@@ -1,0 +1,570 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'docs/**'
+      - '*.md'
+      - 'server/**/*.py'
+      - 'agents/**/*.py'
+      - 'mcp/**/*.py'
+      - 'API/Dashboard/src/**'
+      - 'Roblox/**/*.lua'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - '*.md'
+  workflow_dispatch:
+    inputs:
+      deploy_to_pages:
+        description: 'Deploy to GitHub Pages'
+        required: false
+        default: true
+        type: boolean
+      generate_api_docs:
+        description: 'Regenerate API documentation'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      docs: ${{ steps.changes.outputs.docs }}
+      api: ${{ steps.changes.outputs.api }}
+      lua: ${{ steps.changes.outputs.lua }}
+      dashboard: ${{ steps.changes.outputs.dashboard }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            docs:
+              - 'docs/**'
+              - '*.md'
+            api:
+              - 'server/**/*.py'
+              - 'agents/**/*.py'
+              - 'mcp/**/*.py'
+            lua:
+              - 'Roblox/**/*.lua'
+            dashboard:
+              - 'API/Dashboard/src/**'
+
+  generate-api-docs:
+    runs-on: ubuntu-latest
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.api == 'true' || github.event.inputs.generate_api_docs == 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install documentation dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
+          pip install pdoc3 pydoc-markdown mkdocstrings[python]
+      
+      - name: Generate API documentation with Sphinx
+        run: |
+          mkdir -p docs/api/
+          
+          # Generate API docs for each module
+          sphinx-apidoc -o docs/api/server server/
+          sphinx-apidoc -o docs/api/agents agents/
+          sphinx-apidoc -o docs/api/mcp mcp/
+          sphinx-apidoc -o docs/api/sparc sparc/
+          sphinx-apidoc -o docs/api/swarm swarm/
+          sphinx-apidoc -o docs/api/coordinators coordinators/
+          
+          # Build Sphinx docs
+          sphinx-build -b html docs/api/ docs/_build/api/
+      
+      - name: Generate OpenAPI specification
+        run: |
+          python -c "
+          import json
+          import sys
+          sys.path.append('server')
+          from main import app
+          from fastapi.openapi.utils import get_openapi
+          
+          openapi_schema = get_openapi(
+              title='ToolboxAI Roblox API',
+              version='1.0.0',
+              description='AI-powered educational Roblox environment API',
+              routes=app.routes,
+          )
+          
+          with open('docs/api/openapi.json', 'w') as f:
+              json.dump(openapi_schema, f, indent=2)
+          "
+      
+      - name: Generate Markdown API docs
+        run: |
+          pdoc --html --output-dir docs/api/markdown server/ agents/ mcp/ sparc/ swarm/ coordinators/
+      
+      - name: Upload API documentation
+        uses: actions/upload-artifact@v3
+        with:
+          name: api-docs
+          path: |
+            docs/api/
+            docs/_build/api/
+
+  generate-lua-docs:
+    runs-on: ubuntu-latest
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.lua == 'true' || github.event.inputs.generate_api_docs == 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install LDoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.3 luarocks
+          sudo luarocks install ldoc
+      
+      - name: Generate Lua documentation
+        run: |
+          mkdir -p docs/lua/
+          
+          # Generate documentation for Lua scripts
+          ldoc -d docs/lua/ Roblox/Scripts/
+          
+          # Create index for Lua docs
+          cat > docs/lua/index.md << EOF
+          # Roblox Lua Documentation
+          
+          This section contains automatically generated documentation for all Lua scripts in the ToolboxAI Roblox Environment.
+          
+          ## Modules
+          
+          - [Server Scripts](ServerScripts/index.html) - Main server-side logic
+          - [Client Scripts](ClientScripts/index.html) - Client-side functionality  
+          - [Module Scripts](ModuleScripts/index.html) - Reusable modules
+          - [Plugin Scripts](../Plugins/index.html) - Roblox Studio plugins
+          
+          ## Quick Start
+          
+          1. Import the modules you need
+          2. Follow the API patterns shown in examples
+          3. Check server-client communication patterns
+          
+          EOF
+      
+      - name: Upload Lua documentation
+        uses: actions/upload-artifact@v3
+        with:
+          name: lua-docs
+          path: docs/lua/
+
+  generate-dashboard-docs:
+    runs-on: ubuntu-latest
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.dashboard == 'true' || github.event.inputs.generate_api_docs == 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'API/Dashboard/package-lock.json'
+      
+      - name: Install Dashboard dependencies
+        run: |
+          cd API/Dashboard
+          npm ci
+          npm install -g typedoc @compodoc/compodoc
+      
+      - name: Generate TypeScript documentation
+        run: |
+          cd API/Dashboard
+          
+          # Generate TypeDoc documentation
+          typedoc --out ../../docs/dashboard/typedoc src/
+          
+          # Generate component documentation
+          npx @storybook/cli build-storybook -o ../../docs/dashboard/storybook
+        continue-on-error: true
+      
+      - name: Generate React component docs
+        run: |
+          cd API/Dashboard
+          
+          # Create component documentation
+          mkdir -p ../../docs/dashboard/components/
+          
+          # Generate component README files
+          find src/components -name "*.tsx" -exec basename {} .tsx \; | while read component; do
+            echo "# $component Component" > "../../docs/dashboard/components/$component.md"
+            echo "" >> "../../docs/dashboard/components/$component.md"
+            echo "Auto-generated documentation for the $component component." >> "../../docs/dashboard/components/$component.md"
+          done
+      
+      - name: Upload Dashboard documentation
+        uses: actions/upload-artifact@v3
+        with:
+          name: dashboard-docs
+          path: docs/dashboard/
+
+  build-mkdocs:
+    runs-on: ubuntu-latest
+    needs: [generate-api-docs, generate-lua-docs, generate-dashboard-docs, check-changes]
+    if: always() && (needs.check-changes.outputs.docs == 'true' || github.event.inputs.generate_api_docs == 'true')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install MkDocs
+        run: |
+          pip install mkdocs mkdocs-material mkdocs-mermaid2-plugin
+          pip install mkdocs-minify-plugin mkdocs-redirects
+          pip install pymdown-extensions pygments
+      
+      - name: Download all documentation artifacts
+        uses: actions/download-artifact@v3
+      
+      - name: Organize documentation structure
+        run: |
+          # Copy generated docs to the right places
+          if [ -d "api-docs" ]; then
+            cp -r api-docs/* docs/
+          fi
+          
+          if [ -d "lua-docs" ]; then
+            cp -r lua-docs/* docs/roblox/
+          fi
+          
+          if [ -d "dashboard-docs" ]; then
+            cp -r dashboard-docs/* docs/dashboard/
+          fi
+      
+      - name: Create MkDocs configuration
+        run: |
+          cat > mkdocs.yml << EOF
+          site_name: ToolboxAI Roblox Environment
+          site_description: AI-powered educational Roblox environment documentation
+          site_url: https://toolboxai-solutions.github.io/ToolboxAI-Roblox-Environment/
+          repo_url: https://github.com/ToolboxAI-Solutions/ToolboxAI-Roblox-Environment
+          repo_name: ToolboxAI-Solutions/ToolboxAI-Roblox-Environment
+          
+          theme:
+            name: material
+            palette:
+              - scheme: default
+                primary: blue
+                accent: orange
+                toggle:
+                  icon: material/brightness-7
+                  name: Switch to dark mode
+              - scheme: slate
+                primary: blue
+                accent: orange
+                toggle:
+                  icon: material/brightness-4
+                  name: Switch to light mode
+            features:
+              - navigation.tabs
+              - navigation.sections
+              - navigation.expand
+              - navigation.top
+              - search.highlight
+              - content.code.copy
+          
+          nav:
+            - Home: index.md
+            - Getting Started:
+              - Installation: getting-started/installation.md
+              - Quick Start: getting-started/quick-start.md
+              - Configuration: getting-started/configuration.md
+            - API Documentation:
+              - Overview: api/index.md
+              - Server API: api/server.md
+              - Agents: api/agents.md
+              - MCP Protocol: api/mcp.md
+              - SPARC Framework: api/sparc.md
+              - OpenAPI Spec: api/openapi.json
+            - Roblox Development:
+              - Lua Scripts: roblox/index.md
+              - Plugin Development: roblox/plugins.md
+              - Best Practices: roblox/best-practices.md
+            - Dashboard:
+              - Components: dashboard/components.md
+              - TypeScript API: dashboard/typedoc/index.html
+              - Storybook: dashboard/storybook/index.html
+            - Deployment:
+              - Docker: deployment/docker.md
+              - CI/CD: deployment/cicd.md
+              - Production: deployment/production.md
+            - Contributing:
+              - Guidelines: contributing/guidelines.md
+              - Development: contributing/development.md
+              - Testing: contributing/testing.md
+          
+          plugins:
+            - search
+            - mermaid2:
+                arguments:
+                  theme: base
+            - minify:
+                minify_html: true
+          
+          markdown_extensions:
+            - pymdownx.highlight
+            - pymdownx.superfences:
+                custom_fences:
+                  - name: mermaid
+                    class: mermaid
+                    format: !!python/name:pymdownx.superfences.fence_code_format
+            - pymdownx.tabbed
+            - pymdownx.details
+            - admonition
+            - codehilite
+            - meta
+            - toc:
+                permalink: true
+          EOF
+      
+      - name: Build MkDocs site
+        run: |
+          mkdocs build
+      
+      - name: Upload MkDocs site
+        uses: actions/upload-artifact@v3
+        with:
+          name: mkdocs-site
+          path: site/
+
+  sync-readme:
+    runs-on: ubuntu-latest
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.docs == 'true' || github.event.inputs.generate_api_docs == 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Update README badges and links
+        run: |
+          # Update README with latest badges and links
+          cat > README.md << 'EOF'
+          # ToolboxAI Roblox Environment
+          
+          ![CI/CD](https://github.com/ToolboxAI-Solutions/ToolboxAI-Roblox-Environment/workflows/Deploy/badge.svg)
+          ![Tests](https://github.com/ToolboxAI-Solutions/ToolboxAI-Roblox-Environment/workflows/Test%20Suite/badge.svg)
+          ![Documentation](https://github.com/ToolboxAI-Solutions/ToolboxAI-Roblox-Environment/workflows/Documentation/badge.svg)
+          ![Roblox Sync](https://github.com/ToolboxAI-Solutions/ToolboxAI-Roblox-Environment/workflows/Roblox%20Studio%20Sync/badge.svg)
+          [![codecov](https://codecov.io/gh/ToolboxAI-Solutions/ToolboxAI-Roblox-Environment/branch/main/graph/badge.svg)](https://codecov.io/gh/ToolboxAI-Solutions/ToolboxAI-Roblox-Environment)
+          
+          An AI-powered educational platform that generates immersive Roblox educational environments using LangChain/LangGraph multi-agent orchestration.
+          
+          ## 🌟 Features
+          
+          - **AI-Powered Content Generation**: Automatically generates educational Roblox environments
+          - **Multi-Agent Orchestration**: Uses LangChain/LangGraph for coordinated content creation
+          - **LMS Integration**: Seamless integration with Schoology, Canvas, and other platforms
+          - **Real-time Collaboration**: Live editing via Roblox Studio plugin
+          - **Adaptive Learning**: Dynamic difficulty adjustment based on student performance
+          
+          ## 📚 Documentation
+          
+          - **[📖 Full Documentation](https://toolboxai-solutions.github.io/ToolboxAI-Roblox-Environment/)**
+          - **[🚀 Quick Start Guide](https://toolboxai-solutions.github.io/ToolboxAI-Roblox-Environment/getting-started/quick-start/)**
+          - **[📊 API Documentation](https://toolboxai-solutions.github.io/ToolboxAI-Roblox-Environment/api/)**
+          - **[🎮 Roblox Development](https://toolboxai-solutions.github.io/ToolboxAI-Roblox-Environment/roblox/)**
+          
+          ## 🏗️ Architecture
+          
+          The platform consists of:
+          - **FastAPI Backend** (Port 8008) - Main API server
+          - **Flask Bridge** (Port 5001) - Roblox Studio integration
+          - **MCP Server** (Port 9876) - Model Context Protocol
+          - **React Dashboard** (Port 3000) - Web interface
+          - **Ghost CMS** (Port 2368) - Content management
+          - **Roblox Plugin** (Port 64989) - Studio integration
+          
+          ## 🚀 Quick Start
+          
+          \`\`\`bash
+          # Clone the repository
+          git clone https://github.com/ToolboxAI-Solutions/ToolboxAI-Roblox-Environment.git
+          cd ToolboxAI-Roblox-Environment
+          
+          # Install dependencies
+          pip install -r requirements.txt
+          npm install
+          
+          # Set up environment
+          cp .env.example .env
+          # Edit .env with your API keys
+          
+          # Start all services
+          docker-compose up -d
+          \`\`\`
+          
+          ## 📈 Status
+          
+          - **Backend API**: ✅ Operational
+          - **Frontend Dashboard**: ✅ Operational  
+          - **Roblox Integration**: ✅ Operational
+          - **AI Agents**: ✅ Operational
+          - **MCP Server**: ✅ Operational
+          
+          ## 🤝 Contributing
+          
+          See our [Contributing Guidelines](https://toolboxai-solutions.github.io/ToolboxAI-Roblox-Environment/contributing/guidelines/) for details.
+          
+          ## 📄 License
+          
+          This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+          
+          ---
+          
+          **Made with ❤️ by the ToolboxAI Solutions team**
+          EOF
+      
+      - name: Commit README updates
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          if git diff --quiet README.md; then
+            echo "No changes to README.md"
+          else
+            git add README.md
+            git commit -m "docs: update README with latest information [skip ci]"
+            git push
+          fi
+
+  deploy-to-pages:
+    runs-on: ubuntu-latest
+    needs: [build-mkdocs, sync-readme]
+    if: ${{ github.ref == 'refs/heads/main' && (github.event.inputs.deploy_to_pages != 'false') }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    steps:
+      - name: Download MkDocs site
+        uses: actions/download-artifact@v3
+        with:
+          name: mkdocs-site
+          path: ./site
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: ./site
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+
+  generate-changelog:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Generate changelog
+        uses: orhun/git-cliff-action@v2
+        with:
+          config: cliff.toml
+          args: --verbose
+        env:
+          OUTPUT: CHANGELOG.md
+      
+      - name: Commit changelog
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          if git diff --quiet CHANGELOG.md; then
+            echo "No changes to CHANGELOG.md"
+          else
+            git add CHANGELOG.md
+            git commit -m "docs: update changelog [skip ci]"
+            git push
+          fi
+
+  docs-summary:
+    runs-on: ubuntu-latest
+    needs: [generate-api-docs, generate-lua-docs, generate-dashboard-docs, build-mkdocs, deploy-to-pages]
+    if: always()
+    steps:
+      - name: Create documentation summary
+        run: |
+          echo "# Documentation Generation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check job results
+          if [ "${{ needs.generate-api-docs.result }}" == "success" ]; then
+            echo "✅ **API Documentation:** Generated successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **API Documentation:** Failed or skipped" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.generate-lua-docs.result }}" == "success" ]; then
+            echo "✅ **Lua Documentation:** Generated successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Lua Documentation:** Failed or skipped" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.generate-dashboard-docs.result }}" == "success" ]; then
+            echo "✅ **Dashboard Documentation:** Generated successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Dashboard Documentation:** Failed or skipped" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.build-mkdocs.result }}" == "success" ]; then
+            echo "✅ **MkDocs Site:** Built successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **MkDocs Site:** Failed to build" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.deploy-to-pages.result }}" == "success" ]; then
+            echo "✅ **GitHub Pages:** Deployed successfully" >> $GITHUB_STEP_SUMMARY
+            echo "   - **URL:** https://toolboxai-solutions.github.io/ToolboxAI-Roblox-Environment/" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ **GitHub Pages:** Skipped or failed" >> $GITHUB_STEP_SUMMARY
+          fi

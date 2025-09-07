@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .connected { background: #2e7d32; }
+        .disconnected { background: #c62828; }
+        .connecting { background: #ff6f00; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background: #1976d2;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover { background: #1565c0; }
+        .log {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #1976d2;
+            padding-left: 10px;
+        }
+        .error { border-color: #c62828; color: #ff6b6b; }
+        .success { border-color: #2e7d32; color: #4caf50; }
+        .info { border-color: #ff6f00; color: #ffa726; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ToolboxAI WebSocket Test</h1>
+        
+        <div id="status" class="status disconnected">
+            Status: <span id="statusText">Disconnected</span>
+        </div>
+        
+        <div>
+            <button onclick="connectSocket()">Connect</button>
+            <button onclick="disconnectSocket()">Disconnect</button>
+            <button onclick="sendPing()">Send Ping</button>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+        
+        <h3>Configuration</h3>
+        <div>
+            <label>Server URL: </label>
+            <input type="text" id="serverUrl" value="http://localhost:8001" style="width: 200px; padding: 5px;">
+        </div>
+        
+        <h3>Authentication Token</h3>
+        <textarea id="authToken" rows="4" style="width: 100%; padding: 5px;">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhNTQwZDY5Ny0zMGI4LTQ5ZTktOTk5Ny1lYzQzMTIzOTBjMzIiLCJlbWFpbCI6ImFkbWluQHRvb2xib3hhaS5jb20iLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6IkFkbWluIiwiZXhwIjoxNzU3MTk3NTA4LCJpYXQiOjE3NTcxMTExMDgsInR5cGUiOiJhY2Nlc3MifQ.tthiFO9Wc5mpjXKWMJAIClWlVu6gmQpZPwsytUuUAeg</textarea>
+        
+        <h3>Log</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        let socket = null;
+        let messageCount = 0;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `[${timestamp}] ${message}`;
+            logDiv.insertBefore(entry, logDiv.firstChild);
+            
+            // Keep only last 100 entries
+            while (logDiv.children.length > 100) {
+                logDiv.removeChild(logDiv.lastChild);
+            }
+        }
+
+        function updateStatus(status, className) {
+            const statusDiv = document.getElementById('status');
+            const statusText = document.getElementById('statusText');
+            statusDiv.className = `status ${className}`;
+            statusText.textContent = status;
+        }
+
+        function connectSocket() {
+            if (socket && socket.connected) {
+                log('Already connected', 'info');
+                return;
+            }
+
+            const serverUrl = document.getElementById('serverUrl').value;
+            const token = document.getElementById('authToken').value.trim();
+            
+            log(`Connecting to ${serverUrl}...`, 'info');
+            updateStatus('Connecting...', 'connecting');
+
+            socket = io(serverUrl, {
+                auth: {
+                    token: token
+                },
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000,
+            });
+
+            // Connection events
+            socket.on('connect', () => {
+                log('Connected successfully! Session ID: ' + socket.id, 'success');
+                updateStatus('Connected', 'connected');
+            });
+
+            socket.on('disconnect', (reason) => {
+                log(`Disconnected: ${reason}`, 'error');
+                updateStatus('Disconnected', 'disconnected');
+            });
+
+            socket.on('connect_error', (error) => {
+                log(`Connection error: ${error.message}`, 'error');
+                updateStatus('Connection Error', 'disconnected');
+            });
+
+            // Custom events
+            socket.on('connected', (data) => {
+                log(`Server confirmation: ${JSON.stringify(data)}`, 'success');
+            });
+
+            socket.on('pong', () => {
+                log('Received pong from server', 'info');
+            });
+
+            socket.on('message', (data) => {
+                messageCount++;
+                log(`Message #${messageCount}: ${JSON.stringify(data)}`, 'info');
+            });
+
+            socket.on('error', (error) => {
+                log(`Error: ${JSON.stringify(error)}`, 'error');
+            });
+
+            // Listen for any event
+            socket.onAny((eventName, ...args) => {
+                if (!['connect', 'disconnect', 'connected', 'pong', 'message', 'error'].includes(eventName)) {
+                    log(`Event '${eventName}': ${JSON.stringify(args)}`, 'info');
+                }
+            });
+        }
+
+        function disconnectSocket() {
+            if (socket) {
+                log('Disconnecting...', 'info');
+                socket.disconnect();
+                socket = null;
+            } else {
+                log('Not connected', 'info');
+            }
+        }
+
+        function sendPing() {
+            if (socket && socket.connected) {
+                log('Sending ping...', 'info');
+                socket.emit('ping');
+                
+                // Also send a custom message
+                socket.emit('message', {
+                    type: 'ping',
+                    payload: { timestamp: Date.now() },
+                    timestamp: new Date().toISOString(),
+                    messageId: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+                });
+            } else {
+                log('Not connected', 'error');
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            messageCount = 0;
+        }
+
+        // Auto-connect on load
+        window.addEventListener('load', () => {
+            log('WebSocket test client ready', 'info');
+            log('Click "Connect" to establish WebSocket connection', 'info');
+        });
+    </script>
+</body>
+</html>

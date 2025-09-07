@@ -1,0 +1,8 @@
+{
+  "extends": ["react-app", "react-app/jest"],
+  "rules": {
+    "semi": [2, "always"],
+    "quotes": [2, "double"],
+    "no-unused-vars": "warn"
+  }
+}

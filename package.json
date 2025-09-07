@@ -1,0 +1,35 @@
+{
+  "name": "toolboxai-solutions-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ToolBoxAI Solutions - Educational Technology Platform",
+  "workspaces": [
+    "ToolboxAI-Roblox-Environment",
+    "Dashboard/ToolboxAI-Dashboard"
+  ],
+  "scripts": {
+    "install:all": "npm install && cd ToolboxAI-Roblox-Environment && npm install",
+    "dev:roblox": "cd ToolboxAI-Roblox-Environment && npm run dev",
+    "dev:dashboard": "cd Dashboard/ToolboxAI-Dashboard && npm run dev",
+    "test": "echo \"See individual project test scripts\"",
+    "check-locks": "./check-lock-files.sh",
+    "fix-locks": "./check-lock-files.sh --fix"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/ToolboxAI-Solutions.git"
+  },
+  "keywords": [
+    "education",
+    "roblox",
+    "ai",
+    "learning-management-system",
+    "edtech"
+  ],
+  "author": "ToolBoxAI Solutions Team",
+  "license": "MIT"
+}

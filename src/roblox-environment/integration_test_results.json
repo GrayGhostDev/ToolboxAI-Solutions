@@ -1,0 +1,57 @@
+{
+  "services": {
+    "FastAPI Backend": {
+      "status": "healthy",
+      "response_time_ms": 0.9250640869140625
+    },
+    "Flask Bridge": {
+      "status": "healthy",
+      "response_time_ms": 39.04294967651367
+    },
+    "Dashboard Backend": {
+      "status": "healthy",
+      "response_time_ms": 0.8168220520019531
+    },
+    "Dashboard Frontend": {
+      "status": "offline",
+      "error": "Cannot connect to host 127.0.0.1:5176 ssl:default [Connect call failed ('127.0.0.1', 5176)]"
+    }
+  },
+  "tests": {
+    "content_generation": {
+      "status": "success",
+      "data": {
+        "success": true,
+        "content": {
+          "subject": "Mathematics",
+          "grade_level": 5,
+          "scripts": [
+            "-- Generated Lua script"
+          ],
+          "world_id": "world-1757193103"
+        },
+        "message": "Content generated successfully"
+      }
+    },
+    "roblox_bridge": {
+      "status": "success",
+      "plugin_registered": true,
+      "plugin_id": "881decc5-63b4-4c06-87b3-3e5d8b594cc2"
+    },
+    "websocket": {
+      "status": "failed",
+      "error": "server rejected WebSocket connection: HTTP 403"
+    },
+    "dashboard": {
+      "status": "success",
+      "auth_working": true,
+      "token": true
+    },
+    "cross_service": {
+      "status": "success",
+      "flask_to_fastapi": true
+    }
+  },
+  "errors": [],
+  "performance": {}
+}

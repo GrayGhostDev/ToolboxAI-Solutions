@@ -1,0 +1,6 @@
+[submodule "API/GhostBackend"]
+	path = API/GhostBackend
+	url = https://github.com/GrayGhostDev/Ghost.git
+[submodule "API/Dashboard"]
+	path = API/Dashboard
+	url = https://github.com/GrayGhostDev/ToolboxAI-Dashboard.git

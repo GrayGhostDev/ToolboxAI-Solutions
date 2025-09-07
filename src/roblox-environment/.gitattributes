@@ -1,0 +1,66 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Text files (enforce LF line endings)
+*.lua text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.sh text eol=lf
+*.bash text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.xml text eol=lf
+*.svg text eol=lf
+*.env text eol=lf
+*.env.* text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+*.conf text eol=lf
+*.toml text eol=lf
+Dockerfile text eol=lf
+Makefile text eol=lf
+
+# Binary files
+*.rbxm binary
+*.rbxl binary
+*.rbxmx binary
+*.rbxlx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.mp3 binary
+*.mp4 binary
+*.db binary
+*.sqlite binary
+
+# GitHub Linguist overrides (for language statistics)
+*.lua linguist-detectable=true
+*.py linguist-detectable=true
+*.ts linguist-detectable=true
+*.js linguist-detectable=true
+API/Dashboard/* linguist-vendored
+API/GhostBackend/* linguist-vendored
+docs/* linguist-documentation
+*.md linguist-documentation

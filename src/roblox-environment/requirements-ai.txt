@@ -1,0 +1,42 @@
+# AI/ML Dependencies for ToolboxAI Roblox Environment
+# Properly configured versions to avoid conflicts
+
+# Core LangChain Ecosystem
+langchain==0.1.0
+langchain-openai==0.0.5
+langchain-community==0.0.10
+langgraph==0.0.26
+
+# Language Models
+openai==1.10.0  # Updated to match langchain-openai requirements
+tiktoken==0.5.2
+
+# Vector Embeddings & Search
+numpy==1.26.2
+sentence-transformers==2.2.2
+faiss-cpu==1.8.0
+
+# Educational Content Tools
+wikipedia-api==0.6.0
+duckduckgo-search==3.9.6
+
+# Database for Vector Storage
+sqlalchemy==2.0.23
+redis==5.0.1
+
+# Async and Networking
+aiohttp==3.9.1
+websockets==12.0
+httpx==0.25.2
+
+# Utilities
+python-dotenv==1.0.0
+pydantic==2.5.2
+pydantic-settings==2.1.0
+structlog==23.2.0
+
+# Optional but Recommended for Production
+# langsmith  # For monitoring (requires API key)
+# chromadb  # Alternative vector database
+# anthropic  # Alternative LLM provider
+# cohere  # Alternative LLM provider

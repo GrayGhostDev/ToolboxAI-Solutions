@@ -1,0 +1,578 @@
+import * as React from "react";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Stack,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  TextField,
+  Chip,
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Alert,
+  AlertTitle,
+  LinearProgress,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  ListItemSecondaryAction,
+} from "@mui/material";
+import Grid2 from "@mui/material/Unstable_Grid2";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import PrintIcon from "@mui/icons-material/Print";
+import EmailIcon from "@mui/icons-material/Email";
+import ScheduleIcon from "@mui/icons-material/Schedule";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import PeopleIcon from "@mui/icons-material/People";
+import SchoolIcon from "@mui/icons-material/School";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import DescriptionIcon from "@mui/icons-material/Description";
+import TableChartIcon from "@mui/icons-material/TableChart";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import ViewListIcon from "@mui/icons-material/ViewList";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { useAppSelector } from "../../store";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+
+interface Report {
+  id: string;
+  name: string;
+  type: "progress" | "attendance" | "grades" | "behavior" | "custom";
+  frequency: "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
+  lastGenerated: string;
+  nextScheduled?: string;
+  status: "ready" | "generating" | "scheduled" | "error";
+  size?: string;
+  recipients?: number;
+}
+
+interface ReportTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  category: string;
+  fields: string[];
+  popular?: boolean;
+}
+
+const performanceData = [
+  { month: "Jan", students: 85, average: 78 },
+  { month: "Feb", students: 88, average: 80 },
+  { month: "Mar", students: 92, average: 82 },
+  { month: "Apr", students: 90, average: 85 },
+  { month: "May", students: 94, average: 87 },
+  { month: "Jun", students: 96, average: 89 },
+];
+
+const subjectDistribution = [
+  { name: "Math", value: 30, color: "#2563EB" },
+  { name: "Science", value: 25, color: "#22C55E" },
+  { name: "Language", value: 20, color: "#FACC15" },
+  { name: "Arts", value: 15, color: "#9333EA" },
+  { name: "Tech", value: 10, color: "#EF4444" },
+];
+
+export default function Reports() {
+  const role = useAppSelector((s) => s.user.role);
+  const [reportType, setReportType] = React.useState("progress");
+  const [dateRange, setDateRange] = React.useState<[Date | null, Date | null]>([null, null]);
+  const [selectedTemplate, setSelectedTemplate] = React.useState<ReportTemplate | null>(null);
+
+  const reports: Report[] = [
+    {
+      id: "1",
+      name: "Weekly Progress Report",
+      type: "progress",
+      frequency: "weekly",
+      lastGenerated: "2024-01-29 10:00",
+      nextScheduled: "2024-02-05 10:00",
+      status: "ready",
+      size: "2.4 MB",
+      recipients: 45,
+    },
+    {
+      id: "2",
+      name: "Monthly Attendance Summary",
+      type: "attendance",
+      frequency: "monthly",
+      lastGenerated: "2024-01-01 08:00",
+      nextScheduled: "2024-02-01 08:00",
+      status: "scheduled",
+      size: "1.8 MB",
+      recipients: 12,
+    },
+    {
+      id: "3",
+      name: "Q4 Grade Report",
+      type: "grades",
+      frequency: "quarterly",
+      lastGenerated: "2024-01-15 14:00",
+      status: "ready",
+      size: "5.2 MB",
+      recipients: 156,
+    },
+    {
+      id: "4",
+      name: "Student Behavior Analysis",
+      type: "behavior",
+      frequency: "monthly",
+      lastGenerated: "2024-01-20 09:30",
+      status: "generating",
+      recipients: 8,
+    },
+    {
+      id: "5",
+      name: "Custom Analytics Report",
+      type: "custom",
+      frequency: "daily",
+      lastGenerated: "2024-01-28 16:00",
+      nextScheduled: "2024-01-30 16:00",
+      status: "error",
+      recipients: 3,
+    },
+  ];
+
+  const reportTemplates: ReportTemplate[] = [
+    {
+      id: "1",
+      name: "Student Progress Report",
+      description: "Comprehensive progress tracking including XP, levels, and achievements",
+      icon: <TrendingUpIcon />,
+      category: "Academic",
+      fields: ["Student Name", "Class", "XP Earned", "Level", "Badges", "Completion Rate"],
+      popular: true,
+    },
+    {
+      id: "2",
+      name: "Class Performance Summary",
+      description: "Overall class performance metrics and comparisons",
+      icon: <SchoolIcon />,
+      category: "Academic",
+      fields: ["Class Name", "Average Score", "Top Performers", "Areas for Improvement"],
+      popular: true,
+    },
+    {
+      id: "3",
+      name: "Individual Student Report Card",
+      description: "Traditional report card with grades and teacher comments",
+      icon: <DescriptionIcon />,
+      category: "Grades",
+      fields: ["Subject", "Grade", "Teacher Comments", "Attendance", "Behavior"],
+    },
+    {
+      id: "4",
+      name: "Roblox Activity Report",
+      description: "Gaming platform engagement and educational game progress",
+      icon: <EmojiEventsIcon />,
+      category: "Gamification",
+      fields: ["Game Sessions", "Time Played", "Achievements", "Skills Developed"],
+      popular: true,
+    },
+    {
+      id: "5",
+      name: "Parent Communication Log",
+      description: "Record of parent-teacher communications and meetings",
+      icon: <PeopleIcon />,
+      category: "Communication",
+      fields: ["Date", "Parent Name", "Discussion Topics", "Action Items", "Follow-up"],
+    },
+    {
+      id: "6",
+      name: "Compliance Audit Report",
+      description: "COPPA, FERPA, and GDPR compliance status",
+      icon: <AssessmentIcon />,
+      category: "Compliance",
+      fields: ["Regulation", "Status", "Issues", "Remediation", "Audit Date"],
+    },
+  ];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "ready":
+        return "success";
+      case "generating":
+        return "info";
+      case "scheduled":
+        return "warning";
+      case "error":
+        return "error";
+      default:
+        return "default";
+    }
+  };
+
+  const handleGenerateReport = () => {
+    console.log("Generating report...");
+  };
+
+  return (
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Grid2 container spacing={3}>
+        {/* Header */}
+        <Grid2 size={12}>
+          <Card>
+            <CardContent>
+              <Stack
+                direction={{ xs: "column", md: "row" }}
+                justifyContent="space-between"
+                alignItems={{ xs: "flex-start", md: "center" }}
+                gap={2}
+              >
+                <Stack direction="row" alignItems="center" gap={2}>
+                  <AssessmentIcon sx={{ fontSize: 32, color: "primary.main" }} />
+                  <div>
+                    <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                      Reports & Analytics
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Generate and schedule comprehensive reports
+                    </Typography>
+                  </div>
+                </Stack>
+                <Stack direction="row" gap={2}>
+                  <Button variant="outlined" startIcon={<RefreshIcon />}>
+                    Refresh
+                  </Button>
+                  <Button variant="contained" startIcon={<FileDownloadIcon />}>
+                    Export All
+                  </Button>
+                </Stack>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid2>
+
+        {/* Quick Stats */}
+        <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card>
+            <CardContent>
+              <Stack spacing={1}>
+                <Typography variant="caption" color="text.secondary">
+                  Reports Generated
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                  247
+                </Typography>
+                <Typography variant="caption" color="success.main">
+                  +12% this month
+                </Typography>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid2>
+
+        <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card>
+            <CardContent>
+              <Stack spacing={1}>
+                <Typography variant="caption" color="text.secondary">
+                  Scheduled Reports
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                  18
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Next in 2 hours
+                </Typography>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid2>
+
+        <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card>
+            <CardContent>
+              <Stack spacing={1}>
+                <Typography variant="caption" color="text.secondary">
+                  Recipients
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                  432
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Across all reports
+                </Typography>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid2>
+
+        <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card>
+            <CardContent>
+              <Stack spacing={1}>
+                <Typography variant="caption" color="text.secondary">
+                  Storage Used
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                  8.7 GB
+                </Typography>
+                <LinearProgress variant="determinate" value={43} sx={{ mt: 1 }} />
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid2>
+
+        {/* Report Generator */}
+        <Grid2 size={{ xs: 12, lg: 8 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+                Generate New Report
+              </Typography>
+              <Grid2 container spacing={2}>
+                <Grid2 size={{ xs: 12, md: 6 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Report Type</InputLabel>
+                    <Select
+                      value={reportType}
+                      label="Report Type"
+                      onChange={(e) => setReportType(e.target.value)}
+                    >
+                      <MenuItem value="progress">Progress Report</MenuItem>
+                      <MenuItem value="attendance">Attendance Report</MenuItem>
+                      <MenuItem value="grades">Grade Report</MenuItem>
+                      <MenuItem value="behavior">Behavior Report</MenuItem>
+                      <MenuItem value="custom">Custom Report</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid2>
+                <Grid2 size={{ xs: 12, md: 6 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Class/Student</InputLabel>
+                    <Select defaultValue="all" label="Class/Student">
+                      <MenuItem value="all">All Classes</MenuItem>
+                      <MenuItem value="math5a">Math Grade 5A</MenuItem>
+                      <MenuItem value="science6b">Science Grade 6B</MenuItem>
+                      <MenuItem value="individual">Individual Student</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid2>
+                <Grid2 size={{ xs: 12, md: 6 }}>
+                  <DatePicker
+                    label="Start Date"
+                    value={dateRange[0]}
+                    onChange={(newValue) => setDateRange([newValue, dateRange[1]])}
+                    slotProps={{ textField: { fullWidth: true } }}
+                  />
+                </Grid2>
+                <Grid2 size={{ xs: 12, md: 6 }}>
+                  <DatePicker
+                    label="End Date"
+                    value={dateRange[1]}
+                    onChange={(newValue) => setDateRange([dateRange[0], newValue])}
+                    slotProps={{ textField: { fullWidth: true } }}
+                  />
+                </Grid2>
+                <Grid2 size={12}>
+                  <Stack direction="row" gap={2}>
+                    <Button
+                      variant="contained"
+                      startIcon={<FileDownloadIcon />}
+                      onClick={handleGenerateReport}
+                      sx={{ flex: 1 }}
+                    >
+                      Generate Report
+                    </Button>
+                    <Button variant="outlined" startIcon={<ScheduleIcon />}>
+                      Schedule
+                    </Button>
+                    <Button variant="outlined" startIcon={<EmailIcon />}>
+                      Email
+                    </Button>
+                    <Button variant="outlined" startIcon={<PrintIcon />}>
+                      Print
+                    </Button>
+                  </Stack>
+                </Grid2>
+              </Grid2>
+            </CardContent>
+          </Card>
+        </Grid2>
+
+        {/* Report Templates */}
+        <Grid2 size={{ xs: 12, lg: 4 }}>
+          <Card sx={{ height: "100%" }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                Popular Templates
+              </Typography>
+              <List dense>
+                {reportTemplates.filter(t => t.popular).map((template) => (
+                  <ListItem key={template.id} button onClick={() => setSelectedTemplate(template)}>
+                    <ListItemIcon>{template.icon}</ListItemIcon>
+                    <ListItemText
+                      primary={template.name}
+                      secondary={template.description}
+                    />
+                    <ListItemSecondaryAction>
+                      <IconButton edge="end" size="small">
+                        <MoreVertIcon />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+              </List>
+              <Button fullWidth variant="outlined" sx={{ mt: 2 }}>
+                View All Templates
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid2>
+
+        {/* Analytics Charts */}
+        <Grid2 size={{ xs: 12, md: 6 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                Performance Trends
+              </Typography>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={performanceData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="students" stroke="#2563EB" name="Student Count" />
+                  <Line type="monotone" dataKey="average" stroke="#22C55E" name="Average Score" />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </Grid2>
+
+        <Grid2 size={{ xs: 12, md: 6 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                Subject Distribution
+              </Typography>
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={subjectDistribution}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {subjectDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </Grid2>
+
+        {/* Recent Reports */}
+        <Grid2 size={12}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                Recent Reports
+              </Typography>
+              <TableContainer>
+                <Table aria-label="recent reports table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Report Name</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell>Frequency</TableCell>
+                      <TableCell>Generated</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Size</TableCell>
+                      <TableCell>Recipients</TableCell>
+                      <TableCell>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {reports.map((report) => (
+                      <TableRow key={report.id} hover>
+                        <TableCell>
+                          <Stack direction="row" alignItems="center" gap={1}>
+                            <InsertDriveFileIcon fontSize="small" />
+                            <Typography variant="body2">{report.name}</Typography>
+                          </Stack>
+                        </TableCell>
+                        <TableCell>
+                          <Chip label={report.type} size="small" />
+                        </TableCell>
+                        <TableCell>{report.frequency}</TableCell>
+                        <TableCell>
+                          <Typography variant="caption">
+                            {new Date(report.lastGenerated).toLocaleString()}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={report.status}
+                            size="small"
+                            color={getStatusColor(report.status) as any}
+                          />
+                        </TableCell>
+                        <TableCell>{report.size || "—"}</TableCell>
+                        <TableCell>{report.recipients}</TableCell>
+                        <TableCell>
+                          <Stack direction="row" gap={0.5}>
+                            <IconButton size="small" disabled={report.status !== "ready"}>
+                              <FileDownloadIcon />
+                            </IconButton>
+                            <IconButton size="small">
+                              <EmailIcon />
+                            </IconButton>
+                            <IconButton size="small">
+                              <MoreVertIcon />
+                            </IconButton>
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        </Grid2>
+      </Grid2>
+    </LocalizationProvider>
+  );
+}

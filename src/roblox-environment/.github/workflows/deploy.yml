@@ -1,0 +1,405 @@
+name: Deploy ToolboxAI Roblox Environment
+
+on:
+  push:
+    branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - '.gitignore'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      rollback:
+        description: 'Rollback to previous version'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.changes.outputs.api }}
+      agents: ${{ steps.changes.outputs.agents }}
+      mcp: ${{ steps.changes.outputs.mcp }}
+      roblox: ${{ steps.changes.outputs.roblox }}
+      docker: ${{ steps.changes.outputs.docker }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            api:
+              - 'server/**'
+              - 'API/**'
+              - 'requirements.txt'
+            agents:
+              - 'agents/**'
+              - 'sparc/**'
+              - 'swarm/**'
+              - 'coordinators/**'
+            mcp:
+              - 'mcp/**'
+            roblox:
+              - 'Roblox/**'
+            docker:
+              - 'docker/**'
+              - 'Dockerfile*'
+              - 'docker-compose*.yml'
+
+  test:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.api == 'true' || needs.detect-changes.outputs.agents == 'true' || needs.detect-changes.outputs.mcp == 'true' }}
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-xdist pytest-benchmark
+      
+      - name: Create test environment
+        run: |
+          cp .env.example .env
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/testdb" >> .env
+          echo "REDIS_URL=redis://localhost:6379" >> .env
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+      
+      - name: Run unit tests
+        run: |
+          pytest tests/unit/ -v --cov=server --cov=agents --cov=mcp --cov=sparc --cov=swarm --cov=coordinators \
+                 --cov-report=xml --cov-report=term-missing --numprocesses auto
+      
+      - name: Run integration tests
+        run: |
+          pytest tests/integration/ -v --timeout=300
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+      
+      - name: Store test artifacts
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: test-artifacts-${{ matrix.python-version }}
+          path: |
+            pytest.log
+            test-results/
+            htmlcov/
+
+  lint:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.api == 'true' || needs.detect-changes.outputs.agents == 'true' || needs.detect-changes.outputs.mcp == 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install linting tools
+        run: |
+          pip install black isort flake8 mypy bandit safety
+      
+      - name: Run Black
+        run: black --check --diff server/ agents/ mcp/ sparc/ swarm/ coordinators/
+      
+      - name: Run isort
+        run: isort --check-only --diff server/ agents/ mcp/ sparc/ swarm/ coordinators/
+      
+      - name: Run Flake8
+        run: flake8 server/ agents/ mcp/ sparc/ swarm/ coordinators/ --max-line-length=88 --extend-ignore=E203,W503
+      
+      - name: Run MyPy
+        run: mypy server/ agents/ mcp/ sparc/ swarm/ coordinators/ --ignore-missing-imports
+      
+      - name: Run Bandit security check
+        run: bandit -r server/ agents/ mcp/ sparc/ swarm/ coordinators/ -f json -o bandit-report.json
+        continue-on-error: true
+      
+      - name: Upload security report
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-report
+          path: bandit-report.json
+
+  build-images:
+    runs-on: ubuntu-latest
+    needs: [test, lint, detect-changes]
+    if: ${{ always() && (needs.test.result == 'success' || needs.test.result == 'skipped') && (needs.lint.result == 'success' || needs.lint.result == 'skipped') }}
+    strategy:
+      matrix:
+        image: [api, mcp, agents]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: toolboxai/roblox-${{ matrix.image }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.${{ matrix.image }}
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+            VERSION=${{ github.sha }}
+      
+      - name: Save image locally for testing
+        if: github.event_name == 'pull_request'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.${{ matrix.image }}
+          load: true
+          tags: toolboxai/roblox-${{ matrix.image }}:test
+
+  docker-compose-test:
+    runs-on: ubuntu-latest
+    needs: [build-images, detect-changes]
+    if: ${{ needs.detect-changes.outputs.docker == 'true' || needs.detect-changes.outputs.api == 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Create test environment
+        run: |
+          cp .env.example .env
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+      
+      - name: Start services with Docker Compose
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.test.yml up -d
+          sleep 30
+      
+      - name: Run health checks
+        run: |
+          curl -f http://localhost:8008/health || exit 1
+          curl -f http://localhost:5001/health || exit 1
+      
+      - name: Run integration tests against containers
+        run: |
+          pip install requests pytest
+          python -m pytest tests/integration/docker/ -v
+      
+      - name: Collect container logs
+        if: failure()
+        run: |
+          docker-compose logs > container-logs.txt
+      
+      - name: Upload container logs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: container-logs
+          path: container-logs.txt
+      
+      - name: Cleanup
+        if: always()
+        run: docker-compose down -v
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [build-images, docker-compose-test]
+    if: ${{ github.ref == 'refs/heads/develop' && github.event_name == 'push' }}
+    environment:
+      name: staging
+      url: https://staging.toolboxai-roblox.com
+    steps:
+      - name: Deploy to staging
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd /opt/toolboxai-roblox
+            git pull origin develop
+            docker-compose pull
+            docker-compose up -d --remove-orphans
+            docker system prune -f
+      
+      - name: Run smoke tests
+        run: |
+          sleep 60
+          curl -f https://staging.toolboxai-roblox.com/health
+          curl -f https://staging.toolboxai-roblox.com/docs
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [build-images, docker-compose-test]
+    if: ${{ (github.ref == 'refs/heads/main' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production') }}
+    environment:
+      name: production
+      url: https://toolboxai-roblox.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Get previous deployment tag
+        id: previous-tag
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "v0.0.0")
+          echo "tag=$PREV_TAG" >> $GITHUB_OUTPUT
+      
+      - name: Create deployment backup
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /opt/toolboxai-roblox
+            docker-compose down --remove-orphans
+            tar -czf "backup-$(date +%Y%m%d-%H%M%S).tar.gz" data/ logs/ .env
+      
+      - name: Handle rollback
+        if: ${{ github.event.inputs.rollback == 'true' }}
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /opt/toolboxai-roblox
+            git checkout ${{ steps.previous-tag.outputs.tag }}
+            docker-compose pull
+            docker-compose up -d --remove-orphans
+            exit 0
+      
+      - name: Deploy to production
+        if: ${{ github.event.inputs.rollback != 'true' }}
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /opt/toolboxai-roblox
+            git pull origin main
+            docker-compose pull
+            docker-compose up -d --remove-orphans
+            docker system prune -f
+      
+      - name: Run production smoke tests
+        run: |
+          sleep 90
+          curl -f https://toolboxai-roblox.com/health
+          curl -f https://toolboxai-roblox.com/docs
+      
+      - name: Notify deployment success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: 'Production deployment successful! 🚀'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+      
+      - name: Notify deployment failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: 'Production deployment failed! 🚨 Check logs immediately.'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always()
+    steps:
+      - name: Clean up old Docker images
+        if: github.event_name != 'pull_request'
+        run: |
+          docker system prune -af --filter "until=168h"
+          docker image prune -af --filter "until=72h"
