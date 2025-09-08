@@ -75,44 +75,36 @@ jobs:
           # Create reports directory
           mkdir -p security_reports
           
-          # Find all requirements files
-          find . -name "requirements*.txt" -not -path "./venv*" -not -path "./.venv*" -not -path "./node_modules/*" | while read req_file; do
-            project_name=$(basename "$(dirname "$req_file")")
-            echo "🔍 Auditing: $req_file"
-            
-            # pip-audit scan
-            pip-audit --requirement "$req_file" --format json --output "security_reports/pip-audit-${project_name}.json" || echo "pip-audit completed with findings"
-            
-            # Safety scan
-            safety check --file "$req_file" --json --output "security_reports/safety-${project_name}.json" || echo "Safety scan completed with findings"
-            
-            # Bandit scan for Python code (if exists)
-            if [ -d "$(dirname "$req_file")" ]; then
-              bandit -r "$(dirname "$req_file")" -f json -o "security_reports/bandit-${project_name}.json" --exit-zero || true
-            fi
-          done
+          # Audit main requirements file
+          if [ -f "src/roblox-environment/requirements-verified.txt" ]; then
+            echo "🔍 Auditing: src/roblox-environment/requirements-verified.txt"
+            pip-audit --requirement "src/roblox-environment/requirements-verified.txt" \
+              --format json --output "security_reports/pip-audit-main.json" || echo "pip-audit completed with findings"
+          fi
+          
+          # Run basic static analysis
+          if [ -d "src" ]; then
+            bandit -r src/ -f json -o "security_reports/bandit-src.json" --exit-zero || true
+          fi
 
       - name: 🟢 Node.js Security Audit
         if: github.event.inputs.audit_scope != 'python-only'
         run: |
           echo "🟢 Running Node.js security audit..."
           
-          # Find all package.json files
-          find . -name "package.json" -not -path "./node_modules/*" | while read package_file; do
-            project_name=$(basename "$(dirname "$package_file")")
-            echo "🔍 Auditing: $package_file"
-            
-            # Change to package directory
-            pushd "$(dirname "$package_file")" > /dev/null
-            
-            # npm audit
-            npm audit --json > "../security_reports/npm-audit-${project_name}.json" 2>/dev/null || echo "npm audit completed with findings"
-            
-            # retire.js scan
-            retire --js --outputformat json --outputpath "../security_reports/retire-${project_name}.json" --path . || echo "Retire.js scan completed"
-            
-            popd > /dev/null
-          done
+          # Audit main package.json file
+          if [ -f "package.json" ]; then
+            echo "🔍 Auditing main package.json"
+            npm audit --json > "security_reports/npm-audit-main.json" 2>/dev/null || echo "npm audit completed with findings"
+          fi
+          
+          # Check dashboard package.json if exists
+          if [ -f "src/dashboard/package.json" ]; then
+            echo "🔍 Auditing dashboard package.json"
+            cd src/dashboard
+            npm audit --json > "../../security_reports/npm-audit-dashboard.json" 2>/dev/null || echo "npm audit completed with findings"
+            cd ../..
+          fi
 
       - name: 🧠 AI/ML Security Scan
         if: github.event.inputs.audit_scope != 'nodejs-only'

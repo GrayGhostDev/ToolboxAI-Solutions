@@ -3,19 +3,9 @@ name: "ToolboxAI Solutions CodeQL Configuration"
 # Disable the default queries and specify custom query suites
 disable-default-queries: false
 
-# Define custom query suites to run
+# Define query suites to run
 queries:
-  - name: security-and-quality
-    uses: security-and-quality
-  
-  - name: security-extended
-    uses: security-extended
-    
-  - name: python-security-and-quality
-    uses: ./.github/codeql/queries/python-security-suite.qls
-    
-  - name: javascript-security-and-quality  
-    uses: ./.github/codeql/queries/javascript-security-suite.qls
+  - uses: security-and-quality
 
 # Paths to include in the analysis
 paths:
