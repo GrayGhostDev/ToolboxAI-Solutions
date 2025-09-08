@@ -5,108 +5,133 @@ updates:
   - package-ecosystem: "pip"
     directory: "/src/roblox-environment"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"  # Increased from weekly for security
       time: "06:00"
       timezone: "UTC"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10  # Increased for security updates
     target-branch: "develop"
     reviewers:
       - "ToolboxAI-Solutions/maintainers"
+      - "ToolboxAI-Solutions/security-team"
     assignees:
       - "ToolboxAI-Solutions/maintainers"
     labels:
       - "dependencies"
       - "python"
       - "automated"
+      - "security"
     commit-message:
-      prefix: "🔧"
+      prefix: "🔒"
+      prefix-development: "🔧"
       include: "scope"
     allow:
       - dependency-type: "direct"
       - dependency-type: "indirect"
-    ignore:
-      # Ignore major version updates for stable packages
-      - dependency-name: "fastapi"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "sqlalchemy"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "pydantic"
-        update-types: ["version-update:semver-major"]
+    # Removed ignores for security - allow all security updates
+    vulnerability-alerts:
+      enable: true
 
   # Python dependencies - Ghost Backend
   - package-ecosystem: "pip"
     directory: "/src/api/ghost-backend"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"  # Enhanced for security
       time: "06:30"
       timezone: "UTC"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 8  # Increased for security updates
     target-branch: "develop"
     reviewers:
       - "ToolboxAI-Solutions/backend-team"
+      - "ToolboxAI-Solutions/security-team"
     labels:
       - "dependencies"
       - "python"
       - "ghost-backend"
       - "automated"
+      - "security"
     commit-message:
-      prefix: "🔧"
+      prefix: "🔒"
       include: "scope"
+    vulnerability-alerts:
+      enable: true
 
-  # Python dependencies - Dashboard Backend
+  # Python dependencies - Dashboard Backend  
   - package-ecosystem: "pip"
     directory: "/src/dashboard/backend"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"  # Enhanced for security
       time: "07:00"
       timezone: "UTC"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 8  # Increased for security updates
     target-branch: "develop"
     reviewers:
       - "ToolboxAI-Solutions/backend-team"
+      - "ToolboxAI-Solutions/security-team"
     labels:
       - "dependencies"
       - "python"
       - "dashboard"
       - "automated"
+      - "security"
     commit-message:
-      prefix: "🔧"
+      prefix: "🔒"
       include: "scope"
+    vulnerability-alerts:
+      enable: true
+
+  # Python dependencies - AI Components
+  - package-ecosystem: "pip"
+    directory: "/src/roblox-environment"
+    schedule:
+      interval: "daily"
+      time: "07:30"
+      timezone: "UTC"
+    open-pull-requests-limit: 8
+    target-branch: "develop"
+    reviewers:
+      - "ToolboxAI-Solutions/ai-team"
+      - "ToolboxAI-Solutions/security-team"
+    labels:
+      - "dependencies"
+      - "python"
+      - "ai-ml"
+      - "automated"
+      - "security"
+    commit-message:
+      prefix: "🧠🔒"
+      include: "scope"
+    vulnerability-alerts:
+      enable: true
 
   # Node.js dependencies - Main workspace
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "tuesday"
+      interval: "daily"  # Enhanced for security
       time: "06:00"
       timezone: "UTC"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10  # Increased for security updates
     target-branch: "develop"
     reviewers:
       - "ToolboxAI-Solutions/frontend-team"
+      - "ToolboxAI-Solutions/security-team"
     assignees:
       - "ToolboxAI-Solutions/frontend-team"
     labels:
       - "dependencies"
       - "javascript"
       - "automated"
+      - "security"
     commit-message:
-      prefix: "🔧"
+      prefix: "🔒"
       include: "scope"
     versioning-strategy: "increase"
     allow:
       - dependency-type: "direct"
       - dependency-type: "indirect"
-    ignore:
-      # Ignore major version updates for core frameworks
-      - dependency-name: "react"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "next"
-        update-types: ["version-update:semver-major"]
+    vulnerability-alerts:
+      enable: true
+    # Removed major version ignores for security updates
 
   # Docker dependencies
   - package-ecosystem: "docker"
