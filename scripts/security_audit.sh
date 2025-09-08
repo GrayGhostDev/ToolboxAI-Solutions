@@ -35,12 +35,12 @@ echo ""
 mkdir -p "$REPORT_DIR"
 
 # Initialize report
-cat > "$REPORT_FILE" << EOF
-# 🛡️ Security Audit Report - $(date)
+cat > "$REPORT_FILE" << 'EOF'
+# 🛡️ Security Audit Report - PLACEHOLDER_DATE
 
 ## 📋 Executive Summary
 
-**Audit Date**: $(date)  
+**Audit Date**: PLACEHOLDER_DATE  
 **Audit Type**: Automated Dependency Security Scan  
 **Python Environment**: venv_clean (ToolboxAI-Roblox-Environment/venv_clean)  
 **Scope**: All Python and Node.js dependencies  
@@ -50,6 +50,9 @@ cat > "$REPORT_FILE" << EOF
 ## 🐍 Python Security Audit
 
 EOF
+
+# Replace placeholders with actual date
+sed -i "s/PLACEHOLDER_DATE/$(date)/g" "$REPORT_FILE"
 
 echo -e "${BLUE}🔍 Starting Python Security Audit...${NC}"
 

@@ -172,69 +172,94 @@ fi
 # Generate security summary
 echo -e "${BLUE}📊 Generating Security Update Summary...${NC}"
 
-cat > "SECURITY_UPDATE_$(date +%Y%m%d_%H%M%S).md" << EOF
-# 🔒 Security Update Summary - $(date)
+# Create security summary with proper variable substitution
+SUMMARY_FILE="SECURITY_UPDATE_$(date +%Y%m%d_%H%M%S).md"
+CURRENT_DATE=$(date)
+CURRENT_PYTHON=$(which python)
+CURRENT_USER=$(whoami)
+CURRENT_HOST=$(hostname)
+
+cat > "$SUMMARY_FILE" << 'EOF'
+# 🔒 Security Update Summary - PLACEHOLDER_DATE
 
 ## 📋 Update Status
 
-**Date**: $(date)
-**Python Environment**: venv_clean ($(which python))
-**User**: $(whoami)
-**Host**: $(hostname)
+**Date**: PLACEHOLDER_DATE
+**Python Environment**: venv_clean (PLACEHOLDER_PYTHON)
+**User**: PLACEHOLDER_USER
+**Host**: PLACEHOLDER_HOST
 
 ## 🐍 Python Dependencies Updated
 
-$(find . -name "requirements*.txt" -not -path "./venv*" -not -path "./.venv*" -not -path "./node_modules/*" | while read req_file; do
-    echo "- \`$req_file\`"
-done)
+PLACEHOLDER_PYTHON_FILES
 
 ## 🟢 Node.js Dependencies Updated
 
-$(find . -name "package.json" -not -path "./node_modules/*" | while read pkg_file; do
+PLACEHOLDER_NODEJS_FILES
+EOF
+
+# Replace placeholders with actual values
+sed -i "s|PLACEHOLDER_DATE|$CURRENT_DATE|g" "$SUMMARY_FILE"
+sed -i "s|PLACEHOLDER_PYTHON|$CURRENT_PYTHON|g" "$SUMMARY_FILE"
+sed -i "s|PLACEHOLDER_USER|$CURRENT_USER|g" "$SUMMARY_FILE"
+sed -i "s|PLACEHOLDER_HOST|$CURRENT_HOST|g" "$SUMMARY_FILE"
+
+# Add file lists
+python_files=$(find . -name "requirements*.txt" -not -path "./venv*" -not -path "./.venv*" -not -path "./node_modules/*" | while read req_file; do
+    echo "- \`$req_file\`"
+done)
+
+nodejs_files=$(find . -name "package.json" -not -path "./node_modules/*" | while read pkg_file; do
     echo "- \`$pkg_file\`"
 done)
+
+# Replace file placeholders
+sed -i "s|PLACEHOLDER_PYTHON_FILES|$python_files|g" "$SUMMARY_FILE"
+sed -i "s|PLACEHOLDER_NODEJS_FILES|$nodejs_files|g" "$SUMMARY_FILE"
+
+# Append additional sections to the summary file
+cat >> "$SUMMARY_FILE" << 'EOF'
 
 ## 🔒 Key Security Updates Applied
 
 ### Critical Packages Updated:
-- **aiohttp**: Updated to 3.11.10 (CVE-2024-52304, CVE-2024-52310)
-- **requests**: Updated to 2.32.3 (CVE-2024-35195)
-- **python-jose**: Updated to 3.5.0 (CVE-2024-33663)
+- **aiohttp**: Updated to 3.12.14 (CVE-2024-52304, CVE-2024-52310)
+- **requests**: Updated to 2.32.4 (CVE-2024-35195)
+- **python-jose**: Updated to 3.4.0 (CVE-2024-33663)
 - **numpy**: Updated to 2.3.2 (Multiple security fixes)
 - **sqlalchemy**: Updated to 2.0.36 (SQL injection fixes)
 - **pyyaml**: Updated to 6.0.2 (Unsafe load vulnerabilities)
 
 ### Security Libraries Added:
-- **certifi**: 2025.1.14 (Latest certificates)
-- **urllib3**: ≥2.2.3 (Secure HTTP library)
-- **cryptography**: ≥45.0.0 (Latest crypto functions)
+- **certifi**: 2024.12.14 (Latest certificates)
+- **urllib3**: 2.5.0 (Secure HTTP library)
+- **cryptography**: 45.0.0 (Latest crypto functions)
 
 ## 📁 Backup Files Created
 
-Backup files created with timestamp for rollback if needed:
-$(find . -name "requirements*.txt.backup.*" 2>/dev/null | head -10 || echo "None found")
+Backup files created with timestamp for rollback if needed.
 
 ## 🧪 Verification
 
 Run these commands to verify the updates:
 
-\`\`\`bash
+```bash
 # Activate venv_clean
-source ${VENV_PATH}/bin/activate
+source ToolboxAI-Roblox-Environment/venv_clean/bin/activate
 
 # Verify key packages
 python -c "
 import fastapi, sqlalchemy, requests, aiohttp, langchain
-print(f'FastAPI: {fastapi.__version__}')
-print(f'SQLAlchemy: {sqlalchemy.__version__}')
-print(f'Requests: {requests.__version__}')
-print(f'aiohttp: {aiohttp.__version__}')
-print(f'LangChain: {langchain.__version__}')
+print('FastAPI:', fastapi.__version__)
+print('SQLAlchemy:', sqlalchemy.__version__)
+print('Requests:', requests.__version__)
+print('aiohttp:', aiohttp.__version__)
+print('LangChain:', langchain.__version__)
 "
 
 # Run security audit
 ./scripts/security_audit.sh
-\`\`\`
+```
 
 ## 🚀 Next Steps
 

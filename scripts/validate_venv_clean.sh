@@ -77,7 +77,7 @@ declare -a critical_packages=(
 
 all_installed=true
 for package in "${critical_packages[@]}"; do
-    if python -c "import $package; print(f'✅ $package: {$package.__version__}')" 2>/dev/null; then
+    if python -c "import $package; print('✅ $package:', $package.__version__)" 2>/dev/null; then
         echo -e "${GREEN}  ✅ $package installed${NC}"
     else
         echo -e "${RED}  ❌ $package NOT INSTALLED${NC}"
