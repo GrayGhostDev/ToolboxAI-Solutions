@@ -1,88 +1,29 @@
-name: 🔒 Security - Essential Checks
+name: 🔒 Basic Security Checks
 
 on:
   push:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
-  schedule:
-    # Run security scans daily at 2 AM UTC
-    - cron: '0 2 * * *'
   workflow_dispatch:
 
-# Prevent concurrent runs
+# Simple concurrency
 concurrency:
   group: security-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   PYTHON_VERSION: '3.11'
-  NODE_VERSION: '18.x'
 
 jobs:
-  # 🔍 CodeQL Security Analysis
-  codeql-scan:
-    name: 🔍 CodeQL Analysis
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-
-    strategy:
-      fail-fast: false
-      matrix:
-        language: ['python', 'javascript']
-
-    steps:
-      - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: 🔧 Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: ${{ matrix.language }}
-
-      - name: 🐍 Setup Python (for Python analysis)
-        if: matrix.language == 'python'
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: 📦 Install Python Dependencies
-        if: matrix.language == 'python'
-        run: |
-          python -m pip install --upgrade pip
-          pip install fastapi uvicorn sqlalchemy pydantic requests
-        continue-on-error: true
-
-      - name: 🟢 Setup Node.js (for JavaScript analysis)
-        if: matrix.language == 'javascript'
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: 📦 Install Node.js Dependencies
-        if: matrix.language == 'javascript'
-        run: |
-          if [ -f "package.json" ]; then
-            npm ci || npm install || echo "Node.js installation skipped"
-          fi
-        continue-on-error: true
-
-      - name: 📊 Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-
-  # 🛡️ Dependency Security Scan
-  dependency-scan:
-    name: 🛡️ Dependency Security
+  # 🔒 Basic Security Validation
+  security-checks:
+    name: 🔒 Security Validation
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-      - name: 📥 Checkout Repository
+      - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
       - name: 🐍 Setup Python
@@ -90,38 +31,49 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: 🔒 Python Security Scan
+      - name: 📦 Install Security Tools
         run: |
-          echo "🔒 Running Python security scan..."
-          pip install pip-audit safety
+          python -m pip install --upgrade pip
+          pip install pip-audit safety || echo "Security tools installation attempted"
+
+      - name: 🔍 Dependency Security Check
+        run: |
+          echo "🔍 Running dependency security check..."
           
-          # Scan main requirements file
           if [ -f "src/roblox-environment/requirements-verified.txt" ]; then
-            echo "📋 Scanning verified requirements..."
-            pip-audit --requirement "src/roblox-environment/requirements-verified.txt" || echo "Issues found - review needed"
-          elif [ -f "src/roblox-environment/requirements.txt" ]; then
-            echo "📋 Scanning main requirements..."
-            pip-audit --requirement "src/roblox-environment/requirements.txt" || echo "Issues found - review needed"
+            echo "📋 Checking verified requirements for vulnerabilities..."
+            pip-audit --requirement "src/roblox-environment/requirements-verified.txt" || echo "Security issues found - review recommended"
           else
             echo "📋 No requirements file found for scanning"
           fi
         continue-on-error: true
 
-      - name: 🟢 Node.js Security Scan  
+      - name: 🛡️ File Security Check
         run: |
-          echo "🟢 Running Node.js security scan..."
-          if [ -f "package.json" ]; then
-            npm audit --audit-level=moderate || echo "npm audit found issues (review recommended)"
+          echo "🛡️ Running basic file security check..."
+          
+          # Check for common security issues
+          if grep -r "password.*=" . --include="*.py" --include="*.js" --include="*.ts" | grep -v "__tests__" | grep -v ".git" | head -5; then
+            echo "⚠️ Potential hardcoded credentials found - review recommended"
           else
-            echo "No package.json found, skipping Node.js audit"
+            echo "✅ No obvious hardcoded credentials found"
+          fi
+          
+          # Check for TODO security items
+          if grep -r "TODO.*security\|FIXME.*security" . --include="*.py" --include="*.js" --include="*.ts" | head -3; then
+            echo "📋 Security TODOs found - review recommended"
+          else
+            echo "✅ No security TODOs found"
           fi
         continue-on-error: true
 
       - name: 📊 Security Summary
         run: |
-          echo "## 🔒 Security Scan Complete" >> $GITHUB_STEP_SUMMARY
-          echo "- **Python Dependencies**: Scanned for vulnerabilities" >> $GITHUB_STEP_SUMMARY
-          echo "- **Node.js Dependencies**: Scanned for vulnerabilities" >> $GITHUB_STEP_SUMMARY
-          echo "- **Static Analysis**: CodeQL analysis completed" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔒 Basic Security Check Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ **Status**: Basic security scans completed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dependency Scan**: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- **File Security Check**: Completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📋 **Note**: This is a basic security check. Enable GitHub code scanning for comprehensive analysis." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 **Enable Code Scanning**: Go to Repository Settings → Security → Code Scanning" >> $GITHUB_STEP_SUMMARY

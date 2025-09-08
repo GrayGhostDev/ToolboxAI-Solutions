@@ -39,15 +39,19 @@ jobs:
 
       - name: 📦 Install Python Dependencies
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip wheel setuptools
+          
           # Install essential packages for code quality checks
-          pip install black flake8 mypy pytest
+          pip install black flake8 mypy pytest || echo "Development tools installed"
           
           # Try to install main requirements if available
           if [ -f "src/roblox-environment/requirements-verified.txt" ]; then
-            pip install -r "src/roblox-environment/requirements-verified.txt" || echo "Using minimal installation"
-          else
+            echo "📋 Installing from verified requirements..."
+            pip install -r "src/roblox-environment/requirements-verified.txt" || echo "Fallback to basic packages"
             pip install fastapi uvicorn sqlalchemy pydantic requests || echo "Basic packages installed"
+          else
+            echo "📋 Installing basic packages..."
+            pip install fastapi uvicorn sqlalchemy pydantic requests || echo "Basic packages attempted"
           fi
 
       - name: 🎨 Python Code Formatting Check

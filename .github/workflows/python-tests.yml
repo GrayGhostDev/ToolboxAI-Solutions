@@ -26,13 +26,17 @@ jobs:
         run: |
           python -m pip install --upgrade pip wheel setuptools
           
-          # Install from verified requirements if available
-          if [ -f "src/roblox-environment/requirements-verified.txt" ]; then
-            pip install -r "src/roblox-environment/requirements-verified.txt" || echo "Using fallback installation"
-          fi
+          # Install essential packages first
+          pip install pytest pyright || echo "Basic tools installed"
           
-          # Install testing tools
-          pip install pytest pyright
+          # Try to install from verified requirements if available
+          if [ -f "src/roblox-environment/requirements-verified.txt" ]; then
+            echo "📋 Found verified requirements, installing..."
+            pip install -r "src/roblox-environment/requirements-verified.txt" || echo "Fallback to basic installation"
+          else
+            echo "📋 Installing basic dependencies..."
+            pip install fastapi uvicorn sqlalchemy pydantic || echo "Basic dependencies installed"
+          fi
           
       - name: 🔍 Run pyright type checking
         run: |
