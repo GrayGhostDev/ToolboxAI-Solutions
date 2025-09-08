@@ -1,0 +1,26 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: 💬 Community Discussions
+    url: https://github.com/ToolboxAI-Solutions/ToolboxAI-Solutions/discussions
+    about: "Join community discussions, share ideas, and get help from other users"
+    
+  - name: 📚 Documentation
+    url: https://docs.toolboxai.example.com
+    about: "Browse our comprehensive documentation and guides"
+    
+  - name: 🎥 Video Tutorials
+    url: https://www.youtube.com/toolboxai
+    about: "Watch step-by-step video tutorials and demos"
+    
+  - name: 💬 Discord Community
+    url: https://discord.gg/toolboxai
+    about: "Chat with the community and get real-time support"
+    
+  - name: 🔒 Security Vulnerabilities
+    url: mailto:security@toolboxai.example.com
+    about: "Report security vulnerabilities privately via email"
+    
+  - name: 📧 General Support
+    url: mailto:support@toolboxai.example.com
+    about: "Contact our support team for general inquiries"

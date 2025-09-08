@@ -1,0 +1,118 @@
+# GitHub Environment Configuration: Development
+# This file documents the required environment variables and secrets for the development environment
+
+name: development
+description: "Development environment for testing and feature development"
+
+# Environment Protection Rules
+protection_rules:
+  wait_timer: 0  # No wait time for development
+  prevent_self_review: false
+  required_reviewers: []
+  
+# Environment Variables (non-sensitive)
+variables:
+  # Application Configuration
+  APP_ENV: "development"
+  DEBUG: "true"
+  LOG_LEVEL: "DEBUG"
+  
+  # API Configuration
+  FASTAPI_HOST: "0.0.0.0"
+  FASTAPI_PORT: "8008"
+  FLASK_HOST: "0.0.0.0"
+  FLASK_PORT: "8009"
+  
+  # Database Configuration
+  DATABASE_HOST: "localhost"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "toolboxai_dev"
+  DATABASE_USER: "toolboxai_dev"
+  
+  # Redis Configuration  
+  REDIS_HOST: "localhost"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  
+  # CORS Configuration
+  CORS_ORIGINS: '["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8008"]'
+  
+  # Feature Flags
+  ENABLE_DEBUG_ENDPOINTS: "true"
+  ENABLE_MOCK_DATA: "true"
+  ENABLE_TEST_USERS: "true"
+  
+  # AI Configuration
+  AI_MODEL_TEMPERATURE: "0.7"
+  MAX_TOKENS: "2000"
+  
+  # Rate Limiting (more lenient for development)
+  RATE_LIMIT_REQUESTS_PER_MINUTE: "1000"
+  RATE_LIMIT_BURST_LIMIT: "2000"
+
+# Required Secrets (to be set in GitHub repository settings)
+secrets:
+  # Database
+  - name: DATABASE_PASSWORD
+    description: "Development database password"
+    required: true
+    
+  # AI Services
+  - name: OPENAI_API_KEY
+    description: "OpenAI API key for development (can be test key)"
+    required: true
+    
+  - name: ANTHROPIC_API_KEY
+    description: "Anthropic API key for development"
+    required: false
+    
+  # Authentication
+  - name: JWT_SECRET_KEY
+    description: "JWT signing secret (can be simple for dev)"
+    required: true
+    
+  - name: ENCRYPTION_KEY
+    description: "Data encryption key for development"
+    required: true
+    
+  # External Services
+  - name: REDIS_PASSWORD
+    description: "Redis password (if required)"
+    required: false
+    
+  # LMS Integration (optional for development)
+  - name: SCHOOLOGY_API_KEY
+    description: "Schoology API key for testing"
+    required: false
+    
+  - name: CANVAS_API_KEY
+    description: "Canvas API key for testing"
+    required: false
+    
+  # Email Services (optional for development)
+  - name: SMTP_PASSWORD
+    description: "SMTP password for email testing"
+    required: false
+
+# Deployment URLs
+deployment_urls:
+  api: "https://dev-api.toolboxai.example.com"
+  dashboard: "https://dev.toolboxai.example.com"
+  docs: "https://dev-docs.toolboxai.example.com"
+
+# Health Check Endpoints
+health_checks:
+  - name: "API Health"
+    url: "https://dev-api.toolboxai.example.com/health"
+    expected_status: 200
+    
+  - name: "Database Connection"
+    url: "https://dev-api.toolboxai.example.com/health/database"
+    expected_status: 200
+
+# Monitoring and Logging
+monitoring:
+  enable_debug_logging: true
+  log_retention_days: 7
+  enable_performance_metrics: false
+  enable_error_tracking: true

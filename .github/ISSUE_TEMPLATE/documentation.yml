@@ -1,0 +1,235 @@
+name: 📚 Documentation
+description: Report documentation issues or request documentation improvements
+title: "[Docs]: "
+labels: ["documentation", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve our documentation! 📚
+        
+        Good documentation is essential for a great developer experience. Your feedback helps us make our docs better.
+
+  - type: dropdown
+    id: doc_type
+    attributes:
+      label: "Documentation Type"
+      description: "What type of documentation issue is this?"
+      options:
+        - "❌ Missing Documentation"
+        - "🐛 Incorrect Information"
+        - "🔄 Outdated Content"
+        - "💡 Improvement Suggestion"
+        - "❓ Unclear Instructions"
+        - "🔗 Broken Links"
+        - "📖 New Documentation Request"
+        - "🎨 Format/Style Issues"
+        - "🌐 Translation/Localization"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: doc_category
+    attributes:
+      label: "Documentation Category"
+      description: "Which area of documentation is affected?"
+      options:
+        - "🚀 Getting Started & Setup"
+        - "📋 API Documentation"
+        - "🎮 Roblox Integration Guide"
+        - "🧠 AI Content Generation"
+        - "🔐 Authentication & Security"
+        - "🗄️ Database & Schema"
+        - "📊 Dashboard & Frontend"
+        - "🔄 MCP Integration"
+        - "📚 LMS Integration"
+        - "🛠️ Development & Contributing"
+        - "🚀 Deployment & Operations"
+        - "❓ FAQ & Troubleshooting"
+        - "📖 User Guides"
+        - "🎓 Tutorials & Examples"
+        - "📋 Reference Documentation"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Priority"
+      description: "How urgent is this documentation issue?"
+      options:
+        - "🔴 High - Blocking users/developers"
+        - "🟠 Medium - Important improvement"
+        - "🟡 Low - Nice to have"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Issue Description"
+      description: "Describe the documentation issue in detail"
+      placeholder: |
+        Clear description of the documentation problem:
+        - What is missing, incorrect, or unclear?
+        - Where did you encounter this issue?
+        - What were you trying to accomplish?
+    validations:
+      required: true
+
+  - type: textarea
+    id: location
+    attributes:
+      label: "Documentation Location"
+      description: "Where is this documentation located?"
+      placeholder: |
+        Specify the location of the documentation:
+        - File path (e.g., docs/api/authentication.md)
+        - URL (e.g., https://toolboxai.example.com/docs/setup)
+        - Section or page title
+        - Line numbers (if applicable)
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_content
+    attributes:
+      label: "Current Content"
+      description: "What does the current documentation say? (copy/paste if possible)"
+      placeholder: "Paste the current documentation text here..."
+
+  - type: textarea
+    id: expected_content
+    attributes:
+      label: "Expected/Suggested Content"
+      description: "What should the documentation say instead?"
+      placeholder: |
+        Provide your suggested content:
+        - Correct information
+        - Improved explanations
+        - Additional details needed
+        - Better examples or code samples
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_context
+    attributes:
+      label: "User Context"
+      description: "What were you trying to do when you found this issue?"
+      placeholder: |
+        Describe your context:
+        - What task were you trying to complete?
+        - What role are you in (developer, teacher, student, admin)?
+        - What's your experience level with the platform?
+        - What documentation did you expect to find?
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: "Impact on Users"
+      description: "How does this documentation issue affect users?"
+      placeholder: |
+        Describe the impact:
+        - Confusion or frustration caused
+        - Time wasted due to unclear instructions
+        - Inability to complete tasks
+        - Potential for errors or mistakes
+
+  - type: checkboxes
+    id: audience
+    attributes:
+      label: "Target Audience"
+      description: "Who would benefit from improving this documentation?"
+      options:
+        - label: "👨‍💻 Developers & Technical Users"
+        - label: "👨‍🏫 Teachers & Educators"
+        - label: "👨‍🎓 Students & End Users"
+        - label: "👨‍💼 Administrators"
+        - label: "🏢 System Integrators"
+        - label: "🆕 New Users & Getting Started"
+        - label: "🔧 Advanced Users & Power Users"
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: "Code Examples & Samples"
+      description: "Include code examples or samples that should be documented"
+      placeholder: "Paste code examples, API calls, configuration samples, etc."
+      render: text
+
+  - type: textarea
+    id: related_docs
+    attributes:
+      label: "Related Documentation"
+      description: "Are there other documentation pages that should be updated together?"
+      placeholder: |
+        List related documentation that might need updates:
+        - Similar sections in other guides
+        - Cross-references that need updating
+        - Dependent documentation pages
+
+  - type: checkboxes
+    id: doc_formats
+    attributes:
+      label: "Preferred Documentation Formats"
+      description: "What formats would be most helpful?"
+      options:
+        - label: "📝 Written Instructions"
+        - label: "💻 Code Examples"
+        - label: "📊 Diagrams & Flowcharts"
+        - label: "🎥 Video Tutorials"
+        - label: "📸 Screenshots"
+        - label: "🔗 Interactive Examples"
+        - label: "❓ FAQ Section"
+        - label: "🎓 Step-by-step Tutorials"
+
+  - type: textarea
+    id: research
+    attributes:
+      label: "Research & References"
+      description: "Include any research or references that might be helpful"
+      placeholder: |
+        References that could help with documentation:
+        - Similar documentation from other projects
+        - Official standards or specifications  
+        - Best practices or style guides
+        - External resources or tutorials
+
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: "Accessibility Considerations"
+      description: "Any accessibility considerations for this documentation?"
+      placeholder: |
+        Accessibility improvements needed:
+        - Screen reader compatibility
+        - Alternative text for images
+        - Clear headings and structure
+        - Language and complexity level
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: "Additional Context"
+      description: "Any other context or suggestions"
+      placeholder: "Include any additional information that would be helpful..."
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        
+        ### 📚 Documentation Contribution
+        
+        Want to contribute to documentation yourself? We welcome contributions!
+        
+        - Check our [Contributing Guide](docs/CONTRIBUTING.md)
+        - Review our [Documentation Style Guide](docs/STYLE_GUIDE.md)
+        - Join our documentation discussions
+        
+        Thank you for helping make our documentation better! 🙌

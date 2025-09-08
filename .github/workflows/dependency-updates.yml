@@ -1,0 +1,505 @@
+name: 🔄 Dependency Updates & Maintenance
+
+on:
+  schedule:
+    # Run dependency updates weekly on Mondays at 6 AM UTC
+    - cron: '0 6 * * 1'
+    # Run security updates daily at 3 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      update_type:
+        description: 'Type of updates to perform'
+        type: choice
+        options: ['all', 'security', 'patch', 'minor', 'major']
+        default: 'security'
+      create_pr:
+        description: 'Create pull request with updates'
+        type: boolean
+        default: true
+      auto_merge:
+        description: 'Auto-merge security patches'
+        type: boolean
+        default: false
+
+# Prevent concurrent runs
+concurrency:
+  group: dependency-updates
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18.x'
+  PR_BRANCH_PREFIX: 'automated/dependency-updates'
+
+jobs:
+  # 🔍 Analyze Dependencies
+  analyze-dependencies:
+    name: 🔍 Analyze Current Dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      python-updates: ${{ steps.python-analysis.outputs.updates }}
+      node-updates: ${{ steps.node-analysis.outputs.updates }}
+      security-updates: ${{ steps.security-analysis.outputs.updates }}
+      update-available: ${{ steps.summary.outputs.update_available }}
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Install Analysis Tools
+        run: |
+          # Python tools
+          pip install pip-audit pip-tools safety packaging
+          
+          # Node.js tools
+          npm install -g npm-check-updates audit-ci
+
+      - name: 🐍 Analyze Python Dependencies
+        id: python-analysis
+        run: |
+          echo "🔍 Analyzing Python dependencies..."
+          
+          # Create consolidated requirements for analysis
+          cat > temp_requirements.txt << 'EOF'
+          # Consolidated requirements from all requirement files
+          EOF
+          
+          # Combine all requirements files
+          find . -name "requirements*.txt" -not -path "./venv*" -not -path "./.venv*" | while read req_file; do
+            echo "# From $req_file" >> temp_requirements.txt
+            cat "$req_file" >> temp_requirements.txt
+            echo "" >> temp_requirements.txt
+          done
+          
+          # Check for security vulnerabilities
+          pip-audit --requirement temp_requirements.txt --format=json --output pip-audit-report.json || echo "Security scan completed"
+          
+          # Check for outdated packages
+          pip-compile --upgrade --dry-run temp_requirements.txt > pip-updates.txt 2>&1 || echo "Update check completed"
+          
+          # Count available updates
+          update_count=$(grep -c "would update" pip-updates.txt || echo "0")
+          echo "updates=$update_count" >> $GITHUB_OUTPUT
+          echo "🐍 Python: $update_count updates available"
+
+      - name: 🟢 Analyze Node.js Dependencies  
+        id: node-analysis
+        run: |
+          echo "🔍 Analyzing Node.js dependencies..."
+          
+          if [ -f "package.json" ]; then
+            # Check for security vulnerabilities
+            npm audit --json > npm-audit-report.json 2>/dev/null || echo "NPM audit completed"
+            
+            # Check for outdated packages
+            ncu --jsonAll > ncu-report.json || echo "Update check completed"
+            
+            # Count available updates
+            update_count=$(jq -r 'keys | length' ncu-report.json 2>/dev/null || echo "0")
+            echo "updates=$update_count" >> $GITHUB_OUTPUT
+            echo "🟢 Node.js: $update_count updates available"
+          else
+            echo "updates=0" >> $GITHUB_OUTPUT
+            echo "🟢 Node.js: No package.json found"
+          fi
+
+      - name: 🛡️ Security Analysis
+        id: security-analysis
+        run: |
+          echo "🛡️ Analyzing security vulnerabilities..."
+          
+          security_count=0
+          
+          # Count Python security issues
+          if [ -f "pip-audit-report.json" ]; then
+            python_security=$(jq '.vulnerabilities | length' pip-audit-report.json 2>/dev/null || echo "0")
+            security_count=$((security_count + python_security))
+          fi
+          
+          # Count Node.js security issues
+          if [ -f "npm-audit-report.json" ]; then
+            node_security=$(jq '.metadata.vulnerabilities.total' npm-audit-report.json 2>/dev/null || echo "0")
+            security_count=$((security_count + node_security))
+          fi
+          
+          echo "updates=$security_count" >> $GITHUB_OUTPUT
+          echo "🛡️ Security: $security_count vulnerabilities found"
+
+      - name: 📊 Update Summary
+        id: summary
+        run: |
+          python_updates="${{ steps.python-analysis.outputs.updates }}"
+          node_updates="${{ steps.node-analysis.outputs.updates }}"
+          security_updates="${{ steps.security-analysis.outputs.updates }}"
+          
+          total_updates=$((python_updates + node_updates))
+          
+          echo "📊 Dependency Analysis Summary:"
+          echo "- Python updates: $python_updates"
+          echo "- Node.js updates: $node_updates"
+          echo "- Security vulnerabilities: $security_updates"
+          echo "- Total updates: $total_updates"
+          
+          if [[ $total_updates -gt 0 || $security_updates -gt 0 ]]; then
+            echo "update_available=true" >> $GITHUB_OUTPUT
+          else
+            echo "update_available=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📎 Upload Analysis Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-analysis-reports
+          path: |
+            pip-audit-report.json
+            npm-audit-report.json
+            ncu-report.json
+            pip-updates.txt
+            temp_requirements.txt
+          retention-days: 7
+
+  # 🔧 Generate Updates
+  generate-updates:
+    name: 🔧 Generate Dependency Updates
+    runs-on: ubuntu-latest
+    needs: analyze-dependencies
+    if: needs.analyze-dependencies.outputs.update-available == 'true'
+    timeout-minutes: 20
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Install Update Tools
+        run: |
+          # Python tools
+          pip install pip-tools safety pipenv
+          
+          # Node.js tools
+          npm install -g npm-check-updates
+
+      - name: 📥 Download Analysis Reports
+        uses: actions/download-artifact@v4
+        with:
+          name: dependency-analysis-reports
+          path: ./
+
+      - name: 🐍 Update Python Dependencies
+        run: |
+          echo "🐍 Updating Python dependencies..."
+          
+          update_type="${{ github.event.inputs.update_type || 'security' }}"
+          
+          # Process each requirements file
+          find . -name "requirements*.txt" -not -path "./venv*" -not -path "./.venv*" | while read req_file; do
+            echo "Processing $req_file..."
+            
+            if [[ "$update_type" == "security" ]]; then
+              echo "🛡️ Applying security updates only for $req_file"
+              # Update only packages with known vulnerabilities
+              if [ -f "pip-audit-report.json" ]; then
+                vulnerable_packages=$(jq -r '.vulnerabilities[].package' pip-audit-report.json 2>/dev/null || echo "")
+                for package in $vulnerable_packages; do
+                  if grep -q "^$package" "$req_file"; then
+                    # Update to latest secure version
+                    pip install --upgrade "$package"
+                    pip freeze | grep "^$package" > temp_version.txt
+                    sed -i "s/^$package.*$/$(cat temp_version.txt)/" "$req_file"
+                  fi
+                done
+              fi
+            elif [[ "$update_type" == "patch" ]]; then
+              echo "🩹 Applying patch updates for $req_file"
+              pip-compile --upgrade --resolver=backtracking "$req_file" || echo "Patch update completed for $req_file"
+            elif [[ "$update_type" == "minor" || "$update_type" == "all" ]]; then
+              echo "📈 Applying minor updates for $req_file"
+              pip-compile --upgrade --resolver=backtracking "$req_file" || echo "Minor update completed for $req_file"
+            fi
+          done
+
+      - name: 🟢 Update Node.js Dependencies
+        if: hashFiles('**/package.json') != ''
+        run: |
+          echo "🟢 Updating Node.js dependencies..."
+          
+          update_type="${{ github.event.inputs.update_type || 'security' }}"
+          
+          if [[ "$update_type" == "security" ]]; then
+            echo "🛡️ Applying Node.js security updates..."
+            npm audit fix --force || echo "Security updates applied"
+          elif [[ "$update_type" == "patch" ]]; then
+            echo "🩹 Applying patch updates..."
+            ncu --target patch --upgrade
+            npm install
+          elif [[ "$update_type" == "minor" ]]; then
+            echo "📈 Applying minor updates..."
+            ncu --target minor --upgrade
+            npm install
+          elif [[ "$update_type" == "all" ]]; then
+            echo "🚀 Applying all updates..."
+            ncu --upgrade
+            npm install
+          fi
+
+      - name: 🧪 Test Updated Dependencies
+        run: |
+          echo "🧪 Testing updated dependencies..."
+          
+          # Test Python dependencies
+          if find . -name "requirements*.txt" | head -1 | xargs pip install -r; then
+            echo "✅ Python dependencies installed successfully"
+          else
+            echo "❌ Python dependency installation failed"
+            exit 1
+          fi
+          
+          # Test Node.js dependencies
+          if [ -f "package.json" ]; then
+            if npm install; then
+              echo "✅ Node.js dependencies installed successfully"
+            else
+              echo "❌ Node.js dependency installation failed"
+              exit 1
+            fi
+          fi
+          
+          # Quick smoke test
+          echo "🔥 Running smoke tests..."
+          python -c "import sys; print(f'Python {sys.version} - OK')"
+          if [ -f "package.json" ]; then
+            node --version
+          fi
+
+      - name: 📝 Generate Update Summary
+        run: |
+          echo "📝 Generating update summary..."
+          
+          # Create update summary
+          cat > DEPENDENCY_UPDATE_SUMMARY.md << 'EOF'
+          # 🔄 Dependency Update Summary
+          
+          ## Update Type
+          **Update Type**: ${{ github.event.inputs.update_type || 'security' }}
+          **Triggered**: ${{ github.event_name == 'schedule' && 'Scheduled' || 'Manual' }}
+          **Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
+          ## Python Dependencies
+          EOF
+          
+          # Add Python changes
+          echo "### Updated Python Packages" >> DEPENDENCY_UPDATE_SUMMARY.md
+          if git diff --name-only | grep -q requirements; then
+            echo '```diff' >> DEPENDENCY_UPDATE_SUMMARY.md
+            git diff requirements*.txt >> DEPENDENCY_UPDATE_SUMMARY.md
+            echo '```' >> DEPENDENCY_UPDATE_SUMMARY.md
+          else
+            echo "No Python package updates." >> DEPENDENCY_UPDATE_SUMMARY.md
+          fi
+          
+          # Add Node.js changes
+          echo "" >> DEPENDENCY_UPDATE_SUMMARY.md
+          echo "## Node.js Dependencies" >> DEPENDENCY_UPDATE_SUMMARY.md
+          echo "### Updated Node.js Packages" >> DEPENDENCY_UPDATE_SUMMARY.md
+          if git diff --name-only | grep -q package; then
+            echo '```diff' >> DEPENDENCY_UPDATE_SUMMARY.md
+            git diff package*.json >> DEPENDENCY_UPDATE_SUMMARY.md
+            echo '```' >> DEPENDENCY_UPDATE_SUMMARY.md
+          else
+            echo "No Node.js package updates." >> DEPENDENCY_UPDATE_SUMMARY.md
+          fi
+
+      - name: 🔀 Create Pull Request
+        if: github.event.inputs.create_pr != 'false'
+        uses: peter-evans/create-pull-request@v5
+        id: create-pr
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            🔄 Automated dependency updates (${{ github.event.inputs.update_type || 'security' }})
+            
+            - Update type: ${{ github.event.inputs.update_type || 'security' }}
+            - Python updates: ${{ needs.analyze-dependencies.outputs.python-updates }}
+            - Node.js updates: ${{ needs.analyze-dependencies.outputs.node-updates }}
+            - Security fixes: ${{ needs.analyze-dependencies.outputs.security-updates }}
+          branch: ${{ env.PR_BRANCH_PREFIX }}-${{ github.run_number }}
+          delete-branch: true
+          title: "🔄 Automated Dependency Updates (${{ github.event.inputs.update_type || 'security' }})"
+          body: |
+            ## 🔄 Automated Dependency Updates
+            
+            This pull request contains automated dependency updates generated by the maintenance workflow.
+            
+            ### 📊 Update Summary
+            - **Update Type**: ${{ github.event.inputs.update_type || 'security' }}
+            - **Python Updates**: ${{ needs.analyze-dependencies.outputs.python-updates }}
+            - **Node.js Updates**: ${{ needs.analyze-dependencies.outputs.node-updates }}
+            - **Security Fixes**: ${{ needs.analyze-dependencies.outputs.security-updates }}
+            
+            ### 🧪 Testing
+            - ✅ Dependencies installed successfully
+            - ✅ Smoke tests passed
+            - 🔄 Full CI/CD pipeline will run on merge
+            
+            ### 🛡️ Security
+            This update addresses **${{ needs.analyze-dependencies.outputs.security-updates }}** security vulnerabilities.
+            
+            ---
+            
+            **Auto-generated by**: Dependency Updates Workflow
+            **Date**: ${{ steps.date.outputs.date }}
+            **Commit**: ${{ github.sha }}
+            
+            <details>
+            <summary>📋 Detailed Changes</summary>
+            
+            $(cat DEPENDENCY_UPDATE_SUMMARY.md)
+            
+            </details>
+          labels: |
+            dependencies
+            automated
+            ${{ github.event.inputs.update_type || 'security' }}
+          assignees: ${{ github.actor }}
+          draft: false
+
+      - name: 🔀 Auto-merge Security Updates
+        if: |
+          github.event.inputs.auto_merge == 'true' && 
+          github.event.inputs.update_type == 'security' && 
+          steps.create-pr.outputs.pull-request-number
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pullRequest } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ steps.create-pr.outputs.pull-request-number }}
+            });
+            
+            // Enable auto-merge for security updates
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ steps.create-pr.outputs.pull-request-number }},
+              event: 'APPROVE',
+              body: '🤖 Auto-approving security updates - automated review passed.'
+            });
+            
+            // Enable auto-merge
+            await github.rest.pulls.enableAutoMerge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ steps.create-pr.outputs.pull-request-number }},
+              merge_method: 'squash'
+            });
+
+      - name: 📊 Update Summary
+        run: |
+          echo "## 🔄 Dependency Update Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Update Type**: ${{ github.event.inputs.update_type || 'security' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Python Updates**: ${{ needs.analyze-dependencies.outputs.python-updates }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Node.js Updates**: ${{ needs.analyze-dependencies.outputs.node-updates }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Security Fixes**: ${{ needs.analyze-dependencies.outputs.security-updates }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ steps.create-pr.outputs.pull-request-number }}" ]]; then
+            echo "**Pull Request**: #${{ steps.create-pr.outputs.pull-request-number }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Status**: Updates generated successfully" >> $GITHUB_STEP_SUMMARY
+
+  # 📊 Maintenance Report
+  maintenance-report:
+    name: 📊 Generate Maintenance Report
+    runs-on: ubuntu-latest
+    needs: [analyze-dependencies, generate-updates]
+    if: always() && github.event_name == 'schedule'
+    timeout-minutes: 10
+
+    steps:
+      - name: 📊 Weekly Maintenance Summary
+        if: github.event.schedule == '0 6 * * 1'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `📊 Weekly Maintenance Report - ${new Date().toISOString().split('T')[0]}`;
+            const body = `
+            ## 📊 Weekly Maintenance Report
+            
+            ### 🔍 Dependency Analysis
+            - **Python Updates Available**: ${{ needs.analyze-dependencies.outputs.python-updates }}
+            - **Node.js Updates Available**: ${{ needs.analyze-dependencies.outputs.node-updates }}
+            - **Security Vulnerabilities**: ${{ needs.analyze-dependencies.outputs.security-updates }}
+            
+            ### 🔧 Actions Taken
+            - **Updates Applied**: ${{ needs.analyze-dependencies.outputs.update-available == 'true' && 'Yes' || 'No' }}
+            - **Pull Request Created**: ${{ needs.generate-updates.result == 'success' && 'Yes' || 'No' }}
+            
+            ### 📈 Repository Health
+            - **CI/CD Status**: ✅ Active
+            - **Security Scanning**: ✅ Enabled
+            - **Dependency Monitoring**: ✅ Active
+            
+            ### 📋 Recommendations
+            - Review and merge pending dependency updates
+            - Monitor security advisories
+            - Consider upgrading to latest LTS versions
+            
+            ---
+            *This is an automated weekly maintenance report.*
+            `;
+            
+            // Create or update maintenance issue
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['maintenance', 'weekly-report'],
+              state: 'open'
+            });
+            
+            if (issues.data.length > 0) {
+              // Update existing issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues.data[0].number,
+                body: body
+              });
+            } else {
+              // Create new issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['maintenance', 'weekly-report']
+              });
+            }

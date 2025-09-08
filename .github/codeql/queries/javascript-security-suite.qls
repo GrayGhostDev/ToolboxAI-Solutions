@@ -1,0 +1,106 @@
+# Custom JavaScript/TypeScript Security Query Suite for ToolboxAI Solutions
+# Focuses on frontend security, API security, and dashboard application concerns
+
+# Standard security queries  
+- queries: .
+- include:
+    # Web Application Security
+    query-path: "javascript/security/web/**"
+    
+    # Cross-Site Scripting (XSS)
+    - "js/xss"
+    - "js/xss-through-dom" 
+    - "js/stored-xss"
+    - "js/reflected-xss"
+    - "js/xss-through-exception"
+    - "js/unsafe-html-construction"
+    - "js/unsafe-code-construction"
+    
+    # Injection Attacks
+    - "js/code-injection"
+    - "js/sql-injection"
+    - "js/command-injection"
+    - "js/shell-command-constructed-from-input"
+    - "js/regex-injection"
+    - "js/polynomial-redos"
+    
+    # Authentication & Authorization
+    - "js/hardcoded-credentials"
+    - "js/weak-cryptographic-algorithm"
+    - "js/insufficient-key-size"
+    - "js/jwt-missing-verification"
+    - "js/missing-token-validation"
+    - "js/cors-misconfiguration"
+    
+    # Data Exposure & Privacy
+    - "js/sensitive-data-to-external-api"
+    - "js/clear-text-logging"
+    - "js/clear-text-storage-of-sensitive-data"
+    - "js/exposure-of-private-files"
+    - "js/information-exposure-through-log-files"
+    
+    # File System & Path Security
+    - "js/path-traversal"
+    - "js/zipslip"
+    - "js/arbitrary-file-access-during-archive-extraction"
+    
+    # Network Security
+    - "js/request-forgery"
+    - "js/server-side-request-forgery"
+    - "js/uncontrolled-data-used-in-path"
+    - "js/unsafe-deserialization"
+    - "js/prototype-pollution"
+    
+    # Input Validation & Sanitization
+    - "js/incomplete-sanitization"
+    - "js/incomplete-url-substring-sanitization"
+    - "js/missing-rate-limiting"
+    - "js/unvalidated-dynamic-method-call"
+    
+    # Node.js/Express Specific
+    - "js/express-helmet-missing"
+    - "js/express-missing-helmet"
+    - "js/missing-origin-validation"
+    - "js/unsafe-eval"
+    - "js/eval-like-call"
+    
+    # React/Frontend Specific
+    - "js/react-xss"
+    - "js/react-dangerous-set-inner-html"
+    - "js/react-missing-key-prop"
+    - "js/unsafe-dynamic-method-access"
+    
+    # TypeScript Specific
+    - "js/typescript-any-propagation"
+    - "js/typescript-unsafe-assertion"
+    
+    # API Security
+    - "js/missing-rate-limiting"
+    - "js/insufficient-logging"
+    - "js/cors-misconfiguration"
+    - "js/insecure-randomness"
+    
+    # Educational Platform Concerns
+    - "js/user-data-exposure"
+    - "js/privacy-violation"
+    - "js/session-fixation"
+    
+    # Code Quality (Security Related)
+    - "js/unused-local-variable"
+    - "js/unreachable-code"
+    - "js/useless-assignment-to-local"
+    - "js/duplicate-switch-case"
+
+- exclude:
+    # Exclude test files and build artifacts
+    - "js/test/**"
+    - "js/debug/**"
+    - "js/build/**"
+    
+    # Exclude configuration files
+    - "js/config/**"
+    - "js/webpack/**"
+    
+    # Exclude less critical issues for initial scan
+    - "js/unused-parameter"
+    - "js/missing-semicolon"

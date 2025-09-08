@@ -1,0 +1,73 @@
+name: "ToolboxAI Solutions CodeQL Configuration"
+
+# Disable the default queries and specify custom query suites
+disable-default-queries: false
+
+# Define custom query suites to run
+queries:
+  - name: security-and-quality
+    uses: security-and-quality
+  
+  - name: security-extended
+    uses: security-extended
+    
+  - name: python-security-and-quality
+    uses: ./.github/codeql/queries/python-security-suite.qls
+    
+  - name: javascript-security-and-quality  
+    uses: ./.github/codeql/queries/javascript-security-suite.qls
+
+# Paths to include in the analysis
+paths:
+  - src/
+  - ToolboxAI-Roblox-Environment/
+  - database/
+  - scripts/
+  - docs/
+
+# Paths to exclude from analysis
+paths-ignore:
+  - "**/node_modules/**"
+  - "**/venv*/**" 
+  - "**/.venv*/**"
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/target/**"
+  - "**/__pycache__/**"
+  - "**/coverage/**"
+  - "**/htmlcov/**"
+  - "**/test*/**"
+  - "**/*test*.py"
+  - "**/*_test.py"
+  - "**/tests/**"
+  - "**/test_*"
+  - "**/*.min.js"
+  - "**/*.bundle.js"
+  - "**/vendor/**"
+  - "**/third_party/**"
+
+# Configuration for different languages
+python:
+  setup:
+    # Python version to use for analysis
+    version: "3.11"
+  
+  # Python-specific exclusions
+  exclude:
+    - "**/migrations/**"
+    - "**/alembic/versions/**"
+    - "**/setup.py"
+    - "**/conftest.py"
+
+javascript:
+  setup:
+    # Node.js version for analysis
+    node-version: "18"
+    
+  # JavaScript/TypeScript specific exclusions  
+  exclude:
+    - "**/*.config.js"
+    - "**/*.d.ts"
+    - "**/webpack.config.js"
+    - "**/rollup.config.js"
+    - "**/jest.config.js"

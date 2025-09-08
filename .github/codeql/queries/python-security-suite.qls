@@ -1,0 +1,78 @@
+# Custom Python Security Query Suite for ToolboxAI Solutions
+# Focuses on web application security, AI/ML security, and educational platform concerns
+
+# Standard security queries
+- queries: .
+- include:
+    # Web Application Security
+    query-path: "python/security/web/**"
+    
+    # Injection Attacks
+    - "python/sql-injection"
+    - "python/code-injection"
+    - "python/command-injection"
+    - "python/xpath-injection"
+    - "python/ldap-injection"
+    
+    # Cross-Site Scripting (XSS)
+    - "python/reflected-xss"
+    - "python/stored-xss"
+    - "python/dom-xss"
+    
+    # Authentication & Authorization
+    - "python/weak-cryptographic-algorithm"
+    - "python/hardcoded-credentials"
+    - "python/weak-password-hashing"
+    - "python/improper-ldap-auth"
+    - "python/jwt-missing-verification"
+    
+    # Data Exposure
+    - "python/sensitive-data-exposure"
+    - "python/clear-text-logging"
+    - "python/clear-text-storage"
+    - "python/information-exposure"
+    
+    # File System Security
+    - "python/path-traversal"
+    - "python/arbitrary-file-write"
+    - "python/file-access-to-http"
+    - "python/unsafe-deserialization"
+    
+    # Network Security
+    - "python/request-forgery"
+    - "python/ssrf"
+    - "python/uncontrolled-data-used-in-path"
+    
+    # Input Validation
+    - "python/regex-injection"
+    - "python/polynomial-redos"
+    - "python/incomplete-sanitization"
+    - "python/incomplete-url-substring-sanitization"
+    
+    # FastAPI/Web Framework Specific
+    - "python/django-extra"
+    - "python/flask-extra"
+    - "python/fastapi-extra"
+    
+    # AI/ML Security (if available)
+    - "python/ml-model-injection"
+    - "python/unsafe-pickle-load"
+    - "python/yaml-load"
+    
+    # Educational Platform Specific
+    - "python/privacy-violation"
+    - "python/user-data-exposure"
+    
+    # Code Quality (Security Related)
+    - "python/unused-import"
+    - "python/unreachable-code"
+    - "python/duplicate-code-fragment"
+
+- exclude:
+    # Exclude test files and development tools
+    - "python/test/**"
+    - "python/debug/**"
+    
+    # Exclude less critical issues for initial scan
+    - "python/unused-local-variable"
+    - "python/similar-function"

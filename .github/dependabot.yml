@@ -1,0 +1,172 @@
+version: 2
+
+updates:
+  # Python dependencies - Main Roblox Environment
+  - package-ecosystem: "pip"
+    directory: "/src/roblox-environment"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    target-branch: "develop"
+    reviewers:
+      - "ToolboxAI-Solutions/maintainers"
+    assignees:
+      - "ToolboxAI-Solutions/maintainers"
+    labels:
+      - "dependencies"
+      - "python"
+      - "automated"
+    commit-message:
+      prefix: "🔧"
+      include: "scope"
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    ignore:
+      # Ignore major version updates for stable packages
+      - dependency-name: "fastapi"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "sqlalchemy"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "pydantic"
+        update-types: ["version-update:semver-major"]
+
+  # Python dependencies - Ghost Backend
+  - package-ecosystem: "pip"
+    directory: "/src/api/ghost-backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:30"
+      timezone: "UTC"
+    open-pull-requests-limit: 3
+    target-branch: "develop"
+    reviewers:
+      - "ToolboxAI-Solutions/backend-team"
+    labels:
+      - "dependencies"
+      - "python"
+      - "ghost-backend"
+      - "automated"
+    commit-message:
+      prefix: "🔧"
+      include: "scope"
+
+  # Python dependencies - Dashboard Backend
+  - package-ecosystem: "pip"
+    directory: "/src/dashboard/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 3
+    target-branch: "develop"
+    reviewers:
+      - "ToolboxAI-Solutions/backend-team"
+    labels:
+      - "dependencies"
+      - "python"
+      - "dashboard"
+      - "automated"
+    commit-message:
+      prefix: "🔧"
+      include: "scope"
+
+  # Node.js dependencies - Main workspace
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    target-branch: "develop"
+    reviewers:
+      - "ToolboxAI-Solutions/frontend-team"
+    assignees:
+      - "ToolboxAI-Solutions/frontend-team"
+    labels:
+      - "dependencies"
+      - "javascript"
+      - "automated"
+    commit-message:
+      prefix: "🔧"
+      include: "scope"
+    versioning-strategy: "increase"
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    ignore:
+      # Ignore major version updates for core frameworks
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 3
+    target-branch: "develop"
+    reviewers:
+      - "ToolboxAI-Solutions/devops-team"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "infrastructure"
+      - "automated"
+    commit-message:
+      prefix: "🐳"
+      include: "scope"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "thursday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    target-branch: "develop"
+    reviewers:
+      - "ToolboxAI-Solutions/devops-team"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci-cd"
+      - "automated"
+    commit-message:
+      prefix: "⚡"
+      include: "scope"
+
+  # Coordinators Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/src/roblox-environment/coordinators"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 3
+    target-branch: "develop"
+    reviewers:
+      - "ToolboxAI-Solutions/backend-team"
+    labels:
+      - "dependencies"
+      - "python"
+      - "coordinators"
+      - "automated"
+    commit-message:
+      prefix: "🔧"
+      include: "scope"

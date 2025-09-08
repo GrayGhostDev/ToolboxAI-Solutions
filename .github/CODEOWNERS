@@ -1,0 +1,124 @@
+# Code Owners for ToolboxAI Solutions
+# This file defines who automatically gets requested for review
+# when someone opens a pull request.
+
+# Global Ownership
+# These users are the default owners for everything in the repo
+* @ToolboxAI-Solutions/maintainers
+
+# Root Configuration Files
+/.github/ @ToolboxAI-Solutions/devops-team @ToolboxAI-Solutions/maintainers
+/pyproject.toml @ToolboxAI-Solutions/backend-team @ToolboxAI-Solutions/maintainers
+/package.json @ToolboxAI-Solutions/frontend-team @ToolboxAI-Solutions/maintainers
+/package-lock.json @ToolboxAI-Solutions/frontend-team
+/requirements*.txt @ToolboxAI-Solutions/backend-team
+
+# Security-Sensitive Files
+/SECURITY.md @ToolboxAI-Solutions/security-team @ToolboxAI-Solutions/maintainers
+/.github/workflows/security.yml @ToolboxAI-Solutions/security-team @ToolboxAI-Solutions/devops-team
+/.github/codeql/ @ToolboxAI-Solutions/security-team
+/.github/dependabot.yml @ToolboxAI-Solutions/security-team @ToolboxAI-Solutions/devops-team
+/CODEOWNERS @ToolboxAI-Solutions/maintainers
+
+# CI/CD and Infrastructure
+/.github/workflows/ @ToolboxAI-Solutions/devops-team
+/.github/workflows/ci.yml @ToolboxAI-Solutions/devops-team @ToolboxAI-Solutions/backend-team
+/.github/workflows/deploy.yml @ToolboxAI-Solutions/devops-team @ToolboxAI-Solutions/maintainers
+/.github/workflows/dependency-updates.yml @ToolboxAI-Solutions/devops-team @ToolboxAI-Solutions/security-team
+/scripts/ @ToolboxAI-Solutions/devops-team
+/Dockerfile* @ToolboxAI-Solutions/devops-team
+/docker-compose*.yml @ToolboxAI-Solutions/devops-team
+/.dockerignore @ToolboxAI-Solutions/devops-team
+
+# Backend Code - Python/FastAPI
+/src/api/ @ToolboxAI-Solutions/backend-team
+/src/roblox-environment/ @ToolboxAI-Solutions/backend-team @ToolboxAI-Solutions/roblox-team
+/src/shared/ @ToolboxAI-Solutions/backend-team
+
+# Roblox-Specific Components
+/src/roblox-environment/server/ @ToolboxAI-Solutions/backend-team @ToolboxAI-Solutions/roblox-team
+/src/roblox-environment/agents/ @ToolboxAI-Solutions/ai-team @ToolboxAI-Solutions/backend-team
+/src/roblox-environment/mcp/ @ToolboxAI-Solutions/ai-team @ToolboxAI-Solutions/backend-team
+/src/roblox-environment/swarm/ @ToolboxAI-Solutions/ai-team
+/src/roblox-environment/sparc/ @ToolboxAI-Solutions/ai-team
+/src/roblox-environment/coordinators/ @ToolboxAI-Solutions/ai-team @ToolboxAI-Solutions/backend-team
+
+# Frontend Code - React/TypeScript/Dashboard
+/src/dashboard/ @ToolboxAI-Solutions/frontend-team
+*.tsx @ToolboxAI-Solutions/frontend-team
+*.jsx @ToolboxAI-Solutions/frontend-team
+*.ts @ToolboxAI-Solutions/frontend-team @ToolboxAI-Solutions/backend-team
+*.js @ToolboxAI-Solutions/frontend-team
+
+# Database and Migrations  
+/database/ @ToolboxAI-Solutions/backend-team @ToolboxAI-Solutions/database-team
+/database/schemas/ @ToolboxAI-Solutions/database-team @ToolboxAI-Solutions/backend-team
+/database/migrations/ @ToolboxAI-Solutions/database-team @ToolboxAI-Solutions/backend-team
+*.sql @ToolboxAI-Solutions/database-team
+/alembic.ini @ToolboxAI-Solutions/database-team @ToolboxAI-Solutions/backend-team
+
+# AI/ML and Content Generation
+/src/roblox-environment/agents/ @ToolboxAI-Solutions/ai-team
+/src/roblox-environment/tools/ @ToolboxAI-Solutions/ai-team @ToolboxAI-Solutions/backend-team
+*langchain* @ToolboxAI-Solutions/ai-team
+*openai* @ToolboxAI-Solutions/ai-team
+/src/roblox-environment/requirements-ai*.txt @ToolboxAI-Solutions/ai-team @ToolboxAI-Solutions/backend-team
+
+# Authentication and Security Components
+/src/*/auth* @ToolboxAI-Solutions/security-team @ToolboxAI-Solutions/backend-team
+/src/*/security* @ToolboxAI-Solutions/security-team @ToolboxAI-Solutions/backend-team
+**/middleware/security* @ToolboxAI-Solutions/security-team @ToolboxAI-Solutions/backend-team
+**/auth/ @ToolboxAI-Solutions/security-team @ToolboxAI-Solutions/backend-team
+
+# Testing Files
+/tests/ @ToolboxAI-Solutions/qa-team @ToolboxAI-Solutions/backend-team
+**/*test*.py @ToolboxAI-Solutions/qa-team @ToolboxAI-Solutions/backend-team
+**/*test*.js @ToolboxAI-Solutions/qa-team @ToolboxAI-Solutions/frontend-team
+**/*test*.ts @ToolboxAI-Solutions/qa-team @ToolboxAI-Solutions/frontend-team
+**/*spec*.js @ToolboxAI-Solutions/qa-team @ToolboxAI-Solutions/frontend-team
+**/*spec*.ts @ToolboxAI-Solutions/qa-team @ToolboxAI-Solutions/frontend-team
+/pytest.ini @ToolboxAI-Solutions/qa-team @ToolboxAI-Solutions/backend-team
+/jest.config.js @ToolboxAI-Solutions/qa-team @ToolboxAI-Solutions/frontend-team
+
+# Documentation
+/docs/ @ToolboxAI-Solutions/docs-team
+/Documentation/ @ToolboxAI-Solutions/docs-team
+*.md @ToolboxAI-Solutions/docs-team
+/README.md @ToolboxAI-Solutions/docs-team @ToolboxAI-Solutions/maintainers
+/CONTRIBUTING.md @ToolboxAI-Solutions/docs-team @ToolboxAI-Solutions/maintainers
+/CHANGELOG.md @ToolboxAI-Solutions/docs-team @ToolboxAI-Solutions/maintainers
+
+# Configuration Files
+/config/ @ToolboxAI-Solutions/devops-team @ToolboxAI-Solutions/backend-team
+*.env.example @ToolboxAI-Solutions/devops-team @ToolboxAI-Solutions/backend-team
+/eslint.config.js @ToolboxAI-Solutions/frontend-team @ToolboxAI-Solutions/qa-team
+/pyrightconfig.json @ToolboxAI-Solutions/backend-team
+/tsconfig*.json @ToolboxAI-Solutions/frontend-team
+
+# MCP (Model Context Protocol) Integration
+/mcpServers.json @ToolboxAI-Solutions/ai-team @ToolboxAI-Solutions/backend-team
+/MCP_INTEGRATION_GUIDE.md @ToolboxAI-Solutions/ai-team @ToolboxAI-Solutions/docs-team
+
+# Specific Critical Files
+/ToolboxAI-Roblox-Environment/server/main.py @ToolboxAI-Solutions/backend-team @ToolboxAI-Solutions/maintainers
+/src/roblox-environment/server/main.py @ToolboxAI-Solutions/backend-team @ToolboxAI-Solutions/maintainers
+
+# Educational Platform Specific
+**/lms/ @ToolboxAI-Solutions/education-team @ToolboxAI-Solutions/backend-team
+**/educational/ @ToolboxAI-Solutions/education-team
+**/content/ @ToolboxAI-Solutions/education-team @ToolboxAI-Solutions/ai-team
+
+# Performance and Monitoring
+**/monitoring/ @ToolboxAI-Solutions/devops-team @ToolboxAI-Solutions/backend-team
+**/metrics/ @ToolboxAI-Solutions/devops-team @ToolboxAI-Solutions/backend-team
+**/logging/ @ToolboxAI-Solutions/devops-team @ToolboxAI-Solutions/backend-team
+
+# Legal and Compliance
+/LICENSE @ToolboxAI-Solutions/maintainers
+/PRIVACY.md @ToolboxAI-Solutions/legal-team @ToolboxAI-Solutions/maintainers
+/TERMS.md @ToolboxAI-Solutions/legal-team @ToolboxAI-Solutions/maintainers
+
+# Project Management and Issue Templates
+/.github/ISSUE_TEMPLATE/ @ToolboxAI-Solutions/maintainers @ToolboxAI-Solutions/docs-team
+/.github/pull_request_template.md @ToolboxAI-Solutions/maintainers @ToolboxAI-Solutions/docs-team
+/.github/workflows/project-automation.yml @ToolboxAI-Solutions/maintainers @ToolboxAI-Solutions/devops-team

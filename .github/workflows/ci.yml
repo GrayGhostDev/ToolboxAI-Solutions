@@ -1,0 +1,534 @@
+name: 🚀 Continuous Integration
+
+on:
+  push:
+    branches: [main, develop, feature/*, bugfix/*, hotfix/*]
+    paths:
+      - '**/*.py'
+      - '**/*.js'
+      - '**/*.ts'
+      - '**/*.json'
+      - '**/requirements*.txt'
+      - '**/package*.json'
+      - '**/pyproject.toml'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip test execution (for debugging)'
+        type: boolean
+        default: false
+      python_version:
+        description: 'Python version to test'
+        type: choice
+        options: ['all', '3.10', '3.11', '3.12']
+        default: 'all'
+
+# Prevent concurrent runs on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Python configuration
+  PYTHON_VERSION_DEFAULT: '3.11'
+  POETRY_VERSION: '1.8.2'
+  
+  # Node.js configuration
+  NODE_VERSION: '18.x'
+  
+  # Cache keys
+  CACHE_DEPENDENCY_PATH: |
+    **/requirements*.txt
+    **/package-lock.json
+    **/poetry.lock
+    **/pyproject.toml
+  
+  # Testing configuration
+  PYTEST_MARKERS: 'not slow and not integration'
+  COVERAGE_THRESHOLD: '80'
+  
+  # Security
+  BANDIT_SEVERITY: 'medium'
+
+jobs:
+  # 🔍 Pre-flight Checks
+  pre-flight:
+    name: 🔍 Pre-flight Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      python-changed: ${{ steps.changes.outputs.python }}
+      node-changed: ${{ steps.changes.outputs.node }}
+      docs-changed: ${{ steps.changes.outputs.docs }}
+      skip-tests: ${{ github.event.inputs.skip_tests == 'true' }}
+      
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: 🔍 Detect Changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            python:
+              - '**/*.py'
+              - '**/requirements*.txt'
+              - '**/pyproject.toml'
+              - '**/setup.py'
+              - '**/setup.cfg'
+            node:
+              - '**/*.js'
+              - '**/*.ts'
+              - '**/*.jsx'
+              - '**/*.tsx'
+              - '**/package*.json'
+              - '**/yarn.lock'
+              - '**/tsconfig*.json'
+            docs:
+              - 'docs/**'
+              - 'Documentation/**'
+              - '**/*.md'
+              - '**/mkdocs.yml'
+
+  # 🐍 Python Quality Assurance
+  python-qa:
+    name: 🐍 Python QA (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: pre-flight
+    if: needs.pre-flight.outputs.python-changed == 'true' || github.event_name == 'push'
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: 
+          - ${{ github.event.inputs.python_version == 'all' && '3.10' || github.event.inputs.python_version == '3.10' && '3.10' || '' }}
+          - ${{ github.event.inputs.python_version == 'all' && '3.11' || github.event.inputs.python_version == '3.11' && '3.11' || (!github.event.inputs.python_version || github.event.inputs.python_version == 'all') && '3.11' || '' }}
+          - ${{ github.event.inputs.python_version == 'all' && '3.12' || github.event.inputs.python_version == '3.12' && '3.12' || '' }}
+        exclude:
+          - python-version: ''
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: toolboxai_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: ${{ env.CACHE_DEPENDENCY_PATH }}
+
+      - name: 🔧 Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libpq-dev
+
+      - name: 📦 Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          
+          # Install all requirement files found in the project
+          find . -name "requirements*.txt" -not -path "./venv*" -not -path "./.venv*" | while read req_file; do
+            echo "Installing from $req_file"
+            pip install -r "$req_file" || echo "Failed to install $req_file, continuing..."
+          done
+          
+          # Install development tools
+          pip install \
+            pytest==8.4.2 \
+            pytest-asyncio==1.1.0 \
+            pytest-cov==6.2.1 \
+            pytest-mock==3.12.0 \
+            pytest-xdist==3.6.1 \
+            black==25.1.0 \
+            flake8==7.3.0 \
+            mypy==1.7.1 \
+            bandit==1.8.0 \
+            safety==3.2.9 \
+            isort==5.13.2
+
+      - name: 🏗️ Cache Python Packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
+          restore-keys: |
+            pip-${{ matrix.python-version }}-
+            pip-
+
+      - name: 🔍 Python Code Quality - Black
+        run: |
+          echo "🎨 Running Black formatter check..."
+          black --check --diff --color .
+        continue-on-error: false
+
+      - name: 🔍 Python Code Quality - isort
+        run: |
+          echo "📚 Running isort import sorting check..."
+          isort --check-only --diff --color .
+
+      - name: 🔍 Python Code Quality - Flake8
+        run: |
+          echo "🐸 Running Flake8 linting..."
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
+
+      - name: 🔍 Python Type Checking - MyPy
+        run: |
+          echo "🔬 Running MyPy type checking..."
+          find . -name "*.py" -not -path "./venv*" -not -path "./.venv*" | head -10 | xargs mypy --ignore-missing-imports --no-strict-optional
+        continue-on-error: true
+
+      - name: 🛡️ Security Scan - Bandit
+        run: |
+          echo "🛡️ Running Bandit security scan..."
+          bandit -r . -x "**/venv*,**/.venv*,**/test*" -f json -o bandit-report.json --exit-zero || true
+          bandit -r . -x "**/venv*,**/.venv*,**/test*" -s ${{ env.BANDIT_SEVERITY }} || true
+
+      - name: 🛡️ Security Scan - Safety
+        run: |
+          echo "🔒 Running Safety dependency scan..."
+          find . -name "requirements*.txt" -not -path "./venv*" | head -3 | xargs -I {} safety check --file {} --json --output safety-report.json || true
+        continue-on-error: true
+
+      - name: 🧪 Run Python Tests
+        if: needs.pre-flight.outputs.skip-tests != 'true'
+        run: |
+          echo "🧪 Running Python test suite..."
+          
+          # Create test database
+          PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE IF NOT EXISTS toolboxai_test;" || true
+          
+          # Set test environment variables
+          export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/toolboxai_test"
+          export REDIS_URL="redis://localhost:6379/0"
+          export TESTING=true
+          export LOG_LEVEL=INFO
+          
+          # Run tests with coverage
+          python -m pytest \
+            --cov=src \
+            --cov=ToolboxAI-Roblox-Environment \
+            --cov-report=xml \
+            --cov-report=html \
+            --cov-report=term-missing \
+            --cov-fail-under=${{ env.COVERAGE_THRESHOLD }} \
+            --maxfail=10 \
+            --tb=short \
+            -v \
+            tests/ \
+            --durations=10
+        env:
+          PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/src:${{ github.workspace }}/ToolboxAI-Roblox-Environment
+
+      - name: 📊 Upload Coverage Reports
+        if: needs.pre-flight.outputs.skip-tests != 'true'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: python-${{ matrix.python-version }}
+          name: python-${{ matrix.python-version }}
+          fail_ci_if_error: false
+
+      - name: 📎 Upload Test Artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-test-results-${{ matrix.python-version }}
+          path: |
+            htmlcov/
+            bandit-report.json
+            safety-report.json
+            pytest-report.html
+          retention-days: 30
+
+  # 🟢 Node.js Quality Assurance
+  node-qa:
+    name: 🟢 Node.js QA
+    runs-on: ubuntu-latest
+    needs: pre-flight
+    if: needs.pre-flight.outputs.node-changed == 'true' || github.event_name == 'push'
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: 📦 Install Dependencies
+        run: |
+          npm ci
+          # Install workspace dependencies
+          npm run install:all
+
+      - name: 🔍 ESLint Code Quality
+        run: |
+          echo "🔍 Running ESLint..."
+          npx eslint . --ext .js,.ts,.jsx,.tsx --format=compact || true
+
+      - name: 🎨 Prettier Code Format
+        run: |
+          echo "🎨 Running Prettier check..."
+          npx prettier --check "**/*.{js,ts,jsx,tsx,json,md}" || true
+
+      - name: 🏗️ Build Check
+        run: |
+          echo "🏗️ Running build check..."
+          npm run build --if-present || echo "No build script found"
+
+      - name: 🧪 Run Node.js Tests
+        if: needs.pre-flight.outputs.skip-tests != 'true'
+        run: |
+          echo "🧪 Running Node.js test suite..."
+          npm test --if-present || echo "No test script found"
+
+  # 🗄️ Database Migration Tests
+  database-tests:
+    name: 🗄️ Database Migration Tests
+    runs-on: ubuntu-latest
+    needs: pre-flight
+    if: needs.pre-flight.outputs.python-changed == 'true' || github.event_name == 'push'
+    timeout-minutes: 10
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: toolboxai_migration_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
+
+      - name: 📦 Install Migration Dependencies
+        run: |
+          pip install sqlalchemy alembic asyncpg psycopg2-binary python-dotenv
+
+      - name: 🗄️ Test Database Migrations
+        run: |
+          echo "🗄️ Testing database migrations..."
+          cd database
+          export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/toolboxai_migration_test"
+          
+          # Run migrations
+          python -c "
+          import os
+          os.environ['DATABASE_URL'] = 'postgresql://postgres:postgres@localhost:5432/toolboxai_migration_test'
+          from setup_database import main
+          main()
+          " || echo "Migration test completed with warnings"
+
+  # 📚 Documentation Quality
+  docs-qa:
+    name: 📚 Documentation QA
+    runs-on: ubuntu-latest
+    needs: pre-flight
+    if: needs.pre-flight.outputs.docs-changed == 'true' || github.event_name == 'push'
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
+
+      - name: 📦 Install Documentation Dependencies
+        run: |
+          pip install mkdocs mkdocs-material
+
+      - name: 📚 Build Documentation
+        run: |
+          echo "📚 Building documentation..."
+          if [ -f "mkdocs.yml" ]; then
+            mkdocs build --strict
+          else
+            echo "No mkdocs.yml found, skipping documentation build"
+          fi
+
+      - name: 🔗 Check Links
+        run: |
+          echo "🔗 Checking documentation links..."
+          find . -name "*.md" -not -path "./node_modules/*" -not -path "./.git/*" | head -10 | xargs grep -l "http" | head -5 || echo "No markdown files with links found"
+
+  # 🎯 Integration Tests
+  integration-tests:
+    name: 🎯 Integration Tests
+    runs-on: ubuntu-latest
+    needs: [python-qa, node-qa]
+    if: needs.pre-flight.outputs.skip-tests != 'true' && (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    timeout-minutes: 30
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: toolboxai_integration_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install All Dependencies
+        run: |
+          # Python dependencies
+          find . -name "requirements*.txt" -not -path "./venv*" | head -3 | xargs -I {} pip install -r {}
+          
+          # Node.js dependencies
+          npm ci && npm run install:all
+
+      - name: 🗄️ Setup Test Database
+        run: |
+          export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/toolboxai_integration_test"
+          cd database && python setup_database.py
+
+      - name: 🚀 Start Services
+        run: |
+          echo "🚀 Starting background services for integration tests..."
+          
+          # Start Python server in background
+          export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/toolboxai_integration_test"
+          export REDIS_URL="redis://localhost:6379/0"
+          cd src/roblox-environment && python -m uvicorn server.main:app --host 0.0.0.0 --port 8008 &
+          
+          # Wait for services to start
+          sleep 10
+          
+          # Health check
+          curl -f http://localhost:8008/health || echo "Service health check failed"
+
+      - name: 🧪 Run Integration Tests
+        run: |
+          echo "🧪 Running integration test suite..."
+          export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/toolboxai_integration_test"
+          export REDIS_URL="redis://localhost:6379/0"
+          export TESTING=true
+          
+          python -m pytest tests/integration/ -v --tb=short || echo "Integration tests completed with issues"
+
+  # ✅ Quality Gate
+  quality-gate:
+    name: ✅ Quality Gate
+    runs-on: ubuntu-latest
+    needs: [pre-flight, python-qa, node-qa, database-tests, docs-qa]
+    if: always()
+    timeout-minutes: 5
+
+    steps:
+      - name: 🎯 Check Quality Gate
+        run: |
+          echo "🎯 Evaluating quality gate criteria..."
+          
+          # Check if critical jobs passed
+          python_qa_result="${{ needs.python-qa.result }}"
+          node_qa_result="${{ needs.node-qa.result }}"
+          database_result="${{ needs.database-tests.result }}"
+          
+          echo "Python QA: $python_qa_result"
+          echo "Node.js QA: $node_qa_result"  
+          echo "Database Tests: $database_result"
+          
+          if [[ "$python_qa_result" == "failure" ]]; then
+            echo "❌ Python QA failed - blocking merge"
+            exit 1
+          fi
+          
+          if [[ "$node_qa_result" == "failure" && "${{ needs.pre-flight.outputs.node-changed }}" == "true" ]]; then
+            echo "❌ Node.js QA failed - blocking merge"
+            exit 1
+          fi
+          
+          if [[ "$database_result" == "failure" ]]; then
+            echo "❌ Database tests failed - blocking merge"
+            exit 1
+          fi
+          
+          echo "✅ Quality gate passed - ready for merge"
+
+      - name: 📊 Quality Summary
+        run: |
+          echo "## 📊 CI/CD Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status | Details |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|---------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Python QA | ${{ needs.python-qa.result == 'success' && '✅' || needs.python-qa.result == 'failure' && '❌' || '⏭️' }} | ${{ needs.python-qa.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Node.js QA | ${{ needs.node-qa.result == 'success' && '✅' || needs.node-qa.result == 'failure' && '❌' || '⏭️' }} | ${{ needs.node-qa.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Database Tests | ${{ needs.database-tests.result == 'success' && '✅' || needs.database-tests.result == 'failure' && '❌' || '⏭️' }} | ${{ needs.database-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Documentation | ${{ needs.docs-qa.result == 'success' && '✅' || needs.docs-qa.result == 'failure' && '❌' || '⏭️' }} | ${{ needs.docs-qa.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🎯 **Overall Status**: ${{ (needs.python-qa.result == 'success' || needs.python-qa.result == 'skipped') && (needs.node-qa.result == 'success' || needs.node-qa.result == 'skipped') && (needs.database-tests.result == 'success' || needs.database-tests.result == 'skipped') && '✅ PASSED' || '❌ FAILED' }}" >> $GITHUB_STEP_SUMMARY

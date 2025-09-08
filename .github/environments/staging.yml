@@ -1,0 +1,185 @@
+# GitHub Environment Configuration: Staging
+# This file documents the required environment variables and secrets for the staging environment
+
+name: staging
+description: "Staging environment for pre-production testing and validation"
+
+# Environment Protection Rules
+protection_rules:
+  wait_timer: 0  # No wait time for staging
+  prevent_self_review: true
+  required_reviewers:
+    - "ToolboxAI-Solutions/maintainers"
+  
+# Environment Variables (non-sensitive)
+variables:
+  # Application Configuration
+  APP_ENV: "staging"
+  DEBUG: "false"
+  LOG_LEVEL: "INFO"
+  
+  # API Configuration
+  FASTAPI_HOST: "0.0.0.0"
+  FASTAPI_PORT: "8008"
+  FLASK_HOST: "0.0.0.0"
+  FLASK_PORT: "8009"
+  
+  # Database Configuration
+  DATABASE_HOST: "staging-db.toolboxai.internal"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "toolboxai_staging"
+  DATABASE_USER: "toolboxai_staging"
+  
+  # Redis Configuration
+  REDIS_HOST: "staging-redis.toolboxai.internal"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  
+  # CORS Configuration
+  CORS_ORIGINS: '["https://staging.toolboxai.example.com", "https://staging-api.toolboxai.example.com"]'
+  
+  # Feature Flags
+  ENABLE_DEBUG_ENDPOINTS: "false"
+  ENABLE_MOCK_DATA: "false"
+  ENABLE_TEST_USERS: "true"
+  ENABLE_ANALYTICS: "true"
+  
+  # AI Configuration
+  AI_MODEL_TEMPERATURE: "0.5"
+  MAX_TOKENS: "4000"
+  
+  # Rate Limiting
+  RATE_LIMIT_REQUESTS_PER_MINUTE: "300"
+  RATE_LIMIT_BURST_LIMIT: "500"
+  
+  # Performance
+  GUNICORN_WORKERS: "4"
+  GUNICORN_THREADS: "2"
+  
+  # Monitoring
+  ENABLE_METRICS: "true"
+  METRICS_PORT: "9090"
+
+# Required Secrets
+secrets:
+  # Database
+  - name: DATABASE_PASSWORD
+    description: "Staging database password"
+    required: true
+    
+  # AI Services
+  - name: OPENAI_API_KEY
+    description: "OpenAI API key for staging environment"
+    required: true
+    
+  - name: ANTHROPIC_API_KEY
+    description: "Anthropic API key for staging"
+    required: true
+    
+  # Authentication
+  - name: JWT_SECRET_KEY
+    description: "JWT signing secret for staging"
+    required: true
+    
+  - name: ENCRYPTION_KEY
+    description: "Data encryption key for staging"
+    required: true
+    
+  # External Services
+  - name: REDIS_PASSWORD
+    description: "Redis password for staging"
+    required: true
+    
+  # LMS Integration
+  - name: SCHOOLOGY_API_KEY
+    description: "Schoology API key for staging"
+    required: true
+    
+  - name: SCHOOLOGY_API_SECRET
+    description: "Schoology API secret for staging"
+    required: true
+    
+  - name: CANVAS_API_KEY
+    description: "Canvas API key for staging"
+    required: true
+    
+  - name: CANVAS_API_SECRET
+    description: "Canvas API secret for staging"
+    required: true
+    
+  # Email Services
+  - name: SMTP_PASSWORD
+    description: "SMTP password for email services"
+    required: true
+    
+  - name: SMTP_HOST
+    description: "SMTP host for email services"
+    required: true
+    
+  # Security
+  - name: SECRET_MANAGER_KEY
+    description: "Secret manager encryption key"
+    required: true
+    
+  # Monitoring & Analytics
+  - name: SENTRY_DSN
+    description: "Sentry DSN for error tracking"
+    required: true
+    
+  - name: ANALYTICS_API_KEY
+    description: "Analytics service API key"
+    required: false
+
+# Deployment URLs
+deployment_urls:
+  api: "https://staging-api.toolboxai.example.com"
+  dashboard: "https://staging.toolboxai.example.com"
+  docs: "https://staging-docs.toolboxai.example.com"
+  admin: "https://staging-admin.toolboxai.example.com"
+
+# Health Check Endpoints
+health_checks:
+  - name: "API Health"
+    url: "https://staging-api.toolboxai.example.com/health"
+    expected_status: 200
+    timeout: 30
+    
+  - name: "Database Connection"
+    url: "https://staging-api.toolboxai.example.com/health/database"
+    expected_status: 200
+    timeout: 10
+    
+  - name: "Redis Connection"
+    url: "https://staging-api.toolboxai.example.com/health/redis"
+    expected_status: 200
+    timeout: 10
+    
+  - name: "AI Services"
+    url: "https://staging-api.toolboxai.example.com/health/ai"
+    expected_status: 200
+    timeout: 30
+
+# Load Testing Configuration
+load_testing:
+  enable: true
+  target_rps: 50
+  duration: "5m"
+  endpoints:
+    - "/health"
+    - "/api/v1/user/profile"
+    - "/api/v1/generate_content"
+
+# Monitoring and Logging
+monitoring:
+  enable_debug_logging: false
+  log_retention_days: 30
+  enable_performance_metrics: true
+  enable_error_tracking: true
+  enable_uptime_monitoring: true
+  
+# Backup Configuration
+backup:
+  database_backup_frequency: "daily"
+  database_backup_retention: "30 days"
+  file_backup_frequency: "daily"
+  file_backup_retention: "30 days"

@@ -1,0 +1,217 @@
+name: ❓ Question & Support
+description: Ask a question or request support
+title: "[Question]: "
+labels: ["question", "support"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about ToolboxAI Solutions? We're here to help! ❓
+        
+        Please provide as much detail as possible so we can give you the best answer.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "Pre-submission Checklist"
+      description: "Before asking your question:"
+      options:
+        - label: "I have searched existing issues and discussions"
+          required: true
+        - label: "I have checked the documentation"
+          required: true
+        - label: "This is not a bug report (use bug report template instead)"
+          required: true
+
+  - type: dropdown
+    id: question_category
+    attributes:
+      label: "Question Category"
+      description: "What area is your question about?"
+      options:
+        - "🚀 Getting Started & Setup"
+        - "🎮 Roblox Integration"
+        - "🧠 AI Content Generation"
+        - "📚 Educational Content & LMS"
+        - "🔐 Authentication & Security"
+        - "📊 Dashboard & User Interface"
+        - "🛠️ Development & Customization"
+        - "🔄 MCP Integration & Workflows"
+        - "📈 Performance & Optimization"
+        - "🚀 Deployment & Operations"
+        - "💡 Best Practices"
+        - "❓ General Usage"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: user_type
+    attributes:
+      label: "User Type"
+      description: "What's your role/perspective?"
+      options:
+        - "👨‍🏫 Teacher/Educator"
+        - "👨‍🎓 Student/Learner"
+        - "👨‍💻 Developer"
+        - "👨‍💼 Administrator"
+        - "🏢 Institution Representative"
+        - "🎮 Content Creator"
+        - "❓ Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: "Your Question"
+      description: "What would you like to know?"
+      placeholder: "Ask your question in detail..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "Context & Background"
+      description: "Provide context about what you're trying to accomplish"
+      placeholder: |
+        Help us understand your situation:
+        - What are you trying to achieve?
+        - What have you tried so far?
+        - Where are you in your project/learning journey?
+        - Any relevant background information?
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_understanding
+    attributes:
+      label: "Current Understanding"
+      description: "What do you already know about this topic?"
+      placeholder: |
+        Share your current understanding:
+        - What do you think might be the answer?
+        - What have you learned from documentation?
+        - Any assumptions you're making?
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: "Environment Details"
+      description: "If relevant, provide environment information"
+      placeholder: |
+        If applicable, include:
+        - Operating system
+        - Python version
+        - Node.js version
+        - Browser version
+        - Roblox Studio version
+        - Deployment environment
+
+  - type: textarea
+    id: specific_examples
+    attributes:
+      label: "Specific Examples"
+      description: "Include specific examples, code, or scenarios"
+      placeholder: |
+        If relevant, provide:
+        - Code snippets you're working with
+        - Specific use cases or scenarios
+        - Examples of what you want to achieve
+        - Current configuration or setup
+      render: text
+
+  - type: checkboxes
+    id: help_areas
+    attributes:
+      label: "Areas Where You Need Help"
+      description: "What specific areas do you need guidance on?"
+      options:
+        - label: "📖 Understanding concepts or features"
+        - label: "⚙️ Configuration and setup"
+        - label: "💻 Implementation and coding"
+        - label: "🐛 Troubleshooting issues"
+        - label: "📈 Performance optimization"
+        - label: "🔐 Security best practices"
+        - label: "🎯 Choosing the right approach"
+        - label: "📚 Learning resources and tutorials"
+
+  - type: dropdown
+    id: urgency
+    attributes:
+      label: "Urgency Level"
+      description: "How urgent is this question for you?"
+      options:
+        - "🔴 Urgent - Blocking my work"
+        - "🟠 Important - Need answer soon"
+        - "🟡 Normal - Can wait a few days"
+        - "🟢 Low - Just curious"
+    validations:
+      required: true
+
+  - type: textarea
+    id: attempted_solutions
+    attributes:
+      label: "What Have You Tried?"
+      description: "Describe what you've already attempted"
+      placeholder: |
+        List what you've already tried:
+        - Documentation you've read
+        - Tutorials you've followed
+        - Code or configurations you've attempted
+        - Resources you've consulted
+        - Previous solutions that didn't work
+
+  - type: textarea
+    id: expected_outcome
+    attributes:
+      label: "Expected Outcome"
+      description: "What outcome are you hoping to achieve?"
+      placeholder: |
+        Describe your ideal outcome:
+        - What should happen when everything works correctly?
+        - What are your success criteria?
+        - Any specific requirements or constraints?
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: "Additional Context"
+      description: "Any other information that might be helpful"
+      placeholder: |
+        Include any additional context:
+        - Related questions or topics
+        - Deadlines or timelines
+        - Team or project constraints
+        - Any other relevant information
+
+  - type: checkboxes
+    id: follow_up
+    attributes:
+      label: "Follow-up Preferences"
+      description: "How would you like to be helped?"
+      options:
+        - label: "📝 Detailed written explanation"
+        - label: "💻 Code examples and snippets"
+        - label: "🔗 Links to relevant documentation"
+        - label: "🎥 Video explanations or demos"
+        - label: "🗣️ Real-time discussion or meeting"
+        - label: "📚 Recommended learning resources"
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        
+        ### 💬 Community Support
+        
+        Looking for more immediate help? Try these community resources:
+        
+        - 💬 [Discord Community](https://discord.gg/toolboxai) - Real-time chat
+        - 📋 [Discussion Forums](https://github.com/ToolboxAI-Solutions/discussions) - Threaded discussions
+        - 📚 [Documentation](https://docs.toolboxai.example.com) - Comprehensive guides
+        - 🎥 [Video Tutorials](https://www.youtube.com/toolboxai) - Step-by-step videos
+        
+        We appreciate your question and will do our best to help! 🙌

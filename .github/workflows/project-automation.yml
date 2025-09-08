@@ -1,0 +1,316 @@
+name: 📋 Project Automation
+
+on:
+  issues:
+    types: [opened, closed, assigned, labeled]
+  pull_request:
+    types: [opened, closed, merged, ready_for_review, draft]
+  project:
+    types: [created, edited, closed]
+
+# Environment variables for project management
+env:
+  PROJECT_NUMBER: 1 # Update this to match your project number
+  ORGANIZATION: "ToolboxAI-Solutions"
+
+jobs:
+  # 📋 Manage Issues in Project
+  manage-issues:
+    name: 📋 Manage Issues in Project Board
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues'
+    
+    steps:
+      - name: 📝 Add New Issue to Project
+        if: github.event.action == 'opened'
+        uses: actions/add-to-project@v0.5.0
+        with:
+          project-url: https://github.com/orgs/${{ env.ORGANIZATION }}/projects/${{ env.PROJECT_NUMBER }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Auto-label Based on Content
+        if: github.event.action == 'opened'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const title = issue.title.toLowerCase();
+            const body = issue.body?.toLowerCase() || '';
+            
+            const labels = [];
+            
+            // Auto-assign priority based on keywords
+            if (title.includes('critical') || title.includes('urgent') || body.includes('critical')) {
+              labels.push('priority-high');
+            } else if (title.includes('important') || body.includes('important')) {
+              labels.push('priority-medium');
+            }
+            
+            // Component-based labeling
+            if (body.includes('roblox') || title.includes('roblox')) {
+              labels.push('component-roblox');
+            }
+            if (body.includes('ai') || body.includes('content generation') || title.includes('ai')) {
+              labels.push('component-ai');
+            }
+            if (body.includes('database') || body.includes('migration') || title.includes('database')) {
+              labels.push('component-database');
+            }
+            if (body.includes('security') || title.includes('security')) {
+              labels.push('component-security');
+            }
+            if (body.includes('api') || body.includes('fastapi') || title.includes('api')) {
+              labels.push('component-api');
+            }
+            if (body.includes('frontend') || body.includes('dashboard') || title.includes('frontend')) {
+              labels.push('component-frontend');
+            }
+            
+            // Effort estimation based on complexity indicators
+            if (body.includes('simple') || body.includes('quick fix')) {
+              labels.push('effort-small');
+            } else if (body.includes('complex') || body.includes('major')) {
+              labels.push('effort-large');
+            } else {
+              labels.push('effort-medium');
+            }
+            
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: labels
+              });
+            }
+
+      - name: 🎯 Move Issue to Appropriate Column
+        if: github.event.action == 'assigned'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Move assigned issues to "In Progress" column
+            console.log('Moving assigned issue to In Progress');
+            // GitHub Projects API calls would go here
+
+  # 🔄 Manage Pull Requests in Project
+  manage-pull-requests:
+    name: 🔄 Manage PRs in Project Board
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: 📝 Add New PR to Project
+        if: github.event.action == 'opened'
+        uses: actions/add-to-project@v0.5.0
+        with:
+          project-url: https://github.com/orgs/${{ env.ORGANIZATION }}/projects/${{ env.PROJECT_NUMBER }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Auto-label PR Based on Files
+        if: github.event.action == 'opened'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            
+            // Get list of files changed in PR
+            const files = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+            
+            const labels = new Set();
+            
+            files.data.forEach(file => {
+              const filename = file.filename.toLowerCase();
+              
+              // Component-based labeling
+              if (filename.includes('requirements') || filename.includes('pyproject.toml')) {
+                labels.add('dependencies');
+              }
+              if (filename.includes('database') || filename.includes('migration') || filename.includes('.sql')) {
+                labels.add('component-database');
+              }
+              if (filename.includes('roblox') || filename.includes('plugin')) {
+                labels.add('component-roblox');
+              }
+              if (filename.includes('ai') || filename.includes('agent') || filename.includes('langchain')) {
+                labels.add('component-ai');
+              }
+              if (filename.includes('auth') || filename.includes('security')) {
+                labels.add('component-security');
+              }
+              if (filename.includes('api') || filename.includes('fastapi') || filename.includes('server')) {
+                labels.add('component-api');
+              }
+              if (filename.includes('frontend') || filename.includes('dashboard') || filename.includes('.tsx') || filename.includes('.jsx')) {
+                labels.add('component-frontend');
+              }
+              if (filename.includes('test') || filename.includes('spec')) {
+                labels.add('testing');
+              }
+              if (filename.includes('docs') || filename.includes('.md')) {
+                labels.add('documentation');
+              }
+              if (filename.includes('.github/workflows')) {
+                labels.add('ci-cd');
+              }
+            });
+            
+            // Size labeling based on changes
+            const totalChanges = files.data.reduce((sum, file) => sum + file.changes, 0);
+            if (totalChanges < 50) {
+              labels.add('size-small');
+            } else if (totalChanges < 200) {
+              labels.add('size-medium');
+            } else {
+              labels.add('size-large');
+            }
+            
+            if (labels.size > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: Array.from(labels)
+              });
+            }
+
+      - name: 🎯 Move PR Based on Status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            
+            if (pr.draft) {
+              console.log('PR is draft - moving to Draft column');
+              // Move to Draft column
+            } else if (pr.state === 'open') {
+              console.log('PR is ready for review - moving to Review column');
+              // Move to Review column
+            } else if (pr.merged) {
+              console.log('PR was merged - moving to Done column');
+              // Move to Done column
+            }
+
+  # 📊 Generate Project Reports
+  project-reports:
+    name: 📊 Generate Project Reports
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+      - name: 📊 Weekly Project Summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              since: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() // Last 7 days
+            });
+            
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all'
+            });
+            
+            // Generate weekly summary
+            const summary = {
+              period: 'Last 7 days',
+              issues: {
+                total: issues.length,
+                opened: issues.filter(i => !i.pull_request && new Date(i.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length,
+                closed: issues.filter(i => !i.pull_request && i.closed_at && new Date(i.closed_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length
+              },
+              prs: {
+                total: prs.length,
+                opened: prs.filter(pr => new Date(pr.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length,
+                merged: prs.filter(pr => pr.merged_at && new Date(pr.merged_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length
+              }
+            };
+            
+            console.log('Weekly Project Summary:', JSON.stringify(summary, null, 2));
+
+  # 🔧 Stale Issue Management
+  stale-management:
+    name: 🔧 Manage Stale Issues
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🏷️ Mark Stale Issues
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: |
+            👋 This issue has been automatically marked as stale because it has been inactive for 30 days.
+            
+            **What happens next?**
+            - If this issue is still relevant, please add a comment to keep it open
+            - If no activity occurs within 7 days, this issue will be automatically closed
+            - You can always reopen closed issues if needed
+            
+            **Need help?**
+            - Check our [documentation](https://docs.toolboxai.example.com)
+            - Join our [Discord community](https://discord.gg/toolboxai)
+            - Browse [community discussions](https://github.com/ToolboxAI-Solutions/discussions)
+            
+            Thank you for your contribution to ToolboxAI Solutions! 🚀
+            
+          stale-pr-message: |
+            👋 This pull request has been automatically marked as stale because it has been inactive for 21 days.
+            
+            **What happens next?**
+            - If this PR is still being worked on, please add a comment or push new commits
+            - If no activity occurs within 7 days, this PR will be automatically closed
+            - You can always reopen closed PRs if needed
+            
+            **For reviewers:**
+            - Please review this PR if it's ready
+            - Add feedback or approve if appropriate
+            
+            Thank you for your contribution! 🚀
+            
+          close-issue-message: |
+            🔒 This issue has been automatically closed due to inactivity.
+            
+            **Don't worry!** This doesn't mean your issue isn't important:
+            - You can reopen this issue at any time
+            - The issue remains searchable for others with similar problems
+            - Our team may still address this in future updates
+            
+            **Still need help?**
+            - Reopen this issue with updated information
+            - Create a new issue if requirements have changed
+            - Check our [latest documentation](https://docs.toolboxai.example.com)
+            
+            Thanks for helping improve ToolboxAI Solutions! 🙏
+            
+          close-pr-message: |
+            🔒 This pull request has been automatically closed due to inactivity.
+            
+            **What this means:**
+            - The changes in this PR are not lost
+            - You can reopen this PR at any time  
+            - You can create a new PR with updated changes
+            
+            **To reopen:**
+            1. Add new commits to address feedback
+            2. Comment on this PR to reopen it
+            3. Create a fresh PR if significant changes are needed
+            
+            Thank you for contributing to ToolboxAI Solutions! 🚀
+            
+          days-before-issue-stale: 30
+          days-before-pr-stale: 21
+          days-before-issue-close: 7
+          days-before-pr-close: 7
+          stale-issue-label: 'stale'
+          stale-pr-label: 'stale'
+          exempt-issue-labels: 'pinned,security,critical,in-progress'
+          exempt-pr-labels: 'pinned,security,critical,in-review'
+          operations-per-run: 100

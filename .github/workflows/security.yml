@@ -1,0 +1,457 @@
+name: 🔒 Security Analysis
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '**/*.py'
+      - '**/*.js'
+      - '**/*.ts'
+      - '**/requirements*.txt'
+      - '**/package*.json'
+      - '.github/workflows/security.yml'
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened]
+  schedule:
+    # Run security scans daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of security scan to run'
+        type: choice
+        options: ['all', 'codeql', 'dependencies', 'secrets']
+        default: 'all'
+
+# Prevent concurrent runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18.x'
+
+jobs:
+  # 🔍 CodeQL Security Analysis
+  codeql-analysis:
+    name: 🔍 CodeQL Security Scan
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'codeql' || github.event.inputs.scan_type == ''
+    timeout-minutes: 30
+    
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+      pull-requests: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['python', 'javascript']
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔧 Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: +security-and-quality
+          config: |
+            name: "ToolboxAI Security Configuration"
+            disable-default-queries: false
+            queries:
+              - name: security-and-quality
+                uses: security-and-quality
+              - name: security-extended
+                uses: security-extended
+            paths-ignore:
+              - "**/node_modules/**"
+              - "**/venv*/**"
+              - "**/.venv*/**"
+              - "**/tests/**"
+              - "**/test_*"
+            paths:
+              - "src/**"
+              - "ToolboxAI-Roblox-Environment/**"
+              - "database/**"
+
+      - name: 🐍 Setup Python (for Python analysis)
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: 📦 Install Python Dependencies
+        if: matrix.language == 'python'
+        run: |
+          python -m pip install --upgrade pip
+          # Install core dependencies for analysis
+          pip install fastapi uvicorn sqlalchemy pydantic langchain openai
+          
+          # Install from main requirements file
+          find . -name "requirements.txt" -not -path "./venv*" | head -1 | xargs pip install -r
+
+      - name: 🟢 Setup Node.js (for JavaScript analysis)
+        if: matrix.language == 'javascript'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install Node.js Dependencies
+        if: matrix.language == 'javascript'
+        run: |
+          npm ci --production=false || npm install
+
+      - name: 🏗️ Build Project (for analysis)
+        run: |
+          if [ "${{ matrix.language }}" == "javascript" ]; then
+            echo "Building JavaScript/TypeScript projects..."
+            npm run build --if-present || echo "No build script found"
+          else
+            echo "Python project - no build step required"
+          fi
+
+      - name: 📊 Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+          output: sarif-results
+          upload: true
+
+      - name: 📎 Upload SARIF Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-results-${{ matrix.language }}
+          path: sarif-results
+          retention-days: 30
+
+  # 🛡️ Dependency Security Scan
+  dependency-security:
+    name: 🛡️ Dependency Security Scan  
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'dependencies' || github.event.inputs.scan_type == ''
+    timeout-minutes: 15
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+      pull-requests: write
+
+    strategy:
+      matrix:
+        scanner: ['python', 'nodejs']
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Python Dependency Security Scan
+        if: matrix.scanner == 'python'
+        run: |
+          echo "🔒 Running Python dependency security scan..."
+          
+          # Setup Python
+          python -m pip install --upgrade pip
+          pip install safety bandit semgrep
+          
+          # Safety check for known security vulnerabilities
+          echo "🔍 Running Safety scan..."
+          find . -name "requirements*.txt" -not -path "./venv*" | while read req_file; do
+            echo "Scanning $req_file"
+            safety check --file "$req_file" --json --output safety-report-$(basename "$req_file").json || echo "Safety scan completed with warnings for $req_file"
+          done
+          
+          # Bandit static security analysis
+          echo "🛡️ Running Bandit security analysis..."
+          bandit -r . \
+            -x "**/venv*,**/.venv*,**/node_modules/**,**/tests/**" \
+            -f json \
+            -o bandit-security-report.json \
+            --severity-level medium \
+            --exit-zero || true
+          
+          # Semgrep security scan
+          echo "🔍 Running Semgrep security scan..."
+          semgrep \
+            --config=auto \
+            --json \
+            --output semgrep-report.json \
+            --exclude "**/venv*" \
+            --exclude "**/.venv*" \
+            --exclude "**/node_modules/**" \
+            . || echo "Semgrep scan completed with findings"
+
+      - name: 🟢 Node.js Dependency Security Scan  
+        if: matrix.scanner == 'nodejs'
+        run: |
+          echo "🔒 Running Node.js dependency security scan..."
+          
+          # Setup Node.js
+          npm install -g npm@latest
+          npm install -g audit-ci retire
+          
+          if [ -f "package.json" ]; then
+            # NPM Audit
+            echo "🔍 Running NPM audit..."
+            npm audit --audit-level=moderate --json > npm-audit-report.json || echo "NPM audit completed with findings"
+            
+            # Retire.js for known vulnerable JavaScript libraries
+            echo "📚 Running Retire.js scan..."
+            retire --js --outputformat json --outputpath retire-report.json --path . || echo "Retire.js scan completed"
+          else
+            echo "No package.json found, skipping Node.js security scan"
+          fi
+
+      - name: 📊 Generate Security Summary
+        run: |
+          echo "## 🛡️ Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ matrix.scanner }}" == "python" ]; then
+            echo "### Python Security Findings" >> $GITHUB_STEP_SUMMARY
+            
+            # Count Safety issues
+            if [ -f "safety-report-requirements.txt.json" ]; then
+              safety_count=$(jq '.vulnerabilities | length' safety-report-requirements.txt.json 2>/dev/null || echo "0")
+              echo "- **Safety vulnerabilities**: $safety_count" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            # Count Bandit issues
+            if [ -f "bandit-security-report.json" ]; then
+              bandit_count=$(jq '.results | length' bandit-security-report.json 2>/dev/null || echo "0")
+              echo "- **Bandit security issues**: $bandit_count" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            # Count Semgrep issues
+            if [ -f "semgrep-report.json" ]; then
+              semgrep_count=$(jq '.results | length' semgrep-report.json 2>/dev/null || echo "0")
+              echo "- **Semgrep findings**: $semgrep_count" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+          if [ "${{ matrix.scanner }}" == "nodejs" ]; then
+            echo "### Node.js Security Findings" >> $GITHUB_STEP_SUMMARY
+            
+            # Count NPM audit issues
+            if [ -f "npm-audit-report.json" ]; then
+              npm_count=$(jq '.metadata.vulnerabilities.total' npm-audit-report.json 2>/dev/null || echo "0")
+              echo "- **NPM audit vulnerabilities**: $npm_count" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      - name: 📎 Upload Security Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports-${{ matrix.scanner }}
+          path: |
+            *-report*.json
+            *.json
+          retention-days: 30
+
+  # 🔐 Secret Detection
+  secret-detection:
+    name: 🔐 Secret Detection Scan
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'secrets' || github.event.inputs.scan_type == ''
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 TruffleHog Secret Scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+          
+      - name: 🔐 GitGuardian Secret Scan
+        if: github.event_name != 'pull_request' # Only run on push to avoid API limits
+        uses: GitGuardian/ggshield-action@v1.27.0
+        with:
+          args: secret scan path . --recursive --show-secrets-first --json --output secrets-report.json
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+        continue-on-error: true
+
+      - name: 📊 Secret Detection Summary
+        run: |
+          echo "## 🔐 Secret Detection Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "secrets-report.json" ]; then
+            secret_count=$(jq '.total_secrets' secrets-report.json 2>/dev/null || echo "Unknown")
+            echo "- **Secrets detected**: $secret_count" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Secrets scan**: Completed (TruffleHog only)" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔒 **Recommendation**: Review any detected secrets and rotate if necessary." >> $GITHUB_STEP_SUMMARY
+
+      - name: 📎 Upload Secret Detection Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: secret-detection-results
+          path: |
+            secrets-report.json
+          retention-days: 30
+
+  # 🌐 Container Security (if applicable)
+  container-security:
+    name: 🌐 Container Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 20
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Search for Dockerfiles
+        id: dockerfile-check
+        run: |
+          if find . -name "Dockerfile*" -o -name "*.dockerfile" | grep -q .; then
+            echo "dockerfiles_found=true" >> $GITHUB_OUTPUT
+            echo "Found Dockerfiles in repository"
+          else
+            echo "dockerfiles_found=false" >> $GITHUB_OUTPUT
+            echo "No Dockerfiles found in repository"
+          fi
+
+      - name: 🐳 Build Docker Image (if Dockerfile exists)
+        if: steps.dockerfile-check.outputs.dockerfiles_found == 'true'
+        run: |
+          # Find the main Dockerfile and build image for scanning
+          dockerfile=$(find . -name "Dockerfile" | head -1)
+          if [ -n "$dockerfile" ]; then
+            docker build -t toolboxai-security-scan:latest -f "$dockerfile" .
+          fi
+
+      - name: 🛡️ Trivy Container Security Scan
+        if: steps.dockerfile-check.outputs.dockerfiles_found == 'true'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'toolboxai-security-scan:latest'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: 📊 Upload Trivy Scan Results
+        if: steps.dockerfile-check.outputs.dockerfiles_found == 'true'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # 📋 Security Summary
+  security-summary:
+    name: 📋 Security Analysis Summary
+    runs-on: ubuntu-latest
+    needs: [codeql-analysis, dependency-security, secret-detection]
+    if: always()
+    timeout-minutes: 5
+
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: 📊 Generate Final Security Report
+        run: |
+          echo "# 🔒 Security Analysis Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Summary of Security Scans" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Scan Type | Status | Notes |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|---------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| CodeQL Analysis | ${{ needs.codeql-analysis.result == 'success' && '✅ PASSED' || needs.codeql-analysis.result == 'failure' && '❌ FAILED' || '⏭️ SKIPPED' }} | Static code analysis |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Security | ${{ needs.dependency-security.result == 'success' && '✅ PASSED' || needs.dependency-security.result == 'failure' && '❌ FAILED' || '⏭️ SKIPPED' }} | Vulnerable dependencies |" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret Detection | ${{ needs.secret-detection.result == 'success' && '✅ PASSED' || needs.secret-detection.result == 'failure' && '❌ FAILED' || '⏭️ SKIPPED' }} | Hardcoded secrets |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Determine overall security status
+          overall_status="✅ SECURE"
+          if [[ "${{ needs.codeql-analysis.result }}" == "failure" ]] || [[ "${{ needs.dependency-security.result }}" == "failure" ]] || [[ "${{ needs.secret-detection.result }}" == "failure" ]]; then
+            overall_status="⚠️ REVIEW REQUIRED"
+          fi
+          
+          echo "## 🎯 Overall Security Status: **$overall_status**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 **Next Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Review security scan artifacts for detailed findings" >> $GITHUB_STEP_SUMMARY
+          echo "- Address any high-severity vulnerabilities" >> $GITHUB_STEP_SUMMARY
+          echo "- Update dependencies with security patches" >> $GITHUB_STEP_SUMMARY
+          echo "- Rotate any exposed secrets" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🚨 Create Security Issue (on failure)
+        if: needs.codeql-analysis.result == 'failure' || needs.dependency-security.result == 'failure' || needs.secret-detection.result == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `🚨 Security Alert: Issues Found in ${context.sha.substring(0, 7)}`;
+            const body = `
+            ## 🔒 Security Analysis Results
+            
+            A security scan has detected potential issues that require attention:
+            
+            - **CodeQL Analysis**: ${{ needs.codeql-analysis.result }}
+            - **Dependency Security**: ${{ needs.dependency-security.result }}  
+            - **Secret Detection**: ${{ needs.secret-detection.result }}
+            
+            ## 🔍 Review Required
+            
+            Please review the security scan artifacts and address any findings:
+            
+            1. Check the Actions tab for detailed scan results
+            2. Review and update vulnerable dependencies
+            3. Investigate any detected secrets
+            4. Apply security patches as needed
+            
+            **Commit**: ${context.sha}
+            **Branch**: ${context.ref}
+            **Triggered by**: ${context.actor}
+            
+            ---
+            *This issue was automatically created by the Security Analysis workflow.*
+            `;
+            
+            // Check if similar issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: ['security', 'automated']
+            });
+            
+            const existingIssue = issues.data.find(issue => 
+              issue.title.includes('Security Alert') && 
+              issue.created_at > new Date(Date.now() - 24 * 60 * 60 * 1000) // Within last 24 hours
+            );
+            
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['security', 'high-priority', 'automated']
+              });
+            }

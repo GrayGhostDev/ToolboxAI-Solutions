@@ -1,0 +1,222 @@
+name: 🔒 Security Issue
+description: Report a security vulnerability or concern
+title: "[Security]: "
+labels: ["security", "high-priority", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ⚠️ Security Issue Report
+        
+        **Important**: If you believe you have found a security vulnerability, please DO NOT open a public issue.
+        
+        Instead, please:
+        1. Email us directly at security@toolboxai.example.com
+        2. Or use GitHub's private vulnerability reporting feature
+        
+        For non-critical security concerns, you may continue with this public issue.
+
+  - type: checkboxes
+    id: severity_acknowledgment
+    attributes:
+      label: "Security Issue Type"
+      description: "Please confirm the nature of this security issue:"
+      options:
+        - label: "This is a **non-critical** security concern suitable for public discussion"
+          required: false
+        - label: "This is a **critical vulnerability** and I will report it privately"
+          required: false
+
+  - type: dropdown
+    id: security_category
+    attributes:
+      label: "Security Category"
+      description: "What type of security issue is this?"
+      options:
+        - "🔐 Authentication & Authorization"
+        - "🛡️ Input Validation & Sanitization"
+        - "🔒 Data Protection & Privacy"
+        - "🌐 Network Security"
+        - "📦 Dependency Vulnerabilities"
+        - "🔑 Secrets & Configuration"
+        - "🚪 Access Control"
+        - "📝 Logging & Monitoring"
+        - "🏗️ Infrastructure Security"
+        - "❓ Other Security Concern"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: risk_level
+    attributes:
+      label: "Risk Assessment"
+      description: "What's your assessment of the risk level?"
+      options:
+        - "🔴 High - Immediate security risk"
+        - "🟠 Medium - Moderate security concern"
+        - "🟡 Low - Minor security improvement"
+        - "🔵 Informational - Security best practice"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Security Issue Description"
+      description: "Describe the security issue in detail (avoid sensitive information)"
+      placeholder: |
+        Provide a clear description of the security concern:
+        - What is the potential vulnerability?
+        - Which components are affected?
+        - What could an attacker potentially do?
+        - What information or systems could be compromised?
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: "Potential Impact"
+      description: "What could happen if this security issue is exploited?"
+      placeholder: |
+        Describe the potential impact:
+        - Data exposure or theft
+        - Unauthorized access
+        - System compromise
+        - Service disruption
+        - Privacy violations
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected_components
+    attributes:
+      label: "Affected Components"
+      description: "Which parts of the system are affected?"
+      placeholder: |
+        List the affected components:
+        - API endpoints
+        - Database tables
+        - Authentication systems
+        - Frontend components
+        - Configuration files
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: "Reproduction Steps (if applicable)"
+      description: "How to reproduce this issue (remove sensitive details)"
+      placeholder: |
+        If applicable, provide general steps to reproduce:
+        1. Navigate to...
+        2. Perform action...
+        3. Observe security issue...
+        
+        **Note**: Do not include actual exploits or sensitive details.
+
+  - type: textarea
+    id: current_measures
+    attributes:
+      label: "Current Security Measures"
+      description: "What security measures are currently in place?"
+      placeholder: |
+        Describe current security measures:
+        - Authentication mechanisms
+        - Authorization checks
+        - Input validation
+        - Encryption methods
+        - Monitoring systems
+
+  - type: textarea
+    id: recommendations
+    attributes:
+      label: "Recommended Solutions"
+      description: "What do you recommend to address this issue?"
+      placeholder: |
+        Suggest potential solutions:
+        - Immediate mitigation steps
+        - Long-term security improvements
+        - Best practices to implement
+        - Additional security controls
+
+  - type: checkboxes
+    id: security_areas
+    attributes:
+      label: "Related Security Areas"
+      description: "Which security areas does this affect?"
+      options:
+        - label: "User Data Protection"
+        - label: "API Security"
+        - label: "Database Security"
+        - label: "Authentication Systems"
+        - label: "Authorization & Permissions"
+        - label: "Session Management"
+        - label: "Input Validation"
+        - label: "Output Encoding"
+        - label: "Cryptography"
+        - label: "Network Communications"
+        - label: "File System Security"
+        - label: "Third-party Integrations"
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: "Environment Details"
+      description: "Relevant environment information (no sensitive data)"
+      placeholder: |
+        - Deployment environment (development/staging/production)
+        - Component versions
+        - Configuration relevant to security
+        - Browser or client details (if applicable)
+
+  - type: textarea
+    id: references
+    attributes:
+      label: "References & Documentation"
+      description: "Include relevant security references or documentation"
+      placeholder: |
+        - OWASP guidelines
+        - CVE numbers
+        - Security advisories
+        - Best practice documents
+        - Relevant RFCs or standards
+
+  - type: checkboxes
+    id: compliance
+    attributes:
+      label: "Compliance Considerations"
+      description: "Are there compliance implications?"
+      options:
+        - label: "GDPR (General Data Protection Regulation)"
+        - label: "COPPA (Children's Online Privacy Protection Act)"
+        - label: "FERPA (Family Educational Rights and Privacy Act)"
+        - label: "SOX (Sarbanes-Oxley Act)"
+        - label: "HIPAA (Health Insurance Portability and Accountability Act)"
+        - label: "Other regulatory requirements"
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: "Additional Context"
+      description: "Any other relevant information"
+      placeholder: "Include any additional context that would be helpful for understanding and addressing this security issue..."
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        
+        ### 🔒 Security Disclosure Policy
+        
+        We take security seriously and appreciate responsible disclosure. After submitting this issue:
+        
+        1. **Critical vulnerabilities** will be addressed immediately
+        2. **Security improvements** will be prioritized in our development cycle
+        3. **Contributors** to security will be acknowledged (with permission)
+        4. **Updates** will be provided on remediation progress
+        
+        Thank you for helping keep ToolboxAI Solutions secure! 🛡️

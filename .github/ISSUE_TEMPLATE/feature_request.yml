@@ -1,0 +1,231 @@
+name: 🚀 Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! 🚀
+        
+        Your ideas help make ToolboxAI Solutions better for everyone. Please provide detailed information about your feature request.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "Pre-submission Checklist"
+      description: "Please confirm the following before submitting:"
+      options:
+        - label: "I have searched existing issues and discussions for similar requests"
+          required: true
+        - label: "This is a feature request, not a bug report"
+          required: true
+        - label: "I have provided clear use cases and benefits"
+          required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: "Feature Category"
+      description: "Which area would this feature impact?"
+      options:
+        - "🧠 AI & Content Generation"
+        - "🎮 Roblox Integration & Gameplay"
+        - "📚 Educational Content & LMS"
+        - "🔐 Security & Authentication"
+        - "📊 Analytics & Reporting"
+        - "🎨 User Interface & Experience"
+        - "⚡ Performance & Optimization"
+        - "🔄 Workflow & Automation"
+        - "🛠️ Developer Experience"
+        - "🌐 API & Integration"
+        - "📱 Mobile & Cross-platform"
+        - "❓ Other"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "Priority Level"
+      description: "How important is this feature to you?"
+      options:
+        - "🔴 Critical - Essential for core functionality"
+        - "🟠 High - Important for user experience"
+        - "🟡 Medium - Nice to have improvement"
+        - "🟢 Low - Minor enhancement"
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: "Feature Summary"
+      description: "Provide a concise summary of the feature request"
+      placeholder: "Brief description of what you want to be added..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Problem Statement"
+      description: "What problem does this feature solve?"
+      placeholder: |
+        Describe the current pain point or limitation that this feature would address:
+        - What is currently difficult or impossible?
+        - How does this impact users or workflows?
+        - Why is the current solution inadequate?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Proposed Solution"
+      description: "Describe your proposed solution in detail"
+      placeholder: |
+        Detailed description of the feature:
+        - How would this feature work?
+        - What would the user interface look like?
+        - What are the key components or functionality?
+    validations:
+      required: true
+
+  - type: textarea
+    id: use_cases
+    attributes:
+      label: "Use Cases & User Stories"
+      description: "Provide specific use cases and user stories"
+      placeholder: |
+        Example:
+        - As a teacher, I want to... so that...
+        - As a student, I want to... so that...
+        - As a developer, I want to... so that...
+        
+        Specific scenarios where this feature would be valuable:
+        1. Scenario 1...
+        2. Scenario 2...
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefits
+    attributes:
+      label: "Expected Benefits"
+      description: "What are the expected benefits of this feature?"
+      placeholder: |
+        - Improved user experience by...
+        - Increased efficiency through...
+        - Enhanced functionality that enables...
+        - Cost savings from...
+        - Better performance via...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternative Solutions"
+      description: "Have you considered any alternative approaches?"
+      placeholder: |
+        Describe any alternative solutions you've considered:
+        - Alternative approach 1...
+        - Alternative approach 2...
+        - Why the proposed solution is preferred...
+
+  - type: textarea
+    id: technical_details
+    attributes:
+      label: "Technical Considerations"
+      description: "Any technical details, constraints, or requirements"
+      placeholder: |
+        - API endpoints needed...
+        - Database schema changes...
+        - Third-party integrations...
+        - Performance considerations...
+        - Security implications...
+
+  - type: checkboxes
+    id: impact_areas
+    attributes:
+      label: "Impact Areas"
+      description: "Which parts of the system would be affected?"
+      options:
+        - label: "FastAPI Backend"
+        - label: "Roblox Plugin System"
+        - label: "AI Content Generation"
+        - label: "Database Schema"
+        - label: "User Authentication"
+        - label: "WebSocket/Real-time Features"
+        - label: "Dashboard Frontend"
+        - label: "MCP Integration"
+        - label: "LMS Connections"
+        - label: "API Documentation"
+        - label: "Security & Privacy"
+        - label: "Testing & QA"
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: "Estimated Complexity"
+      description: "How complex do you think this feature would be to implement?"
+      options:
+        - "🟢 Simple - Few hours to days"
+        - "🟡 Moderate - Few days to weeks"
+        - "🟠 Complex - Few weeks to months"
+        - "🔴 Very Complex - Multiple months"
+        - "❓ Unknown"
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: "Mockups & Design Ideas"
+      description: "Include mockups, wireframes, or design concepts"
+      placeholder: "Drag and drop images or paste links to design concepts..."
+
+  - type: textarea
+    id: research
+    attributes:
+      label: "Research & References"
+      description: "Include any research, examples, or references"
+      placeholder: |
+        - Similar features in other products...
+        - Research papers or articles...
+        - Industry best practices...
+        - Example implementations...
+
+  - type: checkboxes
+    id: user_types
+    attributes:
+      label: "Target Users"
+      description: "Who would benefit from this feature?"
+      options:
+        - label: "👨‍🏫 Teachers & Educators"
+        - label: "👨‍🎓 Students & Learners"
+        - label: "👨‍💻 Developers & Integrators"
+        - label: "👨‍💼 Administrators"
+        - label: "🏢 Educational Institutions"
+        - label: "🎮 Content Creators"
+        - label: "📊 Data Analysts"
+
+  - type: textarea
+    id: success_metrics
+    attributes:
+      label: "Success Metrics"
+      description: "How would we measure the success of this feature?"
+      placeholder: |
+        - User engagement metrics...
+        - Performance improvements...
+        - Adoption rates...
+        - User satisfaction scores...
+        - Specific KPIs...
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: "Additional Context"
+      description: "Any other context, examples, or information"
+      placeholder: "Include any additional information that would be helpful..."
