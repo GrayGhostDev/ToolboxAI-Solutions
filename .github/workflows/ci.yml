@@ -85,7 +85,7 @@ jobs:
           if [ -f "tests/test_settings.py" ]; then
             python -m pytest tests/test_settings.py -v || echo "Test issues found (non-blocking)"
           else
-            python -c "import sys; print(f'Python {sys.version} - Basic validation passed')"
+            python -c "import sys; print('Python', sys.version, '- Basic validation passed')"
           fi
         continue-on-error: true
 

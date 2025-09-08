@@ -1,0 +1,46 @@
+# Code Owners for ToolboxAI Solutions - TEMPORARILY DISABLED
+# This file defines who automatically gets requested for review
+# when someone opens a pull request.
+# 
+# IMPORTANT: Teams referenced here need to be created in GitHub first
+# To enable this file, rename it to CODEOWNERS and create the teams
+
+# Global Ownership
+# These users are the default owners for everything in the repo
+# * @ToolboxAI-Solutions/maintainers
+
+# Root Configuration Files
+# /.github/ @ToolboxAI-Solutions/devops-team @ToolboxAI-Solutions/maintainers
+# /pyproject.toml @ToolboxAI-Solutions/backend-team @ToolboxAI-Solutions/maintainers
+# /package.json @ToolboxAI-Solutions/frontend-team @ToolboxAI-Solutions/maintainers
+
+# Security-Sensitive Files
+# /SECURITY.md @ToolboxAI-Solutions/security-team @ToolboxAI-Solutions/maintainers
+# /.github/workflows/security.yml @ToolboxAI-Solutions/security-team @ToolboxAI-Solutions/devops-team
+
+# Backend Code - Python/FastAPI
+# /src/api/ @ToolboxAI-Solutions/backend-team
+# /src/roblox-environment/ @ToolboxAI-Solutions/backend-team @ToolboxAI-Solutions/roblox-team
+
+# Frontend Code - React/TypeScript/Dashboard
+# /src/dashboard/ @ToolboxAI-Solutions/frontend-team
+# *.tsx @ToolboxAI-Solutions/frontend-team
+# *.jsx @ToolboxAI-Solutions/frontend-team
+
+# Database and Migrations  
+# /database/ @ToolboxAI-Solutions/backend-team @ToolboxAI-Solutions/database-team
+
+# Documentation
+# /docs/ @ToolboxAI-Solutions/docs-team
+# *.md @ToolboxAI-Solutions/docs-team
+
+# TO ENABLE:
+# 1. Create the teams in GitHub repository settings:
+#    - @ToolboxAI-Solutions/maintainers
+#    - @ToolboxAI-Solutions/backend-team
+#    - @ToolboxAI-Solutions/frontend-team
+#    - @ToolboxAI-Solutions/security-team
+#    - @ToolboxAI-Solutions/devops-team
+#    - @ToolboxAI-Solutions/docs-team
+# 2. Rename this file to CODEOWNERS
+# 3. Remove the # comments from the team assignments

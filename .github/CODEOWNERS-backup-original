@@ -4,7 +4,8 @@
 
 # Global Ownership
 # These users are the default owners for everything in the repo
-* @ToolboxAI-Solutions/maintainers
+# Note: Teams will need to be created in GitHub repository settings
+# * @ToolboxAI-Solutions/maintainers
 
 # Root Configuration Files
 /.github/ @ToolboxAI-Solutions/devops-team @ToolboxAI-Solutions/maintainers
