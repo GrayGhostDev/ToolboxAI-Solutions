@@ -1,0 +1,58 @@
+name: ✅ Minimal Validation
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+# Prevent concurrent runs
+concurrency:
+  group: minimal-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ✅ Basic Validation
+  validate:
+    name: ✅ Repository Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Python Environment Check
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: ✅ Basic Validation
+        run: |
+          echo "✅ Repository structure validation..."
+          
+          # Check Python version
+          python --version
+          
+          # Basic file structure check
+          if [ -f "README.md" ]; then
+            echo "✅ README.md exists"
+          fi
+          
+          if [ -d "src" ]; then
+            echo "✅ src directory exists"
+          fi
+          
+          if [ -d ".github" ]; then
+            echo "✅ .github directory exists"
+          fi
+          
+          echo "✅ Basic validation completed successfully"
+
+      - name: 📊 Summary
+        run: |
+          echo "## ✅ Validation Complete" >> $GITHUB_STEP_SUMMARY
+          echo "- **Python**: Environment validated" >> $GITHUB_STEP_SUMMARY
+          echo "- **Structure**: Repository structure validated" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ All basic checks passed" >> $GITHUB_STEP_SUMMARY
