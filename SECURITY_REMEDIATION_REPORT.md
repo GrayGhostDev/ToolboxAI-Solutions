@@ -190,18 +190,33 @@ yarn audit --level high
 
 ## 🛠️ Deployment Instructions
 
-### **1. Python Environment Update**
+### **1. Python Environment Update (venv_clean)**
 
 ```bash
-# Update each Python environment
+# Activate the venv_clean environment
+source /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/bin/activate
+
+# Update main Roblox environment
 cd src/roblox-environment
 pip install -r requirements.txt --upgrade
 
+# Update AI-specific dependencies
+pip install -r requirements-ai.txt --upgrade
+
+# Update coordinators dependencies
+cd coordinators
+pip install -r requirements.txt --upgrade
+cd ..
+
+# Update API backends
 cd ../api/ghost-backend  
 pip install -r requirements.txt --upgrade
 
 cd ../dashboard/backend
 pip install -r requirements.txt --upgrade
+
+# Return to project root
+cd ../../
 ```
 
 ### **2. Node.js Environment Update**
