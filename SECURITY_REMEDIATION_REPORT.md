@@ -193,14 +193,14 @@ yarn audit --level high
 ### **1. Python Environment Update (venv_clean)**
 
 ```bash
-# Activate the venv_clean environment
-source /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/bin/activate
+# Activate the venv_clean environment from ToolboxAI-Roblox-Environment folder
+source ToolboxAI-Roblox-Environment/venv_clean/bin/activate
 
 # Update main Roblox environment
 cd src/roblox-environment
 pip install -r requirements.txt --upgrade
 
-# Update AI-specific dependencies
+# Update AI-specific dependencies  
 pip install -r requirements-ai.txt --upgrade
 
 # Update coordinators dependencies
@@ -217,6 +217,9 @@ pip install -r requirements.txt --upgrade
 
 # Return to project root
 cd ../../
+
+# Verify the updates worked
+pip list | grep -E "(fastapi|aiohttp|requests|sqlalchemy|langchain|openai)"
 ```
 
 ### **2. Node.js Environment Update**
@@ -230,9 +233,12 @@ npm ci  # Clean install with updated package-lock.json
 npm audit
 ```
 
-### **3. Verification Steps**
+### **3. Verification Steps (using venv_clean)**
 
 ```bash
+# Activate venv_clean environment
+source ToolboxAI-Roblox-Environment/venv_clean/bin/activate
+
 # Python security verification
 python -m pip install pip-audit safety
 pip-audit
@@ -267,7 +273,8 @@ If critical issues arise:
 3. **Hotfix Deployment**: Apply minimal security patches
 
 ```bash
-# Emergency rollback example
+# Emergency rollback example (using venv_clean)
+source ToolboxAI-Roblox-Environment/venv_clean/bin/activate
 git checkout HEAD~1 -- src/roblox-environment/requirements.txt
 pip install -r src/roblox-environment/requirements.txt --force-reinstall
 ```

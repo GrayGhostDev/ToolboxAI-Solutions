@@ -52,9 +52,8 @@ We're thrilled that you're interested in contributing to ToolboxAI Solutions! Th
 
 3. **Set up the development environment**:
    ```bash
-   # Set up Python environment
-   python -m venv venv
-   source venv/bin/activate  # Windows: venv\Scripts\activate
+   # Activate the venv_clean environment
+   source ToolboxAI-Roblox-Environment/venv_clean/bin/activate  # Windows: ToolboxAI-Roblox-Environment\venv_clean\Scripts\activate
    
    # Install Python dependencies
    pip install -r src/roblox-environment/requirements.txt

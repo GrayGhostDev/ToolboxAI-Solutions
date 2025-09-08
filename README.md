@@ -35,18 +35,18 @@ ToolboxAI Solutions is a cutting-edge educational technology platform that combi
 - **PostgreSQL**: 15+
 - **Redis**: 7+
 
-### 🐍 Backend Setup
+### 🐍 Backend Setup (using venv_clean)
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/ToolboxAI-Solutions/ToolboxAI-Solutions.git
 cd ToolboxAI-Solutions
 
-# 2. Set up Python environment  
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# 2. Activate the venv_clean environment (pre-configured with all dependencies)
+source ToolboxAI-Roblox-Environment/venv_clean/bin/activate  
+# On Windows: ToolboxAI-Roblox-Environment\venv_clean\Scripts\activate
 
-# 3. Install Python dependencies
+# 3. Install/update Python dependencies (now with security fixes)
 pip install -r src/roblox-environment/requirements.txt
 
 # 4. Set up database
@@ -55,6 +55,16 @@ cd database && python setup_database.py && cd ..
 # 5. Start the FastAPI server
 cd src/roblox-environment
 python -m uvicorn server.main:app --reload --host 0.0.0.0 --port 8008
+```
+
+### 🚀 **Quick Setup (Automated)**
+
+```bash
+# One-command setup using venv_clean
+./scripts/setup_development.sh
+
+# Or update security dependencies only
+./scripts/update_security_dependencies.sh
 ```
 
 ### 🟢 Frontend Setup
@@ -93,6 +103,9 @@ ToolboxAI-Solutions/
 ## 🧪 Testing
 
 ```bash
+# Activate venv_clean environment
+source ToolboxAI-Roblox-Environment/venv_clean/bin/activate
+
 # Python tests
 python -m pytest tests/ --cov=src
 
@@ -154,11 +167,15 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - Both server wrappers import the shared `settings` instance
 
 ### IDE Setup
-- Point VS Code Python interpreter to your virtual environment
+- Point VS Code Python interpreter to: `ToolboxAI-Roblox-Environment/venv_clean/bin/python`
 - Reload window after changing interpreter for pyright integration
+- Use Command Palette: "Python: Select Interpreter" → Browse to venv_clean
 
 ### Testing
 ```bash
+# Activate venv_clean environment
+source ToolboxAI-Roblox-Environment/venv_clean/bin/activate
+
 # Install dependencies and run tests
 python -m pip install -r src/roblox-environment/requirements.txt
 python -m pytest tests/test_settings.py

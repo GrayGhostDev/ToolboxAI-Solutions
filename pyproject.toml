@@ -64,7 +64,7 @@ exclude = [
     "**/.vscode",
     "**/.cursor"
 ]
-venvPath = "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment"
+venvPath = "./ToolboxAI-Roblox-Environment"
 venv = "venv_clean"
 pythonVersion = "3.12"
 pythonPlatform = "Darwin"

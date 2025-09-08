@@ -20,6 +20,17 @@ echo -e "${BLUE}🔒 ToolboxAI Solutions - Security Audit${NC}"
 echo -e "${BLUE}=======================================${NC}"
 echo ""
 
+# Activate venv_clean environment for Python security tools
+if [ -f "ToolboxAI-Roblox-Environment/venv_clean/bin/activate" ]; then
+    echo -e "${YELLOW}🐍 Activating venv_clean environment...${NC}"
+    source ToolboxAI-Roblox-Environment/venv_clean/bin/activate
+    echo -e "${GREEN}✅ venv_clean activated: $(which python)${NC}"
+else
+    echo -e "${RED}⚠️  venv_clean not found at ToolboxAI-Roblox-Environment/venv_clean/${NC}"
+    echo -e "${YELLOW}   Continuing with system Python...${NC}"
+fi
+echo ""
+
 # Create reports directory
 mkdir -p "$REPORT_DIR"
 
@@ -31,6 +42,7 @@ cat > "$REPORT_FILE" << EOF
 
 **Audit Date**: $(date)  
 **Audit Type**: Automated Dependency Security Scan  
+**Python Environment**: venv_clean (ToolboxAI-Roblox-Environment/venv_clean)  
 **Scope**: All Python and Node.js dependencies  
 
 ---
