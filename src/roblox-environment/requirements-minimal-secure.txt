@@ -1,0 +1,40 @@
+# ToolboxAI Roblox Environment - Minimal Secure Requirements
+# Only essential packages with verified available versions
+
+# Core Web Framework
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+
+# Data Validation
+pydantic==2.11.7
+pydantic-settings==2.10.1
+
+# Database
+sqlalchemy==2.0.36
+alembic==1.14.0
+
+# HTTP Clients - Secure Versions
+requests==2.32.3
+httpx==0.28.1
+aiohttp==3.11.10
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Configuration
+python-dotenv==1.0.0
+pyyaml==6.0.2
+
+# Testing
+pytest==8.4.2
+pytest-asyncio==1.1.2
+
+# Security Tools
+certifi==2025.1.14
+urllib3==2.2.3
+cryptography==45.0.0
+
+# Development Tools
+black==25.1.0
+mypy==1.8.0

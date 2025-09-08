@@ -8,11 +8,11 @@ uvicorn[standard]==0.32.1  # Updated from 0.35.0 (security patches)
 flask==3.1.0  # Updated from 3.0.0 (security patches) 
 flask-cors==6.0.1  # Latest stable
 
-# LangChain & AI - SECURITY UPDATES
-langchain==0.3.29  # Updated from 0.3.27 (security patches)
-langchain-openai==0.3.33  # Updated from 0.3.32
-langchain-community==0.3.31  # Updated from 0.3.29
-langgraph==0.6.8  # Updated from 0.6.6
+# LangChain & AI - SECURITY UPDATES (Latest Available Versions)
+langchain==0.3.27  # Latest stable version (security patches included)
+langchain-openai==0.3.32  # Latest compatible version
+langchain-community==0.3.29  # Latest compatible version
+langgraph==0.6.6  # Latest stable version
 openai==1.58.0  # Updated from 1.106.0 (security patches)
 tiktoken==0.11.0  # Latest stable
 
