@@ -1,90 +1,197 @@
-# Python
+# ToolboxAI Solutions - Comprehensive .gitignore
+
+# Python Virtual Environments
+ToolboxAI-Roblox-Environment/venv_clean/
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# Python Cache and Build
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
 *.egg
-MANIFEST
+*.egg-info/
+dist/
+build/
+.eggs/
 
-# Virtual environments
-venv/
-env/
-ENV/
-venv_clean/lib/
-venv_clean/include/
-venv_clean/share/
-venv_clean/pyvenv.cfg
+# Environment Variables and Secrets
+.env
+.env.*
+!.env.example
+.envrc
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
 
-# Node
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# IDEs
+# IDE and Editor Files
 .vscode/
 .idea/
 *.swp
 *.swo
-*.swn
-.cursor/
-.cursor-workspace
-
-# OS
+*~
 .DS_Store
 Thumbs.db
 
-# Environment variables
-.env
-.env.local
-.env.*.local
+# Node.js Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn/
+.pnp.*
+
+# Build Outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+
+# Testing and Coverage
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+.nyc_output/
+coverage/
+*.lcov
 
 # Logs
 logs/
 *.log
+lerna-debug.log*
 
-# Testing
-.pytest_cache/
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-*.cover
-
-# Database
+# Database Files
 *.db
 *.sqlite
 *.sqlite3
 
-# Redis
-dump.rdb
-
-# Documentation build
-docs/_build/
-site/
-
-# Temporary files
+# Temporary Files
+tmp/
+temp/
 *.tmp
 *.temp
-temp/
-tmp/
 
-# Lock files (keep these for consistency)
-!package-lock.json
-!yarn.lock
-!pnpm-lock.yaml
+# Security Reports
+security_reports/
+bandit-report.json
+safety-report.json
+pip-audit-report.json
+
+# Backup Files
+*.backup.*
+*.bak
+*-backup
+*-disabled/
+
+# Large Files and Binaries
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.dmg
+*.iso
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.Trash-*
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Jupyter Notebooks (checkpoints)
+.ipynb_checkpoints/
+
+# Sphinx Documentation
+docs/_build/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+.idea/
+
+# Additional ToolboxAI specific ignores
+mcpServers.json.backup
+SECURITY_UPDATE_*.md
+GIT_COMMIT_PREPARATION.md
+QUICK_GIT_REFERENCE.md
+PR_ISSUE_FIX_GUIDE.md
+*_SUMMARY.md
+*_REPORT.md
+*_FIXES*.md
+*_STATUS*.md
+
+# Roblox specific
+*.rbxlx
+*.rbxmx  
+*.rbxl
+
+# AI/ML Models (if any)
+*.pkl
+*.joblib
+*.model
+models/
+checkpoints/
+
+# Monitoring and Metrics
+prometheus/
+grafana/
+.monitoring/
