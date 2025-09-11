@@ -15,6 +15,10 @@ from .rate_limit_manager import get_rate_limit_manager
 
 logger = logging.getLogger(__name__)
 
+# Socket.IO path contract (no trailing slash); must match dashboard and proxy config
+SIO_PATH = "/socket.io"
+assert not SIO_PATH.endswith("/"), "SIO_PATH must not end with a slash"
+
 # Create Socket.io server with asyncio support
 # Allow all origins in development, restrict in production
 cors_origins = [
@@ -116,6 +120,15 @@ async def _emit_message_to_sid(sid: str, msg_type: str, payload: Any = None, cha
         'timestamp': datetime.now(timezone.utc).isoformat()
     }
     await sio.emit('message', message, room=sid)
+
+
+def _ack(ok: bool, **kwargs) -> Dict[str, Any]:
+    """Small, consistent acknowledgment payload for Socket.IO callbacks.
+
+    Returning a dict from an event handler will be delivered to the client's
+    acknowledgment callback. Keep payload minimal to reduce bandwidth.
+    """
+    return {"ok": bool(ok), **kwargs, "ts": datetime.now(timezone.utc).isoformat()}
 
 @sio.event
 async def connect(sid: str, environ: dict, auth: Optional[Dict] = None):
@@ -321,7 +334,7 @@ async def message(sid: str, data: Any):
         # Ensure data is a dict
         if not isinstance(data, dict):
             await _emit_message_to_sid(sid, 'error', {'error': 'Invalid message format'})
-            return
+            return _ack(False, error='invalid_format')
 
         msg_type = str(data.get('type', '')).lower()
         payload = data.get('payload')
@@ -333,7 +346,7 @@ async def message(sid: str, data: Any):
                 'error': f'Rate limit exceeded. Retry after {retry_after} seconds',
                 'event': msg_type
             })
-            return
+            return _ack(False, error='rate_limited', retry_after=retry_after, event=msg_type)
 
         # RBAC check (use message type)
         authorized, required = _is_authorized_for_event(sid, msg_type)
@@ -342,13 +355,13 @@ async def message(sid: str, data: Any):
                 'error': f"Forbidden: requires role '{required}'",
                 'event': msg_type
             })
-            return
+            return _ack(False, error='forbidden', required_role=required, event=msg_type)
 
         # Dispatch by message type
         if msg_type == 'ping':
             # Use engine-style pong event to satisfy client handler
             await sio.emit('pong', {'timestamp': datetime.now(timezone.utc).isoformat()}, room=sid)
-            return
+            return _ack(True, type='ping')
 
         if msg_type == 'subscribe':
             channels = []
@@ -381,7 +394,7 @@ async def message(sid: str, data: Any):
                 subscribed.append(channel)
             # Acknowledge
             await _emit_message_to_sid(sid, 'subscribed', {'channels': subscribed, 'total': len(subscribed)})
-            return
+            return _ack(True, action='subscribe', channels=subscribed, total=len(subscribed))
 
         if msg_type == 'unsubscribe':
             channels = []
@@ -395,7 +408,7 @@ async def message(sid: str, data: Any):
                 except Exception:
                     pass
             await _emit_message_to_sid(sid, 'unsubscribed', {'channels': channels})
-            return
+            return _ack(True, action='unsubscribe', channels=channels)
 
         if msg_type == 'broadcast':
             # Accept either payload { channel, data } or top-level message.channel with any payload
@@ -420,22 +433,24 @@ async def message(sid: str, data: Any):
                 await _emit_message_to_sid(sid, 'broadcast_sent', {
                     'channel': channel
                 })
-                return
+                return _ack(True, action='broadcast', channel=channel)
             await _emit_message_to_sid(sid, 'error', {'error': 'Invalid broadcast payload'})
-            return
+            return _ack(False, error='invalid_broadcast_payload')
 
         if msg_type in ('content_request', 'quiz_response', 'progress_update', 'collaboration_message', 'user_message'):
             # For now, just echo an acknowledgment as typed message; existing dedicated events remain for backward compatibility
             await _emit_message_to_sid(sid, f'{msg_type}_received', payload)
-            return
+            return _ack(True, type=msg_type)
 
         # Default: echo original as acknowledgment
         await _emit_message_to_sid(sid, 'ack', {'received': True, 'type': msg_type})
+        return _ack(True, type=msg_type)
 
     except Exception as e:
         safe_error = str(e)[:200].replace('\n', '').replace('\r', '')
         logger.error(f"Message handling error for {sid[:20]}: {safe_error}")
         await _emit_message_to_sid(sid, 'error', {'error': 'Message handling failed'})
+        return _ack(False, error='message_handling_failed')
 
 @sio.event
 async def ping(sid: str, data: Optional[Dict] = None):
@@ -451,6 +466,7 @@ async def ping(sid: str, data: Optional[Dict] = None):
     await sio.emit('pong', {
         'timestamp': datetime.now(timezone.utc).isoformat()
     }, room=sid)
+    return _ack(True, event='ping')
 
 @sio.event
 async def subscribe(sid: str, data: Dict[str, Any]):
@@ -523,6 +539,7 @@ async def subscribe(sid: str, data: Dict[str, Any]):
             'channel': channel,
             'message': f'Successfully subscribed to {channel}'
         }, room=sid)
+        return _ack(True, action='subscribe', channel=channel)
 
     except Exception as e:
         safe_error = str(e)[:200].replace('\n', '').replace('\r', '')
@@ -546,6 +563,7 @@ async def unsubscribe(sid: str, data: Dict[str, Any]):
             'channel': channel,
             'message': f'Successfully unsubscribed from {channel}'
         }, room=sid)
+        return _ack(True, action='unsubscribe', channel=channel)
 
 # WebSocket message types from dashboard (legacy dedicated events retained)
 @sio.event
@@ -561,7 +579,7 @@ async def content_request(sid: str, data: Dict[str, Any]):
             'error': f"Forbidden: requires role '{required}'",
             'event': 'content_request'
         }, room=sid)
-        return
+        return _ack(False, error='forbidden', required_role=required, event='content_request')
 
     # Rate limit check
     allowed, retry_after = await _check_sio_rate_limit(sid, 'content_request')
@@ -570,7 +588,7 @@ async def content_request(sid: str, data: Dict[str, Any]):
             'error': f'Rate limit exceeded. Retry after {retry_after} seconds',
             'event': 'content_request'
         }, room=sid)
-        return
+        return _ack(False, error='rate_limited', retry_after=retry_after, event='content_request')
 
     # TODO: Integrate with content generation service
     await sio.emit('content_progress', {
@@ -578,6 +596,7 @@ async def content_request(sid: str, data: Dict[str, Any]):
         'progress': 0,
         'message': 'Content generation started'
     }, room=sid)
+    return _ack(True, event='content_request')
 
 @sio.event
 async def quiz_response(sid: str, data: Dict[str, Any]):
@@ -623,6 +642,7 @@ async def quiz_response(sid: str, data: Dict[str, Any]):
         'feedback': 'Great work!' if is_correct else 'Keep practicing!',
         'score': score
     }, room=sid)
+    return _ack(True, event='quiz_response', score=score)
 
 @sio.event
 async def progress_update(sid: str, data: Dict[str, Any]):
@@ -650,6 +670,7 @@ async def progress_update(sid: str, data: Dict[str, Any]):
 
     # Broadcast to relevant channels (e.g., teacher dashboard)
     await sio.emit('student_progress', data, room='teacher_updates')
+    return _ack(True, event='progress_update')
 
 @sio.event
 async def collaboration_message(sid: str, data: Dict[str, Any]):
@@ -680,6 +701,8 @@ async def collaboration_message(sid: str, data: Dict[str, Any]):
             'message': data.get('message'),
             'timestamp': datetime.now(timezone.utc).isoformat()
         }, room=f'collaboration_{room_id}', skip_sid=sid)
+        return _ack(True, event='collaboration_message', room_id=room_id)
+    return _ack(False, error='invalid_room_id')
 
 # Public functions for other services to emit events
 async def emit_to_user(user_id: str, event: str, data: Any):
@@ -712,7 +735,7 @@ def create_socketio_app(app: FastAPI) -> socketio.ASGIApp:
     socketio_app = socketio.ASGIApp(
         sio,
         other_asgi_app=app,
-        socketio_path='/socket.io'
+        socketio_path=SIO_PATH
     )
 
     logger.info("Socket.io server initialized on /socket.io")

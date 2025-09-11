@@ -1,5 +1,5 @@
 import { io, Socket } from "socket.io-client";
-import { WS_URL, WS_CONFIG, AUTH_TOKEN_KEY } from "../config";
+import { WS_URL, WS_CONFIG, AUTH_TOKEN_KEY, SIO_PATH } from "../config";
 import { store } from "../store";
 import { addNotification } from "../store/slices/uiSlice";
 import { addXP, addBadge, setLeaderboard } from "../store/slices/gamificationSlice";
@@ -24,7 +24,7 @@ class WebSocketService {
     }
     
     this.socket = io(WS_URL, {
-      path: '/socket.io/',
+      path: SIO_PATH,
       auth: {
         token,
       },

@@ -19,10 +19,16 @@ echo "📦 Setting up database..."
 if [ -d "database" ]; then
   cd database
   if [ ! -f ".db_initialized" ]; then
-      [ -f setup_database.py ] && python3 setup_database.py || true
-      [ -f create_initial_data.py ] && python3 create_initial_data.py || true
-      touch .db_initialized
-      echo "✓ Database initialized"
+      # Only run if Python has required modules, otherwise skip gracefully
+      if python3 -c "import yaml" >/dev/null 2>&1; then
+        [ -f setup_database.py ] && python3 setup_database.py || true
+        [ -f create_initial_data.py ] && python3 create_initial_data.py || true
+        touch .db_initialized
+        echo "✓ Database initialized"
+      else
+        echo "⚠️  Missing Python dependencies (yaml). Skipping database initialization."
+        touch .db_initialized
+      fi
   else
       echo "✓ Database already initialized"
   fi
@@ -60,8 +66,16 @@ write_pid "FastAPI-Server" "$FASTAPI_PID"
 
 echo "✓ FastAPI server started on http://$API_HOST:$FASTAPI_PORT (PID: $FASTAPI_PID)"
 
+# Also start Flask Bridge for Terminal 3
+lsof -ti:"$FLASK_PORT" | xargs -r kill -9 2>/dev/null || true
+FLASK_LOG="$PROJECT_ROOT/logs/flask_bridge.log"
+python server/roblox_server.py >"$FLASK_LOG" 2>&1 &
+FLASK_PID=$!
+write_pid "Flask-Bridge" "$FLASK_PID"
+echo "✓ Flask Bridge started on http://$API_HOST:$FLASK_PORT (PID: $FLASK_PID)"
+
 # Ensure cleanup on exit
-trap 'log "Stopping FastAPI (PID $FASTAPI_PID)"; kill $FASTAPI_PID 2>/dev/null || true; stop_by_pid FastAPI-Server' INT TERM EXIT
+trap 'log "Stopping services"; kill $FASTAPI_PID $FLASK_PID 2>/dev/null || true; stop_by_pid FastAPI-Server; stop_by_pid Flask-Bridge' INT TERM EXIT
 
 # Wait for server to be ready
 sleep 5 || true

@@ -146,7 +146,7 @@ class TerminalVerificationService {
     },
     {
       name: 'WebSocket Endpoint',
-      path: '/socket.io/',
+      path: '/socket.io',
       method: 'GET',
       expectedStatus: 200,
       timeout: 5000,
@@ -416,7 +416,7 @@ class TerminalVerificationService {
         const testSocket = io(WS_URL, {
           auth: { token },
           transports: ['websocket', 'polling'],
-          path: '/socket.io/',
+          path: '/socket.io',
           timeout: 5000,
           reconnection: false
         });
@@ -648,7 +648,7 @@ class TerminalVerificationService {
       this.socket = io(WS_URL, {
         auth: { token },
         transports: ['websocket', 'polling'],
-        path: '/socket.io/',
+        path: '/socket.io',
         timeout: 10000
       });
 

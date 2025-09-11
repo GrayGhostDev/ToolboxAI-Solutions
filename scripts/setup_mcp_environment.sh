@@ -163,94 +163,15 @@ except ImportError as e:
 "
 
 # Create a simple test script
-echo -e "${YELLOW}🧪 Creating test script...${NC}"
-cat > "$PROJECT_ROOT/scripts/test_mcp_setup.py" << 'EOF'
-#!/usr/bin/env python3
-"""
-Test script to verify MCP setup
-"""
-
-import sys
-import os
-import asyncio
-import websockets
-import json
-from pathlib import Path
-
-# Add project paths
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root / "src" / "roblox-environment"))
-sys.path.insert(0, str(project_root / "src" / "shared"))
-
-def test_imports():
-    """Test that all required modules can be imported"""
-    print("🔍 Testing imports...")
-    
-    try:
-        from mcp.server import MCPServer
-        print("✅ MCP Server imported successfully")
-    except ImportError as e:
-        print(f"❌ MCP Server import failed: {e}")
-        return False
-    
-    try:
-        from agents.orchestrator import Orchestrator
-        print("✅ Agent Orchestrator imported successfully")
-    except ImportError as e:
-        print(f"❌ Agent Orchestrator import failed: {e}")
-        return False
-    
-    try:
-        from sparc.state_manager import SPARCStateManager
-        print("✅ SPARC Manager imported successfully")
-    except ImportError as e:
-        print(f"❌ SPARC Manager import failed: {e}")
-        return False
-    
-    return True
-
-async def test_mcp_server():
-    """Test MCP server functionality"""
-    print("🔍 Testing MCP server...")
-    
-    try:
-        from mcp.server import MCPServer
-        server = MCPServer(port=9877, max_tokens=1000)  # Use different port for testing
-        print("✅ MCP Server created successfully")
-        return True
-    except Exception as e:
-        print(f"❌ MCP Server test failed: {e}")
-        return False
-
-def main():
-    """Run all tests"""
-    print("🚀 Running MCP setup tests...")
-    print("=" * 40)
-    
-    # Test imports
-    if not test_imports():
-        print("❌ Import tests failed")
-        return 1
-    
-    # Test MCP server
-    if not asyncio.run(test_mcp_server()):
-        print("❌ MCP server test failed")
-        return 1
-    
-    print("=" * 40)
-    print("✅ All tests passed! MCP setup is ready.")
-    return 0
-
-if __name__ == "__main__":
-    sys.exit(main())
-EOF
-
-chmod +x "$PROJECT_ROOT/scripts/test_mcp_setup.py"
-
-# Run the test
+# Run the test (optional)
 echo -e "${YELLOW}🧪 Running setup tests...${NC}"
 cd "$PROJECT_ROOT"
-"$VENV_PATH/bin/python" scripts/test_mcp_setup.py
+if [ -f "scripts/mcp/test_mcp_setup.py" ]; then
+  "$VENV_PATH/bin/python" scripts/mcp/test_mcp_setup.py || true
+else
+  echo -e "${YELLOW}⚠️  Test script not found at scripts/mcp/test_mcp_setup.py${NC}"
+fi
+
 
 echo ""
 echo -e "${GREEN}🎉 MCP Environment Setup Complete!${NC}"

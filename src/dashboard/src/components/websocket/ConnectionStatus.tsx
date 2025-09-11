@@ -35,6 +35,7 @@ import { useWebSocketStatus } from '../../hooks/websocket';
 import { useAppSelector } from '../../store';
 import { selectWebSocketStats, selectWebSocketError } from '../../store/slices/realtimeSlice';
 import { WebSocketState } from '../../types/websocket';
+import { API_BASE_URL, DEBUG_MODE } from '../../config';
 
 interface ConnectionStatusProps {
   variant?: 'compact' | 'detailed';
@@ -58,6 +59,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
   const stats = useAppSelector(selectWebSocketStats);
   const error = useAppSelector(selectWebSocketError);
   const [expanded, setExpanded] = useState(false);
+  const [serverDiag, setServerDiag] = useState<any | null>(null);
 
   // Get status color
   const getStatusColor = (): 'success' | 'warning' | 'error' | 'info' => {
@@ -114,6 +116,37 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     if (ms < 300) return `${ms}ms ⚠️`;
     return `${ms}ms ❌`;
   };
+
+  // Server diagnostics: periodically fetch /socketio/status in debug
+  React.useEffect(() => {
+    if (!DEBUG_MODE) return;
+    let timer: any;
+    let aborted = false;
+
+    const load = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/socketio/status`, {
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!aborted) setServerDiag({ ...data, fetchedAt: new Date().toISOString() });
+      } catch {
+        // ignore
+      }
+    };
+
+    // Prefetch on connect and then every 30s
+    if (status.isConnected) {
+      load();
+      timer = setInterval(load, 30000);
+    }
+
+    return () => {
+      aborted = true;
+      if (timer) clearInterval(timer);
+    };
+  }, [status.isConnected]);
 
   // Compact view (icon only with tooltip)
   if (variant === 'compact' && !expanded) {
@@ -283,6 +316,29 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
             <Typography variant="caption" display="block">
               Last disconnected: {new Date(status.lastDisconnected).toLocaleTimeString()}
             </Typography>
+          )}
+
+          {/* Diagnostics (debug only) */}
+          {DEBUG_MODE && (
+            <>
+              <Divider sx={{ my: 1 }} />
+              <Typography variant="subtitle2" gutterBottom>
+                Server Diagnostics
+              </Typography>
+              {serverDiag ? (
+                <Stack spacing={0.5}>
+                  <Typography variant="caption">Path: {serverDiag.path ?? 'unknown'}</Typography>
+                  <Typography variant="caption">Acks: {String(serverDiag.acks_enabled ?? false)}</Typography>
+                  <Typography variant="caption">Connected: {serverDiag.connected ?? 'n/a'}</Typography>
+                  <Typography variant="caption">Authenticated: {serverDiag.authenticated ?? 'n/a'}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Fetched: {new Date(serverDiag.fetchedAt).toLocaleTimeString()}
+                  </Typography>
+                </Stack>
+              ) : (
+                <Typography variant="caption" color="text.secondary">Loading diagnostics...</Typography>
+              )}
+            </>
           )}
         </>
       )}

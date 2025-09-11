@@ -88,7 +88,7 @@ from .models import (
 )
 from .websocket import broadcast_content_update, websocket_endpoint, websocket_manager
 from .database_service import db_service
-from .socketio_server import create_socketio_app
+from .socketio_server import create_socketio_app  # Socket.IO ASGI mounted at path '/socket.io'
 
 logger = logging.getLogger(__name__)
 
@@ -644,6 +644,8 @@ async def socketio_status():
             "connected": total,
             "authenticated": authenticated,
             "role_distribution": role_counts,
+            "acks_enabled": True,
+            "path": "/socket.io"
         }
     except Exception as e:
         logger.error(f"SocketIO status error: {e}")
@@ -796,12 +798,12 @@ async def api_generate_content(
             else:
                 response = await generate_educational_content(content_request, current_user)
         except Exception as e:
-                if sentry_manager.initialized:
-                    capture_educational_content_error(
-                        jsonable_encoder(content_request), 
-                        e, 
-                        current_user.id
-                    )
+            if sentry_manager.initialized:
+                capture_educational_content_error(
+                    jsonable_encoder(content_request), 
+                    e, 
+                    current_user.id
+                )
             raise
         
         # Broadcast update to WebSocket clients

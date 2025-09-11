@@ -6,7 +6,7 @@
  */
 
 import { io, Socket } from 'socket.io-client';
-import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, WS_CONFIG, WS_URL } from '../config';
+import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, WS_CONFIG, WS_URL, SIO_PATH } from '../config';
 import {
   MessageAcknowledgment,
   QueuedMessage,
@@ -115,7 +115,7 @@ export class WebSocketService {
 
         // Create socket connection with JWT authentication
         this.socket = io(socketUrl, {
-          path: '/socket.io/', // Match backend socketio_path (trailing slash)
+          path: SIO_PATH, // Match backend socketio_path (NO trailing slash)
           transports: ['websocket', 'polling'], // Allow fallback to polling
           auth: { 
             token: authToken,

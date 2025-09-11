@@ -46,7 +46,7 @@ async def test_with_token(token):
     try:
         print(f"🔄 Attempting to connect with token: {token[:20]}...")
         await sio.connect('http://localhost:8008', 
-                          socketio_path='/socket.io/',
+                          socketio_path='socket.io',
                           transports=['websocket', 'polling'],
                           auth={'token': token},
                           headers={'Authorization': f'Bearer {token}'})
@@ -69,7 +69,7 @@ async def test_without_token():
     try:
         print("🔄 Attempting to connect without token...")
         await sio.connect('http://localhost:8008', 
-                          socketio_path='/socket.io/',
+                          socketio_path='socket.io',
                           transports=['websocket', 'polling'])
         print("✅ Connection established (no auth)")
         await asyncio.sleep(2)
@@ -92,6 +92,28 @@ async def main():
         print("💡 To test with authentication, run:")
         print("python test_socketio.py YOUR_JWT_TOKEN")
         print("💡 Get a token by logging in at the dashboard")
+
+@pytest.mark.asyncio
+async def test_socketio_message_ack():
+    """Ensure that the server returns an acknowledgment for typed messages."""
+    client = socketio.AsyncClient(reconnection=False)
+    try:
+        await client.connect(
+            'http://127.0.0.1:8008',
+            socketio_path='socket.io',
+            transports=['websocket'],
+            auth={'token': 'test-token'}
+        )
+        ack = await client.call('message', { 'type': 'ping' }, timeout=3)
+        assert isinstance(ack, dict)
+        assert ack.get('ok') is True
+        # type may be 'ping' or None depending on server branch, accept both
+        assert ack.get('type') in ('ping', None)
+    finally:
+        try:
+            await client.disconnect()
+        except Exception:
+            pass
 
 if __name__ == '__main__':
     asyncio.run(main())

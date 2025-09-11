@@ -174,7 +174,15 @@ class SessionManager:
 
         # Store session
         session_key = f"session:{session.id}"
-        session_data = session.model_dump()
+        # Convert to JSON-serializable dict without relying on Pydantic internals
+        session_data = {
+            "id": session.id,
+            "user_id": session.user_id,
+            "roblox_user_id": session.roblox_user_id,
+            "studio_id": session.studio_id,
+            "created_at": session.created_at.isoformat() if getattr(session, "created_at", None) else datetime.now(timezone.utc).isoformat(),
+            "expires_at": session.expires_at.isoformat() if getattr(session, "expires_at", None) else (datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)).isoformat(),
+        }
 
         if redis_client:
             redis_client.setex(

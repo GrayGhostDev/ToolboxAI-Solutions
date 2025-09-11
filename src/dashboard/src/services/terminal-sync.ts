@@ -286,7 +286,7 @@ export class TerminalSyncService extends EventEmitter {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const socket = io(this.terminalEndpoints.terminal1.socketio, {
         auth: { token },
-        path: '/socket.io/',
+        path: '/socket.io',
         transports: ['websocket', 'polling'],
         timeout: 10000,
         reconnection: true,
@@ -458,7 +458,7 @@ export class TerminalSyncService extends EventEmitter {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const debugSocket = io(this.terminalEndpoints.debugger.socketio, {
         auth: { token },
-        path: '/socket.io/',
+        path: '/socket.io',
         namespace: '/debug',
         timeout: 10000
       });

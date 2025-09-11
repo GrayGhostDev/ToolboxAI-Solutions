@@ -50,7 +50,8 @@ lsof -ti:"$DASHBOARD_PORT" | xargs -r kill -9 2>/dev/null || true
 
 # Start the development server on canonical port
 echo "🚀 Starting dashboard development server on port $DASHBOARD_PORT..."
-HOST="$API_HOST" PORT="$DASHBOARD_PORT" npm run dev &
+# Prefer explicit CLI flag for Vite
+npm run dev -- --port "$DASHBOARD_PORT" &
 DASHBOARD_PID=$!
 
 # Wait for dashboard to be ready
