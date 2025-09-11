@@ -10,7 +10,7 @@ IDE setup
 
 - Point VS Code Python interpreter to:
 
-  /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/bin/python
+  /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/roblox-environment/venv_clean/bin/python
 
 - Reload the window after changing the interpreter so pyright picks up installed packages.
 

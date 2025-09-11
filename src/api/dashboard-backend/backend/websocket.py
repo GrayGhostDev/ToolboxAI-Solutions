@@ -23,7 +23,17 @@ JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 # Create async Socket.IO server
 sio = socketio.AsyncServer(
     async_mode='asgi',
-    cors_allowed_origins="*",  # Allow all origins for development
+    cors_allowed_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:5174", 
+        "http://localhost:5175",
+        "http://localhost:5176",
+        "http://localhost:5177",
+        "http://localhost:5179",
+        "https://d3vhlb3c-5173.use.devtunnels.ms",
+        "https://d3vhlb3c-3000.use.devtunnels.ms",
+    ],
     logger=True,
     engineio_logger=True,  # Enable Engine.IO logging for debugging
     ping_timeout=60,
@@ -58,18 +68,51 @@ async def verify_token(token: str) -> Optional[Dict[str, Any]]:
 async def connect(sid, environ, auth):
     """Handle new WebSocket connection"""
     try:
-        # Extract token from auth
-        token = auth.get('token') if auth else None
+        print(f"🔄 New connection attempt: sid={sid}")
+        print(f"🔍 Auth data: {auth}")
+        print(f"🔍 Environ headers: {dict(environ.get('HTTP_AUTHORIZATION', ''))}")
+        
+        # Extract token from multiple sources
+        token = None
+        
+        # 1. From auth object (Socket.IO client auth)
+        if auth and isinstance(auth, dict):
+            token = auth.get('token')
+            print(f"🔑 Token from auth: {token[:20] + '...' if token else 'None'}")
+        
+        # 2. From query parameters
+        if not token:
+            query_string = environ.get('QUERY_STRING', '')
+            print(f"🔍 Query string: {query_string}")
+            if 'token=' in query_string:
+                from urllib.parse import parse_qs
+                parsed = parse_qs(query_string)
+                if 'token' in parsed:
+                    token = parsed['token'][0]
+                    print(f"🔑 Token from query: {token[:20] + '...' if token else 'None'}")
+        
+        # 3. From Authorization header
+        if not token:
+            auth_header = environ.get('HTTP_AUTHORIZATION', '')
+            print(f"🔍 Auth header: {auth_header[:30] + '...' if auth_header else 'None'}")
+            if auth_header.startswith('Bearer '):
+                token = auth_header[7:]
+                print(f"🔑 Token from header: {token[:20] + '...' if token else 'None'}")
         
         if not token:
-            print(f"Connection rejected for {sid}: No token provided")
+            print(f"❌ Connection rejected for {sid}: No token provided in any location")
+            await sio.emit('auth_failed', {'message': 'No authentication token provided'}, room=sid)
             return False
         
         # Verify token
+        print(f"🔐 Verifying token for {sid}...")
         user_data = await verify_token(token)
         if not user_data:
-            print(f"Connection rejected for {sid}: Invalid token")
+            print(f"❌ Connection rejected for {sid}: Invalid token")
+            await sio.emit('auth_failed', {'message': 'Invalid authentication token'}, room=sid)
             return False
+        
+        print(f"✅ Token valid for user: {user_data.get('email')} (role: {user_data.get('role')})")
         
         # Store connection info
         active_connections[sid] = {
@@ -81,7 +124,7 @@ async def connect(sid, environ, auth):
         
         user_rooms[sid] = set()
         
-        print(f"User {user_data.get('email')} connected with session {sid}")
+        print(f"✅ User {user_data.get('email')} connected with session {sid}")
         
         # Send connection confirmation
         await sio.emit('connected', {
@@ -97,7 +140,10 @@ async def connect(sid, environ, auth):
         return True
         
     except Exception as e:
-        print(f"Connection error for {sid}: {str(e)}")
+        print(f"❌ Connection error for {sid}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        await sio.emit('auth_failed', {'message': f'Connection error: {str(e)}'}, room=sid)
         return False
 
 

@@ -27,6 +27,8 @@ import {
   ListItemIcon,
   ListItemText,
   ListItemSecondaryAction,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -48,6 +50,7 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import TimelineIcon from "@mui/icons-material/Timeline";
 import { useAppSelector, useAppDispatch } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
 import {
@@ -77,6 +80,11 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+
+// Import our new analytics components
+import UserActivityChart from "../analytics/UserActivityChart";
+import ContentMetrics from "../analytics/ContentMetrics";
+import PerformanceIndicator from "../analytics/PerformanceIndicator";
 
 interface Report {
   id: string;
@@ -131,6 +139,7 @@ export default function Reports() {
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = React.useState(false);
   const [isEmailDialogOpen, setIsEmailDialogOpen] = React.useState(false);
   const [selectedReportForEmail, setSelectedReportForEmail] = React.useState<string | null>(null);
+  const [currentTab, setCurrentTab] = React.useState(0);
 
   // Load data on component mount
   React.useEffect(() => {
@@ -380,6 +389,321 @@ export default function Reports() {
     }
   };
 
+  const renderTabContent = () => {
+    switch (currentTab) {
+      case 0: // Reports Generation
+        return (
+          <>
+            {/* Quick Stats */}
+            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Stack spacing={1}>
+                    <Typography variant="caption" color="text.secondary">
+                      Reports Generated
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                      {stats?.reports_generated || 0}
+                    </Typography>
+                    <Typography variant="caption" color="success.main">
+                      {stats?.reports_this_month || 0} this month
+                    </Typography>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid2>
+
+            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Stack spacing={1}>
+                    <Typography variant="caption" color="text.secondary">
+                      Scheduled Reports
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                      {stats?.scheduled_reports || 0}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {stats?.next_scheduled_time 
+                        ? `Next: ${new Date(stats.next_scheduled_time).toLocaleString()}`
+                        : "No scheduled reports"}
+                    </Typography>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid2>
+
+            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Stack spacing={1}>
+                    <Typography variant="caption" color="text.secondary">
+                      Recipients
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                      {stats?.total_recipients || 0}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Across all reports
+                    </Typography>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid2>
+
+            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Stack spacing={1}>
+                    <Typography variant="caption" color="text.secondary">
+                      Storage Used
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                      {stats?.storage_used_gb || 0} GB
+                    </Typography>
+                    <LinearProgress 
+                      variant="determinate" 
+                      value={Math.min((stats?.storage_used_gb || 0) * 10, 100)} 
+                      sx={{ mt: 1 }} 
+                    />
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid2>
+
+            {/* Report Generator */}
+            <Grid2 size={{ xs: 12, lg: 8 }}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+                    Generate New Report
+                  </Typography>
+                  <Grid2 container spacing={2}>
+                    <Grid2 size={{ xs: 12, md: 6 }}>
+                      <FormControl fullWidth>
+                        <InputLabel>Report Type</InputLabel>
+                        <Select
+                          value={reportType}
+                          label="Report Type"
+                          onChange={(e) => setReportType(e.target.value)}
+                        >
+                          <MenuItem value="progress">Progress Report</MenuItem>
+                          <MenuItem value="attendance">Attendance Report</MenuItem>
+                          <MenuItem value="grades">Grade Report</MenuItem>
+                          <MenuItem value="behavior">Behavior Report</MenuItem>
+                          <MenuItem value="custom">Custom Report</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid2>
+                    <Grid2 size={{ xs: 12, md: 6 }}>
+                      <FormControl fullWidth>
+                        <InputLabel>Class/Student</InputLabel>
+                        <Select defaultValue="all" label="Class/Student">
+                          <MenuItem value="all">All Classes</MenuItem>
+                          <MenuItem value="math5a">Math Grade 5A</MenuItem>
+                          <MenuItem value="science6b">Science Grade 6B</MenuItem>
+                          <MenuItem value="individual">Individual Student</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid2>
+                    <Grid2 size={{ xs: 12, md: 6 }}>
+                      <DatePicker
+                        label="Start Date"
+                        value={dateRange[0]}
+                        onChange={(newValue) => setDateRange([newValue, dateRange[1]])}
+                        slotProps={{ textField: { fullWidth: true } }}
+                      />
+                    </Grid2>
+                    <Grid2 size={{ xs: 12, md: 6 }}>
+                      <DatePicker
+                        label="End Date"
+                        value={dateRange[1]}
+                        onChange={(newValue) => setDateRange([dateRange[0], newValue])}
+                        slotProps={{ textField: { fullWidth: true } }}
+                      />
+                    </Grid2>
+                    <Grid2 size={12}>
+                      <Stack direction="row" gap={2}>
+                        <Button
+                          variant="contained"
+                          startIcon={<FileDownloadIcon />}
+                          onClick={handleGenerateReport}
+                          sx={{ flex: 1 }}
+                        >
+                          Generate Report
+                        </Button>
+                        <Button 
+                          variant="outlined" 
+                          startIcon={<ScheduleIcon />}
+                          onClick={handleScheduleReport}
+                        >
+                          Schedule
+                        </Button>
+                        <Button 
+                          variant="outlined" 
+                          startIcon={<EmailIcon />}
+                          disabled={reports.length === 0}
+                          onClick={() => reports.length > 0 && handleEmailReport(reports[0].id)}
+                        >
+                          Email
+                        </Button>
+                        <Button variant="outlined" startIcon={<PrintIcon />}>
+                          Print
+                        </Button>
+                      </Stack>
+                    </Grid2>
+                  </Grid2>
+                </CardContent>
+              </Card>
+            </Grid2>
+
+            {/* Report Templates */}
+            <Grid2 size={{ xs: 12, lg: 4 }}>
+              <Card sx={{ height: "100%" }}>
+                <CardContent>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                    Popular Templates
+                  </Typography>
+                  <List dense>
+                    {reportTemplates.filter(t => t.is_popular).map((template) => (
+                      <ListItem key={template.id} button onClick={() => setSelectedTemplate(template)}>
+                        <ListItemIcon>{template.icon}</ListItemIcon>
+                        <ListItemText
+                          primary={template.name}
+                          secondary={template.description}
+                        />
+                        <ListItemSecondaryAction>
+                          <IconButton edge="end" size="small">
+                            <MoreVertIcon />
+                          </IconButton>
+                        </ListItemSecondaryAction>
+                      </ListItem>
+                    ))}
+                  </List>
+                  <Button 
+                    fullWidth 
+                    variant="outlined" 
+                    sx={{ mt: 2 }}
+                    onClick={handleViewAllTemplates}
+                    disabled={loading}
+                  >
+                    View All Templates
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid2>
+
+            {/* Recent Reports */}
+            <Grid2 size={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                    Recent Reports
+                  </Typography>
+                  <TableContainer>
+                    <Table aria-label="recent reports table">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Report Name</TableCell>
+                          <TableCell>Type</TableCell>
+                          <TableCell>Frequency</TableCell>
+                          <TableCell>Generated</TableCell>
+                          <TableCell>Status</TableCell>
+                          <TableCell>Size</TableCell>
+                          <TableCell>Recipients</TableCell>
+                          <TableCell>Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {(reports.length > 0 ? reports : mockReports).slice(0, 5).map((report) => (
+                          <TableRow key={report.id} hover>
+                            <TableCell>
+                              <Stack direction="row" alignItems="center" gap={1}>
+                                <InsertDriveFileIcon fontSize="small" />
+                                <Typography variant="body2">{report.name}</Typography>
+                              </Stack>
+                            </TableCell>
+                            <TableCell>
+                              <Chip label={report.type} size="small" />
+                            </TableCell>
+                            <TableCell>{report.frequency}</TableCell>
+                            <TableCell>
+                              <Typography variant="caption">
+                                {new Date(report.lastGenerated).toLocaleString()}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={report.status}
+                                size="small"
+                                color={getStatusColor(report.status) as any}
+                              />
+                            </TableCell>
+                            <TableCell>{report.size || "—"}</TableCell>
+                            <TableCell>{report.recipients}</TableCell>
+                            <TableCell>
+                              <Stack direction="row" gap={0.5}>
+                                <IconButton 
+                                  size="small" 
+                                  disabled={report.status !== "ready"}
+                                  onClick={() => handleDownloadReport(report.id)}
+                                >
+                                  <FileDownloadIcon />
+                                </IconButton>
+                                <IconButton 
+                                  size="small"
+                                  onClick={() => handleEmailReport(report.id)}
+                                >
+                                  <EmailIcon />
+                                </IconButton>
+                                <IconButton size="small">
+                                  <MoreVertIcon />
+                                </IconButton>
+                              </Stack>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid2>
+          </>
+        );
+      
+      case 1: // Analytics Dashboard
+        return (
+          <>
+            <Grid2 size={12}>
+              <UserActivityChart timeRange="30d" height={350} autoRefresh={true} />
+            </Grid2>
+            <Grid2 size={12}>
+              <ContentMetrics timeRange="30d" autoRefresh={true} />
+            </Grid2>
+          </>
+        );
+      
+      case 2: // Performance Metrics
+        return (
+          <>
+            <Grid2 size={12}>
+              <PerformanceIndicator showSystemHealth={role === "admin"} autoRefresh={true} />
+            </Grid2>
+          </>
+        );
+      
+      default:
+        return (
+          <Grid2 size={12}>
+            <Alert severity="info">
+              Select a tab to view reports and analytics.
+            </Alert>
+          </Grid2>
+        );
+    }
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Grid2 container spacing={3}>
@@ -392,6 +716,7 @@ export default function Reports() {
                 justifyContent="space-between"
                 alignItems={{ xs: "flex-start", md: "center" }}
                 gap={2}
+                mb={2}
               >
                 <Stack direction="row" alignItems="center" gap={2}>
                   <AssessmentIcon sx={{ fontSize: 32, color: "primary.main" }} />
@@ -400,12 +725,12 @@ export default function Reports() {
                       Reports & Analytics
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Generate and schedule comprehensive reports
+                      Generate reports and view real-time analytics
                     </Typography>
                   </div>
                 </Stack>
                 <Stack direction="row" gap={2}>
-                  <Button variant="outlined" startIcon={<RefreshIcon />}>
+                  <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchReportData}>
                     Refresh
                   </Button>
                   <Button variant="contained" startIcon={<FileDownloadIcon />}>
@@ -413,336 +738,31 @@ export default function Reports() {
                   </Button>
                 </Stack>
               </Stack>
-            </CardContent>
-          </Card>
-        </Grid2>
-
-        {/* Quick Stats */}
-        <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
-            <CardContent>
-              <Stack spacing={1}>
-                <Typography variant="caption" color="text.secondary">
-                  Reports Generated
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                  {stats?.reports_generated || 0}
-                </Typography>
-                <Typography variant="caption" color="success.main">
-                  {stats?.reports_this_month || 0} this month
-                </Typography>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid2>
-
-        <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
-            <CardContent>
-              <Stack spacing={1}>
-                <Typography variant="caption" color="text.secondary">
-                  Scheduled Reports
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                  {stats?.scheduled_reports || 0}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {stats?.next_scheduled_time 
-                    ? `Next: ${new Date(stats.next_scheduled_time).toLocaleString()}`
-                    : "No scheduled reports"}
-                </Typography>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid2>
-
-        <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
-            <CardContent>
-              <Stack spacing={1}>
-                <Typography variant="caption" color="text.secondary">
-                  Recipients
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                  {stats?.total_recipients || 0}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Across all reports
-                </Typography>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid2>
-
-        <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card>
-            <CardContent>
-              <Stack spacing={1}>
-                <Typography variant="caption" color="text.secondary">
-                  Storage Used
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                  {stats?.storage_used_gb || 0} GB
-                </Typography>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={Math.min((stats?.storage_used_gb || 0) * 10, 100)} 
-                  sx={{ mt: 1 }} 
+              
+              {/* Navigation Tabs */}
+              <Tabs value={currentTab} onChange={(_, newValue) => setCurrentTab(newValue)}>
+                <Tab 
+                  label="Reports" 
+                  icon={<DescriptionIcon />}
+                  iconPosition="start"
                 />
-              </Stack>
+                <Tab 
+                  label="Analytics" 
+                  icon={<TimelineIcon />}
+                  iconPosition="start"
+                />
+                <Tab 
+                  label="Performance" 
+                  icon={<TrendingUpIcon />}
+                  iconPosition="start"
+                />
+              </Tabs>
             </CardContent>
           </Card>
         </Grid2>
 
-        {/* Report Generator */}
-        <Grid2 size={{ xs: 12, lg: 8 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-                Generate New Report
-              </Typography>
-              <Grid2 container spacing={2}>
-                <Grid2 size={{ xs: 12, md: 6 }}>
-                  <FormControl fullWidth>
-                    <InputLabel>Report Type</InputLabel>
-                    <Select
-                      value={reportType}
-                      label="Report Type"
-                      onChange={(e) => setReportType(e.target.value)}
-                    >
-                      <MenuItem value="progress">Progress Report</MenuItem>
-                      <MenuItem value="attendance">Attendance Report</MenuItem>
-                      <MenuItem value="grades">Grade Report</MenuItem>
-                      <MenuItem value="behavior">Behavior Report</MenuItem>
-                      <MenuItem value="custom">Custom Report</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid2>
-                <Grid2 size={{ xs: 12, md: 6 }}>
-                  <FormControl fullWidth>
-                    <InputLabel>Class/Student</InputLabel>
-                    <Select defaultValue="all" label="Class/Student">
-                      <MenuItem value="all">All Classes</MenuItem>
-                      <MenuItem value="math5a">Math Grade 5A</MenuItem>
-                      <MenuItem value="science6b">Science Grade 6B</MenuItem>
-                      <MenuItem value="individual">Individual Student</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid2>
-                <Grid2 size={{ xs: 12, md: 6 }}>
-                  <DatePicker
-                    label="Start Date"
-                    value={dateRange[0]}
-                    onChange={(newValue) => setDateRange([newValue, dateRange[1]])}
-                    slotProps={{ textField: { fullWidth: true } }}
-                  />
-                </Grid2>
-                <Grid2 size={{ xs: 12, md: 6 }}>
-                  <DatePicker
-                    label="End Date"
-                    value={dateRange[1]}
-                    onChange={(newValue) => setDateRange([dateRange[0], newValue])}
-                    slotProps={{ textField: { fullWidth: true } }}
-                  />
-                </Grid2>
-                <Grid2 size={12}>
-                  <Stack direction="row" gap={2}>
-                    <Button
-                      variant="contained"
-                      startIcon={<FileDownloadIcon />}
-                      onClick={handleGenerateReport}
-                      sx={{ flex: 1 }}
-                    >
-                      Generate Report
-                    </Button>
-                    <Button 
-                      variant="outlined" 
-                      startIcon={<ScheduleIcon />}
-                      onClick={handleScheduleReport}
-                    >
-                      Schedule
-                    </Button>
-                    <Button 
-                      variant="outlined" 
-                      startIcon={<EmailIcon />}
-                      disabled={reports.length === 0}
-                      onClick={() => reports.length > 0 && handleEmailReport(reports[0].id)}
-                    >
-                      Email
-                    </Button>
-                    <Button variant="outlined" startIcon={<PrintIcon />}>
-                      Print
-                    </Button>
-                  </Stack>
-                </Grid2>
-              </Grid2>
-            </CardContent>
-          </Card>
-        </Grid2>
-
-        {/* Report Templates */}
-        <Grid2 size={{ xs: 12, lg: 4 }}>
-          <Card sx={{ height: "100%" }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                Popular Templates
-              </Typography>
-              <List dense>
-                {reportTemplates.filter(t => t.is_popular).map((template) => (
-                  <ListItem key={template.id} button onClick={() => setSelectedTemplate(template)}>
-                    <ListItemIcon>{template.icon}</ListItemIcon>
-                    <ListItemText
-                      primary={template.name}
-                      secondary={template.description}
-                    />
-                    <ListItemSecondaryAction>
-                      <IconButton edge="end" size="small">
-                        <MoreVertIcon />
-                      </IconButton>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                ))}
-              </List>
-              <Button 
-                fullWidth 
-                variant="outlined" 
-                sx={{ mt: 2 }}
-                onClick={handleViewAllTemplates}
-                disabled={loading}
-              >
-                View All Templates
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid2>
-
-        {/* Analytics Charts */}
-        <Grid2 size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                Performance Trends
-              </Typography>
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={performanceData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="students" stroke="#2563EB" name="Student Count" />
-                  <Line type="monotone" dataKey="average" stroke="#22C55E" name="Average Score" />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid2>
-
-        <Grid2 size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                Subject Distribution
-              </Typography>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={subjectDistribution}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {subjectDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid2>
-
-        {/* Recent Reports */}
-        <Grid2 size={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                Recent Reports
-              </Typography>
-              <TableContainer>
-                <Table aria-label="recent reports table">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Report Name</TableCell>
-                      <TableCell>Type</TableCell>
-                      <TableCell>Frequency</TableCell>
-                      <TableCell>Generated</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Size</TableCell>
-                      <TableCell>Recipients</TableCell>
-                      <TableCell>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(reports.length > 0 ? reports : mockReports).slice(0, 5).map((report) => (
-                      <TableRow key={report.id} hover>
-                        <TableCell>
-                          <Stack direction="row" alignItems="center" gap={1}>
-                            <InsertDriveFileIcon fontSize="small" />
-                            <Typography variant="body2">{report.name}</Typography>
-                          </Stack>
-                        </TableCell>
-                        <TableCell>
-                          <Chip label={report.type} size="small" />
-                        </TableCell>
-                        <TableCell>{report.frequency}</TableCell>
-                        <TableCell>
-                          <Typography variant="caption">
-                            {new Date(report.lastGenerated).toLocaleString()}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={report.status}
-                            size="small"
-                            color={getStatusColor(report.status) as any}
-                          />
-                        </TableCell>
-                        <TableCell>{report.size || "—"}</TableCell>
-                        <TableCell>{report.recipients}</TableCell>
-                        <TableCell>
-                          <Stack direction="row" gap={0.5}>
-                            <IconButton 
-                              size="small" 
-                              disabled={report.status !== "ready"}
-                              onClick={() => handleDownloadReport(report.id)}
-                            >
-                              <FileDownloadIcon />
-                            </IconButton>
-                            <IconButton 
-                              size="small"
-                              onClick={() => handleEmailReport(report.id)}
-                            >
-                              <EmailIcon />
-                            </IconButton>
-                            <IconButton size="small">
-                              <MoreVertIcon />
-                            </IconButton>
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </CardContent>
-          </Card>
-        </Grid2>
+        {/* Tab Content */}
+        {renderTabContent()}
       </Grid2>
     </LocalizationProvider>
   );

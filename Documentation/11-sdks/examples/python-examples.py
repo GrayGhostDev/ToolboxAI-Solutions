@@ -149,7 +149,12 @@ async def async_examples():
             if isinstance(result, Exception):
                 print(f"Error for {student_id}: {result}")
             else:
-                print(f"Progress for {student_id}: {result.percent_complete}%")
+                # Safely access percent_complete attribute
+                percent = getattr(result, 'percent_complete', None)
+                if percent is not None:
+                    print(f"Progress for {student_id}: {percent}%")
+                else:
+                    print(f"Progress for {student_id}: {result}")
     
     # Process students in batches
     all_students = ["student-" + str(i) for i in range(100)]
@@ -696,8 +701,13 @@ def webhook_examples():
     def handle_webhook():
         # Verify webhook signature
         signature = request.headers.get("X-ToolBoxAI-Signature")
+        webhook_secret = os.getenv("WEBHOOK_SECRET")
+        
+        if not webhook_secret:
+            return "Webhook secret not configured", 500
+        
         expected_sig = hmac.new(
-            os.getenv("WEBHOOK_SECRET").encode(),
+            webhook_secret.encode(),
             request.data,
             hashlib.sha256
         ).hexdigest()
@@ -707,16 +717,21 @@ def webhook_examples():
         
         # Process webhook event
         event = request.json
-        event_type = event["type"]
+        if not event:
+            return "Invalid request body", 400
+            
+        event_type = event.get("type")
+        if not event_type:
+            return "Missing event type", 400
         
         if event_type == "lesson.completed":
-            handle_lesson_completed(event["data"])
+            handle_lesson_completed(event.get("data", {}))
         elif event_type == "quiz.submitted":
-            handle_quiz_submitted(event["data"])
+            handle_quiz_submitted(event.get("data", {}))
         elif event_type == "achievement.unlocked":
-            handle_achievement_unlocked(event["data"])
+            handle_achievement_unlocked(event.get("data", {}))
         elif event_type == "user.leveled_up":
-            handle_level_up(event["data"])
+            handle_level_up(event.get("data", {}))
         
         return "OK", 200
 

@@ -331,28 +331,28 @@ VALUES (
         'System Administrator',
         true,
         100,
-        '["*"]'
+        ARRAY ['["*"] '::jsonb]
     ),
     (
-        'teacher',
-        'Educator/Teacher',
+        ' teacher ',
+        ' Educator / Teacher ',
         true,
         50,
-        '["content:create", "content:edit", "content:view", "quiz:create", "quiz:edit", "quiz:view", "progress:view"]'
+        ARRAY[' ["content:create", "content:edit", "content:view", "quiz:create", "quiz:edit", "quiz:view", "progress:view"] '::jsonb]
     ),
     (
-        'student',
-        'Student/Learner',
+        ' student ',
+        ' Student / Learner ',
         true,
         10,
-        '["content:view", "quiz:take", "progress:view_own"]'
+        ARRAY[' ["content:view", "quiz:take", "progress:view_own"] '::jsonb]
     ),
     (
-        'developer',
-        'System Developer',
+        ' developer ',
+        ' System Developer ',
         true,
         75,
-        '["*"]'
+        ARRAY[' ["*"] '::jsonb]
     );
 -- Insert default learning objectives
 INSERT INTO learning_objectives (
@@ -364,35 +364,49 @@ INSERT INTO learning_objectives (
         curriculum_standard
     )
 VALUES (
-        'Basic Programming Concepts',
-        'Understand fundamental programming concepts',
-        'Computer Science',
+        ' Basic Programming Concepts ',
+        ' Understand fundamental programming concepts ',
+        ' Computer Science ',
         6,
-        'understand',
-        'CSTA-1A-AP-10'
+        ' understand ',
+        ' CSTA - 1A - AP -10 '
     ),
     (
-        'Problem Solving',
-        'Develop problem-solving skills through coding',
-        'Computer Science',
+        ' Problem Solving ',
+        ' Develop problem - solving skills through coding ',
+        ' Computer Science ',
         6,
-        'apply',
-        'CSTA-1A-AP-11'
+        ' apply ',
+        ' CSTA - 1A - AP -11 '
     ),
     (
-        'Collaboration',
-        'Work effectively in teams',
-        'Computer Science',
+        ' Collaboration ',
+        ' Work effectively in teams ',
+        ' Computer Science ',
         6,
-        'apply',
-        'CSTA-1A-AP-12'
+        ' apply ',
+        ' CSTA - 1A - AP -12 '
     );
 -- ============================================================================
 -- SUCCESS MESSAGE
 -- ============================================================================
-DO $$ BEGIN RAISE NOTICE '✅ Core database schema created successfully!';
-RAISE NOTICE '📊 Tables created: users, roles, user_roles, user_sessions, learning_objectives, educational_content, content_objectives, quizzes, quiz_questions, quiz_options, quiz_attempts, user_progress';
-RAISE NOTICE '🔍 Indexes created for optimal performance';
-RAISE NOTICE '⚡ Triggers created for automatic timestamp updates';
-RAISE NOTICE '📝 Initial data inserted: default roles and learning objectives';
+DO $$
+BEGIN
+    RAISE NOTICE ' ✅ Core database schema created successfully ! ';
+    RAISE NOTICE ' 📊 Tables created: users,
+        roles,
+        user_roles,
+        user_sessions,
+        learning_objectives,
+        educational_content,
+        content_objectives,
+        quizzes,
+        quiz_questions,
+        quiz_options,
+        quiz_attempts,
+        user_progress ';
+    RAISE NOTICE ' 🔍 Indexes created for optimal performance ';
+    RAISE NOTICE ' ⚡ Triggers created for automatic timestamp updates ';
+    RAISE NOTICE ' 📝 Initial data inserted: default roles
+        and learning objectives ';
 END $$;

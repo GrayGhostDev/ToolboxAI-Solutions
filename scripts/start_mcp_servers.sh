@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Project root directory
 PROJECT_ROOT="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
-ROBLOX_ENV="$PROJECT_ROOT/src/roblox-environment"
+ROBLOX_ENV="$PROJECT_ROOT/ToolboxAI-Roblox-Environment"
 VENV_PATH="$ROBLOX_ENV/venv_clean"
 
 echo -e "${BLUE}🚀 Starting ToolboxAI MCP Servers and Agents${NC}"

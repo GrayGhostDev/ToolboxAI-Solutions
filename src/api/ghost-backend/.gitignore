@@ -272,3 +272,29 @@ tunnel.sh
 deploy-prod.sh
 deploy-staging.sh
 rsync-deploy.sh
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+**/.dockerignore
+
+# Additional secrets
+.env
+.env.*
+.envrc
+.secret*
+*.secrets
+*.pem
+*.crt
+*.key
+*.p12
+*.pfx
+*.jks
+*.der
+*.csr
+.npmrc
+.pypirc
+.aws/
+.gcloud/
+.azure/

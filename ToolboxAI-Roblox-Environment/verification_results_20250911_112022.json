@@ -1,0 +1,67 @@
+{
+  "total_tests": 8,
+  "passed": 4,
+  "failed": 1,
+  "skipped": 3,
+  "success_rate": 50.0,
+  "total_duration": 7.632646322250366,
+  "timestamp": "2025-09-11T11:20:22.643429",
+  "detailed_results": [
+    {
+      "test_name": "Database Connectivity",
+      "status": "PASS",
+      "details": "Connected successfully, 37 tables found",
+      "duration": 0.019079923629760742,
+      "timestamp": "2025-09-11T11:20:15.029864"
+    },
+    {
+      "test_name": "API Health Check",
+      "status": "PASS",
+      "details": "API responding: healthy",
+      "duration": 6.463313102722168,
+      "timestamp": "2025-09-11T11:20:21.493222"
+    },
+    {
+      "test_name": "Authentication System",
+      "status": "FAIL",
+      "details": "Login failed: HTTP 401 - {\"detail\":\"Invalid credentials\"}",
+      "duration": 1.1387319564819336,
+      "timestamp": "2025-09-11T11:20:22.632065"
+    },
+    {
+      "test_name": "Protected Endpoints",
+      "status": "SKIP",
+      "details": "No auth token available",
+      "duration": 0.0,
+      "timestamp": "2025-09-11T11:20:22.632159"
+    },
+    {
+      "test_name": "Content Generation",
+      "status": "SKIP",
+      "details": "No auth token available",
+      "duration": 0.0,
+      "timestamp": "2025-09-11T11:20:22.632164"
+    },
+    {
+      "test_name": "WebSocket Authentication",
+      "status": "SKIP",
+      "details": "No auth token available",
+      "duration": 9.5367431640625e-07,
+      "timestamp": "2025-09-11T11:20:22.632167"
+    },
+    {
+      "test_name": "Database Performance",
+      "status": "PASS",
+      "details": "Query executed in 1.43ms (target: <50ms)",
+      "duration": 0.008970975875854492,
+      "timestamp": "2025-09-11T11:20:22.641142"
+    },
+    {
+      "test_name": "WebSocket Status Endpoints",
+      "status": "PASS",
+      "details": "WebSocket status available: 0 active connections",
+      "duration": 0.0021283626556396484,
+      "timestamp": "2025-09-11T11:20:22.643323"
+    }
+  ]
+}

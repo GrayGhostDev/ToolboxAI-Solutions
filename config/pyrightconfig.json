@@ -1,0 +1,16 @@
+{
+  "venvPath": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/roblox-environment",
+  "venv": "venv_clean",
+  "reportMissingImports": false,
+  "typeCheckingMode": "basic",
+  "stubPath": "./types",
+  "extraPaths": [
+    "./src/roblox-environment",
+    "./src/roblox-environment/server",
+    "./src/roblox-environment/agents",
+    "./src/roblox-environment/mcp",
+    "./src/roblox-environment/toolboxai_utils"
+  ],
+  "pythonVersion": "3.12",
+  "pythonPlatform": "Darwin"
+}

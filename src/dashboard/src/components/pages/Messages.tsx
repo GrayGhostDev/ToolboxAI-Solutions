@@ -127,7 +127,7 @@ export default function Messages() {
       const senderId = msg.fromUserId;
       if (!convMap.has(senderId)) {
         convMap.set(senderId, {
-          id: senderId,
+          id: `conv-${senderId}`, // Make ID unique with prefix
           participants: [{
             name: msg.fromUserId, // In real app, would fetch user details
             avatar: undefined,
@@ -326,7 +326,7 @@ export default function Messages() {
                       invisible={conversation.unread === 0}
                     >
                       <Avatar src={conversation.participants[0]?.avatar}>
-                        {conversation.participants[0]?.name[0]}
+                        {conversation.participants[0]?.name?.[0] || '?'}
                       </Avatar>
                     </Badge>
                   </ListItemAvatar>
@@ -410,9 +410,8 @@ export default function Messages() {
                 </Box>
               ) : (
                 filteredMessages.map((message) => (
-                  <ListItem
+                  <ListItemButton
                     key={message.id}
-                    button
                     selected={currentMessage?.id === message.id}
                     onClick={() => handleMessageSelect(message)}
                     sx={{
@@ -421,7 +420,7 @@ export default function Messages() {
                   >
                     <ListItemAvatar>
                       <Avatar>
-                        {message.fromUserId[0]?.toUpperCase()}
+                        {message.fromUserId?.charAt(0)?.toUpperCase() || '?'}
                       </Avatar>
                     </ListItemAvatar>
                   <ListItemText
@@ -464,11 +463,11 @@ export default function Messages() {
                           display: "block",
                         }}
                       >
-                        {message.content.substring(0, 100)}...
+                        {message.content ? `${message.content.substring(0, 100)}...` : 'No content'}
                       </Typography>
                     }
                   />
-                  </ListItem>
+                  </ListItemButton>
                 ))
               )}
             </List>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Socket.IO Test</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Socket.IO Connection Test</h1>
+    <div id="status">Connecting...</div>
+    <div id="messages"></div>
+    
+    <button onclick="sendPing()">Send Ping</button>
+    <button onclick="authenticate()">Authenticate</button>
+    
+    <script>
+        const socket = io('http://localhost:8008', {
+            path: '/socket.io/',
+            transports: ['websocket', 'polling']
+        });
+
+        const statusDiv = document.getElementById('status');
+        const messagesDiv = document.getElementById('messages');
+
+        function log(message) {
+            const p = document.createElement('p');
+            p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            messagesDiv.appendChild(p);
+            console.log(message);
+        }
+
+        socket.on('connect', () => {
+            statusDiv.textContent = '✅ Connected! Socket ID: ' + socket.id;
+            log('Connected to Socket.io server');
+        });
+
+        socket.on('disconnect', () => {
+            statusDiv.textContent = '❌ Disconnected';
+            log('Disconnected from server');
+        });
+
+        socket.on('connected', (data) => {
+            log('Server acknowledged connection: ' + JSON.stringify(data));
+        });
+
+        socket.on('pong', (data) => {
+            log('Received pong: ' + JSON.stringify(data));
+        });
+
+        socket.on('authenticated', (data) => {
+            log('Authentication successful: ' + JSON.stringify(data));
+        });
+
+        socket.on('auth_error', (data) => {
+            log('Authentication error: ' + JSON.stringify(data));
+        });
+
+        socket.on('message_response', (data) => {
+            log('Message response: ' + JSON.stringify(data));
+        });
+
+        socket.on('connect_error', (error) => {
+            statusDiv.textContent = '❌ Connection Error';
+            log('Connection error: ' + error.message);
+        });
+
+        function sendPing() {
+            socket.emit('ping', { timestamp: new Date().toISOString() });
+            log('Sent ping');
+        }
+
+        function authenticate() {
+            socket.emit('authenticate', { 
+                token: 'test-token-123',
+                user_id: 'test-user'
+            });
+            log('Sent authentication request');
+        }
+
+        // Send a test message after connection
+        socket.on('connect', () => {
+            setTimeout(() => {
+                socket.emit('message', { test: 'Hello from client!' });
+                log('Sent test message');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

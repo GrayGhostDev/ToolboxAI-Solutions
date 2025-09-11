@@ -45,8 +45,8 @@ exclude = [
 minversion = "6.0"
 addopts = "-ra -q --strict-markers"
 testpaths = [
-    "tests",
-    "ToolboxAI-Roblox-Environment/tests"
+    "tests/unit",
+    "tests/integration"
 ]
 python_files = "test_*.py"
 python_classes = "Test*"
@@ -85,5 +85,6 @@ extraPaths = [
     "./ToolboxAI-Roblox-Environment/swarm",
     "./ToolboxAI-Roblox-Environment/sparc",
     "./ToolboxAI-Roblox-Environment/toolboxai_utils",
-    "./API/GhostBackend/src"
+    "./src/shared/utils",
+    "./src/api/ghost-backend/src"
 ]

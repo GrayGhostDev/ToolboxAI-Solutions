@@ -25,6 +25,7 @@ import { setRole, signOut } from "../../store/slices/userSlice";
 import { useNavigate } from "react-router-dom";
 import { LANGUAGES } from "../../config";
 import { wsService } from "../../services/ws";
+import ConnectionStatus from "../widgets/ConnectionStatus";
 
 export default function Topbar() {
   const dispatch = useAppDispatch();
@@ -99,13 +100,16 @@ export default function Topbar() {
             aria-label="Select role"
             sx={{ fontSize: "0.875rem" }}
           >
-            {(["Admin", "Teacher", "Student", "Parent"] as UserRole[]).map((r) => (
+            {(["admin", "teacher", "student", "parent"] as UserRole[]).map((r) => (
               <MenuItem key={r} value={r}>
-                {r}
+                {r.charAt(0).toUpperCase() + r.slice(1)}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
+
+        {/* Connection Status */}
+        <ConnectionStatus showLabel={true} size="small" />
 
         {/* Language Selector */}
         <Tooltip title="Change language">

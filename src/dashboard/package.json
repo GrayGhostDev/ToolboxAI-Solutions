@@ -3,6 +3,10 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=18 <23",
+    "npm": ">=9"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -16,14 +20,17 @@
   "dependencies": {
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
-    "@mui/icons-material": "^5.15.20",
+    "@mui/icons-material": "^5.18.0",
     "@mui/material": "^5.15.20",
-    "@mui/x-date-pickers": "^6.19.9",
+    "@mui/x-date-pickers": "^6.20.2",
     "@reduxjs/toolkit": "^2.2.7",
     "axios": "^1.7.2",
+    "chart.js": "^4.5.0",
     "date-fns": "^2.30.0",
+    "esbuild": "^0.25.9",
     "i18next": "^23.11.5",
     "react": "^18.3.1",
+    "react-chartjs-2": "^5.3.0",
     "react-dom": "^18.3.1",
     "react-i18next": "^14.1.2",
     "react-redux": "^9.1.2",
@@ -33,18 +40,23 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20.14.9",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
-    "@vitejs/plugin-react": "^4.3.1",
+    "@vitejs/plugin-react": "^4.7.0",
+    "axios-mock-adapter": "^2.1.0",
     "eslint": "^9.15.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.7",
     "globals": "^16.3.0",
+    "jsdom": "^26.1.0",
     "typescript": "^5.5.3",
-    "vite": "^5.3.3",
+    "vite": "^7.1.5",
     "vitest": "^1.6.0"
   }
 }

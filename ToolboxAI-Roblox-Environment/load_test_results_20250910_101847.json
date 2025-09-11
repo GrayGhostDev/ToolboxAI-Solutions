@@ -1,0 +1,339 @@
+{
+  "timestamp": "2025-09-10T14:18:47.974589",
+  "configuration": {
+    "base_url": "http://localhost:8008",
+    "duration": 12.929289102554321,
+    "total_requests": 36
+  },
+  "summary": {
+    "success_rate": 33.33333333333333,
+    "total_requests": 36,
+    "requests_per_second": 2.784375824103725
+  },
+  "results": [
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status": 200,
+      "duration": 5.9633629322052,
+      "success": true,
+      "timestamp": "2025-09-10T14:18:41.010197",
+      "size": 176
+    },
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status": 200,
+      "duration": 5.9627299308776855,
+      "success": true,
+      "timestamp": "2025-09-10T14:18:41.009637",
+      "size": 175
+    },
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status": 200,
+      "duration": 5.963256120681763,
+      "success": true,
+      "timestamp": "2025-09-10T14:18:41.010245",
+      "size": 175
+    },
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status": 200,
+      "duration": 5.962637901306152,
+      "success": true,
+      "timestamp": "2025-09-10T14:18:41.009522",
+      "size": 176
+    },
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status": 200,
+      "duration": 5.964538812637329,
+      "success": true,
+      "timestamp": "2025-09-10T14:18:41.010971",
+      "size": 175
+    },
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status": 200,
+      "duration": 5.963143825531006,
+      "success": true,
+      "timestamp": "2025-09-10T14:18:41.010188",
+      "size": 175
+    },
+    {
+      "endpoint": "/generate_content",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.964484691619873,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:41.010961",
+      "size": 205
+    },
+    {
+      "endpoint": "/generate_content",
+      "method": "POST",
+      "status": 401,
+      "duration": 4.99082612991333,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:41.007658",
+      "size": 205
+    },
+    {
+      "endpoint": "/generate_content",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.964997053146362,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:41.011411",
+      "size": 205
+    },
+    {
+      "endpoint": "/generate_content",
+      "method": "POST",
+      "status": 401,
+      "duration": 4.990751028060913,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:41.007505",
+      "size": 205
+    },
+    {
+      "endpoint": "/generate_content",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.965752124786377,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:41.011847",
+      "size": 205
+    },
+    {
+      "endpoint": "/generate_content",
+      "method": "POST",
+      "status": 401,
+      "duration": 4.990602254867554,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:41.007468",
+      "size": 205
+    },
+    {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.966091871261597,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:41.012224",
+      "size": 32
+    },
+    {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "status": 401,
+      "duration": 4.99065899848938,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:41.007635",
+      "size": 32
+    },
+    {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.966457843780518,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:41.023424",
+      "size": 32
+    },
+    {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "status": 401,
+      "duration": 4.990554094314575,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:41.007494",
+      "size": 32
+    },
+    {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.966787099838257,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:41.023552",
+      "size": 32
+    },
+    {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "status": 401,
+      "duration": 4.990545272827148,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:41.007726",
+      "size": 32
+    },
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status": 200,
+      "duration": 5.946908950805664,
+      "success": true,
+      "timestamp": "2025-09-10T14:18:47.472558",
+      "size": 175
+    },
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status": 200,
+      "duration": 5.94676399230957,
+      "success": true,
+      "timestamp": "2025-09-10T14:18:47.472570",
+      "size": 176
+    },
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status": 200,
+      "duration": 5.946684837341309,
+      "success": true,
+      "timestamp": "2025-09-10T14:18:47.472551",
+      "size": 175
+    },
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status": 200,
+      "duration": 5.946578025817871,
+      "success": true,
+      "timestamp": "2025-09-10T14:18:47.472493",
+      "size": 175
+    },
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status": 200,
+      "duration": 5.946530103683472,
+      "success": true,
+      "timestamp": "2025-09-10T14:18:47.472482",
+      "size": 176
+    },
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status": 200,
+      "duration": 5.946578741073608,
+      "success": true,
+      "timestamp": "2025-09-10T14:18:47.472564",
+      "size": 175
+    },
+    {
+      "endpoint": "/generate_content",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.942568778991699,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:47.469927",
+      "size": 205
+    },
+    {
+      "endpoint": "/generate_content",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.942493915557861,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:47.469920",
+      "size": 205
+    },
+    {
+      "endpoint": "/generate_content",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.942460060119629,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:47.469934",
+      "size": 205
+    },
+    {
+      "endpoint": "/generate_content",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.942300081253052,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:47.469839",
+      "size": 205
+    },
+    {
+      "endpoint": "/generate_content",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.9423441886901855,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:47.469912",
+      "size": 205
+    },
+    {
+      "endpoint": "/generate_content",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.942224025726318,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:47.469855",
+      "size": 205
+    },
+    {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.9437501430511475,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:47.470639",
+      "size": 32
+    },
+    {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.943544864654541,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:47.470631",
+      "size": 32
+    },
+    {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.943483114242554,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:47.470547",
+      "size": 32
+    },
+    {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.943448066711426,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:47.470622",
+      "size": 32
+    },
+    {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.943320274353027,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:47.470443",
+      "size": 32
+    },
+    {
+      "endpoint": "/auth/login",
+      "method": "POST",
+      "status": 401,
+      "duration": 5.943285942077637,
+      "success": false,
+      "timestamp": "2025-09-10T14:18:47.470451",
+      "size": 32
+    }
+  ]
+}

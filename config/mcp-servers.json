@@ -1,0 +1,141 @@
+{
+  "mcpServers": {
+    "ToolboxAI-MCP-Server": {
+      "command": "python",
+      "args": [
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/mcp/server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment:/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/shared",
+        "MCP_HOST": "localhost",
+        "MCP_PORT": "9876",
+        "MCP_MAX_CONTEXT_TOKENS": "128000"
+      }
+    },
+    "ToolboxAI-Agent-Orchestrator": {
+      "command": "python",
+      "args": [
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/agents/orchestrator.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment:/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/shared",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "LANGCHAIN_API_KEY": "${LANGCHAIN_API_KEY}",
+        "LANGCHAIN_TRACING_V2": "true"
+      }
+    },
+    "ToolboxAI-Content-Agent": {
+      "command": "python",
+      "args": [
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/agents/content_agent.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment:/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/shared",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "AGENT_TYPE": "content"
+      }
+    },
+    "ToolboxAI-Quiz-Agent": {
+      "command": "python",
+      "args": [
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/agents/quiz_agent.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment:/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/shared",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "AGENT_TYPE": "quiz"
+      }
+    },
+    "ToolboxAI-Terrain-Agent": {
+      "command": "python",
+      "args": [
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/agents/terrain_agent.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment:/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/shared",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "AGENT_TYPE": "terrain"
+      }
+    },
+    "ToolboxAI-Script-Agent": {
+      "command": "python",
+      "args": [
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/agents/script_agent.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment:/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/shared",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "AGENT_TYPE": "script"
+      }
+    },
+    "ToolboxAI-Review-Agent": {
+      "command": "python",
+      "args": [
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/agents/review_agent.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment:/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/shared",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "AGENT_TYPE": "review"
+      }
+    },
+    "ToolboxAI-SPARC-Manager": {
+      "command": "python",
+      "args": [
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/sparc/state_manager.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment:/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/shared",
+        "SPARC_MODE": "development"
+      }
+    },
+    "ToolboxAI-Swarm-Controller": {
+      "command": "python",
+      "args": [
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/swarm/swarm_controller.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment:/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/shared",
+        "SWARM_MODE": "development"
+      }
+    },
+    "ToolboxAI-Main-Coordinator": {
+      "command": "python",
+      "args": [
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/coordinators/main_coordinator.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment:/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/shared",
+        "COORDINATOR_MODE": "development"
+      }
+    },
+    "ToolboxAI-FastAPI-Server": {
+      "command": "python",
+      "args": [
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/server/main.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment:/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/shared",
+        "FASTAPI_HOST": "127.0.0.1",
+        "FASTAPI_PORT": "8008",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "LANGCHAIN_API_KEY": "${LANGCHAIN_API_KEY}"
+      }
+    },
+    "ToolboxAI-Flask-Bridge": {
+      "command": "python",
+      "args": [
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/server/roblox_server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment:/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/shared",
+        "FLASK_HOST": "127.0.0.1",
+        "FLASK_PORT": "5001"
+      }
+    },
+    "TalkToFigma": {
+      "command": "npx",
+      "args": ["@sethdouglasford/mcp-figma@latest"]
+    }
+  }
+}

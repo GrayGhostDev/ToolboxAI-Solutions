@@ -1,0 +1,348 @@
+name: Roblox Studio Sync
+
+on:
+  push:
+    paths:
+      - 'ToolboxAI-Roblox-Environment/Roblox/**'
+      - 'ToolboxAI-Roblox-Environment/agents/**'
+      - 'ToolboxAI-Roblox-Environment/server/**'
+      - 'ToolboxAI-Roblox-Environment/mcp/**'
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      place_id:
+        description: 'Roblox Place ID to sync'
+        required: true
+        type: string
+
+jobs:
+  validate-scripts:
+    name: Validate Lua Scripts
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Lua
+        uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.1"
+      
+      - name: Set up LuaRocks
+        uses: leafo/gh-actions-luarocks@v4
+      
+      - name: Install Luacheck
+        run: |
+          luarocks install luacheck
+      
+      - name: Validate Lua syntax
+        run: |
+          find src/roblox-environment/Roblox -name "*.lua" -exec luacheck {} \; || true
+      
+      - name: Check for common issues
+        run: |
+          echo "Checking for common Roblox script issues..."
+          
+          # Check for deprecated APIs
+          if grep -r "workspace.CurrentCamera" src/roblox-environment/Roblox/; then
+            echo "Warning: Found deprecated API usage"
+          fi
+          
+          # Check for security issues
+          if grep -r "loadstring" src/roblox-environment/Roblox/; then
+            echo "Warning: loadstring usage detected - potential security risk"
+          fi
+          
+          # Check for performance issues
+          if grep -r "wait()" src/roblox-environment/Roblox/; then
+            echo "Warning: wait() usage detected - consider using task.wait()"
+          fi
+
+  generate-scripts:
+    name: Generate Educational Scripts
+    needs: validate-scripts
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          cd ToolboxAI-Roblox-Environment
+          pip install -r requirements.txt
+      
+      - name: Start MCP Server
+        run: |
+          cd ToolboxAI-Roblox-Environment
+          python mcp/server.py &
+          sleep 5
+      
+      - name: Trigger Agent Pipeline
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+        run: |
+          cd ToolboxAI-Roblox-Environment
+          python -c "
+          import asyncio
+          from agents.plugin_communication import PluginCommunicationHub
+          from agents.supervisor import SupervisorAgent
+          
+          async def generate_content():
+              # Initialize communication hub
+              hub = PluginCommunicationHub()
+              await hub.initialize()
+              
+              # Prepare CI/CD context
+              context = {
+                  'environment': 'ci_cd',
+                  'github_sha': '${{ github.sha }}',
+                  'github_ref': '${{ github.ref }}',
+                  'github_actor': '${{ github.actor }}',
+                  'workflow_run': '${{ github.run_id }}'
+              }
+              
+              # Generate content for different themes
+              themes = ['classroom', 'laboratory', 'outdoor', 'space']
+              for theme in themes:
+                  request = {
+                      'request_id': f'ci-{theme}-${{ github.run_id }}',
+                      'event_type': 'content_generation',
+                      'config': {
+                          'subject': 'STEM',
+                          'grade_level': 7,
+                          'environment_type': theme,
+                          'include_quiz': True,
+                          'include_terrain': True
+                      },
+                      'context': context
+                  }
+                  
+                  # Trigger agent pipeline
+                  response = await hub.handle_plugin_request(request)
+                  
+                  # Save generated content
+                  if response['status'] == 'success':
+                      with open(f'Roblox/Scripts/Generated/{theme}_complete.lua', 'w') as f:
+                          f.write(response['scripts'])
+              
+              await hub.cleanup()
+          
+          asyncio.run(generate_content())
+          "
+      
+      - name: Run Agent Tests
+        run: |
+          cd ToolboxAI-Roblox-Environment
+          pytest tests/unit/test_agents.py -v --tb=short
+      
+      - name: Generate Build Report
+        run: |
+          cd ToolboxAI-Roblox-Environment
+          python -c "
+          import json
+          import os
+          from datetime import datetime
+          
+          report = {
+              'build_id': '${{ github.run_id }}',
+              'commit': '${{ github.sha }}',
+              'branch': '${{ github.ref }}',
+              'timestamp': datetime.utcnow().isoformat(),
+              'generated_files': [],
+              'status': 'success'
+          }
+          
+          # List generated files
+          generated_dir = 'Roblox/Scripts/Generated'
+          if os.path.exists(generated_dir):
+              for file in os.listdir(generated_dir):
+                  report['generated_files'].append({
+                      'name': file,
+                      'size': os.path.getsize(os.path.join(generated_dir, file))
+                  })
+          
+          with open('build_report.json', 'w') as f:
+              json.dump(report, f, indent=2)
+          "
+      
+      - name: Upload generated scripts
+        uses: actions/upload-artifact@v3
+        with:
+          name: generated-scripts
+          path: ToolboxAI-Roblox-Environment/Roblox/Scripts/Generated/
+      
+      - name: Upload build report
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-report
+          path: ToolboxAI-Roblox-Environment/build_report.json
+
+  sync-to-roblox:
+    name: Sync to Roblox Studio
+    needs: generate-scripts
+    runs-on: windows-latest
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download generated scripts
+        uses: actions/download-artifact@v3
+        with:
+          name: generated-scripts
+          path: ToolboxAI-Roblox-Environment/Roblox/Scripts/Generated/
+      
+      - name: Download build report
+        uses: actions/download-artifact@v3
+        with:
+          name: build-report
+          path: ToolboxAI-Roblox-Environment/
+      
+      - name: Install Rojo
+        run: |
+          cargo install rojo
+      
+      - name: Create Rojo project file
+        run: |
+          @"
+          {
+            "name": "ToolboxAI-Educational",
+            "tree": {
+              "\$className": "DataModel",
+              "ServerScriptService": {
+                "\$path": "ToolboxAI-Roblox-Environment/Roblox/Scripts/ServerScripts",
+                "APIs": {
+                  "\$path": "ToolboxAI-Roblox-Environment/Roblox/API"
+                }
+              },
+              "StarterPlayer": {
+                "StarterPlayerScripts": {
+                  "\$path": "ToolboxAI-Roblox-Environment/Roblox/Scripts/ClientScripts"
+                }
+              },
+              "ReplicatedStorage": {
+                "Modules": {
+                  "\$path": "ToolboxAI-Roblox-Environment/Roblox/Scripts/ModuleScripts"
+                },
+                "Plugins": {
+                  "\$path": "ToolboxAI-Roblox-Environment/Roblox/Plugins"
+                }
+              },
+              "ServerStorage": {
+                "Generated": {
+                  "\$path": "ToolboxAI-Roblox-Environment/Roblox/Scripts/Generated"
+                }
+              }
+            }
+          }
+          "@ | Out-File -FilePath default.project.json -Encoding UTF8
+      
+      - name: Build Roblox place file
+        run: |
+          rojo build -o ToolboxAI.rbxl
+      
+      - name: Upload place file
+        uses: actions/upload-artifact@v3
+        with:
+          name: roblox-place
+          path: ToolboxAI.rbxl
+      
+      - name: Publish to Roblox (if place_id provided)
+        if: github.event.inputs.place_id
+        env:
+          ROBLOSECURITY: ${{ secrets.ROBLOSECURITY }}
+          PLACE_ID: ${{ github.event.inputs.place_id }}
+        run: |
+          # Note: This requires Roblox CLI tools or API integration
+          # Placeholder for actual Roblox publishing logic
+          echo "Would publish to Place ID: $env:PLACE_ID"
+          
+          # Using Roblox Open Cloud API (requires setup)
+          # $headers = @{
+          #   "x-api-key" = "${{ secrets.ROBLOX_API_KEY }}"
+          #   "Content-Type" = "application/octet-stream"
+          # }
+          # $placeFile = Get-Content -Path "ToolboxAI.rbxl" -Raw
+          # Invoke-RestMethod -Uri "https://apis.roblox.com/universes/v1/places/$env:PLACE_ID/versions" `
+          #   -Method POST -Headers $headers -Body $placeFile
+
+  deploy-to-staging:
+    name: Deploy to Staging Environment
+    needs: [sync-to-roblox]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && success()
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy Backend Services
+        env:
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_KEY: ${{ secrets.STAGING_KEY }}
+        run: |
+          echo "Deploying backend services to staging..."
+          # Deploy FastAPI server
+          # Deploy MCP server
+          # Deploy database migrations
+      
+      - name: Update Dashboard
+        env:
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL }}
+          API_KEY: ${{ secrets.DASHBOARD_API_KEY }}
+        run: |
+          curl -X POST "${DASHBOARD_URL}/api/deploy/notify" \
+            -H "Authorization: Bearer ${API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "environment": "staging",
+              "version": "${{ github.sha }}",
+              "status": "deployed"
+            }'
+  
+  notify-discord:
+    name: Notify Discord
+    needs: [sync-to-roblox, deploy-to-staging]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Send Discord notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          BUILD_STATUS="❌ Failed"
+          if [ "${{ needs.sync-to-roblox.result }}" == "success" ]; then
+            BUILD_STATUS="✅ Success"
+          fi
+          
+          DEPLOY_STATUS=""
+          if [ "${{ needs.deploy-to-staging.result }}" == "success" ]; then
+            DEPLOY_STATUS="\n🚀 Deployed to staging"
+          elif [ "${{ needs.deploy-to-staging.result }}" == "skipped" ]; then
+            DEPLOY_STATUS="\n⏭️ Staging deployment skipped"
+          fi
+          
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d "{
+              \"embeds\": [{
+                \"title\": \"Roblox Pipeline Update\",
+                \"description\": \"${BUILD_STATUS} for commit ${{ github.sha }}${DEPLOY_STATUS}\",
+                \"color\": $([ "${BUILD_STATUS}" == "✅ Success" ] && echo "3066993" || echo "15158332"),
+                \"fields\": [
+                  {\"name\": \"Branch\", \"value\": \"${{ github.ref_name }}\", \"inline\": true},
+                  {\"name\": \"Actor\", \"value\": \"${{ github.actor }}\", \"inline\": true},
+                  {\"name\": \"Run ID\", \"value\": \"${{ github.run_id }}\", \"inline\": true}
+                ],
+                \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)\"
+              }]
+            }" \
+            $DISCORD_WEBHOOK

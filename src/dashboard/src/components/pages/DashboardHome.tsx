@@ -16,6 +16,7 @@ import { UserRole } from "../../types";
 import { ProgressCharts } from "../widgets/ProgressCharts";
 import { useAppSelector, useAppDispatch } from "../../store";
 import { addXP } from "../../store/slices/gamificationSlice";
+import { addNotification } from "../../store/slices/uiSlice";
 import { getDashboardOverview } from "../../services/api";
 import { DashboardOverview } from "../../types/api";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
@@ -26,6 +27,8 @@ import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import SchoolIcon from "@mui/icons-material/School";
 import { ROUTES } from "../../config/routes";
 import CreateLessonDialog from "../dialogs/CreateLessonDialog";
+import RealTimeAnalytics from "../widgets/RealTimeAnalytics";
+import ConnectionStatus from "../widgets/ConnectionStatus";
 
 export function DashboardHome({ role }: { role: UserRole }) {
   const dispatch = useAppDispatch();
@@ -112,14 +115,14 @@ export function DashboardHome({ role }: { role: UserRole }) {
                   Welcome back! 👋
                 </Typography>
                 <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                  {role === "Teacher" && "Review today's classes, push lessons to Roblox, and track assessments."}
-                  {role === "Admin" && "Monitor usage across schools, manage integrations, and review compliance."}
-                  {role === "Student" && "Jump into your next mission, level up, and check the leaderboard!"}
-                  {role === "Parent" && "See your child's progress, download reports, and message teachers."}
+                  {role === "teacher" && "Review today's classes, push lessons to Roblox, and track assessments."}
+                  {role === "admin" && "Monitor usage across schools, manage integrations, and review compliance."}
+                  {role === "student" && "Jump into your next mission, level up, and check the leaderboard!"}
+                  {role === "parent" && "See your child's progress, download reports, and message teachers."}
                 </Typography>
               </Stack>
               <Stack direction="row" gap={1}>
-                {role === "Teacher" && (
+                {role === "teacher" && (
                   <>
                     <Button 
                       variant="contained" 
@@ -138,7 +141,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
                     </Button>
                   </>
                 )}
-                {role === "Admin" && (
+                {role === "admin" && (
                   <>
                     <Button 
                       variant="contained" 
@@ -156,7 +159,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
                     </Button>
                   </>
                 )}
-                {role === "Student" && (
+                {role === "student" && (
                   <>
                     <Button
                       variant="contained"
@@ -175,7 +178,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
                     </Button>
                   </>
                 )}
-                {role === "Parent" && (
+                {role === "parent" && (
                   <>
                     <Button 
                       variant="contained" 
@@ -200,7 +203,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
       </Grid2>
 
       {/* KPI Cards */}
-      {role === "Student" && (
+      {role === "student" && (
         <>
           <Grid2 size={{ xs: 12, md: 3 }}>
             <Card role="region" aria-label="XP overview">
@@ -296,7 +299,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
         </>
       )}
 
-      {(role === "Teacher" || role === "Admin") && (
+      {(role === "teacher" || role === "admin") && (
         <>
           <Grid2 size={{ xs: 12, md: 3 }}>
             <Card role="region" aria-label="Active classes">
@@ -392,7 +395,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
         </>
       )}
 
-      {role === "Parent" && (
+      {role === "parent" && (
         <>
           <Grid2 size={{ xs: 12, md: 3 }}>
             <Card role="region" aria-label="Child's XP">
@@ -486,6 +489,19 @@ export function DashboardHome({ role }: { role: UserRole }) {
             </Card>
           </Grid2>
         </>
+      )}
+
+      {/* Real-Time Analytics for Admin and Teacher */}
+      {(role === "admin" || role === "teacher") && (
+        <Grid2 size={12}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Real-Time Analytics
+            </Typography>
+            <ConnectionStatus showLabel={true} />
+          </Box>
+          <RealTimeAnalytics />
+        </Grid2>
       )}
 
       {/* Charts Section */}
@@ -600,7 +616,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
       </Grid2>
       
       {/* Create Lesson Dialog for Teachers */}
-      {role === "Teacher" && (
+      {role === "teacher" && (
         <CreateLessonDialog
           open={createLessonOpen}
           onClose={() => setCreateLessonOpen(false)}

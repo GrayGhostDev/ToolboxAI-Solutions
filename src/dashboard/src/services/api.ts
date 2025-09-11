@@ -80,6 +80,24 @@ class ApiClient {
             message = 'Message sent successfully!';
           } else if (url.includes('/consent')) {
             message = 'Consent recorded successfully!';
+          } else if (url.includes('/schools') && response.config.method === 'post') {
+            message = 'School created successfully!';
+          } else if (url.includes('/schools') && response.config.method === 'put') {
+            message = 'School updated successfully!';
+          } else if (url.includes('/schools') && response.config.method === 'delete') {
+            message = 'School deleted successfully!';
+          } else if (url.includes('/users') && response.config.method === 'post') {
+            message = 'User created successfully!';
+          } else if (url.includes('/users') && response.config.method === 'put') {
+            message = 'User updated successfully!';
+          } else if (url.includes('/users') && response.config.method === 'delete') {
+            message = 'User deleted successfully!';
+          } else if (url.includes('/classes') && response.config.method === 'post') {
+            message = 'Class created successfully!';
+          } else if (url.includes('/classes') && response.config.method === 'put') {
+            message = 'Class updated successfully!';
+          } else if (url.includes('/classes') && response.config.method === 'delete') {
+            message = 'Class deleted successfully!';
           }
           
           if (message) {
@@ -234,11 +252,20 @@ class ApiClient {
 
   // Authentication
   async login(email: string, password: string): Promise<AuthResponse> {
-    return this.request<AuthResponse>({
+    // Handle both email and username inputs
+    const username = email.includes('@') ? email.split('@')[0] : email;
+    
+    // Debug logging
+    console.log('Login attempt with:', { username, email });
+    
+    const response = await this.request<AuthResponse>({
       method: "POST",
       url: "/auth/login",
-      data: { email, password },
+      data: { username, password },
     });
+    
+    console.log('Login response:', response);
+    return response;
   }
 
   async register(data: {
@@ -715,6 +742,7 @@ class ApiClient {
 
 // Export singleton instance
 export const apiClient = new ApiClient();
+export default ApiClient;
 
 // Export bound convenience functions to preserve 'this' context
 export const login = apiClient.login.bind(apiClient);
@@ -850,6 +878,12 @@ export interface School extends SchoolCreate {
   class_count: number;
   created_at: string;
   updated_at: string;
+  // Computed properties for frontend compatibility
+  studentCount?: number;
+  teacherCount?: number;
+  classCount?: number;
+  createdAt?: string;
+  status?: string;
 }
 
 export const listSchools = async (params?: {
@@ -858,11 +892,21 @@ export const listSchools = async (params?: {
   is_active?: boolean;
   search?: string;
 }) => {
-  return apiClient['request']<School[]>({
+  const schools = await apiClient['request']<School[]>({
     method: 'GET',
     url: `/schools/`,
     params,
   });
+  
+  // Transform snake_case to camelCase for frontend compatibility
+  return schools.map(school => ({
+    ...school,
+    studentCount: school.student_count,
+    teacherCount: school.teacher_count,
+    classCount: school.class_count,
+    createdAt: new Date(school.created_at).toLocaleDateString(),
+    status: school.is_active ? 'active' : 'inactive'
+  }));
 };
 
 export const getSchool = async (schoolId: string) => {
@@ -873,19 +917,39 @@ export const getSchool = async (schoolId: string) => {
 };
 
 export const createSchool = async (data: SchoolCreate) => {
-  return apiClient['request']<School>({
+  const school = await apiClient['request']<School>({
     method: 'POST',
     url: `/schools/`,
     data,
   });
+  
+  // Transform response for frontend compatibility
+  return {
+    ...school,
+    studentCount: school.student_count,
+    teacherCount: school.teacher_count,
+    classCount: school.class_count,
+    createdAt: new Date(school.created_at).toLocaleDateString(),
+    status: school.is_active ? 'active' : 'inactive'
+  };
 };
 
 export const updateSchool = async (schoolId: string, data: Partial<SchoolCreate>) => {
-  return apiClient['request']<School>({
+  const school = await apiClient['request']<School>({
     method: 'PUT',
     url: `/schools/${schoolId}`,
     data,
   });
+  
+  // Transform response for frontend compatibility
+  return {
+    ...school,
+    studentCount: school.student_count,
+    teacherCount: school.teacher_count,
+    classCount: school.class_count,
+    createdAt: new Date(school.created_at).toLocaleDateString(),
+    status: school.is_active ? 'active' : 'inactive'
+  };
 };
 
 export const deleteSchool = async (schoolId: string) => {

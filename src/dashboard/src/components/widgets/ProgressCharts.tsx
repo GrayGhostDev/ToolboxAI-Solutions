@@ -82,7 +82,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
         <Card role="region" aria-label="Weekly XP chart">
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Weekly {role === "Student" ? "XP Progress" : "Class Activity"}
+              Weekly {role === "student" ? "XP Progress" : "Class Activity"}
             </Typography>
             <div style={{ width: "100%", height: 300 }}>
               <ResponsiveContainer>
@@ -105,7 +105,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
                     dot={{ fill: chartColors.primary, r: 4 }}
                     activeDot={{ r: 6 }}
                   />
-                  {role === "Teacher" && (
+                  {role === "teacher" && (
                     <Line
                       type="monotone"
                       dataKey="hours"
@@ -127,7 +127,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
         <Card role="region" aria-label="Subject mastery bar chart">
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Subject {role === "Student" ? "Mastery" : "Performance"}
+              Subject {role === "student" ? "Mastery" : "Performance"}
             </Typography>
             <div style={{ width: "100%", height: 300 }}>
               <ResponsiveContainer>
@@ -143,7 +143,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
                     }}
                   />
                   <Bar dataKey="mastery" fill={chartColors.primary} radius={[8, 8, 0, 0]} />
-                  {role === "Teacher" && (
+                  {role === "teacher" && (
                     <Bar dataKey="avgScore" fill={chartColors.secondary} radius={[8, 8, 0, 0]} />
                   )}
                 </BarChart>
@@ -154,7 +154,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
       </Grid2>
 
       {/* Skills Radar Chart */}
-      {role === "Student" && (
+      {role === "student" && (
         <Grid2 size={{ xs: 12, md: 6 }}>
           <Card role="region" aria-label="Skills radar chart">
             <CardContent>
@@ -194,7 +194,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
       )}
 
       {/* Activity Distribution */}
-      <Grid2 size={{ xs: 12, md: role === "Student" ? 6 : 4 }}>
+      <Grid2 size={{ xs: 12, md: role === "student" ? 6 : 4 }}>
         <Card role="region" aria-label="Activity distribution pie chart">
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
@@ -237,7 +237,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
           <Card role="region" aria-label="Progress radial chart">
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                {role === "Student" ? "Level Progress" : "Completion Rate"}
+                {role === "student" ? "Level Progress" : "Completion Rate"}
               </Typography>
               <div style={{ width: "100%", height: 300 }}>
                 <ResponsiveContainer>
@@ -279,7 +279,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
       )}
 
       {/* Monthly Trend (for Teachers and Admins) */}
-      {(role === "Teacher" || role === "Admin") && (
+      {(role === "teacher" || role === "admin") && (
         <Grid2 size={{ xs: 12, md: 4 }}>
           <Card role="region" aria-label="Monthly trend">
             <CardContent>

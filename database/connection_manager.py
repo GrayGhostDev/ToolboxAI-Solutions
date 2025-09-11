@@ -26,6 +26,8 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+# Also load from config directory
+load_dotenv("config/database.env")
 
 
 class DatabaseConnectionManager:
@@ -104,9 +106,11 @@ class DatabaseConnectionManager:
                 sync_engine = create_engine(
                     sync_url,
                     poolclass=QueuePool,
-                    pool_size=int(os.getenv("DB_POOL_SIZE", 10)),
-                    max_overflow=int(os.getenv("DB_MAX_OVERFLOW", 20)),
+                    pool_size=int(os.getenv("DB_POOL_SIZE", 20)),
+                    max_overflow=int(os.getenv("DB_MAX_OVERFLOW", 40)),
                     pool_pre_ping=True,
+                    pool_timeout=30,
+                    pool_recycle=3600,
                     echo=config["echo"],
                 )
 
@@ -114,8 +118,10 @@ class DatabaseConnectionManager:
                 async_url = sync_url.replace("postgresql://", "postgresql+asyncpg://")
                 async_engine = create_async_engine(
                     async_url,
-                    pool_size=int(os.getenv("DB_POOL_SIZE", 10)),
-                    max_overflow=int(os.getenv("DB_MAX_OVERFLOW", 20)),
+                    pool_size=int(os.getenv("DB_POOL_SIZE", 20)),
+                    max_overflow=int(os.getenv("DB_MAX_OVERFLOW", 40)),
+                    pool_timeout=30,
+                    pool_recycle=3600,
                     echo=config["echo"],
                 )
 

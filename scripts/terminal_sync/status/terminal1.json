@@ -1,0 +1,17 @@
+{
+    "terminal": "terminal1",
+    "status": "operational",
+    "timestamp": "2025-09-10T14:15:43Z",
+    "services": {
+        "fastapi": true,
+        "flask": true,
+        "postgres": true,
+        "redis": true
+    },
+    "endpoints": {
+        "api": "http://localhost:8008",
+        "flask_bridge": "http://localhost:5001",
+        "websocket": "ws://localhost:8008/socket.io/"
+    },
+    "health_check": "http://localhost:8008/health"
+}

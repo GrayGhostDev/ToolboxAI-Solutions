@@ -1,0 +1,1250 @@
+[
+  {
+    "name": "Topbar",
+    "category": "layout",
+    "file_path": "src/dashboard/src/components/layout/Topbar.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/material/Badge",
+      "@mui/material/Tooltip",
+      "@mui/material/Select",
+      "@mui/material/FormControl",
+      "@mui/icons-material/Language",
+      "@mui/icons-material/LightMode",
+      "@mui/material/Menu",
+      "@mui/material/IconButton",
+      "@mui/material/Toolbar",
+      "@mui/material/Typography",
+      "react",
+      "@mui/icons-material/AccountCircle",
+      "@mui/icons-material/DarkMode",
+      "@mui/material/AppBar",
+      "@mui/icons-material/Settings",
+      "@mui/material/MenuItem",
+      "@mui/icons-material/Logout",
+      "@mui/icons-material/Notifications",
+      "@mui/icons-material/Menu",
+      "@mui/material/Avatar",
+      "react-router-dom"
+    ],
+    "hooks": [
+      "useAppDispatch",
+      "useNavigate",
+      "useAppSelector",
+      "useState",
+      "useEvent"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "AppLayout",
+    "category": "layout",
+    "file_path": "src/dashboard/src/components/layout/AppLayout.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/material/Box",
+      "react",
+      "@mui/material/Toolbar"
+    ],
+    "hooks": [
+      "useAppSelector"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": false,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "Sidebar",
+    "category": "layout",
+    "file_path": "src/dashboard/src/components/layout/Sidebar.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/material/ListItemText",
+      "@mui/material/Divider",
+      "@mui/icons-material/Security",
+      "@mui/icons-material/Games",
+      "@mui/material/Drawer",
+      "@mui/material/ListItemIcon",
+      "@mui/icons-material/Assignment",
+      "@mui/icons-material/Leaderboard",
+      "@mui/icons-material/EmojiEvents",
+      "@mui/material/Toolbar",
+      "@mui/material/Box",
+      "@mui/icons-material/People",
+      "@mui/material/Typography",
+      "react",
+      "@mui/icons-material/SportsEsports",
+      "@mui/icons-material/AccountCircle",
+      "@mui/material/LinearProgress",
+      "@mui/icons-material/Dashboard",
+      "@mui/icons-material/Message",
+      "@mui/icons-material/Assessment",
+      "@mui/icons-material/Settings",
+      "@mui/icons-material/IntegrationInstructions",
+      "@mui/material/ListItem",
+      "@mui/icons-material/Flag",
+      "@mui/icons-material/School",
+      "@mui/material/List",
+      "@mui/material/ListItemButton",
+      "react-router-dom"
+    ],
+    "hooks": [
+      "useLocation",
+      "useAppSelector"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": false,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "Settings",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Settings.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/icons-material/Security",
+      "@mui/icons-material/Smartphone",
+      "@mui/icons-material/Delete",
+      "@mui/icons-material/Accessibility",
+      "@mui/icons-material/Storage",
+      "@mui/icons-material/VpnKey",
+      "@mui/icons-material/Email",
+      "@mui/icons-material/PhotoCamera",
+      "@mui/icons-material/Language",
+      "@mui/icons-material/Palette",
+      "@mui/icons-material/Save",
+      "react",
+      "@mui/material/Unstable_Grid2",
+      "@mui/icons-material/Download",
+      "@mui/icons-material/Cancel",
+      "@mui/icons-material/AccountCircle",
+      "@mui/icons-material/Edit",
+      "@mui/icons-material/Notifications"
+    ],
+    "hooks": [
+      "useAppDispatch",
+      "useAppSelector",
+      "useState"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "Leaderboard",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Leaderboard.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/icons-material/Whatshot",
+      "@mui/icons-material/TrendingDown",
+      "react",
+      "@mui/material/Unstable_Grid2",
+      "@mui/icons-material/Search",
+      "@mui/icons-material/EmojiEvents",
+      "@mui/icons-material/TrendingUp",
+      "@mui/icons-material/Remove",
+      "@mui/icons-material/Star"
+    ],
+    "hooks": [
+      "useAppDispatch",
+      "useAppSelector",
+      "useState",
+      "useEffect",
+      "useEvent"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "Rewards",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Rewards.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/icons-material/ShoppingCart",
+      "@mui/icons-material/Remove",
+      "@mui/icons-material/Add",
+      "@mui/icons-material/LocalOffer",
+      "@mui/icons-material/CheckCircle",
+      "@mui/icons-material/Timer",
+      "@mui/icons-material/FilterList",
+      "react",
+      "@mui/icons-material/Diamond",
+      "@mui/material/Unstable_Grid2",
+      "@mui/icons-material/Search",
+      "@mui/icons-material/EmojiEvents",
+      "@mui/icons-material/TrendingUp",
+      "@mui/icons-material/Lock",
+      "@mui/icons-material/CardGiftcard",
+      "@mui/icons-material/Star"
+    ],
+    "hooks": [
+      "useAppDispatch",
+      "useAppSelector",
+      "useState"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "Reports",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Reports.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/icons-material/Print",
+      "@mui/icons-material/Description",
+      "@mui/x-date-pickers/LocalizationProvider",
+      "@mui/material/Unstable_Grid2",
+      "@mui/icons-material/EmojiEvents",
+      "@mui/icons-material/TrendingUp",
+      "@mui/x-date-pickers/AdapterDateFns",
+      "@mui/icons-material/People",
+      "@mui/icons-material/PictureAsPdf",
+      "react",
+      "@mui/x-date-pickers/DatePicker",
+      "@mui/icons-material/FileDownload",
+      "@mui/icons-material/Schedule",
+      "@mui/icons-material/ViewList",
+      "@mui/icons-material/Assessment",
+      "@mui/icons-material/Refresh",
+      "@mui/icons-material/InsertDriveFile",
+      "@mui/icons-material/MoreVert",
+      "@mui/icons-material/Email",
+      "@mui/icons-material/TableChart",
+      "@mui/icons-material/Timeline",
+      "@mui/icons-material/School"
+    ],
+    "hooks": [
+      "useAppDispatch",
+      "useAppSelector",
+      "useState",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "Assessments",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Assessments.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/material/Card",
+      "@mui/material/Stack",
+      "@mui/material/CircularProgress",
+      "@mui/material/Menu",
+      "@mui/material/IconButton",
+      "@mui/material/Box",
+      "@mui/icons-material/Add",
+      "@mui/material/Grid",
+      "@mui/material/Typography",
+      "react",
+      "@mui/icons-material/FilterList",
+      "@mui/material/LinearProgress",
+      "@mui/icons-material/Assessment",
+      "@mui/icons-material/Refresh",
+      "@mui/material/MenuItem",
+      "@mui/material/Button",
+      "@mui/icons-material/MoreVert",
+      "@mui/material/Alert",
+      "@mui/material/CardContent",
+      "@mui/material/Chip",
+      "react-router-dom"
+    ],
+    "hooks": [
+      "useAppDispatch",
+      "useNavigate",
+      "useAppSelector",
+      "useState",
+      "useEffect",
+      "useEvent"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "PasswordReset",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/PasswordReset.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/icons-material",
+      "react",
+      "react-router-dom"
+    ],
+    "hooks": [
+      "useNavigate",
+      "useAppDispatch",
+      "useSearchParams",
+      "useState"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "Login",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Login.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/icons-material",
+      "react",
+      "react-router-dom"
+    ],
+    "hooks": [
+      "useNavigate",
+      "useAppDispatch",
+      "useState"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "Progress",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Progress.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "react",
+      "@mui/material/Unstable_Grid2"
+    ],
+    "hooks": [
+      "useAppDispatch",
+      "useAppSelector",
+      "useState",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "Compliance",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Compliance.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/icons-material/Gavel",
+      "@mui/icons-material/Person",
+      "@mui/icons-material/Security",
+      "@mui/icons-material/FileDownload",
+      "@mui/icons-material/FamilyRestroom",
+      "@mui/icons-material/Info",
+      "@mui/icons-material/Policy",
+      "@mui/icons-material/Settings",
+      "@mui/icons-material/Refresh",
+      "@mui/icons-material/School",
+      "react",
+      "@mui/material/Unstable_Grid2",
+      "@mui/icons-material/Error",
+      "@mui/icons-material/AssignmentTurnedIn",
+      "@mui/icons-material/VerifiedUser",
+      "@mui/icons-material/CheckCircle",
+      "@mui/icons-material/Warning"
+    ],
+    "hooks": [
+      "useAppDispatch",
+      "useAppSelector",
+      "useState",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "Missions",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Missions.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "react",
+      "react-redux"
+    ],
+    "hooks": [
+      "useDispatch",
+      "useSelector",
+      "useState",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": true,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "DashboardHome",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/DashboardHome.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/material/Card",
+      "@mui/material/Stack",
+      "@mui/material/CircularProgress",
+      "@mui/icons-material/RocketLaunch",
+      "@mui/material/Unstable_Grid2",
+      "@mui/icons-material/EmojiEvents",
+      "@mui/icons-material/TrendingUp",
+      "@mui/material/Box",
+      "@mui/material/Typography",
+      "react",
+      "@mui/material/LinearProgress",
+      "@mui/icons-material/CheckCircle",
+      "@mui/material/Button",
+      "@mui/material/CardContent",
+      "@mui/icons-material/School",
+      "@mui/material/Avatar",
+      "@mui/material/Chip",
+      "@mui/icons-material/Warning",
+      "react-router-dom"
+    ],
+    "hooks": [
+      "useAppDispatch",
+      "useNavigate",
+      "useAppSelector",
+      "useState",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "Register",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Register.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/icons-material",
+      "react",
+      "react-router-dom"
+    ],
+    "hooks": [
+      "useNavigate",
+      "useAppDispatch",
+      "useState"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "Classes",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Classes.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/icons-material/MoreVert",
+      "@mui/icons-material/Add",
+      "@mui/icons-material/Schedule",
+      "@mui/material/Grid",
+      "@mui/icons-material/People",
+      "@mui/icons-material/Delete",
+      "@mui/icons-material/Visibility",
+      "react",
+      "@mui/icons-material/Search",
+      "@mui/icons-material/RocketLaunch",
+      "@mui/icons-material/Edit",
+      "@mui/icons-material/TrendingUp",
+      "react-router-dom"
+    ],
+    "hooks": [
+      "useAppDispatch",
+      "useNavigate",
+      "useAppSelector",
+      "useState",
+      "useEffect",
+      "useEvent"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "Avatar",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Avatar.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/material",
+      "react"
+    ],
+    "hooks": [],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": false,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "Messages",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Messages.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/icons-material/Drafts",
+      "@mui/material/Unstable_Grid2",
+      "@mui/icons-material/Create",
+      "@mui/icons-material/Reply",
+      "react",
+      "@mui/icons-material/Circle",
+      "@mui/icons-material/SendOutlined",
+      "@mui/icons-material/Forward",
+      "@mui/icons-material/Refresh",
+      "@mui/icons-material/AttachFile",
+      "@mui/icons-material/Search",
+      "@mui/icons-material/Archive",
+      "@mui/icons-material/CheckCircle",
+      "@mui/icons-material/Star",
+      "@mui/icons-material/MoreVert",
+      "@mui/icons-material/Delete",
+      "@mui/icons-material/DoneAll",
+      "@mui/icons-material/Send",
+      "@mui/icons-material/Inbox"
+    ],
+    "hooks": [
+      "useAppDispatch",
+      "useAppSelector",
+      "useState",
+      "useEffect",
+      "useMemo"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "Lessons",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Lessons.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/material/Card",
+      "@mui/material/Stack",
+      "@mui/material/TableCell",
+      "@mui/material/Table",
+      "@mui/material/TableBody",
+      "@mui/icons-material/ContentCopy",
+      "@mui/material/Menu",
+      "@mui/icons-material/RocketLaunch",
+      "@mui/material/Unstable_Grid2",
+      "@mui/material/TableRow",
+      "@mui/material/IconButton",
+      "@mui/icons-material/Add",
+      "@mui/material/Typography",
+      "react",
+      "@mui/material/TableHead",
+      "@mui/material/MenuItem",
+      "@mui/icons-material/Search",
+      "@mui/material/Button",
+      "@mui/material/TextField",
+      "@mui/icons-material/MoreVert",
+      "@mui/icons-material/Delete",
+      "@mui/material/CardContent",
+      "@mui/material/InputAdornment",
+      "@mui/material/Chip",
+      "@mui/icons-material/Edit"
+    ],
+    "hooks": [
+      "useAppDispatch",
+      "useState",
+      "useCallback",
+      "useEffect",
+      "useEvent"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "Integrations",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/Integrations.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/icons-material/Security",
+      "@mui/icons-material/Storage",
+      "@mui/material/Unstable_Grid2",
+      "@mui/icons-material/Error",
+      "@mui/icons-material/Add",
+      "@mui/icons-material/Visibility",
+      "@mui/icons-material/Sync",
+      "@mui/icons-material/CloudSync",
+      "@mui/icons-material/Code",
+      "@mui/icons-material/Api",
+      "react",
+      "@mui/icons-material/SportsEsports",
+      "@mui/icons-material/FileDownload",
+      "@mui/icons-material/Settings",
+      "@mui/icons-material/IntegrationInstructions",
+      "@mui/icons-material/CheckCircle",
+      "@mui/icons-material/Delete",
+      "@mui/icons-material/School",
+      "@mui/icons-material/Warning",
+      "@mui/icons-material/Edit"
+    ],
+    "hooks": [
+      "useAppSelector",
+      "useState"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "TeacherRobloxDashboard",
+    "category": "pages",
+    "file_path": "src/dashboard/src/components/pages/TeacherRobloxDashboard.tsx",
+    "type": "functional",
+    "description": "TeacherRobloxDashboard Page",
+    "props": [],
+    "imports": [
+      "react"
+    ],
+    "hooks": [
+      "useTheme",
+      "useAppDispatch",
+      "useWebSocketContext",
+      "useState",
+      "useAppSelector",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "ProgressCharts",
+    "category": "widgets",
+    "file_path": "src/dashboard/src/components/widgets/ProgressCharts.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/material/Card",
+      "@mui/material/CardContent",
+      "@mui/material/styles",
+      "@mui/material/Typography",
+      "react",
+      "@mui/material/Unstable_Grid2"
+    ],
+    "hooks": [
+      "useTheme"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": false,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "StudentProgressTracker",
+    "category": "widgets",
+    "file_path": "src/dashboard/src/components/widgets/StudentProgressTracker.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "react"
+    ],
+    "hooks": [
+      "useWebSocketContext",
+      "useState",
+      "useRealTimeData",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "RealTimeAnalytics",
+    "category": "widgets",
+    "file_path": "src/dashboard/src/components/widgets/RealTimeAnalytics.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "react-chartjs-2",
+      "react"
+    ],
+    "hooks": [
+      "useWebSocketContext",
+      "useRealTimeData",
+      "useState",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "ConnectionStatus",
+    "category": "widgets",
+    "file_path": "src/dashboard/src/components/widgets/ConnectionStatus.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [
+      {
+        "name": "showLabel",
+        "type": "boolean",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "size",
+        "type": "'small' | 'medium'",
+        "required": false,
+        "description": ""
+      }
+    ],
+    "imports": [
+      "@mui/material",
+      "react"
+    ],
+    "hooks": [
+      "useState",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "EnhancedAnalytics",
+    "category": "admin",
+    "file_path": "src/dashboard/src/components/admin/EnhancedAnalytics.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [
+      {
+        "name": "initialTab",
+        "type": "number",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "timeRange",
+        "type": "\"24h\" | \"7d\" | \"30d\" | \"90d\"",
+        "required": false,
+        "description": ""
+      }
+    ],
+    "imports": [
+      "react"
+    ],
+    "hooks": [
+      "useAppDispatch",
+      "useWebSocketContext",
+      "useAppSelector",
+      "useState"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "UserManagement",
+    "category": "admin",
+    "file_path": "src/dashboard/src/components/admin/UserManagement.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [
+      {
+        "name": "initialRole",
+        "type": "string",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "showBulkActions",
+        "type": "boolean",
+        "required": false,
+        "description": ""
+      }
+    ],
+    "imports": [
+      "@mui/material/styles",
+      "@mui/x-date-pickers/LocalizationProvider",
+      "react",
+      "@mui/x-date-pickers/DatePicker",
+      "@mui/x-date-pickers/AdapterDateFns"
+    ],
+    "hooks": [
+      "useTheme",
+      "useAppDispatch",
+      "useWebSocketContext",
+      "useState",
+      "useCallback",
+      "useEffect",
+      "useMemo"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "PerformanceIndicator",
+    "category": "analytics",
+    "file_path": "src/dashboard/src/components/analytics/PerformanceIndicator.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [
+      {
+        "name": "showSystemHealth",
+        "type": "boolean",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "autoRefresh",
+        "type": "boolean",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "refreshInterval",
+        "type": "number",
+        "required": false,
+        "description": ""
+      }
+    ],
+    "imports": [
+      "@mui/material/styles",
+      "react"
+    ],
+    "hooks": [
+      "useTheme",
+      "useWebSocketContext",
+      "useState",
+      "useCallback",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "ContentMetrics",
+    "category": "analytics",
+    "file_path": "src/dashboard/src/components/analytics/ContentMetrics.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [
+      {
+        "name": "timeRange",
+        "type": "\"7d\" | \"30d\" | \"90d\"",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "autoRefresh",
+        "type": "boolean",
+        "required": false,
+        "description": ""
+      }
+    ],
+    "imports": [
+      "@mui/material/styles",
+      "react"
+    ],
+    "hooks": [
+      "useTheme",
+      "useWebSocketContext",
+      "useState",
+      "useCallback",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "UserActivityChart",
+    "category": "analytics",
+    "file_path": "src/dashboard/src/components/analytics/UserActivityChart.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [
+      {
+        "name": "timeRange",
+        "type": "\"24h\" | \"7d\" | \"30d\" | \"90d\"",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "height",
+        "type": "number",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "autoRefresh",
+        "type": "boolean",
+        "required": false,
+        "description": ""
+      }
+    ],
+    "imports": [
+      "@mui/material/styles",
+      "react"
+    ],
+    "hooks": [
+      "useTheme",
+      "useWebSocketContext",
+      "useState",
+      "useCallback",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "TerminalStatus",
+    "category": "debug",
+    "file_path": "src/dashboard/src/components/debug/TerminalStatus.tsx",
+    "type": "functional",
+    "description": "Terminal Status Debug Component",
+    "props": [],
+    "imports": [
+      "react"
+    ],
+    "hooks": [
+      "useTerminalServices",
+      "useTerminalConnection",
+      "usePerformanceAlerts",
+      "useState"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  },
+  {
+    "name": "MCPAgentDashboard",
+    "category": "mcp",
+    "file_path": "src/dashboard/src/components/mcp/MCPAgentDashboard.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [
+      {
+        "name": "autoRefresh",
+        "type": "boolean",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "showLogs",
+        "type": "boolean",
+        "required": false,
+        "description": ""
+      }
+    ],
+    "imports": [
+      "@mui/material/styles",
+      "react"
+    ],
+    "hooks": [
+      "useTheme",
+      "useAppDispatch",
+      "useWebSocketContext",
+      "useState",
+      "useCallback",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "ClassOverview",
+    "category": "progress",
+    "file_path": "src/dashboard/src/components/progress/ClassOverview.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [
+      {
+        "name": "classId",
+        "type": "string",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "autoRefresh",
+        "type": "boolean",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "showStudentList",
+        "type": "boolean",
+        "required": false,
+        "description": ""
+      }
+    ],
+    "imports": [
+      "@mui/material/styles",
+      "react"
+    ],
+    "hooks": [
+      "useTheme",
+      "useWebSocketContext",
+      "useState",
+      "useCallback",
+      "useEffect",
+      "useMemo"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "StudentProgress",
+    "category": "progress",
+    "file_path": "src/dashboard/src/components/progress/StudentProgress.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [
+      {
+        "name": "studentId",
+        "type": "string",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "showDetailed",
+        "type": "boolean",
+        "required": false,
+        "description": ""
+      },
+      {
+        "name": "autoRefresh",
+        "type": "boolean",
+        "required": false,
+        "description": ""
+      }
+    ],
+    "imports": [
+      "@mui/material/styles",
+      "react"
+    ],
+    "hooks": [
+      "useTheme",
+      "useWebSocketContext",
+      "useState",
+      "useCallback",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": true
+    },
+    "examples": []
+  },
+  {
+    "name": "ReportGenerator",
+    "category": "reports",
+    "file_path": "src/dashboard/src/components/reports/ReportGenerator.tsx",
+    "type": "functional",
+    "description": "",
+    "props": [],
+    "imports": [
+      "@mui/x-date-pickers/LocalizationProvider",
+      "react",
+      "@mui/x-date-pickers/DatePicker",
+      "date-fns",
+      "@mui/x-date-pickers/AdapterDateFns"
+    ],
+    "hooks": [
+      "useAppSelector",
+      "useState",
+      "useEffect"
+    ],
+    "state_management": {
+      "redux": false,
+      "context": false,
+      "local_state": true,
+      "websocket": false
+    },
+    "examples": []
+  }
+]

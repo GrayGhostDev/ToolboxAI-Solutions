@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>WebSocket Connection Test</h1>
+    <div id="status">Ready to connect...</div>
+    <div id="messages"></div>
+    <br>
+    <input type="text" id="tokenInput" placeholder="Enter JWT token" style="width: 400px;">
+    <button onclick="connect()">Connect</button>
+    <button onclick="getTokenFromStorage()">Get Token from localStorage</button>
+    <button onclick="disconnect()">Disconnect</button>
+    
+    <script>
+        let socket = null;
+        
+        function log(message) {
+            const div = document.createElement('div');
+            div.innerHTML = `${new Date().toLocaleTimeString()}: ${message}`;
+            document.getElementById('messages').appendChild(div);
+        }
+        
+        function getTokenFromStorage() {
+            const token = localStorage.getItem('toolboxai_auth_token');
+            if (token) {
+                document.getElementById('tokenInput').value = token;
+                log('🔑 Token loaded from localStorage');
+            } else {
+                log('❌ No token found in localStorage');
+            }
+        }
+        
+        function connect() {
+            const token = document.getElementById('tokenInput').value.trim();
+            if (!token) {
+                log('❌ Please enter a JWT token');
+                return;
+            }
+            
+            log('🔄 Connecting to ws://localhost:8008...');
+            log('🔑 Using token: ' + token.substring(0, 20) + '...');
+            
+            // Try Socket.IO connection with auth token
+            socket = io('http://localhost:8008', {
+                path: '/socket.io',
+                transports: ['websocket', 'polling'],
+                auth: { token: token },
+                extraHeaders: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            
+            socket.on('connect', () => {
+                log('✅ Connected successfully!');
+                document.getElementById('status').innerText = 'Connected';
+                document.getElementById('status').style.color = 'green';
+            });
+            
+            socket.on('connected', (data) => {
+                log('📨 Received connected event: ' + JSON.stringify(data));
+            });
+            
+            socket.on('connect_error', (error) => {
+                log('❌ Connection error: ' + error.message);
+                log('🔧 Error details: ' + JSON.stringify(error));
+                document.getElementById('status').innerText = 'Connection failed';
+                document.getElementById('status').style.color = 'red';
+            });
+            
+            socket.on('disconnect', () => {
+                log('❌ Disconnected');
+                document.getElementById('status').innerText = 'Disconnected';
+                document.getElementById('status').style.color = 'orange';
+            });
+            
+            socket.on('error', (error) => {
+                log('❌ Socket error: ' + JSON.stringify(error));
+            });
+            
+            socket.on('auth_failed', (error) => {
+                log('🔐 Auth failed: ' + JSON.stringify(error));
+            });
+        }
+        
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                log('🔌 Manual disconnect');
+            }
+        }
+        
+        // Test with a sample token (for testing purposes)
+        window.onload = function() {
+            log('🔧 Ready to test WebSocket connection');
+            log('💡 Tip: Get a token by logging in at http://localhost:5179');
+            getTokenFromStorage(); // Auto-load token if available
+        }
+    </script>
+</body>
+</html>

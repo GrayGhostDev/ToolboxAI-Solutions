@@ -10,7 +10,7 @@ ToolBoxAI-Solutions is a comprehensive educational technology platform that inte
 
 ```
 /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/
-├── ToolboxAI-Roblox-Environment/    # Main Roblox educational platform (90% complete)
+├── ToolboxAI-Roblox-Environment/    # Main Roblox educational platform (95% complete)
 │   ├── mcp/                         # Model Context Protocol (WebSocket :9876)
 │   ├── agents/                      # LangChain/LangGraph AI agents
 │   ├── sparc/                       # State-Policy-Action-Reward-Context framework
@@ -21,10 +21,37 @@ ToolBoxAI-Solutions is a comprehensive educational technology platform that inte
 │   ├── Roblox/                      # Roblox Studio components & Lua scripts
 │   ├── API/                         # Dashboard & Ghost backend integration
 │   ├── tests/                       # Comprehensive test suite
+│   │   ├── unit/                    # Unit tests for individual components
+│   │   ├── integration/             # Integration tests for workflows
+│   │   ├── e2e/                     # End-to-end tests
+│   │   └── performance/             # Performance and load tests
 │   ├── venv_clean/                  # Clean Python virtual environment
 │   └── .env.example                 # Environment variables template
-├── API/                              # API integrations
-│   └── Dashboard/                    # React-based teacher/admin dashboard
+├── src/                              # Source code organization
+│   ├── api/                         # API implementations
+│   ├── dashboard/                   # Dashboard components
+│   └── shared/                      # Shared utilities and types
+├── scripts/                          # Management and deployment scripts
+│   ├── integration/                 # Integration verification scripts
+│   ├── testing/                     # Comprehensive testing scripts
+│   ├── deploy/                      # Production deployment scripts
+│   ├── setup/                       # Environment setup scripts
+│   ├── maintenance/                 # Maintenance and cleanup scripts
+│   └── pids/                        # Process ID files
+├── config/                           # Configuration files
+│   ├── production/                  # Production configurations
+│   │   ├── docker-compose.prod.yml  # Production Docker Compose
+│   │   ├── production.env           # Production environment variables
+│   │   └── nginx.conf               # Nginx configuration
+│   ├── development/                 # Development configurations
+│   └── templates/                   # Configuration templates
+├── database/                         # Database setup and migrations
+│   ├── schemas/                     # Database schema files
+│   ├── migrations/                  # Alembic migrations
+│   └── repositories.py              # Database repositories
+├── logs/                             # Application logs
+├── test-results/                     # Test execution results
+├── backups/                          # Database and configuration backups
 └── Documentation/                    # Project documentation
     ├── 01-overview/                 # Getting started guides
     ├── 02-architecture/             # System design & data models
@@ -47,12 +74,29 @@ pip install -r requirements.txt
 # Install Node dependencies
 npm install
 
-# Start all services
+# Start all services (recommended)
+scripts/start_mcp_servers.sh     # Start all services with proper orchestration
+
+# Alternative manual start
 python mcp/server.py &           # MCP server (:9876)
 python server/main.py &          # FastAPI server (:8008)
 python server/roblox_server.py & # Flask bridge (:5001)
 
-# Run tests
+# Service management
+scripts/check_mcp_status.sh      # Check all service status
+scripts/stop_mcp_servers.sh      # Stop all services
+
+# Comprehensive testing
+scripts/testing/run_comprehensive_tests.sh --type=all --verbose --coverage
+scripts/testing/run_comprehensive_tests.sh --type=unit        # Unit tests only
+scripts/testing/run_comprehensive_tests.sh --type=integration # Integration tests only
+scripts/testing/run_comprehensive_tests.sh --type=e2e         # End-to-end tests only
+scripts/testing/run_comprehensive_tests.sh --type=performance # Performance tests only
+
+# Integration verification
+scripts/integration/verify_integration_paths.sh --verbose --fix-issues
+
+# Legacy pytest commands (still supported)
 pytest tests/ -v --cov=server --cov=agents --cov=mcp
 pytest tests/unit/               # Unit tests only
 pytest tests/integration/        # Integration tests only
@@ -62,6 +106,29 @@ pytest tests/e2e/               # End-to-end tests only
 black server/ agents/ mcp/ sparc/ swarm/ coordinators/
 flake8 server/ agents/ mcp/
 mypy server/ agents/ mcp/
+```
+
+### Production Deployment
+
+```bash
+# From project root directory
+
+# Database setup
+scripts/setup_database.sh
+
+# Production deployment
+scripts/deploy/deploy_production.sh --environment=production
+scripts/deploy/deploy_production.sh --skip-tests --force    # Force deploy
+scripts/deploy/deploy_production.sh --rollback             # Rollback deployment
+
+# Production management
+docker-compose -f config/production/docker-compose.prod.yml up -d
+docker-compose -f config/production/docker-compose.prod.yml down
+docker-compose -f config/production/docker-compose.prod.yml logs -f
+
+# Health monitoring
+scripts/check_mcp_status.sh
+scripts/integration/verify_integration_paths.sh --verbose
 ```
 
 ### Dashboard
@@ -232,20 +299,77 @@ make db/status
 psql $DATABASE_URL
 ```
 
+## Integration Points & Communication
+
+### Service Communication Matrix
+```
+┌─────────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
+│ Service         │ FastAPI      │ Dashboard    │ Flask Bridge │ MCP Server   │
+│                 │ (:8008)      │ (:8001)      │ (:5001)      │ (:9876)      │
+├─────────────────┼──────────────┼──────────────┼──────────────┼──────────────┤
+│ FastAPI         │ -            │ HTTP/JSON    │ HTTP/JSON    │ WebSocket    │
+│ Dashboard       │ HTTP/JSON    │ -            │ HTTP/JSON    │ WebSocket    │
+│ Flask Bridge    │ HTTP/JSON    │ HTTP/JSON    │ -            │ WebSocket    │
+│ MCP Server      │ WebSocket    │ WebSocket    │ WebSocket    │ -            │
+│ Roblox Plugin   │ -            │ -            │ HTTP/JSON    │ -            │
+│ Ghost Backend   │ HTTP/JSON    │ HTTP/JSON    │ -            │ -            │
+└─────────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
+```
+
+### Database Integration
+- **Educational Platform DB**: Main application data (users, courses, lessons)
+- **Ghost Backend DB**: Content management and blog functionality
+- **Roblox Data DB**: Game-specific data and player progress
+- **MCP Memory DB**: AI agent context and memory storage
+- **Redis Cache**: Session management and real-time data
+
+### File Structure Updates
+The project now includes comprehensive production-ready infrastructure:
+
+- **`scripts/integration/`**: Integration verification and testing scripts
+- **`scripts/testing/`**: Comprehensive test execution and reporting
+- **`scripts/deploy/`**: Production deployment automation
+- **`config/production/`**: Production configurations and Docker Compose
+- **`test-results/`**: Test execution reports and coverage data
+- **`backups/`**: Database and configuration backups
+
 ## Deployment
 
-### Docker Deployment
+### Development Deployment
 ```bash
-docker-compose up -d
-docker-compose logs -f
-docker-compose down
+# Start all services
+scripts/start_mcp_servers.sh
+
+# Verify integration
+scripts/integration/verify_integration_paths.sh --verbose
+
+# Run comprehensive tests
+scripts/testing/run_comprehensive_tests.sh --type=all --coverage
+```
+
+### Production Deployment
+```bash
+# Full production deployment
+scripts/deploy/deploy_production.sh --environment=production
+
+# Docker-based deployment
+docker-compose -f config/production/docker-compose.prod.yml up -d
+
+# Health monitoring
+scripts/check_mcp_status.sh
 ```
 
 ### Production Configuration
 ```bash
-export ENVIRONMENT=production
-export DEBUG=false
-export LOG_LEVEL=INFO
+# Environment variables
+cp config/production/production.env .env
+# Edit .env with your production values
+
+# Database setup
+scripts/setup_database.sh
+
+# SSL/TLS configuration
+# Place certificates in config/production/ssl/
 ```
 
 ## Common Development Tasks
@@ -268,6 +392,41 @@ export LOG_LEVEL=INFO
 2. Test in Roblox Studio with plugin
 3. Update API endpoints if needed
 4. Document changes in relevant README
+
+## Changelog (2025-09-10)
+
+- WebSocket Diagnostics and Config
+  - Added /ws/status endpoint in FastAPI to expose detailed WebSocket stats and active channels; includes role distribution.
+  - Added /socketio/status endpoint exposing Socket.IO connected client counts, auth ratio, and role distribution.
+  - Introduced WS_RATE_LIMIT_PER_MINUTE (per-connection WS limit) and WS_RBAC_REQUIRED_ROLES (per-message role overrides).
+  - Added runtime RBAC admin endpoints: GET/POST/DELETE /ws/rbac (admin-only) to inspect, update, and reset RBAC mapping safely.
+  - Tests: test_ws_status_endpoint.py, test_websocket_config_overrides.py, test_socketio_status_endpoint.py.
+
+- Socket.IO RBAC and Rate Limiting
+  - Added SIO_RBAC_REQUIRED_ROLES and SIO_RATE_LIMIT_PER_MINUTE to settings for per-event RBAC and rate limits.
+  - Enforced RBAC and rate limiting in Socket.IO event handlers (ping, subscribe, content_request, quiz_response, progress_update, collaboration_message).
+  - Tests added: tests/unit/test_socketio_rbac_and_rate_limit.py.
+
+- SPARC StateManager
+  - Enhanced initialize_state to inject default metadata (timestamp, source, system_bootstrap) improving initial quality metrics.
+  - Implemented calculate_reward(metrics) to normalize reward in [0,1] using objectives met and execution time.
+  - Added unit tests: tests/unit/test_state_manager.py for initialization and reward pathways.
+
+- WebSocket Security
+  - Added RBAC enforcement per message type (student/teacher/admin) in server/websocket.py MessageHandler.
+    - Elevated actions now require teacher role: broadcast, content_request, roblox_event.
+  - Added per-connection rate limiting using server.rate_limit_manager with settings.RATE_LIMIT_PER_MINUTE.
+  - Enforced per-message JWT expiry in server/websocket_auth.authenticate_websocket_message.
+  - Added observability counters for token/auth failures: token_expired and auth_errors incremented at message-auth stage.
+  - Made WebSocketAuthSession.send_auth_message tolerant of mocks/missing client_state for reliable tests.
+  - Added unit tests:
+    - tests/unit/test_websocket_rbac_and_rate_limit.py (RBAC deny for broadcast; rate limit enforcement)
+    - tests/unit/test_websocket_message_auth.py (token expiry denial)
+    - tests/unit/test_websocket_metrics_token_expired.py (metrics increments for token_expired/auth_errors)
+
+- Notes
+  - No changes to external public API routes.
+  - All new logic is feature-flag free and defaults to secure behavior.
 
 ## Troubleshooting
 
@@ -324,3 +483,5 @@ alembic upgrade head
 - Detailed implementation guide: `ToolboxAI-Roblox-Environment/CLAUDE.md`
 - API documentation: `Documentation/03-api/`
 - Architecture docs: `Documentation/02-architecture/`
+- Add to memory. Real Real implementation integration other than Mock Data wherever possible. Then Continue With Remaining Work. Think Deeply.
+- Add to memory. I want to use real Data.

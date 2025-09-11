@@ -1,0 +1,21 @@
+{
+  "timestamp": "2025-09-09T21:04:22.384929",
+  "terminal": "terminal3",
+  "test_suite": "Dashboard Integration",
+  "results": {
+    "Dashboard Health": false,
+    "API Health": true,
+    "Login (teacher)": false,
+    "Content Generation Flow": false,
+    "WebSocket Connection": false,
+    "Roblox Plugin Communication": false,
+    "Progress Tracking": false,
+    "Real-time Updates": true,
+    "Multi-user Scenario": false
+  },
+  "summary": {
+    "total": 9,
+    "passed": 2,
+    "failed": 7
+  }
+}

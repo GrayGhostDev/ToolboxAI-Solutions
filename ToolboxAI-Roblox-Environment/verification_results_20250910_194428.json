@@ -1,0 +1,67 @@
+{
+  "total_tests": 8,
+  "passed": 3,
+  "failed": 2,
+  "skipped": 3,
+  "success_rate": 37.5,
+  "total_duration": 1.2509429454803467,
+  "timestamp": "2025-09-10T19:44:28.394554",
+  "detailed_results": [
+    {
+      "test_name": "Database Connectivity",
+      "status": "WARN",
+      "details": "Missing tables: ['dashboard_users', 'assignments', 'submissions']",
+      "duration": 0.03002190589904785,
+      "timestamp": "2025-09-10T19:44:27.173634"
+    },
+    {
+      "test_name": "API Health Check",
+      "status": "PASS",
+      "details": "API responding: healthy",
+      "duration": 0.02264404296875,
+      "timestamp": "2025-09-10T19:44:27.196329"
+    },
+    {
+      "test_name": "Authentication System",
+      "status": "FAIL",
+      "details": "Login failed: HTTP 401 - {\"detail\":\"Invalid credentials\"}",
+      "duration": 1.1898963451385498,
+      "timestamp": "2025-09-10T19:44:28.386331"
+    },
+    {
+      "test_name": "Protected Endpoints",
+      "status": "SKIP",
+      "details": "No auth token available",
+      "duration": 9.5367431640625e-07,
+      "timestamp": "2025-09-10T19:44:28.386443"
+    },
+    {
+      "test_name": "Content Generation",
+      "status": "SKIP",
+      "details": "No auth token available",
+      "duration": 0.0,
+      "timestamp": "2025-09-10T19:44:28.386449"
+    },
+    {
+      "test_name": "WebSocket Authentication",
+      "status": "SKIP",
+      "details": "No auth token available",
+      "duration": 0.0,
+      "timestamp": "2025-09-10T19:44:28.386451"
+    },
+    {
+      "test_name": "Database Performance",
+      "status": "FAIL",
+      "details": "Performance test failed: relation \"dashboard_users\" does not exist",
+      "duration": 0.00588679313659668,
+      "timestamp": "2025-09-10T19:44:28.392343"
+    },
+    {
+      "test_name": "WebSocket Status Endpoints",
+      "status": "PASS",
+      "details": "WebSocket status available: 0 active connections",
+      "duration": 0.002061128616333008,
+      "timestamp": "2025-09-10T19:44:28.394422"
+    }
+  ]
+}

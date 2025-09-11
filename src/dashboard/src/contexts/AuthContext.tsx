@@ -1,0 +1,350 @@
+/**
+ * Authentication Context Provider
+ * Manages user authentication state and role-based access
+ */
+
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { User, AuthResponse } from '../types/api';
+import { UserRole } from '../types/roles';
+import { getUserConfig, TEST_USERS } from '../config/users';
+import ApiClient from '../services/api';
+import { store } from '../store';
+import { addNotification } from '../store/slices/uiSlice';
+import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from '../config';
+
+interface AuthContextType {
+  user: User | null;
+  userConfig: ReturnType<typeof getUserConfig> | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (userData: any) => Promise<void>;
+  updateProfile: (updates: Partial<User>) => Promise<void>;
+  refreshAuth: () => Promise<void>;
+  checkPermission: (permission: string) => boolean;
+  switchRole: (role: UserRole) => void; // For development/testing
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [userConfig, setUserConfig] = useState<ReturnType<typeof getUserConfig> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [tokenRefreshTimer, setTokenRefreshTimer] = useState<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
+  const apiClient = new ApiClient();
+
+  // Initialize authentication from stored token
+  useEffect(() => {
+    const initAuth = async () => {
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      if (token) {
+        try {
+          // Verify token and get user data
+          const response = await apiClient.getCurrentUser();
+          if (response) {
+            setUser(response);
+            const config = getUserConfig(response.role as UserRole);
+            setUserConfig(config);
+          }
+        } catch (error) {
+          console.error('Failed to restore authentication:', error);
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    initAuth();
+  }, []);
+
+  // Login function
+  const login = useCallback(async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      // Check if it's a test user (for development)
+      const testUser = Object.values(TEST_USERS).find(
+        u => u.email === email || u.username === email
+      );
+      
+      if (testUser && testUser.password === password) {
+        // Use test user credentials
+        const response = await apiClient.login(testUser.username, password);
+        handleAuthSuccess(response);
+      } else {
+        // Regular login
+        const response = await apiClient.login(email, password);
+        handleAuthSuccess(response);
+      }
+    } catch (error: any) {
+      store.dispatch(addNotification({
+        type: 'error',
+        message: error.message || 'Login failed. Please check your credentials.',
+        autoHide: false,
+      }));
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [apiClient, navigate]);
+
+  // Schedule automatic token refresh
+  const scheduleTokenRefresh = useCallback((accessToken: string) => {
+    // Clear existing timer
+    if (tokenRefreshTimer) {
+      clearTimeout(tokenRefreshTimer);
+    }
+    
+    try {
+      // Parse JWT to get expiry time
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      const expiryTime = payload.exp * 1000; // Convert to milliseconds
+      
+      // Schedule refresh 5 minutes before expiry
+      const refreshTime = expiryTime - Date.now() - (5 * 60 * 1000);
+      
+      if (refreshTime > 0) {
+        const timer = setTimeout(async () => {
+          try {
+            await refreshAuth();
+          } catch (error) {
+            console.error('Automatic token refresh failed:', error);
+          }
+        }, refreshTime);
+        
+        setTokenRefreshTimer(timer);
+        console.log(`Token refresh scheduled for ${new Date(expiryTime - 5 * 60 * 1000).toISOString()}`);
+      }
+    } catch (error) {
+      console.error('Failed to schedule token refresh:', error);
+    }
+  }, [tokenRefreshTimer]);
+  
+  // Handle successful authentication
+  const handleAuthSuccess = useCallback((response: AuthResponse) => {
+    const { user, accessToken, refreshToken } = response;
+    
+    // Store tokens
+    localStorage.setItem(AUTH_TOKEN_KEY, accessToken);
+    localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
+    
+    // Schedule automatic token refresh
+    scheduleTokenRefresh(accessToken);
+    
+    // Set user state
+    setUser(user);
+    const config = getUserConfig(user.role as UserRole);
+    setUserConfig(config);
+    
+    // Navigate to appropriate dashboard
+    navigate(config.defaultRoute);
+    
+    // Show success notification
+    store.dispatch(addNotification({
+      type: 'success',
+      message: `Welcome back, ${user.displayName || user.firstName}!`,
+      autoHide: true,
+    }));
+  }, [navigate, scheduleTokenRefresh]);
+
+  // Logout function
+  const logout = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await apiClient.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear token refresh timer
+      if (tokenRefreshTimer) {
+        clearTimeout(tokenRefreshTimer);
+        setTokenRefreshTimer(null);
+      }
+      
+      // Clear local state and storage
+      setUser(null);
+      setUserConfig(null);
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
+      
+      // Navigate to login
+      navigate('/login');
+      
+      // Show notification
+      store.dispatch(addNotification({
+        type: 'info',
+        message: 'You have been logged out successfully.',
+        autoHide: true,
+      }));
+      
+      setIsLoading(false);
+    }
+  }, [apiClient, navigate, tokenRefreshTimer]);
+
+  // Register function
+  const register = useCallback(async (userData: any) => {
+    setIsLoading(true);
+    try {
+      const response = await apiClient.register(userData);
+      handleAuthSuccess(response);
+      
+      // Show welcome notification
+      store.dispatch(addNotification({
+        type: 'success',
+        message: 'Registration successful! Welcome to ToolBoxAI.',
+        autoHide: true,
+      }));
+    } catch (error: any) {
+      store.dispatch(addNotification({
+        type: 'error',
+        message: error.message || 'Registration failed. Please try again.',
+        autoHide: false,
+      }));
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [apiClient]);
+
+  // Update user profile
+  const updateProfile = useCallback(async (updates: Partial<User>) => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const updatedUser = await apiClient.updateUser(user.id, updates);
+      setUser(updatedUser);
+      
+      store.dispatch(addNotification({
+        type: 'success',
+        message: 'Profile updated successfully.',
+        autoHide: true,
+      }));
+    } catch (error: any) {
+      store.dispatch(addNotification({
+        type: 'error',
+        message: error.message || 'Failed to update profile.',
+        autoHide: false,
+      }));
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, apiClient]);
+
+  // Refresh authentication
+  const refreshAuth = useCallback(async () => {
+    const refreshToken = localStorage.getItem(AUTH_REFRESH_TOKEN_KEY);
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+    
+    try {
+      const response = await apiClient.refreshToken(refreshToken);
+      handleAuthSuccess(response);
+      
+      // Also refresh WebSocket connection with new token
+      const { websocketService } = await import('../services/websocket');
+      if (websocketService.isConnected()) {
+        await websocketService.refreshToken(response.accessToken);
+      }
+      
+      return response;
+    } catch (error) {
+      await logout();
+      throw error;
+    }
+  }, [apiClient, handleAuthSuccess, logout]);
+
+  // Check permission based on user role
+  const checkPermission = useCallback((permission: string): boolean => {
+    if (!userConfig) return false;
+    
+    const permissions = {
+      'view.dashboard': userConfig.features.dashboard.showWelcomeMessage,
+      'view.analytics': userConfig.features.dashboard.showStatistics,
+      'view.leaderboard': userConfig.features.dashboard.showLeaderboard,
+      'view.calendar': userConfig.features.dashboard.showCalendar,
+      'use.ai': userConfig.features.dashboard.showAIAssistant,
+      'play.roblox': userConfig.features.dashboard.showRobloxIntegration,
+      'send.messages': userConfig.features.notifications.types.includes('message'),
+      // Add more permission mappings as needed
+    };
+    
+    return permissions[permission] || false;
+  }, [userConfig]);
+
+  // Switch role (for development/testing)
+  const switchRole = useCallback((role: UserRole) => {
+    if (process.env.NODE_ENV !== 'development') {
+      console.warn('Role switching is only available in development mode');
+      return;
+    }
+    
+    const testUser = Object.values(TEST_USERS).find(u => u.role === role);
+    if (testUser) {
+      login(testUser.email, testUser.password);
+    }
+  }, [login]);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (tokenRefreshTimer) {
+        clearTimeout(tokenRefreshTimer);
+      }
+    };
+  }, [tokenRefreshTimer]);
+  
+  // Initialize WebSocket connection when authenticated
+  useEffect(() => {
+    const initWebSocket = async () => {
+      if (user && isAuthenticated) {
+        const token = localStorage.getItem(AUTH_TOKEN_KEY);
+        if (token) {
+          const { websocketService } = await import('../services/websocket');
+          try {
+            await websocketService.connect(token);
+            
+            // Register token refresh callback
+            websocketService.onTokenRefresh(() => {
+              refreshAuth();
+            });
+          } catch (error) {
+            console.error('Failed to connect WebSocket:', error);
+          }
+        }
+      }
+    };
+    
+    initWebSocket();
+  }, [user, isAuthenticated, refreshAuth]);
+
+  const value = {
+    user,
+    userConfig,
+    isAuthenticated: !!user,
+    isLoading,
+    login,
+    logout,
+    register,
+    updateProfile,
+    refreshAuth,
+    checkPermission,
+    switchRole,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};

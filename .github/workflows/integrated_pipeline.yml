@@ -1,0 +1,284 @@
+name: Integrated CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deployment_target:
+        description: 'Deployment target'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+          - rollback
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        terminal: [backend, frontend, roblox, integration]
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Notify Terminal Start
+        run: |
+          if command -v redis-cli &> /dev/null; then
+            redis-cli PUBLISH terminal:${{ matrix.terminal }}:ci_start \
+              '{"job":"test","run_id":"${{ github.run_id }}"}'
+          fi
+      
+      - name: Setup Python
+        if: matrix.terminal == 'backend' || matrix.terminal == 'roblox'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Setup Node.js
+        if: matrix.terminal == 'frontend'
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Run Tests
+        run: |
+          case "${{ matrix.terminal }}" in
+            backend)
+              cd ToolboxAI-Roblox-Environment
+              python -m venv venv_test
+              source venv_test/bin/activate
+              pip install -r requirements.txt
+              pytest tests/unit tests/integration --cov --cov-report=xml
+              ;;
+            frontend)
+              cd src/dashboard
+              npm ci
+              npm test -- --coverage --watchAll=false
+              ;;
+            roblox)
+              cd ToolboxAI-Roblox-Environment
+              python -m venv venv_test
+              source venv_test/bin/activate
+              pip install -r requirements.txt
+              python -m pytest tests/test_roblox_plugin.py
+              ;;
+            integration)
+              ./scripts/testing/run_comprehensive_tests.sh --type=e2e
+              ;;
+          esac
+      
+      - name: Upload Coverage
+        if: always()
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          flags: ${{ matrix.terminal }}
+          fail_ci_if_error: false
+      
+      - name: Notify Terminal Complete
+        if: always()
+        run: |
+          if command -v redis-cli &> /dev/null; then
+            redis-cli PUBLISH terminal:${{ matrix.terminal }}:ci_complete \
+              '{"job":"test","status":"${{ job.status }}","run_id":"${{ github.run_id }}"}'
+          fi
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Run Security Scans
+        run: |
+          # Notify Debugger terminal
+          if command -v redis-cli &> /dev/null; then
+            redis-cli PUBLISH terminal:debugger:security_scan_start '{"scan":"github_actions"}'
+          fi
+          
+          # Run various security tools
+          pip install safety bandit
+          
+          # Run safety check
+          if [ -f "ToolboxAI-Roblox-Environment/requirements.txt" ]; then
+            safety check -r ToolboxAI-Roblox-Environment/requirements.txt || true
+          fi
+          
+          # Run bandit
+          if [ -d "ToolboxAI-Roblox-Environment/server" ]; then
+            bandit -r ToolboxAI-Roblox-Environment/server/ ToolboxAI-Roblox-Environment/agents/ -f json -o bandit_report.json || true
+          fi
+          
+          # SAST scanning with Semgrep
+          docker run --rm -v "$PWD":/src \
+            returntocorp/semgrep:latest \
+            --config=auto --json -o semgrep_report.json . || true
+      
+      - name: Upload Security Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            bandit_report.json
+            semgrep_report.json
+      
+      - name: Notify Debugger
+        if: always()
+        run: |
+          if command -v redis-cli &> /dev/null; then
+            redis-cli PUBLISH terminal:debugger:security_scan_complete \
+              '{"status":"${{ job.status }}","reports":["bandit","semgrep"]}'
+          fi
+
+  deploy:
+    needs: [test, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Coordinate Deployment
+        run: |
+          # Check all terminals ready
+          if [ -f "scripts/terminal_sync/check_deployment_ready.py" ]; then
+            python scripts/terminal_sync/check_deployment_ready.py
+          fi
+      
+      - name: Build Backend
+        run: |
+          cd ToolboxAI-Roblox-Environment
+          python -m venv venv_build
+          source venv_build/bin/activate
+          pip install -r requirements.txt
+          pip install build
+          python -m build
+      
+      - name: Build Frontend
+        run: |
+          cd src/dashboard
+          npm ci
+          npm run build
+      
+      - name: Deploy Backend
+        run: |
+          if command -v redis-cli &> /dev/null; then
+            redis-cli PUBLISH terminal:terminal1:deploy '{"version":"${{ github.sha }}"}'
+          fi
+          # Wait for confirmation
+          if [ -f "scripts/terminal_sync/wait_for_terminal.py" ]; then
+            python scripts/terminal_sync/wait_for_terminal.py terminal1 deploy_complete || true
+          fi
+      
+      - name: Deploy Frontend
+        run: |
+          if command -v redis-cli &> /dev/null; then
+            redis-cli PUBLISH terminal:terminal2:deploy '{"version":"${{ github.sha }}"}'
+          fi
+          if [ -f "scripts/terminal_sync/wait_for_terminal.py" ]; then
+            python scripts/terminal_sync/wait_for_terminal.py terminal2 deploy_complete || true
+          fi
+      
+      - name: Deploy to Cloud
+        env:
+          DEPLOY_ENV: ${{ github.event.inputs.deployment_target || 'staging' }}
+        run: |
+          if command -v redis-cli &> /dev/null; then
+            redis-cli PUBLISH terminal:cloud:deploy '{"version":"${{ github.sha }}","env":"'$DEPLOY_ENV'"}'
+          fi
+          if [ -f "scripts/terminal_sync/wait_for_terminal.py" ]; then
+            python scripts/terminal_sync/wait_for_terminal.py cloud deploy_complete || true
+          fi
+      
+      - name: Verify Deployment
+        run: |
+          if [ -f "scripts/terminal_sync/verify_deployment.py" ]; then
+            python scripts/terminal_sync/verify_deployment.py --all-terminals
+          fi
+
+  release:
+    needs: [deploy]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Generate Release Notes
+        id: release_notes
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          
+          # Generate changelog
+          echo "## What's Changed" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          
+          # Get commits since last tag
+          git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%an)" >> RELEASE_NOTES.md
+          
+          # Set output
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          cat RELEASE_NOTES.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Calculate Version
+        id: version
+        run: |
+          # Get latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          
+          # Remove 'v' prefix
+          VERSION=${LATEST_TAG#v}
+          
+          # Split version
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          
+          # Increment patch version
+          PATCH=$((PATCH + 1))
+          
+          # Create new version
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Release ${{ steps.version.outputs.version }}
+          body: ${{ steps.release_notes.outputs.release_notes }}
+          draft: false
+          prerelease: false

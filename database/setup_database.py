@@ -111,7 +111,7 @@ class DatabaseSetup:
         """Check if PostgreSQL is running."""
         try:
             result = subprocess.run(
-                ["psql", "-U", "postgres", "-c", "SELECT 1;"],
+                ["pg_isready"],
                 capture_output=True,
                 text=True,
                 check=True,

@@ -1,0 +1,103 @@
+# Multi-stage Docker build for ToolBoxAI Backend (FastAPI + MCP + Agents)
+# Optimized for production with minimal image size and security hardening
+
+# Stage 1: Build dependencies
+FROM python:3.11-slim AS builder
+
+# Install build dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    make \
+    libpq-dev \
+    libffi-dev \
+    libssl-dev \
+    git && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /build
+
+# Copy requirements first for better caching
+COPY ToolboxAI-Roblox-Environment/requirements.txt .
+COPY ToolboxAI-Roblox-Environment/requirements-ai.txt .
+
+# Create virtual environment and install dependencies
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Upgrade pip and install dependencies
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements-ai.txt
+
+# Stage 2: Runtime image
+FROM python:3.11-slim AS runtime
+
+# Install runtime dependencies only
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN groupadd -r toolboxai && \
+    useradd -r -g toolboxai -d /app -s /sbin/nologin toolboxai
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Set working directory
+WORKDIR /app
+
+# Copy application code
+COPY --chown=toolboxai:toolboxai ToolboxAI-Roblox-Environment/server ./server
+COPY --chown=toolboxai:toolboxai ToolboxAI-Roblox-Environment/agents ./agents
+COPY --chown=toolboxai:toolboxai ToolboxAI-Roblox-Environment/mcp ./mcp
+COPY --chown=toolboxai:toolboxai ToolboxAI-Roblox-Environment/sparc ./sparc
+COPY --chown=toolboxai:toolboxai ToolboxAI-Roblox-Environment/swarm ./swarm
+COPY --chown=toolboxai:toolboxai ToolboxAI-Roblox-Environment/coordinators ./coordinators
+COPY --chown=toolboxai:toolboxai ToolboxAI-Roblox-Environment/toolboxai_utils ./toolboxai_utils
+COPY --chown=toolboxai:toolboxai database ./database
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/agent_data /app/memory_store && \
+    chown -R toolboxai:toolboxai /app/logs /app/agent_data /app/memory_store
+
+# Add metadata labels
+LABEL org.opencontainers.image.title="ToolBoxAI Backend" \
+      org.opencontainers.image.description="FastAPI backend with AI agents and MCP" \
+      org.opencontainers.image.vendor="ToolBoxAI Solutions" \
+      org.opencontainers.image.url="https://github.com/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment" \
+      org.opencontainers.image.source="https://github.com/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment" \
+      org.opencontainers.image.documentation="https://docs.toolboxai.solutions"
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app \
+    PORT=8008 \
+    MCP_PORT=9876
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/health || exit 1
+
+# Switch to non-root user
+USER toolboxai
+
+# Expose ports
+EXPOSE 8008 9876
+
+# Start command with graceful shutdown handling
+CMD ["python", "-m", "uvicorn", "server.main:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8008", \
+     "--workers", "4", \
+     "--loop", "uvloop", \
+     "--access-log", \
+     "--log-config", "/app/server/logging_config.yaml"]
