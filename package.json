@@ -12,7 +12,12 @@
     "dashboard:build": "npm -w src/dashboard run build",
     "dashboard:test": "npm -w src/dashboard test",
     "dashboard:lint": "npm -w src/dashboard run lint",
-    "verify:dashboard": "npm -w src/dashboard run test --silent && npm -w src/dashboard run build"
+    "verify:dashboard": "npm -w src/dashboard run test --silent && npm -w src/dashboard run build",
+    "docs:format": "prettier --log-level warn --write \"Documentation/**/*.md\"",
+    "docs:lint": "markdownlint-cli2 \"Documentation/**/*.md\"",
+    "docs:redact": "python3 Documentation/.tools/redact_secrets.py",
+    "docs:fences": "python3 Documentation/.tools/fence_langs.py",
+    "docs:openapi": "node Documentation/.tools/json_to_yaml.js Documentation/03-api/openapi-spec.json Documentation/03-api/openapi-spec.yaml"
   },
   "engines": {
     "node": ">=20 <23",
@@ -39,6 +44,9 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
+    "js-yaml": "^4.1.0",
+    "markdownlint-cli2": "^0.18.1",
+    "prettier": "^3.6.2",
     "typescript-eslint": "^8.42.0"
   }
 }
