@@ -1,0 +1,17 @@
+import pytest
+import aiohttp
+
+FASTAPI_BASE = "http://127.0.0.1:8008"
+
+@pytest.mark.asyncio
+async def test_socketio_status_endpoint_acks_and_path():
+    url = f"{FASTAPI_BASE}/socketio/status"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, timeout=3) as resp:
+            assert resp.status == 200
+            data = await resp.json()
+            # Validate keys provided by our implementation
+            assert data.get("status") == "ok"
+            assert data.get("path") == "/socket.io"
+            assert data.get("acks_enabled") is True
+

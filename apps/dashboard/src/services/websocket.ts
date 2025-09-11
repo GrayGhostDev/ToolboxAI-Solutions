@@ -48,7 +48,7 @@ export class WebSocketService {
 
   constructor(options: Partial<WebSocketConnectionOptions> = {}) {
     this.options = {
-      url: options.url || 'http://localhost:8008',
+url: options.url || WS_URL,
       reconnect: options.reconnect !== false,
       reconnectInterval: options.reconnectInterval || WS_CONFIG.reconnectInterval,
       maxReconnectAttempts: options.maxReconnectAttempts || WS_CONFIG.maxReconnectAttempts,
