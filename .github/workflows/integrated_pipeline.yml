@@ -213,8 +213,8 @@ jobs:
       
       - name: Verify Deployment
         run: |
-          if [ -f "scripts/terminal_sync/verify_deployment.py" ]; then
-            python scripts/terminal_sync/verify_deployment.py --all-terminals
+          if [ -f "scripts/deploy/verify_deployment.sh" ]; then
+            bash scripts/deploy/verify_deployment.sh
           fi
 
   release:

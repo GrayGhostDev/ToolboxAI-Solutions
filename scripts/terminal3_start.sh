@@ -1,11 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 # Terminal 3 - Roblox Integration Startup Script
 # Coordinates with all terminals and launches Roblox Studio integration
+set -eu
+# shellcheck source=common/lib.sh
+. "$(cd "$(dirname "$0")"/.. && pwd -P)/scripts/common/lib.sh" 2>/dev/null || \
+  . "$(cd "$(dirname "$0")"/.. && pwd -P)/common/lib.sh"
 
-# Determine project root dynamically (allow override)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd -P)}"
 SYNC_DIR="$PROJECT_ROOT/scripts/terminal_sync"
 ROBLOX_DIR="$PROJECT_ROOT/ToolboxAI-Roblox-Environment/Roblox"
 SCRIPTS_DIR="$ROBLOX_DIR/Scripts/ModuleScripts"
@@ -62,24 +65,24 @@ echo "🔍 Checking dependencies..."
 echo ""
 
 # Check Terminal 1 (Backend)
-if ! wait_for_service "http://localhost:5001/health" "Terminal 1 (Flask Bridge)"; then
+if ! wait_for_service "http://$API_HOST:$FLASK_PORT/health" "Terminal 1 (Flask Bridge)"; then
     echo -e "${RED}ERROR: Terminal 1 services not running${NC}"
     echo "Please start Terminal 1 first with the Flask bridge"
     exit 1
 fi
 
 # Check FastAPI backend
-check_service "http://localhost:8008/health" "FastAPI Backend"
+check_service "http://$API_HOST:$FASTAPI_PORT/health" "FastAPI Backend"
 
 # Check Terminal 2 (Dashboard) - may not be required
-if check_service "http://localhost:5179" "Terminal 2 (Dashboard)"; then
+if check_service "http://$API_HOST:$DASHBOARD_PORT" "Terminal 2 (Dashboard)"; then
     echo "Dashboard is available for integration"
 else
     echo -e "${YELLOW}⚠️ Dashboard not running - some features may be limited${NC}"
 fi
 
 # Check MCP WebSocket
-if nc -z localhost 9876 2>/dev/null; then
+if nc -z "$API_HOST" "$MCP_PORT" 2>/dev/null; then
     echo -e "${GREEN}✅ MCP WebSocket server is listening${NC}"
 else
     echo -e "${YELLOW}⚠️ MCP WebSocket not available${NC}"
@@ -112,7 +115,7 @@ echo "🧪 Testing Flask Bridge integration..."
 echo ""
 
 # Test health endpoint
-if curl -s http://localhost:5001/health | grep -q "healthy"; then
+if curl -s "http://$API_HOST:$FLASK_PORT/health" | grep -q "healthy"; then
     echo -e "${GREEN}✅ Flask Bridge health check passed${NC}"
 else
     echo -e "${YELLOW}⚠️ Flask Bridge health check returned unexpected response${NC}"
@@ -269,8 +272,8 @@ cat > "$SYNC_DIR/status/terminal3.json" << EOF
     "services": {
         "flask_bridge": "connected",
         "fastapi": "connected",
-        "dashboard": "$(check_service 'http://localhost:5179' 'Dashboard' && echo 'connected' || echo 'not_available')",
-        "mcp_websocket": "$(nc -z localhost 9876 2>/dev/null && echo 'connected' || echo 'not_available')",
+        "dashboard": "$(check_service "http://$API_HOST:$DASHBOARD_PORT" 'Dashboard' && echo 'connected' || echo 'not_available')",
+        "mcp_websocket": "$(nc -z "$API_HOST" "$MCP_PORT" 2>/dev/null && echo 'connected' || echo 'not_available')",
         "roblox_studio": "waiting_for_launch"
     },
     "modules": {
@@ -302,7 +305,7 @@ echo ""
 # Monitor loop
 while true; do
     # Check Flask Bridge periodically
-    if curl -s http://localhost:5001/health > /dev/null 2>&1; then
+    if curl -s "http://$API_HOST:$FLASK_PORT/health" > /dev/null 2>&1; then
         echo -n "."
     else
         echo ""
