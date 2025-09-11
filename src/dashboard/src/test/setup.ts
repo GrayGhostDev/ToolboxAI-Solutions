@@ -12,6 +12,14 @@ const localStorageMock = {
 };
 global.localStorage = localStorageMock as Storage;
 
+// Fix for DataCloneError with axios in Vitest
+// Override structuredClone to handle non-serializable objects
+if (typeof structuredClone === 'undefined') {
+  global.structuredClone = (obj: any) => {
+    return JSON.parse(JSON.stringify(obj));
+  };
+}
+
 // Mock WebSocket
 class WebSocketMock {
   constructor(public url: string) {}
