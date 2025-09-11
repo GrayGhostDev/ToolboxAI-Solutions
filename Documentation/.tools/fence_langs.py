@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import re
 import json
+from typing import Optional
 from pathlib import Path
 
 DOCS = Path("Documentation")
@@ -17,7 +18,7 @@ HTTP_PREFIXES = ("GET http://", "GET https://", "POST http://", "POST https://",
                  "PUT http://", "PUT https://", "DELETE http://", "DELETE https://")
 
 
-def detect_lang(body: str) -> str | None:
+def detect_lang(body: str) -> Optional[str]:
     s = body.strip()
     # HTTP examples
     for p in HTTP_PREFIXES:
