@@ -12,9 +12,11 @@ const io = require('socket.io-client');
 const chalk = require('chalk');
 
 // Configuration
-const DASHBOARD_URL = 'http://localhost:5179';
-const API_BASE_URL = 'http://localhost:8008';
-const WS_URL = 'http://localhost:8008';
+const host = process.env.DASHBOARD_HOST || '127.0.0.1';
+const port = Number(process.env.DASHBOARD_PORT || 5179);
+const DASHBOARD_URL = `http://${host}:${port}`;
+const API_BASE_URL = `http://${process.env.API_HOST || '127.0.0.1'}:${process.env.FASTAPI_PORT || 8008}`;
+const WS_URL = API_BASE_URL;
 
 // Test results tracking
 let totalTests = 0;

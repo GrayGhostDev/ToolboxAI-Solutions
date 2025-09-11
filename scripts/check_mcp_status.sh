@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env sh
+# shellcheck shell=sh
+set -eu
+# shellcheck source=common/lib.sh
+. "$(cd "$(dirname "$0")" && pwd -P)/common/lib.sh" 2>/dev/null || true
 
 # ToolboxAI MCP Servers and Agents Status Check Script
 # This script checks the status of all MCP servers and agents
@@ -52,7 +56,7 @@ check_service() {
 
 # Check all services
 echo -e "${BLUE}🤖 Agent Services:${NC}"
-check_service "MCP-Server" "9876"
+check_service "MCP-Server" "$MCP_PORT"
 check_service "Agent-Orchestrator" ""
 check_service "Content-Agent" ""
 check_service "Quiz-Agent" ""
@@ -75,24 +79,24 @@ echo ""
 echo -e "${BLUE}🔗 Connection Tests:${NC}"
 
 # Test MCP Server WebSocket connection
-echo -n "🔌 MCP WebSocket (ws://localhost:9876): "
-if curl -s --connect-timeout 2 http://localhost:9876 >/dev/null 2>&1; then
+echo -n "🔌 MCP WebSocket (ws://$API_HOST:$MCP_PORT): "
+if curl -s --connect-timeout 2 "http://$API_HOST:$MCP_PORT" >/dev/null 2>&1; then
     echo -e "${GREEN}✅ CONNECTED${NC}"
 else
     echo -e "${RED}❌ NOT CONNECTED${NC}"
 fi
 
 # Test FastAPI Server
-echo -n "🌐 FastAPI Server (http://127.0.0.1:8008/health): "
-if curl -s --connect-timeout 2 http://127.0.0.1:8008/health >/dev/null 2>&1; then
+echo -n "🌐 FastAPI Server (http://$API_HOST:$FASTAPI_PORT/health): "
+if curl -s --connect-timeout 2 "http://$API_HOST:$FASTAPI_PORT/health" >/dev/null 2>&1; then
     echo -e "${GREEN}✅ HEALTHY${NC}"
 else
     echo -e "${RED}❌ NOT RESPONDING${NC}"
 fi
 
 # Test Flask Bridge Server
-echo -n "🌉 Flask Bridge (http://127.0.0.1:5001/status): "
-if curl -s --connect-timeout 2 http://127.0.0.1:5001/status >/dev/null 2>&1; then
+echo -n "🌉 Flask Bridge (http://$API_HOST:$FLASK_PORT/status): "
+if curl -s --connect-timeout 2 "http://$API_HOST:$FLASK_PORT/status" >/dev/null 2>&1; then
     echo -e "${GREEN}✅ HEALTHY${NC}"
 else
     echo -e "${RED}❌ NOT RESPONDING${NC}"

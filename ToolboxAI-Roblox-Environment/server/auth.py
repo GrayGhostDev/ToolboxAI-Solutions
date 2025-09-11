@@ -386,6 +386,8 @@ async def get_current_user(
 
     try:
         payload = JWTManager.verify_token(credentials.credentials)
+        if not isinstance(payload, dict):
+            raise AuthenticationError("Invalid token payload")
         user_id = payload.get("sub")
 
         if not user_id:

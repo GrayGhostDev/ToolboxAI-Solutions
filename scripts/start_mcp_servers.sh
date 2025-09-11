@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env sh
+# shellcheck shell=sh
+set -eu
+# shellcheck source=common/lib.sh
+. "$(cd "$(dirname "$0")" && pwd -P)/common/lib.sh" 2>/dev/null || true
 
 # ToolboxAI MCP Servers and Agents Startup Script
 # This script starts all MCP servers and agents for Cursor integration
@@ -34,9 +38,9 @@ source "$VENV_PATH/bin/activate"
 
 # Set environment variables
 export PYTHONPATH="$ROBLOX_ENV:$PROJECT_ROOT/src/shared"
-export MCP_HOST="localhost"
-export MCP_PORT="9876"
-export MCP_MAX_CONTEXT_TOKENS="128000"
+export MCP_HOST="${API_HOST:-127.0.0.1}"
+export MCP_PORT="${MCP_PORT:-9876}"
+export MCP_MAX_CONTEXT_TOKENS="${MCP_MAX_CONTEXT_TOKENS:-128000}"
 
 # Check for required API keys
 if [ -z "$OPENAI_API_KEY" ]; then

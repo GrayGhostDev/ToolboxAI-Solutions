@@ -59,12 +59,12 @@ test_endpoint() {
 
 echo -e "${BLUE}1. Testing Dashboard Accessibility${NC}"
 echo "=========================================="
-test_endpoint "Dashboard Homepage" "http://localhost:5179" "200"
+test_endpoint "Dashboard Homepage" "http://${DASHBOARD_HOST:-127.0.0.1}:${DASHBOARD_PORT:-5179}" "200"
 echo ""
 
 echo -e "${BLUE}2. Testing Backend API (Terminal 1)${NC}"
 echo "=========================================="
-test_endpoint "API Health Check" "http://localhost:8008/health" "200"
+test_endpoint "API Health Check" "http://${API_HOST:-127.0.0.1}:${FASTAPI_PORT:-8008}/health" "200"
 test_endpoint "API Status" "http://localhost:8008/api/v1/status" "200"
 echo ""
 
@@ -72,7 +72,7 @@ echo -e "${BLUE}3. Testing Authentication Flow${NC}"
 echo "=========================================="
 # Test login with real credentials
 echo "Attempting login with test credentials..."
-LOGIN_RESPONSE=$(curl -s -X POST http://localhost:8008/auth/login \
+LOGIN_RESPONSE=$(curl -s -X POST "http://${API_HOST:-127.0.0.1}:${FASTAPI_PORT:-8008}/auth/login" \
     -H "Content-Type: application/json" \
     -d '{"username":"teacher","password":"teacher123"}' 2>/dev/null)
 
@@ -91,8 +91,8 @@ if echo "$LOGIN_RESPONSE" | grep -q "access_token"; then
         echo ""
         echo -e "${BLUE}4. Testing Authenticated Endpoints${NC}"
         echo "=========================================="
-        test_endpoint "User Profile" "http://localhost:8008/api/v1/users/me" "200" "GET" "" "Authorization: Bearer $TOKEN"
-        test_endpoint "Dashboard Overview" "http://localhost:8008/api/v1/dashboard/overview/teacher" "200" "GET" "" "Authorization: Bearer $TOKEN"
+test_endpoint "User Profile" "http://${API_HOST:-127.0.0.1}:${FASTAPI_PORT:-8008}/api/v1/users/me" "200" "GET" "" "Authorization: Bearer $TOKEN"
+test_endpoint "Dashboard Overview" "http://${API_HOST:-127.0.0.1}:${FASTAPI_PORT:-8008}/api/v1/dashboard/overview/teacher" "200" "GET" "" "Authorization: Bearer $TOKEN"
     else
         echo -e "${RED}✗${NC} Failed to extract token"
         ((FAILED++))
@@ -101,7 +101,7 @@ else
     echo -e "${YELLOW}⚠${NC} Login failed or user doesn't exist - trying to check if API accepts invalid credentials correctly"
     
     # Test that invalid credentials are rejected
-    INVALID_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8008/auth/login \
+INVALID_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "http://${API_HOST:-127.0.0.1}:${FASTAPI_PORT:-8008}/auth/login" \
         -H "Content-Type: application/json" \
         -d '{"username":"invalid","password":"wrong"}' 2>/dev/null)
     
@@ -121,7 +121,7 @@ echo "=========================================="
 echo "Checking for real database data..."
 
 # Try to get users count
-USERS_DATA=$(curl -s http://localhost:8008/api/v1/users 2>/dev/null || echo "{}")
+USERS_DATA=$(curl -s "http://${API_HOST:-127.0.0.1}:${FASTAPI_PORT:-8008}/api/v1/users" 2>/dev/null || echo "{}")
 if echo "$USERS_DATA" | grep -q "username"; then
     echo -e "${GREEN}✓${NC} Real user data found in database"
     ((PASSED++))
@@ -130,7 +130,7 @@ else
 fi
 
 # Check database connection
-DB_STATUS=$(curl -s http://localhost:8008/health 2>/dev/null || echo "{}")
+DB_STATUS=$(curl -s "http://${API_HOST:-127.0.0.1}:${FASTAPI_PORT:-8008}/health" 2>/dev/null || echo "{}")
 if echo "$DB_STATUS" | grep -q "database"; then
     if echo "$DB_STATUS" | grep -q "\"connected\":true"; then
         echo -e "${GREEN}✓${NC} Database is connected"
@@ -145,7 +145,7 @@ echo ""
 echo -e "${BLUE}6. Testing WebSocket Availability${NC}"
 echo "=========================================="
 # Check if socket.io endpoint responds
-SOCKET_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8008/socket.io/" 2>/dev/null)
+SOCKET_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "http://${API_HOST:-127.0.0.1}:${FASTAPI_PORT:-8008}/socket.io/" 2>/dev/null)
 if [ "$SOCKET_RESPONSE" = "200" ] || [ "$SOCKET_RESPONSE" = "400" ]; then
     echo -e "${GREEN}✓${NC} WebSocket endpoint available (HTTP $SOCKET_RESPONSE)"
     ((PASSED++))
@@ -158,7 +158,7 @@ echo ""
 echo -e "${BLUE}7. Testing Cross-Terminal Communication${NC}"
 echo "=========================================="
 # Check if Terminal 3 (Roblox Bridge) is running
-test_endpoint "Terminal 3 (Roblox Bridge)" "http://localhost:5001/health" "200"
+test_endpoint "Terminal 3 (Roblox Bridge)" "http://${API_HOST:-127.0.0.1}:${FLASK_PORT:-5001}/health" "200"
 echo ""
 
 # Summary

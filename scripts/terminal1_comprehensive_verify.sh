@@ -1,4 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env sh
+# shellcheck shell=sh
+set -eu
+# shellcheck source=common/lib.sh
+. "$(cd "$(dirname "$0")"/.. && pwd -P)/scripts/common/lib.sh" 2>/dev/null || \
+  . "$(cd "$(dirname "$0")"/.. && pwd -P)/common/lib.sh"
 
 # Terminal 1 - Comprehensive Verification Script
 # This script performs all verification tasks for Terminal 1 readiness
@@ -60,10 +65,10 @@ mkdir -p "$SYNC_DIR"/{messages,status,alerts,metrics,logs}
 print_section "PHASE 1: CORE SERVICES VERIFICATION"
 
 run_check "FastAPI Server (port 8008)" \
-    "curl -s http://localhost:8008/health | grep -q 'healthy'"
+curl -s "http://$API_HOST:$FASTAPI_PORT/health" | grep -q 'healthy'
 
 run_check "Flask Bridge (port 5001)" \
-    "curl -s http://localhost:5001/health | grep -q 'healthy'"
+curl -s "http://$API_HOST:$FLASK_PORT/health" | grep -q 'healthy'
 
 run_check "PostgreSQL Database (port 5432)" \
     "nc -zv localhost 5432"
@@ -72,7 +77,7 @@ run_check "Redis Cache (port 6379)" \
     "redis-cli ping | grep -q PONG"
 
 run_check "Socket.io WebSocket" \
-    "curl -s 'http://localhost:8008/socket.io/?EIO=4&transport=polling' | grep -q 'sid'"
+curl -s "http://$API_HOST:$FASTAPI_PORT/socket.io/?EIO=4&transport=polling" | grep -q 'sid'
 
 # ═══════════════════════════════════════════════════════════════
 # PHASE 2: DATABASE VERIFICATION
@@ -96,16 +101,16 @@ run_check "Database Indexes" \
 print_section "PHASE 3: API ENDPOINTS VERIFICATION"
 
 run_check "Health Endpoint" \
-    "curl -s -o /dev/null -w '%{http_code}' http://localhost:8008/health | grep -q '200'"
+curl -s -o /dev/null -w '%{http_code}' "http://$API_HOST:$FASTAPI_PORT/health" | grep -q '200'
 
 run_check "Authentication Endpoint" \
-    "curl -s -X POST http://localhost:8008/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"test\",\"password\":\"test\"}' | grep -E '(token|error|detail)'"
+curl -s -X POST "http://$API_HOST:$FASTAPI_PORT/auth/login" -H 'Content-Type: application/json' -d '{\"username\":\"test\",\"password\":\"test\"}' | grep -E '(token|error|detail)'
 
 run_check "Content Generation Endpoint" \
-    "curl -s -X POST http://localhost:8008/generate_content -H 'Content-Type: application/json' -d '{\"subject\":\"test\",\"grade_level\":5}' | grep -E '(content|error|detail)'"
+curl -s -X POST "http://$API_HOST:$FASTAPI_PORT/generate_content" -H 'Content-Type: application/json' -d '{\"subject\":\"test\",\"grade_level\":5}' | grep -E '(content|error|detail)'
 
 run_check "Plugin Registration (Flask)" \
-    "curl -s -X POST http://localhost:5001/plugin/register -H 'Content-Type: application/json' -d '{\"plugin_id\":\"test\",\"version\":\"1.0\"}' | grep -E '(registered|success|error)'"
+curl -s -X POST "http://$API_HOST:$FLASK_PORT/plugin/register" -H 'Content-Type: application/json' -d '{\"plugin_id\":\"test\",\"version\":\"1.0\"}' | grep -E '(registered|success|error)'
 
 # ═══════════════════════════════════════════════════════════════
 # PHASE 4: SECURITY VERIFICATION
@@ -123,7 +128,7 @@ run_check ".env in .gitignore" \
     "grep -q '\.env' $BASE_DIR/.gitignore"
 
 run_check "CORS headers configured" \
-    "curl -I http://localhost:8008/health 2>/dev/null | grep -q 'Access-Control-Allow'"
+curl -I "http://$API_HOST:$FASTAPI_PORT/health" 2>/dev/null | grep -q 'Access-Control-Allow'
 
 # ═══════════════════════════════════════════════════════════════
 # PHASE 5: INTER-TERMINAL COMMUNICATION
@@ -163,7 +168,7 @@ print_section "PHASE 6: PERFORMANCE METRICS"
 
 # Quick performance check
 echo -n "  ⚡ Health endpoint response time... "
-response_time=$(curl -o /dev/null -s -w '%{time_total}' http://localhost:8008/health)
+response_time=$(curl -o /dev/null -s -w '%{time_total}' "http://$API_HOST:$FASTAPI_PORT/health")
 response_ms=$(echo "$response_time * 1000" | bc 2>/dev/null || echo "0")
 if (( $(echo "$response_ms < 200" | bc -l 2>/dev/null || echo 0) )); then
     echo -e "${GREEN}✅ ${response_ms}ms (< 200ms target)${NC}"
@@ -264,8 +269,8 @@ cat > "$REPORT_FILE" << EOF
     "percentage": $PERCENTAGE,
     "status": "$([ $PERCENTAGE -ge 90 ] && echo 'production_ready' || echo 'needs_attention')",
     "services": {
-        "fastapi": $(curl -s http://localhost:8008/health > /dev/null 2>&1 && echo true || echo false),
-        "flask": $(curl -s http://localhost:5001/health > /dev/null 2>&1 && echo true || echo false),
+"fastapi": $(curl -s "http://$API_HOST:$FASTAPI_PORT/health" > /dev/null 2>&1 && echo true || echo false),
+        "flask": $(curl -s "http://$API_HOST:$FLASK_PORT/health" > /dev/null 2>&1 && echo true || echo false),
         "postgres": $(nc -zv localhost 5432 > /dev/null 2>&1 && echo true || echo false),
         "redis": $(redis-cli ping > /dev/null 2>&1 && echo true || echo false)
     }

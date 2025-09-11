@@ -1,4 +1,6 @@
 # INTEGRATED TERMINAL ARCHITECTURE
+
+Note: Several scripts have been consolidated and archived under scripts/Archive/2025-09-11/. See scripts/common/lib.sh for canonical ports and env loading.
 ## Multi-Terminal Orchestration System for ToolBoxAI Educational Platform
 
 ### Executive Summary

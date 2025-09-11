@@ -10,9 +10,9 @@ import websockets
 import json
 from pathlib import Path
 
-# Add project paths
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root / "src" / "roblox-environment"))
+# Add project paths (repo root is three levels up: scripts/mcp/ -> project root)
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root / "ToolboxAI-Roblox-Environment"))
 sys.path.insert(0, str(project_root / "src" / "shared"))
 
 

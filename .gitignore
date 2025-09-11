@@ -57,6 +57,7 @@ Thumbs.db
 
 # Logs
 logs/
+!logs/.gitkeep
 *.log
 
 # Testing
@@ -84,6 +85,9 @@ site/
 *.temp
 temp/
 tmp/
+
+# PIDs
+scripts/pids/
 
 # Lock files (keep these for consistency)
 !package-lock.json

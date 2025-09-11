@@ -101,7 +101,7 @@ cat > /tmp/responsive-test.html << 'EOF'
         <div class="device">
             <h3>📱 Mobile (iPhone 12)</h3>
             <div class="viewport" style="width: 390px; height: 844px;">
-                <iframe src="http://localhost:3000" style="transform: scale(0.5); transform-origin: 0 0; width: 780px; height: 1688px;"></iframe>
+<iframe src="{{DASHBOARD_URL}}" style="transform: scale(0.5); transform-origin: 0 0; width: 780px; height: 1688px;"></iframe>
             </div>
             <div class="info">
                 <span class="status pass"></span>
@@ -112,7 +112,7 @@ cat > /tmp/responsive-test.html << 'EOF'
         <div class="device">
             <h3>📱 Mobile (Android)</h3>
             <div class="viewport" style="width: 360px; height: 640px;">
-                <iframe src="http://localhost:3000" style="transform: scale(0.5); transform-origin: 0 0; width: 720px; height: 1280px;"></iframe>
+<iframe src="{{DASHBOARD_URL}}" style="transform: scale(0.5); transform-origin: 0 0; width: 720px; height: 1280px;"></iframe>
             </div>
             <div class="info">
                 <span class="status pass"></span>
@@ -137,7 +137,7 @@ cat > /tmp/responsive-test.html << 'EOF'
         <div class="device" style="grid-column: span 2;">
             <h3>💻 Laptop (13")</h3>
             <div class="viewport" style="width: 100%; height: 600px;">
-                <iframe src="http://localhost:3000"></iframe>
+<iframe src="{{DASHBOARD_URL}}"></iframe>
             </div>
             <div class="info">
                 <span class="status pass"></span>
@@ -170,16 +170,19 @@ cat > /tmp/responsive-test.html << 'EOF'
 </html>
 EOF
 
-echo "📝 Created responsive test page at /tmp/responsive-test.html"
+# Inject the runtime URL into the template and create the file
+sed "s|{{DASHBOARD_URL}}|$DASHBOARD_URL|g" /tmp/responsive-test.html > /tmp/responsive-test.rendered.html
+
+echo "📝 Created responsive test page at /tmp/responsive-test.rendered.html"
 echo ""
 
 # Open the test page in browser if available
 if command -v open &> /dev/null; then
     echo "🌐 Opening test page in browser..."
-    open /tmp/responsive-test.html
+open /tmp/responsive-test.rendered.html
 elif command -v xdg-open &> /dev/null; then
     echo "🌐 Opening test page in browser..."
-    xdg-open /tmp/responsive-test.html
+xdg-open /tmp/responsive-test.rendered.html
 else
     echo "📌 Please open /tmp/responsive-test.html in your browser"
 fi

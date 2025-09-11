@@ -47,6 +47,18 @@ export default [
     },
   },
   {
-    ignores: ['dist', 'node_modules', '*.config.js', '*.config.ts'],
+    ignores: [
+      'dist',
+      'node_modules',
+      '*.config.js',
+      '*.config.ts',
+      'backend/**',
+      '**/venv/**',
+      '**/.venv/**',
+      '**/venv_clean/**',
+      'coverage/**',
+      '.coverage/**',
+      '**/coverage/**'
+    ],
   },
 ];

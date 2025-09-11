@@ -417,24 +417,23 @@ def get_field_path(error):
 
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(request: Request, exc: ValidationError):
-    error_response = ErrorResponse(
-        success=False,
-        message="Validation error",
-        error_type="ValidationError",
-        details=[
-            ErrorDetail(
-                code="validation_error",
-                message=str(error),
-                field=get_field_path(error),
-                context=None,
-            )
-            for error in exc.errors()
-        ],
-    )
-    # Convert datetime objects to ISO format strings
-    response_dict = error_response.model_dump()
-    if 'timestamp' in response_dict and hasattr(response_dict['timestamp'], 'isoformat'):
-        response_dict['timestamp'] = response_dict['timestamp'].isoformat()
+    details = [
+        {
+            "code": "validation_error",
+            "message": str(error),
+            "field": get_field_path(error),
+            "context": None,
+        }
+        for error in exc.errors()
+    ]
+    response_dict = {
+        "success": False,
+        "message": "Validation error",
+        "error_type": "ValidationError",
+        "details": details,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "request_id": getattr(request.state, "request_id", str(uuid.uuid4())),
+    }
     return JSONResponse(
         status_code=422,
         content=response_dict,
@@ -444,16 +443,14 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
     """Handle 404 errors"""
-    error_response = ErrorResponse(
-        success=False,
-        message=f"Resource not found: {request.url.path}",
-        error_type="NotFoundError",
-        details=[],
-    )
-    # Convert datetime objects to ISO format strings
-    response_dict = error_response.model_dump()
-    if 'timestamp' in response_dict and hasattr(response_dict['timestamp'], 'isoformat'):
-        response_dict['timestamp'] = response_dict['timestamp'].isoformat()
+    response_dict = {
+        "success": False,
+        "message": f"Resource not found: {request.url.path}",
+        "error_type": "NotFoundError",
+        "details": [],
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "request_id": getattr(request.state, "request_id", str(uuid.uuid4())),
+    }
     return JSONResponse(
         status_code=404,
         content=response_dict,
@@ -464,16 +461,14 @@ async def not_found_handler(request: Request, exc):
 async def internal_server_error_handler(request: Request, exc):
     """Handle 500 errors"""
     logger.error(f"Internal server error: {exc}", exc_info=True)
-    error_response = ErrorResponse(
-        success=False,
-        message="Internal server error",
-        error_type="InternalServerError",
-        details=[],
-    )
-    # Convert datetime objects to ISO format strings
-    response_dict = error_response.model_dump()
-    if 'timestamp' in response_dict and hasattr(response_dict['timestamp'], 'isoformat'):
-        response_dict['timestamp'] = response_dict['timestamp'].isoformat()
+    response_dict = {
+        "success": False,
+        "message": "Internal server error",
+        "error_type": "InternalServerError",
+        "details": [],
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "request_id": getattr(request.state, "request_id", str(uuid.uuid4())),
+    }
     return JSONResponse(
         status_code=500,
         content=response_dict,
@@ -485,16 +480,14 @@ async def general_exception_handler(request: Request, exc: Exception):
     # Sanitize exception message to prevent log injection
     safe_exc_msg = str(exc)[:500].replace("\n", "").replace("\r", "")
     logger.error(f"Unhandled exception: {safe_exc_msg}", exc_info=True)
-    error_response = ErrorResponse(
-        success=False,
-        message="Internal server error",
-        error_type="InternalServerError",
-        details=[],
-    )
-    # Convert datetime objects to ISO format strings
-    response_dict = error_response.model_dump()
-    if 'timestamp' in response_dict and hasattr(response_dict['timestamp'], 'isoformat'):
-        response_dict['timestamp'] = response_dict['timestamp'].isoformat()
+    response_dict = {
+        "success": False,
+        "message": "Internal server error",
+        "error_type": "InternalServerError",
+        "details": [],
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "request_id": getattr(request.state, "request_id", str(uuid.uuid4())),
+    }
     return JSONResponse(
         status_code=500,
         content=response_dict,
@@ -596,25 +589,27 @@ async def health_check():
 
         overall_status = "healthy" if all(all_checks.values()) else "unhealthy"
 
-        return HealthCheck(
-            status=overall_status,
-            version=settings.APP_VERSION,
-            checks=all_checks,
-            uptime=(
+        return {
+            "status": overall_status,
+            "version": settings.APP_VERSION,
+            "checks": all_checks,
+            "uptime": (
                 time.time() - app.state.start_time
                 if hasattr(app.state, "start_time")
                 else 0
             ),
-        )
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        return HealthCheck(
-            status="unhealthy",
-            version=settings.APP_VERSION,
-            checks={"error": False},
-            uptime=0,
-        )
+        return {
+            "status": "unhealthy",
+            "version": settings.APP_VERSION,
+            "checks": {"error": False},
+            "uptime": 0,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
 
 
 @app.get("/ws/status", tags=["System"])
@@ -801,12 +796,12 @@ async def api_generate_content(
             else:
                 response = await generate_educational_content(content_request, current_user)
         except Exception as e:
-            if sentry_manager.initialized:
-                capture_educational_content_error(
-                    content_request.model_dump(), 
-                    e, 
-                    current_user.id
-                )
+                if sentry_manager.initialized:
+                    capture_educational_content_error(
+                        jsonable_encoder(content_request), 
+                        e, 
+                        current_user.id
+                    )
             raise
         
         # Broadcast update to WebSocket clients
@@ -825,17 +820,19 @@ async def api_generate_content(
     except Exception as e:
         logger.error(f"API content generation failed: {e}")
         error_request_id = str(uuid.uuid4())
-        return ContentResponse(
-            success=False,
-            message=f"Content generation failed: {str(e)}",
-            content={},
-            scripts=[],
-            terrain=None,
-            game_mechanics=None,
-            estimated_build_time=0,
-            resource_requirements={},
-            content_id=error_request_id,
-        )
+        return {
+            "success": False,
+            "message": f"Content generation failed: {str(e)}",
+            "content": {},
+            "scripts": [],
+            "terrain": None,
+            "game_mechanics": None,
+            "estimated_build_time": 0,
+            "resource_requirements": {},
+            "content_id": error_request_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "request_id": getattr(request.state, "request_id", str(uuid.uuid4())),
+        }
 
 
 # Content retrieval endpoint
@@ -2037,7 +2034,15 @@ async def login(login_request: LoginRequest):
         return {
             "access_token": token,
             "token_type": "bearer",
-            "user": user.model_dump(),
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "role": user.role,
+                "grade_level": getattr(user, "grade_level", None),
+                "created_at": getattr(user, "created_at", datetime.now(timezone.utc)).isoformat() if getattr(user, "created_at", None) else None,
+                "last_active": getattr(user, "last_active", None).isoformat() if getattr(user, "last_active", None) else None,
+            },
         }
     
     # Fallback for test credentials (Development Mode)
@@ -2110,7 +2115,15 @@ async def login(login_request: LoginRequest):
             return {
                 "access_token": token,
                 "token_type": "bearer",
-                "user": user.model_dump(),
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "role": user.role,
+                    "grade_level": getattr(user, "grade_level", None),
+                    "created_at": getattr(user, "created_at", datetime.now(timezone.utc)).isoformat() if getattr(user, "created_at", None) else None,
+                    "last_active": getattr(user, "last_active", None).isoformat() if getattr(user, "last_active", None) else None,
+                },
             }
     
     raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -2211,9 +2224,14 @@ async def refresh_access_token(
         
         return {
             "access_token": new_access_token,
-            "refresh_token": new_refresh_token,  # Provide new refresh token
+            "refresh_token": new_refresh_token,
             "token_type": "bearer",
-            "user": user.model_dump(),
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "role": user.role,
+            },
         }
         
     except AuthenticationError as e:
@@ -2257,7 +2275,15 @@ async def create_access_token(login_request: LoginRequest):
         return {
             "access_token": token,
             "token_type": "bearer",
-            "user": user.model_dump(),
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "role": user.role,
+                "grade_level": getattr(user, "grade_level", None),
+                "created_at": getattr(user, "created_at", datetime.now(timezone.utc)).isoformat() if getattr(user, "created_at", None) else None,
+                "last_active": getattr(user, "last_active", None).isoformat() if getattr(user, "last_active", None) else None,
+            },
         }
     
     # Fallback for test credentials
@@ -2277,7 +2303,15 @@ async def create_access_token(login_request: LoginRequest):
         return {
             "access_token": token,
             "token_type": "bearer",
-            "user": user.model_dump(),
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "role": user.role,
+                "grade_level": getattr(user, "grade_level", None),
+                "created_at": getattr(user, "created_at", datetime.now(timezone.utc)).isoformat() if getattr(user, "created_at", None) else None,
+                "last_active": getattr(user, "last_active", None).isoformat() if getattr(user, "last_active", None) else None,
+            },
         }
     
     # Check for demo credentials from settings as last resort
@@ -2303,7 +2337,15 @@ async def create_access_token(login_request: LoginRequest):
             return {
                 "access_token": token,
                 "token_type": "bearer",
-                "user": user.model_dump(),
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "role": user.role,
+                    "grade_level": getattr(user, "grade_level", None),
+                    "created_at": getattr(user, "created_at", datetime.now(timezone.utc)).isoformat() if getattr(user, "created_at", None) else None,
+                    "last_active": getattr(user, "last_active", None).isoformat() if getattr(user, "last_active", None) else None,
+                },
             }
     
     raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -2539,7 +2581,7 @@ async def generate_content(
         except Exception as e:
             if sentry_manager.initialized:
                 capture_educational_content_error(
-                    content_request.model_dump(), 
+                    jsonable_encoder(content_request), 
                     e, 
                     current_user.id
                 )
@@ -2863,7 +2905,7 @@ async def send_plugin_message(message: PluginMessage):
             "plugin_messages",
             {
                 "type": "plugin_message",
-                "message": message.model_dump(),
+                "message": jsonable_encoder(message),
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             },
         )

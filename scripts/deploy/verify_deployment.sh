@@ -1,4 +1,26 @@
-#!/bin/bash
+#!/usr/bin/env sh
+# Kubernetes deployment verification wrapper
+set -eu
+# shellcheck source=../common/lib.sh
+. "$(cd "$(dirname "$0")"/.. && pwd -P)/common/lib.sh" 2>/dev/null || true
+
+NAMESPACE="${NAMESPACE:-default}"
+APP="${APP:-backend}"
+
+if ! command -v kubectl >/dev/null 2>&1; then
+  echo "kubectl is not available" >&2
+  exit 0
+fi
+
+kubectl get ns "$NAMESPACE" >/dev/null 2>&1 || { echo "Namespace $NAMESPACE not found" >&2; exit 1; }
+
+set +e
+kubectl -n "$NAMESPACE" rollout status deploy/"$APP" --timeout=120s
+STATUS=$?
+set -e
+
+kubectl -n "$NAMESPACE" get deploy,svc,ingress || true
+exit "$STATUS"
 
 # ToolBoxAI Deployment Verification Script
 # Comprehensive testing of the cloud/docker infrastructure

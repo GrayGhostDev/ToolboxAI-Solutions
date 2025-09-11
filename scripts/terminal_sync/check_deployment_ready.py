@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Note: ensure this script remains if referenced by CI; otherwise update workflows accordingly.
 """
 Check if all terminals are ready for deployment.
 Implements real coordination between services.

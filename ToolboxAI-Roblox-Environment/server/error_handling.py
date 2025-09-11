@@ -368,10 +368,25 @@ class ErrorHandler:
                 },
             }
 
+        # Record metrics
+        self.metrics.record_error(error_dict, str(error_dict.get("category", "unknown")))
+
+        # Log error
+        self._log_error(error_dict, exc)
+
+        return error_dict
+
     async def _handle_validation_error(
         self, exc: AppValidationError, context: ErrorContext
     ) -> Dict[str, Any]:
         """Handle validation errors"""
+        return {
+            "status_code": exc.status_code,
+            "category": exc.category,
+            "message": exc.message,
+            "details": exc.details,
+            "path": context.path,
+        }
         return {
             "status_code": exc.status_code,
             "category": exc.category,

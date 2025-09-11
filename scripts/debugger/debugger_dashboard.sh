@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env sh
+# shellcheck shell=sh
+set -eu
+# shellcheck source=../common/lib.sh
+. "$(cd "$(dirname "$0")"/.. && pwd -P)/common/lib.sh" 2>/dev/null || true
 # Debugger Terminal - Live Dashboard
 # Real-time monitoring dashboard for the ToolBoxAI Educational Platform
 
@@ -114,28 +118,28 @@ while true; do
     
     # Terminal 1 - Backend
     T1_STATUS="down"
-    if curl -s http://localhost:8008/health > /dev/null 2>&1; then
+if curl -s "http://$API_HOST:$FASTAPI_PORT/health" > /dev/null 2>&1; then
         T1_STATUS="healthy"
-        T1_DATA=$(curl -s http://localhost:8008/health)
+T1_DATA=$(curl -s "http://$API_HOST:$FASTAPI_PORT/health")
         T1_UPTIME=$(echo "$T1_DATA" | python3 -c "import json,sys; d=json.load(sys.stdin); print(f\"{d.get('uptime', 0):.0f}s\")" 2>/dev/null || echo "N/A")
     fi
-    echo -e "  $(get_status_color "$T1_STATUS") Terminal 1 (Backend):   Port 8008 | Uptime: ${T1_UPTIME}${NC}"
+echo -e "  $(get_status_color "$T1_STATUS") Terminal 1 (Backend):   Port $FASTAPI_PORT | Uptime: ${T1_UPTIME}${NC}"
     
     # Terminal 2 - Frontend
     T2_STATUS="down"
-    if curl -s http://localhost:5179 > /dev/null 2>&1; then
+if curl -s "http://$API_HOST:$DASHBOARD_PORT" > /dev/null 2>&1; then
         T2_STATUS="healthy"
     fi
-    echo -e "  $(get_status_color "$T2_STATUS") Terminal 2 (Frontend):  Port 5179${NC}"
+echo -e "  $(get_status_color "$T2_STATUS") Terminal 2 (Frontend):  Port $DASHBOARD_PORT${NC}"
     
     # Terminal 3 - Roblox Bridge
     T3_STATUS="down"
-    if curl -s http://localhost:5001/health > /dev/null 2>&1; then
+if curl -s "http://$API_HOST:$FLASK_PORT/health" > /dev/null 2>&1; then
         T3_STATUS="healthy"
         T3_DATA=$(curl -s http://localhost:5001/health)
         T3_UPTIME=$(echo "$T3_DATA" | python3 -c "import json,sys; d=json.load(sys.stdin); print(f\"{d.get('uptime', 0):.0f}s\")" 2>/dev/null || echo "N/A")
     fi
-    echo -e "  $(get_status_color "$T3_STATUS") Terminal 3 (Roblox):    Port 5001 | Uptime: ${T3_UPTIME}${NC}"
+echo -e "  $(get_status_color "$T3_STATUS") Terminal 3 (Roblox):    Port $FLASK_PORT | Uptime: ${T3_UPTIME}${NC}"
     echo ""
     
     # Security Status

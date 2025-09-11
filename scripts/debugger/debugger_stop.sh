@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env sh
+# shellcheck shell=sh
+set -eu
+# shellcheck source=../common/lib.sh
+. "$(cd "$(dirname "$0")"/.. && pwd -P)/common/lib.sh" 2>/dev/null || true
 # Debugger Terminal - Stop Script
 # Gracefully stops all debugger monitoring processes
 

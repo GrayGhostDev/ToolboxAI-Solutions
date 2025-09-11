@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env sh
+# shellcheck shell=sh
+set -eu
+# shellcheck source=../common/lib.sh
+. "$(cd "$(dirname "$0")"/.. && pwd -P)/common/lib.sh" 2>/dev/null || true
 # Debugger Terminal - System Monitor Startup Script
 # Part of the ToolBoxAI Educational Platform
 
@@ -60,11 +64,11 @@ fi
 # Check all terminals
 echo ""
 echo "🔍 Verifying all terminals..."
-check_service "Terminal 1 (Backend)" "http://localhost:8008/health"
+check_service "Terminal 1 (Backend)" "http://$API_HOST:$FASTAPI_PORT/health"
 T1_STATUS=$?
-check_service "Terminal 2 (Frontend)" "http://localhost:5179"
+check_service "Terminal 2 (Frontend)" "http://$API_HOST:$DASHBOARD_PORT"
 T2_STATUS=$?
-check_service "Terminal 3 (Roblox)" "http://localhost:5001/health"
+check_service "Terminal 3 (Roblox)" "http://$API_HOST:$FLASK_PORT/health"
 T3_STATUS=$?
 
 # Start monitoring components
