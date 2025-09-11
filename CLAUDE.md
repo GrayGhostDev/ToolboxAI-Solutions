@@ -79,13 +79,14 @@ ToolBoxAI-Solutions is a comprehensive educational technology platform that inte
 ```bash
 cd ToolboxAI-Roblox-Environment
 
-# Setup Python environment
-python -m venv venv_clean
+# Setup Python environment (use project-local venv)
+python3 -m venv venv_clean
 source venv_clean/bin/activate  # On Windows: venv_clean\Scripts\activate
-pip install -r requirements.txt
+python -m pip install -U pip wheel setuptools
+python -m pip install -r requirements.txt
 
-# Install Node dependencies
-npm install
+# Install Node dependencies (dashboard only)
+npm run dashboard:dev --workspaces=false # or: npm -w src/dashboard run dev
 
 # Start all services (recommended)
 scripts/start_mcp_servers.sh     # Start all services with proper orchestration
@@ -155,16 +156,18 @@ pip install -r requirements.txt
 uvicorn backend.api.education_manager:app --reload
 
 # Frontend setup (from API/Dashboard root)
-npm install
-npm run dev    # Development server (:3000)
+# Use workspace command from repo root instead
+npm -w src/dashboard install
+npm -w src/dashboard run dev    # Development server (:3000)
 npm run build  # Production build
 npm test       # Run tests
 ```
 
-### Ghost Backend (API/GhostBackend)
+# Ghost Backend (External: /Volumes/G-DRIVE ArmorATD/Server/Backend/Ghost)
 
 ```bash
-cd ToolboxAI-Roblox-Environment/API/GhostBackend
+# External backend path; not part of this repo. Keep it as the source of truth.
+cd "/Volumes/G-DRIVE ArmorATD/Server/Backend/Ghost"
 
 # Setup and run
 ./bin/setup.sh
