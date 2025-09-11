@@ -72,7 +72,7 @@ hashed_password = auth_manager.hash_password("user_password")
 
 ```env
 # Generate API keys for service-to-service communication
-API_KEY=api_key_$(openssl rand -hex 32)
+API_KEY=[REDACTED]$(openssl rand -hex 32)
 
 # Rate limiting to prevent abuse
 API_RATE_LIMIT=100/minute               # Adjust based on your needs

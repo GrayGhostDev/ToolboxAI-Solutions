@@ -23,8 +23,8 @@
 ```bash
 cd ToolboxAI-Roblox-Environment
 source venv_clean/bin/activate
-export POSTGRES_PASSWORD=staging_password_2024
-export REDIS_PASSWORD=staging_redis_2024
+export POSTGRES_PASSWORD=[REDACTED]
+export REDIS_PASSWORD=[REDACTED]
 export JWT_SECRET_KEY=staging_jwt_secret_key_very_long_and_secure_2024
 python server/main.py
 ```text
@@ -33,8 +33,8 @@ python server/main.py
 ```bash
 cd ToolboxAI-Roblox-Environment
 source venv_clean/bin/activate
-export POSTGRES_PASSWORD=staging_password_2024
-export REDIS_PASSWORD=staging_redis_2024
+export POSTGRES_PASSWORD=[REDACTED]
+export REDIS_PASSWORD=[REDACTED]
 python server/roblox_server.py
 ```text
 ### 3. Dashboard Frontend (Port 3000)

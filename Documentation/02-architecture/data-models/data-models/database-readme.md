@@ -81,7 +81,7 @@ EDU_DB_HOST=localhost
 EDU_DB_PORT=5432
 EDU_DB_NAME=educational_platform
 EDU_DB_USER=eduplatform
-EDU_DB_PASSWORD=your_password_here
+EDU_DB_PASSWORD=[REDACTED]
 EDU_DB_ECHO=false
 
 # Redis Configuration

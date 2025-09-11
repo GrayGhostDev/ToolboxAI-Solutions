@@ -256,7 +256,7 @@ async def context_aware_generation():
 
 ```bash
 # AI Configuration
-OPENAI_API_KEY=your-api-key
+OPENAI_API_KEY=[REDACTED]
 OPENAI_MODEL=gpt-4
 OPENAI_TEMPERATURE=0.7
 

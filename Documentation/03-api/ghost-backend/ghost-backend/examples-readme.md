@@ -53,7 +53,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=myapp_db
 DB_USER=postgres
-DB_PASSWORD=password
+DB_PASSWORD=[REDACTED]
 
 # Redis
 REDIS_HOST=localhost
@@ -62,11 +62,11 @@ REDIS_PORT=6379
 # API
 API_HOST=127.0.0.1
 API_PORT=8000
-JWT_SECRET=your-secret-key-here
+JWT_SECRET=[REDACTED]
 
 # External APIs
-OPENAI_API_KEY=your-openai-key
-ANTHROPIC_API_KEY=your-anthropic-key
+OPENAI_API_KEY=[REDACTED]
+ANTHROPIC_API_KEY=[REDACTED]
 ```text
 ### YAML Configuration (config.yaml)
 
@@ -371,7 +371,7 @@ services:
     environment:
       POSTGRES_DB: myapp_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: [REDACTED]
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

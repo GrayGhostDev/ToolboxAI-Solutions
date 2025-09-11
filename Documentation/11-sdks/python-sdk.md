@@ -119,7 +119,7 @@ client = ToolBoxAI(access_token=tokens.access_token)
 import os
 from toolboxai import ToolBoxAI
 
-# Automatically reads TOOLBOXAI_API_KEY environment variable
+# Automatically reads TOOLBOXAI_API_KEY [REDACTED] variable
 client = ToolBoxAI()
 
 # Or specify different env var

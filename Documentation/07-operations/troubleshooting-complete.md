@@ -100,7 +100,7 @@ pip install --force-reinstall -r requirements.txt
 # Start PostgreSQL
 docker run -d \
   --name toolboxai-postgres \
-  -e POSTGRES_PASSWORD=toolboxai123 \
+  -e POSTGRES_PASSWORD=[REDACTED] \
   -e POSTGRES_USER=toolboxai \
   -e POSTGRES_DB=toolboxai_dev \
   -p 5432:5432 \

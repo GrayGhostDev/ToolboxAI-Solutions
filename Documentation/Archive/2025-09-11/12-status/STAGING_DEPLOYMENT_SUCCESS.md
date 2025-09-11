@@ -126,8 +126,8 @@ docker-compose -f config/production/docker-compose.staging.yml down
 ## 🔧 Environment Variables Set
 
 ```bash
-POSTGRES_PASSWORD=staging_password_2024
-REDIS_PASSWORD=staging_redis_2024
+POSTGRES_PASSWORD=[REDACTED]
+REDIS_PASSWORD=[REDACTED]
 JWT_SECRET_KEY=staging_jwt_secret_key_very_long_and_secure_2024
 USE_REAL_DATABASE=true
 USE_REAL_SERVICES=true

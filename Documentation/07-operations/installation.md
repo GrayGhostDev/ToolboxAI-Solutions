@@ -547,7 +547,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=60
 
 # AWS (for S3 storage)
 AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_SECRET_ACCESS_KEY=[REDACTED]
 AWS_S3_BUCKET=toolboxai-storage
 AWS_REGION=us-east-1
 
@@ -555,27 +555,27 @@ AWS_REGION=us-east-1
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=notifications@yourdomain.com
-SMTP_PASSWORD=your-password
+SMTP_PASSWORD=[REDACTED]
 EMAIL_FROM=ToolBoxAI <noreply@yourdomain.com>
 
 # Monitoring
 SENTRY_DSN=https://xxx@sentry.io/xxx
 PROMETHEUS_ENABLED=true
-GRAFANA_API_KEY=your-grafana-key
+GRAFANA_API_KEY=[REDACTED]
 
 # LMS Integration
 CANVAS_API_URL=https://your-school.instructure.com/api/v1
-CANVAS_API_KEY=your-canvas-key
+CANVAS_API_KEY=[REDACTED]
 
 SCHOOLOGY_CONSUMER_KEY=your-key
-SCHOOLOGY_CONSUMER_SECRET=your-secret
+SCHOOLOGY_CONSUMER_SECRET=[REDACTED]
 
 GOOGLE_CLIENT_ID=your-client-id
-GOOGLE_CLIENT_SECRET=your-secret
+GOOGLE_CLIENT_SECRET=[REDACTED]
 
 # Roblox
-ROBLOX_API_KEY=your-roblox-key
-ROBLOX_WEBHOOK_SECRET=your-webhook-secret
+ROBLOX_API_KEY=[REDACTED]
+ROBLOX_WEBHOOK_SECRET=[REDACTED]
 ```text
 ### Configuration Files
 

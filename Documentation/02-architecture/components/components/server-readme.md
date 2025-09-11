@@ -103,7 +103,7 @@ FLASK_HOST=127.0.0.1
 FLASK_PORT=5001
 
 # AI Configuration
-OPENAI_API_KEY=your-openai-key
+OPENAI_API_KEY=[REDACTED]
 OPENAI_MODEL=gpt-4
 OPENAI_TEMPERATURE=0.7
 
@@ -115,8 +115,8 @@ JWT_SECRET_KEY=your-secret-key-change-in-production
 
 # LMS Integration (Optional)
 SCHOOLOGY_KEY=your-schoology-key
-SCHOOLOGY_SECRET=your-schoology-secret
-CANVAS_TOKEN=your-canvas-token
+SCHOOLOGY_SECRET=[REDACTED]
+CANVAS_TOKEN=[REDACTED]
 
 # Rate Limiting
 RATE_LIMIT_PER_MINUTE=100

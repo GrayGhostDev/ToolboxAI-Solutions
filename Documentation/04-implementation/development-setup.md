@@ -82,7 +82,7 @@ cd ../..
 docker run -d \
   --name toolboxai-postgres \
   -e POSTGRES_USER=toolboxai \
-  -e POSTGRES_PASSWORD=toolboxai123 \
+  -e POSTGRES_PASSWORD=[REDACTED] \
   -e POSTGRES_DB=toolboxai_dev \
   -p 5432:5432 \
   -v toolboxai_pgdata:/var/lib/postgresql/data \
@@ -129,13 +129,13 @@ JWT_ALGORITHM=HS256
 JWT_EXPIRATION_MINUTES=1440
 
 # API Keys
-OPENAI_API_KEY=your-openai-api-key
-ANTHROPIC_API_KEY=your-anthropic-api-key  # Optional
+OPENAI_API_KEY=[REDACTED]
+ANTHROPIC_API_KEY=[REDACTED]  # Optional
 
 # LMS Integration (Optional)
 SCHOOLOGY_KEY=your-schoology-key
-SCHOOLOGY_SECRET=your-schoology-secret
-CANVAS_TOKEN=your-canvas-token
+SCHOOLOGY_SECRET=[REDACTED]
+CANVAS_TOKEN=[REDACTED]
 CANVAS_BASE_URL=https://your-school.instructure.com
 
 # Server Configuration

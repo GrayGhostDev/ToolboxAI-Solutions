@@ -191,8 +191,8 @@ LOG_LEVEL=INFO
 LOG_FILE=logs/app.log
 
 # External APIs
-OPENAI_API_KEY=your-openai-key
-ANTHROPIC_API_KEY=your-anthropic-key
+OPENAI_API_KEY=[REDACTED]
+ANTHROPIC_API_KEY=[REDACTED]
 ```text
 ### YAML Configuration (config.yaml)
 

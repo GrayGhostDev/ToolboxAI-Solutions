@@ -1042,7 +1042,7 @@ jobs:
       postgres:
         image: postgres:14
         env:
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: [REDACTED]
           POSTGRES_USER: postgres
           POSTGRES_DB: test_db
         ports:
