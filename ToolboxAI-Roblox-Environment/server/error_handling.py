@@ -243,9 +243,9 @@ class ErrorMetrics:
     def __init__(self):
         self.error_counts: Dict[str, int] = defaultdict(int)
         self.error_rates: Dict[str, List[datetime]] = defaultdict(list)
-        self.last_errors: Dict[str, ErrorResponse] = {}
+        self.last_errors: Dict[str, Dict[str, Any]] = {}
 
-    def record_error(self, error: ErrorResponse, category: str):
+    def record_error(self, error: Dict[str, Any], category: str):
         """Record an error occurrence"""
         self.error_counts[category] += 1
         self.error_rates[category].append(datetime.utcnow())
@@ -301,8 +301,8 @@ class ErrorHandler:
         """Register custom error mapper"""
         self.error_mappers[error_type] = mapper
 
-    async def handle_error(self, request: Request, exc: Exception) -> ErrorResponse:
-        """Handle an error and return standardized response"""
+    async def handle_error(self, request: Request, exc: Exception) -> Dict[str, Any]:
+        """Handle an error and return standardized response (as dict)"""
         # Create error context
         context = ErrorContext(
             path=str(request.url.path),
@@ -345,93 +345,94 @@ class ErrorHandler:
         # Find appropriate handler
         for error_type, mapper in self.error_mappers.items():
             if isinstance(exc, error_type):
-                error_response = await mapper(exc, context)
+                error_dict = await mapper(exc, context)
                 break
         else:
             # Default handler for unknown errors
-            error_response = await self._handle_unknown_error(exc, context)
+            error_dict = await self._handle_unknown_error(exc, context)
 
         # Add debug info if in debug mode
         if self.debug:
-            error_response.debug_info = {
+            error_dict["debug_info"] = {
                 "exception_type": type(exc).__name__,
                 "traceback": traceback.format_exc(),
-                "context": context.model_dump(),
+                "context": {
+                    "request_id": context.request_id,
+                    "timestamp": context.timestamp.isoformat(),
+                    "path": context.path,
+                    "method": context.method,
+                    "user_id": context.user_id,
+                    "client_ip": context.client_ip,
+                    "user_agent": context.user_agent,
+                    "correlation_id": context.correlation_id,
+                },
             }
-
-        # Record metrics
-        self.metrics.record_error(error_response, error_response.category.value)
-
-        # Log error
-        self._log_error(error_response, exc)
-
-        return error_response
 
     async def _handle_validation_error(
         self, exc: AppValidationError, context: ErrorContext
-    ) -> ErrorResponse:
+    ) -> Dict[str, Any]:
         """Handle validation errors"""
-        return ErrorResponse(
-            status_code=exc.status_code,
-            category=exc.category,
-            message=exc.message,
-            details=exc.details,
-            path=context.path,
-        )
+        return {
+            "status_code": exc.status_code,
+            "category": exc.category,
+            "message": exc.message,
+            "details": exc.details,
+            "path": context.path,
+        }
 
     async def _handle_request_validation_error(
         self, exc: RequestValidationError, context: ErrorContext
-    ) -> ErrorResponse:
+    ) -> Dict[str, Any]:
         """Handle FastAPI request validation errors"""
-        details = []
+        details: List[Dict[str, Any]] = []
         for error in exc.errors():
             field_path = ".".join(str(loc) for loc in error.get("loc", []))
             details.append(
-                ErrorDetail(
-                    code="validation_error",
-                    message=error.get("msg", "Validation failed"),
-                    field=field_path,
-                    context={"type": error.get("type")},
-                )
+                {
+                    "code": "validation_error",
+                    "message": error.get("msg", "Validation failed"),
+                    "field": field_path,
+                    "context": {"type": error.get("type")},
+                }
             )
 
-        return ErrorResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            category=ErrorCategory.VALIDATION,
-            message="Request validation failed",
-            details=details,
-            path=context.path,
-        )
+        return {
+            "status_code": status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "category": ErrorCategory.VALIDATION,
+            "message": "Request validation failed",
+            "details": details,
+            "path": context.path,
+        }
 
     async def _handle_http_exception(
         self, exc: Union[HTTPException, StarletteHTTPException], context: ErrorContext
-    ) -> ErrorResponse:
+    ) -> Dict[str, Any]:
         """Handle HTTP exceptions"""
         # Map status code to category
         category = self._map_status_to_category(exc.status_code)
 
-        return ErrorResponse(
-            status_code=exc.status_code,
-            category=category,
-            message=exc.detail if hasattr(exc, "detail") else str(exc),
-            path=context.path,
-        )
+        return {
+            "status_code": exc.status_code,
+            "category": category,
+            "message": exc.detail if hasattr(exc, "detail") else str(exc),
+            "path": context.path,
+        }
 
     async def _handle_application_error(
         self, exc: ApplicationError, context: ErrorContext
-    ) -> ErrorResponse:
+    ) -> Dict[str, Any]:
         """Handle application errors"""
-        return ErrorResponse(
-            status_code=exc.status_code,
-            category=exc.category,
-            message=exc.message,
-            details=exc.details,
-            path=context.path,
-        )
+        return {
+            "status_code": exc.status_code,
+            "category": exc.category,
+            "message": exc.message,
+            "details": exc.details,
+            "path": context.path,
+        }
 
     async def _handle_unknown_error(
         self, exc: Exception, context: ErrorContext
-    ) -> ErrorResponse:
+    ) -> Dict[str, Any]:
         """Handle unknown errors"""
         # Log full exception for unknown errors
         logger.exception(f"Unknown error occurred: {exc}")
@@ -439,12 +440,12 @@ class ErrorHandler:
         # Don't expose internal error details in production
         message = str(exc) if self.debug else "An internal error occurred"
 
-        return ErrorResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            category=ErrorCategory.INTERNAL,
-            message=message,
-            path=context.path,
-        )
+        return {
+            "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "category": ErrorCategory.INTERNAL,
+            "message": message,
+            "path": context.path,
+        }
 
     def _map_status_to_category(self, status_code: int) -> ErrorCategory:
         """Map HTTP status code to error category"""
@@ -465,23 +466,26 @@ class ErrorHandler:
         else:
             return ErrorCategory.BUSINESS_LOGIC
 
-    def _log_error(self, error_response: ErrorResponse, exc: Exception):
+    def _log_error(self, error_dict: Dict[str, Any], exc: Exception):
         """Log error with appropriate level"""
-        if error_response.status_code >= 500:
+        status_code = int(error_dict.get("status_code", 500))
+        msg = str(error_dict.get("message", ""))
+        error_id = error_dict.get("error_id", "n/a")
+        if status_code >= 500:
             logger.error(
-                f"Error {error_response.error_id}: {error_response.message}",
+                f"Error {error_id}: {msg}",
                 exc_info=exc,
-                extra={"error_response": error_response.model_dump()},
+                extra={"error_response": error_dict},
             )
-        elif error_response.status_code >= 400:
+        elif status_code >= 400:
             logger.warning(
-                f"Client error {error_response.error_id}: {error_response.message}",
-                extra={"error_response": error_response.model_dump()},
+                f"Client error {error_id}: {msg}",
+                extra={"error_response": error_dict},
             )
         else:
             logger.info(
-                f"Error {error_response.error_id}: {error_response.message}",
-                extra={"error_response": error_response.model_dump()},
+                f"Error {error_id}: {msg}",
+                extra={"error_response": error_dict},
             )
 
 
@@ -504,16 +508,17 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 
         except Exception as exc:
             # Handle error
-            error_response = await self.error_handler.handle_error(request, exc)
+            error_dict = await self.error_handler.handle_error(request, exc)
 
             # Create JSON response
+            headers = {
+                "X-Error-ID": str(error_dict.get("error_id", "")),
+                "X-Request-ID": getattr(request.state, "request_id", ""),
+            }
             return JSONResponse(
-                status_code=error_response.status_code,
-                content=jsonable_encoder(error_response),
-                headers={
-                    "X-Error-ID": error_response.error_id,
-                    "X-Request-ID": getattr(request.state, "request_id", ""),
-                },
+                status_code=int(error_dict.get("status_code", 500)),
+                content=jsonable_encoder(error_dict),
+                headers=headers,
             )
 
 
@@ -573,6 +578,6 @@ class ErrorAggregator:
         }
 
 
-def create_error_handling_middleware(debug: bool = False) -> ErrorHandlingMiddleware:
+def create_error_handling_middleware(app, debug: bool = False) -> ErrorHandlingMiddleware:
     """Create error handling middleware"""
-    return ErrorHandlingMiddleware(debug=debug)
+    return ErrorHandlingMiddleware(app, debug=debug)
