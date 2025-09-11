@@ -5,17 +5,14 @@
   "type": "module",
   "description": "ToolBoxAI Solutions - Educational Technology Platform",
   "workspaces": [
-    "src/roblox-environment",
     "src/dashboard"
   ],
   "scripts": {
-    "install:all": "npm install && cd src/roblox-environment && npm install",
-    "dev:roblox": "cd src/roblox-environment && npm run dev",
-    "dev:dashboard": "cd src/dashboard && npm run dev",
-    "test": "echo \"See individual project test scripts\"",
-    "check-locks": "./check-lock-files.sh",
-    "fix-locks": "./check-lock-files.sh --fix",
-    "doctor": "node scripts/node-doctor.js"
+    "dashboard:dev": "npm -w src/dashboard run dev",
+    "dashboard:build": "npm -w src/dashboard run build",
+    "dashboard:test": "npm -w src/dashboard test",
+    "dashboard:lint": "npm -w src/dashboard run lint",
+    "verify:dashboard": "npm -w src/dashboard run test --silent && npm -w src/dashboard run build"
   },
   "engines": {
     "node": ">=18.0.0",

@@ -55,7 +55,7 @@ export default tseslint.config(
       '**/.venv/**',
       '**/__pycache__/**',
       '**/*.pyc',
-      'src/roblox-environment/venv_clean/**',
+      'ToolboxAI-Roblox-Environment/venv_clean/**',
       'src/dashboard/backend/venv/**',
       'Documentation/**',
     ],

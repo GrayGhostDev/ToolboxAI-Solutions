@@ -5,7 +5,7 @@
             "name": "ToolBoxAI-Solutions"
         },
         {
-            "path": "src/roblox-environment",
+            "path": "ToolboxAI-Roblox-Environment",
             "name": "Roblox Environment"
         },
         {
@@ -18,7 +18,7 @@
         }
     ],
     "settings": {
-        "python.defaultInterpreterPath": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/roblox-environment/venv_clean/bin/python",
+        "python.defaultInterpreterPath": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/bin/python",
         "python.terminal.activateEnvironment": true,
         "terminal.integrated.cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
         "workbench.commandPalette.experimental.suggestCommands": true,
@@ -62,29 +62,29 @@
                     "--port",
                     "8008"
                 ],
-                "cwd": "${workspaceFolder}/src/roblox-environment",
+                "cwd": "${workspaceFolder}/ToolboxAI-Roblox-Environment",
                 "env": {
-                    "PYTHONPATH": "${workspaceFolder}/src/roblox-environment:${workspaceFolder}/src/shared"
+                    "PYTHONPATH": "${workspaceFolder}/ToolboxAI-Roblox-Environment:${workspaceFolder}/src/shared"
                 }
             },
             {
                 "name": "Python: Flask Bridge",
                 "type": "python",
                 "request": "launch",
-                "program": "${workspaceFolder}/src/roblox-environment/server/roblox_server.py",
-                "cwd": "${workspaceFolder}/src/roblox-environment",
+                "program": "${workspaceFolder}/ToolboxAI-Roblox-Environment/server/roblox_server.py",
+                "cwd": "${workspaceFolder}/ToolboxAI-Roblox-Environment",
                 "env": {
-                    "PYTHONPATH": "${workspaceFolder}/src/roblox-environment:${workspaceFolder}/src/shared"
+                    "PYTHONPATH": "${workspaceFolder}/ToolboxAI-Roblox-Environment:${workspaceFolder}/src/shared"
                 }
             },
             {
                 "name": "Python: MCP Server",
                 "type": "python",
                 "request": "launch",
-                "program": "${workspaceFolder}/src/roblox-environment/mcp/server.py",
-                "cwd": "${workspaceFolder}/src/roblox-environment",
+                "program": "${workspaceFolder}/ToolboxAI-Roblox-Environment/mcp/server.py",
+                "cwd": "${workspaceFolder}/ToolboxAI-Roblox-Environment",
                 "env": {
-                    "PYTHONPATH": "${workspaceFolder}/src/roblox-environment:${workspaceFolder}/src/shared"
+                    "PYTHONPATH": "${workspaceFolder}/ToolboxAI-Roblox-Environment:${workspaceFolder}/src/shared"
                 }
             }
         ]

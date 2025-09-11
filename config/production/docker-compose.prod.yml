@@ -1,0 +1,504 @@
+version: '3.9'
+
+x-common-variables: &common-variables
+  TZ: UTC
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+services:
+  # Nginx Reverse Proxy & Load Balancer
+  nginx:
+    image: nginx:alpine
+    container_name: toolboxai-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - static_files:/usr/share/nginx/html/static
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - fastapi-main
+      - dashboard-backend
+      - dashboard-frontend
+      - ghost-backend
+      - flask-bridge
+    networks:
+      - toolboxai_network
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "nginx", "-t"]
+
+  # PostgreSQL Database with High Availability
+  postgres:
+    image: postgres:15-alpine
+    container_name: toolboxai-postgres
+    environment:
+      POSTGRES_DB: toolboxai_prod
+      POSTGRES_USER: toolboxai_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_MULTIPLE_DATABASES: educational_platform,ghost_backend,roblox_data,mcp_memory
+      POSTGRES_MAX_CONNECTIONS: 200
+      POSTGRES_SHARED_BUFFERS: 256MB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 1GB
+      POSTGRES_MAINTENANCE_WORK_MEM: 64MB
+      POSTGRES_CHECKPOINT_COMPLETION_TARGET: 0.9
+      POSTGRES_WAL_BUFFERS: 16MB
+      POSTGRES_DEFAULT_STATISTICS_TARGET: 100
+      POSTGRES_RANDOM_PAGE_COST: 1.1
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+      - postgres_backup:/backup
+    ports:
+      - '127.0.0.1:5432:5432'
+    networks:
+      - database_network
+      - toolboxai_network
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD-SHELL", "pg_isready -U toolboxai_user -d toolboxai_prod"]
+
+  # Redis Cache with Persistence
+  redis:
+    image: redis:7-alpine
+    container_name: toolboxai-redis
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    ports:
+      - '127.0.0.1:6379:6379'
+    networks:
+      - toolboxai_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+
+  # FastAPI Main Backend Server
+  fastapi-main:
+    image: ghcr.io/toolboxai-solutions/backend:${VERSION:-latest}
+    container_name: toolboxai-fastapi
+    environment:
+      <<: *common-variables
+      ENVIRONMENT: production
+      DEBUG: "false"
+      DATABASE_URL: postgresql://toolboxai_user:${POSTGRES_PASSWORD}@postgres:5432/educational_platform
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      SENTRY_DSN: ${SENTRY_DSN}
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 9876
+      WORKERS: 4
+    ports:
+      - '127.0.0.1:8008:8008'
+      - '127.0.0.1:9876:9876'
+    volumes:
+      - agent_data:/app/agent_data
+      - logs:/app/logs
+      - ./secrets:/app/secrets:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+      - database_network
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+        monitor: 60s
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
+
+  # Dashboard Backend Service
+  dashboard-backend:
+    image: ghcr.io/toolboxai-solutions/dashboard-backend:${VERSION:-latest}
+    container_name: toolboxai-dashboard-backend
+    environment:
+      <<: *common-variables
+      NODE_ENV: production
+      API_BASE_URL: http://fastapi-main:8008
+      DATABASE_URL: postgresql://toolboxai_user:${POSTGRES_PASSWORD}@postgres:5432/educational_platform
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      JWT_SECRET: ${JWT_SECRET_KEY}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5176}
+    ports:
+      - '127.0.0.1:8001:8001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      fastapi-main:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/health"]
+
+  # Dashboard Frontend
+  dashboard-frontend:
+    image: ghcr.io/toolboxai-solutions/frontend:${VERSION:-latest}
+    container_name: toolboxai-dashboard-frontend
+    environment:
+      <<: *common-variables
+      NODE_ENV: production
+      VITE_API_BASE_URL: https://api.toolboxai.solutions
+      VITE_WS_URL: wss://api.toolboxai.solutions
+      VITE_FASTAPI_URL: https://api.toolboxai.solutions
+    ports:
+      - '127.0.0.1:5176:5176'
+    volumes:
+      - static_files:/app/dist
+    depends_on:
+      - dashboard-backend
+    networks:
+      - toolboxai_network
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:5176"]
+
+  # Ghost Backend CMS
+  ghost-backend:
+    image: ghcr.io/toolboxai-solutions/ghost:${VERSION:-latest}
+    container_name: toolboxai-ghost
+    environment:
+      <<: *common-variables
+      NODE_ENV: production
+      database__client: postgres
+      database__connection__host: postgres
+      database__connection__port: 5432
+      database__connection__database: ghost_backend
+      database__connection__user: toolboxai_user
+      database__connection__password: ${POSTGRES_PASSWORD}
+      database__connection__pool__min: 2
+      database__connection__pool__max: 10
+      url: https://content.toolboxai.solutions
+    ports:
+      - '127.0.0.1:8000:8000'
+    volumes:
+      - ghost_content:/var/lib/ghost/content
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+      - database_network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ghost/api/v3/admin/site/"]
+
+  # Flask Bridge for Roblox Integration
+  flask-bridge:
+    image: ghcr.io/toolboxai-solutions/flask-bridge:${VERSION:-latest}
+    container_name: toolboxai-flask-bridge
+    environment:
+      <<: *common-variables
+      FLASK_ENV: production
+      DATABASE_URL: postgresql://toolboxai_user:${POSTGRES_PASSWORD}@postgres:5432/roblox_data
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      FASTAPI_URL: http://fastapi-main:8008
+      JWT_SECRET: ${JWT_SECRET_KEY}
+      WORKERS: 2
+    ports:
+      - '127.0.0.1:5001:5001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      fastapi-main:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:5001/status"]
+
+  # WebSocket Server for Real-time Communication
+  websocket:
+    image: ghcr.io/toolboxai-solutions/backend:${VERSION:-latest}
+    container_name: toolboxai-websocket
+    command: python -m server.socketio_server
+    environment:
+      <<: *common-variables
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      WORKERS: 2
+    ports:
+      - '127.0.0.1:8080:8080'
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: toolboxai-prometheus
+    ports:
+      - '127.0.0.1:9090:9090'
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    networks:
+      - toolboxai_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: toolboxai-grafana
+    ports:
+      - '127.0.0.1:3001:3000'
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_INSTALL_PLUGINS: redis-datasource,postgres-datasource
+      GF_SERVER_ROOT_URL: https://metrics.toolboxai.solutions
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - toolboxai_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+
+  # Backup Service
+  backup:
+    image: ghcr.io/toolboxai-solutions/backup:${VERSION:-latest}
+    container_name: toolboxai-backup
+    environment:
+      <<: *common-variables
+      DATABASE_URL: postgresql://toolboxai_user:${POSTGRES_PASSWORD}@postgres:5432/toolboxai_prod
+      S3_BUCKET: ${BACKUP_S3_BUCKET}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      BACKUP_SCHEDULE: "0 2 * * *"  # Daily at 2 AM
+    volumes:
+      - postgres_backup:/backup/postgres
+      - redis_data:/backup/redis:ro
+      - agent_data:/backup/agent_data:ro
+    networks:
+      - toolboxai_network
+      - database_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  postgres_backup:
+    driver: local
+  redis_data:
+    driver: local
+  agent_data:
+    driver: local
+  logs:
+    driver: local
+  static_files:
+    driver: local
+  ghost_content:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  toolboxai_network:
+    driver: overlay
+    attachable: true
+    ipam:
+      config:
+        - subnet: 10.0.1.0/24
+  database_network:
+    driver: overlay
+    internal: true
+    ipam:
+      config:
+        - subnet: 10.0.2.0/24

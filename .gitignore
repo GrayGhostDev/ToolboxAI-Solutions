@@ -90,9 +90,8 @@ tmp/
 !yarn.lock
 !pnpm-lock.yaml
 
-# Docker
-Dockerfile
-docker-compose*.yml
+# Docker (track Dockerfile and compose files)
+# .dockerignore files may exist in subfolders; keep them tracked if present
 .dockerignore
 **/.dockerignore
 
