@@ -23,7 +23,9 @@ Ghost/
 ## 📂 Directory Details
 
 ### `/bin/` - Executable Scripts
+
 Main operational scripts for the backend:
+
 - `start_backend.sh` - Complete backend startup workflow
 - `stop_backend.sh` - Complete backend shutdown
 - `run_api.sh` - Basic API startup
@@ -34,7 +36,9 @@ Main operational scripts for the backend:
 - `make-safe.sh` - Security hardening script
 
 ### `/config/` - Configuration Files
+
 System configuration and environment templates:
+
 - `config.detected-frontends.yaml`
 - `config.multi-frontend.yaml`
 - `config.production.yaml`
@@ -44,7 +48,9 @@ System configuration and environment templates:
   - `.env.docker.template` - Docker environment template
 
 ### `/src/` - Source Code
+
 Main application source code:
+
 - `ghost/` - Core Ghost backend framework
   - `api.py` - API endpoints and routing
   - `auth.py` - Authentication and authorization
@@ -55,7 +61,9 @@ Main application source code:
   - `websocket.py` - WebSocket handling
 
 ### `/tools/` - Development Tools
+
 Development and maintenance utilities:
+
 - `setup/` - Setup and installation tools
   - `env_helpers.sh` - Environment helper functions
   - `install_macports.sh` - MacPorts installation
@@ -68,7 +76,9 @@ Development and maintenance utilities:
 - `start_multi_backend.py` - Multi-backend orchestration
 
 ### `/scripts/` - Utility Scripts
+
 Database and system utility scripts:
+
 - `database_migrations.py` - Database migration runner
 - `complete_setup.py` - Complete system setup
 - `backend_status.py` - Backend status checking
@@ -77,20 +87,25 @@ Database and system utility scripts:
 - `verify_security.sh` - Security verification
 
 ### `/docs/` - Documentation
+
 Project documentation:
+
 - `DATABASE_SETUP.md` - Database setup guide
 - `DEPLOYMENT_GUIDE.md` - Deployment instructions
 - `SECURITY_GUIDE.md` - Security implementation guide
 - `PROXYMAN_FIX.md` - Proxy configuration fixes
 
 ### `/tests/` - Test Suite
+
 Testing framework and test cases:
+
 - `test_framework.py` - Main test framework
 - Unit tests and integration tests
 
 ## 🚀 Quick Start Commands
 
 From project root:
+
 ```bash
 # Start the complete backend
 ./bin/start_backend.sh

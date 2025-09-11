@@ -5,6 +5,7 @@ The lesson system forms the core educational framework within the learning platf
 ## Overview
 
 The lesson system allows students to access educational content in a structured, sequential manner. It includes:
+
 - Interactive lesson content
 - Progress tracking
 - Navigation between lesson sections
@@ -23,12 +24,12 @@ local controller = LessonPageController.new(gui)
 
 #### Key Methods
 
-| Method | Description |
-|--------|-------------|
-| `switchLesson(lessonNumber)` | Navigates to a specific lesson and updates content |
-| `loadQuestion(questionNumber)` | For embedded quiz elements, loads a specific question |
-| `updateProgressBar()` | Updates visual progress indicators |
-| `startQuiz()` | Transitions to the quiz interface for lesson assessment |
+| Method                         | Description                                             |
+| ------------------------------ | ------------------------------------------------------- |
+| `switchLesson(lessonNumber)`   | Navigates to a specific lesson and updates content      |
+| `loadQuestion(questionNumber)` | For embedded quiz elements, loads a specific question   |
+| `updateProgressBar()`          | Updates visual progress indicators                      |
+| `startQuiz()`                  | Transitions to the quiz interface for lesson assessment |
 
 ### Lesson Content Structure
 
@@ -47,6 +48,7 @@ Course
 ```
 
 Each lesson typically contains:
+
 - Title and overview
 - Educational content (text, images, interactive elements)
 - Progress indicators
@@ -78,6 +80,7 @@ local LESSON_DESCRIPTIONS = {
 ### Content Display Area
 
 The main region where lesson content is presented:
+
 - Displays text, images, and interactive elements
 - Support for multimedia content
 - Adaptive layout for different screen sizes
@@ -85,6 +88,7 @@ The main region where lesson content is presented:
 ### Navigation Controls
 
 Controls for moving between lesson sections:
+
 - Previous/Next buttons
 - Lesson outline/table of contents
 - Quick navigation to specific sections
@@ -116,6 +120,7 @@ end
 ### Progress Tracking
 
 Visual indicators showing student progress:
+
 - Overall course completion percentage
 - Current position within a lesson
 - Completed vs. remaining sections

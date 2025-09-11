@@ -1,11 +1,13 @@
 # Leaderboard
 
 ## Component Information
+
 - **Category**: pages
 - **Type**: functional
 - **File**: `src/dashboard/src/components/pages/Leaderboard.tsx`
 
 ## Hooks Used
+
 - `useAppDispatch`
 - `useAppSelector`
 - `useState`
@@ -13,10 +15,12 @@
 - `useEvent`
 
 ## State Management
+
 - Local component state
 - WebSocket connections
 
 ## Key Dependencies
+
 - `@mui/icons-material/EmojiEvents`
 - `@mui/icons-material/Remove`
 - `@mui/icons-material/Search`

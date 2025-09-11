@@ -25,6 +25,7 @@ src/dashboard/src/
 ## Component Categories
 
 ### 1. Layout Components
+
 - **AppLayout** - Main application wrapper with sidebar
 - **Sidebar** - Role-based navigation menu
 - **Topbar** - Application header with user controls
@@ -32,6 +33,7 @@ src/dashboard/src/
 ### 2. Page Components
 
 #### Student Pages
+
 - **DashboardHome** - Student dashboard overview
 - **Avatar** - Avatar customization
 - **Progress** - Learning progress tracking
@@ -41,17 +43,20 @@ src/dashboard/src/
 - **Play** - Roblox game launcher
 
 #### Teacher Pages
+
 - **Classes** - Classroom management
 - **Lessons** - Lesson planning
 - **Assessments** - Quiz/test creation
 - **Reports** - Student progress reports
 
 #### Admin Pages
+
 - **Schools** - School administration
 - **Users** - User management
 - **Analytics** - System analytics
 
 #### Shared Pages
+
 - **Login/Register** - Authentication
 - **Messages** - Communication system
 - **Settings** - User preferences
@@ -59,17 +64,20 @@ src/dashboard/src/
 - **Integrations** - LMS integrations
 
 ### 3. Widget Components
+
 - **ProgressCharts** - Data visualization widgets
 - **ConnectionStatus** - WebSocket connection indicator
 - **RealTimeAnalytics** - Live data displays
 - **StudentProgressTracker** - Individual progress widget
 
 ### 4. Common Components
+
 - **ErrorBoundary** - Error handling wrapper
 - **LoadingOverlay** - Loading states
 - **RoleGuard** - Access control wrapper
 
 ### 5. Notification Components
+
 - **NotificationToast** - Global notifications
 - **RealtimeToast** - WebSocket notifications
 
@@ -89,10 +97,10 @@ React Router v6 handles navigation with role-based route protection:
 
 ```typescript
 interface RouteConfig {
-  path: string;
-  component: React.ComponentType;
-  roles: UserRole[];
-  exact?: boolean;
+  path: string
+  component: React.ComponentType
+  roles: UserRole[]
+  exact?: boolean
 }
 ```
 
@@ -152,6 +160,7 @@ Components are tested using:
 ## Development Guidelines
 
 ### Component Creation
+
 1. Use functional components with hooks
 2. Define TypeScript interfaces for props
 3. Include JSDoc comments
@@ -159,6 +168,7 @@ Components are tested using:
 5. Implement error boundaries
 
 ### Code Style
+
 - ESLint configuration enforced
 - Prettier for formatting
 - Consistent file structure
@@ -166,6 +176,7 @@ Components are tested using:
 - Comment complex logic
 
 ### Best Practices
+
 - Keep components focused (single responsibility)
 - Extract reusable logic to hooks
 - Use proper TypeScript types
@@ -203,7 +214,7 @@ interface MyComponentProps {
  */
 const MyComponent: React.FC<MyComponentProps> = ({ title, onAction }) => {
   const user = useAppSelector(state => state.user);
-  
+
   return (
     <Box>
       <Typography variant="h4">{title}</Typography>
@@ -222,8 +233,8 @@ import MyComponent from './components/MyComponent';
 
 function App() {
   return (
-    <MyComponent 
-      title="Example" 
+    <MyComponent
+      title="Example"
       onAction={() => console.log('Action')}
     />
   );
@@ -247,6 +258,7 @@ function App() {
 ## Support
 
 For questions or issues:
+
 - Check the [FAQ](../../../09-meta/faq.md)
 - Review [Troubleshooting Guide](../../../04-implementation/troubleshooting.md)
 - Contact development team

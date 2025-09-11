@@ -7,7 +7,9 @@ Remote Functions are used for two-way communication between client and server in
 ### Data Retrieval Functions
 
 #### GetPlayerData.lua
+
 **TODO: Retrieve player data**
+
 ```lua
 -- TODO: Return player information
 -- - Load from DataStore
@@ -18,7 +20,9 @@ Remote Functions are used for two-way communication between client and server in
 ```
 
 #### GetLeaderboard.lua
+
 **TODO: Fetch leaderboard data**
+
 ```lua
 -- TODO: Return leaderboard
 -- - Query top scores
@@ -29,7 +33,9 @@ Remote Functions are used for two-way communication between client and server in
 ```
 
 #### GetLessonContent.lua
+
 **TODO: Retrieve lesson content**
+
 ```lua
 -- TODO: Return lesson data
 -- - Check permissions
@@ -40,7 +46,9 @@ Remote Functions are used for two-way communication between client and server in
 ```
 
 #### GetQuizQuestions.lua
+
 **TODO: Fetch quiz questions**
+
 ```lua
 -- TODO: Return quiz data
 -- - Select questions
@@ -53,7 +61,9 @@ Remote Functions are used for two-way communication between client and server in
 ### Validation Functions
 
 #### ValidateAnswer.lua
+
 **TODO: Validate quiz answer**
+
 ```lua
 -- TODO: Check answer correctness
 -- - Compare with correct answer
@@ -64,7 +74,9 @@ Remote Functions are used for two-way communication between client and server in
 ```
 
 #### CheckPermission.lua
+
 **TODO: Verify user permissions**
+
 ```lua
 -- TODO: Check access rights
 -- - Verify role
@@ -75,7 +87,9 @@ Remote Functions are used for two-way communication between client and server in
 ```
 
 #### ValidatePurchase.lua
+
 **TODO: Validate in-game purchase**
+
 ```lua
 -- TODO: Verify purchase
 -- - Check currency
@@ -88,7 +102,9 @@ Remote Functions are used for two-way communication between client and server in
 ### Calculation Functions
 
 #### CalculateScore.lua
+
 **TODO: Calculate activity score**
+
 ```lua
 -- TODO: Compute score
 -- - Apply scoring rubric
@@ -99,7 +115,9 @@ Remote Functions are used for two-way communication between client and server in
 ```
 
 #### GetRecommendations.lua
+
 **TODO: Get content recommendations**
+
 ```lua
 -- TODO: Generate recommendations
 -- - Analyze performance
@@ -110,7 +128,9 @@ Remote Functions are used for two-way communication between client and server in
 ```
 
 #### CalculateProgress.lua
+
 **TODO: Calculate learning progress**
+
 ```lua
 -- TODO: Compute progress
 -- - Check completions
@@ -123,7 +143,9 @@ Remote Functions are used for two-way communication between client and server in
 ### Creation Functions
 
 #### CreateRoom.lua
+
 **TODO: Create multiplayer room**
+
 ```lua
 -- TODO: Set up room
 -- - Generate room code
@@ -134,7 +156,9 @@ Remote Functions are used for two-way communication between client and server in
 ```
 
 #### GenerateReport.lua
+
 **TODO: Generate progress report**
+
 ```lua
 -- TODO: Create report
 -- - Compile statistics
@@ -145,7 +169,9 @@ Remote Functions are used for two-way communication between client and server in
 ```
 
 #### CreateTeam.lua
+
 **TODO: Form team/group**
+
 ```lua
 -- TODO: Create team
 -- - Validate members
@@ -158,7 +184,9 @@ Remote Functions are used for two-way communication between client and server in
 ### Search Functions
 
 #### SearchContent.lua
+
 **TODO: Search educational content**
+
 ```lua
 -- TODO: Search database
 -- - Parse query
@@ -169,7 +197,9 @@ Remote Functions are used for two-way communication between client and server in
 ```
 
 #### FindMatch.lua
+
 **TODO: Find multiplayer match**
+
 ```lua
 -- TODO: Matchmaking
 -- - Check skill level
@@ -182,7 +212,9 @@ Remote Functions are used for two-way communication between client and server in
 ### Administrative Functions
 
 #### ModerateContent.lua
+
 **TODO: Moderate user content**
+
 ```lua
 -- TODO: Review content
 -- - Check guidelines
@@ -193,7 +225,9 @@ Remote Functions are used for two-way communication between client and server in
 ```
 
 #### GetAnalytics.lua
+
 **TODO: Retrieve analytics data**
+
 ```lua
 -- TODO: Fetch analytics
 -- - Query metrics
@@ -204,7 +238,9 @@ Remote Functions are used for two-way communication between client and server in
 ```
 
 #### ExecuteAdminAction.lua
+
 **TODO: Execute admin command**
+
 ```lua
 -- TODO: Process admin action
 -- - Verify admin status
@@ -217,6 +253,7 @@ Remote Functions are used for two-way communication between client and server in
 ## Implementation Structure
 
 ### Base Function Template
+
 ```lua
 -- TODO: Implement base RemoteFunction handler
 local RemoteFunction = Instance.new("RemoteFunction")
@@ -231,11 +268,11 @@ RemoteFunction.OnServerInvoke = function(player, ...)
     -- - Process request
     -- - Handle errors
     -- - Return response
-    
+
     local success, result = pcall(function()
         -- Function implementation
     end)
-    
+
     if success then
         return result
     else
@@ -245,6 +282,7 @@ end
 ```
 
 ### Security Template
+
 ```lua
 -- TODO: Implement security checks
 local function validateRequest(player, data)
@@ -254,18 +292,19 @@ local function validateRequest(player, data)
     -- - Sanitize inputs
     -- - Check permissions
     -- - Rate limiting
-    
+
     if not player then
         return false, "Invalid player"
     end
-    
+
     -- Additional checks...
-    
+
     return true, "Valid"
 end
 ```
 
 ### Caching Template
+
 ```lua
 -- TODO: Implement caching
 local cache = {}

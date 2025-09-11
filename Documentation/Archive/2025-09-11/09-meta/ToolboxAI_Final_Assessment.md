@@ -2,10 +2,10 @@
 
 ## 📌 Overall Status
 
-- **Completion**: ~90–97% complete  
-- **Core systems**: FastAPI + Socket.IO + Flask bridge + MCP + PostgreSQL + Redis all integrated.  
-- **Agents**: Integrated with fallbacks, Swarm + SPARC + MCP working.  
-- **Remaining gaps**: DB migrations, distributed rate limiting, observability, WS auth hardening, compliance flows, perf testing, final CI/CD polish.  
+- **Completion**: ~90–97% complete
+- **Core systems**: FastAPI + Socket.IO + Flask bridge + MCP + PostgreSQL + Redis all integrated.
+- **Agents**: Integrated with fallbacks, Swarm + SPARC + MCP working.
+- **Remaining gaps**: DB migrations, distributed rate limiting, observability, WS auth hardening, compliance flows, perf testing, final CI/CD polish.
 
 ---
 
@@ -75,42 +75,53 @@
 ## 🔎 Layer-by-Layer Review
 
 ### FastAPI
+
 - Strong: Sentry, exception handling, rate limiting, versioning.
 - Action: Remove dev fallbacks, debug endpoints, ensure Flask checks exist.
 
 ### Socket.IO & WebSockets
+
 - Strong: Socket.IO wrapper, analytics WS endpoint.
 - Action: Enforce token auth, heartbeat, backpressure.
 
 ### Flask Bridge
+
 - Strong: Plugin registration & templates.
 - Action: Secure with tokens, anti-replay, scoping.
 
 ### Agents / MCP / Swarm / SPARC
+
 - Strong: Orchestration, mock LLM, persistent memory.
 - Action: Add perf metrics, timeouts, failover.
 
 ### Security
+
 - Good: TrustedHost, RL, circuit breaker, log sanitization.
 - Action: Central PII redaction, SBOM, vuln scans.
 
 ### Data & DB
+
 - Good: 58 tables, extensions.
 - Action: Alembic baseline, PITR backups, pool sizing.
 
 ### Compliance
+
 - Action: Consent flows, FERPA audit logs, retention policy.
 
 ### Accessibility
+
 - Action: Automated & manual WCAG checks.
 
 ### CI/CD & Infra
+
 - Action: Full pipeline (lint, tests, build, SBOM, scan, deploy).
 
 ### Docs
+
 - Action: Architecture, ops, incident, backup/restore.
 
 ### Minor mismatches
+
 - README interpreter path.
 - Settings for CORS/TrustedHost.
 
@@ -119,6 +130,7 @@
 ## ⏱ Final 48-Hour Plan
 
 ### Day 1 (Engineering)
+
 1. Wire Redis RL.
 2. Add Alembic baseline.
 3. Lock WS auth.
@@ -128,6 +140,7 @@
 7. Sentry PII scrubbers.
 
 ### Day 2 (Ops & QA)
+
 1. k6 load suite.
 2. Helm deploy to staging + migrations.
 3. Security headers.
@@ -161,9 +174,9 @@ alembic upgrade head
 
 ## 📂 File-Specific Notes
 
-- **`server/main.py`**: Good Sentry + error handling. Remove dev_user fallback. Confirm Flask helpers defined.  
-- **`TODO.md`**: Mark Alembic, Redis RL, observability as blocking.  
-- **`README.md`**: Fix venv path; add bootstrap command.  
+- **`server/main.py`**: Good Sentry + error handling. Remove dev_user fallback. Confirm Flask helpers defined.
+- **`TODO.md`**: Mark Alembic, Redis RL, observability as blocking.
+- **`README.md`**: Fix venv path; add bootstrap command.
 - **`.cursor/environment.json`**: Solid; keep aliases in sync with deployed models.
 
 ---

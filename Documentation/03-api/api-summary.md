@@ -1,4 +1,5 @@
 # API Endpoint Summary
+
 Generated: 2025-09-10T10:49:00.285658
 Total Endpoints: 69
 
@@ -159,4 +160,3 @@ Total Endpoints: 69
 
 - **GET /users/** - List Users
 - **GET /users/{user_id}** - Get User
-

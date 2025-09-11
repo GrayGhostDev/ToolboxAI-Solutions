@@ -5,9 +5,11 @@ This directory contains reusable templates for various educational game componen
 ## Directory Structure
 
 ### Terrain/
+
 Templates for different terrain types and environments.
 
 **TODO: Create terrain templates**
+
 - [ ] Create classroom environment template
 - [ ] Create outdoor learning space template
 - [ ] Create science lab environment template
@@ -18,9 +20,11 @@ Templates for different terrain types and environments.
 - [ ] Create mathematical visualization spaces
 
 ### UI/
+
 User interface templates for educational activities.
 
 **TODO: Create UI templates**
+
 - [ ] Create quiz interface template
 - [ ] Create lesson viewer template
 - [ ] Create progress tracker template
@@ -31,9 +35,11 @@ User interface templates for educational activities.
 - [ ] Create leaderboard template
 
 ### GameMechanics/
+
 Templates for interactive educational game mechanics.
 
 **TODO: Create game mechanics templates**
+
 - [ ] Create drag-and-drop activity template
 - [ ] Create matching game template
 - [ ] Create puzzle solving template
@@ -50,6 +56,7 @@ Each template should be self-contained and easily customizable for different edu
 ## Implementation Notes
 
 Templates should follow these guidelines:
+
 - Be modular and reusable
 - Include clear documentation
 - Support easy customization

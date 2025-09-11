@@ -19,6 +19,7 @@ python main.py
 ```
 
 The backend should start with:
+
 - API running on http://localhost:8001
 - Socket.IO WebSocket server on ws://localhost:8001
 - API docs available at http://localhost:8001/api/docs

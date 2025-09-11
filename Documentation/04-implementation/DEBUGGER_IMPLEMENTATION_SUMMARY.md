@@ -7,35 +7,41 @@ Successfully implemented a comprehensive **Debugger Terminal** monitoring system
 ## 🛠️ Components Created
 
 ### 1. **Security Monitor** (`scripts/debugger_security_monitor.py`)
+
 - Real-time vulnerability scanning for hardcoded credentials, SQL injection, XSS
 - Continuous monitoring of all three terminals' security status
 - Generates security reports with vulnerability counts and recommendations
 - **Current Status**: Detected 2 critical and 1 high vulnerability
 
 ### 2. **Performance Aggregator** (`scripts/debugger_performance.py`)
+
 - Collects metrics from all terminals (API response times, CPU, memory)
 - System-wide resource monitoring
 - Alert generation for performance thresholds
 - Real-time status display with color-coded indicators
 
 ### 3. **Alert Orchestrator** (`scripts/debugger_alerts.py`)
+
 - Intelligent alert processing with severity levels
 - Alert suppression to prevent spam
 - Incident creation and tracking
 - Auto-recovery attempts for downed services
 
 ### 4. **Startup Script** (`scripts/debugger_start.sh`)
+
 - Initializes all monitoring components
 - Verifies terminal health before starting
 - Creates necessary directories
 - Provides live monitoring dashboard option
 
 ### 5. **Stop Script** (`scripts/debugger_stop.sh`)
+
 - Gracefully stops all monitoring processes
 - Generates final report
 - Cleans up PID files
 
 ### 6. **Dashboard Script** (`scripts/debugger_dashboard.sh`)
+
 - Live monitoring dashboard with auto-refresh
 - Color-coded status indicators
 - Shows vulnerabilities, performance metrics, alerts
@@ -44,17 +50,20 @@ Successfully implemented a comprehensive **Debugger Terminal** monitoring system
 ## 📊 Current System Status
 
 ### Terminal Health
+
 - **Terminal 1 (Backend)**: ✅ Healthy (Port 8008)
-- **Terminal 2 (Frontend)**: ✅ Healthy (Port 5179)  
+- **Terminal 2 (Frontend)**: ✅ Healthy (Port 5179)
 - **Terminal 3 (Roblox)**: ✅ Healthy (Port 5001)
 
 ### Security Findings
+
 - **Critical Vulnerabilities**: 2
 - **High Vulnerabilities**: 1
 - **Medium Vulnerabilities**: 0
 - **Low Vulnerabilities**: 0
 
 ### Key Recommendations
+
 1. URGENT: Remove all hardcoded credentials immediately
 2. URGENT: Fix authorization bypass vulnerabilities
 3. HIGH: Implement parameterized queries for all database operations
@@ -64,21 +73,25 @@ Successfully implemented a comprehensive **Debugger Terminal** monitoring system
 ## 🚀 Usage
 
 ### Start Monitoring
+
 ```bash
 bash scripts/debugger_start.sh
 ```
 
 ### View Live Dashboard
+
 ```bash
 bash scripts/debugger_dashboard.sh
 ```
 
 ### Stop Monitoring
+
 ```bash
 bash scripts/debugger_stop.sh
 ```
 
 ## 📁 File Structure
+
 ```
 scripts/
 ├── debugger_security_monitor.py   # Security scanner
@@ -99,18 +112,21 @@ scripts/
 ## 🔧 Features
 
 ### Security Features
+
 - Continuous vulnerability scanning
 - Pattern-based detection for common security issues
 - Real-time security status for each terminal
 - Automated security recommendations
 
 ### Performance Features
+
 - Multi-terminal metric aggregation
 - System resource monitoring
 - Response time tracking
 - Alert generation for threshold violations
 
 ### Alert Management
+
 - Severity-based alert routing
 - Alert suppression to prevent flooding
 - Incident tracking and management
@@ -129,6 +145,7 @@ scripts/
 ## 🔄 Graceful Degradation
 
 The system handles missing dependencies gracefully:
+
 - Works without Redis (uses file-based communication)
 - Falls back to urllib if httpx is not available
 - Continues monitoring even if some terminals are down

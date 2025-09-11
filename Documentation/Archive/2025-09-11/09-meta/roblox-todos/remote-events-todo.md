@@ -7,7 +7,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ### Player Actions
 
 #### PlayerJoined.lua
+
 **TODO: Handle player joining**
+
 ```lua
 -- TODO: Fire when player joins
 -- - Send initial game state
@@ -17,7 +19,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ```
 
 #### PlayerAction.lua
+
 **TODO: Handle player actions**
+
 ```lua
 -- TODO: Process player actions
 -- - Movement commands
@@ -29,7 +33,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ### Educational Events
 
 #### StartLesson.lua
+
 **TODO: Initiate lesson**
+
 ```lua
 -- TODO: Start lesson event
 -- - Load lesson content
@@ -39,7 +45,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ```
 
 #### SubmitAnswer.lua
+
 **TODO: Handle answer submission**
+
 ```lua
 -- TODO: Process answer submission
 -- - Validate answer format
@@ -49,7 +57,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ```
 
 #### CompleteActivity.lua
+
 **TODO: Mark activity completion**
+
 ```lua
 -- TODO: Handle activity completion
 -- - Validate completion
@@ -61,7 +71,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ### Progress Events
 
 #### UpdateProgress.lua
+
 **TODO: Sync progress updates**
+
 ```lua
 -- TODO: Update user progress
 -- - Save checkpoint
@@ -71,7 +83,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ```
 
 #### UnlockAchievement.lua
+
 **TODO: Handle achievement unlocks**
+
 ```lua
 -- TODO: Process achievement unlock
 -- - Validate criteria
@@ -83,7 +97,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ### Multiplayer Events
 
 #### PlayerChat.lua
+
 **TODO: Handle chat messages**
+
 ```lua
 -- TODO: Process chat
 -- - Filter content
@@ -93,7 +109,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ```
 
 #### TeamAction.lua
+
 **TODO: Handle team activities**
+
 ```lua
 -- TODO: Process team actions
 -- - Validate team membership
@@ -103,7 +121,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ```
 
 #### TradeRequest.lua
+
 **TODO: Handle trading**
+
 ```lua
 -- TODO: Process trade requests
 -- - Validate items
@@ -115,7 +135,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ### System Events
 
 #### UpdateSettings.lua
+
 **TODO: Sync setting changes**
+
 ```lua
 -- TODO: Update user settings
 -- - Validate changes
@@ -125,7 +147,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ```
 
 #### ReportIssue.lua
+
 **TODO: Handle issue reporting**
+
 ```lua
 -- TODO: Process issue reports
 -- - Collect debug info
@@ -135,7 +159,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ```
 
 #### AdminCommand.lua
+
 **TODO: Handle admin commands**
+
 ```lua
 -- TODO: Process admin commands
 -- - Verify permissions
@@ -147,7 +173,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ### Game State Events
 
 #### StartGame.lua
+
 **TODO: Initialize game session**
+
 ```lua
 -- TODO: Start game session
 -- - Set up environment
@@ -157,7 +185,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ```
 
 #### EndGame.lua
+
 **TODO: Conclude game session**
+
 ```lua
 -- TODO: End game session
 -- - Calculate results
@@ -167,7 +197,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ```
 
 #### PauseGame.lua
+
 **TODO: Handle game pausing**
+
 ```lua
 -- TODO: Pause game state
 -- - Freeze timers
@@ -179,7 +211,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ### Content Events
 
 #### LoadContent.lua
+
 **TODO: Load educational content**
+
 ```lua
 -- TODO: Load content from server
 -- - Request content
@@ -189,7 +223,9 @@ Remote Events are used for one-way communication between client and server in Ro
 ```
 
 #### UpdateContent.lua
+
 **TODO: Handle content updates**
+
 ```lua
 -- TODO: Update existing content
 -- - Check version
@@ -201,6 +237,7 @@ Remote Events are used for one-way communication between client and server in Ro
 ## Implementation Guidelines
 
 ### Security Considerations
+
 ```lua
 -- TODO: Implement security measures
 -- - Always validate on server
@@ -211,6 +248,7 @@ Remote Events are used for one-way communication between client and server in Ro
 ```
 
 ### Performance Optimization
+
 ```lua
 -- TODO: Optimize event handling
 -- - Batch similar events
@@ -221,6 +259,7 @@ Remote Events are used for one-way communication between client and server in Ro
 ```
 
 ### Error Handling
+
 ```lua
 -- TODO: Implement error handling
 -- - Catch exceptions
@@ -233,6 +272,7 @@ Remote Events are used for one-way communication between client and server in Ro
 ## Event Organization
 
 All RemoteEvents should be organized in ReplicatedStorage:
+
 ```
 ReplicatedStorage/
 ├── RemoteEvents/
@@ -258,6 +298,7 @@ ReplicatedStorage/
 ```
 
 ## Priority Implementation Order
+
 1. PlayerAction (Critical - Core functionality)
 2. SubmitAnswer (Critical - Educational core)
 3. UpdateProgress (High - Progress tracking)

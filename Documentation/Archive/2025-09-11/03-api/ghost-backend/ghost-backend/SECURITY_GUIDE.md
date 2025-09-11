@@ -1,5 +1,7 @@
 # ============================================================================
+
 # SECURITY CONFIGURATION GUIDE - Ghost Backend Framework
+
 # ============================================================================
 
 ## 🔑 JWT Token Configuration
@@ -20,6 +22,7 @@ node -e "console.log(require('crypto').randomBytes(64).toString('base64'))"
 ```
 
 ### 2. JWT Configuration in .env:
+
 ```env
 # REQUIRED: Replace with your generated key
 JWT_SECRET_KEY=your-generated-64-character-random-key-here-replace-this-immediately
@@ -31,6 +34,7 @@ JWT_REFRESH_TOKEN_EXPIRE_DAYS=7         # Longer-lived refresh tokens
 ## 🛡️ Password Security
 
 ### 1. Password Hashing Configuration:
+
 ```env
 # Bcrypt rounds (higher = more secure but slower)
 BCRYPT_ROUNDS=12                        # 12-14 recommended for production
@@ -44,6 +48,7 @@ PASSWORD_REQUIRE_SPECIAL=true
 ```
 
 ### 2. Password Validation Example:
+
 ```python
 from ghost import AuthManager, ValidationUtils
 
@@ -68,6 +73,7 @@ hashed_password = auth_manager.hash_password("user_password")
 ## 🔒 API Security
 
 ### 1. API Key Management:
+
 ```env
 # Generate API keys for service-to-service communication
 API_KEY=api_key_$(openssl rand -hex 32)
@@ -82,6 +88,7 @@ API_REQUEST_TIMEOUT=30                  # 30 second timeout
 ```
 
 ### 2. CORS Configuration:
+
 ```env
 # CORS settings for frontend integration
 API_CORS_ORIGINS=["https://yourdomain.com","https://www.yourdomain.com"]
@@ -93,6 +100,7 @@ API_CORS_CREDENTIALS=true
 ## 🌐 HTTPS and SSL/TLS
 
 ### 1. Force HTTPS in Production:
+
 ```env
 # Force HTTPS redirects
 FORCE_HTTPS=true
@@ -102,6 +110,7 @@ HSTS_PRELOAD=true
 ```
 
 ### 2. SSL Certificate Setup:
+
 ```bash
 # Using Let's Encrypt with Certbot
 sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
@@ -111,6 +120,7 @@ sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
 ```
 
 ### 3. Database SSL Configuration:
+
 ```env
 # PostgreSQL with SSL
 DATABASE_URL=postgresql://user:pass@host:5432/db?sslmode=require
@@ -118,13 +128,14 @@ DATABASE_URL=postgresql://user:pass@host:5432/db?sslmode=require
 # For self-signed certificates
 DATABASE_SSL_MODE=require
 DATABASE_SSL_CERT=/path/to/client-cert.pem
-DATABASE_SSL_KEY=/path/to/client-key.pem  
+DATABASE_SSL_KEY=/path/to/client-key.pem
 DATABASE_SSL_ROOT_CERT=/path/to/ca-cert.pem
 ```
 
 ## 🚨 Environment Security
 
 ### 1. Environment Variable Security:
+
 ```bash
 # Set restrictive permissions on .env file
 chmod 600 .env
@@ -136,6 +147,7 @@ echo ".env.*" >> .gitignore
 ```
 
 ### 2. Secrets Management (Production):
+
 ```bash
 # Using AWS Secrets Manager
 aws secretsmanager create-secret --name "myapp/database" --secret-string '{"password":"your_db_password"}'
@@ -150,6 +162,7 @@ echo -n "your_db_password" | gcloud secrets create database-password --data-file
 ## 🔍 Input Validation and Sanitization
 
 ### 1. Request Validation:
+
 ```python
 from ghost import ValidationUtils
 from pydantic import BaseModel, validator
@@ -158,15 +171,15 @@ class UserCreate(BaseModel):
     username: str
     email: str
     password: str
-    
+
     @validator('email')
     def validate_email(cls, v):
         validator = ValidationUtils()
         if not validator.is_email(v):
             raise ValueError('Invalid email format')
         return v.lower()
-    
-    @validator('username') 
+
+    @validator('username')
     def validate_username(cls, v):
         if not v.replace('_', '').replace('-', '').isalnum():
             raise ValueError('Username can only contain letters, numbers, hyphens, and underscores')
@@ -174,6 +187,7 @@ class UserCreate(BaseModel):
 ```
 
 ### 2. SQL Injection Prevention:
+
 ```python
 # Ghost Framework uses SQLAlchemy ORM which prevents SQL injection
 # Always use parameterized queries:
@@ -194,13 +208,14 @@ result = session.execute(
 ## 🛡️ Authorization and Access Control
 
 ### 1. Role-Based Access Control (RBAC):
+
 ```python
 from ghost import AuthManager, User, UserRole
 
 # Define user roles
 class CustomUserRole(UserRole):
     ADMIN = "admin"
-    MANAGER = "manager" 
+    MANAGER = "manager"
     USER = "user"
     READONLY = "readonly"
 
@@ -217,6 +232,7 @@ async def list_users(current_user: User = Depends(get_current_user)):
 ```
 
 ### 2. Resource-Level Permissions:
+
 ```python
 # Example: Users can only access their own data
 @app.get("/users/{user_id}")
@@ -224,7 +240,7 @@ async def get_user(user_id: str, current_user: User = Depends(get_current_user))
     # Check if user can access this resource
     if user_id != current_user.id and CustomUserRole.ADMIN not in current_user.roles:
         raise HTTPException(status_code=403, detail="Access denied")
-    
+
     # Fetch and return user data
     return await get_user_by_id(user_id)
 ```
@@ -232,6 +248,7 @@ async def get_user(user_id: str, current_user: User = Depends(get_current_user))
 ## 🔐 Session Security
 
 ### 1. Secure Session Configuration:
+
 ```env
 # Session settings
 SESSION_SECRET_KEY=your-session-secret-key-different-from-jwt-key
@@ -242,16 +259,17 @@ SESSION_COOKIE_MAX_AGE=1800             # 30 minutes
 ```
 
 ### 2. Token Blacklisting:
+
 ```python
 # Example token blacklist implementation
 class TokenBlacklist:
     def __init__(self, redis_client):
         self.redis = redis_client
-    
+
     async def blacklist_token(self, token: str, expiry: int):
         """Add token to blacklist"""
         await self.redis.setex(f"blacklist:{token}", expiry, "1")
-    
+
     async def is_blacklisted(self, token: str) -> bool:
         """Check if token is blacklisted"""
         return await self.redis.exists(f"blacklist:{token}")
@@ -260,6 +278,7 @@ class TokenBlacklist:
 ## 🔍 Logging and Monitoring Security Events
 
 ### 1. Security Event Logging:
+
 ```env
 # Security-specific logging
 LOG_SECURITY_EVENTS=true
@@ -272,6 +291,7 @@ LOGIN_LOCKOUT_DURATION=1800             # 30 minutes
 ```
 
 ### 2. Example Security Logger:
+
 ```python
 from ghost import get_logger
 
@@ -307,6 +327,7 @@ async def log_suspicious_activity(user_id: str, activity: str, details: dict):
 ## 🛡️ Production Security Checklist
 
 ### Before Deployment:
+
 - [ ] Changed all default passwords and secret keys
 - [ ] Generated strong JWT secret key (64+ characters)
 - [ ] Configured HTTPS with valid SSL certificates
@@ -326,6 +347,7 @@ async def log_suspicious_activity(user_id: str, activity: str, details: dict):
 - [ ] Configured security scanning in CI/CD pipeline
 
 ### Regular Security Maintenance:
+
 - [ ] Rotate JWT secret keys periodically
 - [ ] Update dependencies regularly
 - [ ] Monitor security logs for anomalies
@@ -337,13 +359,14 @@ async def log_suspicious_activity(user_id: str, activity: str, details: dict):
 ## 🚨 Security Incident Response
 
 ### 1. Incident Detection:
+
 ```python
 # Example security monitoring
 class SecurityMonitor:
     def __init__(self, auth_manager, logger):
         self.auth_manager = auth_manager
         self.logger = logger
-    
+
     async def detect_brute_force(self, ip: str) -> bool:
         """Detect brute force attacks"""
         failed_attempts = await self.get_failed_attempts(ip, minutes=15)
@@ -355,17 +378,18 @@ class SecurityMonitor:
 ```
 
 ### 2. Automatic Response:
+
 ```python
 # Example automatic security responses
 async def handle_security_incident(incident_type: str, details: dict):
     if incident_type == "brute_force":
         # Block IP automatically
         await block_ip(details["ip"], duration=3600)
-        
-    elif incident_type == "token_compromise": 
+
+    elif incident_type == "token_compromise":
         # Invalidate all user tokens
         await invalidate_user_tokens(details["user_id"])
-        
+
     # Always notify administrators
     await send_security_alert(incident_type, details)
 ```

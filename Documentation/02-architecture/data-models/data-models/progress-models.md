@@ -16,7 +16,7 @@ StudentCourseProgress = {
     enrolled_at = DateTime,      -- Enrollment timestamp
     last_accessed = DateTime,    -- Last activity timestamp
     status = string,             -- Enum: "not_started", "in_progress", "completed", "paused"
-    
+
     -- Progress tracking
     completed_lessons = {
         {
@@ -27,7 +27,7 @@ StudentCourseProgress = {
             score = number          -- Optional lesson score (0-100)
         }
     },
-    
+
     -- Assessment tracking
     completed_quizzes = {
         {
@@ -40,7 +40,7 @@ StudentCourseProgress = {
             passed = boolean        -- Whether passing score achieved
         }
     },
-    
+
     -- Assignment tracking
     completed_assignments = {
         {
@@ -52,22 +52,22 @@ StudentCourseProgress = {
             status = string        -- "submitted", "graded", "returned"
         }
     },
-    
+
     -- Current state
     current_lesson_id = string,     -- Currently active lesson
     current_module_id = string,     -- Currently active module
     progress_percentage = number,   -- Overall completion (0-100)
-    
+
     -- Certification
     certificate_issued = boolean,   -- Whether certificate was earned
     certificate_url = string,       -- URL to certificate PDF
     certificate_issued_at = DateTime,-- Certificate issue date
-    
+
     -- Engagement metrics
     total_time_spent = number,      -- Total minutes in course
     login_streak = number,          -- Consecutive days accessed
     last_streak_date = DateTime,    -- Last date for streak calculation
-    
+
     -- Student notes and bookmarks
     notes = {
         {
@@ -79,7 +79,7 @@ StudentCourseProgress = {
             tags = {string}        -- User-defined tags
         }
     },
-    
+
     bookmarks = {
         {
             id = string,            -- Bookmark identifier
@@ -90,7 +90,7 @@ StudentCourseProgress = {
             note = string          -- Optional bookmark note
         }
     },
-    
+
     -- Notifications
     last_notification_sent = DateTime, -- Last reminder sent
     notification_preferences = {
@@ -98,7 +98,7 @@ StudentCourseProgress = {
         achievements = boolean,
         deadlines = boolean
     },
-    
+
     -- Custom fields for extensions
     custom_fields = {
         -- Flexible key-value pairs for school-specific data
@@ -116,7 +116,7 @@ StudentCourseProgress = {
     enrolled_at = "2023-09-01T08:00:00Z",
     last_accessed = "2023-10-28T15:45:22Z",
     status = "in_progress",
-    
+
     completed_lessons = {
         {
             lesson_id = "LSN-1001",
@@ -133,7 +133,7 @@ StudentCourseProgress = {
             score = 88
         }
     },
-    
+
     completed_quizzes = {
         {
             quiz_id = "QZ-1001",
@@ -145,7 +145,7 @@ StudentCourseProgress = {
             passed = true
         }
     },
-    
+
     current_lesson_id = "LSN-1003",
     progress_percentage = 35,
     certificate_issued = false,
@@ -167,20 +167,20 @@ QuizAttempt = {
     quiz_id = string,              -- References quizzes.id
     course_id = string,            -- References courses.id
     lesson_id = string,            -- References lessons.id (optional)
-    
+
     -- Timing
     started_at = DateTime,         -- Attempt start time
     completed_at = DateTime,       -- Attempt completion time
     time_spent = number,           -- Total minutes spent
     time_limit_exceeded = boolean, -- If time limit was exceeded
-    
+
     -- Scoring
     score = number,                -- Final score (0-100)
     points_earned = number,        -- Actual points earned
     points_possible = number,      -- Maximum possible points
     passed = boolean,              -- Whether passing threshold met
     passing_score = number,        -- Required passing score
-    
+
     -- Detailed answers
     answers = {
         {
@@ -197,18 +197,18 @@ QuizAttempt = {
             confidence_level = number  -- Student's confidence (1-5)
         }
     },
-    
+
     -- Feedback
     feedback = string,             -- Instructor feedback (markdown)
     feedback_provided_at = DateTime, -- When feedback was given
     feedback_provided_by = string,   -- Instructor user ID
     auto_feedback = string,        -- System-generated feedback
-    
+
     -- Metadata
     attempt_number = number,       -- Which attempt this is (1st, 2nd, etc.)
     is_practice = boolean,        -- Whether this was practice mode
     environment = string,         -- "classroom", "home", "mobile"
-    
+
     -- Device and location
     device_info = {
         type = string,            -- "desktop", "tablet", "mobile"
@@ -216,14 +216,14 @@ QuizAttempt = {
         os = string,             -- Operating system
         screen_size = string     -- Screen resolution
     },
-    
+
     location_info = {
         ip_address = string,      -- IP address (hashed)
         country = string,        -- Country code
         region = string,         -- State/province
         timezone = string        -- Timezone
     },
-    
+
     -- Integrity tracking
     integrity_flags = {
         {
@@ -232,11 +232,11 @@ QuizAttempt = {
             details = string     -- Additional context
         }
     },
-    
+
     -- Session tracking
     session_id = string,         -- Associated session
     interruptions = number,      -- Number of session interruptions
-    
+
     -- Analytics metadata
     metadata = {
         question_order = {string}, -- Order questions were presented
@@ -258,22 +258,22 @@ ActivityLog = {
     id = string,                  -- Log entry identifier
     student_id = string,          -- References users.id
     timestamp = DateTime,         -- Activity timestamp
-    
+
     -- Activity classification
     activity_type = string,       -- Activity type enum
     -- Types: "login", "logout", "lesson_start", "lesson_complete",
     -- "quiz_start", "quiz_submit", "video_play", "video_complete",
     -- "achievement_earned", "resource_download", "help_requested"
-    
+
     activity_category = string,   -- "learning", "assessment", "social", "system"
-    
+
     -- Context references
     course_id = string,          -- References courses.id (optional)
     lesson_id = string,          -- References lessons.id (optional)
     quiz_id = string,            -- References quizzes.id (optional)
     assignment_id = string,      -- References assignments.id (optional)
     resource_id = string,        -- References resources.id (optional)
-    
+
     -- Activity details
     details = {
         action = string,         -- Specific action taken
@@ -282,20 +282,20 @@ ActivityLog = {
         score = number,         -- Score achieved (if applicable)
         input_method = string,  -- "mouse", "keyboard", "touch", "voice"
         interaction_count = number, -- Number of interactions
-        
+
         -- Page/content tracking
         page_url = string,      -- Current page URL
         referrer_url = string,  -- Previous page URL
         content_section = string, -- Specific section accessed
-        
+
         -- Performance metrics
         load_time = number,     -- Page/content load time (ms)
         response_time = number, -- Server response time (ms)
-        
+
         -- Custom event data
         custom_data = {}       -- Flexible field for event-specific data
     },
-    
+
     -- Device and environment
     device_info = {
         type = string,
@@ -304,15 +304,15 @@ ActivityLog = {
         screen_size = string,
         connection_type = string -- "wifi", "cellular", "ethernet"
     },
-    
+
     -- Session context
     session_id = string,        -- Current session identifier
     session_duration = number,  -- Current session length (minutes)
-    
+
     -- Learning context
     learning_path_id = string,  -- Current learning path
     learning_objective_id = string, -- Associated objective
-    
+
     -- Outcome
     success = boolean,          -- Whether action was successful
     error_message = string     -- Error details if failed
@@ -330,12 +330,12 @@ LearningAnalytics = {
     id = string,                -- Analytics record identifier
     student_id = string,        -- References users.id
     course_id = string,         -- References courses.id (optional)
-    
+
     -- Time period
     period_type = string,       -- "daily", "weekly", "monthly", "custom"
     start_date = DateTime,      -- Period start
     end_date = DateTime,        -- Period end
-    
+
     -- Time spent breakdown
     time_metrics = {
         total_time = number,          -- Total minutes
@@ -344,14 +344,14 @@ LearningAnalytics = {
         assignment_time = number,     -- Time on assignments
         resource_time = number,       -- Time with resources
         idle_time = number,          -- Detected idle time
-        
+
         time_by_day = {              -- Daily breakdown
             {
                 date = DateTime,
                 minutes = number
             }
         },
-        
+
         peak_hours = {               -- Most active hours
             morning = number,        -- 6am-12pm
             afternoon = number,      -- 12pm-6pm
@@ -359,7 +359,7 @@ LearningAnalytics = {
             night = number          -- 12am-6am
         }
     },
-    
+
     -- Performance metrics
     performance_metrics = {
         quiz_average = number,       -- Average quiz score
@@ -367,10 +367,10 @@ LearningAnalytics = {
         assignment_average = number, -- Average assignment grade
         completion_rate = number,    -- Content completion percentage
         mastery_level = number,     -- Overall mastery (0-100)
-        
+
         strengths = {string},       -- Identified strong areas
         weaknesses = {string},      -- Areas needing improvement
-        
+
         grade_distribution = {
             a_count = number,       -- 90-100%
             b_count = number,       -- 80-89%
@@ -379,14 +379,14 @@ LearningAnalytics = {
             f_count = number       -- Below 60%
         }
     },
-    
+
     -- Engagement metrics
     engagement_metrics = {
         login_count = number,        -- Number of logins
         session_count = number,      -- Number of sessions
         avg_session_length = number, -- Average session (minutes)
         participation_score = number, -- Participation level (0-100)
-        
+
         interaction_metrics = {
             clicks_per_session = number,
             pages_per_session = number,
@@ -395,52 +395,52 @@ LearningAnalytics = {
             questions_asked = number,
             forum_posts = number
         },
-        
+
         engagement_trend = string,   -- "increasing", "stable", "decreasing"
         risk_level = string         -- "low", "medium", "high"
     },
-    
+
     -- Learning patterns
     learning_patterns = {
         preferred_content_type = string,  -- "video", "text", "interactive"
         learning_pace = string,           -- "fast", "moderate", "slow"
         optimal_session_length = number,  -- Ideal minutes per session
         preferred_difficulty = string,    -- "easy", "medium", "hard"
-        
+
         content_preferences = {
             video_preference = number,    -- 0-100 preference score
             text_preference = number,
             interactive_preference = number,
             audio_preference = number
         },
-        
+
         study_patterns = {
             consistent_schedule = boolean,
             cramming_detected = boolean,
             review_frequency = string    -- "never", "rarely", "often"
         }
     },
-    
+
     -- Comparative metrics
     comparison_metrics = {
         vs_class_average = number,      -- Percentage above/below
         vs_previous_period = number,    -- Change from last period
         percentile_rank = number,       -- Class percentile (0-100)
         vs_personal_best = number,      -- Compared to best performance
-        
+
         peer_comparison = {
             ahead_of_peers = number,    -- Percentage of peers behind
             similar_to_peers = number,  -- Percentage at similar level
             behind_peers = number       -- Percentage of peers ahead
         }
     },
-    
+
     -- Predictive metrics
     predictions = {
         estimated_completion_date = DateTime, -- Course completion prediction
         success_probability = number,        -- Likelihood of success (0-100)
         at_risk_indicators = {string},      -- Risk factors identified
-        
+
         recommended_interventions = {
             {
                 type = string,              -- "tutoring", "review", etc.
@@ -448,7 +448,7 @@ LearningAnalytics = {
                 description = string        -- Intervention details
             }
         },
-        
+
         next_milestone = {
             type = string,                  -- "module", "assessment", etc.
             description = string,
@@ -456,7 +456,7 @@ LearningAnalytics = {
             preparation_needed = string
         }
     },
-    
+
     -- Achievement tracking
     achievements = {
         total_earned = number,
@@ -478,17 +478,17 @@ PerformanceReport = {
     id = string,                    -- Report identifier
     student_id = string,            -- References users.id
     course_id = string,             -- References courses.id (optional)
-    
+
     -- Report metadata
     report_type = string,           -- "progress", "grade", "comprehensive"
     title = string,                 -- Report title
     description = string,           -- Report description
-    
+
     period_start = DateTime,        -- Reporting period start
     period_end = DateTime,          -- Reporting period end
     generated_at = DateTime,        -- Generation timestamp
     generated_by = string,          -- User who generated report
-    
+
     -- Access tracking
     accessed_by = {
         {
@@ -497,25 +497,25 @@ PerformanceReport = {
             accessed_at = DateTime
         }
     },
-    
+
     -- Summary metrics
     summary = {
         overall_grade = string,     -- Letter grade
         overall_percentage = number, -- Numeric grade (0-100)
         attendance_rate = number,   -- Attendance percentage
         completion_rate = number,   -- Work completion percentage
-        
+
         behavior_score = number,    -- Behavior/participation score
         effort_score = number,      -- Effort rating
-        
+
         total_time_spent = number,  -- Total hours
         assignments_completed = number,
         quizzes_taken = number,
-        
+
         gpa_contribution = number,  -- GPA impact
         credit_hours = number      -- Credit hours earned
     },
-    
+
     -- Detailed assessments
     assessments = {
         quizzes = {
@@ -528,7 +528,7 @@ PerformanceReport = {
                 trend = string     -- "improving", "stable", "declining"
             }
         },
-        
+
         assignments = {
             {
                 id = string,
@@ -539,7 +539,7 @@ PerformanceReport = {
                 late = boolean
             }
         },
-        
+
         projects = {
             {
                 id = string,
@@ -550,7 +550,7 @@ PerformanceReport = {
             }
         }
     },
-    
+
     -- Skills assessment
     skills = {
         {
@@ -559,7 +559,7 @@ PerformanceReport = {
             mastery_level = string,     -- "beginner", "developing", "proficient", "advanced"
             evidence_count = number,    -- Number of demonstrations
             last_demonstrated = DateTime,
-            
+
             sub_skills = {
                 {
                     name = string,
@@ -568,7 +568,7 @@ PerformanceReport = {
             }
         }
     },
-    
+
     -- Goals and progress
     goals = {
         {
@@ -577,7 +577,7 @@ PerformanceReport = {
             target_date = DateTime,
             progress = number,         -- 0-100 percentage
             status = string,          -- "on_track", "at_risk", "achieved", "missed"
-            
+
             milestones = {
                 {
                     description = string,
@@ -587,15 +587,15 @@ PerformanceReport = {
             }
         }
     },
-    
+
     -- Feedback and recommendations
     feedback = {
         strengths = {string},          -- List of strengths
         improvements = {string},       -- Areas for improvement
         achievements = {string},       -- Notable achievements
-        
+
         teacher_comments = string,     -- Narrative feedback
-        
+
         action_items = {
             {
                 priority = string,     -- "high", "medium", "low"
@@ -604,14 +604,14 @@ PerformanceReport = {
                 assigned_to = string  -- "student", "parent", "teacher"
             }
         },
-        
+
         recommendations = {
             academic = {string},      -- Academic recommendations
             behavioral = {string},    -- Behavioral suggestions
             enrichment = {string}    -- Enrichment opportunities
         }
     },
-    
+
     -- Next steps
     next_steps = {
         immediate_focus = string,     -- Primary focus area
@@ -625,21 +625,21 @@ PerformanceReport = {
         support_services = {string},  -- Available support services
         parent_actions = {string}     -- Suggested parent involvement
     },
-    
+
     -- Report configuration
     configuration = {
         format = string,              -- "pdf", "html", "json"
         template = string,            -- Template used
         include_graphs = boolean,    -- Whether to include visualizations
         detail_level = string,       -- "summary", "detailed", "comprehensive"
-        
+
         visibility = {
             student = boolean,
             parents = boolean,
             teachers = boolean,
             administrators = boolean
         },
-        
+
         sharing = {
             shareable = boolean,
             share_url = string,
@@ -688,6 +688,7 @@ PerformanceReport = {
 ### Real-time Updates
 
 1. **Event Streaming**
+
    ```python
    async def stream_progress_event(event: ProgressEvent):
        # Update database
@@ -722,4 +723,4 @@ PerformanceReport = {
 
 ---
 
-*For related models, see [Quiz Models](quiz-models.md) and [Analytics Models](analytics-models.md). For implementation details, see [System Design](../system-design.md).*
+_For related models, see [Quiz Models](quiz-models.md) and [Analytics Models](analytics-models.md). For implementation details, see [System Design](../system-design.md)._

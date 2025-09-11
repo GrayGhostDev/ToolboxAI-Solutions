@@ -1,11 +1,13 @@
 # Classes
 
 ## Component Information
+
 - **Category**: pages
 - **Type**: functional
 - **File**: `src/dashboard/src/components/pages/Classes.tsx`
 
 ## Hooks Used
+
 - `useAppDispatch`
 - `useNavigate`
 - `useAppSelector`
@@ -14,9 +16,11 @@
 - `useEvent`
 
 ## State Management
+
 - Local component state
 
 ## Key Dependencies
+
 - `@mui/icons-material/Add`
 - `@mui/icons-material/Delete`
 - `@mui/icons-material/Edit`

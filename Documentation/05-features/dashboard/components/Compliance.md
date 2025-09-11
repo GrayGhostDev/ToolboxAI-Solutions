@@ -1,20 +1,24 @@
 # Compliance
 
 ## Component Information
+
 - **Category**: pages
 - **Type**: functional
 - **File**: `src/dashboard/src/components/pages/Compliance.tsx`
 
 ## Hooks Used
+
 - `useAppDispatch`
 - `useAppSelector`
 - `useState`
 - `useEffect`
 
 ## State Management
+
 - Local component state
 
 ## Key Dependencies
+
 - `@mui/icons-material/AssignmentTurnedIn`
 - `@mui/icons-material/CheckCircle`
 - `@mui/icons-material/Error`

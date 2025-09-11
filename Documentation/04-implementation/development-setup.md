@@ -196,20 +196,15 @@ Create `.vscode/settings.json`:
   "python.formatting.blackArgs": ["--line-length", "120"],
   "python.testing.pytestEnabled": true,
   "python.testing.pytestArgs": ["tests"],
-  
+
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.organizeImports": true,
     "source.fixAll.eslint": true
   },
-  
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
-  
+
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+
   "files.exclude": {
     "**/__pycache__": true,
     "**/*.pyc": true,
@@ -217,10 +212,10 @@ Create `.vscode/settings.json`:
     "**/.pytest_cache": true,
     "**/.mypy_cache": true
   },
-  
+
   "typescript.preferences.importModuleSpecifier": "relative",
   "typescript.updateImportsOnFileMove.enabled": "always",
-  
+
   "tailwindCSS.includeLanguages": {
     "typescript": "javascript",
     "typescriptreact": "javascript"
@@ -241,12 +236,7 @@ Create `.vscode/launch.json`:
       "type": "python",
       "request": "launch",
       "module": "uvicorn",
-      "args": [
-        "server.main:app",
-        "--reload",
-        "--host", "127.0.0.1",
-        "--port", "8008"
-      ],
+      "args": ["server.main:app", "--reload", "--host", "127.0.0.1", "--port", "8008"],
       "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
@@ -296,12 +286,7 @@ Create `.vscode/launch.json`:
   "compounds": [
     {
       "name": "Full Stack",
-      "configurations": [
-        "FastAPI Server",
-        "Flask Bridge",
-        "MCP Server",
-        "Dashboard Dev"
-      ],
+      "configurations": ["FastAPI Server", "Flask Bridge", "MCP Server", "Dashboard Dev"],
       "stopAll": true
     }
   ]
@@ -545,15 +530,15 @@ class TestUserService:
     @pytest.fixture
     def user_service(self):
         return UserService()
-    
+
     @pytest.mark.asyncio
     async def test_create_user(self, user_service):
         # Arrange
         user_data = {"email": "test@example.com", "name": "Test User"}
-        
+
         # Act
         user = await user_service.create_user(user_data)
-        
+
         # Assert
         assert user.email == "test@example.com"
         assert user.name == "Test User"
@@ -735,6 +720,7 @@ footer
 ```
 
 Examples:
+
 - `feat(agents): add new quiz generation agent`
 - `fix(auth): resolve JWT token expiration issue`
 - `docs(api): update endpoint documentation`
@@ -807,11 +793,13 @@ echo "Database reset complete!"
 ## Resources
 
 ### Documentation
+
 - [Project README](../../README.md)
 - [API Documentation](../03-api/README.md)
 - [Architecture Overview](../02-architecture/system-design.md)
 
 ### External Resources
+
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [React Documentation](https://react.dev/)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
@@ -819,6 +807,7 @@ echo "Database reset complete!"
 - [Roblox Developer Hub](https://create.roblox.com/docs)
 
 ### Community
+
 - GitHub Issues: Report bugs and request features
 - Discord: Join development discussions
 - Stack Overflow: Tag with `toolboxai`

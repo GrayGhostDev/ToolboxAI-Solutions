@@ -27,11 +27,14 @@ A modern, enterprise-grade dashboard for the Roblox Educational Training Platfor
    ```
 
 ## Project Structure
+
 - Frontend: React 18 + TypeScript + Material-UI + Redux Toolkit
 - Backend: FastAPI, integrated with Ghost backend
 
 ## Contributing
+
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
 ## License
+
 MIT

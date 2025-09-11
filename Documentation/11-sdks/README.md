@@ -5,15 +5,18 @@ Official Software Development Kits (SDKs) for integrating with ToolBoxAI-Solutio
 ## Available SDKs
 
 ### 🌐 [JavaScript/TypeScript SDK](javascript-sdk.md)
+
 Modern JavaScript SDK with full TypeScript support for web and Node.js applications.
 
 **Best for:**
+
 - React, Angular, Vue applications
 - Node.js backend services
 - Browser-based educational tools
 - Progressive web apps
 
 **Key Features:**
+
 - Promise-based async/await API
 - Full TypeScript definitions
 - React hooks support
@@ -21,6 +24,7 @@ Modern JavaScript SDK with full TypeScript support for web and Node.js applicati
 - Browser and Node.js compatible
 
 **Quick Install:**
+
 ```bash
 npm install @toolboxai/sdk
 # or
@@ -30,9 +34,11 @@ yarn add @toolboxai/sdk
 ---
 
 ### 🐍 [Python SDK](python-sdk.md)
+
 Comprehensive Python SDK for server-side integrations and data analysis.
 
 **Best for:**
+
 - Data analysis and reporting
 - Machine learning integrations
 - Automated content generation
@@ -40,6 +46,7 @@ Comprehensive Python SDK for server-side integrations and data analysis.
 - LMS integrations
 
 **Key Features:**
+
 - Type hints for IDE support
 - Async/await support
 - Pandas integration
@@ -47,6 +54,7 @@ Comprehensive Python SDK for server-side integrations and data analysis.
 - Generator support for large datasets
 
 **Quick Install:**
+
 ```bash
 pip install toolboxai-sdk
 # or
@@ -56,9 +64,11 @@ poetry add toolboxai-sdk
 ---
 
 ### 🎮 [Roblox Lua SDK](roblox-lua-sdk.md)
+
 Native Lua SDK optimized for Roblox Studio and in-game integrations.
 
 **Best for:**
+
 - Roblox Studio plugins
 - In-game educational experiences
 - 3D environment generation
@@ -66,6 +76,7 @@ Native Lua SDK optimized for Roblox Studio and in-game integrations.
 - Interactive assessments
 
 **Key Features:**
+
 - Roblox-optimized networking
 - Promise-like async patterns
 - Event-based updates
@@ -73,6 +84,7 @@ Native Lua SDK optimized for Roblox Studio and in-game integrations.
 - Workspace manipulation
 
 **Quick Install:**
+
 ```lua
 -- In Roblox Studio
 local ToolBoxAI = require(game.ReplicatedStorage.ToolBoxAI)
@@ -80,32 +92,36 @@ local ToolBoxAI = require(game.ReplicatedStorage.ToolBoxAI)
 
 ## Feature Comparison
 
-| Feature | JavaScript/TypeScript | Python | Roblox Lua |
-|---------|---------------------|---------|------------|
-| **Authentication** | ✅ OAuth2, API Key | ✅ OAuth2, API Key | ✅ API Key |
-| **Async Support** | ✅ Promises/async-await | ✅ asyncio | ✅ Promises |
-| **Type Safety** | ✅ TypeScript | ✅ Type hints | ⚠️ Luau (optional) |
-| **Real-time Updates** | ✅ WebSocket | ✅ WebSocket | ✅ Events |
-| **Batch Operations** | ✅ | ✅ | ⚠️ Limited |
-| **Offline Support** | ✅ | ⚠️ Limited | ❌ |
-| **File Uploads** | ✅ | ✅ | ⚠️ Limited |
-| **Data Analysis** | ⚠️ Basic | ✅ Pandas | ❌ |
-| **3D Manipulation** | ❌ | ❌ | ✅ Native |
-| **Package Manager** | npm/yarn | pip/poetry | Roblox/Wally |
+| Feature               | JavaScript/TypeScript   | Python             | Roblox Lua         |
+| --------------------- | ----------------------- | ------------------ | ------------------ |
+| **Authentication**    | ✅ OAuth2, API Key      | ✅ OAuth2, API Key | ✅ API Key         |
+| **Async Support**     | ✅ Promises/async-await | ✅ asyncio         | ✅ Promises        |
+| **Type Safety**       | ✅ TypeScript           | ✅ Type hints      | ⚠️ Luau (optional) |
+| **Real-time Updates** | ✅ WebSocket            | ✅ WebSocket       | ✅ Events          |
+| **Batch Operations**  | ✅                      | ✅                 | ⚠️ Limited         |
+| **Offline Support**   | ✅                      | ⚠️ Limited         | ❌                 |
+| **File Uploads**      | ✅                      | ✅                 | ⚠️ Limited         |
+| **Data Analysis**     | ⚠️ Basic                | ✅ Pandas          | ❌                 |
+| **3D Manipulation**   | ❌                      | ❌                 | ✅ Native          |
+| **Package Manager**   | npm/yarn                | pip/poetry         | Roblox/Wally       |
 
 ## Common Use Cases
 
 ### Educational Web Application
-**Recommended SDK**: JavaScript/TypeScript
-```javascript
-import { ToolBoxAI } from '@toolboxai/sdk';
 
-const client = new ToolBoxAI({ apiKey: 'your-key' });
-const lessons = await client.lessons.list({ grade: 5 });
+**Recommended SDK**: JavaScript/TypeScript
+
+```javascript
+import { ToolBoxAI } from '@toolboxai/sdk'
+
+const client = new ToolBoxAI({ apiKey: 'your-key' })
+const lessons = await client.lessons.list({ grade: 5 })
 ```
 
 ### Data Analytics Dashboard
+
 **Recommended SDK**: Python
+
 ```python
 from toolboxai import ToolBoxAI
 import pandas as pd
@@ -115,7 +131,9 @@ df = client.analytics.get_progress_dataframe()
 ```
 
 ### Roblox Learning Game
+
 **Recommended SDK**: Roblox Lua
+
 ```lua
 local ToolBoxAI = require(script.ToolBoxAI)
 local client = ToolBoxAI.new({ apiKey = 'your-key' })
@@ -127,6 +145,7 @@ client:deployEnvironment(lessonId, workspace)
 All SDKs provide complete coverage of the ToolBoxAI-Solutions API:
 
 ### Core Features
+
 - ✅ **Authentication**: Login, logout, token management
 - ✅ **User Management**: CRUD operations, role management
 - ✅ **Lesson Management**: Create, deploy, update lessons
@@ -139,6 +158,7 @@ All SDKs provide complete coverage of the ToolBoxAI-Solutions API:
 - ✅ **Analytics**: Performance metrics, learning analytics
 
 ### Advanced Features
+
 - ✅ **Webhooks**: Event notifications
 - ✅ **Batch Operations**: Bulk create/update
 - ✅ **Real-time Updates**: WebSocket/Events
@@ -150,15 +170,18 @@ All SDKs provide complete coverage of the ToolBoxAI-Solutions API:
 ## Getting Started
 
 ### Step 1: Choose Your SDK
+
 Select the SDK that best matches your development environment and use case.
 
 ### Step 2: Install the SDK
+
 Follow the installation instructions for your chosen SDK.
 
 ### Step 3: Authenticate
+
 ```javascript
 // JavaScript
-const client = new ToolBoxAI({ apiKey: 'your-api-key' });
+const client = new ToolBoxAI({ apiKey: 'your-api-key' })
 ```
 
 ```python
@@ -172,9 +195,10 @@ local client = ToolBoxAI.new({ apiKey = 'your-api-key' })
 ```
 
 ### Step 4: Make Your First API Call
+
 ```javascript
 // JavaScript
-const lesson = await client.lessons.get('lesson-id');
+const lesson = await client.lessons.get('lesson-id')
 ```
 
 ```python
@@ -194,12 +218,15 @@ end)
 All SDKs support multiple authentication methods:
 
 ### API Key Authentication
+
 Best for server-side applications and development.
 
 ### OAuth2 Authentication
+
 Best for user-facing applications requiring user consent.
 
 ### JWT Token Authentication
+
 Best for secure, stateless authentication.
 
 See individual SDK documentation for implementation details.
@@ -211,11 +238,11 @@ All SDKs provide consistent error handling:
 ```javascript
 // JavaScript
 try {
-    const result = await client.lessons.create(data);
+  const result = await client.lessons.create(data)
 } catch (error) {
-    if (error.code === 'INVALID_INPUT') {
-        // Handle validation error
-    }
+  if (error.code === 'INVALID_INPUT') {
+    // Handle validation error
+  }
 }
 ```
 
@@ -242,6 +269,7 @@ end)
 ## Rate Limiting
 
 All SDKs handle rate limiting automatically:
+
 - Automatic retry with exponential backoff
 - Rate limit headers exposed
 - Configurable retry behavior
@@ -250,17 +278,20 @@ All SDKs handle rate limiting automatically:
 ## Support and Resources
 
 ### Documentation
+
 - [API Reference](../03-api/README.md)
 - [Authentication Guide](../03-api/authentication.md)
 - [Error Codes](../03-api/error-handling.md)
 - [Examples](examples/)
 
 ### Community
+
 - GitHub: [github.com/toolboxai/sdks](https://github.com/toolboxai/sdks)
 - Discord: [discord.gg/toolboxai](https://discord.gg/toolboxai)
 - Forum: [forum.toolboxai.com](https://forum.toolboxai.com)
 
 ### Support
+
 - Email: sdk-support@toolboxai.com
 - Documentation: [docs.toolboxai.com](https://docs.toolboxai.com)
 - Issues: [GitHub Issues](https://github.com/toolboxai/sdks/issues)
@@ -268,6 +299,7 @@ All SDKs handle rate limiting automatically:
 ## Contributing
 
 We welcome contributions to our SDKs! See our [Contributing Guide](https://github.com/toolboxai/sdks/CONTRIBUTING.md) for:
+
 - Development setup
 - Testing requirements
 - Pull request process
@@ -280,6 +312,7 @@ All ToolBoxAI SDKs are released under the MIT License. See individual SDK reposi
 ## Versioning
 
 SDKs follow [Semantic Versioning](https://semver.org/):
+
 - **Major**: Breaking changes
 - **Minor**: New features (backward compatible)
 - **Patch**: Bug fixes
@@ -287,20 +320,21 @@ SDKs follow [Semantic Versioning](https://semver.org/):
 ## Migration Guides
 
 Upgrading? Check our migration guides:
+
 - [JavaScript SDK Migration](javascript-sdk.md#migration)
 - [Python SDK Migration](python-sdk.md#migration)
 - [Roblox Lua SDK Migration](roblox-lua-sdk.md#migration)
 
 ## Performance Benchmarks
 
-| Operation | JavaScript | Python | Roblox Lua |
-|-----------|------------|---------|------------|
-| Auth (avg) | 45ms | 52ms | 67ms |
-| API Call (avg) | 120ms | 135ms | 145ms |
-| Batch (100 items) | 1.2s | 0.9s | 2.1s |
-| WebSocket latency | 15ms | 18ms | 25ms |
+| Operation         | JavaScript | Python | Roblox Lua |
+| ----------------- | ---------- | ------ | ---------- |
+| Auth (avg)        | 45ms       | 52ms   | 67ms       |
+| API Call (avg)    | 120ms      | 135ms  | 145ms      |
+| Batch (100 items) | 1.2s       | 0.9s   | 2.1s       |
+| WebSocket latency | 15ms       | 18ms   | 25ms       |
 
-*Benchmarks based on average response times from US-East region*
+_Benchmarks based on average response times from US-East region_
 
 ---
 

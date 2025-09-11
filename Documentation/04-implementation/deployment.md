@@ -5,6 +5,7 @@ This document describes how to deploy ToolBoxAI-Solutions.
 ## Environment Setup
 
 ## Deployment Steps
+
 1. Build the application
 2. Run tests
 3. Deploy to server or cloud

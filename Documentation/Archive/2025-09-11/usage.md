@@ -479,9 +479,9 @@ When implementing these models in a database system:
 
 3. **Query Patterns**:
    - Optimize for common query patterns like:
-	 - Retrieving all lessons for a course in correct order
-	 - Finding all resources used in a specific course
-	 - Accessing quiz questions with their options and correct answers
+   - Retrieving all lessons for a course in correct order
+   - Finding all resources used in a specific course
+   - Accessing quiz questions with their options and correct answers
 
 4. **Transactions**:
    - Use database transactions when updating related records (e.g., updating a course and its lessons)
@@ -490,6 +490,7 @@ When implementing these models in a database system:
 5. **Backup and Recovery**:
    - Implement regular backups of course content
    - Consider point-in-time recovery options for accidental content deletion
+
 # User Data Models
 
 This document details the data models representing users in the educational platform system, including students, educators, and parents.
@@ -749,6 +750,7 @@ When implementing these models in a database system:
 4. Use database transactions for operations that modify multiple related records to maintain data integrity.
 
 5. Consider caching strategies for frequently accessed user data to reduce database load.
+
 # Educational Platform Data Models Documentation
 
 This document provides a comprehensive overview of the data models used in the ToolboxAI-Solutions educational platform, focusing on user data, course content, and progress tracking. Understanding these models is essential for developers who need to work with the platform's data structures.

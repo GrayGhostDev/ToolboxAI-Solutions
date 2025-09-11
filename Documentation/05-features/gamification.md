@@ -1,6 +1,5 @@
 # Gamification System
 
-
 # Gamification System
 
 The gamification system provides engagement mechanics to motivate students in the learning platform through rewards, achievements, and progress tracking.
@@ -8,6 +7,7 @@ The gamification system provides engagement mechanics to motivate students in th
 ## Overview
 
 The gamification system includes several interconnected features:
+
 - Experience points (XP) and level progression
 - Achievements and badges
 - Daily challenges
@@ -27,13 +27,13 @@ local controller = GamificationHubController.new(gui)
 
 #### Key Methods
 
-| Method | Description |
-|--------|-------------|
-| `updateXPDisplay()` | Updates the XP bar and level display based on current points |
-| `loadBadges()` | Loads and displays user's earned badges |
-| `loadChallenges()` | Populates the daily challenges list |
-| `loadRewards()` | Displays available rewards and their costs |
-| `purchaseReward(index)` | Processes reward redemption |
+| Method                  | Description                                                  |
+| ----------------------- | ------------------------------------------------------------ |
+| `updateXPDisplay()`     | Updates the XP bar and level display based on current points |
+| `loadBadges()`          | Loads and displays user's earned badges                      |
+| `loadChallenges()`      | Populates the daily challenges list                          |
+| `loadRewards()`         | Displays available rewards and their costs                   |
+| `purchaseReward(index)` | Processes reward redemption                                  |
 
 ### Reward Redemption System
 
@@ -106,6 +106,7 @@ Displays achievements earned by the student with visual indicators and hover inf
 ### Challenge Panel
 
 Shows active daily challenges:
+
 - Challenge description
 - XP reward amount
 - Progress indicator
@@ -114,6 +115,7 @@ Shows active daily challenges:
 ### Leaderboard
 
 Displays top performers within the learning community:
+
 - Rank
 - Player name
 - XP total

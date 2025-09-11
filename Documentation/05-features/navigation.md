@@ -19,12 +19,12 @@ local controller = NavigationMenuController.new(gui)
 
 #### Key Methods
 
-| Method | Description |
-|--------|-------------|
-| `toggleMenu()` | Expands or collapses the navigation panel |
+| Method                       | Description                                             |
+| ---------------------------- | ------------------------------------------------------- |
+| `toggleMenu()`               | Expands or collapses the navigation panel               |
 | `selectSection(sectionName)` | Highlights the selected section and triggers navigation |
-| `updateLayout()` | Adjusts layout based on screen size |
-| `handleSearch(searchText)` | Filters navigation items based on search query |
+| `updateLayout()`             | Adjusts layout based on screen size                     |
+| `handleSearch(searchText)`   | Filters navigation items based on search query          |
 
 ### MainController
 
@@ -55,6 +55,7 @@ end
 ### Navigation Panel
 
 The main navigation sidebar that contains:
+
 - Profile section
 - Search functionality
 - Navigation items for different sections
@@ -76,6 +77,7 @@ local NAV_ITEMS = {
 ### Responsive Elements
 
 Components designed to adapt to different screen sizes:
+
 - Collapsible sidebar that shows only icons on smaller screens
 - Mobile-friendly toggle button
 - Adaptive content layout
@@ -109,6 +111,7 @@ end
 ### Visual Feedback Elements
 
 Components that provide interactive feedback:
+
 - Hover effects
 - Selection indicators
 - Transition animations
@@ -202,6 +205,7 @@ The system supports different navigation options based on user roles:
 ### Student Navigation
 
 Focused on learning activities:
+
 - Dashboard
 - Lessons
 - Quizzes
@@ -211,6 +215,7 @@ Focused on learning activities:
 ### Educator Navigation
 
 Includes teaching and management tools:
+
 - Courses
 - Student Progress
 - Grading

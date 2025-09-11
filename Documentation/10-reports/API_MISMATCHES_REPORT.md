@@ -1,15 +1,19 @@
 # API Mismatches & Integration Issues Report
+
 ## Terminal 3 - Roblox Integration
+
 ## Date: 2025-09-09
 
 ## 🔴 Critical Issues
 
 ### 1. Dashboard Not Running (Port 5179)
+
 - **Issue**: Dashboard is not accessible on port 5179
 - **Impact**: Cannot test full integration flow
 - **Required Action**: Terminal 2 needs to start dashboard service
 
 ### 2. Authentication Endpoints Missing/Broken
+
 - **Issue**: No working login endpoints found
 - **Tested Endpoints**:
   - `http://127.0.0.1:8008/auth/login` - Returns 401
@@ -20,6 +24,7 @@
 - **Required Action**: Fix authentication flow or provide test tokens
 
 ### 3. WebSocket Authentication Failed
+
 - **Issue**: MCP WebSocket (port 9876) not handling authentication
 - **Response**: Returns "context" instead of authentication confirmation
 - **Impact**: Real-time updates not working
@@ -28,6 +33,7 @@
 ## 🟡 API Mismatches Found
 
 ### Flask Bridge Endpoints
+
 1. **Content Generation**
    - Expected: `/plugin/generate`
    - Actual: `/plugin/content/generate`
@@ -49,6 +55,7 @@
    - Only `script` field available
 
 ### Plugin Communication
+
 1. **Plugin Registration**
    - Endpoint: `/register_plugin`
    - Required fields: `plugin_id`, `studio_id`, `port`, `version`
@@ -82,12 +89,14 @@
 ## 📊 Test Results Summary
 
 ### Flask Bridge Integration
+
 - Total Tests: 9
 - Passed: 4 (44.4%)
 - Failed: 5
 - Main Issues: Content generation auth, response formats
 
 ### Dashboard Integration
+
 - Total Tests: 9
 - Passed: 2 (22.2%)
 - Failed: 7
@@ -96,18 +105,21 @@
 ## 🚨 Recommendations for Other Terminals
 
 ### For Terminal 1 (Backend):
+
 1. Fix authentication endpoints - provide clear auth flow
 2. Add CORS headers for dashboard requests
 3. Implement proper error messages (not just status codes)
 4. Fix `/plugin/dashboard/sync` endpoint (500 error)
 
 ### For Terminal 2 (Dashboard):
+
 1. **PRIORITY**: Start dashboard service on port 5179
 2. **CRITICAL**: Fix WebSocket authentication in MCP
 3. Implement login flow with proper token management
 4. Add real-time update listeners
 
 ### For Debugger:
+
 1. Dashboard is blocking integration testing
 2. WebSocket auth is the critical path issue
 3. Authentication system needs unified approach
@@ -115,6 +127,7 @@
 ## 📝 Data Format Requirements
 
 ### Quiz Generation Should Return:
+
 ```json
 {
   "success": true,
@@ -132,6 +145,7 @@
 ```
 
 ### Terrain Generation Should Return:
+
 ```json
 {
   "success": true,
@@ -140,7 +154,9 @@
     "regions": [
       {
         "type": "sphere|block",
-        "x": 0, "y": 0, "z": 0,
+        "x": 0,
+        "y": 0,
+        "z": 0,
         "material": "Grass",
         "radius": 10
       }
@@ -150,6 +166,7 @@
 ```
 
 ### Script Generation Should Return:
+
 ```json
 {
   "success": true,

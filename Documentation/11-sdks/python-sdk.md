@@ -20,21 +20,25 @@ Official Python SDK for ToolBoxAI-Solutions. Build powerful educational applicat
 ## Installation
 
 ### pip
+
 ```bash
 pip install toolboxai-sdk
 ```
 
 ### Poetry
+
 ```bash
 poetry add toolboxai-sdk
 ```
 
 ### Conda
+
 ```bash
 conda install -c toolboxai toolboxai-sdk
 ```
 
 ### Development Installation
+
 ```bash
 git clone https://github.com/toolboxai/python-sdk.git
 cd python-sdk
@@ -42,6 +46,7 @@ pip install -e .
 ```
 
 ### Requirements
+
 - Python 3.8 or higher
 - Optional: pandas for data analysis features
 - Optional: aiohttp for async support
@@ -49,6 +54,7 @@ pip install -e .
 ## Quick Start
 
 ### Basic Usage
+
 ```python
 from toolboxai import ToolBoxAI
 
@@ -82,6 +88,7 @@ print(f"Created quiz: {quiz.id}")
 ## Authentication
 
 ### API Key Authentication
+
 ```python
 from toolboxai import ToolBoxAI
 
@@ -89,6 +96,7 @@ client = ToolBoxAI(api_key="your-api-key-here")
 ```
 
 ### OAuth2 Authentication
+
 ```python
 from toolboxai import ToolBoxAI, OAuth2Flow
 
@@ -113,6 +121,7 @@ client = ToolBoxAI(access_token=tokens.access_token)
 ```
 
 ### Environment Variables
+
 ```python
 import os
 from toolboxai import ToolBoxAI
@@ -125,6 +134,7 @@ client = ToolBoxAI(api_key=os.getenv("MY_API_KEY"))
 ```
 
 ### Token Management
+
 ```python
 # Login with credentials
 tokens = client.auth.login(
@@ -147,6 +157,7 @@ client.auth.logout()
 ## Configuration
 
 ### Client Configuration
+
 ```python
 from toolboxai import ToolBoxAI, Config
 
@@ -157,17 +168,17 @@ config = Config(
     timeout=30,  # seconds
     max_retries=3,
     retry_delay=1.0,  # seconds
-    
+
     # Connection pooling
     pool_connections=10,
     pool_maxsize=10,
-    
+
     # Proxy settings
     proxy="http://proxy.example.com:8080",
-    
+
     # SSL verification
     verify_ssl=True,
-    
+
     # Custom headers
     headers={
         "X-Custom-Header": "value"
@@ -178,6 +189,7 @@ client = ToolBoxAI(config=config)
 ```
 
 ### Logging Configuration
+
 ```python
 import logging
 from toolboxai import ToolBoxAI
@@ -489,6 +501,7 @@ export_result = client.lms.export_grades(
 ## Type Hints
 
 ### Using Type Hints
+
 ```python
 from typing import List, Optional, Dict, Any
 from toolboxai import ToolBoxAI
@@ -501,11 +514,11 @@ def get_student_lessons(
 ) -> List[Lesson]:
     """Get all lessons for a student."""
     user: User = client.users.get(student_id)
-    
+
     filters: Dict[str, Any] = {"grade_level": user.grade_level}
     if subject:
         filters["subject"] = subject
-    
+
     lessons: List[Lesson] = client.lessons.list(**filters)
     return lessons
 
@@ -514,6 +527,7 @@ def get_student_lessons(
 ```
 
 ### Custom Types
+
 ```python
 from dataclasses import dataclass
 from typing import Protocol
@@ -538,6 +552,7 @@ class LessonRepository(Protocol):
 ## Async Support
 
 ### Async Client
+
 ```python
 import asyncio
 from toolboxai import AsyncToolBoxAI
@@ -548,14 +563,14 @@ async def main():
         # Concurrent requests
         lessons_task = client.lessons.list(grade=5)
         quizzes_task = client.quizzes.list()
-        
+
         lessons, quizzes = await asyncio.gather(
             lessons_task,
             quizzes_task
         )
-        
+
         print(f"Found {len(lessons)} lessons and {len(quizzes)} quizzes")
-        
+
         # Async iteration
         async for user in client.users.iter_all():
             print(user.name)
@@ -565,12 +580,13 @@ asyncio.run(main())
 ```
 
 ### Async Context Manager
+
 ```python
 async def process_lessons():
     async with AsyncToolBoxAI(api_key="your-key") as client:
         # Client is automatically closed after the block
         lessons = await client.lessons.list()
-        
+
         # Process lessons concurrently
         tasks = [
             process_lesson(client, lesson)
@@ -582,16 +598,17 @@ async def process_lessons():
 async def process_lesson(client: AsyncToolBoxAI, lesson: Lesson):
     # Generate quiz for lesson
     quiz = await client.ai.generate_quiz(lesson_id=lesson.id)
-    
+
     # Deploy to Roblox
     deployment = await client.lessons.deploy_to_roblox(lesson.id)
-    
+
     return {"lesson": lesson, "quiz": quiz, "deployment": deployment}
 ```
 
 ## Data Analysis
 
 ### Pandas Integration
+
 ```python
 import pandas as pd
 from toolboxai import ToolBoxAI
@@ -626,6 +643,7 @@ print(correlation)
 ```
 
 ### Batch Data Processing
+
 ```python
 from toolboxai.utils import BatchProcessor
 
@@ -654,6 +672,7 @@ df = pd.DataFrame(results)
 ## Error Handling
 
 ### Exception Types
+
 ```python
 from toolboxai.exceptions import (
     ToolBoxAIError,
@@ -685,6 +704,7 @@ except ToolBoxAIError as e:
 ```
 
 ### Retry Logic
+
 ```python
 from toolboxai.utils import retry
 import time
@@ -715,6 +735,7 @@ def robust_api_call(func, *args, **kwargs):
 ## Advanced Features
 
 ### Context Managers
+
 ```python
 from toolboxai import ToolBoxAI
 
@@ -732,6 +753,7 @@ with client.batch() as batch:
 ```
 
 ### Generators and Iterators
+
 ```python
 # Memory-efficient iteration over large datasets
 def process_all_students(client):
@@ -756,6 +778,7 @@ active_students = (
 ```
 
 ### Caching
+
 ```python
 from toolboxai import ToolBoxAI
 from toolboxai.cache import MemoryCache, RedisCache
@@ -783,6 +806,7 @@ def get_lesson_cached(lesson_id: str) -> Lesson:
 ```
 
 ### Webhooks
+
 ```python
 from flask import Flask, request
 from toolboxai.webhooks import WebhookHandler
@@ -796,14 +820,14 @@ def handle_webhook():
     signature = request.headers.get("X-ToolBoxAI-Signature")
     if not webhook_handler.verify_signature(request.data, signature):
         return "Invalid signature", 401
-    
+
     # Process event
     event = request.json
     if event["type"] == "lesson.created":
         handle_lesson_created(event["data"])
     elif event["type"] == "quiz.submitted":
         handle_quiz_submitted(event["data"])
-    
+
     return "OK", 200
 
 def handle_lesson_created(lesson_data):
@@ -814,6 +838,7 @@ def handle_quiz_submitted(quiz_data):
 ```
 
 ### CLI Tool
+
 ```python
 import click
 from toolboxai import ToolBoxAI
@@ -854,6 +879,7 @@ if __name__ == "__main__":
 ## Examples
 
 ### Complete Application
+
 ```python
 import asyncio
 import pandas as pd
@@ -864,68 +890,68 @@ from toolboxai.models import LessonCreate, QuizCreate
 class EducationPlatform:
     def __init__(self, api_key: str):
         self.client = AsyncToolBoxAI(api_key=api_key)
-    
+
     async def create_weekly_curriculum(
-        self, 
-        grade: int, 
-        subject: str, 
+        self,
+        grade: int,
+        subject: str,
         week_number: int
     ):
         """Create a week's worth of lessons and quizzes."""
         curriculum = []
-        
+
         for day in range(5):  # Monday to Friday
             # Generate lesson
             lesson_prompt = f"""
-            Create a {subject} lesson for grade {grade}, 
+            Create a {subject} lesson for grade {grade},
             week {week_number}, day {day + 1}
             """
-            
+
             lesson = await self.client.ai.generate_lesson(
                 prompt=lesson_prompt,
                 grade_level=grade,
                 duration=45
             )
-            
+
             # Generate quiz
             quiz = await self.client.ai.generate_quiz(
                 lesson_id=lesson.id,
                 question_count=5
             )
-            
+
             # Deploy to Roblox
             environment = await self.client.lessons.deploy_to_roblox(
                 lesson_id=lesson.id
             )
-            
+
             curriculum.append({
                 "day": day + 1,
                 "lesson": lesson,
                 "quiz": quiz,
                 "environment": environment
             })
-        
+
         return curriculum
-    
+
     async def analyze_student_performance(
-        self, 
-        student_id: str, 
+        self,
+        student_id: str,
         days: int = 30
     ):
         """Analyze student performance over time."""
         # Get progress data
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
-        
+
         progress = await self.client.progress.get_analytics(
             user_id=student_id,
             start_date=start_date.isoformat(),
             end_date=end_date.isoformat()
         )
-        
+
         # Convert to DataFrame
         df = pd.DataFrame(progress.daily_metrics)
-        
+
         # Calculate metrics
         metrics = {
             "average_score": df["score"].mean(),
@@ -936,41 +962,41 @@ class EducationPlatform:
             "study_time": df["time_spent"].sum() / 60,  # Convert to hours
             "engagement_score": self._calculate_engagement(df)
         }
-        
+
         # Generate recommendations
         recommendations = await self._generate_recommendations(
-            student_id, 
+            student_id,
             metrics
         )
-        
+
         return {
             "metrics": metrics,
             "recommendations": recommendations,
             "chart_data": df.to_dict("records")
         }
-    
+
     def _calculate_engagement(self, df: pd.DataFrame) -> float:
         """Calculate engagement score based on various factors."""
         login_frequency = len(df) / df["date"].nunique()
         completion_rate = df["completed"].mean()
         interaction_rate = df["interactions"].mean() / df["time_spent"].mean()
-        
+
         engagement = (
-            login_frequency * 0.3 + 
-            completion_rate * 0.4 + 
+            login_frequency * 0.3 +
+            completion_rate * 0.4 +
             interaction_rate * 0.3
         ) * 100
-        
+
         return min(engagement, 100)
-    
+
     async def _generate_recommendations(
-        self, 
-        student_id: str, 
+        self,
+        student_id: str,
         metrics: dict
     ) -> list:
         """Generate personalized recommendations."""
         recommendations = []
-        
+
         if metrics["average_score"] < 70:
             recommendations.append({
                 "type": "remedial",
@@ -979,7 +1005,7 @@ class EducationPlatform:
                     metrics["weak_areas"]
                 )
             })
-        
+
         if metrics["consistency"] > 15:
             recommendations.append({
                 "type": "consistency",
@@ -990,12 +1016,12 @@ class EducationPlatform:
                     "Review material regularly"
                 ]
             })
-        
+
         return recommendations
-    
+
     async def __aenter__(self):
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.client.close()
 
@@ -1008,13 +1034,13 @@ async def main():
             subject="science",
             week_number=1
         )
-        
+
         # Analyze performance
         analysis = await platform.analyze_student_performance(
             student_id="student-123",
             days=30
         )
-        
+
         print(f"Average Score: {analysis['metrics']['average_score']:.1f}%")
         print(f"Best Subject: {analysis['metrics']['best_subject']}")
         print(f"Study Time: {analysis['metrics']['study_time']:.1f} hours")
@@ -1028,6 +1054,7 @@ if __name__ == "__main__":
 ### Common Issues
 
 #### SSL Certificate Errors
+
 ```python
 # Disable SSL verification (not recommended for production)
 client = ToolBoxAI(api_key="your-key", verify_ssl=False)
@@ -1040,6 +1067,7 @@ client = ToolBoxAI(
 ```
 
 #### Proxy Configuration
+
 ```python
 # HTTP proxy
 client = ToolBoxAI(
@@ -1061,16 +1089,17 @@ client = ToolBoxAI(
 ```
 
 #### Memory Issues with Large Datasets
+
 ```python
 # Use generators instead of lists
 def process_large_dataset(client):
     # Bad - loads all into memory
     # all_users = client.users.list(limit=10000)
-    
+
     # Good - processes one at a time
     for user in client.users.iter_all():
         process_user(user)
-        
+
 # Use chunking for batch operations
 from toolboxai.utils import chunk
 
@@ -1080,6 +1109,7 @@ for user_chunk in chunk(users, size=100):
 ```
 
 ### Debug Mode
+
 ```python
 import logging
 
@@ -1092,12 +1122,13 @@ logging.basicConfig(
 client = ToolBoxAI(api_key="your-key", debug=True)
 
 # Log all requests and responses
-client.set_debug_callback(lambda req, resp: 
+client.set_debug_callback(lambda req, resp:
     print(f"Request: {req}\nResponse: {resp}")
 )
 ```
 
 ### Performance Profiling
+
 ```python
 import cProfile
 import pstats
@@ -1107,15 +1138,15 @@ def profile_code():
     """Profile API calls for performance optimization."""
     profiler = cProfile.Profile()
     profiler.enable()
-    
+
     # Code to profile
     client = ToolBoxAI(api_key="your-key")
     lessons = client.lessons.list(limit=100)
     for lesson in lessons:
         client.quizzes.list(lesson_id=lesson.id)
-    
+
     profiler.disable()
-    
+
     # Print stats
     stream = StringIO()
     stats = pstats.Stats(profiler, stream=stream)
@@ -1127,6 +1158,7 @@ def profile_code():
 ## Migration
 
 ### Migrating from v1 to v2
+
 ```python
 # v1 (deprecated)
 from toolboxai import Client
@@ -1144,6 +1176,7 @@ See [Migration Guide](https://github.com/toolboxai/python-sdk/blob/main/MIGRATIO
 ## Testing
 
 ### Unit Testing
+
 ```python
 import unittest
 from unittest.mock import Mock, patch
@@ -1152,16 +1185,16 @@ from toolboxai import ToolBoxAI
 class TestLessonOperations(unittest.TestCase):
     def setUp(self):
         self.client = ToolBoxAI(api_key="test-key")
-    
+
     @patch("toolboxai.lessons.requests.get")
     def test_get_lesson(self, mock_get):
         mock_get.return_value.json.return_value = {
             "id": "lesson-123",
             "title": "Test Lesson"
         }
-        
+
         lesson = self.client.lessons.get("lesson-123")
-        
+
         self.assertEqual(lesson.id, "lesson-123")
         self.assertEqual(lesson.title, "Test Lesson")
         mock_get.assert_called_once()
@@ -1171,6 +1204,7 @@ if __name__ == "__main__":
 ```
 
 ### Integration Testing
+
 ```python
 import pytest
 from toolboxai import ToolBoxAI
@@ -1187,15 +1221,15 @@ def test_full_lesson_lifecycle(client):
         grade_level=5
     )
     assert lesson.id is not None
-    
+
     # Update lesson
     lesson.title = "Updated Test Lesson"
     updated = client.lessons.update(lesson)
     assert updated.title == "Updated Test Lesson"
-    
+
     # Delete lesson
     client.lessons.delete(lesson.id)
-    
+
     # Verify deletion
     with pytest.raises(NotFoundError):
         client.lessons.get(lesson.id)
@@ -1211,7 +1245,7 @@ def test_full_lesson_lifecycle(client):
 
 ---
 
-*SDK Version: 2.0.0 | API Version: v1 | Python: 3.8+ | Last Updated: September 2025*# ToolboxAI Python SDK - Complete Documentation
+_SDK Version: 2.0.0 | API Version: v1 | Python: 3.8+ | Last Updated: September 2025_# ToolboxAI Python SDK - Complete Documentation
 
 ## Installation
 
@@ -1286,15 +1320,15 @@ from toolboxai.exceptions import AuthenticationError
 
 class CustomTokenStorage(TokenStorage):
     """Custom token storage implementation"""
-    
+
     async def save_tokens(self, access_token: str, refresh_token: str):
         # Save to secure storage
         pass
-    
+
     async def load_tokens(self) -> tuple[str, str]:
         # Load from storage
         return access_token, refresh_token
-    
+
     async def clear_tokens(self):
         # Clear stored tokens
         pass
@@ -1309,13 +1343,13 @@ auth = AuthManager(
 try:
     # Email/password login
     user = await auth.login("user@example.com", "password")
-    
+
     # OAuth login
     user = await auth.oauth_login(provider="google", token="oauth-token")
-    
+
     # API key authentication
     auth.set_api_key("your-api-key")
-    
+
 except AuthenticationError as e:
     print(f"Authentication failed: {e}")
 
@@ -1334,7 +1368,7 @@ print(f"Logged in as: {user.name} ({user.role})")
 ```python
 from toolboxai.content import ContentGenerator
 from toolboxai.types import (
-    ContentType, Subject, Difficulty, 
+    ContentType, Subject, Difficulty,
     EnvironmentType, Language
 )
 
@@ -1393,7 +1427,7 @@ contents = await generator.generate_batch([
         "content_type": "lesson"
     },
     {
-        "subject": "Science", 
+        "subject": "Science",
         "grade_level": 5,
         "content_type": "quiz"
     }
@@ -1577,7 +1611,7 @@ for data_point in metrics.data:
 # Custom analytics query
 custom_data = await analytics.query(
     query="""
-    SELECT 
+    SELECT
         subject,
         AVG(score) as avg_score,
         COUNT(*) as total_quizzes
@@ -1613,16 +1647,16 @@ ws = client.websocket
 class MyHandler(MessageHandler):
     async def on_content_update(self, data):
         print(f"Content updated: {data}")
-    
+
     async def on_quiz_result(self, data):
         print(f"Quiz completed: Score {data['score']}")
-    
+
     async def on_progress_update(self, data):
         print(f"Progress: {data['percentage']}%")
-    
+
     async def on_notification(self, data):
         print(f"📢 {data['message']}")
-    
+
     async def on_error(self, error):
         print(f"Error: {error}")
 
@@ -1652,7 +1686,7 @@ await ws.disconnect()
 # Alternative: Context manager
 async with client.websocket.session() as ws:
     await ws.subscribe(["notifications"])
-    
+
     # Listen for 60 seconds
     await asyncio.sleep(60)
 ```
@@ -1821,27 +1855,27 @@ from toolboxai.exceptions import (
 
 try:
     content = await client.content.generate(...)
-    
+
 except AuthenticationError as e:
     print(f"Authentication failed: {e}")
     # Refresh token or re-login
     await client.auth.refresh_token()
-    
+
 except RateLimitError as e:
     print(f"Rate limited. Retry after: {e.retry_after} seconds")
     await asyncio.sleep(e.retry_after)
-    
+
 except ValidationError as e:
     print(f"Invalid request: {e}")
     print(f"Validation errors: {e.errors}")
-    
+
 except NotFoundError as e:
     print(f"Resource not found: {e}")
-    
+
 except ServerError as e:
     print(f"Server error: {e}")
     # Implement exponential backoff
-    
+
 except ToolboxAIError as e:
     print(f"API error: {e}")
 ```
@@ -1852,16 +1886,16 @@ except ToolboxAIError as e:
 # Use as async context manager
 async with ToolboxAI(api_key="your-key") as client:
     await client.auth.login("user@example.com", "password")
-    
+
     content = await client.content.generate(
         subject="Math",
         grade_level=7,
         learning_objectives=["Fractions"]
     )
-    
+
     # WebSocket automatically connects
     await client.websocket.subscribe(["notifications"])
-    
+
 # Automatically disconnects and cleans up
 ```
 
@@ -1888,7 +1922,7 @@ page = await client.quiz.list(
 while page.has_next:
     for quiz in page.items:
         print(quiz.title)
-    
+
     page = await page.next()
 ```
 
@@ -1961,14 +1995,14 @@ def test_data():
 async def test_content_generation(mock_client, test_data):
     # Mock responses
     mock_client.content.generate.return_value = test_data.lesson
-    
+
     # Test your code
     result = await mock_client.content.generate(
         subject="Math",
         grade_level=7,
         learning_objectives=["Test"]
     )
-    
+
     assert result.title == test_data.lesson.title
     mock_client.content.generate.assert_called_once()
 ```
@@ -2000,7 +2034,7 @@ async def generate_content_for_class(
 ) -> List[Content]:
     """Generate content for entire class."""
     contents: List[Content] = []
-    
+
     for topic in ["Lesson 1", "Lesson 2", "Lesson 3"]:
         content: Content = await client.content.generate(
             subject=subject,
@@ -2008,7 +2042,7 @@ async def generate_content_for_class(
             learning_objectives=[topic]
         )
         contents.append(content)
-    
+
     return contents
 
 # Full IDE autocomplete and type checking support
@@ -2024,7 +2058,7 @@ from toolboxai import Client
 client = Client(api_key="key")
 content = client.generate_content(...)
 
-# New (v2.x)  
+# New (v2.x)
 from toolboxai import ToolboxAI
 client = ToolboxAI(api_key="key")
 content = await client.content.generate(...)

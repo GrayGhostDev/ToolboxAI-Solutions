@@ -5,11 +5,13 @@ A comprehensive, reusable backend development foundation designed to be used acr
 ## 🚀 Features
 
 ### Core Foundation
+
 - **Configuration Management**: Environment-based configuration with YAML, JSON, and .env support
 - **Advanced Logging**: Structured logging with Loguru, file rotation, and multiple output formats
 - **Comprehensive Utilities**: Date/time, string manipulation, validation, serialization, and more
 
 ### Optional Components
+
 - **Database Layer**: SQLAlchemy 2.0 with async support for PostgreSQL, SQLite, Redis, and MongoDB
 - **Authentication**: JWT-based auth with bcrypt hashing and role-based access control (RBAC)
 - **API Framework**: FastAPI integration with middleware, rate limiting, and standardized responses
@@ -17,6 +19,7 @@ A comprehensive, reusable backend development foundation designed to be used acr
 ## 📦 Quick Start
 
 ### 1. Initial Setup
+
 ```bash
 # Clone and enter the project
 cd Ghost
@@ -32,6 +35,7 @@ cd Ghost
 ```
 
 ### 2. Start the Backend
+
 ```bash
 # Start complete backend stack
 ./bin/start_backend.sh
@@ -41,6 +45,7 @@ cd Ghost
 ```
 
 ### 3. Stop the Backend
+
 ```bash
 # Stop complete backend stack
 ./bin/stop_backend.sh
@@ -57,7 +62,7 @@ Ghost/
 ├── config/        # Configuration files and templates
 ├── src/ghost/     # Core framework source code
 ├── tools/         # Development and security tools
-├── scripts/       # Database and utility scripts  
+├── scripts/       # Database and utility scripts
 ├── tests/         # Test suite
 ├── docs/          # Documentation
 └── examples/      # Usage examples
@@ -68,21 +73,24 @@ See [docs/DIRECTORY_STRUCTURE.md](docs/DIRECTORY_STRUCTURE.md) for detailed orga
 ## 📦 Installation
 
 ### Basic Installation
+
 ```bash
 pip install -e .
 ```
 
 ### With All Features
+
 ```bash
 pip install -e ".[all]"
 ```
 
 ### Selective Installation
+
 ```bash
 # Web API features
 pip install -e ".[web]"
 
-# Database features  
+# Database features
 pip install -e ".[database]"
 
 # Authentication features
@@ -95,6 +103,7 @@ pip install -e ".[dev]"
 ## 🏗️ Quick Start
 
 ### 1. Basic Configuration
+
 ```python
 from ghost import Config, setup_logging, get_logger
 
@@ -107,6 +116,7 @@ logger.info("Ghost Backend Framework initialized!")
 ```
 
 ### 2. Database Integration
+
 ```python
 from ghost import DatabaseManager, get_db_manager
 
@@ -121,6 +131,7 @@ async with db_manager.get_session() as session:
 ```
 
 ### 3. API Development
+
 ```python
 from ghost import APIManager, get_api_manager
 from fastapi import FastAPI
@@ -138,6 +149,7 @@ if __name__ == "__main__":
 ```
 
 ### 4. Authentication
+
 ```python
 from ghost import AuthManager, User, UserRole
 
@@ -147,7 +159,7 @@ auth_manager = AuthManager(config.auth)
 # Create and authenticate users
 user = User(
     id="user123",
-    username="john_doe", 
+    username="john_doe",
     email="john@example.com",
     roles=[UserRole.USER]
 )
@@ -160,9 +172,11 @@ token = auth_manager.create_token(user)
 ## 🔧 Configuration
 
 ### Environment Variables (.env)
+
 # 📚 Documentation
 
 All project documentation is now located in the `docs/` folder for better organization and maintainability. This includes:
+
 - Architecture Review: [docs/ARCHITECTURE_REVIEW.md](docs/ARCHITECTURE_REVIEW.md)
 - Security Policy: [docs/SECURITY.md](docs/SECURITY.md)
 - Security Status: [docs/SECURITY_STATUS_COMPLETE.md](docs/SECURITY_STATUS_COMPLETE.md)
@@ -172,6 +186,7 @@ All project documentation is now located in the `docs/` folder for better organi
 - Proxy Configuration: [docs/PROXYMAN_FIX.md](docs/PROXYMAN_FIX.md)
 - Security Remediation Report: [docs/SECURITY_REMEDIATION_REPORT.md](docs/SECURITY_REMEDIATION_REPORT.md)
 - Organization Complete: [docs/ORGANIZATION_COMPLETE.md](docs/ORGANIZATION_COMPLETE.md)
+
 ```env
 # Database
 DATABASE_URL=postgresql://user:pass@localhost/dbname
@@ -192,23 +207,24 @@ ANTHROPIC_API_KEY=your-anthropic-key
 ```
 
 ### YAML Configuration (config.yaml)
+
 ```yaml
 database:
-  url: "postgresql://user:pass@localhost/dbname"
+  url: 'postgresql://user:pass@localhost/dbname'
   pool_size: 5
   echo: false
 
 api:
-  title: "My API"
-  version: "1.0.0"
-  cors_origins: ["http://localhost:3000"]
-  rate_limit: "100/minute"
+  title: 'My API'
+  version: '1.0.0'
+  cors_origins: ['http://localhost:3000']
+  rate_limit: '100/minute'
 
 logging:
-  level: "INFO"
-  file: "logs/app.log"
-  rotation: "1 day"
-  retention: "30 days"
+  level: 'INFO'
+  file: 'logs/app.log'
+  rotation: '1 day'
+  retention: '30 days'
 ```
 
 ## macOS setup via MacPorts (PostgreSQL 16)
@@ -220,6 +236,7 @@ logging:
 ## 🧪 Testing
 
 Run the test suite:
+
 ```bash
 # Run all tests
 pytest
@@ -229,13 +246,14 @@ pytest --cov=src/ghost --cov-report=html
 
 # Run specific test categories
 pytest -m "not slow"  # Skip slow tests
-pytest -m "unit"      # Only unit tests  
+pytest -m "unit"      # Only unit tests
 pytest -m "integration"  # Only integration tests
 ```
 
 ## 🔍 Development
 
 ### Setting up Development Environment
+
 ```bash
 # Clone and setup
 git clone <your-repo-url>
@@ -257,9 +275,11 @@ mypy src/         # Type checking
 ```
 
 ### Code Quality
+
 This framework enforces high code quality standards:
+
 - **Black**: Code formatting
-- **isort**: Import sorting  
+- **isort**: Import sorting
 - **flake8**: Linting
 - **mypy**: Type checking
 - **pytest**: Testing with 85% coverage requirement

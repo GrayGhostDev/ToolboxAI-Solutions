@@ -206,7 +206,7 @@ from typing import Optional
 class RateLimitHandler:
     def __init__(self, max_retries: int = 3):
         self.max_retries = max_retries
-    
+
     async def request_with_retry(self, func, *args, **kwargs):
         for attempt in range(self.max_retries):
             try:
@@ -232,38 +232,38 @@ class RateLimitHandler:
 ```javascript
 // Implement reconnection logic
 class ReconnectingWebSocket {
-    constructor(url) {
-        this.url = url;
-        this.reconnectInterval = 5000;
-        this.shouldReconnect = true;
-        this.connect();
+  constructor(url) {
+    this.url = url
+    this.reconnectInterval = 5000
+    this.shouldReconnect = true
+    this.connect()
+  }
+
+  connect() {
+    this.ws = new WebSocket(this.url)
+
+    this.ws.onopen = () => {
+      console.log('WebSocket connected')
+      this.reconnectInterval = 5000
     }
-    
-    connect() {
-        this.ws = new WebSocket(this.url);
-        
-        this.ws.onopen = () => {
-            console.log('WebSocket connected');
-            this.reconnectInterval = 5000;
-        };
-        
-        this.ws.onclose = () => {
-            if (this.shouldReconnect) {
-                console.log(`Reconnecting in ${this.reconnectInterval}ms...`);
-                setTimeout(() => this.connect(), this.reconnectInterval);
-                this.reconnectInterval = Math.min(30000, this.reconnectInterval * 2);
-            }
-        };
-        
-        this.ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
-        };
+
+    this.ws.onclose = () => {
+      if (this.shouldReconnect) {
+        console.log(`Reconnecting in ${this.reconnectInterval}ms...`)
+        setTimeout(() => this.connect(), this.reconnectInterval)
+        this.reconnectInterval = Math.min(30000, this.reconnectInterval * 2)
+      }
     }
-    
-    disconnect() {
-        this.shouldReconnect = false;
-        this.ws.close();
+
+    this.ws.onerror = (error) => {
+      console.error('WebSocket error:', error)
     }
+  }
+
+  disconnect() {
+    this.shouldReconnect = false
+    this.ws.close()
+  }
 }
 ```
 
@@ -272,12 +272,14 @@ class ReconnectingWebSocket {
 #### Plugin Can't Connect to Server
 
 **Solution 1:** Enable HTTP requests in Roblox Studio
+
 ```lua
 -- In Roblox Studio:
 -- File > Game Settings > Security > Allow HTTP Requests = ON
 ```
 
 **Solution 2:** Check Flask bridge is running
+
 ```bash
 python server/roblox_server.py
 
@@ -286,6 +288,7 @@ python server/roblox_server.py --host 127.0.0.1 --port 5001
 ```
 
 **Solution 3:** Fix Lua script errors
+
 ```lua
 -- Test connection from Roblox console
 local HttpService = game:GetService("HttpService")
@@ -358,10 +361,10 @@ async def add_process_time_header(request: Request, call_next):
     response = await call_next(request)
     process_time = time.perf_counter() - start_time
     response.headers["X-Process-Time"] = str(process_time)
-    
+
     if process_time > 1.0:  # Log slow requests
         logger.warning(f"Slow request: {request.url.path} took {process_time:.2f}s")
-    
+
     return response
 ```
 
@@ -467,7 +470,7 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -480,22 +483,22 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
           cache: 'pip'
-      
+
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov
-      
+
       - name: Run tests
         env:
           DATABASE_URL: postgresql://postgres:test@localhost:5432/test
@@ -594,21 +597,21 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     pkill -f "uvicorn"
     pkill -f "python"
     docker-compose down -v
-    
+
     # Clean everything
     rm -rf venv_clean node_modules __pycache__ .pytest_cache
     rm -rf logs/*.log
-    
+
     # Rebuild
     python3.11 -m venv venv_clean
     source venv_clean/bin/activate
     pip install -r requirements.txt
     npm install
-    
+
     # Reset database
     alembic upgrade head
     python scripts/seed_db.py
-    
+
     echo "Reset complete!"
 fi
 ```
@@ -629,7 +632,7 @@ async def check_service_health():
         ("Flask Bridge", "http://localhost:5001/health"),
         ("Dashboard", "http://localhost:3000"),
     ]
-    
+
     results = []
     async with httpx.AsyncClient() as client:
         for name, url in services:
@@ -638,9 +641,9 @@ async def check_service_health():
                 status = "✓" if response.status_code == 200 else "✗"
             except:
                 status = "✗"
-            
+
             results.append(f"{name}: {status}")
-    
+
     print(f"[{datetime.now()}] Health Check")
     for result in results:
         print(f"  {result}")

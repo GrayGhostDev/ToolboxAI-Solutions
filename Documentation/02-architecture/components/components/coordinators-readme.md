@@ -33,7 +33,7 @@ from coordinators import initialize_coordinators, generate_educational_content
 async def main():
     # Initialize coordinator system
     system = await initialize_coordinators()
-    
+
     # Generate educational content
     result = await generate_educational_content(
         subject="Mathematics",
@@ -42,10 +42,10 @@ async def main():
         environment_type="interactive_classroom",
         include_quiz=True
     )
-    
+
     print(f"Content generated: {result.success}")
     print(f"Scripts: {len(result.scripts)}")
-    
+
     # Shutdown
     await system.shutdown()
 
@@ -61,13 +61,13 @@ from coordinators import coordinator_context
 async def generate_content():
     async with coordinator_context() as system:
         main_coordinator = system.get_main_coordinator()
-        
+
         result = await main_coordinator.generate_educational_content(
             subject="Science",
             grade_level=6,
             learning_objectives=["Solar System", "Planets"]
         )
-        
+
         return result
 ```
 
@@ -252,7 +252,7 @@ resource:
 
 error:
   enable_notifications: true
-  alert_email: "admin@example.com"
+  alert_email: 'admin@example.com'
 ```
 
 ## 🎓 Educational Workflows
@@ -311,26 +311,31 @@ await sync_coordinator.publish_event(
 Each coordinator exposes REST API endpoints:
 
 ### Main Coordinator (port 8008)
+
 - `POST /generate_content` - Generate educational content
 - `GET /health` - System health check
 - `GET /metrics` - System metrics
 
 ### Workflow Coordinator
+
 - `POST /workflows` - Create workflow
 - `GET /workflows/{id}` - Get workflow status
 - `POST /workflows/{id}/cancel` - Cancel workflow
 
 ### Resource Coordinator
+
 - `POST /allocate` - Allocate resources
 - `GET /quota/{service}` - Check API quota
 - `GET /status` - Resource status
 
 ### Sync Coordinator
+
 - `POST /register` - Register component
 - `POST /state/{component_id}` - Update state
 - `WebSocket /ws` - Real-time sync
 
 ### Error Coordinator
+
 - `POST /errors` - Report error
 - `GET /errors` - List errors
 - `GET /summary` - Error summary
@@ -429,12 +434,14 @@ error_coordinator.recovery_strategies['custom'] = RecoveryStrategy(
 ### Common Issues
 
 1. **"Coordinator system not initialized"**
+
    ```python
    # Ensure you call initialize_coordinators() first
    system = await initialize_coordinators()
    ```
 
 2. **"Resource allocation failed"**
+
    ```python
    # Check system resources
    status = await resource_coordinator.get_resource_status()
@@ -501,21 +508,25 @@ error_coordinator.recovery_strategies['my_strategy'] = RecoveryStrategy(
 ## 🎯 Educational Use Cases
 
 ### Classroom Management
+
 - Real-time lesson synchronization
 - Student progress tracking
 - Adaptive content delivery
 
 ### Course Creation
+
 - Multi-lesson course generation
 - Assessment integration
 - Learning outcome tracking
 
 ### Collaborative Learning
+
 - Multi-user environment synchronization
 - Shared workspace management
 - Real-time collaboration events
 
 ### Performance Analytics
+
 - Learning outcome measurement
 - Content effectiveness analysis
 - Student engagement metrics
@@ -530,5 +541,5 @@ error_coordinator.recovery_strategies['my_strategy'] = RecoveryStrategy(
 
 ---
 
-*ToolboxAI Coordinator System v1.0.0*  
-*Comprehensive orchestration for educational AI systems*
+_ToolboxAI Coordinator System v1.0.0_  
+_Comprehensive orchestration for educational AI systems_

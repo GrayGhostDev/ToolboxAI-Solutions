@@ -3,7 +3,9 @@
 ## Templates to Create
 
 ### 1. DragDropActivityTemplate.lua
+
 **TODO: Implement drag and drop mechanics**
+
 ```lua
 -- TODO: Create drag and drop system
 -- - Object selection detection
@@ -17,7 +19,9 @@
 ```
 
 ### 2. MatchingGameTemplate.lua
+
 **TODO: Implement matching game mechanics**
+
 ```lua
 -- TODO: Create matching game system
 -- - Card flip animations
@@ -31,7 +35,9 @@
 ```
 
 ### 3. PuzzleSolvingTemplate.lua
+
 **TODO: Implement puzzle mechanics**
+
 ```lua
 -- TODO: Create puzzle solving system
 -- - Jigsaw puzzle mechanics
@@ -45,7 +51,9 @@
 ```
 
 ### 4. BuildingConstructionTemplate.lua
+
 **TODO: Implement building/construction mechanics**
+
 ```lua
 -- TODO: Create building system
 -- - Block placement
@@ -59,7 +67,9 @@
 ```
 
 ### 5. CollectionGatheringTemplate.lua
+
 **TODO: Implement collection mechanics**
+
 ```lua
 -- TODO: Create collection system
 -- - Item spawning
@@ -73,7 +83,9 @@
 ```
 
 ### 6. RacingCompetitionTemplate.lua
+
 **TODO: Implement racing/competition mechanics**
+
 ```lua
 -- TODO: Create racing system
 -- - Character/vehicle movement
@@ -87,7 +99,9 @@
 ```
 
 ### 7. SimulationTemplate.lua
+
 **TODO: Implement simulation mechanics**
+
 ```lua
 -- TODO: Create simulation system
 -- - Physics simulations
@@ -101,7 +115,9 @@
 ```
 
 ### 8. CollaborativeActivityTemplate.lua
+
 **TODO: Implement collaborative mechanics**
+
 ```lua
 -- TODO: Create collaboration system
 -- - Multi-player synchronization
@@ -117,7 +133,9 @@
 ## Core Mechanics Modules
 
 ### InteractionSystem.lua
+
 **TODO: Create interaction handling**
+
 ```lua
 -- TODO: Implement interaction system
 -- - Click/tap detection
@@ -130,7 +148,9 @@
 ```
 
 ### InventorySystem.lua
+
 **TODO: Create inventory management**
+
 ```lua
 -- TODO: Implement inventory system
 -- - Item storage
@@ -144,7 +164,9 @@
 ```
 
 ### ScoringSystem.lua
+
 **TODO: Create scoring mechanics**
+
 ```lua
 -- TODO: Implement scoring system
 -- - Point calculation
@@ -158,7 +180,9 @@
 ```
 
 ### PhysicsController.lua
+
 **TODO: Create physics handling**
+
 ```lua
 -- TODO: Implement physics control
 -- - Gravity manipulation
@@ -171,7 +195,9 @@
 ```
 
 ### AIBehaviorSystem.lua
+
 **TODO: Create AI behavior templates**
+
 ```lua
 -- TODO: Implement AI behaviors
 -- - Pathfinding
@@ -184,7 +210,9 @@
 ```
 
 ### MultiplayerSync.lua
+
 **TODO: Create multiplayer synchronization**
+
 ```lua
 -- TODO: Implement multiplayer sync
 -- - State synchronization
@@ -199,7 +227,9 @@
 ## Educational Mechanics
 
 ### AssessmentMechanics.lua
+
 **TODO: Create assessment-specific mechanics**
+
 ```lua
 -- TODO: Implement assessment tools
 -- - Question randomization
@@ -212,7 +242,9 @@
 ```
 
 ### GamificationMechanics.lua
+
 **TODO: Create gamification elements**
+
 ```lua
 -- TODO: Implement gamification
 -- - XP system
@@ -226,6 +258,7 @@
 ```
 
 ## Implementation Priority
+
 1. DragDropActivityTemplate (High - Versatile mechanic)
 2. MatchingGameTemplate (High - Common educational game)
 3. CollaborativeActivityTemplate (High - Multi-player focus)

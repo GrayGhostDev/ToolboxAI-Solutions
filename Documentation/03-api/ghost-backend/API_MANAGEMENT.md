@@ -4,20 +4,26 @@ This directory contains scripts for managing the Ghost Backend API with exclusiv
 
 ## Available Scripts
 
-### `./run_api.sh` 
+### `./run_api.sh`
+
 **Main API Server (Default: Port 8000)**
+
 - Automatically cleans up any processes using ports 8000/8001 before starting
 - Loads secure credentials from macOS Keychain
 - Runs on port 8000 by default (configurable via API_PORT environment variable)
 - Includes graceful shutdown handling
 
 ### `./run_api_8001.sh`
+
 **Alternate Port Server (Port 8001)**
+
 - Same as main script but forces port 8001
 - Useful for running multiple instances or testing
 
 ### `./stop_api.sh`
+
 **Clean Shutdown**
+
 - Gracefully stops all Ghost Backend API instances
 - Attempts SIGTERM first, then SIGKILL if needed
 - Frees up both ports 8000 and 8001
@@ -28,7 +34,7 @@ This directory contains scripts for managing the Ghost Backend API with exclusiv
 # Start the API on default port (8000)
 ./run_api.sh
 
-# Start the API on port 8001 
+# Start the API on port 8001
 ./run_api_8001.sh
 
 # Stop all running APIs
@@ -41,6 +47,7 @@ API_PORT=8000 ./run_api.sh
 ## Port Management
 
 The scripts ensure **exclusive access** to ports 8000 and 8001 by:
+
 1. Checking for existing processes on these ports
 2. Cleanly terminating any conflicting processes
 3. Waiting for ports to be fully available
@@ -57,12 +64,14 @@ The scripts ensure **exclusive access** to ports 8000 and 8001 by:
 ## API Endpoints
 
 Once running, the API will be available at:
+
 - **Main**: http://localhost:8000
 - **Health Check**: http://localhost:8000/
 - **Interactive Docs**: http://localhost:8000/docs
 - **OpenAPI Schema**: http://localhost:8000/openapi.json
 
 The API includes:
+
 - JWT-based authentication
 - Rate limiting
 - CORS configuration

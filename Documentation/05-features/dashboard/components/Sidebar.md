@@ -1,17 +1,20 @@
 # Sidebar
 
 ## Component Information
+
 - **Category**: layout
 - **Type**: functional
 - **File**: `src/dashboard/src/components/layout/Sidebar.tsx`
 
 ## Hooks Used
+
 - `useLocation`
 - `useAppSelector`
 
 ## State Management
 
 ## Key Dependencies
+
 - `@mui/icons-material/AccountCircle`
 - `@mui/icons-material/Assessment`
 - `@mui/icons-material/Assignment`

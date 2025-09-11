@@ -61,101 +61,105 @@ Unit tests should follow the Arrange-Act-Assert (AAA) pattern:
 
 ```typescript
 // src/utils/score-calculator.ts
-export function calculateFinalScore(quizScores: number[], weightedAssignments: [number, number][]): number {
+export function calculateFinalScore(
+  quizScores: number[],
+  weightedAssignments: [number, number][]
+): number {
   if (quizScores.length === 0 && weightedAssignments.length === 0) {
-    throw new Error('No scores provided');
+    throw new Error('No scores provided')
   }
 
-  let totalScore = 0;
-  let totalWeight = 0;
+  let totalScore = 0
+  let totalWeight = 0
 
   // Calculate quiz average (all quizzes have equal weight)
   if (quizScores.length > 0) {
-    const quizAverage = quizScores.reduce((sum, score) => sum + score, 0) / quizScores.length;
-    totalScore += quizAverage * 0.4; // Quizzes are 40% of final score
-    totalWeight += 0.4;
+    const quizAverage = quizScores.reduce((sum, score) => sum + score, 0) / quizScores.length
+    totalScore += quizAverage * 0.4 // Quizzes are 40% of final score
+    totalWeight += 0.4
   }
 
   // Calculate weighted assignment score
   if (weightedAssignments.length > 0) {
-    let assignmentScore = 0;
-    let assignmentWeight = 0;
+    let assignmentScore = 0
+    let assignmentWeight = 0
 
     for (const [score, weight] of weightedAssignments) {
-      assignmentScore += score * weight;
-      assignmentWeight += weight;
+      assignmentScore += score * weight
+      assignmentWeight += weight
     }
 
     if (assignmentWeight > 0) {
-      totalScore += (assignmentScore / assignmentWeight) * 0.6; // Assignments are 60% of final score
-      totalWeight += 0.6;
+      totalScore += (assignmentScore / assignmentWeight) * 0.6 // Assignments are 60% of final score
+      totalWeight += 0.6
     }
   }
 
   // Normalize based on actual weights used
-  return totalWeight > 0 ? totalScore / totalWeight : 0;
+  return totalWeight > 0 ? totalScore / totalWeight : 0
 }
 
 // tests/unit/utils/score-calculator.test.ts
-import { calculateFinalScore } from '../../../src/utils/score-calculator';
+import { calculateFinalScore } from '../../../src/utils/score-calculator'
 
 describe('calculateFinalScore', () => {
   test('should calculate score with both quizzes and assignments', () => {
     // Arrange
-    const quizScores = [85, 90, 95];
+    const quizScores = [85, 90, 95]
     const weightedAssignments: [number, number][] = [
       [80, 1], // [score, weight]
-      [90, 2]
-    ];
+      [90, 2],
+    ]
 
     // Act
-    const finalScore = calculateFinalScore(quizScores, weightedAssignments);
+    const finalScore = calculateFinalScore(quizScores, weightedAssignments)
 
     // Assert
-    expect(finalScore).toBeCloseTo(88.33, 2);
-  });
+    expect(finalScore).toBeCloseTo(88.33, 2)
+  })
 
   test('should calculate score with only quizzes', () => {
     // Arrange
-    const quizScores = [85, 90, 95];
-    const weightedAssignments: [number, number][] = [];
+    const quizScores = [85, 90, 95]
+    const weightedAssignments: [number, number][] = []
 
     // Act
-    const finalScore = calculateFinalScore(quizScores, weightedAssignments);
+    const finalScore = calculateFinalScore(quizScores, weightedAssignments)
 
     // Assert
-    expect(finalScore).toBeCloseTo(90, 2);
-  });
+    expect(finalScore).toBeCloseTo(90, 2)
+  })
 
   test('should calculate score with only assignments', () => {
     // Arrange
-    const quizScores: number[] = [];
+    const quizScores: number[] = []
     const weightedAssignments: [number, number][] = [
       [80, 1],
-      [90, 2]
-    ];
+      [90, 2],
+    ]
 
     // Act
-    const finalScore = calculateFinalScore(quizScores, weightedAssignments);
+    const finalScore = calculateFinalScore(quizScores, weightedAssignments)
 
     // Assert
-    expect(finalScore).toBeCloseTo(86.67, 2);
-  });
+    expect(finalScore).toBeCloseTo(86.67, 2)
+  })
 
   test('should throw error when no scores are provided', () => {
     // Arrange
-    const quizScores: number[] = [];
-    const weightedAssignments: [number, number][] = [];
+    const quizScores: number[] = []
+    const weightedAssignments: [number, number][] = []
 
     // Act & Assert
     expect(() => {
-      calculateFinalScore(quizScores, weightedAssignments);
-    }).toThrow('No scores provided');
-  });
-});
+      calculateFinalScore(quizScores, weightedAssignments)
+    }).toThrow('No scores provided')
+  })
+})
 ```
 
 ... (full document continues with all sections as provided in your request) ...
+
 # Testing Guidelines
 
 This document outlines the testing strategy and practices for the Educational Platform project. Following these guidelines ensures consistent, comprehensive testing across all components of the system.
@@ -219,98 +223,101 @@ Unit tests should follow the Arrange-Act-Assert (AAA) pattern:
 
 ```typescript
 // src/utils/score-calculator.ts
-export function calculateFinalScore(quizScores: number[], weightedAssignments: [number, number][]): number {
+export function calculateFinalScore(
+  quizScores: number[],
+  weightedAssignments: [number, number][]
+): number {
   if (quizScores.length === 0 && weightedAssignments.length === 0) {
-    throw new Error('No scores provided');
+    throw new Error('No scores provided')
   }
 
-  let totalScore = 0;
-  let totalWeight = 0;
+  let totalScore = 0
+  let totalWeight = 0
 
   // Calculate quiz average (all quizzes have equal weight)
   if (quizScores.length > 0) {
-    const quizAverage = quizScores.reduce((sum, score) => sum + score, 0) / quizScores.length;
-    totalScore += quizAverage * 0.4; // Quizzes are 40% of final score
-    totalWeight += 0.4;
+    const quizAverage = quizScores.reduce((sum, score) => sum + score, 0) / quizScores.length
+    totalScore += quizAverage * 0.4 // Quizzes are 40% of final score
+    totalWeight += 0.4
   }
 
   // Calculate weighted assignment score
   if (weightedAssignments.length > 0) {
-    let assignmentScore = 0;
-    let assignmentWeight = 0;
+    let assignmentScore = 0
+    let assignmentWeight = 0
 
     for (const [score, weight] of weightedAssignments) {
-      assignmentScore += score * weight;
-      assignmentWeight += weight;
+      assignmentScore += score * weight
+      assignmentWeight += weight
     }
 
     if (assignmentWeight > 0) {
-      totalScore += (assignmentScore / assignmentWeight) * 0.6; // Assignments are 60% of final score
-      totalWeight += 0.6;
+      totalScore += (assignmentScore / assignmentWeight) * 0.6 // Assignments are 60% of final score
+      totalWeight += 0.6
     }
   }
 
   // Normalize based on actual weights used
-  return totalWeight > 0 ? totalScore / totalWeight : 0;
+  return totalWeight > 0 ? totalScore / totalWeight : 0
 }
 
 // tests/unit/utils/score-calculator.test.ts
-import { calculateFinalScore } from '../../../src/utils/score-calculator';
+import { calculateFinalScore } from '../../../src/utils/score-calculator'
 
 describe('calculateFinalScore', () => {
   test('should calculate score with both quizzes and assignments', () => {
     // Arrange
-    const quizScores = [85, 90, 95];
+    const quizScores = [85, 90, 95]
     const weightedAssignments: [number, number][] = [
       [80, 1], // [score, weight]
-      [90, 2]
-    ];
+      [90, 2],
+    ]
 
     // Act
-    const finalScore = calculateFinalScore(quizScores, weightedAssignments);
+    const finalScore = calculateFinalScore(quizScores, weightedAssignments)
 
     // Assert
-    expect(finalScore).toBeCloseTo(88.33, 2);
-  });
+    expect(finalScore).toBeCloseTo(88.33, 2)
+  })
 
   test('should calculate score with only quizzes', () => {
     // Arrange
-    const quizScores = [85, 90, 95];
-    const weightedAssignments: [number, number][] = [];
+    const quizScores = [85, 90, 95]
+    const weightedAssignments: [number, number][] = []
 
     // Act
-    const finalScore = calculateFinalScore(quizScores, weightedAssignments);
+    const finalScore = calculateFinalScore(quizScores, weightedAssignments)
 
     // Assert
-    expect(finalScore).toBeCloseTo(90, 2);
-  });
+    expect(finalScore).toBeCloseTo(90, 2)
+  })
 
   test('should calculate score with only assignments', () => {
     // Arrange
-    const quizScores: number[] = [];
+    const quizScores: number[] = []
     const weightedAssignments: [number, number][] = [
       [80, 1],
-      [90, 2]
-    ];
+      [90, 2],
+    ]
 
     // Act
-    const finalScore = calculateFinalScore(quizScores, weightedAssignments);
+    const finalScore = calculateFinalScore(quizScores, weightedAssignments)
 
     // Assert
-    expect(finalScore).toBeCloseTo(86.67, 2);
-  });
+    expect(finalScore).toBeCloseTo(86.67, 2)
+  })
 
   test('should throw error when no scores are provided', () => {
     // Arrange
-    const quizScores: number[] = [];
-    const weightedAssignments: [number, number][] = [];
+    const quizScores: number[] = []
+    const weightedAssignments: [number, number][] = []
 
     // Act & Assert
     expect(() => {
-      calculateFinalScore(quizScores, weightedAssignments);
-    }).toThrow('No scores provided');
-  });
-});
+      calculateFinalScore(quizScores, weightedAssignments)
+    }).toThrow('No scores provided')
+  })
+})
 ```
 
 ### Unit Testing Guidelines
@@ -327,40 +334,40 @@ Use mocks to isolate the unit being tested:
 
 ```typescript
 // Example with mocking (Jest)
-import { CourseService } from '../../../src/services/course-service';
-import { CourseRepository } from '../../../src/repositories/course-repository';
+import { CourseService } from '../../../src/services/course-service'
+import { CourseRepository } from '../../../src/repositories/course-repository'
 
 // Mock the repository
-jest.mock('../../../src/repositories/course-repository');
-const MockedCourseRepository = CourseRepository as jest.MockedClass<typeof CourseRepository>;
+jest.mock('../../../src/repositories/course-repository')
+const MockedCourseRepository = CourseRepository as jest.MockedClass<typeof CourseRepository>
 
 describe('CourseService', () => {
   beforeEach(() => {
-    MockedCourseRepository.mockClear();
-  });
+    MockedCourseRepository.mockClear()
+  })
 
   test('should return active courses only when specified', async () => {
     // Arrange
     const mockCourses = [
       { id: '1', title: 'Course 1', status: 'active' },
       { id: '2', title: 'Course 2', status: 'draft' },
-      { id: '3', title: 'Course 3', status: 'active' }
-    ];
+      { id: '3', title: 'Course 3', status: 'active' },
+    ]
 
-    MockedCourseRepository.prototype.getAllCourses.mockResolvedValue(mockCourses);
+    MockedCourseRepository.prototype.getAllCourses.mockResolvedValue(mockCourses)
 
-    const courseService = new CourseService(new MockedCourseRepository());
+    const courseService = new CourseService(new MockedCourseRepository())
 
     // Act
-    const activeCourses = await courseService.getActiveCourses();
+    const activeCourses = await courseService.getActiveCourses()
 
     // Assert
-    expect(activeCourses).toHaveLength(2);
-    expect(activeCourses[0].id).toBe('1');
-    expect(activeCourses[1].id).toBe('3');
-    expect(MockedCourseRepository.prototype.getAllCourses).toHaveBeenCalledTimes(1);
-  });
-});
+    expect(activeCourses).toHaveLength(2)
+    expect(activeCourses[0].id).toBe('1')
+    expect(activeCourses[1].id).toBe('3')
+    expect(MockedCourseRepository.prototype.getAllCourses).toHaveBeenCalledTimes(1)
+  })
+})
 ```
 
 ## Integration Testing
@@ -388,38 +395,38 @@ Integration tests should:
 
 ```typescript
 // tests/integration/api/courses.test.ts
-import request from 'supertest';
-import { app } from '../../../src/app';
-import { setupTestDatabase, clearTestDatabase } from '../../utils/test-db';
+import request from 'supertest'
+import { app } from '../../../src/app'
+import { setupTestDatabase, clearTestDatabase } from '../../utils/test-db'
 
 describe('Courses API', () => {
   beforeAll(async () => {
-    await setupTestDatabase();
-  });
+    await setupTestDatabase()
+  })
 
   afterAll(async () => {
-    await clearTestDatabase();
-  });
+    await clearTestDatabase()
+  })
 
   test('GET /api/courses should return list of courses', async () => {
     // Act
     const response = await request(app)
       .get('/api/courses')
-      .set('Authorization', `Bearer ${testUserToken}`);
+      .set('Authorization', `Bearer ${testUserToken}`)
 
     // Assert
-    expect(response.status).toBe(200);
-    expect(response.body.success).toBe(true);
-    expect(Array.isArray(response.body.data)).toBe(true);
-    expect(response.body.data.length).toBeGreaterThan(0);
+    expect(response.status).toBe(200)
+    expect(response.body.success).toBe(true)
+    expect(Array.isArray(response.body.data)).toBe(true)
+    expect(response.body.data.length).toBeGreaterThan(0)
 
     // Verify the structure of returned course objects
-    const course = response.body.data[0];
-    expect(course).toHaveProperty('id');
-    expect(course).toHaveProperty('title');
-    expect(course).toHaveProperty('description');
-    expect(course).toHaveProperty('status');
-  });
+    const course = response.body.data[0]
+    expect(course).toHaveProperty('id')
+    expect(course).toHaveProperty('title')
+    expect(course).toHaveProperty('description')
+    expect(course).toHaveProperty('status')
+  })
 
   test('POST /api/courses should create a new course', async () => {
     // Arrange
@@ -427,100 +434,100 @@ describe('Courses API', () => {
       title: 'Test Integration Course',
       description: 'Course created during integration testing',
       category: 'technology',
-      difficulty: 'beginner'
-    };
+      difficulty: 'beginner',
+    }
 
     // Act
     const response = await request(app)
       .post('/api/courses')
       .set('Authorization', `Bearer ${adminUserToken}`)
-      .send(newCourse);
+      .send(newCourse)
 
     // Assert
-    expect(response.status).toBe(201);
-    expect(response.body.success).toBe(true);
-    expect(response.body.data).toHaveProperty('id');
-    expect(response.body.data.title).toBe(newCourse.title);
+    expect(response.status).toBe(201)
+    expect(response.body.success).toBe(true)
+    expect(response.body.data).toHaveProperty('id')
+    expect(response.body.data.title).toBe(newCourse.title)
 
     // Verify course was actually created in the database
     const getCourseResponse = await request(app)
       .get(`/api/courses/${response.body.data.id}`)
-      .set('Authorization', `Bearer ${testUserToken}`);
+      .set('Authorization', `Bearer ${testUserToken}`)
 
-    expect(getCourseResponse.status).toBe(200);
-    expect(getCourseResponse.body.data.title).toBe(newCourse.title);
-  });
-});
+    expect(getCourseResponse.status).toBe(200)
+    expect(getCourseResponse.body.data.title).toBe(newCourse.title)
+  })
+})
 ```
 
 ### Example (Database Integration)
 
 ```typescript
 // tests/integration/repositories/user-repository.test.ts
-import { UserRepository } from '../../../src/repositories/user-repository';
-import { connectToTestDatabase, disconnectFromTestDatabase } from '../../utils/test-db';
+import { UserRepository } from '../../../src/repositories/user-repository'
+import { connectToTestDatabase, disconnectFromTestDatabase } from '../../utils/test-db'
 
 describe('UserRepository', () => {
-  let db;
-  let userRepository: UserRepository;
+  let db
+  let userRepository: UserRepository
 
   beforeAll(async () => {
-    db = await connectToTestDatabase();
-    userRepository = new UserRepository(db);
-  });
+    db = await connectToTestDatabase()
+    userRepository = new UserRepository(db)
+  })
 
   afterAll(async () => {
-    await disconnectFromTestDatabase(db);
-  });
+    await disconnectFromTestDatabase(db)
+  })
 
   test('should create and retrieve a user', async () => {
     // Arrange
     const userData = {
       username: 'testuser',
       email: 'test@example.com',
-      displayName: 'Test User'
-    };
+      displayName: 'Test User',
+    }
 
     // Act - Create user
-    const createdUser = await userRepository.createUser(userData);
+    const createdUser = await userRepository.createUser(userData)
 
     // Assert user was created
-    expect(createdUser).toHaveProperty('id');
-    expect(createdUser.username).toBe(userData.username);
-    expect(createdUser.email).toBe(userData.email);
+    expect(createdUser).toHaveProperty('id')
+    expect(createdUser.username).toBe(userData.username)
+    expect(createdUser.email).toBe(userData.email)
 
     // Act - Retrieve user
-    const retrievedUser = await userRepository.getUserById(createdUser.id);
+    const retrievedUser = await userRepository.getUserById(createdUser.id)
 
     // Assert user was retrieved correctly
-    expect(retrievedUser).not.toBeNull();
-    expect(retrievedUser?.id).toBe(createdUser.id);
-    expect(retrievedUser?.username).toBe(userData.username);
-  });
+    expect(retrievedUser).not.toBeNull()
+    expect(retrievedUser?.id).toBe(createdUser.id)
+    expect(retrievedUser?.username).toBe(userData.username)
+  })
 
   test('should update user information', async () => {
     // Arrange - Create a user first
     const userData = {
       username: 'updatetestuser',
       email: 'updatetest@example.com',
-      displayName: 'Update Test User'
-    };
-    const user = await userRepository.createUser(userData);
+      displayName: 'Update Test User',
+    }
+    const user = await userRepository.createUser(userData)
 
     // Act - Update the user
     const updatedUser = await userRepository.updateUser(user.id, {
-      displayName: 'Updated Name'
-    });
+      displayName: 'Updated Name',
+    })
 
     // Assert
-    expect(updatedUser.displayName).toBe('Updated Name');
-    expect(updatedUser.email).toBe(userData.email); // Unchanged field
+    expect(updatedUser.displayName).toBe('Updated Name')
+    expect(updatedUser.email).toBe(userData.email) // Unchanged field
 
     // Verify the update persisted
-    const retrievedUser = await userRepository.getUserById(user.id);
-    expect(retrievedUser?.displayName).toBe('Updated Name');
-  });
-});
+    const retrievedUser = await userRepository.getUserById(user.id)
+    expect(retrievedUser?.displayName).toBe('Updated Name')
+  })
+})
 ```
 
 ### Integration Testing Guidelines
@@ -555,51 +562,55 @@ E2E tests should:
 
 ```typescript
 // tests/e2e/course-enrollment.spec.ts
-import { test, expect } from '@playwright/test';
-import { loginAsStudent } from '../utils/test-auth';
+import { test, expect } from '@playwright/test'
+import { loginAsStudent } from '../utils/test-auth'
 
 test.describe('Course Enrollment Flow', () => {
   test('Student can browse, enroll in, and access a course', async ({ page }) => {
     // Login as a student
-    await loginAsStudent(page);
+    await loginAsStudent(page)
 
     // Navigate to course catalog
-    await page.click('text=Browse Courses');
-    await expect(page).toHaveURL(/.*\/courses/);
+    await page.click('text=Browse Courses')
+    await expect(page).toHaveURL(/.*\/courses/)
 
     // Find and select a specific course
-    await page.fill('[data-testid="course-search"]', 'Introduction to Programming');
-    await page.click('[data-testid="search-button"]');
+    await page.fill('[data-testid="course-search"]', 'Introduction to Programming')
+    await page.click('[data-testid="search-button"]')
 
     // Wait for search results and click on the course
-    await page.waitForSelector('[data-testid="course-card"]');
-    await page.click('[data-testid="course-card"]:has-text("Introduction to Programming")');
+    await page.waitForSelector('[data-testid="course-card"]')
+    await page.click('[data-testid="course-card"]:has-text("Introduction to Programming")')
 
     // Verify course details page loaded
-    await expect(page).toHaveURL(/.*\/courses\/[\w-]+/);
-    await expect(page.locator('h1')).toContainText('Introduction to Programming');
+    await expect(page).toHaveURL(/.*\/courses\/[\w-]+/)
+    await expect(page.locator('h1')).toContainText('Introduction to Programming')
 
     // Enroll in the course
-    await page.click('[data-testid="enroll-button"]');
+    await page.click('[data-testid="enroll-button"]')
 
     // Verify enrollment confirmation
-    await expect(page.locator('[data-testid="enrollment-confirmation"]')).toBeVisible();
-    await expect(page.locator('[data-testid="enrollment-confirmation"]')).toContainText('Successfully enrolled');
+    await expect(page.locator('[data-testid="enrollment-confirmation"]')).toBeVisible()
+    await expect(page.locator('[data-testid="enrollment-confirmation"]')).toContainText(
+      'Successfully enrolled'
+    )
 
     // Navigate to my courses
-    await page.click('text=My Courses');
+    await page.click('text=My Courses')
 
     // Verify the course appears in enrolled courses
-    await expect(page.locator('[data-testid="enrolled-course-list"]')).toContainText('Introduction to Programming');
+    await expect(page.locator('[data-testid="enrolled-course-list"]')).toContainText(
+      'Introduction to Programming'
+    )
 
     // Access the course content
-    await page.click('[data-testid="course-card"]:has-text("Introduction to Programming")');
+    await page.click('[data-testid="course-card"]:has-text("Introduction to Programming")')
 
     // Verify course content is accessible
-    await expect(page.locator('[data-testid="lesson-list"]')).toBeVisible();
-    await expect(page.locator('[data-testid="course-progress"]')).toBeVisible();
-  });
-});
+    await expect(page.locator('[data-testid="lesson-list"]')).toBeVisible()
+    await expect(page.locator('[data-testid="course-progress"]')).toBeVisible()
+  })
+})
 ```
 
 ### Example (Roblox UI E2E Test)
@@ -720,49 +731,51 @@ Performance tests evaluate the system's response time, throughput, and resource 
 
 ```javascript
 // tests/performance/api-load.js
-import http from 'k6/http';
-import { check, sleep } from 'k6';
+import http from 'k6/http'
+import { check, sleep } from 'k6'
 
 export const options = {
   stages: [
-    { duration: '1m', target: 50 },  // Ramp up to 50 users over 1 minute
-    { duration: '3m', target: 50 },  // Stay at 50 users for 3 minutes
-    { duration: '1m', target: 0 },   // Ramp down to 0 users over 1 minute
+    { duration: '1m', target: 50 }, // Ramp up to 50 users over 1 minute
+    { duration: '3m', target: 50 }, // Stay at 50 users for 3 minutes
+    { duration: '1m', target: 0 }, // Ramp down to 0 users over 1 minute
   ],
   thresholds: {
     http_req_duration: ['p95<500'], // 95% of requests must complete within 500ms
-    http_req_failed: ['rate<0.01'],  // Less than 1% of requests can fail
+    http_req_failed: ['rate<0.01'], // Less than 1% of requests can fail
   },
-};
+}
 
 // Test scenario
-export default function() {
+export default function () {
   // Get courses (most common operation)
-  const coursesResponse = http.get('https://api-test.educational-platform.example.com/api/courses');
+  const coursesResponse = http.get('https://api-test.educational-platform.example.com/api/courses')
   check(coursesResponse, {
     'courses status is 200': (r) => r.status === 200,
     'courses response time < 200ms': (r) => r.timings.duration < 200,
-  });
+  })
 
   // Get single course details (common operation)
-  const courseId = 'course-123'; // Test course ID
-  const courseResponse = http.get(`https://api-test.educational-platform.example.com/api/courses/${courseId}`);
+  const courseId = 'course-123' // Test course ID
+  const courseResponse = http.get(
+    `https://api-test.educational-platform.example.com/api/courses/${courseId}`
+  )
   check(courseResponse, {
     'course details status is 200': (r) => r.status === 200,
     'course details response time < 150ms': (r) => r.timings.duration < 150,
-  });
+  })
 
   // Search functionality (resource-intensive operation)
   const searchResponse = http.get(
     'https://api-test.educational-platform.example.com/api/courses/search?q=programming'
-  );
+  )
   check(searchResponse, {
     'search status is 200': (r) => r.status === 200,
     'search response time < 300ms': (r) => r.timings.duration < 300,
-  });
+  })
 
   // Pause between iterations
-  sleep(1);
+  sleep(1)
 }
 ```
 
@@ -794,55 +807,55 @@ Accessibility tests verify that the system is usable by people with diverse abil
 
 ```typescript
 // tests/accessibility/pages.test.ts
-import { test, expect } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
+import { test, expect } from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
 
 test.describe('Accessibility Tests', () => {
   test('Home page should not have accessibility violations', async ({ page }) => {
     // Navigate to home page
-    await page.goto('/');
+    await page.goto('/')
 
     // Run axe accessibility tests
-    const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
+    const accessibilityScanResults = await new AxeBuilder({ page }).analyze()
 
     // Assert no violations
-    expect(accessibilityScanResults.violations).toEqual([]);
-  });
+    expect(accessibilityScanResults.violations).toEqual([])
+  })
 
   test('Course page should not have accessibility violations', async ({ page }) => {
     // Login first (courses require authentication)
-    await loginAsStudent(page);
+    await loginAsStudent(page)
 
     // Navigate to a course page
-    await page.goto('/courses/introduction-to-programming');
+    await page.goto('/courses/introduction-to-programming')
 
     // Run axe accessibility tests
-    const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
+    const accessibilityScanResults = await new AxeBuilder({ page }).analyze()
 
     // Assert no violations
-    expect(accessibilityScanResults.violations).toEqual([]);
-  });
+    expect(accessibilityScanResults.violations).toEqual([])
+  })
 
   test('Quiz interface should not have accessibility violations', async ({ page }) => {
     // Login and navigate to a quiz
-    await loginAsStudent(page);
-    await page.goto('/courses/introduction-to-programming/quizzes/1');
+    await loginAsStudent(page)
+    await page.goto('/courses/introduction-to-programming/quizzes/1')
 
     // Run axe accessibility tests
-    const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
+    const accessibilityScanResults = await new AxeBuilder({ page }).analyze()
 
     // Assert no violations
-    expect(accessibilityScanResults.violations).toEqual([]);
+    expect(accessibilityScanResults.violations).toEqual([])
 
     // Additional test for keyboard navigation
-    await page.keyboard.press('Tab');
-    const firstOption = page.locator('[data-testid="quiz-option"]:first-child');
-    await expect(firstOption).toBeFocused();
+    await page.keyboard.press('Tab')
+    const firstOption = page.locator('[data-testid="quiz-option"]:first-child')
+    await expect(firstOption).toBeFocused()
 
-    await page.keyboard.press('Space');
-    await expect(firstOption).toHaveAttribute('aria-checked', 'true');
-  });
-});
+    await page.keyboard.press('Space')
+    await expect(firstOption).toHaveAttribute('aria-checked', 'true')
+  })
+})
 ```
 
 ### Accessibility Testing Guidelines
@@ -876,88 +889,87 @@ Security tests identify vulnerabilities and ensure the system protects sensitive
 
 ```typescript
 // tests/security/api-authorization.test.ts
-import request from 'supertest';
-import { app } from '../../src/app';
+import request from 'supertest'
+import { app } from '../../src/app'
 import {
   getStudentToken,
   getEducatorToken,
   getAdminToken,
-  getExpiredToken
-} from '../utils/test-tokens';
+  getExpiredToken,
+} from '../utils/test-tokens'
 
 describe('API Authorization Tests', () => {
   test('Unauthenticated requests should be rejected', async () => {
     // Try to access protected endpoint without token
-    const response = await request(app)
-      .get('/api/courses/manage');
+    const response = await request(app).get('/api/courses/manage')
 
     // Should be rejected
-    expect(response.status).toBe(401);
-  });
+    expect(response.status).toBe(401)
+  })
 
   test('Expired tokens should be rejected', async () => {
     // Try to access with expired token
-    const expiredToken = getExpiredToken();
+    const expiredToken = getExpiredToken()
     const response = await request(app)
       .get('/api/courses')
-      .set('Authorization', `Bearer ${expiredToken}`);
+      .set('Authorization', `Bearer ${expiredToken}`)
 
     // Should be rejected
-    expect(response.status).toBe(401);
-  });
+    expect(response.status).toBe(401)
+  })
 
   test('Students should not access educator endpoints', async () => {
     // Get student token
-    const studentToken = getStudentToken();
+    const studentToken = getStudentToken()
 
     // Try to access educator endpoint
     const response = await request(app)
       .get('/api/courses/manage')
-      .set('Authorization', `Bearer ${studentToken}`);
+      .set('Authorization', `Bearer ${studentToken}`)
 
     // Should be forbidden
-    expect(response.status).toBe(403);
-  });
+    expect(response.status).toBe(403)
+  })
 
   test('Educators should access their own courses but not others', async () => {
     // Get educator token
-    const educatorToken = getEducatorToken('educator1');
+    const educatorToken = getEducatorToken('educator1')
 
     // Access own course
     const ownCourseResponse = await request(app)
       .get('/api/courses/course-123/manage')
-      .set('Authorization', `Bearer ${educatorToken}`);
+      .set('Authorization', `Bearer ${educatorToken}`)
 
     // Should be allowed
-    expect(ownCourseResponse.status).toBe(200);
+    expect(ownCourseResponse.status).toBe(200)
 
     // Try to access another educator's course
     const otherCourseResponse = await request(app)
       .get('/api/courses/course-456/manage')
-      .set('Authorization', `Bearer ${educatorToken}`);
+      .set('Authorization', `Bearer ${educatorToken}`)
 
     // Should be forbidden
-    expect(otherCourseResponse.status).toBe(403);
-  });
+    expect(otherCourseResponse.status).toBe(403)
+  })
 
   test('Admin should access all endpoints', async () => {
     // Get admin token
-    const adminToken = getAdminToken();
+    const adminToken = getAdminToken()
 
     // Access various endpoints
     const responses = await Promise.all([
       request(app).get('/api/courses').set('Authorization', `Bearer ${adminToken}`),
       request(app).get('/api/courses/manage').set('Authorization', `Bearer ${adminToken}`),
       request(app).get('/api/users').set('Authorization', `Bearer ${adminToken}`),
-      request(app).get('/api/analytics').set('Authorization', `Bearer ${adminToken}`)
-    ]);
+      request(app).get('/api/analytics').set('Authorization', `Bearer ${adminToken}`),
+    ])
 
     // All should be allowed
-    responses.forEach(response => {
-      expect(response.status).toBe(200);
-    });
-  });
-});
+    responses.forEach((response) => {
+      expect(response.status).toBe(200)
+    })
+  })
+})
 ```
 
 ### Security Testing Guidelines
@@ -998,9 +1010,9 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   lint:
@@ -1131,8 +1143,8 @@ jobs:
 
 ```typescript
 // tests/utils/factories/user-factory.ts
-import { faker } from '@faker-js/faker';
-import { User, UserRole } from '../../../src/types';
+import { faker } from '@faker-js/faker'
+import { User, UserRole } from '../../../src/types'
 
 export class UserFactory {
   static createStudent(overrides: Partial<User> = {}): User {
@@ -1149,11 +1161,11 @@ export class UserFactory {
         textSize: 1,
         notifications: {
           email: true,
-          inApp: true
-        }
+          inApp: true,
+        },
       },
-      ...overrides
-    };
+      ...overrides,
+    }
   }
 
   static createEducator(overrides: Partial<User> = {}): User {
@@ -1166,20 +1178,17 @@ export class UserFactory {
       createdAt: faker.date.past(),
       lastLogin: faker.date.recent(),
       biography: faker.lorem.paragraph(),
-      credentials: [
-        faker.person.jobTitle(),
-        `PhD in ${faker.person.jobArea()}`
-      ],
+      credentials: [faker.person.jobTitle(), `PhD in ${faker.person.jobArea()}`],
       settings: {
         darkMode: faker.datatype.boolean(),
         textSize: 1,
         notifications: {
           email: true,
-          inApp: true
-        }
+          inApp: true,
+        },
       },
-      ...overrides
-    };
+      ...overrides,
+    }
   }
 
   static createAdmin(overrides: Partial<User> = {}): User {
@@ -1196,11 +1205,11 @@ export class UserFactory {
         textSize: 1,
         notifications: {
           email: true,
-          inApp: true
-        }
+          inApp: true,
+        },
       },
-      ...overrides
-    };
+      ...overrides,
+    }
   }
 }
 ```
@@ -1209,9 +1218,9 @@ export class UserFactory {
 
 ```typescript
 // tests/utils/test-db.ts
-import { Client } from 'pg';
-import { UserFactory } from './factories/user-factory';
-import { CourseFactory } from './factories/course-factory';
+import { Client } from 'pg'
+import { UserFactory } from './factories/user-factory'
+import { CourseFactory } from './factories/course-factory'
 
 export async function setupTestDatabase() {
   const client = new Client({
@@ -1219,40 +1228,65 @@ export async function setupTestDatabase() {
     port: parseInt(process.env.TEST_DB_PORT || '5432'),
     database: process.env.TEST_DB_NAME || 'test_db',
     user: process.env.TEST_DB_USER || 'postgres',
-    password: process.env.TEST_DB_PASSWORD || 'postgres'
-  });
+    password: process.env.TEST_DB_PASSWORD || 'postgres',
+  })
 
-  await client.connect();
+  await client.connect()
 
   // Clean database
-  await client.query('TRUNCATE users, courses, lessons, quizzes CASCADE');
+  await client.query('TRUNCATE users, courses, lessons, quizzes CASCADE')
 
   // Create test users
-  const student = UserFactory.createStudent({ id: 'test-student-1' });
-  const educator = UserFactory.createEducator({ id: 'test-educator-1' });
-  const admin = UserFactory.createAdmin({ id: 'test-admin-1' });
+  const student = UserFactory.createStudent({ id: 'test-student-1' })
+  const educator = UserFactory.createEducator({ id: 'test-educator-1' })
+  const admin = UserFactory.createAdmin({ id: 'test-admin-1' })
 
   await client.query(
     'INSERT INTO users(id, username, email, display_name, role, created_at, last_login, settings) VALUES($1, $2, $3, $4, $5, $6, $7, $8)',
-    [student.id, student.username, student.email, student.displayName, student.role, student.createdAt, student.lastLogin, JSON.stringify(student.settings)]
-  );
+    [
+      student.id,
+      student.username,
+      student.email,
+      student.displayName,
+      student.role,
+      student.createdAt,
+      student.lastLogin,
+      JSON.stringify(student.settings),
+    ]
+  )
 
   // Create test courses
   const courses = [
-    CourseFactory.create({ id: 'test-course-1', educatorId: educator.id, title: 'Introduction to Programming' }),
-    CourseFactory.create({ id: 'test-course-2', educatorId: educator.id, title: 'Advanced Mathematics' })
-  ];
+    CourseFactory.create({
+      id: 'test-course-1',
+      educatorId: educator.id,
+      title: 'Introduction to Programming',
+    }),
+    CourseFactory.create({
+      id: 'test-course-2',
+      educatorId: educator.id,
+      title: 'Advanced Mathematics',
+    }),
+  ]
 
   for (const course of courses) {
     await client.query(
       'INSERT INTO courses(id, title, description, educator_id, status, created_at, updated_at) VALUES($1, $2, $3, $4, $5, $6, $7)',
-      [course.id, course.title, course.description, course.educatorId, course.status, course.createdAt, course.updatedAt]
-    );
+      [
+        course.id,
+        course.title,
+        course.description,
+        course.educatorId,
+        course.status,
+        course.createdAt,
+        course.updatedAt,
+      ]
+    )
   }
 
   // Additional seeding as needed
 
-  await client.end();
+  await client.end()
 }
 
 export async function clearTestDatabase() {
@@ -1261,12 +1295,12 @@ export async function clearTestDatabase() {
     port: parseInt(process.env.TEST_DB_PORT || '5432'),
     database: process.env.TEST_DB_NAME || 'test_db',
     user: process.env.TEST_DB_USER || 'postgres',
-    password: process.env.TEST_DB_PASSWORD || 'postgres'
-  });
+    password: process.env.TEST_DB_PASSWORD || 'postgres',
+  })
 
-  await client.connect();
-  await client.query('TRUNCATE users, courses, lessons, quizzes CASCADE');
-  await client.end();
+  await client.connect()
+  await client.query('TRUNCATE users, courses, lessons, quizzes CASCADE')
+  await client.end()
 }
 ```
 

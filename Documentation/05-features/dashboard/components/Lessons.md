@@ -1,11 +1,13 @@
 # Lessons
 
 ## Component Information
+
 - **Category**: pages
 - **Type**: functional
 - **File**: `src/dashboard/src/components/pages/Lessons.tsx`
 
 ## Hooks Used
+
 - `useAppDispatch`
 - `useState`
 - `useCallback`
@@ -13,9 +15,11 @@
 - `useEvent`
 
 ## State Management
+
 - Local component state
 
 ## Key Dependencies
+
 - `@mui/icons-material/Add`
 - `@mui/icons-material/ContentCopy`
 - `@mui/icons-material/Delete`

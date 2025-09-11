@@ -3,7 +3,9 @@
 ## Templates to Create
 
 ### 1. ClassroomTerrain.lua
+
 **TODO: Implement classroom environment terrain**
+
 ```lua
 -- TODO: Create indoor classroom space
 -- - Floor with tile texture
@@ -14,7 +16,9 @@
 ```
 
 ### 2. OutdoorLearningTerrain.lua
+
 **TODO: Implement outdoor learning environment**
+
 ```lua
 -- TODO: Create outdoor educational space
 -- - Grass terrain base
@@ -25,7 +29,9 @@
 ```
 
 ### 3. ScienceLabTerrain.lua
+
 **TODO: Implement science laboratory environment**
+
 ```lua
 -- TODO: Create science lab terrain
 -- - Lab floor with appropriate material
@@ -36,7 +42,9 @@
 ```
 
 ### 4. HistoricalTerrain.lua
+
 **TODO: Implement historical period environments**
+
 ```lua
 -- TODO: Create historical setting templates
 -- - Ancient civilization terrains
@@ -47,7 +55,9 @@
 ```
 
 ### 5. GeographyTerrain.lua
+
 **TODO: Implement geographical education terrains**
+
 ```lua
 -- TODO: Create geography learning environments
 -- - Mountain formations
@@ -58,7 +68,9 @@
 ```
 
 ### 6. SpaceTerrain.lua
+
 **TODO: Implement space/astronomy environment**
+
 ```lua
 -- TODO: Create space environment
 -- - Zero gravity simulation areas
@@ -69,7 +81,9 @@
 ```
 
 ### 7. OceanTerrain.lua
+
 **TODO: Implement underwater environment**
+
 ```lua
 -- TODO: Create ocean environment
 -- - Ocean floor terrain
@@ -80,7 +94,9 @@
 ```
 
 ### 8. MathVisualizationTerrain.lua
+
 **TODO: Implement mathematical visualization space**
+
 ```lua
 -- TODO: Create math visualization environment
 -- - Grid-based floors
@@ -93,7 +109,9 @@
 ## Shared Components
 
 ### TerrainGenerator.lua
+
 **TODO: Create base terrain generation module**
+
 ```lua
 -- TODO: Implement terrain generation utilities
 -- - Procedural generation functions
@@ -104,7 +122,9 @@
 ```
 
 ### TerrainConfig.lua
+
 **TODO: Create terrain configuration module**
+
 ```lua
 -- TODO: Implement configuration system
 -- - Terrain size parameters
@@ -115,6 +135,7 @@
 ```
 
 ## Implementation Priority
+
 1. ClassroomTerrain (High - Core functionality)
 2. OutdoorLearningTerrain (High - Common use case)
 3. ScienceLabTerrain (Medium - Subject specific)

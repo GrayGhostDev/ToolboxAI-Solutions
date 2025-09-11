@@ -5,9 +5,10 @@
 **Your codebase had EXPOSED API KEYS that have been secured!**
 
 The following files have been updated to use secure keychain-based credential management:
+
 - `.env` → `.env.secure` (secure template)
 - `config.production.yaml` (environment variable references)
-- `run_api.sh` (keychain integration) 
+- `run_api.sh` (keychain integration)
 - `docker-compose.yml` (environment variable references)
 - `tools/start_multi_backend.py` (keychain loader)
 - `scripts/complete_setup.py` (secure templates)
@@ -22,7 +23,7 @@ The following files have been updated to use secure keychain-based credential ma
 
 # This will prompt you to enter your API keys securely:
 # - Anthropic API Key (sk-ant-...)
-# - OpenAI API Key (sk-...)  
+# - OpenAI API Key (sk-...)
 # - GitHub PAT (ghp_...)
 # - Brave API Key
 # - SendGrid API Key
@@ -86,7 +87,7 @@ source <(./scripts/secrets/keychain.sh export)
 ### ⚠️ CRITICAL - Next Steps Required
 
 1. **Revoke Exposed Keys**: The following API keys were found exposed and should be revoked:
-   - Anthropic API Key: `sk-ant-admin01-nRD0KZkk...` 
+   - Anthropic API Key: `sk-ant-admin01-nRD0KZkk...`
    - GitHub PAT: `ghp_qYDj7StKxZrqQ6YyK...`
    - Brave API Key: `BSAQRnhgYzC94_lX5bxwG...`
 
@@ -98,7 +99,7 @@ source <(./scripts/secrets/keychain.sh export)
 
 ```
 📁 Your Project/
-├── .env.secure              ← Secure template (use this pattern)  
+├── .env.secure              ← Secure template (use this pattern)
 ├── .env.docker.template     ← Docker environment template
 ├── .env.runtime             ← Generated runtime loader (git ignored)
 ├── config.production.yaml   ← Updated with ${ENV_VAR} references
@@ -130,7 +131,7 @@ If you have an existing `.env` file with credentials:
 # Generate runtime environment
 ./scripts/secrets/keychain.sh runtime-env
 
-# Load credentials and start containers  
+# Load credentials and start containers
 source .env.runtime
 docker-compose up
 ```
@@ -158,13 +159,14 @@ grep -r "sk-" . --exclude-dir=.git --exclude="*.md" || echo "✅ No exposed secr
 
 # Test credential loading
 source .env.runtime
-echo "JWT_SECRET loaded: ${JWT_SECRET:0:10}..." 
+echo "JWT_SECRET loaded: ${JWT_SECRET:0:10}..."
 echo "API_KEY loaded: ${API_KEY:0:10}..."
 ```
 
 ## 🆘 Troubleshooting
 
 ### Keychain Access Denied
+
 ```bash
 # If macOS denies keychain access, you may need to:
 # 1. Open Keychain Access app
@@ -173,6 +175,7 @@ echo "API_KEY loaded: ${API_KEY:0:10}..."
 ```
 
 ### Environment Not Loading
+
 ```bash
 # Check if runtime environment exists
 ls -la .env.runtime
@@ -185,6 +188,7 @@ ls -la .env.runtime
 ```
 
 ### Docker Environment Issues
+
 ```bash
 # Make sure you source the environment before docker-compose
 source .env.runtime
@@ -194,6 +198,7 @@ docker-compose config  # Verify environment substitution
 ## 📞 Support
 
 If you encounter issues:
+
 1. Check the logs in `logs/` directory
 2. Verify keychain entries with `./scripts/secrets/keychain.sh list`
 3. Test credential loading with `source .env.runtime`

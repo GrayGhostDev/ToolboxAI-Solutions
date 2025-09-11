@@ -101,22 +101,22 @@ ws_messages = Counter(
 async def metrics_middleware(request: Request, call_next):
     start_time = time.time()
     active_requests.inc()
-    
+
     try:
         response = await call_next(request)
         duration = time.time() - start_time
-        
+
         request_count.labels(
             method=request.method,
             endpoint=request.url.path,
             status=response.status_code
         ).inc()
-        
+
         request_duration.labels(
             method=request.method,
             endpoint=request.url.path
         ).observe(duration)
-        
+
         return response
     finally:
         active_requests.dec()
@@ -183,21 +183,21 @@ spec:
       labels:
         app: node-exporter
       annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "9100"
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9100'
     spec:
       containers:
-      - name: node-exporter
-        image: prom/node-exporter:latest
-        ports:
-        - containerPort: 9100
-        resources:
-          requests:
-            memory: 30Mi
-            cpu: 100m
-          limits:
-            memory: 50Mi
-            cpu: 200m
+        - name: node-exporter
+          image: prom/node-exporter:latest
+          ports:
+            - containerPort: 9100
+          resources:
+            requests:
+              memory: 30Mi
+              cpu: 100m
+            limits:
+              memory: 50Mi
+              cpu: 200m
 ```
 
 #### Database Metrics
@@ -219,20 +219,20 @@ spec:
       labels:
         app: postgres-exporter
       annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "9187"
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9187'
     spec:
       containers:
-      - name: postgres-exporter
-        image: wrouesnel/postgres_exporter:latest
-        env:
-        - name: DATA_SOURCE_NAME
-          valueFrom:
-            secretKeyRef:
-              name: postgres-credentials
-              key: connection-string
-        ports:
-        - containerPort: 9187
+        - name: postgres-exporter
+          image: wrouesnel/postgres_exporter:latest
+          env:
+            - name: DATA_SOURCE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: connection-string
+          ports:
+            - containerPort: 9187
 ```
 
 ## Logging
@@ -254,7 +254,7 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
         log_record['module'] = record.module
         log_record['function'] = record.funcName
         log_record['line'] = record.lineno
-        
+
         # Add request context if available
         if hasattr(record, 'request_id'):
             log_record['request_id'] = record.request_id
@@ -267,7 +267,7 @@ def setup_logging():
     # Configure root logger
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-    
+
     # Console handler with JSON formatting
     console_handler = logging.StreamHandler()
     formatter = CustomJsonFormatter(
@@ -275,7 +275,7 @@ def setup_logging():
     )
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
-    
+
     # File handler for persistent logs
     file_handler = logging.handlers.RotatingFileHandler(
         'logs/app.log',
@@ -284,7 +284,7 @@ def setup_logging():
     )
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
-    
+
     return logger
 
 # Usage
@@ -406,42 +406,42 @@ def setup_tracing(app):
     # Configure tracer
     trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
-    
+
     # Configure Jaeger exporter
     jaeger_exporter = JaegerExporter(
         agent_host_name="jaeger",
         agent_port=6831,
     )
-    
+
     # Add span processor
     span_processor = BatchSpanProcessor(jaeger_exporter)
     trace.get_tracer_provider().add_span_processor(span_processor)
-    
+
     # Instrument libraries
     FastAPIInstrumentor.instrument_app(app)
     SQLAlchemyInstrumentor().instrument(engine=engine)
     RedisInstrumentor().instrument()
     HTTPXClientInstrumentor().instrument()
-    
+
     return tracer
 
 # Custom span creation
 @app.post("/generate_content")
 async def generate_content(request: ContentRequest):
     tracer = trace.get_tracer(__name__)
-    
+
     with tracer.start_as_current_span("generate_content") as span:
         span.set_attribute("content.type", request.content_type)
         span.set_attribute("content.subject", request.subject)
-        
+
         # AI generation with nested span
         with tracer.start_as_current_span("ai_generation"):
             content = await generate_with_ai(request)
-        
+
         # Database save with nested span
         with tracer.start_as_current_span("database_save"):
             await save_to_database(content)
-        
+
         return content
 ```
 
@@ -572,53 +572,53 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "High error rate detected"
-          description: "Error rate is {{ $value }} errors per second"
-      
+          summary: 'High error rate detected'
+          description: 'Error rate is {{ $value }} errors per second'
+
       - alert: HighResponseTime
         expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
         for: 10m
         labels:
           severity: warning
         annotations:
-          summary: "High response time"
-          description: "95th percentile response time is {{ $value }} seconds"
-      
+          summary: 'High response time'
+          description: '95th percentile response time is {{ $value }} seconds'
+
       - alert: DatabaseConnectionPoolExhausted
         expr: database_connections_active / database_connections_max > 0.9
         for: 5m
         labels:
           severity: critical
         annotations:
-          summary: "Database connection pool nearly exhausted"
-          description: "{{ $value }}% of connections in use"
-      
+          summary: 'Database connection pool nearly exhausted'
+          description: '{{ $value }}% of connections in use'
+
       - alert: HighMemoryUsage
         expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
         for: 10m
         labels:
           severity: warning
         annotations:
-          summary: "High memory usage"
-          description: "Memory usage is {{ $value }}%"
-      
+          summary: 'High memory usage'
+          description: 'Memory usage is {{ $value }}%'
+
       - alert: DiskSpaceLow
         expr: node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} < 0.1
         for: 5m
         labels:
           severity: critical
         annotations:
-          summary: "Low disk space"
-          description: "Only {{ $value }}% disk space remaining"
-      
+          summary: 'Low disk space'
+          description: 'Only {{ $value }}% disk space remaining'
+
       - alert: ServiceDown
         expr: up == 0
         for: 2m
         labels:
           severity: critical
         annotations:
-          summary: "Service is down"
-          description: "{{ $labels.job }} is down"
+          summary: 'Service is down'
+          description: '{{ $labels.job }} is down'
 ```
 
 ### AlertManager Configuration
@@ -651,11 +651,11 @@ receivers:
   - name: 'default'
     email_configs:
       - to: 'ops-team@toolboxai.com'
-        
+
   - name: 'pagerduty'
     pagerduty_configs:
       - service_key: 'YOUR_PAGERDUTY_SERVICE_KEY'
-        
+
   - name: 'slack'
     slack_configs:
       - api_url: 'YOUR_SLACK_WEBHOOK_URL'
@@ -694,7 +694,7 @@ async def detailed_health_check() -> Dict[str, Any]:
         "timestamp": datetime.utcnow().isoformat(),
         "components": {}
     }
-    
+
     # Check database
     try:
         async with database.get_session() as session:
@@ -703,7 +703,7 @@ async def detailed_health_check() -> Dict[str, Any]:
     except Exception as e:
         health_status["components"]["database"] = f"unhealthy: {str(e)}"
         health_status["status"] = "degraded"
-    
+
     # Check Redis
     try:
         redis = await aioredis.create_redis_pool(settings.REDIS_URL)
@@ -713,7 +713,7 @@ async def detailed_health_check() -> Dict[str, Any]:
     except Exception as e:
         health_status["components"]["redis"] = f"unhealthy: {str(e)}"
         health_status["status"] = "degraded"
-    
+
     # Check external APIs
     try:
         async with httpx.AsyncClient() as client:
@@ -730,7 +730,7 @@ async def detailed_health_check() -> Dict[str, Any]:
     except Exception as e:
         health_status["components"]["openai"] = f"unhealthy: {str(e)}"
         health_status["status"] = "degraded"
-    
+
     return health_status
 
 @router.get("/ready")
@@ -751,31 +751,31 @@ async def readiness_check() -> Dict[str, str]:
 # deployment.yaml
 spec:
   containers:
-  - name: api
-    livenessProbe:
-      httpGet:
-        path: /health
-        port: 8008
-      initialDelaySeconds: 30
-      periodSeconds: 10
-      timeoutSeconds: 5
-      failureThreshold: 3
-    readinessProbe:
-      httpGet:
-        path: /ready
-        port: 8008
-      initialDelaySeconds: 5
-      periodSeconds: 5
-      timeoutSeconds: 3
-      failureThreshold: 3
-    startupProbe:
-      httpGet:
-        path: /health
-        port: 8008
-      initialDelaySeconds: 0
-      periodSeconds: 10
-      timeoutSeconds: 5
-      failureThreshold: 30
+    - name: api
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 8008
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 3
+      readinessProbe:
+        httpGet:
+          path: /ready
+          port: 8008
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        timeoutSeconds: 3
+        failureThreshold: 3
+      startupProbe:
+        httpGet:
+          path: /health
+          port: 8008
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 30
 ```
 
 ## Performance Monitoring
@@ -794,30 +794,30 @@ def setup_apm(app):
         'ENVIRONMENT': settings.ENVIRONMENT,
         'SECRET_TOKEN': settings.APM_SECRET_TOKEN
     })
-    
+
     app.add_middleware(ElasticAPM, client=apm_client)
-    
+
     return apm_client
 
 # Custom transaction tracking
 @app.post("/complex_operation")
 async def complex_operation():
     apm_client = elasticapm.get_client()
-    
+
     # Start transaction
     apm_client.begin_transaction('custom')
-    
+
     try:
         # Track custom spans
         with apm_client.capture_span('database_query'):
             result = await database.query()
-        
+
         with apm_client.capture_span('ai_processing'):
             processed = await ai_service.process(result)
-        
+
         with apm_client.capture_span('cache_update'):
             await cache.set(key, processed)
-        
+
         apm_client.end_transaction('complex_operation', 'success')
         return processed
     except Exception as e:
@@ -835,34 +835,34 @@ baselines:
       p50: 10ms
       p95: 50ms
       p99: 100ms
-    
+
     - endpoint: /api/auth/login
       p50: 100ms
       p95: 500ms
       p99: 1000ms
-    
+
     - endpoint: /api/content/generate
       p50: 2000ms
       p95: 5000ms
       p99: 10000ms
-  
+
   database_queries:
     - query: user_by_id
       p50: 5ms
       p95: 20ms
       p99: 50ms
-    
+
     - query: content_list
       p50: 50ms
       p95: 200ms
       p99: 500ms
-  
+
   agent_tasks:
     - agent: content_agent
       p50: 1000ms
       p95: 3000ms
       p99: 5000ms
-    
+
     - agent: quiz_agent
       p50: 500ms
       p95: 1500ms
@@ -990,31 +990,38 @@ retention_policies:
 
 ```markdown
 # Service: [Service Name]
+
 ## Alert: [Alert Name]
 
 ### Description
+
 Brief description of what this alert means
 
 ### Impact
+
 - User impact
 - Business impact
 - Technical impact
 
 ### Detection
+
 - How is this issue detected?
 - What metrics/logs to check?
 
 ### Mitigation
+
 1. Immediate steps to mitigate
 2. How to verify mitigation worked
 3. Rollback procedures if needed
 
 ### Root Cause Analysis
+
 - Common causes
 - Where to look for root cause
 - Historical incidents
 
 ### Prevention
+
 - How to prevent recurrence
 - Long-term fixes needed
 ```
@@ -1022,6 +1029,7 @@ Brief description of what this alert means
 ## Monitoring Checklist
 
 ### Pre-Production
+
 - [ ] All endpoints have metrics
 - [ ] Health checks implemented
 - [ ] Logging configured with proper levels
@@ -1030,6 +1038,7 @@ Brief description of what this alert means
 - [ ] Performance baselines established
 
 ### Production
+
 - [ ] 24/7 monitoring enabled
 - [ ] Alert escalation configured
 - [ ] Log retention policies applied

@@ -1,11 +1,13 @@
 # Messages
 
 ## Component Information
+
 - **Category**: pages
 - **Type**: functional
 - **File**: `src/dashboard/src/components/pages/Messages.tsx`
 
 ## Hooks Used
+
 - `useAppDispatch`
 - `useAppSelector`
 - `useState`
@@ -13,9 +15,11 @@
 - `useMemo`
 
 ## State Management
+
 - Local component state
 
 ## Key Dependencies
+
 - `@mui/icons-material/Archive`
 - `@mui/icons-material/AttachFile`
 - `@mui/icons-material/CheckCircle`

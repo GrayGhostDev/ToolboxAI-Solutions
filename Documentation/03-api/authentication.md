@@ -5,32 +5,40 @@ All ToolboxAI-Solutions API endpoints require authentication using an API key or
 ## Authentication Methods
 
 ### 1. API Key
+
 Obtain your API key from the admin dashboard. Include it in the `x-api-key` header:
+
 ```http
 GET /api/users
 x-api-key: YOUR_API_KEY
 ```
 
 ### 2. Bearer Token (OAuth2)
+
 Authenticate using OAuth2 and include the token in the `Authorization` header:
+
 ```http
 GET /api/data
 Authorization: Bearer YOUR_ACCESS_TOKEN
 ```
 
 ## Example Request
+
 ```http
 GET /api/users/123
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
 ```
 
 ## Token Expiry
+
 Tokens expire after a set period. Refresh tokens as needed using the `/api/auth/refresh` endpoint.
 
 ## Error Codes
+
 - `401 Unauthorized`: Invalid or missing token/key
 - `403 Forbidden`: Insufficient permissions
-\n\n---\n
+  \n\n---\n
+
 # Authentication Guide
 
 ## Overview
@@ -41,14 +49,14 @@ The ToolBoxAI Educational Platform uses JWT (JSON Web Token) based authenticatio
 
 The following test users are available in the development and staging environments:
 
-| Username | Password | Role | Email | Description |
-|----------|----------|------|-------|-------------|
-| `john_teacher` | `Teacher123!` | Teacher | john.smith@school.edu | Primary teacher account with full class management |
-| `testuser` | `password123` | Teacher | test@example.com | Basic test teacher account |
-| `alice_student` | `Student123!` | Student | alice@test.edu | Student account for testing |
-| `charlie_student` | `Student123!` | Student | charlie@test.edu | Another student account |
-| `admin_user` | `Admin123!` | Admin | admin@school.edu | Administrator with full system access |
-| `parent_user` | `Parent123!` | Parent | parent@test.edu | Parent account for monitoring |
+| Username          | Password      | Role    | Email                 | Description                                        |
+| ----------------- | ------------- | ------- | --------------------- | -------------------------------------------------- |
+| `john_teacher`    | `Teacher123!` | Teacher | john.smith@school.edu | Primary teacher account with full class management |
+| `testuser`        | `password123` | Teacher | test@example.com      | Basic test teacher account                         |
+| `alice_student`   | `Student123!` | Student | alice@test.edu        | Student account for testing                        |
+| `charlie_student` | `Student123!` | Student | charlie@test.edu      | Another student account                            |
+| `admin_user`      | `Admin123!`   | Admin   | admin@school.edu      | Administrator with full system access              |
+| `parent_user`     | `Parent123!`  | Parent  | parent@test.edu       | Parent account for monitoring                      |
 
 **Note:** The password hash for `testuser` is: `$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/8KzKz2K`
 
@@ -69,6 +77,7 @@ Content-Type: application/json
 ```
 
 **Successful Response:**
+
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -103,13 +112,13 @@ curl -X GET http://localhost:8008/dashboard/teacher \
 
 ### Authentication Endpoints
 
-| Endpoint | Method | Description | Authentication Required |
-|----------|--------|-------------|------------------------|
-| `/auth/login` | POST | User login | No |
-| `/auth/logout` | POST | User logout | Yes |
-| `/auth/refresh` | POST | Refresh access token | Yes (Refresh Token) |
-| `/auth/verify` | GET | Verify current token | Yes |
-| `/auth/profile` | GET | Get user profile | Yes |
+| Endpoint        | Method | Description          | Authentication Required |
+| --------------- | ------ | -------------------- | ----------------------- |
+| `/auth/login`   | POST   | User login           | No                      |
+| `/auth/logout`  | POST   | User logout          | Yes                     |
+| `/auth/refresh` | POST   | Refresh access token | Yes (Refresh Token)     |
+| `/auth/verify`  | GET    | Verify current token | Yes                     |
+| `/auth/profile` | GET    | Get user profile     | Yes                     |
 
 ### Protected Endpoints
 
@@ -126,6 +135,7 @@ All other API endpoints require authentication:
 The platform implements role-based access control with the following roles:
 
 ### Teacher Role
+
 - Create and manage classes
 - Generate educational content
 - Create quizzes and assessments
@@ -133,6 +143,7 @@ The platform implements role-based access control with the following roles:
 - Access all teaching resources
 
 ### Student Role
+
 - Access assigned content
 - Take quizzes and assessments
 - View own progress
@@ -140,6 +151,7 @@ The platform implements role-based access control with the following roles:
 - Access student dashboard
 
 ### Admin Role
+
 - Full system access
 - User management
 - System configuration
@@ -147,6 +159,7 @@ The platform implements role-based access control with the following roles:
 - Content moderation
 
 ### Parent Role
+
 - View children's progress
 - Access reports
 - Communicate with teachers
@@ -155,6 +168,7 @@ The platform implements role-based access control with the following roles:
 ## Code Examples
 
 ### Python (requests)
+
 ```python
 import requests
 
@@ -175,28 +189,30 @@ print(dashboard.json())
 ```
 
 ### JavaScript (fetch)
+
 ```javascript
 // Login
 const loginResponse = await fetch('http://localhost:8008/auth/login', {
   method: 'POST',
-  headers: {'Content-Type': 'application/json'},
+  headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     username: 'john_teacher',
-    password: 'Teacher123!'
-  })
-});
-const { access_token } = await loginResponse.json();
+    password: 'Teacher123!',
+  }),
+})
+const { access_token } = await loginResponse.json()
 
 // Use token for authenticated requests
 const dashboardResponse = await fetch('http://localhost:8008/dashboard/teacher', {
   headers: {
-    'Authorization': `Bearer ${access_token}`
-  }
-});
-const dashboardData = await dashboardResponse.json();
+    Authorization: `Bearer ${access_token}`,
+  },
+})
+const dashboardData = await dashboardResponse.json()
 ```
 
 ### cURL
+
 ```bash
 # Login and save token
 TOKEN=$(curl -s -X POST http://localhost:8008/auth/login \
@@ -214,7 +230,7 @@ curl -X GET http://localhost:8008/dashboard/teacher \
 For WebSocket connections, pass the token as a query parameter:
 
 ```javascript
-const ws = new WebSocket(`ws://localhost:9876/ws?token=${access_token}`);
+const ws = new WebSocket(`ws://localhost:9876/ws?token=${access_token}`)
 ```
 
 ## Security Best Practices
@@ -232,20 +248,24 @@ const ws = new WebSocket(`ws://localhost:9876/ws?token=${access_token}`);
 ### Common Issues
 
 #### "Invalid credentials" Error
+
 - Verify username and password are correct
 - Check if user account is active
 - Ensure password meets requirements
 
 #### "Token expired" Error
+
 - Request a new token via `/auth/login`
 - Implement automatic token refresh
 
 #### "Unauthorized" Error
+
 - Ensure token is included in Authorization header
 - Check token format: `Bearer <token>`
 - Verify token hasn't expired
 
 #### CORS Issues
+
 - Ensure frontend origin is allowed
 - Check CORS configuration in FastAPI
 
@@ -299,6 +319,7 @@ RATE_LIMIT=100  # requests per minute
 ## Support
 
 For authentication issues or questions:
+
 1. Check this documentation
 2. Review server logs: `tail -f logs/auth.log`
 3. Test with provided credentials
@@ -306,5 +327,5 @@ For authentication issues or questions:
 
 ---
 
-*Last Updated: 2025-09-08*
-*Version: 1.0.0*
+_Last Updated: 2025-09-08_
+_Version: 1.0.0_

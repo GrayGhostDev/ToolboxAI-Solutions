@@ -37,6 +37,7 @@ Welcome to the Educational Platform! This guide will help you navigate the platf
 ToolBoxAI-Solutions gives students a gamified, immersive way to engage with curriculum in interactive 3D Roblox environments.
 
 ## Core Features for Students
+
 - Explore school-based hubs and classrooms
 - Interact with NPCs and classmates
 - Earn XP, badges, and rewards
@@ -449,6 +450,7 @@ If you encounter any issues:
 4. Call the support line at 1-800-LEARN (available Mon-Fri, 9am-5pm)
 
 Remember to include:
+
 - Your username
 - Device and browser information
 - Screenshots of any error messages

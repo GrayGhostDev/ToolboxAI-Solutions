@@ -3,17 +3,20 @@
 ## ✅ MCP Servers and Agents Status
 
 ### 🟢 Working Services
+
 - **MCP Server**: ✅ Running on ws://localhost:9876
 - **FastAPI Server**: ✅ Running on http://127.0.0.1:8008
 - **Flask Bridge Server**: ✅ Running on http://127.0.0.1:5001
 
 ### 🟡 Services with Import Issues
+
 - Individual Agent files (Content, Quiz, Terrain, Script, Review) have relative import issues when run directly
 - These can be accessed through the main orchestrator or server endpoints
 
 ## 🚀 Quick Start
 
 ### 1. Start MCP Servers
+
 ```bash
 # Start all MCP servers and agents
 ./scripts/start_mcp_servers.sh
@@ -40,7 +43,7 @@ The MCP configuration file `mcpServers.json` has been created with all available
         "MCP_HOST": "localhost",
         "MCP_PORT": "9876"
       }
-    },
+    }
     // ... other servers
   }
 }
@@ -49,17 +52,20 @@ The MCP configuration file `mcpServers.json` has been created with all available
 ### 3. Available Endpoints
 
 #### MCP WebSocket Server
+
 - **URL**: ws://localhost:9876
 - **Purpose**: Real-time context management for AI agents
 - **Features**: Token-aware context, priority-based pruning, multi-client sync
 
 #### FastAPI Main Server
+
 - **URL**: http://127.0.0.1:8008
 - **Documentation**: http://127.0.0.1:8008/docs
 - **Purpose**: Primary API server with AI capabilities
 - **Features**: Content generation, authentication, LMS integration
 
 #### Flask Bridge Server
+
 - **URL**: http://127.0.0.1:5001
 - **Purpose**: Lightweight bridge for Roblox Studio plugin
 - **Features**: Plugin registration, simplified content generation
@@ -67,16 +73,19 @@ The MCP configuration file `mcpServers.json` has been created with all available
 ## 🔧 Configuration Files
 
 ### Cursor Settings
+
 - **File**: `.cursor/settings.json`
 - **Updated**: All paths corrected for new directory structure
 - **Python Interpreter**: Points to `src/roblox-environment/venv_clean/bin/python`
 
 ### MCP Configuration
+
 - **File**: `mcpServers.json`
 - **Purpose**: Cursor MCP server configuration
 - **Contains**: All ToolboxAI servers and agents
 
 ### Environment
+
 - **File**: `.env.template`
 - **Purpose**: Environment variable template
 - **Required**: OPENAI_API_KEY for full functionality
@@ -84,15 +93,18 @@ The MCP configuration file `mcpServers.json` has been created with all available
 ## 🛠️ Management Scripts
 
 ### Setup Script
+
 ```bash
 ./scripts/setup_mcp_environment.sh
 ```
+
 - Creates virtual environment
 - Installs dependencies
 - Tests imports
 - Creates configuration files
 
 ### Startup Scripts
+
 ```bash
 ./scripts/start_mcp_servers.sh    # Start all services
 ./scripts/stop_mcp_servers.sh     # Stop all services
@@ -102,12 +114,14 @@ The MCP configuration file `mcpServers.json` has been created with all available
 ## 🧪 Testing
 
 ### Test MCP Setup
+
 ```bash
 source ToolboxAI-Roblox-Environment/venv_clean/bin/activate
 python scripts/test_mcp_setup.py
 ```
 
 ### Test Individual Components
+
 ```bash
 # Test MCP server
 curl -s http://localhost:9876
@@ -122,6 +136,7 @@ curl -s http://127.0.0.1:5001/status
 ## 📊 Current Status
 
 ### ✅ Completed
+
 1. **Cursor Settings Updated**: All paths corrected for new directory structure
 2. **MCP Configuration Created**: Comprehensive `mcpServers.json` with all servers
 3. **Startup Scripts Created**: Automated service management
@@ -129,6 +144,7 @@ curl -s http://127.0.0.1:5001/status
 5. **Environment Setup**: Virtual environment with all dependencies
 
 ### 🔄 Next Steps
+
 1. **Fix Agent Imports**: Resolve relative import issues in individual agent files
 2. **Test Cursor Integration**: Verify MCP servers work with Cursor
 3. **API Key Configuration**: Set up OPENAI_API_KEY for full functionality

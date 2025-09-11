@@ -18,6 +18,7 @@ This comprehensive guide covers the installation and initial setup of ToolBoxAI-
 ### Required Software
 
 #### Core Requirements
+
 - **Operating System**: Linux (Ubuntu 20.04+ recommended), macOS 11+, or Windows Server 2019+
 - **Python**: 3.10 or higher
 - **Node.js**: 18.x LTS or higher
@@ -27,6 +28,7 @@ This comprehensive guide covers the installation and initial setup of ToolBoxAI-
 - **Kubernetes**: 1.24+ (for orchestrated deployment)
 
 #### Additional Tools
+
 ```bash
 # Package managers
 - pip 22.0+
@@ -62,16 +64,16 @@ sudo chown -R toolboxai:toolboxai /opt/toolboxai
 
 Open the following ports:
 
-| Port | Service | Protocol | Direction |
-|------|---------|----------|-----------|
-| 80 | HTTP | TCP | Inbound |
-| 443 | HTTPS | TCP | Inbound |
-| 5432 | PostgreSQL | TCP | Internal |
-| 6379 | Redis | TCP | Internal |
-| 8000 | API Server | TCP | Internal |
-| 3000 | Web UI | TCP | Internal |
-| 9090 | Prometheus | TCP | Internal |
-| 3100 | Grafana | TCP | Internal |
+| Port | Service    | Protocol | Direction |
+| ---- | ---------- | -------- | --------- |
+| 80   | HTTP       | TCP      | Inbound   |
+| 443  | HTTPS      | TCP      | Inbound   |
+| 5432 | PostgreSQL | TCP      | Internal  |
+| 6379 | Redis      | TCP      | Internal  |
+| 8000 | API Server | TCP      | Internal  |
+| 3000 | Web UI     | TCP      | Internal  |
+| 9090 | Prometheus | TCP      | Internal  |
+| 3100 | Grafana    | TCP      | Internal  |
 
 ## System Requirements
 
@@ -414,12 +416,12 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
+
         # WebSocket support
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        
+
         # Timeouts
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
@@ -605,6 +607,7 @@ ROBLOX_WEBHOOK_SECRET=your-webhook-secret
 Create these configuration files:
 
 #### logging.yaml
+
 ```yaml
 version: 1
 disable_existing_loggers: false
@@ -627,7 +630,7 @@ handlers:
     level: INFO
     formatter: json
     filename: /var/log/toolboxai/app.log
-    maxBytes: 104857600  # 100MB
+    maxBytes: 104857600 # 100MB
     backupCount: 10
 
   error_file:
@@ -730,6 +733,7 @@ python manage.py test_storage
 ### Common Issues
 
 #### Database Connection Failed
+
 ```bash
 # Check PostgreSQL is running
 sudo systemctl status postgresql
@@ -746,6 +750,7 @@ sudo systemctl restart postgresql
 ```
 
 #### Redis Connection Failed
+
 ```bash
 # Check Redis is running
 sudo systemctl status redis-server
@@ -761,6 +766,7 @@ sudo tail -f /var/log/redis/redis-server.log
 ```
 
 #### API Server Won't Start
+
 ```bash
 # Check Python version
 python --version
@@ -776,6 +782,7 @@ python manage.py runserver --debug
 ```
 
 #### Frontend Build Fails
+
 ```bash
 # Clear npm cache
 npm cache clean --force
@@ -791,6 +798,7 @@ node --version  # Should be 18.x
 ```
 
 #### SSL Certificate Issues
+
 ```bash
 # Renew certificate
 sudo certbot renew
@@ -859,4 +867,4 @@ For deployment strategies, see [Deployment Guide](../04-implementation/deploymen
 
 ---
 
-*Last updated: September 2025*
+_Last updated: September 2025_

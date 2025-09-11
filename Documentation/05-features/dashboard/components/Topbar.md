@@ -1,11 +1,13 @@
 # Topbar
 
 ## Component Information
+
 - **Category**: layout
 - **Type**: functional
 - **File**: `src/dashboard/src/components/layout/Topbar.tsx`
 
 ## Hooks Used
+
 - `useAppDispatch`
 - `useNavigate`
 - `useAppSelector`
@@ -13,10 +15,12 @@
 - `useEvent`
 
 ## State Management
+
 - Local component state
 - WebSocket connections
 
 ## Key Dependencies
+
 - `@mui/icons-material/AccountCircle`
 - `@mui/icons-material/DarkMode`
 - `@mui/icons-material/Language`

@@ -5,6 +5,7 @@ The quiz system provides assessment capabilities within the learning platform, a
 ## Overview
 
 The quiz system handles the creation, display, and evaluation of assessments throughout the learning experience. It includes:
+
 - Multiple choice questions
 - Timer functionality
 - Feedback mechanisms
@@ -24,14 +25,14 @@ local controller = QuizController.new(gui)
 
 #### Key Methods
 
-| Method | Description |
-|--------|-------------|
-| `loadQuestion(questionNumber)` | Displays a specific question and its options |
-| `selectOption(optionNumber)` | Handles user selection of an answer option |
-| `submitAnswer()` | Validates the selected answer and provides feedback |
-| `nextQuestion()` | Advances to the next question or ends quiz |
-| `startTimer()` | Initializes and manages the countdown timer |
-| `endQuiz()` | Finalizes quiz, calculates score, and shows results |
+| Method                         | Description                                         |
+| ------------------------------ | --------------------------------------------------- |
+| `loadQuestion(questionNumber)` | Displays a specific question and its options        |
+| `selectOption(optionNumber)`   | Handles user selection of an answer option          |
+| `submitAnswer()`               | Validates the selected answer and provides feedback |
+| `nextQuestion()`               | Advances to the next question or ends quiz          |
+| `startTimer()`                 | Initializes and manages the countdown timer         |
+| `endQuiz()`                    | Finalizes quiz, calculates score, and shows results |
 
 ### Quiz Data Model
 
@@ -59,6 +60,7 @@ local QUIZ_DATA = {
 ### Question Display
 
 The main area showing the current question:
+
 - Question text
 - Visual assets if applicable
 - Clear typography and spacing for readability
@@ -66,6 +68,7 @@ The main area showing the current question:
 ### Answer Options
 
 Container for selectable answer choices:
+
 - Multiple choice options
 - Visual feedback for selection
 - Support for rich content in answers (images, code snippets)
@@ -94,6 +97,7 @@ end
 ### Timer Display
 
 Countdown timer showing remaining time:
+
 - Visual and numerical representation
 - Warning states when time is running low
 - Auto-submission when time expires
@@ -124,6 +128,7 @@ end
 ### Progress Tracker
 
 Visual indicator showing quiz progression:
+
 - Current question number
 - Total questions
 - Completion percentage
@@ -131,6 +136,7 @@ Visual indicator showing quiz progression:
 ### Feedback Display
 
 Modal or inline component showing answer feedback:
+
 - Correct/incorrect indicator
 - Explanation of correct answer
 - Points earned
@@ -168,6 +174,7 @@ end
 ### Results Summary
 
 End-of-quiz screen showing overall performance:
+
 - Final score
 - Correct/incorrect breakdown
 - Time taken
@@ -178,6 +185,7 @@ End-of-quiz screen showing overall performance:
 ### Scoring System
 
 The default scoring mechanism:
+
 - Base points per correct answer (typically 10 points)
 - Optional time bonuses for quick answers
 - No penalty for incorrect answers in standard quizzes
@@ -186,6 +194,7 @@ The default scoring mechanism:
 ### Time Management
 
 Quiz timing options:
+
 - Overall time limit for the entire quiz
 - Optional per-question time limits
 - Pause functionality for accessibility needs

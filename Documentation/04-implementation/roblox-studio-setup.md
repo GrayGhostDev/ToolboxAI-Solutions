@@ -7,12 +7,14 @@ This guide provides comprehensive instructions for setting up and configuring th
 ## Prerequisites
 
 ### System Requirements
+
 - **Roblox Studio**: Latest version (2024.1 or higher)
 - **Operating System**: Windows 10/11, macOS 10.15+
 - **Network**: Stable internet connection for API communication
 - **Permissions**: HTTP requests must be enabled in Studio
 
 ### Backend Requirements
+
 - ToolboxAI Backend running (FastAPI on port 8008)
 - Flask Bridge Server running (port 5001)
 - MCP WebSocket Server running (port 9876)
@@ -34,6 +36,7 @@ This guide provides comprehensive instructions for setting up and configuring th
 #### Method A: Manual Installation
 
 1. Locate the plugin file:
+
    ```
    ToolboxAI-Roblox-Environment/Roblox/Plugins/AIContentGenerator.lua
    ```
@@ -91,6 +94,7 @@ Alternative: API Key Authentication
 ### Content Generation
 
 1. **Enable AI Content Generation**:
+
    ```lua
    ENABLE_AI_GENERATION = true
    AI_MODEL = "gpt-3.5-turbo"  -- or "gpt-4" for better quality
@@ -106,6 +110,7 @@ Alternative: API Key Authentication
 ### Terrain Generation
 
 1. **Terrain Templates**:
+
    ```lua
    TERRAIN_TYPES = {
        classroom = {size = Vector3.new(50, 20, 50)},
@@ -128,6 +133,7 @@ Alternative: API Key Authentication
 ### Quiz System
 
 1. **Quiz Configuration**:
+
    ```lua
    QUIZ_SETTINGS = {
        max_questions = 20,
@@ -325,36 +331,48 @@ PERMISSIONS = {
 ### Common Issues
 
 #### 1. Authentication Failed
+
 ```
 Error: Authentication failed
 ```
+
 **Solution**:
+
 - Verify credentials are correct
 - Check backend server is running
 - Ensure network connectivity
 
 #### 2. HTTP Requests Blocked
+
 ```
 Error: HttpService is not allowed to access ROBLOX resources
 ```
+
 **Solution**:
+
 - Enable HTTP requests in Studio Settings
 - Restart Roblox Studio
 
 #### 3. Connection Timeout
+
 ```
 Error: Connection to server timed out
 ```
+
 **Solution**:
+
 - Check firewall settings
 - Verify server URLs are correct
 - Ensure all backend services are running
 
 #### 4. WebSocket Connection Failed
+
 ```
 Error: WebSocket connection failed
 ```
+
 **Solution**:
+
 - Check MCP server is running on port 9876
 - Verify WebSocket URL format (ws:// not http://)
 - Check for proxy/firewall blocking WebSocket
@@ -494,16 +512,19 @@ PRODUCTION_PERMISSIONS = {
 ## Support and Resources
 
 ### Documentation
+
 - API Documentation: `/Documentation/03-api/`
 - Architecture Guide: `/Documentation/02-architecture/`
 - SDK Reference: `/Documentation/11-sdks/`
 
 ### Support Channels
+
 - GitHub Issues: [Report bugs and feature requests]
 - Discord: [Community support]
 - Email: support@toolboxai.com
 
 ### Version Information
+
 - Plugin Version: 1.0.0
 - Minimum Studio Version: 2024.1
 - API Version: v1

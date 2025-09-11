@@ -33,40 +33,40 @@ spec:
         app: api
     spec:
       containers:
-      - name: api
-        image: toolboxai/api:latest
-        ports:
-        - containerPort: 8008
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: db-credentials
-              key: url
-        - name: REDIS_URL
-          valueFrom:
-            secretKeyRef:
-              name: redis-credentials
-              key: url
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8008
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: 8008
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        - name: api
+          image: toolboxai/api:latest
+          ports:
+            - containerPort: 8008
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: url
+          resources:
+            requests:
+              memory: '256Mi'
+              cpu: '250m'
+            limits:
+              memory: '512Mi'
+              cpu: '500m'
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8008
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8008
+            initialDelaySeconds: 5
+            periodSeconds: 5
 ```
 
 #### Service Configuration
@@ -191,12 +191,12 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
+
         # Timeouts
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
-        
+
         # Buffering
         proxy_buffering on;
         proxy_buffer_size 4k;
@@ -213,7 +213,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        
+
         # WebSocket specific
         proxy_read_timeout 3600s;
         proxy_send_timeout 3600s;
@@ -251,47 +251,47 @@ spec:
         app: postgres
     spec:
       containers:
-      - name: postgres
-        image: postgres:15
-        env:
-        - name: POSTGRES_REPLICATION_MODE
-          value: master
-        - name: POSTGRES_REPLICATION_USER
-          value: replicator
-        - name: POSTGRES_REPLICATION_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secrets
-              key: replication-password
-        - name: POSTGRES_DB
-          value: toolboxai
-        - name: POSTGRES_USER
-          value: toolboxai
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secrets
-              key: password
-        ports:
-        - containerPort: 5432
-        volumeMounts:
-        - name: postgres-storage
-          mountPath: /var/lib/postgresql/data
+        - name: postgres
+          image: postgres:15
+          env:
+            - name: POSTGRES_REPLICATION_MODE
+              value: master
+            - name: POSTGRES_REPLICATION_USER
+              value: replicator
+            - name: POSTGRES_REPLICATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: replication-password
+            - name: POSTGRES_DB
+              value: toolboxai
+            - name: POSTGRES_USER
+              value: toolboxai
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: password
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              memory: '2Gi'
+              cpu: '1'
+            limits:
+              memory: '4Gi'
+              cpu: '2'
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ['ReadWriteOnce']
         resources:
           requests:
-            memory: "2Gi"
-            cpu: "1"
-          limits:
-            memory: "4Gi"
-            cpu: "2"
-  volumeClaimTemplates:
-  - metadata:
-      name: postgres-storage
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 100Gi
+            storage: 100Gi
 ```
 
 #### Redis Cluster
@@ -314,36 +314,36 @@ spec:
         app: redis
     spec:
       containers:
-      - name: redis
-        image: redis:7-alpine
-        command:
-          - redis-server
-          - --appendonly
-          - "yes"
-          - --requirepass
-          - "$(REDIS_PASSWORD)"
-        env:
-        - name: REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: redis-secrets
-              key: password
-        ports:
-        - containerPort: 6379
-        volumeMounts:
-        - name: redis-storage
-          mountPath: /data
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "250m"
-          limits:
-            memory: "1Gi"
-            cpu: "500m"
+        - name: redis
+          image: redis:7-alpine
+          command:
+            - redis-server
+            - --appendonly
+            - 'yes'
+            - --requirepass
+            - '$(REDIS_PASSWORD)'
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secrets
+                  key: password
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: redis-storage
+              mountPath: /data
+          resources:
+            requests:
+              memory: '512Mi'
+              cpu: '250m'
+            limits:
+              memory: '1Gi'
+              cpu: '500m'
       volumes:
-      - name: redis-storage
-        persistentVolumeClaim:
-          claimName: redis-pvc
+        - name: redis-storage
+          persistentVolumeClaim:
+            claimName: redis-pvc
 ```
 
 ### Terraform Configuration
@@ -396,7 +396,7 @@ module "eks" {
       max_size     = 10
 
       instance_types = ["t3.large"]
-      
+
       k8s_labels = {
         Environment = var.environment
         NodeGroup   = "main"
@@ -413,33 +413,33 @@ module "eks" {
 # RDS PostgreSQL
 resource "aws_db_instance" "postgres" {
   identifier = "toolboxai-${var.environment}"
-  
+
   engine         = "postgres"
   engine_version = "15.3"
   instance_class = "db.r6g.large"
-  
+
   allocated_storage     = 100
   max_allocated_storage = 1000
   storage_encrypted     = true
-  
+
   db_name  = "toolboxai"
   username = "toolboxai"
   password = var.db_password
-  
+
   vpc_security_group_ids = [aws_security_group.rds.id]
   db_subnet_group_name   = aws_db_subnet_group.main.name
-  
+
   backup_retention_period = 30
   backup_window          = "03:00-04:00"
   maintenance_window     = "sun:04:00-sun:05:00"
-  
+
   multi_az               = true
   deletion_protection    = true
   skip_final_snapshot    = false
   final_snapshot_identifier = "toolboxai-${var.environment}-final-${timestamp()}"
-  
+
   enabled_cloudwatch_logs_exports = ["postgresql"]
-  
+
   tags = {
     Environment = var.environment
     Project     = "ToolboxAI"
@@ -454,13 +454,13 @@ resource "aws_elasticache_cluster" "redis" {
   num_cache_nodes     = 1
   parameter_group_name = "default.redis7"
   port                = 6379
-  
+
   subnet_group_name = aws_elasticache_subnet_group.main.name
   security_group_ids = [aws_security_group.redis.id]
-  
+
   snapshot_retention_limit = 7
   snapshot_window         = "03:00-05:00"
-  
+
   tags = {
     Environment = var.environment
     Project     = "ToolboxAI"
@@ -470,7 +470,7 @@ resource "aws_elasticache_cluster" "redis" {
 # S3 Buckets
 resource "aws_s3_bucket" "assets" {
   bucket = "toolboxai-assets-${var.environment}"
-  
+
   tags = {
     Environment = var.environment
     Project     = "ToolboxAI"
@@ -479,7 +479,7 @@ resource "aws_s3_bucket" "assets" {
 
 resource "aws_s3_bucket_versioning" "assets" {
   bucket = aws_s3_bucket.assets.id
-  
+
   versioning_configuration {
     status = "Enabled"
   }
@@ -487,7 +487,7 @@ resource "aws_s3_bucket_versioning" "assets" {
 
 resource "aws_s3_bucket_encryption" "assets" {
   bucket = aws_s3_bucket.assets.id
-  
+
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
@@ -500,44 +500,44 @@ resource "aws_cloudfront_distribution" "main" {
   enabled             = true
   is_ipv6_enabled    = true
   default_root_object = "index.html"
-  
+
   origin {
     domain_name = aws_s3_bucket.assets.bucket_regional_domain_name
     origin_id   = "S3-${aws_s3_bucket.assets.id}"
-    
+
     s3_origin_config {
       origin_access_identity = aws_cloudfront_origin_access_identity.main.cloudfront_access_identity_path
     }
   }
-  
+
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-${aws_s3_bucket.assets.id}"
-    
+
     forwarded_values {
       query_string = false
       cookies {
         forward = "none"
       }
     }
-    
+
     viewer_protocol_policy = "redirect-to-https"
     min_ttl                = 0
     default_ttl            = 3600
     max_ttl                = 86400
   }
-  
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
     }
   }
-  
+
   viewer_certificate {
     cloudfront_default_certificate = true
   }
-  
+
   tags = {
     Environment = var.environment
     Project     = "ToolboxAI"
@@ -573,7 +573,7 @@ data:
     global:
       scrape_interval: 15s
       evaluation_interval: 15s
-    
+
     scrape_configs:
     - job_name: 'kubernetes-pods'
       kubernetes_sd_configs:
@@ -591,7 +591,7 @@ data:
         regex: ([^:]+)(?::\d+)?;(\d+)
         replacement: $1:$2
         target_label: __address__
-    
+
     - job_name: 'node-exporter'
       kubernetes_sd_configs:
       - role: node
@@ -603,6 +603,7 @@ data:
 #### Grafana Dashboards
 
 Custom dashboards for:
+
 - API performance metrics
 - Database query performance
 - Cache hit rates
@@ -625,26 +626,26 @@ spec:
     matchLabels:
       app: api
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
   ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          name: ingress-nginx
-    ports:
-    - protocol: TCP
-      port: 8008
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8008
   egress:
-  - to:
-    - namespaceSelector:
-        matchLabels:
-          name: toolboxai-production
-    ports:
-    - protocol: TCP
-      port: 5432  # PostgreSQL
-    - protocol: TCP
-      port: 6379  # Redis
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: toolboxai-production
+      ports:
+        - protocol: TCP
+          port: 5432 # PostgreSQL
+        - protocol: TCP
+          port: 6379 # Redis
 ```
 
 #### Secrets Management
@@ -680,10 +681,10 @@ spec:
     name: db-credentials
     creationPolicy: Owner
   data:
-  - secretKey: url
-    remoteRef:
-      key: toolboxai/production/database
-      property: connection_string
+    - secretKey: url
+      remoteRef:
+        key: toolboxai/production/database
+        property: connection_string
 ```
 
 ### Backup and Disaster Recovery
@@ -747,31 +748,31 @@ spec:
   minReplicas: 3
   maxReplicas: 20
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 80
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
   behavior:
     scaleDown:
       stabilizationWindowSeconds: 300
       policies:
-      - type: Percent
-        value: 50
-        periodSeconds: 60
+        - type: Percent
+          value: 50
+          periodSeconds: 60
     scaleUp:
       stabilizationWindowSeconds: 60
       policies:
-      - type: Percent
-        value: 100
-        periodSeconds: 60
+        - type: Percent
+          value: 100
+          periodSeconds: 60
 ```
 
 ### Cost Optimization

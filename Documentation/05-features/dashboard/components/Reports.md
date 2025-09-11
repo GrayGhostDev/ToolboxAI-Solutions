@@ -1,20 +1,24 @@
 # Reports
 
 ## Component Information
+
 - **Category**: pages
 - **Type**: functional
 - **File**: `src/dashboard/src/components/pages/Reports.tsx`
 
 ## Hooks Used
+
 - `useAppDispatch`
 - `useAppSelector`
 - `useState`
 - `useEffect`
 
 ## State Management
+
 - Local component state
 
 ## Key Dependencies
+
 - `@mui/icons-material/Assessment`
 - `@mui/icons-material/Description`
 - `@mui/icons-material/Email`

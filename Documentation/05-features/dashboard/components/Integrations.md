@@ -1,18 +1,22 @@
 # Integrations
 
 ## Component Information
+
 - **Category**: pages
 - **Type**: functional
 - **File**: `src/dashboard/src/components/pages/Integrations.tsx`
 
 ## Hooks Used
+
 - `useAppSelector`
 - `useState`
 
 ## State Management
+
 - Local component state
 
 ## Key Dependencies
+
 - `@mui/icons-material/Add`
 - `@mui/icons-material/Api`
 - `@mui/icons-material/CheckCircle`

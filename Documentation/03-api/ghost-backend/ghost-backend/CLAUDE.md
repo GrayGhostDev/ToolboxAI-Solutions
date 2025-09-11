@@ -9,6 +9,7 @@ Ghost Backend Framework - A comprehensive, reusable backend development foundati
 ## Core Architecture
 
 ### Module Structure
+
 - `src/ghost/config.py` - Configuration management with env, YAML, and JSON support
 - `src/ghost/database.py` - SQLAlchemy async database layer with pooling
 - `src/ghost/auth.py` - JWT authentication with bcrypt and RBAC
@@ -22,6 +23,7 @@ Ghost Backend Framework - A comprehensive, reusable backend development foundati
 - `src/ghost/models.py` - Base models and repository pattern for database operations
 
 ### Configuration Loading Order
+
 1. Environment variables (.env file)
 2. YAML configuration (config.yaml)
 3. JSON configuration (config.json)
@@ -30,6 +32,7 @@ Ghost Backend Framework - A comprehensive, reusable backend development foundati
 ## Essential Commands
 
 ### Development Setup
+
 ```bash
 # Initial setup
 ./bin/setup.sh
@@ -42,6 +45,7 @@ Ghost Backend Framework - A comprehensive, reusable backend development foundati
 ```
 
 ### Running the Backend
+
 ```bash
 # Start complete backend stack (API + Database + Redis)
 ./bin/start_backend.sh
@@ -57,6 +61,7 @@ Ghost Backend Framework - A comprehensive, reusable backend development foundati
 ```
 
 ### Database Management (MacPorts PostgreSQL 16)
+
 ```bash
 # Install PostgreSQL via MacPorts
 make db/install
@@ -79,6 +84,7 @@ make db/status
 ```
 
 ### Testing
+
 ```bash
 # Run all tests
 pytest
@@ -99,6 +105,7 @@ pytest tests/test_framework.py::TestGhostFramework::test_config_loading
 ```
 
 ### Code Quality
+
 ```bash
 # Format code with Black
 black src/
@@ -117,6 +124,7 @@ black src/ && isort src/ && flake8 src/ && mypy src/
 ```
 
 ### Installation
+
 ```bash
 # Basic installation
 pip install -e .
@@ -137,6 +145,7 @@ pip install -e ".[dev]"       # Development tools
 ## New Backend Components (Phase 1)
 
 ### Email Module (ghost.email)
+
 - SMTP email sending with async support
 - Multiple provider support (SMTP, SendGrid, AWS SES planned)
 - Template rendering with Jinja2
@@ -144,6 +153,7 @@ pip install -e ".[dev]"       # Development tools
 - Email attachments
 
 ### Task Processing (ghost.tasks)
+
 - In-memory task queue with priority support
 - Background task workers (sync and async)
 - Task scheduling with cron-like syntax
@@ -151,6 +161,7 @@ pip install -e ".[dev]"       # Development tools
 - Task status tracking and results
 
 ### File Storage (ghost.storage)
+
 - Local filesystem storage with organized structure
 - File type validation and categorization
 - Image processing (thumbnails, resizing)
@@ -158,6 +169,7 @@ pip install -e ".[dev]"       # Development tools
 - Secure file upload handling
 
 ### Database Models (ghost.models)
+
 - Base models with common mixins (timestamps, soft delete, audit)
 - User, Role, Permission models for RBAC
 - Repository pattern for database operations
@@ -167,27 +179,35 @@ pip install -e ".[dev]"       # Development tools
 ## Key Implementation Patterns
 
 ### Async Database Operations
+
 All database operations use async/await pattern with context managers:
+
 ```python
 async with db_manager.get_session() as session:
     # Database operations here
 ```
 
 ### Configuration Access
+
 Configuration is centralized through the Config class:
+
 ```python
 from ghost import Config, get_config
 config = get_config()  # Singleton pattern
 ```
 
 ### JWT Authentication
+
 Token-based authentication with role-based access control:
+
 - Passwords hashed with bcrypt
 - JWT tokens with configurable expiration
 - User roles: USER, ADMIN, SUPER_ADMIN
 
 ### API Response Standardization
+
 All API responses follow the APIResponse pattern:
+
 - Consistent error handling
 - Standardized status codes
 - Structured response format
@@ -195,6 +215,7 @@ All API responses follow the APIResponse pattern:
 ## Environment Variables
 
 Critical environment variables (configured in .env):
+
 - `DATABASE_URL` - PostgreSQL connection string (overrides all other DB config)
 - `REDIS_URL` - Redis connection for caching/sessions
 - `JWT_SECRET_KEY` - Secret for JWT token signing
@@ -205,6 +226,7 @@ Critical environment variables (configured in .env):
 ## Security Configuration
 
 ### Port Security
+
 - **All services bound to 127.0.0.1** by default (not 127.0.0.1)
 - **Production uses reverse proxy** (nginx) for external access
 - **Docker ports mapped to localhost only** for security
@@ -213,7 +235,9 @@ Critical environment variables (configured in .env):
 - Nginx example: `config/nginx-example.conf`
 
 ### macOS Keychain Integration
+
 Credentials stored securely in macOS Keychain:
+
 - Database passwords
 - API keys
 - JWT secrets
@@ -221,6 +245,7 @@ Credentials stored securely in macOS Keychain:
 Access via: `./scripts/secrets/keychain.sh`
 
 ### Production Security
+
 - HTTPS/SSL ready
 - CORS configuration per frontend
 - Rate limiting via SlowAPI
@@ -231,6 +256,7 @@ Access via: `./scripts/secrets/keychain.sh`
 ## Database Schema Management
 
 ### Alembic Migrations
+
 ```bash
 # Create new migration
 alembic revision --autogenerate -m "description"
@@ -248,6 +274,7 @@ alembic current
 ## API Documentation
 
 When the API is running:
+
 - Swagger UI: http://localhost:8080/docs
 - ReDoc: http://localhost:8080/redoc
 - Health check: http://localhost:8080/health
@@ -255,20 +282,25 @@ When the API is running:
 ## Project-Specific Notes
 
 ### Multi-Frontend Support
+
 Framework auto-detects frontend applications:
+
 - React, Angular, Vue, Flutter support
 - Dynamic CORS configuration
 - Frontend-specific API prefixes
 - WebSocket channels per frontend
 
 ### Connection Pooling
+
 Default database pool settings:
+
 - Pool size: 10 connections
 - Max overflow: 20 connections
 - Pool timeout: 30 seconds
 - Pool recycle: 3600 seconds
 
 ### Test Coverage
+
 - Current requirement: 10% (set low for initial development)
 - Production target: 85%
 - Coverage reports in htmlcov/
@@ -276,24 +308,28 @@ Default database pool settings:
 ## Common Development Tasks
 
 ### Adding a New API Endpoint
+
 1. Create route in appropriate module or `src/ghost/api.py`
 2. Use dependency injection for database/auth
 3. Return standardized APIResponse
 4. Add corresponding tests
 
 ### Adding Database Models
+
 1. Define model in appropriate module
 2. Create Alembic migration
 3. Apply migration
 4. Add model tests
 
 ### Debugging Database Issues
+
 1. Check connection: `make db/status`
 2. Verify credentials in Keychain
 3. Check logs in `logs/` directory
 4. Test connection: `psql $DATABASE_URL`
 
 ## Directory Organization
+
 - `bin/` - Executable scripts for setup and runtime
 - `config/` - Configuration templates and examples
 - `src/ghost/` - Core framework source code
@@ -304,6 +340,7 @@ Default database pool settings:
 - `examples/` - Usage examples
 
 ## Important Files
+
 - `pyproject.toml` - Python package configuration and dependencies
 - `Makefile` - Database and environment management commands
 - `.env` - Environment variables (create from .env.example)

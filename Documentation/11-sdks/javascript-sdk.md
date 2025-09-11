@@ -19,137 +19,146 @@ Official JavaScript SDK for ToolBoxAI-Solutions with full TypeScript support. Bu
 ## Installation
 
 ### NPM
+
 ```bash
 npm install @toolboxai/sdk
 ```
 
 ### Yarn
+
 ```bash
 yarn add @toolboxai/sdk
 ```
 
 ### CDN
+
 ```html
 <script src="https://cdn.toolboxai.com/sdk/latest/toolboxai.min.js"></script>
 ```
 
 ### Requirements
+
 - Node.js 14+ (for Node.js environment)
 - Modern browser with ES6 support (for browser environment)
 
 ## Quick Start
 
 ### Basic Setup
+
 ```javascript
-import { ToolBoxAI } from '@toolboxai/sdk';
+import { ToolBoxAI } from '@toolboxai/sdk'
 
 // Initialize client
 const client = new ToolBoxAI({
   apiKey: 'your-api-key-here',
-  environment: 'production' // or 'sandbox'
-});
+  environment: 'production', // or 'sandbox'
+})
 
 // Make your first API call
 async function getStarted() {
   try {
     // Get current user
-    const user = await client.users.me();
-    console.log('Logged in as:', user.name);
-    
+    const user = await client.users.me()
+    console.log('Logged in as:', user.name)
+
     // List lessons
     const lessons = await client.lessons.list({
       grade: 5,
-      subject: 'math'
-    });
-    console.log('Found lessons:', lessons);
+      subject: 'math',
+    })
+    console.log('Found lessons:', lessons)
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('Error:', error.message)
   }
 }
 
-getStarted();
+getStarted()
 ```
 
 ## Authentication
 
 ### API Key Authentication
+
 ```javascript
 const client = new ToolBoxAI({
-  apiKey: 'your-api-key-here'
-});
+  apiKey: 'your-api-key-here',
+})
 ```
 
 ### OAuth2 Authentication
+
 ```javascript
 const client = new ToolBoxAI({
   clientId: 'your-client-id',
   clientSecret: 'your-client-secret',
-  redirectUri: 'https://yourapp.com/callback'
-});
+  redirectUri: 'https://yourapp.com/callback',
+})
 
 // Initiate OAuth flow
 const authUrl = client.auth.getAuthorizationUrl({
   scope: ['lessons:read', 'lessons:write'],
-  state: 'random-state-string'
-});
+  state: 'random-state-string',
+})
 
 // Handle callback
-const tokens = await client.auth.handleCallback(callbackUrl);
-client.setAccessToken(tokens.accessToken);
+const tokens = await client.auth.handleCallback(callbackUrl)
+client.setAccessToken(tokens.accessToken)
 ```
 
 ### JWT Token Authentication
+
 ```javascript
 // Login with credentials
 const { accessToken, refreshToken } = await client.auth.login({
   email: 'user@example.com',
-  password: 'password123'
-});
+  password: 'password123',
+})
 
 // Set tokens
-client.setAccessToken(accessToken);
-client.setRefreshToken(refreshToken);
+client.setAccessToken(accessToken)
+client.setRefreshToken(refreshToken)
 
 // Auto-refresh tokens
 client.on('token:refresh', (newTokens) => {
   // Store new tokens
-  localStorage.setItem('accessToken', newTokens.accessToken);
-});
+  localStorage.setItem('accessToken', newTokens.accessToken)
+})
 ```
 
 ## Configuration
 
 ### Client Options
+
 ```javascript
 const client = new ToolBoxAI({
   // Required
   apiKey: 'your-api-key',
-  
+
   // Optional
   environment: 'production', // 'production' | 'sandbox' | 'development'
   baseUrl: 'https://api.toolboxai.com', // Custom API endpoint
   timeout: 30000, // Request timeout in ms
   retries: 3, // Number of retries
   retryDelay: 1000, // Delay between retries
-  
+
   // Advanced
   cache: {
     enabled: true,
     ttl: 300000, // Cache TTL in ms
-    storage: 'memory' // 'memory' | 'localStorage' | 'sessionStorage'
+    storage: 'memory', // 'memory' | 'localStorage' | 'sessionStorage'
   },
-  
+
   interceptors: {
     request: (config) => {
       // Modify request config
-      return config;
+      return config
     },
     response: (response) => {
       // Process response
-      return response;
-    }
-  }
-});
+      return response
+    },
+  },
+})
 ```
 
 ## API Reference
@@ -158,26 +167,26 @@ const client = new ToolBoxAI({
 
 ```javascript
 // Get current user
-const user = await client.users.me();
+const user = await client.users.me()
 
 // Get user by ID
-const user = await client.users.get('user-id');
+const user = await client.users.get('user-id')
 
 // Update user
 const updated = await client.users.update('user-id', {
   name: 'New Name',
-  preferences: { theme: 'dark' }
-});
+  preferences: { theme: 'dark' },
+})
 
 // List users (admin only)
 const users = await client.users.list({
   role: 'student',
   page: 1,
-  limit: 20
-});
+  limit: 20,
+})
 
 // Delete user (admin only)
-await client.users.delete('user-id');
+await client.users.delete('user-id')
 ```
 
 ### Lessons
@@ -234,28 +243,28 @@ const quiz = await client.quizzes.create({
       type: 'multiple_choice',
       question: 'What is 2 + 2?',
       options: ['3', '4', '5', '6'],
-      correctAnswer: 1
-    }
+      correctAnswer: 1,
+    },
   ],
-  timeLimit: 600 // 10 minutes
-});
+  timeLimit: 600, // 10 minutes
+})
 
 // Get quiz
-const quiz = await client.quizzes.get('quiz-id');
+const quiz = await client.quizzes.get('quiz-id')
 
 // Submit quiz attempt
 const result = await client.quizzes.submit('quiz-id', {
   answers: [
     { questionId: 'q1', answer: 1 },
-    { questionId: 'q2', answer: 'Paris' }
-  ]
-});
+    { questionId: 'q2', answer: 'Paris' },
+  ],
+})
 
 // Get quiz results
-const results = await client.quizzes.getResults('attempt-id');
+const results = await client.quizzes.getResults('attempt-id')
 
 // Get quiz analytics
-const analytics = await client.quizzes.getAnalytics('quiz-id');
+const analytics = await client.quizzes.getAnalytics('quiz-id')
 ```
 
 ### Progress Tracking
@@ -268,27 +277,27 @@ await client.progress.track({
   event: 'lesson_completed',
   data: {
     timeSpent: 1200, // seconds
-    score: 95
-  }
-});
+    score: 95,
+  },
+})
 
 // Get user progress
 const progress = await client.progress.get('user-id', {
-  courseId: 'course-id'
-});
+  courseId: 'course-id',
+})
 
 // Get analytics
 const analytics = await client.progress.getAnalytics('user-id', {
   startDate: '2024-01-01',
-  endDate: '2024-12-31'
-});
+  endDate: '2024-12-31',
+})
 
 // Generate report
 const report = await client.progress.generateReport({
   userId: 'user-id',
   type: 'monthly',
-  format: 'pdf'
-});
+  format: 'pdf',
+})
 ```
 
 ### Gamification
@@ -331,28 +340,28 @@ const lesson = await client.ai.generateLesson({
   prompt: 'Create a lesson about photosynthesis for 5th graders',
   gradeLevel: 5,
   duration: 45, // minutes
-  includeQuiz: true
-});
+  includeQuiz: true,
+})
 
 // Generate quiz from lesson
 const quiz = await client.ai.generateQuiz({
   lessonId: 'lesson-id',
   questionCount: 10,
-  difficulty: 'medium'
-});
+  difficulty: 'medium',
+})
 
 // Generate Roblox environment
 const environment = await client.ai.generateEnvironment({
   lessonId: 'lesson-id',
   theme: 'space',
-  interactiveElements: ['npcs', 'puzzles', 'collectibles']
-});
+  interactiveElements: ['npcs', 'puzzles', 'collectibles'],
+})
 
 // Validate content
 const validation = await client.ai.validateContent({
   content: lessonContent,
-  checkFor: ['age_appropriate', 'factual_accuracy', 'bias']
-});
+  checkFor: ['age_appropriate', 'factual_accuracy', 'bias'],
+})
 ```
 
 ### LMS Integration
@@ -362,61 +371,62 @@ const validation = await client.ai.validateContent({
 await client.lms.canvas.sync({
   courseId: 'canvas-course-id',
   syncGrades: true,
-  syncAssignments: true
-});
+  syncAssignments: true,
+})
 
 // Import from Google Classroom
 const imported = await client.lms.googleClassroom.importCourse({
   classroomId: 'classroom-id',
-  importStudents: true
-});
+  importStudents: true,
+})
 
 // Export grades
 const exported = await client.lms.exportGrades({
   courseId: 'course-id',
   format: 'csv',
-  lmsType: 'schoology'
-});
+  lmsType: 'schoology',
+})
 ```
 
 ### Real-time Updates
 
 ```javascript
 // Connect to WebSocket
-client.realtime.connect();
+client.realtime.connect()
 
 // Subscribe to events
 client.realtime.on('progress.updated', (data) => {
-  console.log('Progress updated:', data);
-});
+  console.log('Progress updated:', data)
+})
 
 client.realtime.on('achievement.unlocked', (data) => {
-  console.log('Achievement unlocked:', data);
-});
+  console.log('Achievement unlocked:', data)
+})
 
 // Subscribe to specific channel
 client.realtime.subscribe('lesson:lesson-id', (event) => {
-  console.log('Lesson event:', event);
-});
+  console.log('Lesson event:', event)
+})
 
 // Unsubscribe
-client.realtime.unsubscribe('lesson:lesson-id');
+client.realtime.unsubscribe('lesson:lesson-id')
 
 // Disconnect
-client.realtime.disconnect();
+client.realtime.disconnect()
 ```
 
 ## TypeScript Support
 
 ### Type Definitions
+
 ```typescript
-import { 
-  ToolBoxAI, 
-  Lesson, 
-  Quiz, 
-  User, 
+import {
+  ToolBoxAI,
+  Lesson,
+  Quiz,
+  User,
   Progress,
-  Achievement 
+  Achievement
 } from '@toolboxai/sdk';
 
 // Full type safety
@@ -456,34 +466,32 @@ const lessonWithMetadata = await client.lessons.create<
 ```
 
 ### Enums and Constants
+
 ```typescript
-import { 
-  Subject, 
-  QuestionType, 
-  UserRole, 
-  Environment,
-  ErrorCode 
-} from '@toolboxai/sdk';
+import { Subject, QuestionType, UserRole, Environment, ErrorCode } from '@toolboxai/sdk'
 
 // Use enums for type safety
 const lesson = await client.lessons.create({
   subject: Subject.SCIENCE,
   // ...
-});
+})
 
 const quiz = await client.quizzes.create({
-  questions: [{
-    type: QuestionType.MULTIPLE_CHOICE,
-    // ...
-  }]
-});
+  questions: [
+    {
+      type: QuestionType.MULTIPLE_CHOICE,
+      // ...
+    },
+  ],
+})
 ```
 
 ## React Integration
 
 ### React Hooks
+
 ```jsx
-import { useToolBoxAI, ToolBoxAIProvider } from '@toolboxai/sdk/react';
+import { useToolBoxAI, ToolBoxAIProvider } from '@toolboxai/sdk/react'
 
 // Wrap your app with provider
 function App() {
@@ -491,56 +499,61 @@ function App() {
     <ToolBoxAIProvider apiKey={process.env.REACT_APP_API_KEY}>
       <YourApp />
     </ToolBoxAIProvider>
-  );
+  )
 }
 
 // Use hooks in components
 function LessonList() {
-  const { data: lessons, loading, error } = useToolBoxAI('lessons.list', {
+  const {
+    data: lessons,
+    loading,
+    error,
+  } = useToolBoxAI('lessons.list', {
     gradeLevel: 5,
-    subject: 'math'
-  });
+    subject: 'math',
+  })
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (loading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
 
   return (
     <ul>
-      {lessons.map(lesson => (
+      {lessons.map((lesson) => (
         <li key={lesson.id}>{lesson.title}</li>
       ))}
     </ul>
-  );
+  )
 }
 
 // Mutations
 function CreateLesson() {
-  const { mutate: createLesson, loading } = useToolBoxAI('lessons.create');
+  const { mutate: createLesson, loading } = useToolBoxAI('lessons.create')
 
   const handleCreate = async () => {
     try {
       const lesson = await createLesson({
         title: 'New Lesson',
         // ...
-      });
-      console.log('Created:', lesson);
+      })
+      console.log('Created:', lesson)
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error:', error)
     }
-  };
+  }
 
   return (
     <button onClick={handleCreate} disabled={loading}>
       Create Lesson
     </button>
-  );
+  )
 }
 ```
 
 ### React Query Integration
+
 ```jsx
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { client } from './toolboxai';
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { client } from './toolboxai'
 
 // Query
 function useLessons(filters) {
@@ -548,7 +561,7 @@ function useLessons(filters) {
     queryKey: ['lessons', filters],
     queryFn: () => client.lessons.list(filters),
     staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  })
 }
 
 // Mutation
@@ -556,64 +569,67 @@ function useCreateLesson() {
   return useMutation({
     mutationFn: (data) => client.lessons.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['lessons']);
-    }
-  });
+      queryClient.invalidateQueries(['lessons'])
+    },
+  })
 }
 ```
 
 ## Error Handling
 
 ### Error Types
+
 ```javascript
-import { 
+import {
   ToolBoxAIError,
   ValidationError,
   AuthenticationError,
   RateLimitError,
-  NetworkError 
-} from '@toolboxai/sdk';
+  NetworkError,
+} from '@toolboxai/sdk'
 
 try {
-  const result = await client.lessons.create(data);
+  const result = await client.lessons.create(data)
 } catch (error) {
   if (error instanceof ValidationError) {
-    console.error('Validation failed:', error.errors);
+    console.error('Validation failed:', error.errors)
   } else if (error instanceof AuthenticationError) {
-    console.error('Authentication failed:', error.message);
+    console.error('Authentication failed:', error.message)
     // Redirect to login
   } else if (error instanceof RateLimitError) {
-    console.error('Rate limited. Retry after:', error.retryAfter);
+    console.error('Rate limited. Retry after:', error.retryAfter)
   } else if (error instanceof NetworkError) {
-    console.error('Network error:', error.message);
+    console.error('Network error:', error.message)
   } else {
-    console.error('Unknown error:', error);
+    console.error('Unknown error:', error)
   }
 }
 ```
 
 ### Global Error Handler
+
 ```javascript
 client.on('error', (error) => {
-  console.error('Global error:', error);
+  console.error('Global error:', error)
   // Send to error tracking service
-});
+})
 
 // Retry configuration
 client.setRetryPolicy({
   maxRetries: 3,
   retryCondition: (error) => {
-    return error.code !== 'INVALID_INPUT';
+    return error.code !== 'INVALID_INPUT'
   },
   retryDelay: (retryCount) => {
-    return Math.min(1000 * Math.pow(2, retryCount), 10000);
-  }
-});
+    return Math.min(1000 * Math.pow(2, retryCount), 10000)
+  },
+})
 ```
 
 ## Advanced Features
 
 ### Batch Operations
+
 ```javascript
 // Batch create
 const lessons = await client.lessons.batchCreate([
@@ -633,56 +649,59 @@ await client.lessons.batchDelete(['lesson-1', 'lesson-2', 'lesson-3']);
 ```
 
 ### Pagination
+
 ```javascript
 // Cursor-based pagination
-let cursor = null;
-const allLessons = [];
+let cursor = null
+const allLessons = []
 
 do {
   const response = await client.lessons.list({
     cursor,
-    limit: 100
-  });
-  
-  allLessons.push(...response.data);
-  cursor = response.nextCursor;
-} while (cursor);
+    limit: 100,
+  })
+
+  allLessons.push(...response.data)
+  cursor = response.nextCursor
+} while (cursor)
 
 // Page-based pagination
-const page1 = await client.lessons.list({ page: 1, limit: 20 });
-const page2 = await client.lessons.list({ page: 2, limit: 20 });
+const page1 = await client.lessons.list({ page: 1, limit: 20 })
+const page2 = await client.lessons.list({ page: 2, limit: 20 })
 
 // Auto-pagination
 const allLessons = await client.lessons.listAll({
-  subject: 'math'
-}); // Automatically fetches all pages
+  subject: 'math',
+}) // Automatically fetches all pages
 ```
 
 ### File Uploads
+
 ```javascript
 // Upload file
-const file = document.getElementById('file-input').files[0];
+const file = document.getElementById('file-input').files[0]
 const uploaded = await client.files.upload(file, {
   type: 'lesson_resource',
-  lessonId: 'lesson-id'
-});
+  lessonId: 'lesson-id',
+})
 
 // Upload with progress
 const uploaded = await client.files.upload(file, {
   onProgress: (progress) => {
-    console.log(`Upload progress: ${progress.percent}%`);
-  }
-});
+    console.log(`Upload progress: ${progress.percent}%`)
+  },
+})
 
 // Multipart upload for large files
-const uploader = client.files.createMultipartUpload(file);
+const uploader = client.files.createMultipartUpload(file)
 uploader.on('progress', (progress) => {
-  console.log(`Progress: ${progress.percent}%`);
-});
-const result = await uploader.start();
+  console.log(`Progress: ${progress.percent}%`)
+})
+const result = await uploader.start()
 ```
 
 ### Caching
+
 ```javascript
 // Enable caching
 const client = new ToolBoxAI({
@@ -690,55 +709,53 @@ const client = new ToolBoxAI({
   cache: {
     enabled: true,
     ttl: 5 * 60 * 1000, // 5 minutes
-    storage: 'localStorage'
-  }
-});
+    storage: 'localStorage',
+  },
+})
 
 // Manual cache control
-client.cache.set('lessons:5th-grade', lessonsData, 300000);
-const cached = client.cache.get('lessons:5th-grade');
-client.cache.clear();
+client.cache.set('lessons:5th-grade', lessonsData, 300000)
+const cached = client.cache.get('lessons:5th-grade')
+client.cache.clear()
 
 // Skip cache for specific request
 const freshData = await client.lessons.get('lesson-id', {
-  cache: false
-});
+  cache: false,
+})
 ```
 
 ### Webhooks
+
 ```javascript
 // Register webhook
 const webhook = await client.webhooks.create({
   url: 'https://yourapp.com/webhook',
   events: ['lesson.created', 'quiz.submitted'],
-  secret: 'webhook-secret'
-});
+  secret: 'webhook-secret',
+})
 
 // Verify webhook signature (in your webhook handler)
-const isValid = client.webhooks.verifySignature(
-  payload,
-  signature,
-  secret
-);
+const isValid = client.webhooks.verifySignature(payload, signature, secret)
 
 // List webhooks
-const webhooks = await client.webhooks.list();
+const webhooks = await client.webhooks.list()
 
 // Delete webhook
-await client.webhooks.delete('webhook-id');
+await client.webhooks.delete('webhook-id')
 ```
 
 ## Examples
 
 ### Complete Application Example
+
 ```javascript
-import { ToolBoxAI } from '@toolboxai/sdk';
+import { ToolBoxAI } from '@toolboxai/sdk'
 
 class EducationApp {
   constructor() {
     this.client = new ToolBoxAI({
-      apiKey: process.env.API_KEY
-    });
+      apiKey: process.env.API_KEY,
+    })
   }
 
   async createCourse(gradeLevel, subject) {
@@ -747,30 +764,28 @@ class EducationApp {
       const lesson = await this.client.ai.generateLesson({
         prompt: `Create ${subject} lesson for grade ${gradeLevel}`,
         gradeLevel,
-        includeQuiz: true
-      });
+        includeQuiz: true,
+      })
 
       // Deploy to Roblox
-      const environment = await this.client.lessons.deployToRoblox(
-        lesson.id
-      );
+      const environment = await this.client.lessons.deployToRoblox(lesson.id)
 
       // Create associated quiz
       const quiz = await this.client.quizzes.create({
         lessonId: lesson.id,
-        questions: lesson.generatedQuiz.questions
-      });
+        questions: lesson.generatedQuiz.questions,
+      })
 
       // Set up progress tracking
       await this.client.progress.initializeTracking({
         lessonId: lesson.id,
-        metrics: ['completion', 'score', 'timeSpent']
-      });
+        metrics: ['completion', 'score', 'timeSpent'],
+      })
 
-      return { lesson, quiz, environment };
+      return { lesson, quiz, environment }
     } catch (error) {
-      console.error('Course creation failed:', error);
-      throw error;
+      console.error('Course creation failed:', error)
+      throw error
     }
   }
 
@@ -779,23 +794,21 @@ class EducationApp {
     await this.client.progress.track({
       userId,
       lessonId,
-      ...eventData
-    });
+      ...eventData,
+    })
 
     // Check for achievements
-    const achievements = await this.client.gamification.checkAchievements(
-      userId
-    );
+    const achievements = await this.client.gamification.checkAchievements(userId)
 
     // Award XP
     if (eventData.event === 'lesson_completed') {
       await this.client.gamification.awardXP(userId, {
         amount: 100,
-        reason: 'Lesson completion'
-      });
+        reason: 'Lesson completion',
+      })
     }
 
-    return achievements;
+    return achievements
   }
 }
 ```
@@ -805,77 +818,83 @@ class EducationApp {
 ### Common Issues
 
 #### CORS Errors
+
 ```javascript
 // Configure CORS proxy for browser environments
 const client = new ToolBoxAI({
   apiKey: 'your-key',
-  corsProxy: 'https://cors-proxy.yourapp.com'
-});
+  corsProxy: 'https://cors-proxy.yourapp.com',
+})
 ```
 
 #### Token Expiration
+
 ```javascript
 // Automatic token refresh
 client.on('token:expired', async () => {
-  const newTokens = await client.auth.refreshToken();
-  client.setAccessToken(newTokens.accessToken);
-});
+  const newTokens = await client.auth.refreshToken()
+  client.setAccessToken(newTokens.accessToken)
+})
 ```
 
 #### Network Timeouts
+
 ```javascript
 // Increase timeout for slow connections
 const client = new ToolBoxAI({
   apiKey: 'your-key',
-  timeout: 60000 // 60 seconds
-});
+  timeout: 60000, // 60 seconds
+})
 ```
 
 ### Debug Mode
+
 ```javascript
 // Enable debug logging
 const client = new ToolBoxAI({
   apiKey: 'your-key',
-  debug: true
-});
+  debug: true,
+})
 
 // Custom logger
 client.setLogger({
   log: (message, data) => console.log(message, data),
   error: (message, error) => console.error(message, error),
-  warn: (message, data) => console.warn(message, data)
-});
+  warn: (message, data) => console.warn(message, data),
+})
 ```
 
 ### Performance Optimization
+
 ```javascript
 // Connection pooling
 const client = new ToolBoxAI({
   apiKey: 'your-key',
   httpAgent: {
     keepAlive: true,
-    maxSockets: 10
-  }
-});
+    maxSockets: 10,
+  },
+})
 
 // Request deduplication
-client.enableRequestDeduplication();
+client.enableRequestDeduplication()
 
 // Compression
-client.enableCompression();
+client.enableCompression()
 ```
 
 ## Migration
 
 ### Migrating from v1 to v2
+
 ```javascript
 // v1 (deprecated)
-const client = new ToolBoxAIClient(apiKey);
-client.getLessons(callback);
+const client = new ToolBoxAIClient(apiKey)
+client.getLessons(callback)
 
 // v2 (current)
-const client = new ToolBoxAI({ apiKey });
-const lessons = await client.lessons.list();
+const client = new ToolBoxAI({ apiKey })
+const lessons = await client.lessons.list()
 ```
 
 See [Migration Guide](https://github.com/toolboxai/sdk-js/blob/main/MIGRATION.md) for detailed instructions.
@@ -890,4 +909,4 @@ See [Migration Guide](https://github.com/toolboxai/sdk-js/blob/main/MIGRATION.md
 
 ---
 
-*SDK Version: 2.0.0 | API Version: v1 | Last Updated: September 2025*
+_SDK Version: 2.0.0 | API Version: v1 | Last Updated: September 2025_

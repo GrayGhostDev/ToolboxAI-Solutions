@@ -26,6 +26,7 @@ cd /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions
 ```
 
 This will:
+
 1. Create a complete backup
 2. Remove duplicates
 3. Reorganize structure
@@ -56,6 +57,7 @@ If you prefer to run each step individually:
 ## 📁 **What Will Be Changed**
 
 ### **Files to be Removed (Duplicates)**
+
 - `Documentation/09-meta/CLAUDE.md`
 - `Dashboard/ToolboxAI-Dashboard/CLAUDE.md`
 - `ToolboxAI-Roblox-Environment/API/Dashboard/CLAUDE.md`
@@ -65,6 +67,7 @@ If you prefer to run each step individually:
 - Various scattered status files
 
 ### **Directories to be Reorganized**
+
 - `ToolboxAI-Roblox-Environment/` → `src/roblox-environment/`
 - `Dashboard/ToolboxAI-Dashboard/` → `src/dashboard/`
 - `ToolboxAI-Roblox-Environment/API/GhostBackend/` → `src/api/ghost-backend/`
@@ -73,6 +76,7 @@ If you prefer to run each step individually:
 - `types/` → `src/shared/types/`
 
 ### **New Directory Structure**
+
 ```
 ToolBoxAI-Solutions/
 ├── docs/                    # All documentation
@@ -90,16 +94,19 @@ ToolBoxAI-Solutions/
 ## ⚠️ **Important Considerations**
 
 ### **Backup Strategy**
+
 - A complete backup will be created before any changes
 - Backup location: `ToolBoxAI-Solutions-Backup-YYYYMMDD-HHMMSS/`
 - Keep the backup until you've verified everything works
 
 ### **Dependency Management**
+
 - Node.js dependencies will need to be reinstalled
 - Python virtual environments will need to be recreated
 - Import paths will be automatically updated
 
 ### **Configuration Updates**
+
 - `pyproject.toml` will be updated with new paths
 - `package.json` will be updated with new workspace paths
 - All import statements will be updated
@@ -107,6 +114,7 @@ ToolBoxAI-Solutions/
 ## 🔧 **Post-Execution Steps**
 
 ### **1. Install Dependencies**
+
 ```bash
 # Install Node.js dependencies
 npm install
@@ -117,6 +125,7 @@ pip install -r requirements.txt
 ```
 
 ### **2. Test Functionality**
+
 ```bash
 # Test Node.js workspace
 npm run test
@@ -127,11 +136,13 @@ python -m pytest
 ```
 
 ### **3. Update IDE Configuration**
+
 - Update any hardcoded paths in your IDE
 - Refresh project structure in your editor
 - Update any custom build configurations
 
 ### **4. Commit Changes**
+
 ```bash
 git add .
 git commit -m "feat: complete project cleanup and reorganization
@@ -164,12 +175,14 @@ cd ToolboxAI-Roblox-Environment && pip install -r requirements.txt
 ## 📊 **Expected Results**
 
 ### **Quantitative Improvements**
+
 - **30% reduction** in total file count
 - **6 CLAUDE.md files** consolidated to 4 project-specific files
 - **3 package.json files** unified to 1 workspace configuration
 - **50+ markdown files** organized into structured documentation
 
 ### **Qualitative Improvements**
+
 - **Clear project structure** with logical organization
 - **Consistent naming conventions** throughout
 - **Unified configuration management**

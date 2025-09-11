@@ -123,11 +123,11 @@ educational-platform/
 ```typescript
 // Good
 if (condition) {
-  doSomething();
+  doSomething()
 }
 
 // Avoid
-if (condition) doSomething();
+if (condition) doSomething()
 ```
 
 ### Naming Conventions
@@ -154,12 +154,12 @@ interface CourseProperties { ... }
 
 ```typescript
 // Good
-const newArray = originalArray.map(item => transformItem(item));
+const newArray = originalArray.map((item) => transformItem(item))
 
 // Avoid
-const newArray = [];
+const newArray = []
 for (let i = 0; i < originalArray.length; i++) {
-  newArray.push(transformItem(originalArray[i]));
+  newArray.push(transformItem(originalArray[i]))
 }
 ```
 
@@ -173,11 +173,11 @@ for (let i = 0; i < originalArray.length; i++) {
 // Good
 async function fetchUserData(userId: string): Promise<UserData> {
   try {
-    const response = await api.get(`/users/${userId}`);
-    return response.data;
+    const response = await api.get(`/users/${userId}`)
+    return response.data
   } catch (error) {
-    logger.error('Failed to fetch user data', { userId, error });
-    throw new Error('Failed to fetch user data');
+    logger.error('Failed to fetch user data', { userId, error })
+    throw new Error('Failed to fetch user data')
   }
 }
 ```
@@ -436,13 +436,7 @@ return MyModule
 
 ```html
 <!-- Good -->
-<button
-  type="button"
-  aria-pressed="false"
-  class="toggle-button"
->
-  Toggle Feature
-</button>
+<button type="button" aria-pressed="false" class="toggle-button">Toggle Feature</button>
 
 <img src="chart.png" alt="Chart showing user growth over time" />
 
@@ -457,7 +451,7 @@ return MyModule
 - Use parameterized queries to prevent SQL injection
 - Avoid raw SQL in application code; use ORMs or query builders
 - Keep queries simple and focused on a single responsibility
-- Use explicit column names in SELECT statements, avoid SELECT *
+- Use explicit column names in SELECT statements, avoid SELECT \*
 - Include appropriate indexes for frequently queried fields
 
 ```typescript
@@ -467,10 +461,12 @@ const users = await db
   .from('users')
   .where('status', 'active')
   .orderBy('created_at', 'desc')
-  .limit(10);
+  .limit(10)
 
 // Avoid - raw SQL
-const users = await db.raw(`SELECT * FROM users WHERE status = 'active' ORDER BY created_at DESC LIMIT 10`);
+const users = await db.raw(
+  `SELECT * FROM users WHERE status = 'active' ORDER BY created_at DESC LIMIT 10`
+)
 ```
 
 ### Database Access Layer
@@ -487,24 +483,24 @@ export class UserService {
 
   async getUserById(id: string): Promise<User | null> {
     try {
-      return await this.db.users.findUnique({ where: { id } });
+      return await this.db.users.findUnique({ where: { id } })
     } catch (error) {
-      logger.error('Database error when fetching user', { userId: id, error });
-      throw new DatabaseError('Failed to fetch user');
+      logger.error('Database error when fetching user', { userId: id, error })
+      throw new DatabaseError('Failed to fetch user')
     }
   }
 
   async createUser(userData: UserCreateData): Promise<User> {
     return this.db.$transaction(async (tx) => {
-      const user = await tx.users.create({ data: userData });
+      const user = await tx.users.create({ data: userData })
       await tx.userPreferences.create({
         data: {
           userId: user.id,
           // Default preferences
-        }
-      });
-      return user;
-    });
+        },
+      })
+      return user
+    })
   }
 }
 ```
@@ -596,14 +592,14 @@ GET    /api/courses/{id}/lessons    # List lessons for a course
  * @throws {Error} If no valid submissions are found
  */
 function calculateAverageScore(submissions: QuizSubmission[]): number {
-  const validSubmissions = submissions.filter(sub => sub.status === 'completed');
+  const validSubmissions = submissions.filter((sub) => sub.status === 'completed')
 
   if (validSubmissions.length === 0) {
-    throw new Error('No valid submissions found');
+    throw new Error('No valid submissions found')
   }
 
-  const totalScore = validSubmissions.reduce((sum, sub) => sum + sub.score, 0);
-  return (totalScore / validSubmissions.length) * 100;
+  const totalScore = validSubmissions.reduce((sum, sub) => sum + sub.score, 0)
+  return (totalScore / validSubmissions.length) * 100
 }
 ```
 

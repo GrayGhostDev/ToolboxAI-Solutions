@@ -7,17 +7,20 @@ This document provides comprehensive guidance on port configuration, network sec
 ## Port Configuration Strategy
 
 ### Development Environment
+
 - **API Server**: 127.0.0.1:8000 (primary), 127.0.0.1:8001 (alternative)
 - **PostgreSQL**: 127.0.0.1:5432
 - **Redis**: 127.0.0.1:6379
 - **MongoDB**: 127.0.0.1:27017 (if used)
 
 ### Production Environment
+
 - **API Server**: 127.0.0.1:8080 (behind reverse proxy)
 - **Public Access**: 443 (HTTPS), 80 (redirects to HTTPS)
 - **All services**: Bound to localhost only
 
 ### Docker Environment
+
 - **Container Internal**: 127.0.0.1:8888 (OK within container)
 - **Host Binding**: 127.0.0.1:8888 (secure host exposure)
 - **Inter-container**: Via Docker network names
@@ -27,22 +30,25 @@ This document provides comprehensive guidance on port configuration, network sec
 ### 1. Never Expose Services Directly
 
 ❌ **INCORRECT** (Security Risk):
+
 ```yaml
 # docker-compose.yml
 ports:
-  - "8888:8888"  # Exposes to all network interfaces
+  - '8888:8888' # Exposes to all network interfaces
 ```
 
 ✅ **CORRECT** (Secure):
+
 ```yaml
 # docker-compose.yml
 ports:
-  - "127.0.0.1:8888:8888"  # Only localhost
+  - '127.0.0.1:8888:8888' # Only localhost
 ```
 
 ### 2. Use Reverse Proxy for External Access
 
 All external traffic should go through a reverse proxy (nginx/traefik):
+
 ```
 Internet → Firewall → Reverse Proxy (443) → Backend (127.0.0.1:8080)
 ```
@@ -85,6 +91,7 @@ The Ghost Backend Framework intentionally **does not include SSH configuration f
 ### Secure Deployment Methods
 
 #### Option 1: GitHub Actions with Secrets
+
 ```yaml
 # .github/workflows/deploy.yml
 - name: Deploy via SSH
@@ -96,11 +103,13 @@ The Ghost Backend Framework intentionally **does not include SSH configuration f
 ```
 
 #### Option 2: CI/CD Pipeline
+
 - Use GitLab CI, Jenkins, or CircleCI
 - Store SSH keys in CI/CD secret management
 - Never store keys in the repository
 
 #### Option 3: Container Registry
+
 - Push Docker images to registry
 - Pull from registry on production server
 - No direct SSH needed
@@ -134,9 +143,11 @@ chmod 600 .ssh/config
 ## Port Forwarding Configuration
 
 ### Local Development
+
 No port forwarding needed - all services on localhost.
 
 ### Production with Nginx
+
 ```nginx
 # Port 443 (HTTPS) → localhost:8080 (API)
 upstream ghost_backend {
@@ -152,20 +163,22 @@ server {
 ```
 
 ### Docker Networking
+
 ```yaml
 # docker-compose.yml
 services:
   backend:
     ports:
-      - "127.0.0.1:8888:8888"  # Host:Container
+      - '127.0.0.1:8888:8888' # Host:Container
     environment:
-      - DB_HOST=postgres        # Use service name
-      - REDIS_HOST=redis        # Use service name
+      - DB_HOST=postgres # Use service name
+      - REDIS_HOST=redis # Use service name
 ```
 
 ## Common Port Issues and Solutions
 
 ### Issue: Port Already in Use
+
 ```bash
 # Check what's using a port
 lsof -i :8000
@@ -177,17 +190,20 @@ kill -9 $(lsof -ti :8000)
 ```
 
 ### Issue: Connection Refused
+
 1. Check service is running: `ps aux | grep python`
 2. Verify binding address: Should be 127.0.0.1, not 127.0.0.1
 3. Check firewall: `ufw status`
 
 ### Issue: Cannot Access from Browser
+
 - Development: Use `localhost:8000` not `127.0.0.1:8000`
 - Production: Access via domain name (HTTPS) not IP:port
 
 ## Environment-Specific Configurations
 
 ### Development (.env)
+
 ```env
 API_HOST=127.0.0.1
 API_PORT=8000
@@ -195,6 +211,7 @@ DEBUG=true
 ```
 
 ### Production (.env.production)
+
 ```env
 API_HOST=127.0.0.1
 API_PORT=8080
@@ -203,6 +220,7 @@ FORCE_HTTPS=true
 ```
 
 ### Docker (.env.docker)
+
 ```env
 API_HOST=127.0.0.1  # Inside container
 API_PORT=8888
@@ -226,6 +244,7 @@ REDIS_HOST=redis  # Docker service name
 ## Monitoring and Logging
 
 ### Port Monitoring
+
 ```bash
 # Monitor open ports
 watch -n 1 'netstat -tulpn | grep LISTEN'
@@ -235,6 +254,7 @@ nmap -p 8000,8080,5432,6379 your-server.com
 ```
 
 ### Access Logs
+
 - Nginx: `/var/log/nginx/access.log`
 - API: `logs/ghost.log`
 - Docker: `docker logs ghost-backend`

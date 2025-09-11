@@ -1,10 +1,13 @@
 # ============================================================================
+
 # DEPLOYMENT CONFIGURATION GUIDE - Ghost Backend Framework
+
 # ============================================================================
 
 ## 🐳 Docker Deployment
 
 ### 1. Create Dockerfile
+
 ```dockerfile
 FROM python:3.13-slim
 
@@ -42,6 +45,7 @@ CMD ["uvicorn", "src.ghost.api:app", "--host", "127.0.0.1", "--port", "8000"]
 ```
 
 ### 2. Docker Compose Configuration
+
 ```yaml
 version: '3.8'
 
@@ -50,7 +54,7 @@ services:
   ghost-backend:
     build: .
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       - ENVIRONMENT=production
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/ghost_db
@@ -76,7 +80,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - '5432:5432'
     restart: unless-stopped
     networks:
       - ghost-network
@@ -86,7 +90,7 @@ services:
     image: redis:7-alpine
     command: redis-server --requirepass password
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -97,8 +101,8 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
       - ./ssl:/etc/nginx/ssl
@@ -118,6 +122,7 @@ networks:
 ```
 
 ### 3. Nginx Configuration
+
 ```nginx
 events {
     worker_connections 1024;
@@ -184,6 +189,7 @@ http {
 ### AWS Deployment
 
 #### 1. EC2 with Docker
+
 ```bash
 #!/bin/bash
 # User data script for EC2 instance
@@ -214,6 +220,7 @@ docker-compose up -d
 ```
 
 #### 2. ECS (Elastic Container Service)
+
 ```json
 {
   "family": "ghost-backend",
@@ -233,8 +240,8 @@ docker-compose up -d
         }
       ],
       "environment": [
-        {"name": "ENVIRONMENT", "value": "production"},
-        {"name": "DATABASE_URL", "value": "postgresql://user:pass@rds-endpoint:5432/db"}
+        { "name": "ENVIRONMENT", "value": "production" },
+        { "name": "DATABASE_URL", "value": "postgresql://user:pass@rds-endpoint:5432/db" }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
@@ -250,6 +257,7 @@ docker-compose up -d
 ```
 
 #### 3. Lambda Deployment (Serverless)
+
 ```yaml
 # serverless.yml
 service: ghost-backend
@@ -287,6 +295,7 @@ custom:
 ### Google Cloud Platform (GCP)
 
 #### 1. Cloud Run Deployment
+
 ```yaml
 # cloudbuild.yaml
 steps:
@@ -309,6 +318,7 @@ steps:
 ```
 
 #### 2. App Engine Deployment
+
 ```yaml
 # app.yaml
 runtime: python39
@@ -331,6 +341,7 @@ resources:
 ### Microsoft Azure
 
 #### 1. Container Instances
+
 ```json
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
@@ -353,13 +364,13 @@ resources:
             "name": "ghost-backend",
             "properties": {
               "image": "your-registry.azurecr.io/ghost-backend:latest",
-              "ports": [{"port": 8000}],
+              "ports": [{ "port": 8000 }],
               "environmentVariables": [
-                {"name": "ENVIRONMENT", "value": "production"},
-                {"name": "DATABASE_URL", "secureValue": "[parameters('databaseUrl')]"}
+                { "name": "ENVIRONMENT", "value": "production" },
+                { "name": "DATABASE_URL", "secureValue": "[parameters('databaseUrl')]" }
               ],
               "resources": {
-                "requests": {"cpu": 1, "memoryInGb": 1}
+                "requests": { "cpu": 1, "memoryInGb": 1 }
               }
             }
           }
@@ -367,7 +378,7 @@ resources:
         "osType": "Linux",
         "ipAddress": {
           "type": "Public",
-          "ports": [{"protocol": "TCP", "port": 8000}]
+          "ports": [{ "protocol": "TCP", "port": 8000 }]
         }
       }
     }
@@ -378,6 +389,7 @@ resources:
 ## 🔄 CI/CD Pipeline Configuration
 
 ### GitHub Actions
+
 ```yaml
 # .github/workflows/deploy.yml
 name: Deploy Ghost Backend
@@ -397,15 +409,15 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.13'
-      
+
       - name: Install dependencies
         run: |
           pip install -e ".[dev]"
-      
+
       - name: Run tests
         run: |
           pytest --cov=src/ghost --cov-report=xml
-      
+
       - name: Code quality checks
         run: |
           black --check src/
@@ -419,18 +431,18 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-      
+
       - name: Build and push Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -439,7 +451,7 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-      
+
       - name: Deploy to ECS
         run: |
           # Update ECS service with new image
@@ -447,6 +459,7 @@ jobs:
 ```
 
 ### GitLab CI/CD
+
 ```yaml
 # .gitlab-ci.yml
 stages:
@@ -490,6 +503,7 @@ deploy:
 ## 📊 Monitoring and Observability
 
 ### 1. Application Performance Monitoring
+
 ```env
 # Sentry for error tracking
 SENTRY_DSN=https://your-sentry-dsn@sentry.io/project
@@ -506,6 +520,7 @@ HEALTH_CHECK_TIMEOUT=10
 ```
 
 ### 2. Logging Configuration
+
 ```env
 # Structured logging for production
 LOG_FORMAT=json
@@ -522,6 +537,7 @@ LOG_ROTATION=daily
 ```
 
 ### 3. Database Monitoring
+
 ```python
 # Example monitoring setup
 from ghost import DatabaseManager
@@ -529,24 +545,25 @@ import asyncio
 
 async def monitor_database():
     db_manager = DatabaseManager(config.database)
-    
+
     while True:
         # Check connection pool status
         pool_status = await db_manager.get_pool_status()
-        
+
         # Log metrics
         logger.info("Database metrics", extra={
             "active_connections": pool_status.active,
             "idle_connections": pool_status.idle,
             "pool_size": pool_status.size
         })
-        
+
         await asyncio.sleep(60)  # Check every minute
 ```
 
 ## 🔧 Environment-Specific Configurations
 
 ### Development Environment
+
 ```env
 ENVIRONMENT=development
 DEBUG=true
@@ -557,6 +574,7 @@ REDIS_URL=redis://localhost:6379/0
 ```
 
 ### Staging Environment
+
 ```env
 ENVIRONMENT=staging
 DEBUG=false
@@ -567,6 +585,7 @@ JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
 
 ### Production Environment
+
 ```env
 ENVIRONMENT=production
 DEBUG=false
@@ -581,6 +600,7 @@ SENTRY_DSN=https://your-production-sentry-dsn@sentry.io/project
 ## 🚀 Scaling Considerations
 
 ### 1. Horizontal Scaling
+
 ```yaml
 # Kubernetes horizontal pod autoscaler
 apiVersion: autoscaling/v2
@@ -595,21 +615,22 @@ spec:
   minReplicas: 2
   maxReplicas: 10
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 80
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
 ```
 
 ### 2. Database Scaling
+
 ```env
 # Read replicas
 DATABASE_REPLICA_URLS=postgresql://user:pass@replica1.example.com:5432/ghost_prod,postgresql://user:pass@replica2.example.com:5432/ghost_prod
@@ -621,6 +642,7 @@ DB_POOL_TIMEOUT=30
 ```
 
 ### 3. Caching Strategy
+
 ```env
 # Redis clustering
 REDIS_CLUSTER_ENABLED=true

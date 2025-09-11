@@ -1,11 +1,13 @@
 # DashboardHome
 
 ## Component Information
+
 - **Category**: pages
 - **Type**: functional
 - **File**: `src/dashboard/src/components/pages/DashboardHome.tsx`
 
 ## Hooks Used
+
 - `useAppDispatch`
 - `useNavigate`
 - `useAppSelector`
@@ -13,9 +15,11 @@
 - `useEffect`
 
 ## State Management
+
 - Local component state
 
 ## Key Dependencies
+
 - `@mui/icons-material/CheckCircle`
 - `@mui/icons-material/EmojiEvents`
 - `@mui/icons-material/RocketLaunch`

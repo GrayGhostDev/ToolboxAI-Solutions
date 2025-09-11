@@ -51,11 +51,13 @@ ToolboxAI uses multiple PostgreSQL databases for different services:
 ### Installation
 
 1. **Install Python dependencies:**
+
    ```bash
    pip install sqlalchemy psycopg2-binary alembic redis pymongo python-dotenv
    ```
 
 2. **Run the setup script:**
+
    ```bash
    ./scripts/setup_database.sh
    ```
@@ -95,6 +97,7 @@ REDIS_DB=0
 ### Core Schema (01_core_schema.sql)
 
 **Tables:**
+
 - `users` - User accounts and profiles
 - `roles` - Role-based access control
 - `user_roles` - User-role associations
@@ -111,6 +114,7 @@ REDIS_DB=0
 ### AI Agents Schema (02_ai_agents_schema.sql)
 
 **Tables:**
+
 - `ai_agents` - AI agent definitions
 - `agent_tasks` - Task management
 - `agent_states` - SPARC framework states
@@ -126,6 +130,7 @@ REDIS_DB=0
 ### LMS Integration Schema (03_lms_integration_schema.sql)
 
 **Tables:**
+
 - `lms_integrations` - LMS platform configurations
 - `lms_courses` - Course synchronization
 - `lms_assignments` - Assignment integration
@@ -140,6 +145,7 @@ REDIS_DB=0
 ### Analytics Schema (04_analytics_schema.sql)
 
 **Tables:**
+
 - `usage_analytics` - Usage metrics and events
 - `educational_analytics` - Learning insights
 - `error_logs` - Error tracking and debugging
@@ -156,26 +162,31 @@ REDIS_DB=0
 ### Using Alembic
 
 **Create a new migration:**
+
 ```bash
 python database/migrate.py create "Add new feature"
 ```
 
 **Upgrade database:**
+
 ```bash
 python database/migrate.py upgrade
 ```
 
 **Downgrade database:**
+
 ```bash
 python database/migrate.py downgrade <revision>
 ```
 
 **View migration history:**
+
 ```bash
 python database/migrate.py history
 ```
 
 **Check current revision:**
+
 ```bash
 python database/migrate.py current
 ```
@@ -227,6 +238,7 @@ python database/connection_manager.py
 ### Health Check Results
 
 The health check will verify:
+
 - ✅ PostgreSQL database connections
 - ✅ Redis connection
 - ✅ MongoDB connection (if configured)
@@ -269,6 +281,7 @@ psql -U eduplatform -h localhost educational_platform < backup_file.sql
 ### Indexes
 
 All schemas include optimized indexes for:
+
 - Primary key lookups
 - Foreign key relationships
 - Frequently queried fields
@@ -283,6 +296,7 @@ All schemas include optimized indexes for:
 ### Connection Pooling
 
 Configured with:
+
 - Pool size: 10 connections
 - Max overflow: 20 connections
 - Connection recycling: 1 hour
@@ -332,6 +346,7 @@ Configured with:
 ### Debug Mode
 
 Enable debug mode in `.env`:
+
 ```env
 EDU_DB_ECHO=true
 DEBUG=true
@@ -359,6 +374,7 @@ When making database changes:
 ## 📞 Support
 
 For database-related issues:
+
 1. Check the troubleshooting section above
 2. Review the logs in `logs/` directory
 3. Run health checks to identify issues
