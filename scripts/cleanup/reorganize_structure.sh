@@ -5,8 +5,9 @@
 
 set -e
 
-PROJECT_ROOT="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+# Determine project root dynamically (allow override)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 
 echo "🏗️  Starting structural reorganization..."
 echo "Project root: $PROJECT_ROOT"

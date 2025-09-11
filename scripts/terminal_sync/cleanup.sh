@@ -2,7 +2,9 @@
 # ToolBoxAI Cleanup Management Interface
 # Unified interface for all cleanup operations
 
-PROJECT_ROOT="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+# Determine project root dynamically (allow override)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 CLEANUP_DIR="$PROJECT_ROOT/scripts/terminal_sync"
 
 # Colors for output
@@ -35,7 +37,7 @@ show_menu() {
 view_status() {
     echo -e "\n${BLUE}System Status${NC}"
     echo "======================================"
-    df -h /Volumes/G-DRIVE\ ArmorATD | grep -E "Filesystem|/Volumes"
+    df -h "$PROJECT_ROOT" | grep -E "Filesystem|^/|Mounted" || df -h
     echo ""
     echo "Project Size:"
     du -sh "$PROJECT_ROOT" 2>/dev/null

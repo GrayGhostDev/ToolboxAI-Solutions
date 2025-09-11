@@ -56,7 +56,10 @@ while true; do
     # Terminal Status
     echo ""
     echo "=== TERMINAL STATUS ==="
-    SYNC_DIR="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/scripts/terminal_sync"
+    # Compute project root dynamically to avoid hardcoded absolute paths
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    PROJECT_ROOT="${PROJECT_ROOT:-${SCRIPT_DIR}}"
+    SYNC_DIR="${SYNC_DIR:-${PROJECT_ROOT}/scripts/terminal_sync}"
     for terminal in terminal1 terminal2 terminal3 debugger; do
         if [ -f "$SYNC_DIR/status/${terminal}.status" ]; then
             status=$(tail -1 "$SYNC_DIR/status/${terminal}.status")

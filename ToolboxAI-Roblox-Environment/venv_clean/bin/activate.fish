@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV '/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean'
+set -gx VIRTUAL_ENV '/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean'
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"bin $PATH

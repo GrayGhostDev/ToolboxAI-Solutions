@@ -12,9 +12,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Project root directory
-PROJECT_ROOT="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
-ROBLOX_ENV="$PROJECT_ROOT/src/roblox-environment"
+# Project root directory (computed dynamically; override with PROJECT_ROOT env var)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+ROBLOX_ENV="$PROJECT_ROOT/ToolboxAI-Roblox-Environment"
 VENV_PATH="$ROBLOX_ENV/venv_clean"
 
 echo -e "${BLUE}🚀 Setting up ToolboxAI MCP Environment${NC}"

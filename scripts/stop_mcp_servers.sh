@@ -12,8 +12,9 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Project root directory
-PROJECT_ROOT="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+# Project root directory (computed dynamically; override with PROJECT_ROOT env var)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 PIDS_DIR="$PROJECT_ROOT/scripts/pids"
 
 echo -e "${BLUE}🛑 Stopping ToolboxAI MCP Servers and Agents${NC}"

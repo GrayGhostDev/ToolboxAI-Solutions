@@ -10,140 +10,140 @@
     "critical": [
       {
         "type": "code",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/scripts/security_scanner.py",
+        "file": "scripts/security_scanner.py",
         "issue": "Using eval() function",
         "fix": "Replace eval() with ast.literal_eval() or safer alternatives"
       },
       {
         "type": "code",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/scripts/security_scanner.py",
+        "file": "scripts/security_scanner.py",
         "issue": "Using exec() function",
         "fix": "Remove exec() and use safer alternatives"
       },
       {
         "type": "code",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/coordinators/error_coordinator.py",
+        "file": "ToolboxAI-Roblox-Environment/coordinators/error_coordinator.py",
         "issue": "Using eval() function",
         "fix": "Replace eval() with ast.literal_eval() or safer alternatives"
       },
       {
         "type": "code",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/agents/standards_agent.py",
+        "file": "ToolboxAI-Roblox-Environment/agents/standards_agent.py",
         "issue": "Using eval() function",
         "fix": "Replace eval() with ast.literal_eval() or safer alternatives"
       },
       {
         "type": "code",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/github/hooks/pre_push.py",
+        "file": "github/hooks/pre_push.py",
         "issue": "Using eval() function",
         "fix": "Replace eval() with ast.literal_eval() or safer alternatives"
       },
       {
         "type": "code",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/github/hooks/pre_push.py",
+        "file": "github/hooks/pre_push.py",
         "issue": "Using exec() function",
         "fix": "Remove exec() and use safer alternatives"
       },
       {
         "type": "authentication",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/server/auth.py",
+        "file": "ToolboxAI-Roblox-Environment/server/auth.py",
         "issue": "Weak or default secret key",
         "fix": "Generate strong random secret: openssl rand -hex 32"
       },
       {
         "type": "authentication",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/dashboard/backend/api/auth.py",
+        "file": "src/dashboard/backend/api/auth.py",
         "issue": "Weak or default secret key",
         "fix": "Generate strong random secret: openssl rand -hex 32"
       },
       {
         "type": "authentication",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/api/ghost-backend/src/ghost/auth.py",
+        "file": "src/api/ghost-backend/src/ghost/auth.py",
         "issue": "Weak or default secret key",
         "fix": "Generate strong random secret: openssl rand -hex 32"
       },
       {
         "type": "authentication",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/api/dashboard-backend/backend/api/auth.py",
+        "file": "src/api/dashboard-backend/backend/api/auth.py",
         "issue": "Weak or default secret key",
         "fix": "Generate strong random secret: openssl rand -hex 32"
       },
       {
         "type": "websocket",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/api/ghost-backend/src/ghost/websocket.py",
+        "file": "src/api/ghost-backend/src/ghost/websocket.py",
         "issue": "WebSocket connection without authentication",
         "fix": "Implement WebSocket authentication"
       },
       {
         "type": "sql_injection",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/agents/database_integration.py",
+        "file": "ToolboxAI-Roblox-Environment/agents/database_integration.py",
         "issue": "SQL query using f-string formatting",
         "fix": "Use parameterized queries instead of f-strings"
       },
       {
         "type": "exposed_secret",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/database/setup_real_data.py",
+        "file": "database/setup_real_data.py",
         "secret_type": "password",
         "issue": "Potential password exposed",
         "fix": "Move to environment variables"
       },
       {
         "type": "exposed_secret",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/server/roblox_server.py",
+        "file": "ToolboxAI-Roblox-Environment/server/roblox_server.py",
         "secret_type": "password",
         "issue": "Potential password exposed",
         "fix": "Move to environment variables"
       },
       {
         "type": "exposed_secret",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/config/kubernetes/postgres-statefulset.yaml",
+        "file": "config/kubernetes/postgres-statefulset.yaml",
         "secret_type": "password",
         "issue": "Potential password exposed",
         "fix": "Move to environment variables"
       },
       {
         "type": "exposed_secret",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/config/kubernetes/redis-deployment.yaml",
+        "file": "config/kubernetes/redis-deployment.yaml",
         "secret_type": "password",
         "issue": "Potential password exposed",
         "fix": "Move to environment variables"
       },
       {
         "type": "exposed_secret",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/dashboard/src/config/users.ts",
+        "file": "src/dashboard/src/config/users.ts",
         "secret_type": "password",
         "issue": "Potential password exposed",
         "fix": "Move to environment variables"
       },
       {
         "type": "exposed_secret",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/dashboard/src/utils/terminal-verify.ts",
+        "file": "src/dashboard/src/utils/terminal-verify.ts",
         "secret_type": "password",
         "issue": "Potential password exposed",
         "fix": "Move to environment variables"
       },
       {
         "type": "exposed_secret",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/api/ghost-backend/config/config.production.yaml",
+        "file": "src/api/ghost-backend/config/config.production.yaml",
         "secret_type": "password",
         "issue": "Potential password exposed",
         "fix": "Move to environment variables"
       },
       {
         "type": "cors",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/server/main.py",
+        "file": "ToolboxAI-Roblox-Environment/server/main.py",
         "issue": "CORS allows credentials with wildcard origin",
         "fix": "Never use wildcard with credentials"
       },
       {
         "type": "cors",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/dashboard/backend/main.py",
+        "file": "src/dashboard/backend/main.py",
         "issue": "CORS allows credentials with wildcard origin",
         "fix": "Never use wildcard with credentials"
       },
       {
         "type": "cors",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/api/dashboard-backend/backend/main.py",
+        "file": "src/api/dashboard-backend/backend/main.py",
         "issue": "CORS allows credentials with wildcard origin",
         "fix": "Never use wildcard with credentials"
       }
@@ -151,61 +151,61 @@
     "high": [
       {
         "type": "code",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/scripts/security_scanner.py",
+        "file": "scripts/security_scanner.py",
         "issue": "Using pickle for deserialization",
         "fix": "Use JSON or other safe serialization formats"
       },
       {
         "type": "websocket",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/server/websocket_auth.py",
+        "file": "ToolboxAI-Roblox-Environment/server/websocket_auth.py",
         "issue": "WebSocket without rate limiting",
         "fix": "Implement per-connection rate limiting"
       },
       {
         "type": "websocket",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/examples/websocket_auth_usage.py",
+        "file": "ToolboxAI-Roblox-Environment/examples/websocket_auth_usage.py",
         "issue": "WebSocket without rate limiting",
         "fix": "Implement per-connection rate limiting"
       },
       {
         "type": "websocket",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/examples/websocket_auth_usage.py",
+        "file": "ToolboxAI-Roblox-Environment/examples/websocket_auth_usage.py",
         "issue": "WebSocket without RBAC",
         "fix": "Implement role-based access control"
       },
       {
         "type": "websocket",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/dashboard/backend/websocket.py",
+        "file": "src/dashboard/backend/websocket.py",
         "issue": "WebSocket without rate limiting",
         "fix": "Implement per-connection rate limiting"
       },
       {
         "type": "websocket",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/dashboard/backend/websocket.py",
+        "file": "src/dashboard/backend/websocket.py",
         "issue": "WebSocket without RBAC",
         "fix": "Implement role-based access control"
       },
       {
         "type": "websocket",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/api/ghost-backend/src/ghost/websocket.py",
+        "file": "src/api/ghost-backend/src/ghost/websocket.py",
         "issue": "WebSocket without rate limiting",
         "fix": "Implement per-connection rate limiting"
       },
       {
         "type": "websocket",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/api/ghost-backend/src/ghost/websocket.py",
+        "file": "src/api/ghost-backend/src/ghost/websocket.py",
         "issue": "WebSocket without RBAC",
         "fix": "Implement role-based access control"
       },
       {
         "type": "websocket",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/api/dashboard-backend/backend/websocket.py",
+        "file": "src/api/dashboard-backend/backend/websocket.py",
         "issue": "WebSocket without rate limiting",
         "fix": "Implement per-connection rate limiting"
       },
       {
         "type": "websocket",
-        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/api/dashboard-backend/backend/websocket.py",
+        "file": "src/api/dashboard-backend/backend/websocket.py",
         "issue": "WebSocket without RBAC",
         "fix": "Implement role-based access control"
       }

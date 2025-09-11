@@ -2,7 +2,9 @@
 # Setup Automatic Cleanup Scheduling
 # Based on CLEANUP_INTEGRATED.md scheduling protocols
 
-PROJECT_ROOT="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+# Determine project root dynamically (allow override)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 CLEANUP_SCRIPT="$PROJECT_ROOT/scripts/terminal_sync/intelligent_cleanup.py"
 EMERGENCY_SCRIPT="$PROJECT_ROOT/scripts/terminal_sync/emergency_cleanup.sh"
 

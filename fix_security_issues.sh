@@ -6,6 +6,11 @@
 
 set -e
 
+# Determine project root dynamically (allow override)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$SCRIPT_DIR}"
+cd "$PROJECT_ROOT"
+
 echo "=========================================="
 echo "TERMINAL 4: FINAL SECURITY FIXES"
 echo "Achieving 100% Security Completion"
@@ -17,9 +22,6 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
-
-PROJECT_ROOT="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
-cd "$PROJECT_ROOT"
 
 # ============================================
 # 1. GENERATE SECURE SECRETS

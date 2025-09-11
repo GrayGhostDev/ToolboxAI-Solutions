@@ -5,13 +5,10 @@ Identifies and reports all security vulnerabilities
 
 import os
 import re
-import ast
 import json
 import subprocess
 from pathlib import Path
 from datetime import datetime
-import hashlib
-from typing import Dict, List, Any
 
 class SecurityScanner:
     def __init__(self, project_root="."):
@@ -24,6 +21,13 @@ class SecurityScanner:
         }
         self.scan_results = {}
         
+    def _rel(self, p: Path | str) -> str:
+        try:
+            pth = Path(p)
+            return str(pth.resolve().relative_to(self.project_root.resolve()))
+        except Exception:
+            return str(p)
+
     def run_all_scans(self):
         """Execute all security scans"""
         print("=" * 60)
@@ -123,7 +127,7 @@ class SecurityScanner:
                 if re.search(r'\beval\s*\(', content):
                     self.vulnerabilities["critical"].append({
                         "type": "code",
-                        "file": str(py_file),
+                        "file": self._rel(py_file),
                         "issue": "Using eval() function",
                         "fix": "Replace eval() with ast.literal_eval() or safer alternatives"
                     })
@@ -132,7 +136,7 @@ class SecurityScanner:
                 if re.search(r'\bexec\s*\(', content):
                     self.vulnerabilities["critical"].append({
                         "type": "code",
-                        "file": str(py_file),
+                        "file": self._rel(py_file),
                         "issue": "Using exec() function",
                         "fix": "Remove exec() and use safer alternatives"
                     })
@@ -141,7 +145,7 @@ class SecurityScanner:
                 if "pickle.loads" in content or "pickle.load" in content:
                     self.vulnerabilities["high"].append({
                         "type": "code",
-                        "file": str(py_file),
+                        "file": self._rel(py_file),
                         "issue": "Using pickle for deserialization",
                         "fix": "Use JSON or other safe serialization formats"
                     })
@@ -168,7 +172,7 @@ class SecurityScanner:
                     if not re.search(r'os\.environ|os\.getenv|settings\.|config\.', content):
                         self.vulnerabilities["critical"].append({
                             "type": "authentication",
-                            "file": str(auth_file),
+                            "file": self._rel(auth_file),
                             "issue": "Hardcoded secret key found",
                             "fix": "Use environment variables for secrets"
                         })
@@ -177,7 +181,7 @@ class SecurityScanner:
                 if re.search(r'SECRET_KEY.*secret|password|12345', content, re.IGNORECASE):
                     self.vulnerabilities["critical"].append({
                         "type": "authentication",
-                        "file": str(auth_file),
+                        "file": self._rel(auth_file),
                         "issue": "Weak or default secret key",
                         "fix": "Generate strong random secret: openssl rand -hex 32"
                     })
@@ -187,7 +191,7 @@ class SecurityScanner:
                     if "exp" not in content and "expires_delta" not in content and "expiry" not in content.lower():
                         self.vulnerabilities["high"].append({
                             "type": "authentication",
-                            "file": str(auth_file),
+                            "file": self._rel(auth_file),
                             "issue": "JWT tokens may not expire",
                             "fix": "Add expiration to JWT tokens"
                         })
@@ -213,7 +217,7 @@ class SecurityScanner:
                     if "authenticate" not in content.lower() and "auth" not in content.lower():
                         self.vulnerabilities["critical"].append({
                             "type": "websocket",
-                            "file": str(ws_file),
+                            "file": self._rel(ws_file),
                             "issue": "WebSocket connection without authentication",
                             "fix": "Implement WebSocket authentication"
                         })
@@ -222,7 +226,7 @@ class SecurityScanner:
                     if "rate_limit" not in content.lower():
                         self.vulnerabilities["high"].append({
                             "type": "websocket",
-                            "file": str(ws_file),
+                            "file": self._rel(ws_file),
                             "issue": "WebSocket without rate limiting",
                             "fix": "Implement per-connection rate limiting"
                         })
@@ -231,7 +235,7 @@ class SecurityScanner:
                     if not re.search(r'role.*check|rbac|permission', content, re.IGNORECASE):
                         self.vulnerabilities["high"].append({
                             "type": "websocket",
-                            "file": str(ws_file),
+                            "file": self._rel(ws_file),
                             "issue": "WebSocket without RBAC",
                             "fix": "Implement role-based access control"
                         })
@@ -259,7 +263,7 @@ class SecurityScanner:
                     if "pydantic" not in content.lower() and "validate" not in content.lower():
                         self.vulnerabilities["high"].append({
                             "type": "input_validation",
-                            "file": str(api_file),
+                            "file": self._rel(api_file),
                             "issue": "API endpoint without input validation",
                             "fix": "Use Pydantic models for input validation"
                         })
@@ -269,7 +273,7 @@ class SecurityScanner:
                     if not re.search(r'content_type|mime|extension|allowed_extensions', content, re.IGNORECASE):
                         self.vulnerabilities["critical"].append({
                             "type": "file_upload",
-                            "file": str(api_file),
+                            "file": self._rel(api_file),
                             "issue": "File upload without type validation",
                             "fix": "Validate file types and size limits"
                         })
@@ -296,7 +300,7 @@ class SecurityScanner:
                 if re.search(r'(SELECT|INSERT|UPDATE|DELETE).*\+.*%', content, re.IGNORECASE):
                     self.vulnerabilities["critical"].append({
                         "type": "sql_injection",
-                        "file": str(db_file),
+                        "file": self._rel(db_file),
                         "issue": "Potential SQL injection via string concatenation",
                         "fix": "Use parameterized queries"
                     })
@@ -305,7 +309,7 @@ class SecurityScanner:
                 if re.search(r'f["\'].*?(SELECT|INSERT|UPDATE|DELETE).*?\{', content, re.IGNORECASE):
                     self.vulnerabilities["critical"].append({
                         "type": "sql_injection",
-                        "file": str(db_file),
+                        "file": self._rel(db_file),
                         "issue": "SQL query using f-string formatting",
                         "fix": "Use parameterized queries instead of f-strings"
                     })
@@ -332,7 +336,7 @@ class SecurityScanner:
                 if "dangerouslySetInnerHTML" in content:
                     self.vulnerabilities["high"].append({
                         "type": "xss",
-                        "file": str(jsx_file),
+                        "file": self._rel(jsx_file),
                         "issue": "Using dangerouslySetInnerHTML",
                         "fix": "Sanitize HTML or use safe alternatives"
                     })
@@ -341,7 +345,7 @@ class SecurityScanner:
                 if re.search(r'\beval\s*\(', content):
                     self.vulnerabilities["critical"].append({
                         "type": "xss",
-                        "file": str(jsx_file),
+                        "file": self._rel(jsx_file),
                         "issue": "Using eval() function",
                         "fix": "Remove eval() and use safe alternatives"
                     })
@@ -376,7 +380,7 @@ class SecurityScanner:
                             if ".example" not in str(file_path) and "test" not in str(file_path).lower():
                                 self.vulnerabilities["critical"].append({
                                     "type": "exposed_secret",
-                                    "file": str(file_path),
+                                    "file": self._rel(file_path),
                                     "secret_type": secret_type,
                                     "issue": f"Potential {secret_type} exposed",
                                     "fix": "Move to environment variables"
@@ -399,10 +403,10 @@ class SecurityScanner:
                 content = cors_file.read_text()
                 
                 # Check for wildcard CORS
-                if re.search(r'allow_origins.*?\[\s*["\']?\*["\']?\s*\]', content):
+                if re.search(r'allow_origins.*?\[\s*["\']?\*["\']?\s*]', content):
                     self.vulnerabilities["high"].append({
                         "type": "cors",
-                        "file": str(cors_file),
+                        "file": self._rel(cors_file),
                         "issue": "CORS allows all origins (*)",
                         "fix": "Specify allowed origins explicitly"
                     })
@@ -411,7 +415,7 @@ class SecurityScanner:
                 if "allow_credentials=True" in content and "*" in content:
                     self.vulnerabilities["critical"].append({
                         "type": "cors",
-                        "file": str(cors_file),
+                        "file": self._rel(cors_file),
                         "issue": "CORS allows credentials with wildcard origin",
                         "fix": "Never use wildcard with credentials"
                     })
@@ -491,5 +495,8 @@ class SecurityScanner:
 
 # Run scanner
 if __name__ == "__main__":
-    scanner = SecurityScanner("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions")
+    # Determine project root dynamically: use PROJECT_ROOT env or parent of this script
+    default_root = Path(__file__).resolve().parents[1]
+    project_root = os.environ.get("PROJECT_ROOT", str(default_root))
+    scanner = SecurityScanner(project_root)
     scanner.run_all_scans()

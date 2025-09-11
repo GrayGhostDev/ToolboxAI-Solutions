@@ -3,14 +3,11 @@
 # Terminal 1 - Comprehensive Verification Script
 # This script performs all verification tasks for Terminal 1 readiness
 
-echo "╔════════════════════════════════════════════════════════════╗"
-echo "║     TERMINAL 1 - COMPREHENSIVE VERIFICATION SUITE         ║"
-echo "║         Backend/Database Orchestrator                     ║"
-echo "╚════════════════════════════════════════════════════════════╝"
-echo ""
-echo "🕐 Start Time: $(date)"
-echo "📍 Location: $(pwd)"
-echo ""
+# Determine base dir dynamically (allow override)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="${BASE_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+SYNC_DIR="$BASE_DIR/scripts/terminal_sync"
+VENV_DIR="$BASE_DIR/ToolboxAI-Roblox-Environment/venv_clean"
 
 # Colors for output
 RED='\033[0;31m'
@@ -20,11 +17,6 @@ BLUE='\033[0;34m'
 MAGENTA='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
-
-# Configuration
-BASE_DIR="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
-SYNC_DIR="$BASE_DIR/scripts/terminal_sync"
-VENV_DIR="$BASE_DIR/ToolboxAI-Roblox-Environment/venv_clean"
 
 # Score tracking
 TOTAL_CHECKS=0
@@ -296,3 +288,4 @@ else
 fi
 
 exit $EXIT_CODE
+

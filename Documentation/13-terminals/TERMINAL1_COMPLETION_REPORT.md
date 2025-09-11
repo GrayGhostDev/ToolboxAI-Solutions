@@ -86,7 +86,7 @@ ws://127.0.0.1:8008/ws/{client_id}
 
 ### Service Monitor Script
 ```bash
-/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/monitor_services.sh
+./monitor_services.sh
 # Usage: ./monitor_services.sh
 ```
 

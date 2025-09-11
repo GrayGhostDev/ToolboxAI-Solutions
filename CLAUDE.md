@@ -9,7 +9,7 @@ ToolBoxAI-Solutions is a comprehensive educational technology platform that inte
 ## Repository Structure
 
 ```
-/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/
+./
 ├── ToolboxAI-Roblox-Environment/    # Main Roblox educational platform (95% complete)
 │   ├── mcp/                         # Model Context Protocol (WebSocket :9876)
 │   ├── agents/                      # LangChain/LangGraph AI agents
@@ -37,6 +37,9 @@ ToolBoxAI-Solutions is a comprehensive educational technology platform that inte
 │   ├── deploy/                      # Production deployment scripts
 │   ├── setup/                       # Environment setup scripts
 │   ├── maintenance/                 # Maintenance and cleanup scripts
+│   ├── database/                    # Database management scripts
+│   ├── terminal_sync/               # Terminal synchronization scripts
+│   ├── cleanup/                     # Project cleanup scripts
 │   └── pids/                        # Process ID files
 ├── config/                           # Configuration files
 │   ├── production/                  # Production configurations
@@ -56,7 +59,17 @@ ToolBoxAI-Solutions is a comprehensive educational technology platform that inte
     ├── 01-overview/                 # Getting started guides
     ├── 02-architecture/             # System design & data models
     ├── 03-api/                      # API documentation
-    └── 11-sdks/                     # SDK documentation
+    ├── 04-implementation/           # Implementation details & fixes
+    ├── 05-features/                 # Feature documentation
+    ├── 06-user-guides/              # User guides and tutorials
+    ├── 07-operations/               # Operations and deployment
+    ├── 08-reference/                # Reference documentation
+    ├── 09-meta/                     # Meta documentation & assessments
+    ├── 10-reports/                  # Various technical reports
+    ├── 11-sdks/                     # SDK documentation
+    ├── 12-status/                   # Project status and TODO
+    ├── 13-terminals/                # Terminal-specific documentation
+    └── 14-testing/                  # Testing documentation
 ```
 
 ## Development Commands
@@ -114,7 +127,7 @@ mypy server/ agents/ mcp/
 # From project root directory
 
 # Database setup
-scripts/setup_database.sh
+scripts/database/setup_database.sh
 
 # Production deployment
 scripts/deploy/deploy_production.sh --environment=production
@@ -366,7 +379,7 @@ cp config/production/production.env .env
 # Edit .env with your production values
 
 # Database setup
-scripts/setup_database.sh
+scripts/database/setup_database.sh
 
 # SSL/TLS configuration
 # Place certificates in config/production/ssl/

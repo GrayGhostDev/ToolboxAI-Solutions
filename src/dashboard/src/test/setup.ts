@@ -18,6 +18,25 @@ if (typeof structuredClone === 'undefined') {
   global.structuredClone = (obj: any) => {
     return JSON.parse(JSON.stringify(obj));
   };
+} else {
+  // Override existing structuredClone to handle axios config objects
+  const originalStructuredClone = global.structuredClone;
+  global.structuredClone = (obj: any, options?: any) => {
+    try {
+      // Try the original first
+      return originalStructuredClone(obj, options);
+    } catch (e) {
+      // If it fails (e.g., with functions), fallback to JSON serialization
+      // This removes functions but preserves data structure
+      const serializable = JSON.parse(JSON.stringify(obj, (key, value) => {
+        if (typeof value === 'function') {
+          return undefined; // Remove functions
+        }
+        return value;
+      }));
+      return serializable;
+    }
+  };
 }
 
 // Mock WebSocket

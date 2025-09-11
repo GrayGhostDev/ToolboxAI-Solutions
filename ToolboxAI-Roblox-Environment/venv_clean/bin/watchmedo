@@ -1,5 +1,5 @@
 #!/bin/sh
-'''exec' "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/bin/python3.12" "$0" "$@"
+'''exec' "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/bin/python3.12" "$0" "$@"
 ' '''
 import sys
 from watchdog.watchmedo import main

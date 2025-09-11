@@ -3,16 +3,17 @@
 # Terminal 3 - Roblox Integration Startup Script
 # Coordinates with all terminals and launches Roblox Studio integration
 
+# Determine project root dynamically (allow override)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+SYNC_DIR="$PROJECT_ROOT/scripts/terminal_sync"
+ROBLOX_DIR="$PROJECT_ROOT/ToolboxAI-Roblox-Environment/Roblox"
+SCRIPTS_DIR="$ROBLOX_DIR/Scripts/ModuleScripts"
+
 echo "🎮 Terminal 3 - Roblox Integration Startup"
 echo "=========================================="
 echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
 echo ""
-
-# Set paths
-PROJECT_ROOT="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
-SYNC_DIR="$PROJECT_ROOT/scripts/terminal_sync"
-ROBLOX_DIR="$PROJECT_ROOT/ToolboxAI-Roblox-Environment/Roblox"
-SCRIPTS_DIR="$ROBLOX_DIR/Scripts/ModuleScripts"
 
 # Colors for output
 RED='\033[0;31m'
@@ -90,6 +91,8 @@ echo ""
 
 # Create status file
 mkdir -p "$SYNC_DIR/status"
+# Ensure scripts directory exists for monitor script
+mkdir -p "$SYNC_DIR/scripts"
 cat > "$SYNC_DIR/status/terminal3.json" << EOF
 {
     "terminal": "terminal3",
@@ -322,3 +325,4 @@ EOF
     
     sleep 10
 done
+

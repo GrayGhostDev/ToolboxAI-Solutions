@@ -3,6 +3,10 @@
 # Terminal 1 Integration Verification Script
 # Tests communication with Terminal 2 (Frontend) and Terminal 3 (Roblox)
 
+# Determine project root dynamically (allow override)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+
 echo "🔍 Terminal 1 - Integration Verification"
 echo "========================================"
 echo "Time: $(date)"
@@ -15,7 +19,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Sync directory for inter-terminal communication
-SYNC_DIR="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/scripts/terminal_sync"
+SYNC_DIR="${SYNC_DIR:-$PROJECT_ROOT/scripts/terminal_sync}"
 
 # Create necessary directories if they don't exist
 mkdir -p "$SYNC_DIR/messages"
@@ -233,7 +237,7 @@ if command -v python3 > /dev/null 2>&1; then
 import psutil
 print(f'CPU Usage: {psutil.cpu_percent(interval=1)}%')
 print(f'Memory Usage: {psutil.virtual_memory().percent}%')
-print(f'Disk Usage: {psutil.disk_usage('/').percent}%')
+print(f'Disk Usage: {psutil.disk_usage(\"/\").percent}%')
 " 2>/dev/null || echo "Unable to get system metrics"
 fi
 

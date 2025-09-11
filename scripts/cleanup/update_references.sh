@@ -5,8 +5,9 @@
 
 set -e
 
-PROJECT_ROOT="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+# Determine project root dynamically (allow override)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 
 echo "🔗 Starting reference updates..."
 echo "Project root: $PROJECT_ROOT"
@@ -70,9 +71,9 @@ if [[ -f "$PROJECT_ROOT/pyproject.toml" ]]; then
     sed -i.bak 's|"./ToolboxAI-Roblox-Environment/toolboxai_utils"|"./src/shared/utils"|g' "$PROJECT_ROOT/pyproject.toml"
     sed -i.bak 's|"./API/GhostBackend/src"|"./src/api/ghost-backend/src"|g' "$PROJECT_ROOT/pyproject.toml"
     
-    # Update venv path
-    sed -i.bak 's|venvPath = "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment"|venvPath = "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/roblox-environment"|g' "$PROJECT_ROOT/pyproject.toml"
-    
+    # Update venv path (replace any venvPath pointing to ToolboxAI-Roblox-Environment with src/roblox-environment)
+    sed -i.bak 's|venvPath\s*=\s*"[^"]*ToolboxAI-Roblox-Environment"|venvPath = "./src/roblox-environment"|g' "$PROJECT_ROOT/pyproject.toml"
+
     rm "$PROJECT_ROOT/pyproject.toml.bak" 2>/dev/null || true
     echo "   ✅ pyproject.toml updated"
 fi

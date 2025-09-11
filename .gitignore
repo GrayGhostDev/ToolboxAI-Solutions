@@ -21,14 +21,15 @@ wheels/
 *.egg
 MANIFEST
 
-# Virtual environments
-venv/
-env/
-ENV/
-venv_clean/lib/
-venv_clean/include/
-venv_clean/share/
-venv_clean/pyvenv.cfg
+# Virtual environments (global)
+**/venv/
+**/.venv/
+**/venv_clean/
+**/env/
+**/ENV/
+**/pyvenv.cfg
+**/Scripts/
+**/bin/activate*
 
 # Node
 node_modules/
@@ -138,3 +139,6 @@ blob-report/
 # Misc
 *.tgz
 *.tar.gz
+
+# Generated security reports
+security_scan_report.json
