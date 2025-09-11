@@ -145,8 +145,8 @@ class TerminalVerificationService {
       critical: false
     },
     {
-      name: 'WebSocket Endpoint',
-      path: '/socket.io',
+      name: 'Socket.IO Status',
+      path: '/socketio/status',
       method: 'GET',
       expectedStatus: 200,
       timeout: 5000,

@@ -66,7 +66,7 @@ If you prefer to run each step individually:
 
 ### **Directories to be Reorganized**
 
-- `ToolboxAI-Roblox-Environment/` → `src/roblox-environment/`
+- `ToolboxAI-Roblox-Environment/` (canonical path)
 - `Dashboard/ToolboxAI-Dashboard/` → `src/dashboard/`
 - `ToolboxAI-Roblox-Environment/API/GhostBackend/` → `src/api/ghost-backend/`
 - `toolboxai_settings/` → `src/shared/settings/`

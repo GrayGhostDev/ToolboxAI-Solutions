@@ -116,7 +116,7 @@ ToolBoxAI-Solutions/
 #### **CLAUDE.md Consolidation**
 
 - **KEEP**: `/CLAUDE.md` (Root - Main project overview)
-- **KEEP**: `/ToolboxAI-Roblox-Environment/CLAUDE.md` → Move to `/src/roblox-environment/CLAUDE.md`
+- **KEEP**: `/ToolboxAI-Roblox-Environment/CLAUDE.md` → Canonical path `/ToolboxAI-Roblox-Environment/CLAUDE.md`
 - **MERGE**: Dashboard CLAUDE.md files → Create `/src/dashboard/CLAUDE.md`
 - **MERGE**: Ghost backend CLAUDE.md → Create `/src/api/ghost-backend/CLAUDE.md`
 - **DELETE**: `/Documentation/09-meta/CLAUDE.md` (redundant)
@@ -152,7 +152,7 @@ ToolBoxAI-Solutions/
 
 #### **Roblox Environment Cleanup**
 
-- **REORGANIZE**: Main Roblox environment into `/src/roblox-environment/`
+- **REORGANIZE**: Main Roblox environment into `/ToolboxAI-Roblox-Environment/`
 - **CONSOLIDATE**: All Roblox-related code in one place
 - **ORGANIZE**: Lua scripts, agents, and services
 
@@ -160,7 +160,7 @@ ToolBoxAI-Solutions/
 
 #### **Environment Management**
 
-- **STANDARDIZE**: Virtual environment in `/src/roblox-environment/venv/`
+- **STANDARDIZE**: Virtual environment in `/ToolboxAI-Roblox-Environment/venv/`
 - **CONSOLIDATE**: All requirements files
 - **UNIFY**: Environment variable management
 

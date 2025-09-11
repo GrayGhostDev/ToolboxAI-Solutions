@@ -5,6 +5,7 @@ import asyncio
 import socketio
 import sys
 import os
+import pytest
 
 # Create a Socket.IO client
 sio = socketio.AsyncClient()

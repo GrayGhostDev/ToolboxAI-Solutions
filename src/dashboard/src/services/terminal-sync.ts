@@ -9,7 +9,7 @@
  */
 
 import { io, Socket } from 'socket.io-client';
-import { WS_URL, API_BASE_URL, AUTH_TOKEN_KEY } from '../config';
+import { WS_URL, API_BASE_URL, AUTH_TOKEN_KEY, SIO_PATH } from '../config';
 import axios, { AxiosInstance } from 'axios';
 
 // Browser-compatible EventEmitter implementation
@@ -286,7 +286,7 @@ export class TerminalSyncService extends EventEmitter {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const socket = io(this.terminalEndpoints.terminal1.socketio, {
         auth: { token },
-        path: '/socket.io',
+        path: SIO_PATH,
         transports: ['websocket', 'polling'],
         timeout: 10000,
         reconnection: true,
@@ -456,10 +456,10 @@ export class TerminalSyncService extends EventEmitter {
     
     try {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      // Official Socket.IO client usage: pass namespace in URL, not as an option
       const debugSocket = io(this.terminalEndpoints.debugger.socketio, {
         auth: { token },
-        path: '/socket.io',
-        namespace: '/debug',
+        path: SIO_PATH,
         timeout: 10000
       });
 

@@ -58,6 +58,25 @@ sio = socketio.AsyncServer(
     cors_credentials=True
 )
 
+# Optional: Debug namespace implementation to follow official namespacing pattern
+class DebugNamespace(socketio.AsyncNamespace):
+    async def on_connect(self, sid, environ):
+        try:
+            safe_sid = str(sid)[:20].replace('\n', '').replace('\r', '')
+            logger.info(f"[debug] Client {safe_sid} connected to /debug")
+        except Exception:
+            pass
+
+    async def on_disconnect(self, sid):
+        try:
+            safe_sid = str(sid)[:20].replace('\n', '').replace('\r', '')
+            logger.info(f"[debug] Client {safe_sid} disconnected from /debug")
+        except Exception:
+            pass
+
+# Register namespace
+sio.register_namespace(DebugNamespace('/debug'))
+
 # Track connected clients
 connected_clients: Dict[str, Dict[str, Any]] = {}
 

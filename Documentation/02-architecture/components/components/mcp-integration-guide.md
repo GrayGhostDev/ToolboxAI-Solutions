@@ -74,7 +74,7 @@ The MCP configuration file `mcpServers.json` has been created with all available
 
 - **File**: `.cursor/settings.json`
 - **Updated**: All paths corrected for new directory structure
-- **Python Interpreter**: Points to `src/roblox-environment/venv_clean/bin/python`
+- **Python Interpreter**: Points to `ToolboxAI-Roblox-Environment/venv_clean/bin/python`
 
 ### MCP Configuration
 

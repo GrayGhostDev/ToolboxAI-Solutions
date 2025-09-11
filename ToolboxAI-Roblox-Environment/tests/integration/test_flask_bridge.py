@@ -95,7 +95,7 @@ def main():
         import subprocess
         import os
 
-        env_path = "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/src/roblox-environment"
+        env_path = "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment"
         try:
             # Create a simple Flask test server
             flask_test = """
