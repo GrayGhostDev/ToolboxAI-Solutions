@@ -74,6 +74,8 @@ faiss-cpu==1.8.0
 # Educational Content Tools
 wikipedia-api==0.8.1
 duckduckgo-search==8.1.1
+# Provide ddgs runtime for LangChain DuckDuckGo wrapper used in tools
+ddgs>=1.0.0
 
 # Utilities
 python-dateutil==2.9.0.post0
@@ -90,5 +92,4 @@ mkdocs==1.5.3
 mkdocs-material==9.5.2
 
 # ToolboxAI Utils Dependencies
-urllib3==2.2.3
 urllib3==2.2.3

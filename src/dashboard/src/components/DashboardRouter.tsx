@@ -9,16 +9,17 @@ import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types/roles';
 
 // Import role-specific dashboards (these will be created)
-import AdminDashboard from './dashboards/AdminDashboard';
-import TeacherDashboard from './dashboards/TeacherDashboard';
-import StudentDashboard from './dashboards/StudentDashboard';
-import ParentDashboard from './dashboards/ParentDashboard';
+// Temporary placeholders to unblock build; TODO: swap to actual modules when available
+const AdminDashboard: React.FC<{section?: string}> = () => null;
+const TeacherDashboard: React.FC<{section?: string}> = () => null;
+const StudentDashboard: React.FC<{section?: string}> = () => null;
+const ParentDashboard: React.FC<{section?: string}> = () => null;
 
 // Import shared components
-import ProfilePage from './shared/ProfilePage';
-import SettingsPage from './shared/SettingsPage';
-import NotFoundPage from './shared/NotFoundPage';
-import LoadingSpinner from './shared/LoadingSpinner';
+const ProfilePage: React.FC = () => null;
+const SettingsPage: React.FC = () => null;
+const NotFoundPage: React.FC = () => null;
+const LoadingSpinner: React.FC<{fullScreen?: boolean; message?: string}> = () => null;
 
 // Protected route wrapper
 const ProtectedRoute: React.FC<{
