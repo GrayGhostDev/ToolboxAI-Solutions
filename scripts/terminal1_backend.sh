@@ -1,71 +1,88 @@
-#!/bin/bash
+#!/usr/bin/env sh
 # Terminal 1: Backend Services
 # Manages database setup and backend API servers
+set -eu
+# shellcheck source=common/lib.sh
+. "$(cd "$(dirname "$0")"/.. && pwd -P)/scripts/common/lib.sh" 2>/dev/null || \
+  . "$(cd "$(dirname "$0")"/.. && pwd -P)/common/lib.sh"
 
 echo "========================================="
 echo "Terminal 1: Backend Services Manager"
 echo "========================================="
 
-cd /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions
+cd "$PROJECT_ROOT"
 
 # Use coordinator to prevent conflicts
-python3 scripts/terminal_coordinator.py backend setup_database
+python3 scripts/terminal_coordinator.py backend setup_database || true
 
 echo "📦 Setting up database..."
-cd database
-if [ ! -f ".db_initialized" ]; then
-    python3 setup_database.py
-    python3 create_initial_data.py
-    touch .db_initialized
-    echo "✓ Database initialized"
+if [ -d "database" ]; then
+  cd database
+  if [ ! -f ".db_initialized" ]; then
+      [ -f setup_database.py ] && python3 setup_database.py || true
+      [ -f create_initial_data.py ] && python3 create_initial_data.py || true
+      touch .db_initialized
+      echo "✓ Database initialized"
+  else
+      echo "✓ Database already initialized"
+  fi
+  cd ..
 else
-    echo "✓ Database already initialized"
+  echo "⚠️  database/ directory not found; skipping setup"
 fi
-cd ..
 
 # Mark database setup complete
-python3 scripts/terminal_coordinator.py backend start_fastapi_server
+python3 scripts/terminal_coordinator.py backend start_fastapi_server || true
 
 echo "🚀 Starting FastAPI server with Socket.io..."
-cd ToolboxAI-Roblox-Environment
+cd "$PROJECT_ROOT/ToolboxAI-Roblox-Environment"
 
-# Kill any existing processes on port 8008
-lsof -ti:8008 | xargs -r kill -9 2>/dev/null || true
+# Kill any existing processes on configured port
+lsof -ti:"$FASTAPI_PORT" | xargs -r kill -9 2>/dev/null || true
 
-# Start the server with Socket.io support
-export POSTGRES_PASSWORD=staging_password_2024
-export REDIS_PASSWORD=staging_redis_2024
-export JWT_SECRET_KEY=staging_jwt_secret_key_very_long_and_secure_2024
-export SENTRY_DSN="https://af64bfdc2bd0cd6cd870bfeb7f26c22c@o4509912543199232.ingest.us.sentry.io/4509991438581760"
-export SENTRY_ENVIRONMENT=staging
-export SENTRY_TRACES_SAMPLE_RATE=1.0
-export ENVIRONMENT=staging
-export DEBUG=True
+# Activate virtual environment
+if [ -f "venv_clean/bin/activate" ]; then
+  # shellcheck disable=SC1091
+  . venv_clean/bin/activate
+else
+  die "venv_clean not found. Please set up the environment first."
+fi
 
-source venv_clean/bin/activate
-uvicorn server.main:socketio_app --host 127.0.0.1 --port 8008 --reload &
+# Start the server with Socket.io support (env-only; no inline secrets)
+LOG_FILE="$PROJECT_ROOT/logs/fastapi_server.log"
+uvicorn server.main:socketio_app \
+  --host "$API_HOST" \
+  --port "$FASTAPI_PORT" \
+  --reload \
+  >"$LOG_FILE" 2>&1 &
 FASTAPI_PID=$!
+write_pid "FastAPI-Server" "$FASTAPI_PID"
 
-echo "✓ FastAPI server started on port 8008 (PID: $FASTAPI_PID)"
+echo "✓ FastAPI server started on http://$API_HOST:$FASTAPI_PORT (PID: $FASTAPI_PID)"
+
+# Ensure cleanup on exit
+trap 'log "Stopping FastAPI (PID $FASTAPI_PID)"; kill $FASTAPI_PID 2>/dev/null || true; stop_by_pid FastAPI-Server' INT TERM EXIT
 
 # Wait for server to be ready
-sleep 5
+sleep 5 || true
 
 # Test server health
 echo "🔍 Testing server health..."
-curl -s http://127.0.0.1:8008/health | jq . || echo "⚠️ Server health check failed"
+if command -v curl >/dev/null 2>&1; then
+  curl -s "http://$API_HOST:$FASTAPI_PORT/health" >/dev/null 2>&1 && echo "✓ Health OK" || echo "⚠️ Health check failed"
+fi
 
 # Mark task complete
-python3 ../scripts/terminal_coordinator.py backend start_socketio_server
+python3 "$PROJECT_ROOT/scripts/terminal_coordinator.py" backend start_socketio_server || true
 
 echo "
 ========================================="
 echo "Terminal 1 Ready!"
 echo "========================================="
 echo "Services running:"
-echo "  - FastAPI + Socket.io: http://127.0.0.1:8008"
-echo "  - API Docs: http://127.0.0.1:8008/docs"
-echo "  - Socket.io: ws://127.0.0.1:8008/socket.io/"
+echo "  - FastAPI + Socket.io: http://$API_HOST:$FASTAPI_PORT"
+echo "  - API Docs: http://$API_HOST:$FASTAPI_PORT/docs"
+echo "  - Socket.io: ws://$API_HOST:$FASTAPI_PORT/socket.io/"
 echo ""
 echo "Next steps for other terminals:"
 echo "  Terminal 2: Run frontend dashboard"

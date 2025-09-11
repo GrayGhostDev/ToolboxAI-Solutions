@@ -14,7 +14,7 @@ langchain-openai>=0.0.5
 langchain-community>=0.0.10
 
 # Data processing and storage
-aioredis>=2.0.1
+redis>=5,<6
 asyncpg>=0.29.0
 sqlalchemy[asyncio]>=2.0.0
 

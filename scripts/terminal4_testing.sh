@@ -1,4 +1,8 @@
 #!/bin/bash
+# DEPRECATED: Use scripts/testing/run_comprehensive_tests.sh
+# This script is retained temporarily for guidance and will exit.
+echo "Use scripts/testing/run_comprehensive_tests.sh" >&2
+exit 1
 # Terminal 4: Testing and Verification
 # Runs comprehensive tests and verifies all services
 

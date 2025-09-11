@@ -1,4 +1,8 @@
 #!/bin/bash
+# DEPRECATED: consolidated into scripts/terminal1_comprehensive_verify.sh
+# Kept temporarily for guidance.
+echo "Use scripts/terminal1_comprehensive_verify.sh" >&2
+exit 1
 
 # Terminal 1 Integration Verification Script
 # Tests communication with Terminal 2 (Frontend) and Terminal 3 (Roblox)

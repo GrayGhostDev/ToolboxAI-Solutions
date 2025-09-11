@@ -11,7 +11,7 @@ from typing import Dict, Any, List, Optional, AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
-import aioredis
+import redis.asyncio as redis
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ class OptimizedConnectionManager:
         self.configs: Dict[str, ConnectionConfig] = {}
         self.monitor = PerformanceMonitor()
         self._initialized = False
-        self._redis_pool: Optional[aioredis.ConnectionPool] = None
+        self._redis_pool: Optional[redis.ConnectionPool] = None
         
         # Load configurations from environment
         self._load_configurations()
@@ -185,7 +185,7 @@ class OptimizedConnectionManager:
         """Initialize Redis connection pool for caching"""
         try:
             redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-            self._redis_pool = aioredis.ConnectionPool.from_url(
+            self._redis_pool = redis.ConnectionPool.from_url(
                 redis_url,
                 max_connections=int(os.getenv("REDIS_MAX_CONNECTIONS", 50))
             )

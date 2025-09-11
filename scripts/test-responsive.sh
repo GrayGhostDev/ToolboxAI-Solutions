@@ -6,7 +6,7 @@
 echo "🎨 Testing Dashboard Responsive Design..."
 echo "=================================="
 
-DASHBOARD_URL="http://localhost:3000"
+DASHBOARD_URL="http://${DASHBOARD_HOST:-127.0.0.1}:${DASHBOARD_PORT:-5179}"
 
 # Check if dashboard is running
 if ! curl -s --head $DASHBOARD_URL > /dev/null; then

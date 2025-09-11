@@ -1,16 +1,35 @@
 {
+  "include": ["**/*.py"],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/venv",
+    "**/venv_clean/lib",
+    "**/venv_clean/include",
+    "**/.git",
+    "**/.vscode",
+    "**/.cursor",
+    "Archive/**"
+  ],
   "venvPath": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment",
   "venv": "venv_clean",
   "reportMissingImports": false,
-  "typeCheckingMode": "basic",
-  "stubPath": "./types",
+  "typeCheckingMode": "standard",
+  "stubPath": "src/shared/types",
   "extraPaths": [
     "./ToolboxAI-Roblox-Environment",
     "./ToolboxAI-Roblox-Environment/server",
     "./ToolboxAI-Roblox-Environment/agents",
     "./ToolboxAI-Roblox-Environment/mcp",
-    "./ToolboxAI-Roblox-Environment/toolboxai_utils"
+    "./ToolboxAI-Roblox-Environment/coordinators",
+    "./ToolboxAI-Roblox-Environment/swarm",
+    "./ToolboxAI-Roblox-Environment/sparc",
+    "./ToolboxAI-Roblox-Environment/toolboxai_utils",
+    "./src/shared/utils",
+    "./src/api/ghost-backend/src"
   ],
   "pythonVersion": "3.12",
-  "pythonPlatform": "Darwin"
+  "pythonPlatform": "Darwin",
+  "useLibraryCodeForTypes": true,
+  "autoImportCompletions": true
 }

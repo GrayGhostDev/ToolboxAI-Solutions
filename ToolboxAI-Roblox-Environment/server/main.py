@@ -359,16 +359,14 @@ socketio_app = create_socketio_app(app)
 # Global exception handlers
 @app.exception_handler(AuthenticationError)
 async def authentication_exception_handler(request: Request, exc: AuthenticationError):
-    error_response = ErrorResponse(
-        success=False,
-        message=exc.detail,
-        error_type="AuthenticationError",
-        details=[],
-    )
-    # Convert datetime objects to ISO format strings
-    response_dict = error_response.model_dump()
-    if 'timestamp' in response_dict and hasattr(response_dict['timestamp'], 'isoformat'):
-        response_dict['timestamp'] = response_dict['timestamp'].isoformat()
+    response_dict = {
+        "success": False,
+        "message": exc.detail,
+        "error_type": "AuthenticationError",
+        "details": [],
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "request_id": getattr(request.state, "request_id", str(uuid.uuid4())),
+    }
     return JSONResponse(
         status_code=exc.status_code,
         content=response_dict,
@@ -377,16 +375,14 @@ async def authentication_exception_handler(request: Request, exc: Authentication
 
 @app.exception_handler(AuthorizationError)
 async def authorization_exception_handler(request: Request, exc: AuthorizationError):
-    error_response = ErrorResponse(
-        success=False,
-        message=exc.detail,
-        error_type="AuthorizationError",
-        details=[],
-    )
-    # Convert datetime objects to ISO format strings
-    response_dict = error_response.model_dump()
-    if 'timestamp' in response_dict and hasattr(response_dict['timestamp'], 'isoformat'):
-        response_dict['timestamp'] = response_dict['timestamp'].isoformat()
+    response_dict = {
+        "success": False,
+        "message": exc.detail,
+        "error_type": "AuthorizationError",
+        "details": [],
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "request_id": getattr(request.state, "request_id", str(uuid.uuid4())),
+    }
     return JSONResponse(
         status_code=exc.status_code,
         content=response_dict,
@@ -395,17 +391,20 @@ async def authorization_exception_handler(request: Request, exc: AuthorizationEr
 
 @app.exception_handler(RateLimitError)
 async def rate_limit_exception_handler(request: Request, exc: RateLimitError):
-    error_response = ErrorResponse(
-        success=False, message=exc.detail, error_type="RateLimitError", details=[]
-    )
-    # Convert datetime objects to ISO format strings
-    response_dict = error_response.model_dump()
-    if 'timestamp' in response_dict and hasattr(response_dict['timestamp'], 'isoformat'):
-        response_dict['timestamp'] = response_dict['timestamp'].isoformat()
+    response_dict = {
+        "success": False,
+        "message": exc.detail,
+        "error_type": "RateLimitError",
+        "details": [],
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "request_id": getattr(request.state, "request_id", str(uuid.uuid4())),
+    }
+    headers = dict(exc.headers or {})
+    headers.setdefault("Retry-After", "60")
     return JSONResponse(
         status_code=exc.status_code,
         content=response_dict,
-        headers=exc.headers,
+        headers=headers,
     )
 
 

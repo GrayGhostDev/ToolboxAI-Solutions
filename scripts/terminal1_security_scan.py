@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# DEPRECATED: Use scripts/security_scanner.py
+import sys
+print("Use scripts/security_scanner.py", file=sys.stderr)
+sys.exit(1)
 
 import os
 import re

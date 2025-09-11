@@ -36,7 +36,7 @@ The MCP configuration file `mcpServers.json` has been created with all available
       "command": "python",
       "args": ["/path/to/mcp/server.py"],
       "env": {
-        "PYTHONPATH": "/path/to/project/src/roblox-environment:/path/to/project/src/shared",
+        "PYTHONPATH": "/path/to/project/ToolboxAI-Roblox-Environment:/path/to/project/src/shared",
         "MCP_HOST": "localhost",
         "MCP_PORT": "9876"
       }
@@ -103,7 +103,7 @@ The MCP configuration file `mcpServers.json` has been created with all available
 
 ### Test MCP Setup
 ```bash
-source src/roblox-environment/venv_clean/bin/activate
+source ToolboxAI-Roblox-Environment/venv_clean/bin/activate
 python scripts/test_mcp_setup.py
 ```
 

@@ -1,4 +1,8 @@
 #!/bin/bash
+# DEPRECATED: Use scripts/terminal2_verify.cjs instead.
+# This file remains for compatibility and will exit with guidance.
+echo "This verifier is deprecated. Use: node scripts/terminal2_verify.cjs"
+exit 1
 
 # Terminal 2 Integration Verification Script
 # Tests real data flow between Terminal 2 (Dashboard) and Terminal 1 (Backend API)

@@ -68,7 +68,7 @@ exclude = [
 ]
 venvPath = "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment"
 venv = "venv_clean"
-pythonVersion = "3.12"
+pythonVersion = "3.11"
 pythonPlatform = "Darwin"
 typeCheckingMode = "standard"
 reportMissingImports = false
