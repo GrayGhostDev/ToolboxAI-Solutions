@@ -106,14 +106,12 @@
 # Fixed in agents/orchestrator.py
 - from langgraph.checkpoint import MemorySaver
 + from langgraph.checkpoint.memory import MemorySaver
-```
-
+```text
 ### 2. Dependency Installation
 
 ```bash
 pip install ddgs psycopg2-binary requests flask flask-cors
-```
-
+```text
 ### 3. Server Startup Scripts
 
 - Created minimal FastAPI test server
@@ -203,16 +201,14 @@ pytest tests/
 
 # Integration tests
 python tests/test_e2e_integration.py
-```
-
+```text
 ### Check Service Health
 
 ```bash
 curl http://localhost:8008/health     # FastAPI
 curl http://localhost:8001/api/v1/health  # Dashboard
 curl http://localhost:5001/health     # Flask Bridge
-```
-
+```text
 ---
 
 ## ✅ Conclusion

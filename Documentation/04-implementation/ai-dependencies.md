@@ -69,7 +69,7 @@ The ToolBoxAI platform requires a comprehensive set of AI/ML dependencies to pow
 
 ### Multi-Agent System (`agents/`)
 
-```
+```text
 ├── supervisor.py       # LangGraph orchestration
 ├── content_agent.py    # Educational content
 ├── quiz_agent.py       # Assessment creation
@@ -77,37 +77,33 @@ The ToolBoxAI platform requires a comprehensive set of AI/ML dependencies to pow
 ├── script_agent.py     # Lua code generation
 ├── review_agent.py     # Quality assurance
 └── orchestrator.py     # Workflow management
-```
-
+```text
 ### SPARC Framework (`sparc/`)
 
-```
+```text
 ├── state_manager.py    # Environment state tracking
 ├── policy_engine.py    # Decision making
 ├── action_executor.py  # Task execution
 ├── reward_calculator.py # Learning outcomes
 └── context_tracker.py  # User context (128K tokens)
-```
-
+```text
 ### Swarm Intelligence (`swarm/`)
 
-```
+```text
 ├── swarm_controller.py # Parallel orchestration
 ├── worker_pool.py      # Agent workers (10 max)
 ├── task_distributor.py # Task management
 ├── consensus_engine.py # Quality consensus (70%)
 └── load_balancer.py    # Resource optimization
-```
-
+```text
 ### MCP Protocol (`mcp/`)
 
-```
+```text
 ├── server.py           # WebSocket server (9876)
 ├── context_manager.py  # Token optimization
 ├── memory_store.py     # Vector storage
 └── protocols/          # Communication protocols
-```
-
+```text
 ## 🔑 Required API Keys
 
 ### Essential
@@ -163,28 +159,24 @@ graph TD
     J --> K[Vector Store]
     K --> L[Redis Cache]
     L --> M[Response]
-```
-
+```text
 ## 🚀 Installation Commands
 
 ### Quick Install (Minimal)
 
 ```bash
 pip install -r requirements-minimal.txt
-```
-
+```text
 ### AI Dependencies
 
 ```bash
 pip install -r requirements-ai.txt
-```
-
+```text
 ### Full Installation
 
 ```bash
 pip install -r requirements.txt  # Fixed version
-```
-
+```text
 ### Development Setup
 
 ```bash
@@ -203,8 +195,7 @@ cp .env.example .env
 python mcp/server.py &
 python server/main.py &
 python server/roblox_server.py &
-```
-
+```text
 ## 🔍 Dependency Resolution
 
 ### Common Issues
@@ -214,23 +205,20 @@ python server/roblox_server.py &
 ```bash
 # Problem: langchain-openai requires openai>=1.10.0
 # Solution: Update openai to 1.10.0 in requirements.txt
-```
-
+```text
 #### Faiss-CPU Version
 
 ```bash
 # Problem: faiss-cpu==1.7.4 not available
 # Solution: Use faiss-cpu==1.8.0
-```
-
+```text
 #### Memory Issues with Transformers
 
 ```bash
 # Problem: Out of memory when loading models
 # Solution: Use smaller models or increase swap
 export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
-```
-
+```text
 ## 📈 Performance Optimization
 
 ### Token Management

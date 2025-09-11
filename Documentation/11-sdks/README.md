@@ -29,8 +29,7 @@ Modern JavaScript SDK with full TypeScript support for web and Node.js applicati
 npm install @toolboxai/sdk
 # or
 yarn add @toolboxai/sdk
-```
-
+```text
 ---
 
 ### 🐍 [Python SDK](python-sdk.md)
@@ -59,8 +58,7 @@ Comprehensive Python SDK for server-side integrations and data analysis.
 pip install toolboxai-sdk
 # or
 poetry add toolboxai-sdk
-```
-
+```text
 ---
 
 ### 🎮 [Roblox Lua SDK](roblox-lua-sdk.md)
@@ -88,8 +86,7 @@ Native Lua SDK optimized for Roblox Studio and in-game integrations.
 ```lua
 -- In Roblox Studio
 local ToolBoxAI = require(game.ReplicatedStorage.ToolBoxAI)
-```
-
+```text
 ## Feature Comparison
 
 | Feature               | JavaScript/TypeScript   | Python             | Roblox Lua         |
@@ -116,8 +113,7 @@ import { ToolBoxAI } from '@toolboxai/sdk'
 
 const client = new ToolBoxAI({ apiKey: 'your-key' })
 const lessons = await client.lessons.list({ grade: 5 })
-```
-
+```text
 ### Data Analytics Dashboard
 
 **Recommended SDK**: Python
@@ -128,8 +124,7 @@ import pandas as pd
 
 client = ToolBoxAI(api_key='your-key')
 df = client.analytics.get_progress_dataframe()
-```
-
+```text
 ### Roblox Learning Game
 
 **Recommended SDK**: Roblox Lua
@@ -138,8 +133,7 @@ df = client.analytics.get_progress_dataframe()
 local ToolBoxAI = require(script.ToolBoxAI)
 local client = ToolBoxAI.new({ apiKey = 'your-key' })
 client:deployEnvironment(lessonId, workspace)
-```
-
+```text
 ## API Coverage
 
 All SDKs provide complete coverage of the ToolBoxAI-Solutions API:
@@ -182,37 +176,31 @@ Follow the installation instructions for your chosen SDK.
 ```javascript
 // JavaScript
 const client = new ToolBoxAI({ apiKey: 'your-api-key' })
-```
-
+```text
 ```python
 # Python
 client = ToolBoxAI(api_key='your-api-key')
-```
-
+```text
 ```lua
 -- Lua
 local client = ToolBoxAI.new({ apiKey = 'your-api-key' })
-```
-
+```text
 ### Step 4: Make Your First API Call
 
 ```javascript
 // JavaScript
 const lesson = await client.lessons.get('lesson-id')
-```
-
+```text
 ```python
 # Python
 lesson = client.lessons.get('lesson-id')
-```
-
+```text
 ```lua
 -- Lua
 client:getLesson('lesson-id'):andThen(function(lesson)
     print(lesson.title)
 end)
-```
-
+```text
 ## Authentication
 
 All SDKs support multiple authentication methods:
@@ -244,8 +232,7 @@ try {
     // Handle validation error
   }
 }
-```
-
+```text
 ```python
 # Python
 from toolboxai.exceptions import InvalidInputError
@@ -255,8 +242,7 @@ try:
 except InvalidInputError as e:
     # Handle validation error
     print(e.message)
-```
-
+```text
 ```lua
 -- Lua
 client:createLesson(data):catch(function(error)
@@ -264,8 +250,7 @@ client:createLesson(data):catch(function(error)
         -- Handle validation error
     end
 end)
-```
-
+```text
 ## Rate Limiting
 
 All SDKs handle rate limiting automatically:

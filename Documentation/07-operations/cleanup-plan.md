@@ -44,7 +44,7 @@ This document outlines a comprehensive cleanup and reorganization plan for the T
 
 ## 📁 **Proposed New Structure**
 
-```
+```text
 ToolBoxAI-Solutions/
 ├── README.md                          # Main project README
 ├── CLAUDE.md                          # Main project guidance
@@ -108,8 +108,7 @@ ToolBoxAI-Solutions/
     ├── linting/                      # Lint configs
     ├── formatting/                   # Format configs
     └── analysis/                     # Analysis tools
-```
-
+```text
 ## 🗂️ **File Consolidation Plan**
 
 ### **Phase 1: Remove Duplicates**

@@ -236,8 +236,7 @@ Quiz = {
     ai_generated = boolean,         -- AI-generated quiz
     ai_config = {}                  -- AI generation parameters
 }
-```
-
+```text
 ## Question Model
 
 Represents individual questions that can be used in quizzes.
@@ -472,8 +471,7 @@ Question = {
     ai_prompt = string,
     ai_model = string
 }
-```
-
+```text
 ## QuestionBank Model
 
 Repository of reusable questions organized by category and topic.
@@ -565,8 +563,7 @@ QuestionBank = {
     created_at = DateTime,
     updated_at = DateTime
 }
-```
-
+```text
 ## AssessmentResult Model
 
 Records the complete results of a quiz attempt including detailed analytics.
@@ -725,8 +722,7 @@ AssessmentResult = {
     included_in_grade = boolean,
     grade_weight = number
 }
-```
-
+```text
 ## Implementation Notes
 
 ### Question Types Implementation
@@ -758,8 +754,7 @@ def validate_answer(question_type: QuestionType, response: Any, answer: dict):
         # ... etc
     }
     return validators[question_type](response, answer)
-```
-
+```text
 ### Adaptive Testing
 
 For adaptive quizzes that adjust difficulty:
@@ -787,8 +782,7 @@ AdaptiveAlgorithm = {
 
     ability_estimation = "maximum_likelihood" -- or "bayesian"
 }
-```
-
+```text
 ### Anti-Cheating Measures
 
 ```lua
@@ -819,8 +813,7 @@ IntegrityMonitoring = {
         analyze_response_similarity = true
     }
 }
-```
-
+```text
 ### Question Pool Management
 
 ```python
@@ -848,8 +841,7 @@ class QuestionPoolSelector:
         )
 
         return selected
-```
-
+```text
 ### Performance Optimization
 
 1. **Question Caching**

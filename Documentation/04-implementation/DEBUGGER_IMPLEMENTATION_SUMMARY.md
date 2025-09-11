@@ -76,23 +76,20 @@ Successfully implemented a comprehensive **Debugger Terminal** monitoring system
 
 ```bash
 bash scripts/debugger_start.sh
-```
-
+```text
 ### View Live Dashboard
 
 ```bash
 bash scripts/debugger_dashboard.sh
-```
-
+```text
 ### Stop Monitoring
 
 ```bash
 bash scripts/debugger_stop.sh
-```
-
+```text
 ## 📁 File Structure
 
-```
+```text
 scripts/
 ├── debugger_security_monitor.py   # Security scanner
 ├── debugger_performance.py        # Performance monitor
@@ -107,8 +104,7 @@ scripts/
     ├── alerts/                    # Alert history
     ├── logs/                      # Component logs
     └── pids/                      # Process IDs
-```
-
+```text
 ## 🔧 Features
 
 ### Security Features

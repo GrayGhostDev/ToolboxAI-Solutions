@@ -34,15 +34,14 @@
 
 ### Services Health
 
-```
+```text
 ✅ FastAPI Server:     Port 8008 - HEALTHY
 ✅ Flask Bridge:       Port 5001 - HEALTHY
 ✅ Dashboard:          Port 5179 - HEALTHY (Socket.io working!)
 ✅ MCP WebSocket:      Port 9876 - HEALTHY
 ✅ Database:           PostgreSQL - 8 active connections
 ✅ Redis:              Caching layer - OPERATIONAL
-```
-
+```text
 ### Terminal Status
 
 | Terminal   | Completion | Status                                     |

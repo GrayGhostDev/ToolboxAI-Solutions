@@ -4,7 +4,7 @@ This document outlines the organized directory structure of the Ghost Backend Fr
 
 ## 📁 Root Directory Structure
 
-```
+```text
 Ghost/
 ├── 📁 bin/                     # Executable scripts
 ├── 📁 config/                  # Configuration files
@@ -18,8 +18,7 @@ Ghost/
 ├── 📁 backups/                 # Backup files
 ├── 📁 migrations/              # Database migrations
 └── 📁 examples/                # Example implementations
-```
-
+```text
 ## 📂 Directory Details
 
 ### `/bin/` - Executable Scripts
@@ -118,8 +117,7 @@ From project root:
 
 # Stop the API
 ./bin/stop_api.sh
-```
-
+```text
 ## 🔧 Development Workflow
 
 1. **Initial Setup**: `./bin/setup.sh`

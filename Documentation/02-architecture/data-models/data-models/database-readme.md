@@ -4,7 +4,7 @@ This directory contains the complete database infrastructure for the ToolboxAI R
 
 ## 📁 Directory Structure
 
-```
+```text
 database/
 ├── README.md                    # This documentation
 ├── alembic.ini                  # Alembic configuration
@@ -20,8 +20,7 @@ database/
     ├── env.py                  # Alembic environment configuration
     ├── script.py.mako          # Migration template
     └── versions/               # Generated migration files
-```
-
+```text
 ## 🗄️ Database Architecture
 
 ### Multi-Database Setup
@@ -73,8 +72,7 @@ Copy the environment template and update with your credentials:
 
 ```bash
 cp config/database.env.example .env
-```
-
+```text
 Update the `.env` file with your database credentials:
 
 ```env
@@ -90,8 +88,7 @@ EDU_DB_ECHO=false
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_DB=0
-```
-
+```text
 ## 📊 Database Schemas
 
 ### Core Schema (01_core_schema.sql)
@@ -165,32 +162,27 @@ REDIS_DB=0
 
 ```bash
 python database/migrate.py create "Add new feature"
-```
-
+```text
 **Upgrade database:**
 
 ```bash
 python database/migrate.py upgrade
-```
-
+```text
 **Downgrade database:**
 
 ```bash
 python database/migrate.py downgrade <revision>
-```
-
+```text
 **View migration history:**
 
 ```bash
 python database/migrate.py history
-```
-
+```text
 **Check current revision:**
 
 ```bash
 python database/migrate.py current
-```
-
+```text
 ### Direct Alembic Commands
 
 ```bash
@@ -200,8 +192,7 @@ alembic upgrade head
 alembic downgrade -1
 alembic current
 alembic history
-```
-
+```text
 ## 🔌 Connection Management
 
 ### Using the Connection Manager
@@ -218,8 +209,7 @@ with get_session('education') as session:
 async with get_async_session('education') as session:
     # Your async database operations
     pass
-```
-
+```text
 ### Available Databases
 
 - `'education'` - Educational platform database
@@ -233,8 +223,7 @@ async with get_async_session('education') as session:
 
 ```bash
 python database/connection_manager.py
-```
-
+```text
 ### Health Check Results
 
 The health check will verify:
@@ -250,8 +239,7 @@ The health check will verify:
 
 ```bash
 python database/setup_database.py --dev-data
-```
-
+```text
 ### Reset Database
 
 ```bash
@@ -264,8 +252,7 @@ Base.metadata.drop_all(engine)
 Base.metadata.create_all(engine)
 print('Database reset complete')
 "
-```
-
+```text
 ### Database Backup
 
 ```bash
@@ -274,8 +261,7 @@ pg_dump -U eduplatform -h localhost educational_platform > backup_$(date +%Y%m%d
 
 # Restore from backup
 psql -U eduplatform -h localhost educational_platform < backup_file.sql
-```
-
+```text
 ## 📈 Performance Optimization
 
 ### Indexes
@@ -350,8 +336,7 @@ Enable debug mode in `.env`:
 ```env
 EDU_DB_ECHO=true
 DEBUG=true
-```
-
+```text
 This will show all SQL queries and detailed error information.
 
 ## 📚 Additional Resources

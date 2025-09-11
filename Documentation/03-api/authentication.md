@@ -11,8 +11,7 @@ Obtain your API key from the admin dashboard. Include it in the `x-api-key` head
 ```http
 GET /api/users
 x-api-key: YOUR_API_KEY
-```
-
+```text
 ### 2. Bearer Token (OAuth2)
 
 Authenticate using OAuth2 and include the token in the `Authorization` header:
@@ -20,15 +19,13 @@ Authenticate using OAuth2 and include the token in the `Authorization` header:
 ```http
 GET /api/data
 Authorization: Bearer YOUR_ACCESS_TOKEN
-```
-
+```text
 ## Example Request
 
 ```http
 GET /api/users/123
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
-```
-
+```text
 ## Token Expiry
 
 Tokens expire after a set period. Refresh tokens as needed using the `/api/auth/refresh` endpoint.
@@ -74,8 +71,7 @@ Content-Type: application/json
   "username": "john_teacher",
   "password": "Teacher123!"
 }
-```
-
+```text
 **Successful Response:**
 
 ```json
@@ -91,8 +87,7 @@ Content-Type: application/json
     "last_name": "Smith"
   }
 }
-```
-
+```text
 ### 2. Using the Token
 
 Include the JWT token in the Authorization header for all subsequent requests:
@@ -100,8 +95,7 @@ Include the JWT token in the Authorization header for all subsequent requests:
 ```bash
 curl -X GET http://localhost:8008/dashboard/teacher \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
-
+```text
 ### 3. Token Expiration
 
 - **Access Token Lifetime:** 30 minutes
@@ -186,8 +180,7 @@ dashboard = requests.get(
     headers=headers
 )
 print(dashboard.json())
-```
-
+```text
 ### JavaScript (fetch)
 
 ```javascript
@@ -209,8 +202,7 @@ const dashboardResponse = await fetch('http://localhost:8008/dashboard/teacher',
   },
 })
 const dashboardData = await dashboardResponse.json()
-```
-
+```text
 ### cURL
 
 ```bash
@@ -223,16 +215,14 @@ TOKEN=$(curl -s -X POST http://localhost:8008/auth/login \
 # Use token for authenticated requests
 curl -X GET http://localhost:8008/dashboard/teacher \
   -H "Authorization: Bearer $TOKEN"
-```
-
+```text
 ## WebSocket Authentication
 
 For WebSocket connections, pass the token as a query parameter:
 
 ```javascript
 const ws = new WebSocket(`ws://localhost:9876/ws?token=${access_token}`)
-```
-
+```text
 ## Security Best Practices
 
 1. **Never store passwords in plain text** - Always use secure hashing (bcrypt)
@@ -276,8 +266,7 @@ Enable debug logging for authentication:
 ```python
 import logging
 logging.getLogger("auth").setLevel(logging.DEBUG)
-```
-
+```text
 ## Database Schema
 
 User authentication data is stored in the `users` table:
@@ -296,8 +285,7 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-```
-
+```text
 ## Environment Variables
 
 Configure authentication settings in `.env`:
@@ -314,8 +302,7 @@ DATABASE_URL=postgresql://user:password@localhost/educational_platform
 # Security
 BCRYPT_ROUNDS=12
 RATE_LIMIT=100  # requests per minute
-```
-
+```text
 ## Support
 
 For authentication issues or questions:

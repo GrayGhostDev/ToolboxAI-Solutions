@@ -1081,8 +1081,7 @@ Tasks:
 □ Fix WebSocket authentication flow
 □ Implement proper reconnection with exponential backoff
 □ Add connection status monitoring
-```
-
+```text
 ### **Priority 2: Enhanced Content Application (HIGH)**
 
 ```lua
@@ -1095,8 +1094,7 @@ Tasks:
 □ Add object placement with proper positioning
 □ Create script injection with error handling
 □ Add content preview before application
-```
-
+```text
 ### **Priority 3: Real-time Dashboard Sync (HIGH)**
 
 ```typescript
@@ -1109,14 +1107,12 @@ Tasks:
 □ Create session management
 □ Add teacher control panel
 □ Implement student monitoring
-```
-
+```text
 ### **Priority 4: Production Security (MEDIUM)**
 
 ```python
 <code_block_to_apply_changes_from>
-```
-
+```text
 ## 🚨 **CRITICAL ISSUES TO FIX**
 
 ### **1. WebSocket Compatibility Issue**
@@ -1133,8 +1129,7 @@ local function establishConnection()
         return startHTTPPolling()
     end
 end
-```
-
+```text
 ### **2. Content Generation Timeout**
 
 **Problem**: Large content generation can timeout
@@ -1145,8 +1140,7 @@ end
 @app.route("/plugin/content/chunked", methods=["POST"])
 def deliver_content_chunked():
     # Implement chunked delivery for large content
-```
-
+```text
 ### **3. Plugin Crash Recovery**
 
 **Problem**: Plugin crashes don't recover gracefully
@@ -1162,8 +1156,7 @@ local function safeExecute(func, ...)
     end
     return success, result
 end
-```
-
+```text
 ## 🚀 **NEXT PHASE: BACKEND INTEGRATION & TESTING** (2025-01-09)
 
 ### **Phase 1: Agent Communication & Environment Creation** ⚡ IN PROGRESS

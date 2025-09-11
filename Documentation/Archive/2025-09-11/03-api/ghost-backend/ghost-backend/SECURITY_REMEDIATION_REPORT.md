@@ -86,8 +86,7 @@
 # 3. Log into Brave Search API
 # → Revoke key: BSAQRnhgYzC94_lX5bxwG_stqLVgyGp
 # → Generate new API key
-```
-
+```text
 ### 2. Setup Secure Credential Management
 
 ```bash
@@ -99,8 +98,7 @@
 
 # Verify secure operation
 ./run_api.sh
-```
-
+```text
 ### 3. Remove Insecure Files
 
 ```bash
@@ -109,8 +107,7 @@ rm .env.backup.INSECURE  # After confirming new system works
 
 # Verify no secrets in repository
 git log --patch | grep -E "(sk-|ghp_|api_key)" || echo "✅ Clean"
-```
-
+```text
 ---
 
 ## ✅ Security Verification Checklist
@@ -136,8 +133,7 @@ grep -r "sk-" . --exclude-dir=.git --exclude="*.md" --exclude="*.INSECURE" || ec
 
 # Test application startup with secure credentials
 source .env.runtime && echo "JWT_SECRET loaded: ${JWT_SECRET:0:10}..."
-```
-
+```text
 ---
 
 ## 📖 Documentation & Guides

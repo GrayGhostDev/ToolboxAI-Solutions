@@ -19,7 +19,7 @@ All integration points between dashboard, Roblox, databases, and services have b
 
 #### **Service Communication Matrix**
 
-```
+```text
 ┌─────────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
 │ Service         │ FastAPI      │ Dashboard    │ Flask Bridge │ MCP Server   │
 │                 │ (:8008)      │ (:8001)      │ (:5001)      │ (:9876)      │
@@ -31,8 +31,7 @@ All integration points between dashboard, Roblox, databases, and services have b
 │ Roblox Plugin   │ -            │ -            │ HTTP/JSON    │ -            │
 │ Ghost Backend   │ HTTP/JSON    │ HTTP/JSON    │ -            │ -            │
 └─────────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
-```
-
+```text
 #### **Database Integration Points**
 
 - **Educational Platform DB**: Main application data (users, courses, lessons)
@@ -203,8 +202,7 @@ scripts/testing/run_comprehensive_tests.sh --type=all --verbose --coverage
 
 # Verify integration paths
 scripts/integration/verify_integration_paths.sh --verbose --fix-issues
-```
-
+```text
 ### **Production Commands**
 
 ```bash
@@ -218,8 +216,7 @@ docker-compose -f config/production/docker-compose.prod.yml logs -f
 # Health monitoring
 scripts/check_mcp_status.sh
 scripts/integration/verify_integration_paths.sh --verbose
-```
-
+```text
 ## 📊 **Integration Test Results**
 
 The comprehensive testing framework provides:

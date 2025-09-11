@@ -20,8 +20,7 @@ The `LessonPageController` manages user interaction within lessons, including na
 ```lua
 -- Main controller initialization
 local controller = LessonPageController.new(gui)
-```
-
+```text
 #### Key Methods
 
 | Method                         | Description                                             |
@@ -35,7 +34,7 @@ local controller = LessonPageController.new(gui)
 
 Lessons are organized into a hierarchical structure:
 
-```
+```text
 Course
   └── Lesson 1
        ├── Introduction
@@ -45,8 +44,7 @@ Course
        └── Assessment
   └── Lesson 2
       ...
-```
-
+```text
 Each lesson typically contains:
 
 - Title and overview
@@ -73,8 +71,7 @@ local LESSON_DESCRIPTIONS = {
     "Put your knowledge to the test with hands-on practice exercises...",
     "Apply everything you've learned in this comprehensive final project..."
 }
-```
-
+```text
 ## UI Components
 
 ### Content Display Area
@@ -115,8 +112,7 @@ function LessonPageController:setupButtonCallbacks()
         end)
     end
 end
-```
-
+```text
 ### Progress Tracking
 
 Visual indicators showing student progress:
@@ -140,8 +136,7 @@ function LessonPageController:updateProgressBar()
 
     progressText.Text = string.format("Progress: %d%%", math.floor(progress * 100))
 end
-```
-
+```text
 ## Integration Points
 
 ### Quiz System Integration
@@ -161,8 +156,7 @@ function LessonPageController:startQuiz()
     self.gui.MainFrame.ContentArea.Visible = false
     self.gui.MainFrame.QuizArea.Visible = true
 end
-```
-
+```text
 ### Gamification Integration
 
 Lessons integrate with the gamification system:
@@ -180,8 +174,7 @@ function LessonPageController:completeLesson()
     -- Show completion feedback
     self:showCompletionDialog(earnedXP)
 end
-```
-
+```text
 ## Accessibility Features
 
 The lesson system incorporates several accessibility enhancements:
@@ -202,8 +195,7 @@ function LessonPageController:setupAccessibility()
         self:setupKeyboardControls()
     end
 end
-```
-
+```text
 ## Implementation Guidelines
 
 ### Adding New Lessons

@@ -32,8 +32,7 @@
 ```lua
 -- First, verify the plugin file exists
 print(game:GetService("HttpService"):GetAsync("http://127.0.0.1:5001/plugin/verify"))
-```
-
+```text
 3. Load the plugin:
 
 ```lua
@@ -89,16 +88,14 @@ Button.Click:Connect(function()
 end)
 
 print("✅ ToolBoxAI Plugin installed successfully!")
-```
-
+```text
 #### Method B: Manual File Installation
 
 1. Navigate to plugin files:
 
 ```bash
 cd /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/Roblox/Plugins
-```
-
+```text
 2. Copy the plugin file to Roblox Studio plugins folder:
    - **Windows**: `%LOCALAPPDATA%\Roblox\Plugins\`
    - **macOS**: `~/Documents/Roblox/Plugins/`
@@ -227,15 +224,14 @@ Generated quizzes support:
 
 Access module scripts:
 
-```
+```text
 workspace
 └── ToolBoxAI_Generated
     ├── TerrainGenerator
     ├── QuizUI
     ├── ObjectPlacer
     └── ContentManager
-```
-
+```text
 ## Advanced Features
 
 ### Real-Time Collaboration
@@ -256,8 +252,7 @@ local lessons = library:GetLessons("Science", 7)
 
 -- Load specific lesson
 library:LoadLesson("solar_system_exploration")
-```
-
+```text
 ### AI-Powered Assistance
 
 Get help while building:
@@ -290,8 +285,7 @@ local success, result = pcall(function()
     return game:GetService("HttpService"):GetAsync("http://127.0.0.1:5001/health")
 end)
 print("Flask bridge status:", success and "Connected" or "Not connected")
-```
-
+```text
 ### Generation Fails
 
 1. Check service status:
@@ -302,8 +296,7 @@ curl http://127.0.0.1:8008/health
 
 # Terminal 3 - Check Flask bridge
 curl http://127.0.0.1:5001/health
-```
-
+```text
 2. Verify authentication:
 
 ```lua
@@ -318,8 +311,7 @@ HttpService:RequestAsync({
         port = 64989
     })
 })
-```
-
+```text
 ### Content Not Appearing
 
 - Check Output window for errors (View → Output)
@@ -383,8 +375,7 @@ LMSConnector:Initialize({
 
 -- Auto-sync grades
 LMSConnector:EnableAutoSync(true)
-```
-
+```text
 ## Support & Resources
 
 ### Getting Help
@@ -402,14 +393,12 @@ LMSConnector:EnableAutoSync(true)
 
 ```bash
 tail -f logs/flask_bridge.log
-```
-
+```text
 3. Check FastAPI logs:
 
 ```bash
 tail -f logs/fastapi.log
-```
-
+```text
 ### Feature Requests
 
 Submit requests via:
@@ -433,8 +422,7 @@ Submit requests via:
     place_objects = true,
     objects = {"telescope", "planet_models", "orbit_simulator"}
 }
-```
-
+```text
 ### Math Lesson: Geometry
 
 ```lua
@@ -447,8 +435,7 @@ Submit requests via:
     place_objects = true,
     objects = {"geometric_shapes", "calculator", "graph_board"}
 }
-```
-
+```text
 ### History Lesson: Ancient Civilizations
 
 ```lua
@@ -462,8 +449,7 @@ Submit requests via:
     place_objects = true,
     objects = {"pyramid", "artifacts", "timeline"}
 }
-```
-
+```text
 ## Security & Privacy
 
 ### Data Protection
@@ -489,16 +475,14 @@ The plugin checks for updates on startup:
 ```lua
 -- Disable auto-update if needed
 _G.ToolBoxAI_AutoUpdate = false
-```
-
+```text
 ### Manual Update
 
 ```bash
 cd /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions
 git pull origin main
 # Restart Studio to load updates
-```
-
+```text
 ## Conclusion
 
 The ToolBoxAI Roblox Plugin bridges education and gaming, making learning interactive and engaging. With real educational data integration, comprehensive assessment tools, and AI-powered content generation, educators can create immersive learning experiences in minutes.

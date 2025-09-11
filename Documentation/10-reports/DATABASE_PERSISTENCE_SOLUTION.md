@@ -56,8 +56,7 @@ Created a comprehensive database schema specifically for the Dashboard backend w
 ```bash
 cd /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions
 psql -U grayghostdata -h localhost -d educational_platform -f database/schemas/05_dashboard_schema.sql
-```
-
+```text
 ### 3. Created Sample Data (`create_sample_data.sql`)
 
 Populated the database with realistic sample data:
@@ -106,8 +105,7 @@ db_config = {
     'password': 'grayghostdata',
     'database': 'educational_platform'
 }
-```
-
+```text
 ## Test User Accounts
 
 ### Admin Account
@@ -183,8 +181,7 @@ CREATE INDEX idx_submissions_student ON submissions(student_id);
 
 -- Progress indexes
 CREATE INDEX idx_student_progress_student ON student_progress(student_id);
-```
-
+```text
 ## Data Integrity Features
 
 ### Automatic Count Maintenance

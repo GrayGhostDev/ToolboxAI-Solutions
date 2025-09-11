@@ -22,20 +22,17 @@ Official JavaScript SDK for ToolBoxAI-Solutions with full TypeScript support. Bu
 
 ```bash
 npm install @toolboxai/sdk
-```
-
+```text
 ### Yarn
 
 ```bash
 yarn add @toolboxai/sdk
-```
-
+```text
 ### CDN
 
 ```html
 <script src="https://cdn.toolboxai.com/sdk/latest/toolboxai.min.js"></script>
-```
-
+```text
 ### Requirements
 
 - Node.js 14+ (for Node.js environment)
@@ -73,8 +70,7 @@ async function getStarted() {
 }
 
 getStarted()
-```
-
+```text
 ## Authentication
 
 ### API Key Authentication
@@ -83,8 +79,7 @@ getStarted()
 const client = new ToolBoxAI({
   apiKey: 'your-api-key-here',
 })
-```
-
+```text
 ### OAuth2 Authentication
 
 ```javascript
@@ -103,8 +98,7 @@ const authUrl = client.auth.getAuthorizationUrl({
 // Handle callback
 const tokens = await client.auth.handleCallback(callbackUrl)
 client.setAccessToken(tokens.accessToken)
-```
-
+```text
 ### JWT Token Authentication
 
 ```javascript
@@ -123,8 +117,7 @@ client.on('token:refresh', (newTokens) => {
   // Store new tokens
   localStorage.setItem('accessToken', newTokens.accessToken)
 })
-```
-
+```text
 ## Configuration
 
 ### Client Options
@@ -159,8 +152,7 @@ const client = new ToolBoxAI({
     },
   },
 })
-```
-
+```text
 ## API Reference
 
 ### Users
@@ -187,8 +179,7 @@ const users = await client.users.list({
 
 // Delete user (admin only)
 await client.users.delete('user-id')
-```
-
+```text
 ### Lessons
 
 ```javascript
@@ -229,8 +220,7 @@ const deployment = await client.lessons.deployToRoblox('lesson-id', {
   environmentType: 'classroom',
   maxPlayers: 30
 });
-```
-
+```text
 ### Quizzes
 
 ```javascript
@@ -265,8 +255,7 @@ const results = await client.quizzes.getResults('attempt-id')
 
 // Get quiz analytics
 const analytics = await client.quizzes.getAnalytics('quiz-id')
-```
-
+```text
 ### Progress Tracking
 
 ```javascript
@@ -298,8 +287,7 @@ const report = await client.progress.generateReport({
   type: 'monthly',
   format: 'pdf',
 })
-```
-
+```text
 ### Gamification
 
 ```javascript
@@ -330,8 +318,7 @@ const quest = await client.gamification.createQuest({
     badges: ['math-master']
   }
 });
-```
-
+```text
 ### Content Generation (AI)
 
 ```javascript
@@ -362,8 +349,7 @@ const validation = await client.ai.validateContent({
   content: lessonContent,
   checkFor: ['age_appropriate', 'factual_accuracy', 'bias'],
 })
-```
-
+```text
 ### LMS Integration
 
 ```javascript
@@ -386,8 +372,7 @@ const exported = await client.lms.exportGrades({
   format: 'csv',
   lmsType: 'schoology',
 })
-```
-
+```text
 ### Real-time Updates
 
 ```javascript
@@ -413,8 +398,7 @@ client.realtime.unsubscribe('lesson:lesson-id')
 
 // Disconnect
 client.realtime.disconnect()
-```
-
+```text
 ## TypeScript Support
 
 ### Type Definitions
@@ -463,8 +447,7 @@ type CustomMetadata = {
 const lessonWithMetadata = await client.lessons.create<
   CreateLessonParams & { metadata: CustomMetadata }
 >({...});
-```
-
+```text
 ### Enums and Constants
 
 ```typescript
@@ -484,8 +467,7 @@ const quiz = await client.quizzes.create({
     },
   ],
 })
-```
-
+```text
 ## React Integration
 
 ### React Hooks
@@ -547,8 +529,7 @@ function CreateLesson() {
     </button>
   )
 }
-```
-
+```text
 ### React Query Integration
 
 ```jsx
@@ -573,8 +554,7 @@ function useCreateLesson() {
     },
   })
 }
-```
-
+```text
 ## Error Handling
 
 ### Error Types
@@ -604,8 +584,7 @@ try {
     console.error('Unknown error:', error)
   }
 }
-```
-
+```text
 ### Global Error Handler
 
 ```javascript
@@ -624,8 +603,7 @@ client.setRetryPolicy({
     return Math.min(1000 * Math.pow(2, retryCount), 10000)
   },
 })
-```
-
+```text
 ## Advanced Features
 
 ### Batch Operations
@@ -646,8 +624,7 @@ const updated = await client.lessons.batchUpdate([
 
 // Batch delete
 await client.lessons.batchDelete(['lesson-1', 'lesson-2', 'lesson-3']);
-```
-
+```text
 ### Pagination
 
 ```javascript
@@ -673,8 +650,7 @@ const page2 = await client.lessons.list({ page: 2, limit: 20 })
 const allLessons = await client.lessons.listAll({
   subject: 'math',
 }) // Automatically fetches all pages
-```
-
+```text
 ### File Uploads
 
 ```javascript
@@ -698,8 +674,7 @@ uploader.on('progress', (progress) => {
   console.log(`Progress: ${progress.percent}%`)
 })
 const result = await uploader.start()
-```
-
+```text
 ### Caching
 
 ```javascript
@@ -722,8 +697,7 @@ client.cache.clear()
 const freshData = await client.lessons.get('lesson-id', {
   cache: false,
 })
-```
-
+```text
 ### Webhooks
 
 ```javascript
@@ -742,8 +716,7 @@ const webhooks = await client.webhooks.list()
 
 // Delete webhook
 await client.webhooks.delete('webhook-id')
-```
-
+```text
 ## Examples
 
 ### Complete Application Example
@@ -811,8 +784,7 @@ class EducationApp {
     return achievements
   }
 }
-```
-
+```text
 ## Troubleshooting
 
 ### Common Issues
@@ -825,8 +797,7 @@ const client = new ToolBoxAI({
   apiKey: 'your-key',
   corsProxy: 'https://cors-proxy.yourapp.com',
 })
-```
-
+```text
 #### Token Expiration
 
 ```javascript
@@ -835,8 +806,7 @@ client.on('token:expired', async () => {
   const newTokens = await client.auth.refreshToken()
   client.setAccessToken(newTokens.accessToken)
 })
-```
-
+```text
 #### Network Timeouts
 
 ```javascript
@@ -845,8 +815,7 @@ const client = new ToolBoxAI({
   apiKey: 'your-key',
   timeout: 60000, // 60 seconds
 })
-```
-
+```text
 ### Debug Mode
 
 ```javascript
@@ -862,8 +831,7 @@ client.setLogger({
   error: (message, error) => console.error(message, error),
   warn: (message, data) => console.warn(message, data),
 })
-```
-
+```text
 ### Performance Optimization
 
 ```javascript
@@ -881,8 +849,7 @@ client.enableRequestDeduplication()
 
 // Compression
 client.enableCompression()
-```
-
+```text
 ## Migration
 
 ### Migrating from v1 to v2
@@ -895,8 +862,7 @@ client.getLessons(callback)
 // v2 (current)
 const client = new ToolBoxAI({ apiKey })
 const lessons = await client.lessons.list()
-```
-
+```text
 See [Migration Guide](https://github.com/toolboxai/sdk-js/blob/main/MIGRATION.md) for detailed instructions.
 
 ## Support

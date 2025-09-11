@@ -125,8 +125,7 @@ async def metrics_middleware(request: Request, call_next):
 @app.get("/metrics")
 async def get_metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
-```
-
+```text
 #### Custom Business Metrics
 
 ```python
@@ -161,8 +160,7 @@ content_generated.labels(
     subject='Math',
     grade_level='7'
 ).inc()
-```
-
+```text
 ### Infrastructure Metrics
 
 #### Node Exporter Configuration
@@ -198,8 +196,7 @@ spec:
             limits:
               memory: 50Mi
               cpu: 200m
-```
-
+```text
 #### Database Metrics
 
 ```yaml
@@ -233,8 +230,7 @@ spec:
                   key: connection-string
           ports:
             - containerPort: 9187
-```
-
+```text
 ## Logging
 
 ### Structured Logging
@@ -300,8 +296,7 @@ logger.info(
         'duration': duration
     }
 )
-```
-
+```text
 ### Log Aggregation with Loki
 
 ```yaml
@@ -345,8 +340,7 @@ limits_config:
   reject_old_samples_max_age: 168h
   ingestion_rate_mb: 10
   ingestion_burst_size_mb: 20
-```
-
+```text
 ### Promtail Configuration
 
 ```yaml
@@ -385,8 +379,7 @@ scrape_configs:
       - timestamp:
           source: timestamp
           format: Unix
-```
-
+```text
 ## Distributed Tracing
 
 ### Jaeger Integration
@@ -443,8 +436,7 @@ async def generate_content(request: ContentRequest):
             await save_to_database(content)
 
         return content
-```
-
+```text
 ## Dashboards
 
 ### Grafana Dashboard Configuration
@@ -513,8 +505,7 @@ async def generate_content(request: ContentRequest):
     ]
   }
 }
-```
-
+```text
 #### Agent Performance Dashboard
 
 ```json
@@ -554,8 +545,7 @@ async def generate_content(request: ContentRequest):
     ]
   }
 }
-```
-
+```text
 ## Alerting
 
 ### Alert Rules
@@ -619,8 +609,7 @@ groups:
         annotations:
           summary: 'Service is down'
           description: '{{ $labels.job }} is down'
-```
-
+```text
 ### AlertManager Configuration
 
 ```yaml
@@ -662,8 +651,7 @@ receivers:
         channel: '#alerts'
         title: 'ToolboxAI Alert'
         text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
-```
-
+```text
 ## Health Checks
 
 ### Application Health Endpoints
@@ -743,8 +731,7 @@ async def readiness_check() -> Dict[str, str]:
         return {"status": "ready"}
     except:
         return {"status": "not ready"}, status.HTTP_503_SERVICE_UNAVAILABLE
-```
-
+```text
 ### Kubernetes Probes
 
 ```yaml
@@ -776,8 +763,7 @@ spec:
         periodSeconds: 10
         timeoutSeconds: 5
         failureThreshold: 30
-```
-
+```text
 ## Performance Monitoring
 
 ### APM Integration
@@ -823,8 +809,7 @@ async def complex_operation():
     except Exception as e:
         apm_client.end_transaction('complex_operation', 'failure')
         raise
-```
-
+```text
 ### Performance Baselines
 
 ```yaml
@@ -867,8 +852,7 @@ baselines:
       p50: 500ms
       p95: 1500ms
       p99: 3000ms
-```
-
+```text
 ## Log Analysis
 
 ### Elasticsearch Queries
@@ -914,8 +898,7 @@ baselines:
     }
   }
 }
-```
-
+```text
 ### Kibana Visualizations
 
 1. **Error Rate Timeline**: Line chart showing error rate over time
@@ -939,8 +922,7 @@ user_sessions_active
 requests  # Too generic
 dbQueryTime  # Inconsistent casing
 cache_hits_percentage  # Use ratio instead
-```
-
+```text
 ### 2. Label Usage
 
 ```python
@@ -954,8 +936,7 @@ request_count.labels(
 # Avoid high cardinality labels
 # Bad: user_id as label (too many unique values)
 # Good: user_type as label (limited values)
-```
-
+```text
 ### 3. Alert Fatigue Prevention
 
 - Set appropriate thresholds based on baselines
@@ -982,8 +963,7 @@ retention_policies:
     retention: 7d
   - level: DEBUG
     retention: 1d
-```
-
+```text
 ## Incident Response
 
 ### Runbook Template
@@ -1024,8 +1004,7 @@ Brief description of what this alert means
 
 - How to prevent recurrence
 - Long-term fixes needed
-```
-
+```text
 ## Monitoring Checklist
 
 ### Pre-Production

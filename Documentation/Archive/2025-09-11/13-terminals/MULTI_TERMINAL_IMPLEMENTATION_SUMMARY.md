@@ -67,7 +67,7 @@ The ToolBoxAI Educational Platform has been successfully organized for parallel 
 
 ### Directory Structure
 
-```
+```text
 scripts/terminal_sync/
 ├── status/           # Real-time status files
 ├── messages/         # Inter-terminal messages
@@ -77,8 +77,7 @@ scripts/terminal_sync/
 ├── TERMINAL2_TASKS.md
 ├── TERMINAL3_TASKS.md
 └── DEBUGGER_TASKS.md
-```
-
+```text
 ### Communication Commands
 
 ```bash
@@ -96,8 +95,7 @@ scripts/terminal_sync/
 
 # Create report
 ./sync.sh [terminal] report
-```
-
+```text
 ## 📅 7-Day Sprint Plan
 
 ### Day 1-2: Critical Fixes
@@ -155,8 +153,7 @@ cd ToolboxAI-Roblox-Environment
 git checkout -b feature/backend-completion
 # Read: scripts/terminal_sync/TERMINAL1_TASKS.md
 # First task: Fix SPARC state_manager.py
-```
-
+```text
 #### Terminal 2 Start:
 
 ```bash
@@ -164,8 +161,7 @@ cd src/dashboard
 git checkout -b feature/frontend-integration
 # Read: scripts/terminal_sync/TERMINAL2_TASKS.md
 # First task: Fix WebSocket authentication
-```
-
+```text
 #### Terminal 3 Start:
 
 ```bash
@@ -173,16 +169,14 @@ cd ToolboxAI-Roblox-Environment/Roblox
 git checkout -b feature/roblox-plugin
 # Read: scripts/terminal_sync/TERMINAL3_TASKS.md
 # First task: Implement HTTP polling
-```
-
+```text
 #### Debugger Start:
 
 ```bash
 git checkout -b fix/test-failures
 # Read: scripts/terminal_sync/DEBUGGER_TASKS.md
 # Monitor all services continuously
-```
-
+```text
 ## 📝 Key Files & Locations
 
 ### Configuration
@@ -202,16 +196,14 @@ cd src/dashboard && npm test
 
 # Integration tests
 venv_clean/bin/pytest tests/integration/ -v
-```
-
+```text
 ### Service Health Checks
 
 ```bash
 curl http://localhost:8008/health  # FastAPI
 curl http://localhost:5001/health  # Flask
 curl http://localhost:3000         # Dashboard
-```
-
+```text
 ## 🔧 Critical Dependencies
 
 ### Terminal Dependencies

@@ -25,8 +25,7 @@ This document describes error codes and responses for ToolBoxAI-Solutions API en
     "details": {}
   }
 }
-```
-
+```text
 ## Best Practices
 
 - Always check error codes and messages

@@ -22,8 +22,7 @@ pip install -r requirements.txt
 
 # Or install specific coordinator requirements
 pip install fastapi uvicorn websockets pydantic langchain psutil pyyaml
-```
-
+```text
 ### Basic Usage
 
 ```python
@@ -51,8 +50,7 @@ async def main():
 
 # Run
 asyncio.run(main())
-```
-
+```text
 ### Context Manager Usage
 
 ```python
@@ -69,8 +67,7 @@ async def generate_content():
         )
 
         return result
-```
-
+```text
 ## 📊 Component Details
 
 ### Main Coordinator
@@ -93,8 +90,7 @@ result = await coordinator.generate_educational_content(
 # Check system health
 health = await coordinator.get_health_status()
 print(f"System status: {health.status}")
-```
-
+```text
 ### Workflow Coordinator
 
 Manages complex multi-step workflows:
@@ -117,8 +113,7 @@ workflow_id = await coordinator.create_workflow(
 # Monitor progress
 status = await coordinator.get_workflow_status(workflow_id)
 print(f"Progress: {status['progress']}%")
-```
-
+```text
 ### Resource Coordinator
 
 Manages system resources and API quotas:
@@ -143,8 +138,7 @@ available = await coordinator.check_api_quota('openai', 10, 5000)
 
 # Release resources
 await coordinator.release_resources("my_request")
-```
-
+```text
 ### Sync Coordinator
 
 Handles state synchronization and events:
@@ -172,8 +166,7 @@ event_id = await coordinator.publish_event(
     source='my_component',
     data={'task_id': '123', 'result': 'success'}
 )
-```
-
+```text
 ### Error Coordinator
 
 Centralized error handling and recovery:
@@ -198,8 +191,7 @@ except Exception as e:
 summary = await coordinator.get_error_summary(24)  # Last 24 hours
 print(f"Errors: {summary['total_errors']}")
 print(f"Resolution rate: {summary['resolution_rate']}%")
-```
-
+```text
 ## 🔧 Configuration
 
 ### Environment-based Configuration
@@ -215,8 +207,7 @@ prod_config = get_config_for_environment('production')
 
 # Initialize with specific config
 system = await initialize_coordinators(dev_config)
-```
-
+```text
 ### Custom Configuration
 
 ```python
@@ -232,8 +223,7 @@ config = CoordinatorSystemConfig(
 )
 
 system = await initialize_coordinators(config.to_dict())
-```
-
+```text
 ### Configuration File
 
 Create `coordinator_config.yaml`:
@@ -253,8 +243,7 @@ resource:
 error:
   enable_notifications: true
   alert_email: 'admin@example.com'
-```
-
+```text
 ## 🎓 Educational Workflows
 
 ### Complete Course Generation
@@ -271,8 +260,7 @@ workflow_id = await workflow_coordinator.create_workflow(
         'assessment_frequency': 'per_lesson'
     }
 )
-```
-
+```text
 ### Adaptive Assessment
 
 ```python
@@ -288,8 +276,7 @@ workflow_id = await workflow_coordinator.create_workflow(
         ]
     }
 )
-```
-
+```text
 ### Real-time Collaboration
 
 ```python
@@ -304,8 +291,7 @@ await sync_coordinator.publish_event(
     source='teacher_dashboard',
     data={'lesson_id': 'lesson_1', 'content_version': 2}
 )
-```
-
+```text
 ## 🔌 API Endpoints
 
 Each coordinator exposes REST API endpoints:
@@ -354,8 +340,7 @@ import asyncio
 from coordinators.integration_test import benchmark_coordinator_system
 asyncio.run(benchmark_coordinator_system())
 "
-```
-
+```text
 ### Unit Tests
 
 ```bash
@@ -364,8 +349,7 @@ pytest coordinators/tests/
 
 # With coverage
 pytest coordinators/tests/ --cov=coordinators --cov-report=html
-```
-
+```text
 ## 📈 Monitoring
 
 ### Health Monitoring
@@ -379,8 +363,7 @@ print(f"Active workflows: {health.active_workflows}")
 # Component-specific health
 workflow_health = await workflow_coordinator.get_health()
 resource_health = await resource_coordinator.get_health()
-```
-
+```text
 ### Metrics Collection
 
 ```python
@@ -390,8 +373,7 @@ workflow_metrics = await workflow_coordinator.get_metrics()
 resource_metrics = await resource_coordinator.get_metrics()
 sync_metrics = await sync_coordinator.get_metrics()
 error_metrics = await error_coordinator.get_metrics()
-```
-
+```text
 ### Performance Optimization
 
 ```python
@@ -400,8 +382,7 @@ optimization = await resource_coordinator.optimize_resource_allocation()
 print("Recommendations:")
 for rec in optimization['recommendations']:
     print(f"  - {rec}")
-```
-
+```text
 ## 🚨 Error Handling
 
 ### Automatic Recovery
@@ -427,8 +408,7 @@ error_coordinator.recovery_strategies['custom'] = RecoveryStrategy(
     applicable_errors=['custom_error'],
     recovery_function=custom_recovery
 )
-```
-
+```text
 ## 🔧 Troubleshooting
 
 ### Common Issues
@@ -465,8 +445,7 @@ logging.getLogger('coordinators').setLevel(logging.DEBUG)
 from coordinators.config import get_testing_config
 debug_config = get_testing_config()
 debug_config.log_level = "DEBUG"
-```
-
+```text
 ## 📝 Contributing
 
 ### Adding New Coordinators
@@ -492,8 +471,7 @@ error_coordinator.recovery_strategies['my_strategy'] = RecoveryStrategy(
     applicable_errors=['my_error_type'],
     recovery_function=my_recovery_strategy
 )
-```
-
+```text
 ## 📋 Best Practices
 
 1. **Always use context managers** for automatic cleanup

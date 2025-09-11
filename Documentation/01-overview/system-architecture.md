@@ -100,12 +100,11 @@ ToolBoxAI-Solutions employs a modern, microservices-based architecture designed 
 
 #### Content Processing Pipeline
 
-```
+```text
 Input → Parse → Analyze → Generate → Validate → Deploy
          ↓        ↓         ↓          ↓         ↓
      [Lesson] [Standards] [3D Env] [Testing] [Roblox]
-```
-
+```text
 #### Analytics Engine
 
 - **Real-time Processing**: Apache Kafka for event streaming
@@ -209,7 +208,7 @@ Input → Parse → Analyze → Generate → Validate → Deploy
 
 ### Content Creation Flow
 
-```
+```text
 Educator uploads lesson
     ↓
 API Gateway validates request
@@ -227,11 +226,10 @@ ValidationAgent verifies output
 Deploy to Roblox environment
     ↓
 Notify educator of completion
-```
-
+```text
 ### Student Interaction Flow
 
-```
+```text
 Student joins Roblox environment
     ↓
 WebSocket connection established
@@ -245,8 +243,7 @@ Stream events to analytics
 Update progress in real-time
     ↓
 Sync with LMS gradebook
-```
-
+```text
 ## Security Architecture
 
 ### Security Layers
@@ -360,10 +357,9 @@ Sync with LMS gradebook
 
 ### CI/CD Pipeline
 
-```
+```text
 Code Commit → Build → Test → Security Scan → Deploy to Staging → Deploy to Production
-```
-
+```text
 ### Environment Strategy
 
 - **Development**: Feature development and testing

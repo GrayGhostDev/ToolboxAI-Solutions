@@ -72,8 +72,7 @@ npm install
 # Set up environment variables
 cp .env.example .env
 # Edit .env with your configuration
-```
-
+```text
 #### Step 2: Local Development
 
 ```bash
@@ -85,8 +84,7 @@ npm run dev
 
 # Access the application
 open http://localhost:3000
-```
-
+```text
 #### Step 3: Roblox Studio Plugin
 
 1. Open Roblox Studio

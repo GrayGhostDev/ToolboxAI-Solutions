@@ -16,8 +16,7 @@ npm install
 npm run dev
 # OR
 python main.py
-```
-
+```text
 The backend should start with:
 
 - API running on http://localhost:8001
@@ -36,8 +35,7 @@ npm install
 
 # Start the development server
 npm run dev
-```
-
+```text
 The frontend should start on http://localhost:5173 (or another port if 5173 is in use).
 
 ## 3. Testing WebSocket Connection

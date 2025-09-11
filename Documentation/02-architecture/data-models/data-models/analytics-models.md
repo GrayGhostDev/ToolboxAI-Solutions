@@ -168,8 +168,7 @@ AnalyticsEvent = {
         }
     }
 }
-```
-
+```text
 ## AggregatedMetrics Model
 
 Pre-computed metrics for efficient reporting.
@@ -352,8 +351,7 @@ AggregatedMetrics = {
 
     anomalies_detected = {string}   -- Detected anomalies
 }
-```
-
+```text
 ## Dashboard Model
 
 Configurable dashboard definitions for different user roles.
@@ -584,8 +582,7 @@ Dashboard = {
     is_default = boolean,         -- Default for role
     is_template = boolean        -- Template dashboard
 }
-```
-
+```text
 ## Report Model
 
 Structured reports for detailed analysis and compliance.
@@ -826,8 +823,7 @@ Report = {
 
     version = number
 }
-```
-
+```text
 ## InsightModel
 
 AI-generated insights and recommendations.
@@ -1012,8 +1008,7 @@ Insight = {
 
     auto_generated = boolean
 }
-```
-
+```text
 ## Implementation Notes
 
 ### Event Processing Pipeline
@@ -1041,8 +1036,7 @@ class AnalyticsPipeline:
 
         # 7. Trigger Insights
         await self.generate_insights(enriched)
-```
-
+```text
 ### Metric Aggregation Strategy
 
 ```lua
@@ -1093,8 +1087,7 @@ AggregationStrategy = {
         cold = "2 years"     -- Archive storage
     }
 }
-```
-
+```text
 ### Dashboard Performance Optimization
 
 ```python
@@ -1115,8 +1108,7 @@ class DashboardOptimizer:
 
         # Optimize widget refresh
         self.batch_widget_refreshes(dashboard.widgets)
-```
-
+```text
 ### Insight Generation
 
 ```python
@@ -1145,8 +1137,7 @@ class InsightGenerator:
         insights.extend(recommendations)
 
         return insights
-```
-
+```text
 ### Real-time Analytics
 
 ```lua
@@ -1187,8 +1178,7 @@ RealTimeAnalytics = {
         }
     }
 }
-```
-
+```text
 ---
 
 _For user activity tracking, see [Progress Models](progress-models.md). For assessment analytics, see [Quiz Models](quiz-models.md)._

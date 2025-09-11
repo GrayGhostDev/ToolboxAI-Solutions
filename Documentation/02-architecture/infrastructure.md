@@ -67,8 +67,7 @@ spec:
               port: 8008
             initialDelaySeconds: 5
             periodSeconds: 5
-```
-
+```text
 #### Service Configuration
 
 ```yaml
@@ -85,8 +84,7 @@ spec:
       port: 80
       targetPort: 8008
   type: LoadBalancer
-```
-
+```text
 ### Docker Configuration
 
 #### API Dockerfile
@@ -126,8 +124,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 EXPOSE 8008
 
 CMD ["uvicorn", "server.main:app", "--host", "127.0.0.1", "--port", "8008"]
-```
-
+```text
 #### Dashboard Dockerfile
 
 ```dockerfile
@@ -155,8 +152,7 @@ RUN echo 'add_header X-Frame-Options "SAMEORIGIN" always;' >> /etc/nginx/conf.d/
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
-```
-
+```text
 ### Load Balancing
 
 #### NGINX Configuration
@@ -226,8 +222,7 @@ server {
         add_header Content-Type text/plain;
     }
 }
-```
-
+```text
 ### Database Infrastructure
 
 #### PostgreSQL Cluster
@@ -292,8 +287,7 @@ spec:
         resources:
           requests:
             storage: 100Gi
-```
-
+```text
 #### Redis Cluster
 
 ```yaml
@@ -344,8 +338,7 @@ spec:
         - name: redis-storage
           persistentVolumeClaim:
             claimName: redis-pvc
-```
-
+```text
 ### Terraform Configuration
 
 #### AWS Infrastructure
@@ -543,8 +536,7 @@ resource "aws_cloudfront_distribution" "main" {
     Project     = "ToolboxAI"
   }
 }
-```
-
+```text
 ### CI/CD Pipeline
 
 #### GitHub Actions Workflow
@@ -598,8 +590,7 @@ data:
       relabel_configs:
       - action: labelmap
         regex: __meta_kubernetes_node_label_(.+)
-```
-
+```text
 #### Grafana Dashboards
 
 Custom dashboards for:
@@ -646,8 +637,7 @@ spec:
           port: 5432 # PostgreSQL
         - protocol: TCP
           port: 6379 # Redis
-```
-
+```text
 #### Secrets Management
 
 ```yaml
@@ -685,8 +675,7 @@ spec:
       remoteRef:
         key: toolboxai/production/database
         property: connection_string
-```
-
+```text
 ### Backup and Disaster Recovery
 
 #### Database Backup
@@ -715,8 +704,7 @@ else
     echo "Backup failed" >&2
     exit 1
 fi
-```
-
+```text
 #### Disaster Recovery Plan
 
 1. **RTO (Recovery Time Objective)**: 4 hours
@@ -773,8 +761,7 @@ spec:
         - type: Percent
           value: 100
           periodSeconds: 60
-```
-
+```text
 ### Cost Optimization
 
 1. **Reserved Instances**: 60% of baseline capacity

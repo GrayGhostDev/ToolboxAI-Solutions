@@ -74,19 +74,17 @@ The Ghost Backend Framework has been successfully secured through comprehensive 
 
 # 4. Verify security status
 ./scripts/verify_security.sh
-```
-
+```text
 ### Docker Deployment
 
 ```bash
 # Environment variables are loaded from keychain
 ./scripts/secrets/keychain.sh export-env
 docker-compose up -d
-```
-
+```text
 ## 🔍 Security Verification Results
 
-```
+```text
 🔍 Ghost Backend Framework - Security Verification
 =================================================
 ✅ No exposed secrets found in codebase
@@ -94,8 +92,7 @@ docker-compose up -d
 ✅ Configuration files use secure environment variable references
 ✅ Git ignore properly configured for security files
 ✅ All security components verified
-```
-
+```text
 ## 📚 Documentation & Resources
 
 ### Security Documentation

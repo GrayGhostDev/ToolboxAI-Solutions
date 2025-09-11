@@ -16,8 +16,7 @@
 -- - Progress indicator
 -- - Submit/Next buttons
 -- - Score display
-```
-
+```text
 ### 2. LessonViewerTemplate.lua
 
 **TODO: Implement lesson content viewer**
@@ -32,8 +31,7 @@
 -- - Bookmark functionality
 -- - Search within lesson
 -- - Print/export options
-```
-
+```text
 ### 3. ProgressTrackerTemplate.lua
 
 **TODO: Implement progress tracking UI**
@@ -48,8 +46,7 @@
 -- - Time spent tracking
 -- - Goal setting interface
 -- - Performance graphs
-```
-
+```text
 ### 4. AchievementDisplayTemplate.lua
 
 **TODO: Implement achievement system UI**
@@ -64,8 +61,7 @@
 -- - Share functionality
 -- - Leaderboard integration
 -- - Milestone celebrations
-```
-
+```text
 ### 5. MenuSystemTemplate.lua
 
 **TODO: Implement menu system template**
@@ -80,8 +76,7 @@
 -- - Profile menu
 -- - Help/tutorial menu
 -- - Credits screen
-```
-
+```text
 ### 6. DialogBoxTemplate.lua
 
 **TODO: Implement dialog system**
@@ -96,8 +91,7 @@
 -- - Character portraits
 -- - Dialog choices
 -- - Skip/auto-advance options
-```
-
+```text
 ### 7. NotificationTemplate.lua
 
 **TODO: Implement notification system**
@@ -112,8 +106,7 @@
 -- - Toast notifications
 -- - Banner notifications
 -- - Notification center
-```
-
+```text
 ### 8. LeaderboardTemplate.lua
 
 **TODO: Implement leaderboard UI**
@@ -128,8 +121,7 @@
 -- - Player profiles
 -- - Pagination
 -- - Search functionality
-```
-
+```text
 ## Shared UI Components
 
 ### UIThemeManager.lua
@@ -145,8 +137,7 @@
 -- - Accessibility themes
 -- - Custom themes
 -- - Theme switching
-```
-
+```text
 ### UIAnimationLibrary.lua
 
 **TODO: Create UI animation library**
@@ -160,8 +151,7 @@
 -- - Bounce effects
 -- - Glow/pulse effects
 -- - Parallax scrolling
-```
-
+```text
 ### UILayoutManager.lua
 
 **TODO: Create layout management system**
@@ -175,8 +165,7 @@
 -- - Safe area handling
 -- - Screen adaptation
 -- - Orientation support
-```
-
+```text
 ### UIInputHandler.lua
 
 **TODO: Create input handling system**
@@ -190,8 +179,7 @@
 -- - Focus management
 -- - Tab order
 -- - Accessibility inputs
-```
-
+```text
 ## Implementation Priority
 
 1. QuizInterfaceTemplate (High - Core feature)

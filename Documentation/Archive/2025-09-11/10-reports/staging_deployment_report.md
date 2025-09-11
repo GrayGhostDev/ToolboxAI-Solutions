@@ -27,8 +27,7 @@ export POSTGRES_PASSWORD=staging_password_2024
 export REDIS_PASSWORD=staging_redis_2024
 export JWT_SECRET_KEY=staging_jwt_secret_key_very_long_and_secure_2024
 python server/main.py
-```
-
+```text
 ### 2. Flask Bridge (Port 5001)
 
 ```bash
@@ -37,15 +36,13 @@ source venv_clean/bin/activate
 export POSTGRES_PASSWORD=staging_password_2024
 export REDIS_PASSWORD=staging_redis_2024
 python server/roblox_server.py
-```
-
+```text
 ### 3. Dashboard Frontend (Port 3000)
 
 ```bash
 cd src/dashboard
 npm run dev
-```
-
+```text
 ## Testing Checklist
 
 - [ ] FastAPI server starts successfully
@@ -62,8 +59,7 @@ npm run dev
 ```bash
 cd config/production
 docker-compose -f docker-compose.staging.yml down
-```
-
+```text
 ## Next Steps
 
 1. Start applications manually for testing

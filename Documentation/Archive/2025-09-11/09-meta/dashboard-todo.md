@@ -319,8 +319,7 @@ VITE_ENABLE_ANALYTICS=true
 VITE_COPPA_COMPLIANCE=true
 VITE_FERPA_COMPLIANCE=true
 VITE_GDPR_COMPLIANCE=true
-```
-
+```text
 ## 🚀 Quick Commands
 
 ### Development
@@ -343,8 +342,7 @@ npm test
 
 # Build for production
 npm run build
-```
-
+```text
 ### Database
 
 ```bash
@@ -356,8 +354,7 @@ cd backend && alembic upgrade head
 
 # Create new migration
 alembic revision --autogenerate -m "Description"
-```
-
+```text
 ## 📊 Progress Tracking
 
 ### Completed ✅

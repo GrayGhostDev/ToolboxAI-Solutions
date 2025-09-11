@@ -50,7 +50,7 @@ This document outlines the coding standards and best practices for developers wo
 
 The project follows this high-level structure:
 
-```
+```text
 educational-platform/
 ├── api/                  # Backend API services
 │   ├── controllers/      # API endpoint handlers
@@ -79,8 +79,7 @@ educational-platform/
     ├── unit/             # Unit tests
     ├── integration/      # Integration tests
     └── e2e/              # End-to-end tests
-```
-
+```text
 ### File Naming
 
 - Use descriptive, meaningful names that reflect the file's purpose
@@ -128,8 +127,7 @@ if (condition) {
 
 // Avoid
 if (condition) doSomething()
-```
-
+```text
 ### Naming Conventions
 
 - Use `camelCase` for variables, functions, and methods
@@ -143,8 +141,7 @@ const maxRetryAttempts = 3;
 function calculateTotalScore(scores: number[]): number { ... }
 class UserAuthentication { ... }
 interface CourseProperties { ... }
-```
-
+```text
 ### Functional Programming
 
 - Prefer pure functions where appropriate
@@ -161,8 +158,7 @@ const newArray = []
 for (let i = 0; i < originalArray.length; i++) {
   newArray.push(transformItem(originalArray[i]))
 }
-```
-
+```text
 ### Asynchronous Code
 
 - Prefer async/await over Promise chains for readability
@@ -180,8 +176,7 @@ async function fetchUserData(userId: string): Promise<UserData> {
     throw new Error('Failed to fetch user data')
   }
 }
-```
-
+```text
 ### React-Specific Standards
 
 - Use functional components with hooks instead of class components
@@ -226,8 +221,7 @@ export function Component({ title, items, onSelect }: ComponentProps): JSX.Eleme
     </div>
   );
 }
-```
-
+```text
 ## Lua Standards
 
 ### Language Features
@@ -250,8 +244,7 @@ local function calculateDistance(pointA, pointB)
   local yDiff = pointA.Y - pointB.Y
   return math.sqrt(xDiff * xDiff + yDiff * yDiff)
 end
-```
-
+```text
 ### Naming Conventions
 
 - Use `PascalCase` for classes/modules
@@ -284,8 +277,7 @@ function PlayerController:move(direction)
   local velocity = calculateVelocity(direction, self._speed)
   -- Implementation
 end
-```
-
+```text
 ### Module Structure
 
 - Use the module pattern for all Lua modules
@@ -331,8 +323,7 @@ end
 
 -- Return the module
 return MyModule
-```
-
+```text
 ### Best Practices
 
 - Initialize all variables to avoid nil errors
@@ -370,8 +361,7 @@ return MyModule
   margin: 0;
   color: #fff;
 }
-```
-
+```text
 ### Naming Conventions
 
 - Use descriptive class names that reflect purpose, not presentation
@@ -390,8 +380,7 @@ return MyModule
     }
   }
 }
-```
-
+```text
 ### Best Practices
 
 - Use CSS variables for theming and reusable values
@@ -417,8 +406,7 @@ return MyModule
   <h2 class="content-section__title">Section Title</h2>
   <img src="image.jpg" alt="Descriptive text" />
 </section>
-```
-
+```text
 ### Semantic HTML
 
 - Use semantic HTML elements (`<article>`, `<section>`, `<nav>`, etc.)
@@ -442,8 +430,7 @@ return MyModule
 
 <label for="username">Username</label>
 <input type="text" id="username" name="username" />
-```
-
+```text
 ## Database Access
 
 ### Query Standards
@@ -467,8 +454,7 @@ const users = await db
 const users = await db.raw(
   `SELECT * FROM users WHERE status = 'active' ORDER BY created_at DESC LIMIT 10`
 )
-```
-
+```text
 ### Database Access Layer
 
 - Encapsulate database operations in service or repository modules
@@ -503,8 +489,7 @@ export class UserService {
     })
   }
 }
-```
-
+```text
 ## API Development
 
 ### RESTful API Design
@@ -515,7 +500,7 @@ export class UserService {
 - Use plural resource names for consistency
 - Structure URLs hierarchically
 
-```
+```text
 # Good
 GET    /api/courses                 # List courses
 POST   /api/courses                 # Create a course
@@ -523,8 +508,7 @@ GET    /api/courses/{id}            # Get a course
 PUT    /api/courses/{id}            # Update a course
 DELETE /api/courses/{id}            # Delete a course
 GET    /api/courses/{id}/lessons    # List lessons for a course
-```
-
+```text
 ### Response Format
 
 - Use consistent response formats across all endpoints
@@ -554,8 +538,7 @@ GET    /api/courses/{id}/lessons    # List lessons for a course
     }
   }
 }
-```
-
+```text
 ### API Documentation
 
 - Document all API endpoints using OpenAPI/Swagger
@@ -601,8 +584,7 @@ function calculateAverageScore(submissions: QuizSubmission[]): number {
   const totalScore = validSubmissions.reduce((sum, sub) => sum + sub.score, 0)
   return (totalScore / validSubmissions.length) * 100
 }
-```
-
+```text
 ### Documentation Files
 
 - Maintain up-to-date README files in each major directory
@@ -641,7 +623,7 @@ function calculateAverageScore(submissions: QuizSubmission[]): number {
   - `test:` - Adding or correcting tests
   - `chore:` - Changes to the build process or auxiliary tools
 
-```
+```text
 feat(course): add pagination to course listing
 
 Add pagination support to the course listing API and UI to improve
@@ -653,8 +635,7 @@ Includes:
 - Unit tests for pagination logic
 
 Fixes #123
-```
-
+```text
 ### Pull Requests
 
 - Create descriptive pull request titles

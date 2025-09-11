@@ -77,8 +77,7 @@ default=lambda: datetime.now(timezone.utc)
 
 # After
 default=func.now()
-```
-
+```text
 ### 2. XSS Prevention
 
 ```python
@@ -87,8 +86,7 @@ default=func.now()
 
 # After
 "username": html.escape(self.username) if self.username else None,
-```
-
+```text
 ### 3. Mutable Default Fix
 
 ```python
@@ -97,8 +95,7 @@ settings = Column(JSON, default=dict, nullable=False)
 
 # After
 settings = Column(JSON, default=lambda: {}, nullable=False)
-```
-
+```text
 ### 4. Performance Optimization
 
 ```python
@@ -111,8 +108,7 @@ for role in self.roles:
         if permission.name == permission_name:
             return True
 return False
-```
-
+```text
 ### 5. Audit System Integration
 
 ```python
@@ -125,8 +121,7 @@ if hasattr(entity, "add_audit_entry"):
     entity.add_audit_entry("update", details=kwargs)
 elif hasattr(entity, "version"):
     entity.version += 1
-```
-
+```text
 ## Testing Recommendations
 
 1. **Security Testing**: Verify XSS prevention with malicious input strings

@@ -44,15 +44,13 @@ brew install gh  # macOS
 
 # Authenticate
 gh auth login
-```
-
+```text
 ### 2. Run GitHub Setup
 
 ```bash
 # Execute the automated setup
 ./bin/github_setup.sh
-```
-
+```text
 This script will:
 
 - ✅ Configure repository metadata and topics
@@ -69,14 +67,13 @@ After running the setup script, you may want to:
 
 Go to `Settings > Secrets and variables > Actions` and add:
 
-```
+```text
 CODECOV_TOKEN       # For code coverage reporting
 DOCKER_USERNAME     # For container registry
 DOCKER_PASSWORD     # For container registry
 DEPLOY_KEY         # For deployment (if needed)
 SLACK_WEBHOOK      # For notifications (if needed)
-```
-
+```text
 #### Collaborators
 
 Go to `Settings > Manage access` to invite collaborators.

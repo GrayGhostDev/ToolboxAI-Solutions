@@ -329,8 +329,7 @@ Lesson = {
         custom_fields = {}         -- Organization-specific fields
     }
 }
-```
-
+```text
 ## Course Model
 
 Represents a complete course containing multiple lessons and modules.
@@ -574,8 +573,7 @@ Course = {
     published_at = DateTime,
     archived_at = DateTime
 }
-```
-
+```text
 ## Module Model
 
 Represents a learning module or unit within a course.
@@ -628,8 +626,7 @@ Module = {
     created_at = DateTime,
     updated_at = DateTime
 }
-```
-
+```text
 ## Resource Model
 
 Represents supplementary learning resources.
@@ -701,8 +698,7 @@ Resource = {
     updated_at = DateTime,
     created_by = string
 }
-```
-
+```text
 ## Implementation Notes
 
 ### Content Versioning
@@ -718,8 +714,7 @@ ContentVersion = {
     changed_at = DateTime,
     snapshot = {}  -- Full content snapshot
 }
-```
-
+```text
 ### Content Delivery
 
 1. **CDN Integration**
@@ -748,8 +743,7 @@ async def generate_lesson_content(lesson_plan: str):
     blueprint = await roblox_agent.create_blueprint(environment)
 
     return Lesson(content=structured, roblox=blueprint)
-```
-
+```text
 ---
 
 _For assessment models, see [Quiz Models](quiz-models.md). For tracking student interaction with lessons, see [Progress Models](progress-models.md)._

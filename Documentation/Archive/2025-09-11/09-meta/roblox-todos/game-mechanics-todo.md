@@ -16,8 +16,7 @@
 -- - Undo/redo support
 -- - Visual feedback
 -- - Touch/mouse support
-```
-
+```text
 ### 2. MatchingGameTemplate.lua
 
 **TODO: Implement matching game mechanics**
@@ -32,8 +31,7 @@
 -- - Hint system
 -- - Different matching modes
 -- - Difficulty scaling
-```
-
+```text
 ### 3. PuzzleSolvingTemplate.lua
 
 **TODO: Implement puzzle mechanics**
@@ -48,8 +46,7 @@
 -- - Hint generation
 -- - Auto-solve option
 -- - Progress saving
-```
-
+```text
 ### 4. BuildingConstructionTemplate.lua
 
 **TODO: Implement building/construction mechanics**
@@ -64,8 +61,7 @@
 -- - Material selection
 -- - Save/load constructions
 -- - Collaborative building
-```
-
+```text
 ### 5. CollectionGatheringTemplate.lua
 
 **TODO: Implement collection mechanics**
@@ -80,8 +76,7 @@
 -- - Collection albums
 -- - Achievement integration
 -- - Resource management
-```
-
+```text
 ### 6. RacingCompetitionTemplate.lua
 
 **TODO: Implement racing/competition mechanics**
@@ -96,8 +91,7 @@
 -- - Power-ups
 -- - Track generation
 -- - Multiplayer support
-```
-
+```text
 ### 7. SimulationTemplate.lua
 
 **TODO: Implement simulation mechanics**
@@ -112,8 +106,7 @@
 -- - Time progression
 -- - Variable manipulation
 -- - Data visualization
-```
-
+```text
 ### 8. CollaborativeActivityTemplate.lua
 
 **TODO: Implement collaborative mechanics**
@@ -128,8 +121,7 @@
 -- - Contribution tracking
 -- - Conflict resolution
 -- - Team formation
-```
-
+```text
 ## Core Mechanics Modules
 
 ### InteractionSystem.lua
@@ -145,8 +137,7 @@
 -- - Tool switching
 -- - Interaction ranges
 -- - Cooldown management
-```
-
+```text
 ### InventorySystem.lua
 
 **TODO: Create inventory management**
@@ -161,8 +152,7 @@
 -- - Search/filter
 -- - Item tooltips
 -- - Trade interface
-```
-
+```text
 ### ScoringSystem.lua
 
 **TODO: Create scoring mechanics**
@@ -177,8 +167,7 @@
 -- - Score persistence
 -- - Leaderboard submission
 -- - Achievement triggers
-```
-
+```text
 ### PhysicsController.lua
 
 **TODO: Create physics handling**
@@ -192,8 +181,7 @@
 -- - Ragdoll physics
 -- - Particle systems
 -- - Fluid simulation
-```
-
+```text
 ### AIBehaviorSystem.lua
 
 **TODO: Create AI behavior templates**
@@ -207,8 +195,7 @@
 -- - NPC interactions
 -- - Adaptive difficulty
 -- - Companion AI
-```
-
+```text
 ### MultiplayerSync.lua
 
 **TODO: Create multiplayer synchronization**
@@ -222,8 +209,7 @@
 -- - Event replication
 -- - Conflict resolution
 -- - Bandwidth optimization
-```
-
+```text
 ## Educational Mechanics
 
 ### AssessmentMechanics.lua
@@ -239,8 +225,7 @@
 -- - Rubric evaluation
 -- - Peer assessment
 -- - Self-assessment tools
-```
-
+```text
 ### GamificationMechanics.lua
 
 **TODO: Create gamification elements**
@@ -255,8 +240,7 @@
 -- - Virtual currency
 -- - Cosmetic unlocks
 -- - Prestige system
-```
-
+```text
 ## Implementation Priority
 
 1. DragDropActivityTemplate (High - Versatile mechanic)

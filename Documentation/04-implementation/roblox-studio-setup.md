@@ -68,8 +68,7 @@ BACKEND_URL = "http://127.0.0.1:5001"  -- Flask bridge
 WEBSOCKET_URL = "ws://127.0.0.1:9876"  -- MCP WebSocket
 DASHBOARD_URL = "http://127.0.0.1:3000" -- Dashboard
 PLUGIN_PORT = 64989                     -- Plugin communication port
-```
-
+```text
 ### 4. Authenticate the Plugin
 
 1. In the plugin window, click **Login**
@@ -163,8 +162,7 @@ The plugin automatically connects to the database through the backend API. Ensur
 # Backend .env file
 DATABASE_URL=postgresql://user:password@localhost/toolboxai
 REDIS_URL=redis://localhost:6379
-```
-
+```text
 ### 2. Enable Content Persistence
 
 ```lua
@@ -172,8 +170,7 @@ REDIS_URL=redis://localhost:6379
 PERSIST_CONTENT = true
 AUTO_SAVE_INTERVAL = 300  -- seconds
 CACHE_DURATION = 3600      -- seconds
-```
-
+```text
 ## Dashboard Integration
 
 ### 1. Real-time Sync
@@ -183,8 +180,7 @@ Enable real-time synchronization with the teacher dashboard:
 ```lua
 ENABLE_DASHBOARD_SYNC = true
 SYNC_INTERVAL = 30  -- seconds
-```
-
+```text
 ### 2. WebSocket Connection
 
 The plugin maintains a WebSocket connection for real-time updates:
@@ -195,8 +191,7 @@ WEBSOCKET_SETTINGS = {
     reconnect_delay = 5,
     heartbeat_interval = 30
 }
-```
-
+```text
 ### 3. Session Management
 
 Configure classroom session settings:
@@ -208,8 +203,7 @@ SESSION_SETTINGS = {
     allow_late_join = true,
     track_progress = true
 }
-```
-
+```text
 ## Agent Pipeline Configuration
 
 ### 1. Enable Agent Integration
@@ -223,8 +217,7 @@ AGENT_SETTINGS = {
     enable_script_agent = true,
     enable_review_agent = true
 }
-```
-
+```text
 ### 2. Agent Priorities
 
 Configure agent execution priorities:
@@ -237,8 +230,7 @@ AGENT_PRIORITIES = {
     script = "low",
     review = "low"
 }
-```
-
+```text
 ## CI/CD Integration
 
 ### 1. GitHub Actions Setup
@@ -251,8 +243,7 @@ CICD_SETTINGS = {
     github_webhook = "https://api.github.com/repos/your-repo/dispatches",
     branch = "main"
 }
-```
-
+```text
 ### 2. Automated Testing
 
 Enable automated testing on content generation:
@@ -263,8 +254,7 @@ AUTO_TEST_SETTINGS = {
     test_on_generate = true,
     validation_level = "strict"
 }
-```
-
+```text
 ## Security Configuration
 
 ### 1. Token Management
@@ -276,8 +266,7 @@ SECURITY_SETTINGS = {
     auto_refresh = true,
     secure_storage = true
 }
-```
-
+```text
 ### 2. Permissions
 
 Configure plugin permissions:
@@ -289,8 +278,7 @@ PERMISSIONS = {
     student_data_access = false,  -- Requires admin
     settings_modification = false  -- Requires admin
 }
-```
-
+```text
 ## Testing the Setup
 
 ### 1. Connection Test
@@ -332,10 +320,9 @@ PERMISSIONS = {
 
 #### 1. Authentication Failed
 
-```
+```text
 Error: Authentication failed
-```
-
+```text
 **Solution**:
 
 - Verify credentials are correct
@@ -344,10 +331,9 @@ Error: Authentication failed
 
 #### 2. HTTP Requests Blocked
 
-```
+```text
 Error: HttpService is not allowed to access ROBLOX resources
-```
-
+```text
 **Solution**:
 
 - Enable HTTP requests in Studio Settings
@@ -355,10 +341,9 @@ Error: HttpService is not allowed to access ROBLOX resources
 
 #### 3. Connection Timeout
 
-```
+```text
 Error: Connection to server timed out
-```
-
+```text
 **Solution**:
 
 - Check firewall settings
@@ -367,10 +352,9 @@ Error: Connection to server timed out
 
 #### 4. WebSocket Connection Failed
 
-```
+```text
 Error: WebSocket connection failed
-```
-
+```text
 **Solution**:
 
 - Check MCP server is running on port 9876
@@ -388,8 +372,7 @@ DEBUG_SETTINGS = {
     log_to_file = true,
     log_file_path = "ToolboxAI_debug.log"
 }
-```
-
+```text
 ### Log Locations
 
 - **Plugin Logs**: `%LocalAppData%\Roblox\logs\`
@@ -410,8 +393,7 @@ CACHE_SETTINGS = {
     cache_lessons = true,
     cache_quizzes = true
 }
-```
-
+```text
 ### 2. Batch Operations
 
 Configure batch processing:
@@ -422,8 +404,7 @@ BATCH_SETTINGS = {
     batch_size = 10,
     batch_delay = 100  -- milliseconds
 }
-```
-
+```text
 ### 3. Rate Limiting
 
 Respect API rate limits:
@@ -435,8 +416,7 @@ RATE_LIMIT_SETTINGS = {
     retry_on_limit = true,
     retry_delay = 1000  -- milliseconds
 }
-```
-
+```text
 ## Advanced Configuration
 
 ### Custom Agent Workflows
@@ -456,8 +436,7 @@ CUSTOM_WORKFLOWS = {
         timeout = 120
     }
 }
-```
-
+```text
 ### Plugin Extensions
 
 Enable additional plugin features:
@@ -469,8 +448,7 @@ EXTENSIONS = {
     enable_vr_support = false,
     enable_analytics = true
 }
-```
-
+```text
 ## Deployment to Production
 
 ### 1. Production URLs
@@ -483,8 +461,7 @@ API_URL = "https://api.toolboxai.com"
 BACKEND_URL = "https://bridge.toolboxai.com"
 WEBSOCKET_URL = "wss://ws.toolboxai.com"
 DASHBOARD_URL = "https://dashboard.toolboxai.com"
-```
-
+```text
 ### 2. SSL/TLS Configuration
 
 Enable secure connections:
@@ -495,8 +472,7 @@ SSL_SETTINGS = {
     verify_certificates = true,
     certificate_path = "certs/toolboxai.crt"
 }
-```
-
+```text
 ### 3. Production Permissions
 
 Restrict permissions for production:
@@ -507,8 +483,7 @@ PRODUCTION_PERMISSIONS = {
     local_storage = false,
     direct_database_access = false
 }
-```
-
+```text
 ## Support and Resources
 
 ### Documentation

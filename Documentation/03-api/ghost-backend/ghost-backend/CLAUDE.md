@@ -42,8 +42,7 @@ Ghost Backend Framework - A comprehensive, reusable backend development foundati
 
 # Configure security (macOS Keychain-based)
 ./tools/security/keychain.sh setup
-```
-
+```text
 ### Running the Backend
 
 ```bash
@@ -58,8 +57,7 @@ Ghost Backend Framework - A comprehensive, reusable backend development foundati
 
 # Stop just the API
 ./bin/stop_api.sh
-```
-
+```text
 ### Database Management (MacPorts PostgreSQL 16)
 
 ```bash
@@ -81,8 +79,7 @@ make env/keychain-setup
 
 # Check database status
 make db/status
-```
-
+```text
 ### Testing
 
 ```bash
@@ -102,8 +99,7 @@ pytest tests/test_framework.py
 
 # Run a specific test
 pytest tests/test_framework.py::TestGhostFramework::test_config_loading
-```
-
+```text
 ### Code Quality
 
 ```bash
@@ -121,8 +117,7 @@ mypy src/
 
 # Run all quality checks
 black src/ && isort src/ && flake8 src/ && mypy src/
-```
-
+```text
 ### Installation
 
 ```bash
@@ -140,8 +135,7 @@ pip install -e ".[email]"     # Email sending capabilities
 pip install -e ".[tasks]"     # Background task processing
 pip install -e ".[storage]"   # File storage and uploads
 pip install -e ".[dev]"       # Development tools
-```
-
+```text
 ## New Backend Components (Phase 1)
 
 ### Email Module (ghost.email)
@@ -185,8 +179,7 @@ All database operations use async/await pattern with context managers:
 ```python
 async with db_manager.get_session() as session:
     # Database operations here
-```
-
+```text
 ### Configuration Access
 
 Configuration is centralized through the Config class:
@@ -194,8 +187,7 @@ Configuration is centralized through the Config class:
 ```python
 from ghost import Config, get_config
 config = get_config()  # Singleton pattern
-```
-
+```text
 ### JWT Authentication
 
 Token-based authentication with role-based access control:
@@ -269,8 +261,7 @@ alembic downgrade -1
 
 # Check current version
 alembic current
-```
-
+```text
 ## API Documentation
 
 When the API is running:

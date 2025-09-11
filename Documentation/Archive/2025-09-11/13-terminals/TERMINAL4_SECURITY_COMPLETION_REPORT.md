@@ -13,22 +13,20 @@
 
 ### Before Implementation
 
-```
+```text
 🔴 Critical: 22 vulnerabilities
 🟠 High: 13 vulnerabilities
 🟡 Medium: 2 vulnerabilities
 🟢 Low: 0 vulnerabilities
-```
-
+```text
 ### After Implementation
 
-```
+```text
 🔴 Critical: 0 vulnerabilities (100% resolved)
 🟠 High: 3 vulnerabilities (77% resolved)
 🟡 Medium: 2 vulnerabilities
 🟢 Low: 0 vulnerabilities
-```
-
+```text
 ---
 
 ## ✅ COMPLETED IMPLEMENTATIONS
@@ -77,8 +75,7 @@
 # Admin Permissions (includes all)
 ✅ system_broadcast, user_management
 ✅ config_update, rbac_update
-```
-
+```text
 #### WebSocket Security Features:
 
 - ✅ Per-connection rate limiting (60 msgs/min default)
@@ -108,8 +105,7 @@ API Endpoints: 100 requests/minute
 WebSocket: 60 messages/minute
 Content Generation: 30 requests/minute
 Agent Execution: 20 requests/minute
-```
-
+```text
 ### 4. Security Middleware Suite
 
 **File**: `ToolboxAI-Roblox-Environment/server/security_middleware.py`
@@ -164,8 +160,7 @@ Agent Execution: 20 requests/minute
     "xss_attempts": count,
     "csrf_failures": count
 }
-```
-
+```text
 ### 6. Comprehensive Test Suite
 
 **File**: `ToolboxAI-Roblox-Environment/tests/test_security.py`
@@ -221,8 +216,7 @@ Agent Execution: 20 requests/minute
 # Move all secrets to environment variables
 export DB_PASSWORD=$(openssl rand -hex 16)
 export REDIS_PASSWORD=$(openssl rand -hex 16)
-```
-
+```text
 #### 2. Remove eval() Usage
 
 **Files to Fix**:
@@ -237,8 +231,7 @@ export REDIS_PASSWORD=$(openssl rand -hex 16)
 # Replace eval() with ast.literal_eval()
 import ast
 result = ast.literal_eval(expression)
-```
-
+```text
 #### 3. Fix SQL Injection Vulnerabilities
 
 **Files to Fix**:
@@ -252,8 +245,7 @@ result = ast.literal_eval(expression)
 # Bad: query = f"SELECT * FROM users WHERE id = {user_id}"
 # Good: query = "SELECT * FROM users WHERE id = %s"
 cursor.execute(query, (user_id,))
-```
-
+```text
 ### Medium Priority
 
 1. **Update NPM Dependencies**
@@ -333,16 +325,14 @@ cursor.execute(query, (user_id,))
 ```bash
 cd /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions
 python scripts/security_scanner.py
-```
-
+```text
 ### Test Security Implementation
 
 ```bash
 cd ToolboxAI-Roblox-Environment
 source venv_clean/bin/activate
 python -m pytest tests/test_security.py -v
-```
-
+```text
 ### Monitor Security in Real-Time
 
 ```bash
@@ -370,8 +360,7 @@ done
 EOF
 chmod +x monitor_security.sh
 ./monitor_security.sh
-```
-
+```text
 ---
 
 ## 🎉 SUCCESS CRITERIA MET

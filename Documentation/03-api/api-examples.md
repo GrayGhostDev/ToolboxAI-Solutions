@@ -44,8 +44,7 @@ async def register_user():
 
 # Run the async function
 user = asyncio.run(register_user())
-```
-
+```text
 #### JavaScript/TypeScript
 
 ```typescript
@@ -82,8 +81,7 @@ async function registerUser() {
 
 // Usage
 const user = await registerUser()
-```
-
+```text
 #### cURL
 
 ```bash
@@ -96,8 +94,7 @@ curl -X POST http://localhost:8008/api/auth/register \
     "role": "student",
     "grade_level": 7
   }'
-```
-
+```text
 ### Login and Get Token
 
 #### Python
@@ -159,8 +156,7 @@ async def main():
         print("Login failed!")
 
 asyncio.run(main())
-```
-
+```text
 #### JavaScript/TypeScript
 
 ```typescript
@@ -241,8 +237,7 @@ const success = await auth.login('student@example.com', 'SecurePassword123!')
 if (success) {
   console.log('Login successful!')
 }
-```
-
+```text
 ## Content Generation
 
 ### Generate Educational Content
@@ -338,8 +333,7 @@ async def generate_math_lesson():
         print(f"Roblox Scripts: {lesson.get('roblox_integration', {})}")
 
 asyncio.run(generate_math_lesson())
-```
-
+```text
 #### JavaScript/TypeScript
 
 ```typescript
@@ -426,8 +420,7 @@ async function createInteractiveLesson() {
     console.log('Lesson created with Roblox integration')
   }
 }
-```
-
+```text
 ## Quiz Management
 
 ### Create and Submit Quiz
@@ -567,8 +560,7 @@ async def take_quiz(quiz_id: str):
             print(f"Achievement Unlocked: {achievement}")
 
 asyncio.run(create_math_quiz())
-```
-
+```text
 #### JavaScript/TypeScript
 
 ```typescript
@@ -730,8 +722,7 @@ class InteractiveQuiz {
     console.log(`Your score: ${result.percentage}%`)
   }
 }
-```
-
+```text
 ## Progress Tracking
 
 ### Track Learning Progress
@@ -825,8 +816,7 @@ async def track_student_progress():
         print(f"Quizzes Completed: {analytics['summary']['quizzes_completed']}")
 
 asyncio.run(track_student_progress())
-```
-
+```text
 #### JavaScript/TypeScript
 
 ```typescript
@@ -978,8 +968,7 @@ class ProgressDashboard {
     }
   }
 }
-```
-
+```text
 ## WebSocket Connections
 
 ### Real-time Updates
@@ -1084,8 +1073,7 @@ async def realtime_updates():
         await ws_client.disconnect()
 
 asyncio.run(realtime_updates())
-```
-
+```text
 #### JavaScript/TypeScript
 
 ```typescript
@@ -1262,8 +1250,7 @@ function RealTimeComponent() {
         </div>
     );
 }
-```
-
+```text
 ## Error Handling
 
 ### Comprehensive Error Handling
@@ -1423,8 +1410,7 @@ async def safe_content_generation():
         print(f"Unexpected error: {e}")
 
 asyncio.run(safe_content_generation())
-```
-
+```text
 #### JavaScript/TypeScript
 
 ```typescript
@@ -1677,8 +1663,7 @@ async function safeContentGeneration() {
         }
     }
 }
-```
-
+```text
 ## Best Practices
 
 ### API Client Wrapper
@@ -1741,8 +1726,7 @@ const client = new ToolboxAIClient()
 await client.initialize('teacher@example.com', 'password')
 
 const content = await client.generateContent('Mathematics', 7, ['Fractions'], 'classroom')
-```
-
+```text
 ## Testing API Endpoints
 
 ### Automated Testing
@@ -1809,6 +1793,5 @@ async def test_quiz_workflow(auth_client: APIClient):
 
     assert result["score"] == 1
     assert result["passed"] is True
-```
-
+```text
 This comprehensive API examples documentation provides practical, working code for all major endpoints and use cases.

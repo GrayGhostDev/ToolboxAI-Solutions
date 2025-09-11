@@ -6,7 +6,7 @@ The ToolBoxAI Dashboard is built with React 18 and TypeScript, using Material-UI
 
 ## Architecture
 
-```
+```text
 src/dashboard/src/
 ├── components/
 │   ├── layout/         # Main layout components
@@ -20,8 +20,7 @@ src/dashboard/src/
 ├── services/           # API services
 ├── store/              # Redux state management
 └── utils/              # Utility functions
-```
-
+```text
 ## Component Categories
 
 ### 1. Layout Components
@@ -102,8 +101,7 @@ interface RouteConfig {
   roles: UserRole[]
   exact?: boolean
 }
-```
-
+```text
 ## API Integration
 
 Components interact with the backend through service modules:
@@ -224,8 +222,7 @@ const MyComponent: React.FC<MyComponentProps> = ({ title, onAction }) => {
 };
 
 export default MyComponent;
-```
-
+```text
 ### Using Components
 
 ```typescript
@@ -239,8 +236,7 @@ function App() {
     />
   );
 }
-```
-
+```text
 ## Resources
 
 - [React Documentation](https://react.dev)

@@ -23,8 +23,7 @@ The `GamificationHubController` manages the user's interaction with the gamifica
 ```lua
 -- Main controller initialization
 local controller = GamificationHubController.new(gui)
-```
-
+```text
 #### Key Methods
 
 | Method                  | Description                                                  |
@@ -51,8 +50,7 @@ local REWARD_DATA = {
 	},
 	-- Additional rewards...
 }
-```
-
+```text
 #### Reward Tiers
 
 Rewards are organized in tiers (gold, silver, bronze, basic) with corresponding visual indicators.
@@ -95,8 +93,7 @@ function GamificationHubController:updateXPDisplay()
 	-- Update XP text
 	xpText.Text = string.format("%d / %d XP", self.currentXP, self.maxXP)
 end
-```
-
+```text
 ## UI Components
 
 ### Badges Panel
@@ -132,8 +129,7 @@ When a student completes a lesson, the system should:
 rewardXP(lessonXPValue)
 checkAchievements("lesson", lessonId)
 updateChallengeProgress("lessons", 1)
-```
-
+```text
 ### Quiz Completion Integration
 
 When a student completes a quiz, the system should:
@@ -144,8 +140,7 @@ local earnedXP = baseQuizXP * (score / maxScore)
 rewardXP(earnedXP)
 checkAchievements("quiz", quizId, score)
 updateChallengeProgress("quizzes", 1)
-```
-
+```text
 ## Implementation Guidelines
 
 ### Adding New Rewards

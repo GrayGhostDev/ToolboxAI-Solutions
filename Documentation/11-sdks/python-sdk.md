@@ -23,28 +23,24 @@ Official Python SDK for ToolBoxAI-Solutions. Build powerful educational applicat
 
 ```bash
 pip install toolboxai-sdk
-```
-
+```text
 ### Poetry
 
 ```bash
 poetry add toolboxai-sdk
-```
-
+```text
 ### Conda
 
 ```bash
 conda install -c toolboxai toolboxai-sdk
-```
-
+```text
 ### Development Installation
 
 ```bash
 git clone https://github.com/toolboxai/python-sdk.git
 cd python-sdk
 pip install -e .
-```
-
+```text
 ### Requirements
 
 - Python 3.8 or higher
@@ -83,8 +79,7 @@ quiz = client.quizzes.create(
     ]
 )
 print(f"Created quiz: {quiz.id}")
-```
-
+```text
 ## Authentication
 
 ### API Key Authentication
@@ -93,8 +88,7 @@ print(f"Created quiz: {quiz.id}")
 from toolboxai import ToolBoxAI
 
 client = ToolBoxAI(api_key="your-api-key-here")
-```
-
+```text
 ### OAuth2 Authentication
 
 ```python
@@ -118,8 +112,7 @@ tokens = oauth.handle_callback(callback_url)
 
 # Initialize client with tokens
 client = ToolBoxAI(access_token=tokens.access_token)
-```
-
+```text
 ### Environment Variables
 
 ```python
@@ -131,8 +124,7 @@ client = ToolBoxAI()
 
 # Or specify different env var
 client = ToolBoxAI(api_key=os.getenv("MY_API_KEY"))
-```
-
+```text
 ### Token Management
 
 ```python
@@ -152,8 +144,7 @@ client.set_access_token(new_tokens.access_token)
 
 # Logout
 client.auth.logout()
-```
-
+```text
 ## Configuration
 
 ### Client Configuration
@@ -186,8 +177,7 @@ config = Config(
 )
 
 client = ToolBoxAI(config=config)
-```
-
+```text
 ### Logging Configuration
 
 ```python
@@ -202,8 +192,7 @@ client = ToolBoxAI(api_key="your-key", debug=True)
 # Custom logger
 logger = logging.getLogger("my_app")
 client = ToolBoxAI(api_key="your-key", logger=logger)
-```
-
+```text
 ## API Reference
 
 ### Users
@@ -240,8 +229,7 @@ for user in client.users.iter_all(role="teacher"):
 
 # Delete user (admin only)
 client.users.delete("user-id")
-```
-
+```text
 ### Lessons
 
 ```python
@@ -290,8 +278,7 @@ lessons = client.lessons.batch_create([
     LessonCreate(title="Lesson 1", ...),
     LessonCreate(title="Lesson 2", ...),
 ])
-```
-
+```text
 ### Quizzes
 
 ```python
@@ -334,8 +321,7 @@ print(f"Score: {results.score}%")
 analytics = client.quizzes.get_analytics("quiz-id")
 print(f"Average score: {analytics.average_score}")
 print(f"Pass rate: {analytics.pass_rate}%")
-```
-
+```text
 ### Progress Tracking
 
 ```python
@@ -377,8 +363,7 @@ report = client.progress.generate_report(
 # Save report to file
 with open("report.pdf", "wb") as f:
     f.write(report.content)
-```
-
+```text
 ### Gamification
 
 ```python
@@ -420,8 +405,7 @@ quest = client.gamification.create_quest(
         "badges": ["math-master"]
     }
 )
-```
-
+```text
 ### Content Generation (AI)
 
 ```python
@@ -462,8 +446,7 @@ if validation.passed:
     print("Content is valid")
 else:
     print(f"Issues found: {validation.issues}")
-```
-
+```text
 ### LMS Integration
 
 ```python
@@ -496,8 +479,7 @@ export_result = client.lms.export_grades(
     lms_type="schoology",
     format="csv"
 )
-```
-
+```text
 ## Type Hints
 
 ### Using Type Hints
@@ -524,8 +506,7 @@ def get_student_lessons(
 
 # Type checking with mypy
 # mypy your_script.py
-```
-
+```text
 ### Custom Types
 
 ```python
@@ -547,8 +528,7 @@ class LessonRepository(Protocol):
     def create(self, lesson: Lesson) -> Lesson: ...
     def update(self, lesson: Lesson) -> Lesson: ...
     def delete(self, lesson_id: str) -> None: ...
-```
-
+```text
 ## Async Support
 
 ### Async Client
@@ -577,8 +557,7 @@ async def main():
 
 # Run async function
 asyncio.run(main())
-```
-
+```text
 ### Async Context Manager
 
 ```python
@@ -603,8 +582,7 @@ async def process_lesson(client: AsyncToolBoxAI, lesson: Lesson):
     deployment = await client.lessons.deploy_to_roblox(lesson.id)
 
     return {"lesson": lesson, "quiz": quiz, "deployment": deployment}
-```
-
+```text
 ## Data Analysis
 
 ### Pandas Integration
@@ -640,8 +618,7 @@ plt.show()
 # Correlation analysis
 correlation = df[["time_spent", "score", "attempts"]].corr()
 print(correlation)
-```
-
+```text
 ### Batch Data Processing
 
 ```python
@@ -667,8 +644,7 @@ results = processor.process_all(
 
 # Convert to DataFrame
 df = pd.DataFrame(results)
-```
-
+```text
 ## Error Handling
 
 ### Exception Types
@@ -701,8 +677,7 @@ except NetworkError as e:
     # Implement retry logic
 except ToolBoxAIError as e:
     print(f"API error: {e.code} - {e.message}")
-```
-
+```text
 ### Retry Logic
 
 ```python
@@ -730,8 +705,7 @@ def robust_api_call(func, *args, **kwargs):
                 time.sleep(2 ** attempt)  # Exponential backoff
                 continue
             raise
-```
-
+```text
 ## Advanced Features
 
 ### Context Managers
@@ -750,8 +724,7 @@ with client.batch() as batch:
     batch.create_lesson(lesson2_data)
     batch.create_quiz(quiz_data)
     # All operations are executed when exiting the context
-```
-
+```text
 ### Generators and Iterators
 
 ```python
@@ -775,8 +748,7 @@ active_students = (
     student for student in client.users.iter_all()
     if student.last_login_days <= 7
 )
-```
-
+```text
 ### Caching
 
 ```python
@@ -803,8 +775,7 @@ from functools import lru_cache
 @lru_cache(maxsize=128)
 def get_lesson_cached(lesson_id: str) -> Lesson:
     return client.lessons.get(lesson_id)
-```
-
+```text
 ### Webhooks
 
 ```python
@@ -835,8 +806,7 @@ def handle_lesson_created(lesson_data):
 
 def handle_quiz_submitted(quiz_data):
     print(f"Quiz submitted: {quiz_data['score']}%")
-```
-
+```text
 ### CLI Tool
 
 ```python
@@ -874,8 +844,7 @@ def create_lesson(client, title, grade):
 
 if __name__ == "__main__":
     cli()
-```
-
+```text
 ## Examples
 
 ### Complete Application
@@ -1047,8 +1016,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-```
-
+```text
 ## Troubleshooting
 
 ### Common Issues
@@ -1064,8 +1032,7 @@ client = ToolBoxAI(
     api_key="your-key",
     verify_ssl="/path/to/ca-bundle.crt"
 )
-```
-
+```text
 #### Proxy Configuration
 
 ```python
@@ -1086,8 +1053,7 @@ client = ToolBoxAI(
     api_key="your-key",
     proxy="http://user:pass@proxy.example.com:8080"
 )
-```
-
+```text
 #### Memory Issues with Large Datasets
 
 ```python
@@ -1106,8 +1072,7 @@ from toolboxai.utils import chunk
 users = client.users.iter_all()
 for user_chunk in chunk(users, size=100):
     process_batch(user_chunk)
-```
-
+```text
 ### Debug Mode
 
 ```python
@@ -1125,8 +1090,7 @@ client = ToolBoxAI(api_key="your-key", debug=True)
 client.set_debug_callback(lambda req, resp:
     print(f"Request: {req}\nResponse: {resp}")
 )
-```
-
+```text
 ### Performance Profiling
 
 ```python
@@ -1153,8 +1117,7 @@ def profile_code():
     stats.sort_stats("cumulative")
     stats.print_stats(10)
     print(stream.getvalue())
-```
-
+```text
 ## Migration
 
 ### Migrating from v1 to v2
@@ -1169,8 +1132,7 @@ lessons = client.get_lessons()
 from toolboxai import ToolBoxAI
 client = ToolBoxAI(api_key=api_key)
 lessons = client.lessons.list()
-```
-
+```text
 See [Migration Guide](https://github.com/toolboxai/python-sdk/blob/main/MIGRATION.md) for detailed instructions.
 
 ## Testing
@@ -1201,8 +1163,7 @@ class TestLessonOperations(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-```
-
+```text
 ### Integration Testing
 
 ```python
@@ -1233,8 +1194,7 @@ def test_full_lesson_lifecycle(client):
     # Verify deletion
     with pytest.raises(NotFoundError):
         client.lessons.get(lesson.id)
-```
-
+```text
 ## Support
 
 - **Documentation**: [docs.toolboxai.com](https://docs.toolboxai.com)
@@ -1251,16 +1211,14 @@ _SDK Version: 2.0.0 | API Version: v1 | Python: 3.8+ | Last Updated: September 2
 
 ```bash
 pip install toolboxai-sdk
-```
-
+```text
 Or install from source:
 
 ```bash
 git clone https://github.com/toolboxai/python-sdk.git
 cd python-sdk
 pip install -e .
-```
-
+```text
 ## Quick Start
 
 ```python
@@ -1283,8 +1241,7 @@ content = await client.content.generate(
 )
 
 print(f"Generated: {content.title}")
-```
-
+```text
 ## Complete SDK Reference
 
 ### Client Initialization
@@ -1310,8 +1267,7 @@ config = Config(
 )
 
 client = ToolboxAI(config=config)
-```
-
+```text
 ### Authentication Module
 
 ```python
@@ -1361,8 +1317,7 @@ await auth.logout()
 # Get current user
 user = await auth.get_current_user()
 print(f"Logged in as: {user.name} ({user.role})")
-```
-
+```text
 ### Content Generation Module
 
 ```python
@@ -1432,8 +1387,7 @@ contents = await generator.generate_batch([
         "content_type": "quiz"
     }
 ])
-```
-
+```text
 ### Quiz Management Module
 
 ```python
@@ -1513,8 +1467,7 @@ analytics = await quiz_manager.get_analytics(
 )
 print(f"Average score: {analytics.average_score}")
 print(f"Completion rate: {analytics.completion_rate}")
-```
-
+```text
 ### Progress Tracking Module
 
 ```python
@@ -1569,8 +1522,7 @@ leaderboard = await tracker.get_leaderboard(
 
 for rank, entry in enumerate(leaderboard.entries, 1):
     print(f"{rank}. {entry.user_name}: {entry.score} points")
-```
-
+```text
 ### Analytics Module
 
 ```python
@@ -1631,8 +1583,7 @@ report = await analytics.export_report(
     email="admin@school.edu"
 )
 print(f"Report exported: {report.url}")
-```
-
+```text
 ### WebSocket Real-time Module
 
 ```python
@@ -1689,8 +1640,7 @@ async with client.websocket.session() as ws:
 
     # Listen for 60 seconds
     await asyncio.sleep(60)
-```
-
+```text
 ### Agent Management Module
 
 ```python
@@ -1736,8 +1686,7 @@ performance = await agent_manager.get_performance(
 )
 print(f"Average processing time: {performance.avg_processing_time}s")
 print(f"Success rate: {performance.success_rate}%")
-```
-
+```text
 ### Roblox Integration Module
 
 ```python
@@ -1783,8 +1732,7 @@ roblox_analytics = await roblox.get_analytics(
     place_id="123456789",
     metrics=["play_time", "completion_rate", "engagement"]
 )
-```
-
+```text
 ### User Management Module
 
 ```python
@@ -1839,8 +1787,7 @@ results = await user_manager.bulk_create([
     {"email": "student1@school.edu", "name": "Student 1", ...},
     {"email": "student2@school.edu", "name": "Student 2", ...}
 ])
-```
-
+```text
 ### Error Handling
 
 ```python
@@ -1878,8 +1825,7 @@ except ServerError as e:
 
 except ToolboxAIError as e:
     print(f"API error: {e}")
-```
-
+```text
 ### Async Context Manager
 
 ```python
@@ -1897,8 +1843,7 @@ async with ToolboxAI(api_key="your-key") as client:
     await client.websocket.subscribe(["notifications"])
 
 # Automatically disconnects and cleans up
-```
-
+```text
 ### Pagination
 
 ```python
@@ -1924,8 +1869,7 @@ while page.has_next:
         print(quiz.title)
 
     page = await page.next()
-```
-
+```text
 ### Caching
 
 ```python
@@ -1955,8 +1899,7 @@ content = await client.content.get(
     "content-123",
     use_cache=False
 )
-```
-
+```text
 ### Logging
 
 ```python
@@ -1976,8 +1919,7 @@ client = ToolboxAI(
     api_key="your-key",
     logger=logger
 )
-```
-
+```text
 ### Testing Support
 
 ```python
@@ -2005,8 +1947,7 @@ async def test_content_generation(mock_client, test_data):
 
     assert result.title == test_data.lesson.title
     mock_client.content.generate.assert_called_once()
-```
-
+```text
 ### Environment Variables
 
 ```python
@@ -2018,8 +1959,7 @@ os.environ["TOOLBOXAI_BASE_URL"] = "https://api.toolboxai.com"
 
 # Client auto-configures from environment
 client = ToolboxAI()  # No parameters needed
-```
-
+```text
 ### Type Hints and IDE Support
 
 ```python
@@ -2046,8 +1986,7 @@ async def generate_content_for_class(
     return contents
 
 # Full IDE autocomplete and type checking support
-```
-
+```text
 ## Migration Guide
 
 ### From v1.x to v2.x
@@ -2062,8 +2001,7 @@ content = client.generate_content(...)
 from toolboxai import ToolboxAI
 client = ToolboxAI(api_key="key")
 content = await client.content.generate(...)
-```
-
+```text
 ### From REST API to SDK
 
 ```python
@@ -2085,8 +2023,7 @@ content = await client.content.generate(
     subject="Math",
     grade_level=7
 )
-```
-
+```text
 ## Performance Optimization
 
 ```python
@@ -2117,8 +2054,7 @@ async for chunk in client.content.generate_stream(
     stream=True
 ):
     print(chunk, end="")
-```
-
+```text
 ## Contributing
 
 ```bash
@@ -2139,8 +2075,7 @@ mypy .
 
 # Build documentation
 cd docs && make html
-```
-
+```text
 ## Support
 
 - Documentation: https://docs.toolboxai.com/sdk/python

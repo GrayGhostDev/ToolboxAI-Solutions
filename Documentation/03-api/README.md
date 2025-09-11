@@ -21,8 +21,7 @@ Create a new user.
   "email": "string",
   "password": "string"
 }
-```
-
+```text
 **Response:**
 
 ```json
@@ -31,8 +30,7 @@ Create a new user.
   "username": "string",
   "email": "string"
 }
-```
-
+```text
 #### `GET /api/users/{id}`
 
 Retrieve user details by ID.
@@ -45,8 +43,7 @@ Retrieve user details by ID.
   "email": "string",
   "created_at": "datetime"
 }
-```
-
+```text
 ### 2. Data Operations
 
 #### `POST /api/data`
@@ -59,8 +56,7 @@ Submit new data for processing.
   "data": "string",
   "type": "string"
 }
-```
-
+```text
 **Response:**
 
 ```json
@@ -68,8 +64,7 @@ Submit new data for processing.
   "job_id": "string",
   "status": "queued"
 }
-```
-
+```text
 #### `GET /api/data/{job_id}`
 
 Check the status and result of a data processing job.
@@ -81,8 +76,7 @@ Check the status and result of a data processing job.
   "status": "completed",
   "result": "string"
 }
-```
-
+```text
 ## Error Handling
 
 All errors are returned in the following format:
@@ -94,8 +88,7 @@ All errors are returned in the following format:
     "message": "string"
   }
 }
-```
-
+```text
 ## Rate Limiting
 
 API requests are subject to rate limits. Exceeding limits will result in a 429 error.

@@ -18,7 +18,7 @@ The ToolboxAI Agent System is a sophisticated multi-agent orchestration framewor
 
 ### System Components
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                     Orchestrator                         │
 │                  (Main Coordination)                     │
@@ -35,8 +35,7 @@ The ToolboxAI Agent System is a sophisticated multi-agent orchestration framewor
 │Content │  │  Quiz  │  │Terrain │  │ Script │  │ Review │
 │ Agent  │  │ Agent  │  │ Agent  │  │ Agent  │  │ Agent  │
 └────────┘  └────────┘  └────────┘  └────────┘  └────────┘
-```
-
+```text
 ### Supporting Frameworks
 
 - **SPARC Framework**: State-Policy-Action-Reward-Context management
@@ -60,8 +59,7 @@ result = await agent.generate_lesson({
     "topic": "Photosynthesis",
     "learning_objectives": ["Understand chlorophyll function"]
 })
-```
-
+```text
 ### 2. Quiz Agent
 
 Creates interactive quizzes and assessments.
@@ -76,8 +74,7 @@ quiz = await agent.generate_quiz({
     "num_questions": 10,
     "question_types": ["multiple_choice", "true_false"]
 })
-```
-
+```text
 ### 3. Terrain Agent
 
 Generates 3D terrain and environments in Roblox.
@@ -91,8 +88,7 @@ terrain_script = await agent.generate_terrain({
     "size": "large",
     "features": ["trees", "river", "hills"]
 })
-```
-
+```text
 ### 4. Script Agent
 
 Generates Lua scripts for game logic and interactions.
@@ -105,8 +101,7 @@ scripts = await agent.generate_scripts({
     "script_types": ["game_logic", "ui", "player_controller"],
     "features": ["score_tracking", "timer", "checkpoints"]
 })
-```
-
+```text
 ### 5. Review Agent
 
 Reviews and validates generated content for quality and educational value.
@@ -119,8 +114,7 @@ review = await agent.review_content({
     "content": generated_content,
     "criteria": ["educational_value", "technical_quality", "engagement"]
 })
-```
-
+```text
 ## Usage Patterns
 
 ### Pattern 1: Simple Content Generation
@@ -144,8 +138,7 @@ async def generate_simple_lesson():
 
 # Run
 lesson = asyncio.run(generate_simple_lesson())
-```
-
+```text
 ### Pattern 2: Full Educational Experience
 
 ```python
@@ -173,8 +166,7 @@ async def generate_complete_experience():
 
     result = await orchestrator.generate_experience(request)
     return result
-```
-
+```text
 ### Pattern 3: Parallel Agent Execution
 
 ```python
@@ -194,8 +186,7 @@ async def parallel_content_generation():
     # Execute in parallel
     results = await swarm.distribute_tasks(tasks)
     return results
-```
-
+```text
 ### Pattern 4: SPARC-Driven Adaptive Learning
 
 ```python
@@ -228,8 +219,7 @@ async def adaptive_learning_session():
 
         # Update policy
         sparc.update_policy(current_state, action, reward)
-```
-
+```text
 ### Pattern 5: Context-Aware Generation with MCP
 
 ```python
@@ -259,8 +249,7 @@ async def context_aware_generation():
     )
 
     return result
-```
-
+```text
 ## Configuration
 
 ### Environment Variables
@@ -291,8 +280,7 @@ SWARM_CONSENSUS_THRESHOLD=0.8
 ENABLE_MCP_PROTOCOL=true
 MCP_PORT=9876
 MCP_MEMORY_LIMIT=128000
-```
-
+```text
 ### Agent Configuration File
 
 ```python
@@ -326,8 +314,7 @@ AGENT_CONFIG = {
         "require_approval": True
     }
 }
-```
-
+```text
 ## Examples
 
 ### Example 1: Mathematics Lesson with Quiz
@@ -366,8 +353,7 @@ async def create_math_lesson():
 
 # Execute
 lesson = asyncio.run(create_math_lesson())
-```
-
+```text
 ### Example 2: Science Lab with 3D Environment
 
 ```python
@@ -398,8 +384,7 @@ async def create_science_lab():
     })
 
     return result
-```
-
+```text
 ### Example 3: History Experience with Storytelling
 
 ```python
@@ -427,8 +412,7 @@ async def create_history_experience():
     })
 
     return result
-```
-
+```text
 ## Best Practices
 
 ### 1. Error Handling
@@ -455,8 +439,7 @@ async def safe_content_generation():
         logger.error(f"Unexpected error: {e}")
         # Return safe default content
         return get_default_content(request)
-```
-
+```text
 ### 2. Performance Optimization
 
 ```python
@@ -477,8 +460,7 @@ async def batch_generate(requests):
     tasks = [{"type": "generate", "data": req} for req in requests]
     results = await swarm.distribute_tasks(tasks)
     return results
-```
-
+```text
 ### 3. Context Management
 
 ```python
@@ -502,8 +484,7 @@ class SessionManager:
         if user_id in self.contexts:
             self.contexts[user_id].update(data)
             self.mcp.update_context(self.contexts[user_id])
-```
-
+```text
 ### 4. Quality Assurance
 
 ```python
@@ -528,8 +509,7 @@ async def ensure_quality(content):
         content = await apply_improvements(content, suggestions)
 
     return content
-```
-
+```text
 ## Troubleshooting
 
 ### Common Issues and Solutions
@@ -540,8 +520,7 @@ async def ensure_quality(content):
 
 ```python
 TimeoutError: Agent response exceeded 30 seconds
-```
-
+```text
 **Solution**:
 
 ```python
@@ -552,16 +531,14 @@ orchestrator = Orchestrator(timeout=60)
 import asyncio
 async with asyncio.timeout(45):
     result = await orchestrator.generate_experience(request)
-```
-
+```text
 #### 2. Context Overflow
 
 **Problem**: Context exceeds token limit
 
 ```python
 ContextOverflowError: Context exceeds 128K token limit
-```
-
+```text
 **Solution**:
 
 ```python
@@ -570,16 +547,14 @@ mcp.prune_context(max_tokens=100000)
 
 # Or use sliding window
 context_manager.use_sliding_window(window_size=50000)
-```
-
+```text
 #### 3. Agent Coordination Failure
 
 **Problem**: Agents fail to coordinate properly
 
 ```python
 CoordinationError: Agent consensus not reached
-```
-
+```text
 **Solution**:
 
 ```python
@@ -588,16 +563,14 @@ swarm.consensus_engine.max_attempts = 5
 
 # Or lower consensus threshold
 swarm.consensus_engine.threshold = 0.7  # From 0.8
-```
-
+```text
 #### 4. Quality Score Too Low
 
 **Problem**: Generated content fails quality checks
 
 ```python
 QualityError: Content quality score 65 below threshold 70
-```
-
+```text
 **Solution**:
 
 ```python
@@ -608,8 +581,7 @@ orchestrator.max_improvement_iterations = 3
 # Or adjust generation parameters
 agent.temperature = 0.6  # Lower for more focused content
 agent.top_p = 0.85  # Narrower token selection
-```
-
+```text
 ### Debug Mode
 
 Enable debug mode for detailed logging:
@@ -629,8 +601,7 @@ orchestrator.set_log_level(logging.DEBUG)
 with orchestrator.trace_execution():
     result = await orchestrator.generate_experience(request)
     # Execution trace will be logged
-```
-
+```text
 ### Performance Monitoring
 
 ```python
@@ -648,8 +619,7 @@ print(f"Execution time: {metrics['execution_time']}s")
 print(f"Token usage: {metrics['tokens_used']}")
 print(f"API calls: {metrics['api_calls']}")
 print(f"Cache hits: {metrics['cache_hits']}")
-```
-
+```text
 ## Advanced Topics
 
 ### Custom Agent Development
@@ -674,8 +644,7 @@ class CustomAgent(BaseAgent):
         """Load specialized tool."""
         # Load custom tool
         return CustomTool()
-```
-
+```text
 ### Agent Communication Protocol
 
 ```python
@@ -697,8 +666,7 @@ class AgentProtocol:
     def validate_message(message):
         required_fields = ["id", "sender", "receiver", "content"]
         return all(field in message for field in required_fields)
-```
-
+```text
 ### Integration with External Systems
 
 ```python
@@ -719,8 +687,7 @@ class LMSIntegration:
         """Export content as SCORM package."""
         # Implementation
         pass
-```
-
+```text
 ## Claude Code Custom Agents
 
 In addition to the ToolboxAI Agent System, we have implemented specialized Claude Code agents for development and maintenance tasks. These agents are located in `.claude/agents/` and can be invoked using the Task tool.
@@ -769,8 +736,7 @@ Task(
     prompt="Review the latest API endpoints for security and best practices",
     subagent_type="code-reviewer"
 )
-```
-
+```text
 These agents complement the main ToolboxAI Agent System by providing specialized development support.
 
 ## Conclusion

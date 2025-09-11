@@ -37,28 +37,24 @@ ToolBoxAI.__index = ToolBoxAI
 
 -- SDK implementation (see GitHub for full code)
 return ToolBoxAI
-```
-
+```text
 ### Method 3: Wally Package Manager
 
 ```toml
 # wally.toml
 [dependencies]
 toolboxai = "toolboxai/sdk@1.0.0"
-```
-
+```text
 ```bash
 wally install
-```
-
+```text
 ### Method 4: GitHub Release
 
 ```lua
 -- Download from GitHub releases
 -- https://github.com/toolboxai/roblox-sdk/releases
 -- Place in ServerScriptService or ReplicatedStorage
-```
-
+```text
 ## Quick Start
 
 ### Basic Setup
@@ -82,8 +78,7 @@ client:testConnection():andThen(function(result)
 end):catch(function(error)
     warn("Connection failed:", error.message)
 end)
-```
-
+```text
 ### Studio Plugin Setup
 
 ```lua
@@ -102,8 +97,7 @@ button.Click:Connect(function()
     -- Deploy lesson
     client:deployLesson(lessonId, workspace)
 end)
-```
-
+```text
 ## Authentication
 
 ### API Key Authentication
@@ -116,8 +110,7 @@ local config = require(ServerStorage.Config)
 local client = ToolBoxAI.new({
     apiKey = config.TOOLBOXAI_API_KEY
 })
-```
-
+```text
 ### Studio Plugin Authentication
 
 ```lua
@@ -131,8 +124,7 @@ if not apiKey then
 end
 
 local client = ToolBoxAI.new({ apiKey = apiKey })
-```
-
+```text
 ### User Authentication (In-Game)
 
 ```lua
@@ -150,8 +142,7 @@ local function authenticatePlayer(player)
 end
 
 game.Players.PlayerAdded:Connect(authenticatePlayer)
-```
-
+```text
 ## Core Features
 
 ### Lessons Management
@@ -168,8 +159,7 @@ client:getLessons({
         print(lesson.title, lesson.id)
     end
 end)
-```
-
+```text
 #### Get Lesson Details
 
 ```lua
@@ -178,8 +168,7 @@ client:getLesson(lessonId):andThen(function(lesson)
     print("Objectives:", table.concat(lesson.objectives, ", "))
     print("Duration:", lesson.duration, "minutes")
 end)
-```
-
+```text
 #### Deploy Lesson to Workspace
 
 ```lua
@@ -200,8 +189,7 @@ client:deployLesson(lessonId, workspace):andThen(function(environment)
         end
     end
 end)
-```
-
+```text
 ### Quiz System
 
 #### Create Quiz Instance
@@ -217,8 +205,7 @@ local quiz = client:createQuizInstance({
 quiz:deploy():andThen(function(quizModel)
     print("Quiz deployed at:", quizModel.PrimaryPart.Position)
 end)
-```
-
+```text
 #### Submit Quiz Answer
 
 ```lua
@@ -238,8 +225,7 @@ client:submitAnswer({
         ShowIncorrectFeedback(player, result.hint)
     end
 end)
-```
-
+```text
 ### Progress Tracking
 
 #### Track Player Progress
@@ -264,8 +250,7 @@ client:saveCheckpoint({
     position = player.Character.HumanoidRootPart.Position,
     inventory = GetPlayerInventory(player)
 })
-```
-
+```text
 #### Get Player Statistics
 
 ```lua
@@ -278,8 +263,7 @@ client:getPlayerStats(player.UserId):andThen(function(stats)
         leaderstats.Achievements.Value = #stats.achievements
     end
 end)
-```
-
+```text
 ### Gamification
 
 #### Award XP and Achievements
@@ -297,8 +281,7 @@ end)
 client:unlockAchievement(player.UserId, "first_lesson"):andThen(function(achievement)
     ShowAchievementNotification(player, achievement)
 end)
-```
-
+```text
 #### Leaderboards
 
 ```lua
@@ -316,8 +299,7 @@ client:submitScore({
     score = score,
     leaderboardId = "weekly_challenge"
 })
-```
-
+```text
 ## API Reference
 
 ### Client Initialization
@@ -333,8 +315,7 @@ Options:
 - retryCount: number = 3
 - cacheEnabled: boolean = true
 - cacheTTL: number = 300
-```
-
+```text
 ### Lessons API
 
 ```lua
@@ -349,8 +330,7 @@ client:deployLesson(lessonId: string, parent: Instance) -> Promise<Environment>
 
 -- Create lesson (Studio only)
 client:createLesson(lessonData: table) -> Promise<Lesson>
-```
-
+```text
 ### Quiz API
 
 ```lua
@@ -365,8 +345,7 @@ client:submitAnswer(data: table) -> Promise<Result>
 
 -- Get quiz results
 client:getQuizResults(attemptId: string) -> Promise<QuizResults>
-```
-
+```text
 ### Progress API
 
 ```lua
@@ -381,8 +360,7 @@ client:saveCheckpoint(data: table) -> Promise<void>
 
 -- Load checkpoint
 client:loadCheckpoint(playerId: string, lessonId: string) -> Promise<Checkpoint>
-```
-
+```text
 ### Gamification API
 
 ```lua
@@ -400,8 +378,7 @@ client:getLeaderboard(options: table) -> Promise<Leaderboard>
 
 -- Submit score
 client:submitScore(data: table) -> Promise<void>
-```
-
+```text
 ### Analytics API
 
 ```lua
@@ -413,8 +390,7 @@ client:trackInteraction(player: Player, objectId: string) -> Promise<void>
 
 -- Get analytics
 client:getAnalytics(filters: table) -> Promise<Analytics>
-```
-
+```text
 ## Roblox-Specific Features
 
 ### 3D Environment Generation
@@ -435,8 +411,7 @@ environmentGenerator:generate({
     -- - Learning stations
     -- - Quiz zones
 end)
-```
-
+```text
 ### Interactive Objects
 
 ```lua
@@ -466,8 +441,7 @@ local function createInteractiveObject(objectData)
 
     return part
 end
-```
-
+```text
 ### NPC Tutors
 
 ```lua
@@ -500,8 +474,7 @@ local function createTutorNPC(tutorData)
 
     return npc
 end
-```
-
+```text
 ### Adaptive Difficulty
 
 ```lua
@@ -523,8 +496,7 @@ local function adjustDifficulty(player)
         client:updatePlayerDifficulty(player.UserId, difficulty)
     end)
 end
-```
-
+```text
 ## Event System
 
 ### Event Subscription
@@ -543,8 +515,7 @@ end)
 client:on("levelUp", function(data)
     PlayLevelUpEffect(data.player, data.newLevel)
 end)
-```
-
+```text
 ### Custom Events
 
 ```lua
@@ -561,8 +532,7 @@ client:on("customEvent", function(data)
         client:unlockAchievement(data.player.UserId, "explorer")
     end
 end)
-```
-
+```text
 ### Real-time Updates
 
 ```lua
@@ -579,8 +549,7 @@ end)
 client:onRealtimeUpdate("leaderboard_update", function(data)
     UpdateLeaderboardDisplay(data.leaderboard)
 end)
-```
-
+```text
 ## Error Handling
 
 ### Promise-based Error Handling
@@ -609,8 +578,7 @@ client:getLesson(lessonId)
         -- Cleanup
         HideLoadingScreen()
     end)
-```
-
+```text
 ### Error Types
 
 ```lua
@@ -646,8 +614,7 @@ local function handleError(error)
         warn("Unhandled error:", error)
     end
 end
-```
-
+```text
 ## Best Practices
 
 ### 1. Security
@@ -670,8 +637,7 @@ RemoteEvent.OnServerEvent:Connect(function(player, action, data)
         end)
     end
 end)
-```
-
+```text
 ### 2. Performance
 
 ```lua
@@ -693,8 +659,7 @@ local function getCachedLesson(lessonId)
         return lesson
     end)
 end
-```
-
+```text
 ### 3. Memory Management
 
 ```lua
@@ -712,8 +677,7 @@ game.Players.PlayerRemoving:Connect(function(player)
         playerRequests[player] = nil
     end
 end)
-```
-
+```text
 ### 4. Rate Limiting
 
 ```lua
@@ -751,8 +715,7 @@ if limiter:canRequest() then
 else
     warn("Rate limit exceeded")
 end
-```
-
+```text
 ## Examples
 
 ### Complete Learning Game Example
@@ -869,8 +832,7 @@ end
 
 -- Start game
 initializeGame()
-```
-
+```text
 ### Studio Plugin Example
 
 ```lua
@@ -942,8 +904,7 @@ syncButton.Click:Connect(function()
         warn("Sync failed:", error)
     end)
 end)
-```
-
+```text
 ## Studio Plugin Development
 
 ### Plugin Architecture
@@ -993,8 +954,7 @@ function Plugin:createUI()
     self:createDeploymentPanel()
     self:createSettingsPanel()
 end
-```
-
+```text
 ### Lesson Browser
 
 ```lua
@@ -1029,8 +989,7 @@ function Plugin:searchLessons(query)
         self:displaySearchResults(results)
     end)
 end
-```
-
+```text
 ### Deployment Panel
 
 ```lua
@@ -1088,8 +1047,7 @@ function Plugin:deployLesson(lesson)
         self:showError("Deployment failed: " .. error.message)
     end)
 end
-```
-
+```text
 ## Performance Optimization
 
 ### Batching Requests
@@ -1154,8 +1112,7 @@ for _, player in ipairs(game.Players:GetPlayers()) do
         end
     })
 end
-```
-
+```text
 ### Caching Strategy
 
 ```lua
@@ -1208,8 +1165,7 @@ local function getCachedLesson(lessonId)
         return lesson
     end)
 end
-```
-
+```text
 ### Memory Management
 
 ```lua
@@ -1261,8 +1217,7 @@ local quizUIPool = ObjectPool.new(
     function(ui) ResetQuizUI(ui) end,
     10
 )
-```
-
+```text
 ## Security
 
 ### API Key Management
@@ -1297,8 +1252,7 @@ end
 if not isServerContext() then
     error("ToolBoxAI SDK can only be used on the server")
 end
-```
-
+```text
 ### Input Validation
 
 ```lua
@@ -1334,8 +1288,7 @@ local function safeGetLesson(lessonId)
     Validator.validateLessonId(lessonId)
     return client:getLesson(lessonId)
 end
-```
-
+```text
 ### Rate Limiting Protection
 
 ```lua
@@ -1380,8 +1333,7 @@ game.ReplicatedStorage.RemoteEvent.OnServerEvent:Connect(function(player, action
 
     -- Process request
 end)
-```
-
+```text
 ## Troubleshooting
 
 ### Common Issues
@@ -1411,8 +1363,7 @@ local function connectWithRetry(maxAttempts)
 
     return attempt()
 end
-```
-
+```text
 #### Memory Leaks
 
 ```lua
@@ -1438,8 +1389,7 @@ game:BindToClose(function()
     cleanupConnections()
     -- Other cleanup
 end)
-```
-
+```text
 #### Studio Plugin Issues
 
 ```lua
@@ -1469,8 +1419,7 @@ local function debugPlugin()
 
     print("Plugin environment OK")
 end
-```
-
+```text
 ### Debug Mode
 
 ```lua
@@ -1488,8 +1437,7 @@ client.debug = true
 client:on("debug", function(message)
     debugLog(message)
 end)
-```
-
+```text
 ### Performance Profiling
 
 ```lua
@@ -1524,8 +1472,7 @@ Profiler:start("getLesson")
 client:getLesson(lessonId):finally(function()
     Profiler:stop("getLesson")
 end)
-```
-
+```text
 ## Migration Guide
 
 ### From Version 0.x to 1.0
@@ -1550,8 +1497,7 @@ local function migrateOldCode()
         return result
     end
 end
-```
-
+```text
 ## Support and Resources
 
 ### Documentation
@@ -1583,8 +1529,7 @@ client:getDiagnostics():andThen(function(diagnostics)
     print("API Status:", diagnostics.apiStatus)
     print("Latency:", diagnostics.latency, "ms")
 end)
-```
-
+```text
 ---
 
 _ToolBoxAI Roblox Lua SDK - Bringing education to life in 3D_

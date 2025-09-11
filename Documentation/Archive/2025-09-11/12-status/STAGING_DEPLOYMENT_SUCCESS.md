@@ -48,8 +48,7 @@ Flask Bridge Health (localhost:5001/health):
     "redis": true
   }
 }
-```
-
+```text
 ### ✅ Integration Tests Passed
 
 - ✅ test_health_endpoint - PASSED
@@ -88,8 +87,7 @@ psql -h localhost -p 5432 -U toolboxai_user -d educational_platform
 
 # Redis
 redis-cli -h localhost -p 6379 -a staging_redis_2024
-```
-
+```text
 ## 📊 Service Management Commands
 
 ### View Logs
@@ -100,8 +98,7 @@ docker-compose -f config/production/docker-compose.staging.yml logs -f
 
 # Application logs
 tail -f /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions/logs/*.log
-```
-
+```text
 ### Restart Services
 
 ```bash
@@ -113,8 +110,7 @@ kill -HUP 30435  # FastAPI
 kill -HUP 21538  # Flask
 kill -HUP 47275  # MCP
 kill -HUP 33742  # Dashboard
-```
-
+```text
 ### Stop All Services
 
 ```bash
@@ -126,8 +122,7 @@ pkill -f "npm run dev"
 
 # Stop infrastructure
 docker-compose -f config/production/docker-compose.staging.yml down
-```
-
+```text
 ## 🔧 Environment Variables Set
 
 ```bash
@@ -137,8 +132,7 @@ JWT_SECRET_KEY=staging_jwt_secret_key_very_long_and_secure_2024
 USE_REAL_DATABASE=true
 USE_REAL_SERVICES=true
 SKIP_MOCKS=true
-```
-
+```text
 ## ✅ Verification Steps Completed
 
 1. **Infrastructure Deployment** ✅
@@ -183,8 +177,7 @@ SKIP_MOCKS=true
 # Run load tests
 cd ToolboxAI-Roblox-Environment
 venv_clean/bin/pytest tests/performance/ -v --tb=short
-```
-
+```text
 ### Production Preparation
 
 1. Containerize application services

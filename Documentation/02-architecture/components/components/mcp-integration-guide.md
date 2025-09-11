@@ -26,8 +26,7 @@
 
 # Stop all services
 ./scripts/stop_mcp_servers.sh
-```
-
+```text
 ### 2. Configure Cursor
 
 The MCP configuration file `mcpServers.json` has been created with all available servers:
@@ -47,8 +46,7 @@ The MCP configuration file `mcpServers.json` has been created with all available
     // ... other servers
   }
 }
-```
-
+```text
 ### 3. Available Endpoints
 
 #### MCP WebSocket Server
@@ -96,8 +94,7 @@ The MCP configuration file `mcpServers.json` has been created with all available
 
 ```bash
 ./scripts/setup_mcp_environment.sh
-```
-
+```text
 - Creates virtual environment
 - Installs dependencies
 - Tests imports
@@ -109,8 +106,7 @@ The MCP configuration file `mcpServers.json` has been created with all available
 ./scripts/start_mcp_servers.sh    # Start all services
 ./scripts/stop_mcp_servers.sh     # Stop all services
 ./scripts/check_mcp_status.sh     # Check service status
-```
-
+```text
 ## 🧪 Testing
 
 ### Test MCP Setup
@@ -118,8 +114,7 @@ The MCP configuration file `mcpServers.json` has been created with all available
 ```bash
 source ToolboxAI-Roblox-Environment/venv_clean/bin/activate
 python scripts/test_mcp_setup.py
-```
-
+```text
 ### Test Individual Components
 
 ```bash
@@ -131,8 +126,7 @@ curl -s http://127.0.0.1:8008/health
 
 # Test Flask bridge
 curl -s http://127.0.0.1:5001/status
-```
-
+```text
 ## 📊 Current Status
 
 ### ✅ Completed

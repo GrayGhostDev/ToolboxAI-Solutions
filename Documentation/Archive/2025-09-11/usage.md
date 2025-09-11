@@ -41,8 +41,7 @@ Course = {
 	syllabus = string,           -- Course outline/syllabus content
 	certificateTemplate = string -- Template ID for completion certificate
 }
-```
-
+```text
 ### Example Course Object
 
 ```lua
@@ -84,8 +83,7 @@ Course = {
 	syllabus = "Week 1: Introduction to Algebra\nWeek 2: Linear Equations\nWeek 3: Quadratic Equations...",
 	certificateTemplate = "TPL1001"
 }
-```
-
+```text
 ## Lesson Model
 
 The Lesson model represents individual units of educational content within a course.
@@ -138,8 +136,7 @@ Lesson = {
 		minGrade = number        -- Minimum grade required in previous quiz
 	}
 }
-```
-
+```text
 ### Example Lesson Object
 
 ```lua
@@ -204,8 +201,7 @@ Lesson = {
 		minGrade = 0
 	}
 }
-```
-
+```text
 ## Quiz Model
 
 The Quiz model represents assessments that test understanding of course content.
@@ -262,8 +258,7 @@ Quiz = {
 		quizzes = {QuizId}       -- Quizzes that must be passed
 	}
 }
-```
-
+```text
 ### Example Quiz Object
 
 ```lua
@@ -350,8 +345,7 @@ Quiz = {
 		quizzes = []
 	}
 }
-```
-
+```text
 ## Resource Model
 
 The Resource model represents supplementary educational materials that can be used across multiple courses.
@@ -391,8 +385,7 @@ Resource = {
 		publishedDate = DateTime -- Date of original publication
 	}
 }
-```
-
+```text
 ## Assignment Model
 
 The Assignment model represents tasks assigned to students that require submission.
@@ -447,8 +440,7 @@ Assignment = {
 		}
 	}
 }
-```
-
+```text
 ## Implementation Notes
 
 1. **Content Versioning**: Implement a versioning system for course content to track changes over time and allow reverting to previous versions if needed.
@@ -523,8 +515,7 @@ Student = {
 	achievements = {AchievementId}, -- List of earned achievements
 	badges = {BadgeId}           -- List of earned badges
 }
-```
-
+```text
 ### Example Student Object
 
 ```lua
@@ -551,8 +542,7 @@ Student = {
 	achievements = {"ACH1001", "ACH1002", "ACH1003"},
 	badges = {"BDG1001", "BDG1002"}
 }
-```
-
+```text
 ## Educator Model
 
 The Educator model represents teachers, instructors, or content creators who manage courses.
@@ -579,8 +569,7 @@ Educator = {
 		}
 	}
 }
-```
-
+```text
 ### Example Educator Object
 
 ```lua
@@ -605,8 +594,7 @@ Educator = {
 		}
 	}
 }
-```
-
+```text
 ## Parent Model
 
 The Parent model represents guardians who monitor student progress and manage screen time.
@@ -635,8 +623,7 @@ Parent = {
 		dailyReport = boolean         -- Receives daily activity summary
 	}
 }
-```
-
+```text
 ### Example Parent Object
 
 ```lua
@@ -663,8 +650,7 @@ Parent = {
 		dailyReport = true
 	}
 }
-```
-
+```text
 ## User Authentication Model
 
 The Authentication model handles user credentials and login information across all user types.
@@ -696,8 +682,7 @@ Authentication = {
 		}
 	}
 }
-```
-
+```text
 ## User Relationships Model
 
 The UserRelationship model represents connections between different users in the system.
@@ -718,8 +703,7 @@ UserRelationship = {
 		receiveNotifications = boolean -- Can receive notifications
 	}
 }
-```
-
+```text
 ## Implementation Notes
 
 1. **User Privacy**: All personal data should be handled according to relevant privacy regulations (GDPR, COPPA, etc.). Ensure proper consent mechanisms are in place, especially for students under age 18.
@@ -794,8 +778,7 @@ Student = {
 	achievements = {AchievementId}, -- List of earned achievements
 	badges = {BadgeId}           -- List of earned badges
 }
-```
-
+```text
 ### Educator Model
 
 The Educator model represents teachers, instructors, or content creators who manage courses.
@@ -822,8 +805,7 @@ Educator = {
 		}
 	}
 }
-```
-
+```text
 ### Parent Model
 
 The Parent model represents guardians who monitor student progress and manage screen time.
@@ -852,8 +834,7 @@ Parent = {
 		dailyReport = boolean         -- Receives daily activity summary
 	}
 }
-```
-
+```text
 ## Course Content Models
 
 ### Course Model
@@ -892,8 +873,7 @@ Course = {
 		}
 	}
 }
-```
-
+```text
 ### Lesson Model
 
 The Lesson model represents individual units of educational content within a course.
@@ -924,8 +904,7 @@ Lesson = {
 	hasQuiz = boolean,           -- Whether lesson has associated quiz
 	quizId = string              -- ID of associated quiz (if applicable)
 }
-```
-
+```text
 ### Quiz Model
 
 The Quiz model represents assessments that test understanding of course content.
@@ -957,8 +936,7 @@ Quiz = {
 	},
 	totalPoints = number         -- Sum of all question points
 }
-```
-
+```text
 ## Progress Tracking Models
 
 ### StudentCourseProgress Model
@@ -997,8 +975,7 @@ StudentCourseProgress = {
 		}
 	}
 }
-```
-
+```text
 ### QuizAttempt Model
 
 Records details of each attempt a student makes on a quiz.
@@ -1025,8 +1002,7 @@ QuizAttempt = {
 	feedback = string,           -- Educator feedback (if any)
 	attemptNumber = number       -- Sequential attempt number for this quiz
 }
-```
-
+```text
 ### ActivityLog Model
 
 Records detailed student activity for analytics and parental monitoring.
@@ -1053,8 +1029,7 @@ ActivityLog = {
 		os = string              -- Operating system
 	}
 }
-```
-
+```text
 ## Gamification and Rewards Models
 
 ### Achievement Model
@@ -1081,8 +1056,7 @@ Achievement = {
 	rarity = string,             -- "common", "uncommon", "rare", "legendary"
 	visibleToAll = boolean       -- Whether achievement is visible before earning
 }
-```
-
+```text
 ### Badge Model
 
 Represents visual indicators of accomplishments displayed on student profiles.
@@ -1100,8 +1074,7 @@ Badge = {
 	displayPriority = number,    -- Order priority for display (lower = higher priority)
 	expiryDays = number          -- Days until badge expires (0 = never)
 }
-```
-
+```text
 ### Challenge Model
 
 Represents time-limited tasks that students can complete for rewards.
@@ -1126,8 +1099,7 @@ Challenge = {
 	category = string,           -- "daily", "weekly", "special"
 	completedBy = {StudentId}    -- Students who have completed this challenge
 }
-```
-
+```text
 ### Reward Model
 
 Represents items or benefits that students can purchase with XP.
@@ -1154,13 +1126,12 @@ Reward = {
 		multiplier = number      -- Effect multiplier (e.g., XP boost)
 	}
 }
-```
-
+```text
 ## Relationships Between Models
 
 The following diagram outlines the key relationships between data models in the ToolboxAI-Solutions educational platform:
 
-```
+```text
 Student
   ├── enrolledCourses → Course
   ├── completedCourses → Course
@@ -1223,13 +1194,12 @@ Challenge
 
 Reward
   └── redeemedBy → Student
-```
-
+```text
 ## Data Flow Diagrams
 
 ### User Progress Flow
 
-```
+```text
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │   Student   │────▶│    Lesson   │────▶│     Quiz    │────▶│ Achievement │
 └─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
@@ -1247,11 +1217,10 @@ Reward
 │     XP      │───────────────────────────────────────────▶│   Reward    │
 │Accumulation │                                            │ Redemption  │
 └─────────────┘                                            └─────────────┘
-```
-
+```text
 ### Parental Monitoring Flow
 
-```
+```text
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │   Student   │────▶│  Activity   │────▶│    Parent   │
 │  Activity   │     │     Log     │     │ Notification│
@@ -1263,11 +1232,10 @@ Reward
 │    Screen   │     │  Progress   │     │  Parental   │
 │Time Settings│◀────│   Reports   │◀────│   Portal    │
 └─────────────┘     └─────────────┘     └─────────────┘
-```
-
+```text
 ### Educator Content Management Flow
 
-```
+```text
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │  Educator   │────▶│    Course   │────▶│    Lesson   │────▶│     Quiz    │
 │  Creation   │     │   Creation  │     │  Creation   │     │  Creation   │
@@ -1279,4 +1247,4 @@ Reward
 │  Student    │     │   Course    │     │    Quiz     │     │  Educator   │
 │ Enrollment  │◀────│  Publishing │◀────│ Assessment  │◀────│  Dashboard  │
 └─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
-```
+```text

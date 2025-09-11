@@ -36,8 +36,7 @@ Thank you for your interest in contributing to the Ghost Backend Framework! This
 git checkout -b feature/your-feature-name
 # or
 git checkout -b fix/your-bug-fix
-```
-
+```text
 ### 2. Make Changes
 
 - Write clean, readable code
@@ -56,15 +55,13 @@ pytest tests/test_specific.py
 
 # Check coverage
 pytest --cov=src tests/
-```
-
+```text
 ### 4. Commit Changes
 
 ```bash
 git add .
 git commit -m "feat: add new feature description"
-```
-
+```text
 Use conventional commit messages:
 
 - `feat:` for new features
@@ -79,8 +76,7 @@ Use conventional commit messages:
 
 ```bash
 git push origin your-branch-name
-```
-
+```text
 Then create a pull request through GitHub.
 
 ## 📝 Code Standards

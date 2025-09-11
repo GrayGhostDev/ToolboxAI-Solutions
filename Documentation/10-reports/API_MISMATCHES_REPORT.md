@@ -142,8 +142,7 @@
     ]
   }
 }
-```
-
+```text
 ### Terrain Generation Should Return:
 
 ```json
@@ -163,8 +162,7 @@
     ]
   }
 }
-```
-
+```text
 ### Script Generation Should Return:
 
 ```json
@@ -176,8 +174,7 @@
     "script_type": "LocalScript|ServerScript|ModuleScript"
   }
 }
-```
-
+```text
 ## 🔄 Integration Flow Status
 
 1. **Roblox → Flask Bridge**: ✅ Working (registration, heartbeat)

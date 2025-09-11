@@ -35,24 +35,21 @@ This document provides comprehensive guidance on port configuration, network sec
 # docker-compose.yml
 ports:
   - '8888:8888' # Exposes to all network interfaces
-```
-
+```text
 ✅ **CORRECT** (Secure):
 
 ```yaml
 # docker-compose.yml
 ports:
   - '127.0.0.1:8888:8888' # Only localhost
-```
-
+```text
 ### 2. Use Reverse Proxy for External Access
 
 All external traffic should go through a reverse proxy (nginx/traefik):
 
-```
+```text
 Internet → Firewall → Reverse Proxy (443) → Backend (127.0.0.1:8080)
-```
-
+```text
 ### 3. Firewall Configuration
 
 ```bash
@@ -76,8 +73,7 @@ ufw deny 27017/tcp
 
 # Enable firewall
 ufw enable
-```
-
+```text
 ## SSH Configuration (Deployment)
 
 ### Why No SSH Configuration Files?
@@ -100,8 +96,7 @@ The Ghost Backend Framework intentionally **does not include SSH configuration f
     DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
   run: |
     # SSH deployment script
-```
-
+```text
 #### Option 2: CI/CD Pipeline
 
 - Use GitLab CI, Jenkins, or CircleCI
@@ -138,8 +133,7 @@ Host ghost-prod
 EOF
 
 chmod 600 .ssh/config
-```
-
+```text
 ## Port Forwarding Configuration
 
 ### Local Development
@@ -160,8 +154,7 @@ server {
         proxy_pass http://ghost_backend;
     }
 }
-```
-
+```text
 ### Docker Networking
 
 ```yaml
@@ -173,8 +166,7 @@ services:
     environment:
       - DB_HOST=postgres # Use service name
       - REDIS_HOST=redis # Use service name
-```
-
+```text
 ## Common Port Issues and Solutions
 
 ### Issue: Port Already in Use
@@ -187,8 +179,7 @@ netstat -tulpn | grep 8000
 
 # Kill process using port
 kill -9 $(lsof -ti :8000)
-```
-
+```text
 ### Issue: Connection Refused
 
 1. Check service is running: `ps aux | grep python`
@@ -208,8 +199,7 @@ kill -9 $(lsof -ti :8000)
 API_HOST=127.0.0.1
 API_PORT=8000
 DEBUG=true
-```
-
+```text
 ### Production (.env.production)
 
 ```env
@@ -217,8 +207,7 @@ API_HOST=127.0.0.1
 API_PORT=8080
 DEBUG=false
 FORCE_HTTPS=true
-```
-
+```text
 ### Docker (.env.docker)
 
 ```env
@@ -226,8 +215,7 @@ API_HOST=127.0.0.1  # Inside container
 API_PORT=8888
 DB_HOST=postgres  # Docker service name
 REDIS_HOST=redis  # Docker service name
-```
-
+```text
 ## Security Checklist
 
 - [ ] All services bound to 127.0.0.1 in production
@@ -251,8 +239,7 @@ watch -n 1 'netstat -tulpn | grep LISTEN'
 
 # Check external accessibility
 nmap -p 8000,8080,5432,6379 your-server.com
-```
-
+```text
 ### Access Logs
 
 - Nginx: `/var/log/nginx/access.log`
@@ -279,8 +266,7 @@ psql -h 127.0.0.1 -U ghost -d ghost_db -c "SELECT 1"
 
 # Test Redis connectivity
 redis-cli -h 127.0.0.1 ping
-```
-
+```text
 ## Important Notes
 
 1. **Never expose database ports** to the internet

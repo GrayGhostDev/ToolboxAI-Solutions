@@ -182,7 +182,7 @@ Successfully created a comprehensive coordinator system for the ToolboxAI Roblox
 
 ### System Components Integration
 
-```
+```text
 Main Coordinator
     ├── Workflow Coordinator (process orchestration)
     ├── Resource Coordinator (system resources)
@@ -193,8 +193,7 @@ Main Coordinator
         ├── Swarm Controller (parallel processing)
         ├── SPARC Manager (adaptive learning)
         └── MCP Client (context management)
-```
-
+```text
 ### API Endpoints
 
 - **Main API**: Port 8008 (content generation, health)
@@ -226,8 +225,7 @@ result = await generate_educational_content(
     learning_objectives=["Fractions", "Decimals"],
     environment_type="interactive_classroom"
 )
-```
-
+```text
 ### Advanced Workflow
 
 ```python
@@ -241,8 +239,7 @@ workflow_id = await workflow_coordinator.create_workflow(
         'number_of_lessons': 8
     }
 )
-```
-
+```text
 ### Resource Management
 
 ```python
@@ -254,8 +251,7 @@ async with resource_coordinator.resource_context("my_task", {
 }) as allocation:
     # Your resource-intensive work here
     pass  # Resources automatically released
-```
-
+```text
 ## 🔍 Integration Points
 
 ### Existing System Integration

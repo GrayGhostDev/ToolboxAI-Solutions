@@ -35,8 +35,7 @@ lsof -i :3000 > /dev/null 2>&1 && echo "Dashboard: ✓ Running" || echo "Dashboa
 echo ""
 echo "Environment Variables:"
 env | grep -E "DATABASE_URL|REDIS_URL|OPENAI_API_KEY" | sed 's/=.*/=<set>/'
-```
-
+```text
 ## Common Issues and Solutions
 
 ### 1. Installation Problems
@@ -56,8 +55,7 @@ source /path/to/project/venv_clean/bin/activate
 
 # Solution 3: Check Python version
 python3.11 --version || echo "Python 3.11 not installed"
-```
-
+```text
 #### Node Module Installation Failures
 
 **Problem:** npm install hangs or fails
@@ -70,8 +68,7 @@ npm install --legacy-peer-deps
 
 # Alternative: Use yarn
 yarn install
-```
-
+```text
 ### 2. Service Startup Issues
 
 #### FastAPI Server Won't Start
@@ -85,8 +82,7 @@ kill -9 <PID>
 
 # Or use different port
 uvicorn server.main:app --port 8009
-```
-
+```text
 **Problem:** Module import errors
 
 ```bash
@@ -95,8 +91,7 @@ export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
 # Reinstall dependencies
 pip install --force-reinstall -r requirements.txt
-```
-
+```text
 #### Database Connection Failures
 
 **Problem:** PostgreSQL connection refused
@@ -113,8 +108,7 @@ docker run -d \
 
 # Or using system PostgreSQL
 sudo systemctl start postgresql
-```
-
+```text
 **Problem:** Redis connection error
 
 ```bash
@@ -126,8 +120,7 @@ docker run -d \
 
 # Test connection
 redis-cli ping
-```
-
+```text
 ### 3. Authentication Issues
 
 #### JWT Token Problems
@@ -145,8 +138,7 @@ print(f"New JWT_SECRET_KEY: {secret_key}")
 
 # Update .env file
 # JWT_SECRET_KEY=<new_secret_key>
-```
-
+```text
 #### Login Failures
 
 **Problem:** Can't login with correct credentials
@@ -156,8 +148,7 @@ print(f"New JWT_SECRET_KEY: {secret_key}")
 SELECT email, role, is_active FROM users WHERE email = 'user@example.com';
 
 -- Reset password (run in Python)
-```
-
+```text
 ```python
 from server.auth import hash_password
 from database.connection import get_db
@@ -169,8 +160,7 @@ async def reset_user_password(email: str, new_password: str):
             user.password_hash = hash_password(new_password)
             await session.commit()
             print(f"Password reset for {email}")
-```
-
+```text
 ### 4. API Errors
 
 #### 500 Internal Server Error
@@ -192,8 +182,7 @@ if __name__ == "__main__":
         reload=True,
         log_level="debug"
     )
-```
-
+```text
 #### Rate Limiting Issues
 
 **Problem:** 429 Too Many Requests
@@ -221,8 +210,7 @@ class RateLimitHandler:
                 if attempt == self.max_retries - 1:
                     raise
                 time.sleep(2 ** attempt)
-```
-
+```text
 ### 5. WebSocket Connection Issues
 
 #### Connection Drops Frequently
@@ -265,8 +253,7 @@ class ReconnectingWebSocket {
     this.ws.close()
   }
 }
-```
-
+```text
 ### 6. Roblox Integration Problems
 
 #### Plugin Can't Connect to Server
@@ -276,8 +263,7 @@ class ReconnectingWebSocket {
 ```lua
 -- In Roblox Studio:
 -- File > Game Settings > Security > Allow HTTP Requests = ON
-```
-
+```text
 **Solution 2:** Check Flask bridge is running
 
 ```bash
@@ -285,8 +271,7 @@ python server/roblox_server.py
 
 # Or with specific host
 python server/roblox_server.py --host 127.0.0.1 --port 5001
-```
-
+```text
 **Solution 3:** Fix Lua script errors
 
 ```lua
@@ -303,8 +288,7 @@ if success then
 else
     print("Failed:", response)
 end
-```
-
+```text
 ### 7. Database Migration Issues
 
 #### Alembic Migration Failures
@@ -326,8 +310,7 @@ alembic upgrade head
 
 # Rollback if needed
 alembic downgrade -1
-```
-
+```text
 #### Schema Mismatch
 
 **Problem:** Table already exists errors
@@ -338,12 +321,10 @@ DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
 
 -- Then run migrations
-```
-
+```text
 ```bash
 alembic upgrade head
-```
-
+```text
 ### 8. Performance Issues
 
 #### Slow API Response Times
@@ -366,8 +347,7 @@ async def add_process_time_header(request: Request, call_next):
         logger.warning(f"Slow request: {request.url.path} took {process_time:.2f}s")
 
     return response
-```
-
+```text
 **Optimization Solutions:**
 
 ```python
@@ -402,8 +382,7 @@ async def get_items(
     limit: int = Query(100, le=1000)
 ):
     return await db.query(Item).offset(skip).limit(limit).all()
-```
-
+```text
 ### 9. Docker/Container Issues
 
 #### Container Crashes on Startup
@@ -419,8 +398,7 @@ docker run -it --entrypoint /bin/bash toolboxai-api
 
 # Inside container, test startup
 python -c "from server.main import app"
-```
-
+```text
 **Common Fixes:**
 
 ```dockerfile
@@ -453,8 +431,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8008/health')" || exit 1
 
 CMD ["uvicorn", "server.main:app", "--host", "127.0.0.1", "--port", "8008"]
-```
-
+```text
 ### 10. CI/CD Pipeline Failures
 
 #### GitHub Actions Failing
@@ -505,8 +482,7 @@ jobs:
           REDIS_URL: redis://localhost:6379
         run: |
           pytest tests/ -v --cov
-```
-
+```text
 ## Advanced Debugging
 
 ### Memory Profiling
@@ -529,8 +505,7 @@ top_stats = snapshot.statistics('lineno')
 
 for stat in top_stats[:10]:
     print(stat)
-```
-
+```text
 ### SQL Query Analysis
 
 ```python
@@ -542,8 +517,7 @@ logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 # Or use echo in engine
 engine = create_async_engine(DATABASE_URL, echo=True)
-```
-
+```text
 ### Network Debugging
 
 ```bash
@@ -558,8 +532,7 @@ curl -v -X POST http://localhost:8008/api/content/generate \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"subject": "Math", "grade_level": 7}'
-```
-
+```text
 ## Recovery Procedures
 
 ### Emergency Database Recovery
@@ -580,8 +553,7 @@ psql $DATABASE_URL < latest_backup.sql
 
 # Run migrations
 alembic upgrade head
-```
-
+```text
 ### Full System Reset
 
 ```bash
@@ -614,8 +586,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 
     echo "Reset complete!"
 fi
-```
-
+```text
 ## Monitoring and Alerts
 
 ### Setup Health Monitoring
@@ -656,8 +627,7 @@ async def monitor_loop():
 
 if __name__ == "__main__":
     asyncio.run(monitor_loop())
-```
-
+```text
 ## Getting Support
 
 When requesting help, provide:

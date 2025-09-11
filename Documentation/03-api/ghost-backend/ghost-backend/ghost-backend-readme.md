@@ -32,8 +32,7 @@ cd Ghost
 
 # Configure security (keychain-based credentials)
 ./tools/security/keychain.sh setup
-```
-
+```text
 ### 2. Start the Backend
 
 ```bash
@@ -42,8 +41,7 @@ cd Ghost
 
 # Or start just the API
 ./bin/run_api.sh
-```
-
+```text
 ### 3. Stop the Backend
 
 ```bash
@@ -52,11 +50,10 @@ cd Ghost
 
 # Or stop just the API
 ./bin/stop_api.sh
-```
-
+```text
 ## 📁 Project Structure
 
-```
+```text
 Ghost/
 ├── bin/           # Executable scripts (start/stop/setup)
 ├── config/        # Configuration files and templates
@@ -66,8 +63,7 @@ Ghost/
 ├── tests/         # Test suite
 ├── docs/          # Documentation
 └── examples/      # Usage examples
-```
-
+```text
 See [docs/DIRECTORY_STRUCTURE.md](docs/DIRECTORY_STRUCTURE.md) for detailed organization and all documentation files.
 
 ## 📦 Installation
@@ -76,14 +72,12 @@ See [docs/DIRECTORY_STRUCTURE.md](docs/DIRECTORY_STRUCTURE.md) for detailed orga
 
 ```bash
 pip install -e .
-```
-
+```text
 ### With All Features
 
 ```bash
 pip install -e ".[all]"
-```
-
+```text
 ### Selective Installation
 
 ```bash
@@ -98,8 +92,7 @@ pip install -e ".[auth]"
 
 # Development tools
 pip install -e ".[dev]"
-```
-
+```text
 ## 🏗️ Quick Start
 
 ### 1. Basic Configuration
@@ -113,8 +106,7 @@ setup_logging(config.logging)
 logger = get_logger(__name__)
 
 logger.info("Ghost Backend Framework initialized!")
-```
-
+```text
 ### 2. Database Integration
 
 ```python
@@ -128,8 +120,7 @@ await db_manager.initialize()
 async with db_manager.get_session() as session:
     # Your database operations here
     pass
-```
-
+```text
 ### 3. API Development
 
 ```python
@@ -146,8 +137,7 @@ async def health_check():
 
 if __name__ == "__main__":
     api_manager.run()
-```
-
+```text
 ### 4. Authentication
 
 ```python
@@ -167,8 +157,7 @@ user = User(
 # Hash password and create JWT token
 hashed_password = auth_manager.hash_password("secure_password")
 token = auth_manager.create_token(user)
-```
-
+```text
 ## 🔧 Configuration
 
 ### Environment Variables (.env)
@@ -204,8 +193,7 @@ LOG_FILE=logs/app.log
 # External APIs
 OPENAI_API_KEY=your-openai-key
 ANTHROPIC_API_KEY=your-anthropic-key
-```
-
+```text
 ### YAML Configuration (config.yaml)
 
 ```yaml
@@ -225,8 +213,7 @@ logging:
   file: 'logs/app.log'
   rotation: '1 day'
   retention: '30 days'
-```
-
+```text
 ## macOS setup via MacPorts (PostgreSQL 16)
 
 - See docs/DATABASE_SETUP.md for step-by-step setup.
@@ -248,8 +235,7 @@ pytest --cov=src/ghost --cov-report=html
 pytest -m "not slow"  # Skip slow tests
 pytest -m "unit"      # Only unit tests
 pytest -m "integration"  # Only integration tests
-```
-
+```text
 ## 🔍 Development
 
 ### Setting up Development Environment
@@ -272,8 +258,7 @@ black src/        # Format code
 isort src/        # Sort imports
 flake8 src/       # Lint code
 mypy src/         # Type checking
-```
-
+```text
 ### Code Quality
 
 This framework enforces high code quality standards:

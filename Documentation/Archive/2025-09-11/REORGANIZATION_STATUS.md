@@ -105,8 +105,7 @@ rm architecture.md  # Content split and reorganized
 rm project-overview.md  # Moved to 01-overview/
 rm getting-started.md  # Moved to 01-overview/
 rm README.md  # Replaced with 01-overview/README.md
-```
-
+```text
 ## 📋 Remaining Tasks
 
 ### 1. Create Missing Files

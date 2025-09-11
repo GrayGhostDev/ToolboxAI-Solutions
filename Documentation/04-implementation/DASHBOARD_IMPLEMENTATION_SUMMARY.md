@@ -159,11 +159,10 @@ GET /reports/stats/overview
 
 // Health Endpoint
 GET /health
-```
-
+```text
 ### Data Flow Architecture
 
-```
+```text
 Frontend Components
        ↓
    API Client
@@ -175,8 +174,7 @@ Frontend Components
    WebSocket Updates
        ↓
    Real-time UI Updates
-```
-
+```text
 ### Fallback Mechanisms
 
 #### **Mock Data Integration**
@@ -206,8 +204,7 @@ Frontend Components
 
 ```bash
 ./scripts/start_mcp_servers.sh
-```
-
+```text
 This starts all required services:
 
 - MCP Server and agents
@@ -217,7 +214,7 @@ This starts all required services:
 
 ## File Structure
 
-```
+```text
 src/dashboard/src/components/
 ├── analytics/
 │   ├── UserActivityChart.tsx      # Real-time user activity metrics
@@ -233,8 +230,7 @@ src/dashboard/src/components/
 │   └── MCPAgentDashboard.tsx      # Agent monitoring and control
 └── pages/
     └── Reports.tsx                # Enhanced reports with analytics
-```
-
+```text
 ## Key Features
 
 ### **Real-Time Capabilities**
@@ -267,8 +263,7 @@ src/dashboard/src/components/
 ```bash
 cd /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions
 ./scripts/start_mcp_servers.sh
-```
-
+```text
 ### **Accessing Components**
 
 ```typescript
@@ -281,8 +276,7 @@ import PerformanceIndicator from '../components/analytics/PerformanceIndicator';
 <UserActivityChart timeRange="7d" autoRefresh={true} />
 <ContentMetrics timeRange="30d" autoRefresh={true} />
 <PerformanceIndicator showSystemHealth={true} />
-```
-
+```text
 ### **API Integration Example**
 
 ```typescript
@@ -300,8 +294,7 @@ const fetchData = async () => {
     setData(mockData)
   }
 }
-```
-
+```text
 ## Testing
 
 ### **Component Testing**

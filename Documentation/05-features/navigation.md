@@ -15,8 +15,7 @@ The `NavigationMenuController` manages the navigation panel, including display s
 ```lua
 -- Main controller initialization
 local controller = NavigationMenuController.new(gui)
-```
-
+```text
 #### Key Methods
 
 | Method                       | Description                                             |
@@ -48,8 +47,7 @@ function MainController:switchSection(sectionName)
 
     self.currentSection = sectionName
 end
-```
-
+```text
 ## UI Components
 
 ### Navigation Panel
@@ -72,8 +70,7 @@ local NAV_ITEMS = {
     {name = "Messages", icon = "✉️"},
     {name = "Settings", icon = "⚙️"}
 }
-```
-
+```text
 ### Responsive Elements
 
 Components designed to adapt to different screen sizes:
@@ -106,8 +103,7 @@ function NavigationMenuController:updateLayout()
         end
     end
 end
-```
-
+```text
 ### Visual Feedback Elements
 
 Components that provide interactive feedback:
@@ -125,8 +121,7 @@ function NavigationMenuController:showHoverEffect(hoverEffect)
     )
     hoverTween:Play()
 end
-```
-
+```text
 ## Animation System
 
 The navigation incorporates smooth transitions for a polished user experience:
@@ -168,8 +163,7 @@ function NavigationMenuController:toggleMenu()
         end
     end
 end
-```
-
+```text
 ## Search Functionality
 
 The navigation includes a search mechanism to quickly find platform features:
@@ -188,8 +182,7 @@ function NavigationMenuController:handleSearch(searchText)
         end
     end
 end
-```
-
+```text
 ## User Profile Integration
 
 The navigation system includes user profile display:
@@ -243,8 +236,7 @@ function NavigationMenuController:setupKeyboardNavigation()
         end
     end)
 end
-```
-
+```text
 ## Implementation Guidelines
 
 ### Adding New Navigation Items

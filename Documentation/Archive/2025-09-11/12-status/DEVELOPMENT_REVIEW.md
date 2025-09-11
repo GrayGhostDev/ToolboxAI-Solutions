@@ -65,7 +65,7 @@
 
 ### 🔄 Communication Flow Verified
 
-```
+```text
 Roblox Studio Plugin
     ↓ (JWT Auth)
 Dashboard ←→ Flask Bridge (:5001)
@@ -79,8 +79,7 @@ Updates          ↓
             Specialized Agents
                  ↓
             PostgreSQL Database
-```
-
+```text
 ### 💻 Development Environment
 
 - **Python Version**: 3.12.11 (venv_clean)

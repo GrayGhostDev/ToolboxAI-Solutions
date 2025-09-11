@@ -109,8 +109,7 @@ Successfully implemented comprehensive cloud and container orchestration infrast
 - terminal:cloud:backup      # Backup requests
 - terminal:cloud:rollback    # Rollback requests
 - terminal:all:infrastructure # Status broadcasts
-```
-
+```text
 ### 6. Monitoring and Health Systems ✅
 
 **Integrated Monitoring Stack:**
@@ -140,7 +139,7 @@ Successfully implemented comprehensive cloud and container orchestration infrast
 
 ## Infrastructure Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                        Load Balancer                         │
 │                     (Nginx / Ingress)                        │
@@ -165,8 +164,7 @@ Successfully implemented comprehensive cloud and container orchestration infrast
     │  - Grafana                              │
     │  - Health Checks                        │
     └──────────────────────────────────────────┘
-```
-
+```text
 ## Deployment Commands
 
 ### Local Development
@@ -180,8 +178,7 @@ python scripts/deploy/build_and_push_images.py --registry ghcr.io/toolboxai-solu
 
 # Verify deployment
 ./scripts/deploy/verify_deployment.sh
-```
-
+```text
 ### Kubernetes Production
 
 ```bash
@@ -193,8 +190,7 @@ kubectl scale deployment backend-deployment --replicas=5 -n toolboxai-production
 
 # Monitor deployment
 kubectl get pods -n toolboxai-production -w
-```
-
+```text
 ### Inter-Terminal Communication
 
 ```bash
@@ -203,8 +199,7 @@ python scripts/terminal_sync/cloud_docker_sync.py
 
 # Send deployment request via Redis
 redis-cli PUBLISH terminal:cloud:deploy '{"type":"deploy_containers","version":"latest"}'
-```
-
+```text
 ## Security Features
 
 1. **Container Security:**

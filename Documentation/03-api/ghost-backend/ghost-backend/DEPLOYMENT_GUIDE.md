@@ -42,8 +42,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Run the application
 CMD ["uvicorn", "src.ghost.api:app", "--host", "127.0.0.1", "--port", "8000"]
-```
-
+```text
 ### 2. Docker Compose Configuration
 
 ```yaml
@@ -119,8 +118,7 @@ volumes:
 networks:
   ghost-network:
     driver: bridge
-```
-
+```text
 ### 3. Nginx Configuration
 
 ```nginx
@@ -182,8 +180,7 @@ http {
         }
     }
 }
-```
-
+```text
 ## ☁️ Cloud Platform Deployments
 
 ### AWS Deployment
@@ -217,8 +214,7 @@ cp .env.production.example .env
 
 # Start services
 docker-compose up -d
-```
-
+```text
 #### 2. ECS (Elastic Container Service)
 
 ```json
@@ -254,8 +250,7 @@ docker-compose up -d
     }
   ]
 }
-```
-
+```text
 #### 3. Lambda Deployment (Serverless)
 
 ```yaml
@@ -290,8 +285,7 @@ custom:
     app: src.ghost.api.app
   pythonRequirements:
     dockerizePip: true
-```
-
+```text
 ### Google Cloud Platform (GCP)
 
 #### 1. Cloud Run Deployment
@@ -315,8 +309,7 @@ steps:
       - 'us-central1'
       - '--platform'
       - 'managed'
-```
-
+```text
 #### 2. App Engine Deployment
 
 ```yaml
@@ -336,8 +329,7 @@ resources:
   cpu: 1
   memory_gb: 2
   disk_size_gb: 10
-```
-
+```text
 ### Microsoft Azure
 
 #### 1. Container Instances
@@ -384,8 +376,7 @@ resources:
     }
   ]
 }
-```
-
+```text
 ## 🔄 CI/CD Pipeline Configuration
 
 ### GitHub Actions
@@ -456,8 +447,7 @@ jobs:
         run: |
           # Update ECS service with new image
           aws ecs update-service --cluster ghost-cluster --service ghost-backend --force-new-deployment
-```
-
+```text
 ### GitLab CI/CD
 
 ```yaml
@@ -498,8 +488,7 @@ deploy:
     - kubectl rollout status deployment/ghost-backend
   only:
     - main
-```
-
+```text
 ## 📊 Monitoring and Observability
 
 ### 1. Application Performance Monitoring
@@ -517,8 +506,7 @@ METRICS_PORT=9090
 # Health checks
 HEALTH_CHECK_INTERVAL=30
 HEALTH_CHECK_TIMEOUT=10
-```
-
+```text
 ### 2. Logging Configuration
 
 ```env
@@ -534,8 +522,7 @@ KIBANA_URL=https://kibana.example.com:5601
 # Log retention
 LOG_RETENTION_DAYS=30
 LOG_ROTATION=daily
-```
-
+```text
 ### 3. Database Monitoring
 
 ```python
@@ -558,8 +545,7 @@ async def monitor_database():
         })
 
         await asyncio.sleep(60)  # Check every minute
-```
-
+```text
 ## 🔧 Environment-Specific Configurations
 
 ### Development Environment
@@ -571,8 +557,7 @@ LOG_LEVEL=DEBUG
 API_CORS_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000"]
 DATABASE_URL=sqlite:///./dev.db
 REDIS_URL=redis://localhost:6379/0
-```
-
+```text
 ### Staging Environment
 
 ```env
@@ -582,8 +567,7 @@ LOG_LEVEL=INFO
 DATABASE_URL=postgresql://user:pass@staging-db.example.com:5432/ghost_staging
 REDIS_URL=redis://staging-redis.example.com:6379/0
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
-```
-
+```text
 ### Production Environment
 
 ```env
@@ -595,8 +579,7 @@ DATABASE_URL=postgresql://user:pass@prod-db.example.com:5432/ghost_prod?sslmode=
 REDIS_URL=redis://prod-redis.example.com:6379/0
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES=15
 SENTRY_DSN=https://your-production-sentry-dsn@sentry.io/project
-```
-
+```text
 ## 🚀 Scaling Considerations
 
 ### 1. Horizontal Scaling
@@ -627,8 +610,7 @@ spec:
         target:
           type: Utilization
           averageUtilization: 80
-```
-
+```text
 ### 2. Database Scaling
 
 ```env
@@ -639,8 +621,7 @@ DATABASE_REPLICA_URLS=postgresql://user:pass@replica1.example.com:5432/ghost_pro
 DB_POOL_SIZE=50
 DB_MAX_OVERFLOW=100
 DB_POOL_TIMEOUT=30
-```
-
+```text
 ### 3. Caching Strategy
 
 ```env
@@ -652,6 +633,5 @@ REDIS_CLUSTER_NODES=redis1.example.com:6379,redis2.example.com:6379,redis3.examp
 CACHE_DEFAULT_TTL=300
 CACHE_LONG_TTL=3600
 CACHE_SHORT_TTL=60
-```
-
+```text
 Remember to test your deployment configuration thoroughly before going to production!

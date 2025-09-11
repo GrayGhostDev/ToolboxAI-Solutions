@@ -23,8 +23,7 @@ Run the complete cleanup process with a single command:
 ```bash
 cd /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions
 ./scripts/cleanup/execute_cleanup.sh
-```
-
+```text
 This will:
 
 1. Create a complete backup
@@ -52,8 +51,7 @@ If you prefer to run each step individually:
 
 # Step 5: Validate cleanup
 ./scripts/cleanup/validate_cleanup.sh
-```
-
+```text
 ## 📁 **What Will Be Changed**
 
 ### **Files to be Removed (Duplicates)**
@@ -77,7 +75,7 @@ If you prefer to run each step individually:
 
 ### **New Directory Structure**
 
-```
+```text
 ToolBoxAI-Solutions/
 ├── docs/                    # All documentation
 ├── src/                     # Source code
@@ -89,8 +87,7 @@ ToolBoxAI-Solutions/
 ├── config/                  # Configuration files
 ├── tests/                   # Test suites
 └── tools/                   # Development tools
-```
-
+```text
 ## ⚠️ **Important Considerations**
 
 ### **Backup Strategy**
@@ -122,8 +119,7 @@ npm install
 # Install Python dependencies
 cd ToolboxAI-Roblox-Environment
 pip install -r requirements.txt
-```
-
+```text
 ### **2. Test Functionality**
 
 ```bash
@@ -133,8 +129,7 @@ npm run test
 # Test Python modules
 cd ToolboxAI-Roblox-Environment
 python -m pytest
-```
-
+```text
 ### **3. Update IDE Configuration**
 
 - Update any hardcoded paths in your IDE
@@ -152,8 +147,7 @@ git commit -m "feat: complete project cleanup and reorganization
 - Updated all import paths and references
 - Consolidated documentation and configuration files
 - Created unified workspace configuration"
-```
-
+```text
 ## 🚨 **Rollback Procedure**
 
 If something goes wrong, you can rollback using the backup:
@@ -170,8 +164,7 @@ cp -r /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions-Backup-
 cd /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions
 npm install
 cd ToolboxAI-Roblox-Environment && pip install -r requirements.txt
-```
-
+```text
 ## 📊 **Expected Results**
 
 ### **Quantitative Improvements**

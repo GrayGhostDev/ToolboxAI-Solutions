@@ -28,8 +28,7 @@ The following files have been updated to use secure keychain-based credential ma
 # - Brave API Key
 # - SendGrid API Key
 # - And other external API credentials
-```
-
+```text
 ### 2. Generate Runtime Environment
 
 ```bash
@@ -37,8 +36,7 @@ The following files have been updated to use secure keychain-based credential ma
 ./scripts/secrets/keychain.sh runtime-env
 
 # This creates .env.runtime that loads credentials from keychain
-```
-
+```text
 ### 3. Start Your Application Securely
 
 ```bash
@@ -52,8 +50,7 @@ python -m uvicorn src.ghost.api:app --reload
 # Option 3: Docker with secure environment
 source .env.runtime
 docker-compose up
-```
-
+```text
 ## 🔐 Keychain Management Commands
 
 ```bash
@@ -71,8 +68,7 @@ source <(./scripts/secrets/keychain.sh export)
 
 # Remove all stored credentials
 ./scripts/secrets/keychain.sh cleanup
-```
-
+```text
 ## 🛡️ Security Features
 
 ### ✅ What's Now Secure
@@ -97,7 +93,7 @@ source <(./scripts/secrets/keychain.sh export)
 
 ## 📁 File Structure Changes
 
-```
+```text
 📁 Your Project/
 ├── .env.secure              ← Secure template (use this pattern)
 ├── .env.docker.template     ← Docker environment template
@@ -111,8 +107,7 @@ source <(./scripts/secrets/keychain.sh export)
 │   ├── keychain.sh          ← Keychain management utility
 │   └── runtime_env.sh       ← Runtime environment helper
 └── 🚨 .env (REMOVED)        ← Old file with exposed keys
-```
-
+```text
 ## 🔄 Migration from Old System
 
 If you have an existing `.env` file with credentials:
@@ -134,8 +129,7 @@ If you have an existing `.env` file with credentials:
 # Load credentials and start containers
 source .env.runtime
 docker-compose up
-```
-
+```text
 ### Production Docker
 
 ```bash
@@ -144,8 +138,7 @@ cp .env.docker.template .env
 
 # Edit .env with your secure values (or use keychain references)
 # Deploy with your production Docker orchestration
-```
-
+```text
 ## 🔍 Verification
 
 Verify your setup is secure:
@@ -161,8 +154,7 @@ grep -r "sk-" . --exclude-dir=.git --exclude="*.md" || echo "✅ No exposed secr
 source .env.runtime
 echo "JWT_SECRET loaded: ${JWT_SECRET:0:10}..."
 echo "API_KEY loaded: ${API_KEY:0:10}..."
-```
-
+```text
 ## 🆘 Troubleshooting
 
 ### Keychain Access Denied
@@ -172,8 +164,7 @@ echo "API_KEY loaded: ${API_KEY:0:10}..."
 # 1. Open Keychain Access app
 # 2. Allow access for Terminal/VS Code
 # 3. Re-run: ./scripts/secrets/keychain.sh setup
-```
-
+```text
 ### Environment Not Loading
 
 ```bash
@@ -185,16 +176,14 @@ ls -la .env.runtime
 
 # Check keychain entries
 ./scripts/secrets/keychain.sh list
-```
-
+```text
 ### Docker Environment Issues
 
 ```bash
 # Make sure you source the environment before docker-compose
 source .env.runtime
 docker-compose config  # Verify environment substitution
-```
-
+```text
 ## 📞 Support
 
 If you encounter issues:

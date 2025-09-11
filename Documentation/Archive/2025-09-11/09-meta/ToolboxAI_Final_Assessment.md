@@ -168,8 +168,7 @@ curl -s http://localhost:8008/metrics | head
 # DB migrations
 alembic current
 alembic upgrade head
-```
-
+```text
 ---
 
 ## 📂 File-Specific Notes

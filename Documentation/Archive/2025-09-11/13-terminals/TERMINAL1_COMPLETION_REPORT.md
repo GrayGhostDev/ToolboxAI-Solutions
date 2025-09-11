@@ -12,16 +12,14 @@ FastAPI Main Server: http://127.0.0.1:8008
 Flask Bridge Server: http://127.0.0.1:5001
 MCP WebSocket Server: ws://127.0.0.1:9876
 PostgreSQL Database: postgresql://grayghostdata:securepass123@localhost:5432
-```
-
+```text
 ### Process IDs (PIDs)
 
 ```bash
 FastAPI: 35657, 35641 (saved in scripts/pids/fastapi.pid)
 Flask Bridge: 21538
 MCP Server: 47275
-```
-
+```text
 ## 📊 DATABASE INFORMATION FOR OTHER TERMINALS
 
 ### Available Databases
@@ -49,8 +47,7 @@ MCP Server: 47275
     { "username": "charlie_student", "role": "student" }
   ]
 }
-```
-
+```text
 ## 🔌 API ENDPOINTS READY FOR USE
 
 ### Authentication
@@ -62,15 +59,13 @@ Content-Type: application/json
   "username": "testuser",
   "password": "password123"
 }
-```
-
+```text
 ### Health Checks
 
 ```bash
 GET http://127.0.0.1:8008/health  # FastAPI health
 GET http://127.0.0.1:5001/health  # Flask Bridge health
-```
-
+```text
 ### Content Generation
 
 ```bash
@@ -83,14 +78,12 @@ Authorization: Bearer <token>
   "environment_type": "space_station",
   "include_quiz": true
 }
-```
-
+```text
 ### WebSocket (with minor auth issues - non-blocking)
 
 ```javascript
 ws://127.0.0.1:8008/ws/{client_id}
-```
-
+```text
 ## 📁 CREATED FILES FOR MONITORING
 
 ### Service Monitor Script
@@ -98,15 +91,13 @@ ws://127.0.0.1:8008/ws/{client_id}
 ```bash
 ./monitor_services.sh
 # Usage: ./monitor_services.sh
-```
-
+```text
 ### Test Scripts
 
 ```bash
 test_databases.py    # Database connectivity test
 test_websocket.py    # WebSocket connection test
-```
-
+```text
 ## ⚙️ CONFIGURATION DETAILS
 
 ### Database Connection Pool Settings
@@ -136,8 +127,7 @@ REACT_APP_WS_URL=ws://127.0.0.1:8008
 
 # Flask bridge for legacy compatibility:
 REACT_APP_FLASK_URL=http://127.0.0.1:5001
-```
-
+```text
 ### Terminal 3: Roblox Integration
 
 ```bash
@@ -147,8 +137,7 @@ ROBLOX_WS_ENDPOINT=ws://127.0.0.1:8008/ws/roblox
 
 # Content generation endpoint:
 POST http://127.0.0.1:8008/generate_content
-```
-
+```text
 ### Terminal 4: Testing
 
 ```bash
@@ -157,16 +146,14 @@ POST http://127.0.0.1:8008/generate_content
 - Integration: pytest tests/integration/
 - E2E: pytest tests/e2e/
 - Load testing: Ready for stress tests
-```
-
+```text
 ### Terminal 5: Documentation
 
 ```bash
 # API documentation available at:
 http://127.0.0.1:8008/docs     # Swagger UI
 http://127.0.0.1:8008/redoc    # ReDoc
-```
-
+```text
 ### Terminal 6: DevOps/Deployment
 
 ```bash
@@ -174,8 +161,7 @@ http://127.0.0.1:8008/redoc    # ReDoc
 # Health endpoints configured
 # Monitoring script available
 # Database migrations applied
-```
-
+```text
 ## 🔍 KNOWN ISSUES (Non-Critical)
 
 1. **WebSocket Authentication**: Minor issue with auth handshake
@@ -213,16 +199,14 @@ curl http://127.0.0.1:8008/health | jq '.'
 
 # Check database
 psql -U grayghostdata -d educational_platform -c "SELECT COUNT(*) FROM users;"
-```
-
+```text
 ### Background Process Running:
 
 ```bash
 # FastAPI server running in background
 # Process ID: c2f82b
 # To check output: Use BashOutput tool with bash_id: c2f82b
-```
-
+```text
 ---
 
 **TERMINAL 1 MISSION COMPLETE** 🎯

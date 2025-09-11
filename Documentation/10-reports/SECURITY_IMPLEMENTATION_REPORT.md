@@ -73,8 +73,7 @@ This report documents the comprehensive security implementation for the ToolBoxA
 # Admin level access
 - system_broadcast, user_management
 - config_update, rbac_update
-```
-
+```text
 ### 3. Comprehensive Security Test Suite (`tests/test_security.py`)
 
 ✅ **Test Coverage**:
@@ -128,8 +127,7 @@ metrics = {
     "xss_attempts": count,
     "csrf_failures": count
 }
-```
-
+```text
 ### Alert Thresholds
 
 - **CRITICAL**: Malicious requests, exposed secrets
@@ -186,8 +184,7 @@ OPENAI_API_KEY=<your-api-key>
 SCHOOLOGY_KEY=<your-key>
 SCHOOLOGY_SECRET=<your-secret>
 CANVAS_TOKEN=<your-token>
-```
-
+```text
 ## Compliance & Standards
 
 ### Implemented Security Standards
@@ -251,8 +248,7 @@ while true; do
 
     sleep 5
 done
-```
-
+```text
 ## Conclusion
 
 The security implementation has successfully addressed the critical vulnerabilities and established a robust security posture for the ToolBoxAI platform. The system now includes:

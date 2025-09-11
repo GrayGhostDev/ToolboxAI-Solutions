@@ -17,8 +17,7 @@ interface AppLayoutProps {
   role: UserRole
   children: React.ReactNode
 }
-```
-
+```text
 ### Features
 
 - Responsive sidebar management
@@ -32,8 +31,7 @@ interface AppLayoutProps {
 <AppLayout role={currentUserRole}>
   <DashboardContent />
 </AppLayout>
-```
-
+```text
 ### State Management
 
 - Uses Redux for sidebar open/closed state
@@ -44,8 +42,7 @@ interface AppLayoutProps {
 ```typescript
 const drawerWidth = 280 // Sidebar width
 const mobileBreakpoint = 'md' // Responsive breakpoint
-```
-
+```text
 ---
 
 ## Sidebar Component
@@ -64,8 +61,7 @@ Role-based navigation sidebar with user information and quick stats.
 interface SidebarProps {
   role: UserRole
 }
-```
-
+```text
 ### Navigation Structure
 
 ```typescript
@@ -102,8 +98,7 @@ const navigationItems = {
     { path: '/reports', label: 'Reports', icon: AssessmentIcon },
   ],
 }
-```
-
+```text
 ### User Info Section
 
 ```tsx
@@ -123,8 +118,7 @@ const navigationItems = {
     </Box>
   )}
 </Box>
-```
-
+```text
 ### Mobile Responsiveness
 
 - Drawer transforms to temporary drawer on mobile
@@ -207,8 +201,7 @@ const Topbar: React.FC = () => {
     </AppBar>
   )
 }
-```
-
+```text
 ### Notification Menu
 
 ```tsx
@@ -219,8 +212,7 @@ const Topbar: React.FC = () => {
   <Divider />
   <MenuItem onClick={viewAllNotifications}>View all notifications</MenuItem>
 </Menu>
-```
-
+```text
 ### User Menu
 
 ```tsx
@@ -245,8 +237,7 @@ const Topbar: React.FC = () => {
     Logout
   </MenuItem>
 </Menu>
-```
-
+```text
 ### Theme Integration
 
 ```typescript
@@ -256,8 +247,7 @@ const isDarkMode = theme.palette.mode === 'dark'
 const toggleTheme = () => {
   dispatch(setTheme(isDarkMode ? 'light' : 'dark'))
 }
-```
-
+```text
 ### Search Component
 
 ```tsx
@@ -297,8 +287,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     },
   },
 }))
-```
-
+```text
 ---
 
 ## Layout Utilities
@@ -314,8 +303,7 @@ export const useResponsive = () => {
 
   return { isMobile, isTablet, isDesktop }
 }
-```
-
+```text
 ### Layout Constants
 
 ```typescript
@@ -326,8 +314,7 @@ export const LAYOUT_CONSTANTS = {
   CONTENT_PADDING: 3,
   SIDEBAR_TRANSITION_DURATION: 225,
 }
-```
-
+```text
 ### Layout Context Provider
 
 ```typescript
@@ -354,8 +341,7 @@ export const LayoutProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     </LayoutContext.Provider>
   );
 };
-```
-
+```text
 ---
 
 ## Styling Guidelines
@@ -382,8 +368,7 @@ const layoutTheme = createTheme({
     },
   },
 })
-```
-
+```text
 ### Responsive Breakpoints
 
 ```typescript
@@ -393,8 +378,7 @@ const breakpoints = {
   desktop: 1024, // 1024px+
   wide: 1440, // 1440px+
 }
-```
-
+```text
 ---
 
 ## Performance Optimizations
@@ -405,14 +389,12 @@ const breakpoints = {
 const MemoizedSidebar = React.memo(Sidebar, (prevProps, nextProps) => {
   return prevProps.role === nextProps.role
 })
-```
-
+```text
 ### Lazy Loading
 
 ```typescript
 const LazyTopbar = React.lazy(() => import('./Topbar'))
-```
-
+```text
 ### Debounced Search
 
 ```typescript
@@ -423,8 +405,7 @@ const debouncedSearch = useMemo(
     }, 300),
   [dispatch]
 )
-```
-
+```text
 ---
 
 ## Accessibility
@@ -439,8 +420,7 @@ const debouncedSearch = useMemo(
 >
   {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
 </IconButton>
-```
-
+```text
 ### Keyboard Navigation
 
 ```typescript
@@ -449,8 +429,7 @@ const handleKeyDown = (event: React.KeyboardEvent) => {
     setSidebarOpen(false)
   }
 }
-```
-
+```text
 ### Focus Management
 
 ```typescript
@@ -459,8 +438,7 @@ useEffect(() => {
     sidebarRef.current?.focus()
   }
 }, [sidebarOpen])
-```
-
+```text
 ---
 
 ## Testing
@@ -483,8 +461,7 @@ describe('AppLayout', () => {
     expect(container.firstChild).toHaveClass('teacher-layout');
   });
 });
-```
-
+```text
 ### Integration Tests
 
 ```typescript
@@ -499,8 +476,7 @@ describe('Layout Integration', () => {
     });
   });
 });
-```
-
+```text
 ---
 
 ## Common Issues & Solutions
@@ -514,8 +490,7 @@ describe('Layout Integration', () => {
   margin-left: ${DRAWER_WIDTH}px;
   transition: margin-left 225ms;
 }
-```
-
+```text
 ### Issue: Theme toggle not persisting
 
 **Solution**: Save theme preference to localStorage
@@ -524,8 +499,7 @@ describe('Layout Integration', () => {
 useEffect(() => {
   localStorage.setItem('theme', theme)
 }, [theme])
-```
-
+```text
 ### Issue: Mobile drawer not closing on navigation
 
 **Solution**: Add close handler to navigation items
@@ -537,4 +511,4 @@ const handleNavigation = (path: string) => {
     setSidebarOpen(false)
   }
 }
-```
+```text

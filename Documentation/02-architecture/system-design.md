@@ -25,7 +25,7 @@ This document provides the detailed technical design of ToolBoxAI-Solutions, cov
 
 ### Service Topology
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                      Load Balancer                          │
 └─────────────────────────────────────────────────────────────┘
@@ -52,8 +52,7 @@ This document provides the detailed technical design of ToolBoxAI-Solutions, cov
 │   Agent     │ │   Agent     │ │      Agent          │
 │   Lesson    │ │ Environment │ │    Validation       │
 └─────────────┘ └─────────────┘ └───────────────────┘
-```
-
+```text
 ### Core Services
 
 #### 1. API Gateway Service
@@ -80,8 +79,7 @@ This document provides the detailed technical design of ToolBoxAI-Solutions, cov
 /api/v1/environments/* # 3D environment operations
 /api/v1/progress/*   # Progress tracking
 /api/v1/analytics/*  # Analytics and reporting
-```
-
+```text
 #### 2. Authentication Service
 
 **Responsibilities:**
@@ -99,8 +97,7 @@ class AuthenticationService:
     def authorize(token: AuthToken, resource: str) -> bool
     def refresh_token(refresh_token: str) -> AuthToken
     def revoke_token(token: AuthToken) -> bool
-```
-
+```text
 #### 3. Content Management Service
 
 **Responsibilities:**
@@ -112,10 +109,9 @@ class AuthenticationService:
 
 **Data Flow:**
 
-```
+```text
 Upload → Validate → Process → Store → Index → Serve
-```
-
+```text
 #### 4. AI Orchestration Service
 
 **Responsibilities:**
@@ -143,8 +139,7 @@ class AIOrchestrator:
             result = await agent.process(lesson_content, context)
             context.update(result)
         return context
-```
-
+```text
 #### 5. Progress Tracking Service
 
 **Responsibilities:**
@@ -167,8 +162,7 @@ class ProgressTracker:
         await self.stream_to_analytics(event)
         # Sync with LMS
         await self.sync_to_lms(event)
-```
-
+```text
 #### 6. Roblox Integration Service
 
 **Responsibilities:**
@@ -180,10 +174,9 @@ class ProgressTracker:
 
 **Deployment Flow:**
 
-```
+```text
 Generate → Validate → Package → Deploy → Monitor
-```
-
+```text
 ### Data Architecture
 
 #### Primary Database Schema
@@ -224,8 +217,7 @@ CREATE TABLE student_progress (
     progress_data JSONB,
     completed_at TIMESTAMP
 );
-```
-
+```text
 #### Caching Strategy
 
 **Cache Layers:**
@@ -244,8 +236,7 @@ class CacheManager:
 
     def invalidate_cascade(entity: str, id: str):
         # Invalidate related cache entries
-```
-
+```text
 ### AI Agent Architecture
 
 #### Agent Interface
@@ -260,8 +251,7 @@ class BaseAgent:
         # Validate output
         self.validate_output(result)
         return result
-```
-
+```text
 #### LessonAnalysisAgent
 
 ```python
@@ -282,8 +272,7 @@ class LessonAnalysisAgent(BaseAgent):
         # Map to curriculum standards
         # Extract structured data
         return structured_lesson
-```
-
+```text
 #### EnvironmentAgent
 
 ```python
@@ -297,8 +286,7 @@ class EnvironmentAgent(BaseAgent):
         # Select appropriate assets
         # Define interaction zones
         return environment_blueprint
-```
-
+```text
 ### Integration Architecture
 
 #### LMS Integration Pattern
@@ -319,8 +307,7 @@ class LMSAdapter:
         assignments = await self.connector.get_assignments()
         # Transform to internal format
         return self.transform_assignments(assignments)
-```
-
+```text
 #### Roblox Plugin Communication
 
 ```lua
@@ -341,16 +328,14 @@ function deployEnvironment(blueprint)
     -- Set up interactions
     -- Configure scripts
 end
-```
-
+```text
 ### Security Architecture
 
 #### Authentication Flow
 
-```
+```text
 User Login → Validate Credentials → Generate JWT → Set Refresh Token → Return Access Token
-```
-
+```text
 #### Authorization Matrix
 
 | Role        | Create Lesson | View Analytics | Manage Users | System Admin |
@@ -372,8 +357,7 @@ class DataProtection:
 
     def audit_access(self, user: str, resource: str, action: str):
         # Log all data access for audit trail
-```
-
+```text
 ### Performance Optimization
 
 #### Query Optimization
@@ -387,8 +371,7 @@ class QueryOptimizer:
     def partition_tables(self):
         # Partition by date for time-series data
         # Partition by tenant for multi-tenancy
-```
-
+```text
 #### Async Processing
 
 ```python
@@ -403,8 +386,7 @@ class AsyncProcessor:
         while True:
             task = await self.queue.get()
             await self.process_task(task)
-```
-
+```text
 ### Monitoring and Observability
 
 #### Metrics Collection
@@ -419,8 +401,7 @@ class MetricsCollector:
 
     def track_business_metrics(self, metric_name: str, value: float):
         # Track business KPIs
-```
-
+```text
 #### Logging Strategy
 
 ```python
@@ -440,8 +421,7 @@ class ServiceLogger:
                     error_type=type(error).__name__,
                     error_message=str(error),
                     **context)
-```
-
+```text
 ### Deployment Architecture
 
 #### Container Configuration
@@ -456,8 +436,7 @@ RUN pip install -r requirements.txt
 
 COPY . .
 CMD ["uvicorn", "main:app", "--host", "127.0.0.1", "--port", "8000"]
-```
-
+```text
 #### Kubernetes Deployment
 
 ```yaml
@@ -486,8 +465,7 @@ spec:
                 secretKeyRef:
                   name: db-secret
                   key: url
-```
-
+```text
 ### Disaster Recovery
 
 #### Backup Strategy
@@ -506,8 +484,7 @@ class DisasterRecovery:
         # Update DNS records
         # Notify monitoring systems
         # Validate system health
-```
-
+```text
 ## Conclusion
 
 This system design provides a robust, scalable foundation for ToolBoxAI-Solutions. The modular architecture allows for independent scaling and development while maintaining system cohesion through well-defined interfaces and contracts.

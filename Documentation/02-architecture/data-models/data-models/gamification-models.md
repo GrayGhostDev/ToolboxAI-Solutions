@@ -281,8 +281,7 @@ PlayerProfile = {
         }
     }
 }
-```
-
+```text
 ## Achievement Model
 
 Defines achievements that players can earn.
@@ -456,8 +455,7 @@ Achievement = {
 
     created_by = string
 }
-```
-
+```text
 ## Badge Model
 
 Collectible badges that represent accomplishments.
@@ -578,8 +576,7 @@ Badge = {
     created_at = DateTime,
     updated_at = DateTime
 }
-```
-
+```text
 ## Leaderboard Model
 
 Competitive rankings and leaderboards.
@@ -794,8 +791,7 @@ Leaderboard = {
 
     tags = {string}
 }
-```
-
+```text
 ## Quest Model
 
 Defines quests and challenges for players.
@@ -993,8 +989,7 @@ Quest = {
 
     tags = {string}
 }
-```
-
+```text
 ## Reward Model
 
 Defines rewards that can be earned or purchased.
@@ -1112,8 +1107,7 @@ Reward = {
     created_at = DateTime,
     updated_at = DateTime
 }
-```
-
+```text
 ## Implementation Notes
 
 ### XP Calculation System
@@ -1148,8 +1142,7 @@ class XPCalculator:
         final_xp = int(base_xp * total_multiplier * boost_multiplier)
 
         return final_xp
-```
-
+```text
 ### Level Progression Formula
 
 ```lua
@@ -1175,8 +1168,7 @@ LevelProgression = {
         }
     }
 }
-```
-
+```text
 ### Achievement Tracking
 
 ```python
@@ -1200,8 +1192,7 @@ class AchievementTracker:
 
                 # Check chain achievements
                 await self.check_chain_achievements(user_id, achievement)
-```
-
+```text
 ### Leaderboard Updates
 
 ```python
@@ -1232,8 +1223,7 @@ class LeaderboardManager:
 
         # Trigger rank change events
         await self.process_rank_changes(leaderboard_id, user_id, new_rank)
-```
-
+```text
 ### Quest System
 
 ```lua
@@ -1276,8 +1266,7 @@ QuestManager = {
         end
     end
 }
-```
-
+```text
 ---
 
 _For user profiles, see [User Models](user-models.md). For learning progress, see [Progress Models](progress-models.md). For analytics on gamification, see [Analytics Models](analytics-models.md)._

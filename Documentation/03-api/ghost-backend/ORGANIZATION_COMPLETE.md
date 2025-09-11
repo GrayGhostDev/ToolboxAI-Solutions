@@ -72,8 +72,7 @@ The user experience remains exactly the same:
 # Basic API operations
 ./bin/run_api.sh
 ./bin/stop_api.sh
-```
-
+```text
 ## ✅ **Benefits Achieved**
 
 1. **Clear Separation of Concerns**: Scripts, configs, tools, and docs are properly separated

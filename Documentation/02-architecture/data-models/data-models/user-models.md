@@ -194,8 +194,7 @@ User = {
         custom_fields = {}          -- School-specific fields
     }
 }
-```
-
+```text
 ### Database Schema (PostgreSQL)
 
 ```sql
@@ -233,8 +232,7 @@ CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_status ON users(status);
 CREATE INDEX idx_users_organization ON users USING GIN(organization);
 CREATE INDEX idx_users_last_activity ON users(last_activity);
-```
-
+```text
 ## Role Model
 
 Defines available roles and their default permissions.
@@ -320,8 +318,7 @@ Role = {
     created_at = DateTime,
     updated_at = DateTime
 }
-```
-
+```text
 ## Session Model
 
 Tracks active user sessions for security and analytics.
@@ -398,8 +395,7 @@ Session = {
     revoked_by = string,         -- Who revoked the session
     revoke_reason = string       -- Reason for revocation
 }
-```
-
+```text
 ## ParentChildRelation Model
 
 Links parent accounts to their children for access and monitoring.
@@ -463,8 +459,7 @@ ParentChildRelation = {
     updated_at = DateTime,
     expires_at = DateTime        -- For temporary guardianship
 }
-```
-
+```text
 ## Group Model
 
 Represents user groups for bulk operations and permissions.
@@ -528,8 +523,7 @@ Group = {
     archived = boolean,
     archived_at = DateTime
 }
-```
-
+```text
 ## Implementation Notes
 
 ### Security Considerations

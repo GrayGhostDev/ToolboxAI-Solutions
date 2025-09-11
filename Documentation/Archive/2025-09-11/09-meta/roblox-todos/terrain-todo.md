@@ -13,8 +13,7 @@
 -- - Ceiling with lighting
 -- - Window areas for natural light
 -- - Designated areas for different activities
-```
-
+```text
 ### 2. OutdoorLearningTerrain.lua
 
 **TODO: Implement outdoor learning environment**
@@ -26,8 +25,7 @@
 -- - Paths and walkways
 -- - Outdoor seating areas
 -- - Weather effects support
-```
-
+```text
 ### 3. ScienceLabTerrain.lua
 
 **TODO: Implement science laboratory environment**
@@ -39,8 +37,7 @@
 -- - Safety zones marked
 -- - Chemical storage areas
 -- - Experiment areas
-```
-
+```text
 ### 4. HistoricalTerrain.lua
 
 **TODO: Implement historical period environments**
@@ -52,8 +49,7 @@
 -- - Industrial revolution settings
 -- - Modern city environments
 -- - Time period appropriate materials
-```
-
+```text
 ### 5. GeographyTerrain.lua
 
 **TODO: Implement geographical education terrains**
@@ -65,8 +61,7 @@
 -- - Desert landscapes
 -- - Coastal areas
 -- - Climate zone representations
-```
-
+```text
 ### 6. SpaceTerrain.lua
 
 **TODO: Implement space/astronomy environment**
@@ -78,8 +73,7 @@
 -- - Space station interior
 -- - Asteroid fields
 -- - Star system representations
-```
-
+```text
 ### 7. OceanTerrain.lua
 
 **TODO: Implement underwater environment**
@@ -91,8 +85,7 @@
 -- - Underwater caves
 -- - Different depth zones
 -- - Marine habitat areas
-```
-
+```text
 ### 8. MathVisualizationTerrain.lua
 
 **TODO: Implement mathematical visualization space**
@@ -104,8 +97,7 @@
 -- - Geometric shape areas
 -- - Graph plotting spaces
 -- - Fractal generation zones
-```
-
+```text
 ## Shared Components
 
 ### TerrainGenerator.lua
@@ -119,8 +111,7 @@
 -- - Material application methods
 -- - Optimization techniques
 -- - LOD (Level of Detail) support
-```
-
+```text
 ### TerrainConfig.lua
 
 **TODO: Create terrain configuration module**
@@ -132,8 +123,7 @@
 -- - Biome settings
 -- - Weather configurations
 -- - Performance settings
-```
-
+```text
 ## Implementation Priority
 
 1. ClassroomTerrain (High - Core functionality)

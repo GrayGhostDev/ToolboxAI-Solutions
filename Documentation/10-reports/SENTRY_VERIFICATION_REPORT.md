@@ -18,8 +18,7 @@
   "traces_sample_rate": 1.0,
   "profiles_sample_rate": 1.0
 }
-```
-
+```text
 ## 📊 Test Results
 
 ### 1. `/sentry-debug` Endpoint Test
@@ -32,8 +31,7 @@
 
 ```bash
 curl http://localhost:8008/sentry-debug
-```
-
+```text
 #### Response
 
 ```json
@@ -41,15 +39,13 @@ curl http://localhost:8008/sentry-debug
   "detail": "Internal server error",
   "request_id": "f80b48cb-648f-42c9-a5be-6eb84a637636"
 }
-```
-
+```text
 #### Server Logs
 
-```
+```text
 ERROR: Request f80b48cb-648f-42c9-a5be-6eb84a637636 failed: division by zero
 INFO: 127.0.0.1:53607 - "GET /sentry-debug HTTP/1.1" 500 Internal Server Error
-```
-
+```text
 ### 2. Error Details Sent to Sentry
 
 #### Error Type
@@ -69,8 +65,7 @@ INFO: 127.0.0.1:53607 - "GET /sentry-debug HTTP/1.1" 500 Internal Server Error
     "verification": "Testing Sentry error capture"
   }
 }
-```
-
+```text
 #### Tags Applied
 
 - `test_endpoint`: `sentry-debug`
@@ -102,8 +97,7 @@ SENTRY_TRACES_SAMPLE_RATE=1.0
 SENTRY_PROFILES_SAMPLE_RATE=1.0
 SENTRY_ENABLE_LOGS=true
 SENTRY_SEND_DEFAULT_PII=false
-```
-
+```text
 ### Features Enabled
 
 - ✅ **Error Tracking** - Automatic exception capture
@@ -155,8 +149,7 @@ SENTRY_SEND_DEFAULT_PII=false
 SENTRY_TRACES_SAMPLE_RATE=0.1  # 10% sampling
 SENTRY_PROFILES_SAMPLE_RATE=0.1  # 10% profiling
 SENTRY_ENVIRONMENT=production
-```
-
+```text
 ## 📝 How to Verify Events in Sentry Dashboard
 
 1. **Go to Sentry Dashboard**
@@ -199,8 +192,7 @@ curl http://localhost:8008/sentry/status | jq
 
 # View metrics with Sentry data
 curl http://localhost:8008/metrics | jq '.sentry'
-```
-
+```text
 ## 🎊 Integration Successful!
 
 The Sentry integration is fully operational and capturing errors with complete context. The division by zero test error has been successfully sent to Sentry with all expected metadata, tags, and breadcrumbs.

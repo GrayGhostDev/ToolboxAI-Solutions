@@ -21,8 +21,7 @@ The `QuizController` manages quiz interaction, question progression, answer vali
 ```lua
 -- Main controller initialization
 local controller = QuizController.new(gui)
-```
-
+```text
 #### Key Methods
 
 | Method                         | Description                                         |
@@ -53,8 +52,7 @@ local QUIZ_DATA = {
     },
     -- Additional questions...
 }
-```
-
+```text
 ## UI Components
 
 ### Question Display
@@ -92,8 +90,7 @@ function QuizController:selectOption(optionNumber)
         self.selectedOption = optionNumber
     end
 end
-```
-
+```text
 ### Timer Display
 
 Countdown timer showing remaining time:
@@ -123,8 +120,7 @@ function QuizController:startTimer()
         wait(1)
     end)
 end
-```
-
+```text
 ### Progress Tracker
 
 Visual indicator showing quiz progression:
@@ -169,8 +165,7 @@ function QuizController:submitAnswer()
         self.score = self.score + 10
     end
 end
-```
-
+```text
 ### Results Summary
 
 End-of-quiz screen showing overall performance:
@@ -218,8 +213,7 @@ function QuizController:endQuiz()
     local continueButton = feedbackFrame.ContinueButton
     continueButton.Text = "Return to Lesson"
 end
-```
-
+```text
 ## Integration Points
 
 ### Lesson System Integration
@@ -236,8 +230,7 @@ function LessonPageController:startQuiz()
     local quizController = QuizController.new(self.gui)
     quizController:loadQuizForLesson(self.currentLesson)
 end
-```
-
+```text
 ### Gamification Integration
 
 Quiz results feed into the gamification system:
@@ -256,8 +249,7 @@ function QuizController:completeQuiz()
         self.gamificationController:awardAchievement("quiz_master")
     end
 end
-```
-
+```text
 ### Progress Tracking Integration
 
 Quiz results are stored for progress tracking:
@@ -278,8 +270,7 @@ function QuizController:saveResults()
     -- Save to progress tracking system
     self.progressController:saveQuizResults(results)
 }
-```
-
+```text
 ## Accessibility Features
 
 The quiz system incorporates several accessibility enhancements:

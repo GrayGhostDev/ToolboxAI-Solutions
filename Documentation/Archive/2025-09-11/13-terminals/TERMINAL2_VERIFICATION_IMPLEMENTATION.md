@@ -75,7 +75,7 @@ This implementation provides a complete Terminal 2 verification service for the 
 
 ## 📁 File Structure
 
-```
+```text
 src/dashboard/src/
 ├── utils/
 │   ├── terminal-verify.ts          # Main verification service
@@ -88,8 +88,7 @@ src/dashboard/src/
 │   └── debug/
 │       └── TerminalStatus.tsx     # Debug dashboard component
 └── App.tsx                        # Updated with service integration
-```
-
+```text
 ## 🚀 Usage Examples
 
 ### Basic Verification
@@ -103,8 +102,7 @@ console.log('Verification results:', results)
 
 // Start continuous monitoring
 terminalVerifier.startMonitoring()
-```
-
+```text
 ### React Component Integration
 
 ```tsx
@@ -120,8 +118,7 @@ function MyComponent() {
     </div>
   )
 }
-```
-
+```text
 ### Performance Monitoring
 
 ```typescript
@@ -133,8 +130,7 @@ console.log('Performance Score:', summary.score)
 
 // Monitor specific components
 performanceMonitor.startMonitoring()
-```
-
+```text
 ## 📊 Verification Results Schema
 
 ```typescript
@@ -150,8 +146,7 @@ interface VerificationResult {
     retryCount?: number // Number of retries attempted
   }
 }
-```
-
+```text
 ## 🔄 Communication Protocol
 
 ### Terminal 1 ← Terminal 2 Messages
@@ -171,8 +166,7 @@ interface VerificationResult {
     }
   }
 }
-```
-
+```text
 ### Cross-Terminal Events
 
 - `verification_request`: Request verification from Terminal 1
@@ -234,8 +228,7 @@ const summary = performanceMonitor.getPerformanceSummary()
 
 // Connection testing
 const isConnected = terminalSync.isTerminalConnected('terminal1')
-```
-
+```text
 ## 📱 Debug Dashboard
 
 The `TerminalStatus` component provides a real-time dashboard showing:
@@ -254,8 +247,7 @@ The `TerminalStatus` component provides a real-time dashboard showing:
 ```bash
 VITE_API_BASE_URL=http://localhost:8008
 VITE_WS_URL=http://localhost:8008
-```
-
+```text
 ### Service Configuration
 
 ```typescript
@@ -267,8 +259,7 @@ const config = {
   enableRealTimeMonitoring: true, // Real-time monitoring
   criticalServicesOnly: false, // Monitor all services
 }
-```
-
+```text
 ## 🚀 Production Deployment
 
 ### Build Process
@@ -276,8 +267,7 @@ const config = {
 ```bash
 npm run build
 npm run preview
-```
-
+```text
 ### Health Monitoring
 
 ```bash
@@ -286,8 +276,7 @@ curl http://localhost:5179/health
 
 # View performance metrics
 curl http://localhost:5179/metrics
-```
-
+```text
 ## 📋 Success Criteria ✅
 
 1. **✅ Terminal Verification**: Comprehensive REST API, WebSocket, and Auth verification

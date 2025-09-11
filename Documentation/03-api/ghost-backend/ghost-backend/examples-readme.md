@@ -38,13 +38,12 @@ app.include_router(router)
 # 5. Run the server
 if __name__ == "__main__":
     api_manager.run()
-```
-
+```text
 ## Configuration Examples
 
 ### Environment Variables (.env)
 
-```
+```text
 ENVIRONMENT=development
 DEBUG=true
 PROJECT_NAME=My Backend API
@@ -68,8 +67,7 @@ JWT_SECRET=your-secret-key-here
 # External APIs
 OPENAI_API_KEY=your-openai-key
 ANTHROPIC_API_KEY=your-anthropic-key
-```
-
+```text
 ### YAML Configuration (config.yaml)
 
 ```yaml
@@ -112,8 +110,7 @@ custom:
     new_feature: true
   limits:
     max_requests_per_minute: 100
-```
-
+```text
 ## Database Usage Examples
 
 ### Define Models
@@ -131,8 +128,7 @@ class User(Base):
     email = Column(String(100), unique=True, nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-```
-
+```text
 ### Database Operations
 
 ```python
@@ -147,8 +143,7 @@ with get_db_session() as session:
 # Query users
 with get_db_session() as session:
     users = session.query(User).filter(User.is_active == True).all()
-```
-
+```text
 ## API Usage Examples
 
 ### Protected Routes
@@ -169,8 +164,7 @@ async def admin_route(current_user = Depends(api_manager.require_auth)):
     if UserRole.ADMIN not in [UserRole(role) for role in current_user.roles]:
         raise HTTPException(status_code=403, detail="Admin access required")
     return APIResponse.success(message="Admin access granted")
-```
-
+```text
 ### Rate Limited Routes
 
 ```python
@@ -183,8 +177,7 @@ api_manager = get_api_manager()
 @api_manager.limiter.limit("5/minute")
 async def limited_route(request: Request):
     return APIResponse.success(message="Rate limited endpoint")
-```
-
+```text
 ## Authentication Examples
 
 ### User Registration and Login
@@ -227,8 +220,7 @@ async def login_user(username: str, password: str):
             "refresh_token": refresh_token,
             "user": user
         }
-```
-
+```text
 ## Utility Examples
 
 ### Data Validation
@@ -248,8 +240,7 @@ password = StringUtils.generate_random_string(12, include_special=True)
 
 # Create slug from title
 slug = StringUtils.generate_slug("My Blog Post Title")  # "my-blog-post-title"
-```
-
+```text
 ### Caching with Redis
 
 ```python
@@ -267,8 +258,7 @@ redis_manager.set(cache_key, SerializationUtils.to_json(data), expire=300)
 cached_data = redis_manager.get(cache_key)
 if cached_data:
     data = SerializationUtils.from_json(cached_data)
-```
-
+```text
 ## Background Tasks
 
 ### Celery Integration
@@ -295,8 +285,7 @@ def process_data_task(data_id: str):
     # Your processing logic here
 
     return {"status": "completed", "data_id": data_id}
-```
-
+```text
 ## Testing Examples
 
 ### Unit Tests
@@ -340,8 +329,7 @@ def test_user_creation(db_session):
 
     token_data = auth_manager.verify_token(token)
     assert token_data.username == "testuser"
-```
-
+```text
 ## Deployment Examples
 
 ### Docker
@@ -359,8 +347,7 @@ COPY . .
 EXPOSE 8000
 
 CMD ["python", "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", "8000"]
-```
-
+```text
 ### Docker Compose
 
 ```yaml
@@ -397,4 +384,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
-```
+```text

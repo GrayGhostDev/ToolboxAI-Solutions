@@ -104,8 +104,7 @@ StudentCourseProgress = {
         -- Flexible key-value pairs for school-specific data
     }
 }
-```
-
+```text
 ### Example Instance
 
 ```lua
@@ -152,8 +151,7 @@ StudentCourseProgress = {
     total_time_spent = 315,
     login_streak = 5
 }
-```
-
+```text
 ## QuizAttempt Model
 
 Records detailed information about each attempt a student makes on a quiz, including individual question responses and timing.
@@ -245,8 +243,7 @@ QuizAttempt = {
         difficulty_adjustments = {number} -- Difficulty changes during test
     }
 }
-```
-
+```text
 ## ActivityLog Model
 
 Records fine-grained student activity for analytics, monitoring, and personalization.
@@ -317,8 +314,7 @@ ActivityLog = {
     success = boolean,          -- Whether action was successful
     error_message = string     -- Error details if failed
 }
-```
-
+```text
 ## LearningAnalytics Model
 
 Aggregated analytics data for insights, reporting, and personalization.
@@ -465,8 +461,7 @@ LearningAnalytics = {
         achievement_velocity = number     -- Achievements per week
     }
 }
-```
-
+```text
 ## PerformanceReport Model
 
 Structured reports for educators, parents, and administrators.
@@ -647,8 +642,7 @@ PerformanceReport = {
         }
     }
 }
-```
-
+```text
 ## Implementation Notes
 
 ### Performance Optimization

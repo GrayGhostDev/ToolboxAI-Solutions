@@ -19,8 +19,7 @@ npm --version         # npm 9+
 docker --version      # Docker 20+
 git --version         # Git 2.30+
 code --version        # VS Code (latest)
-```
-
+```text
 ## Local Development Environment
 
 ### 1. Clone Repository
@@ -32,8 +31,7 @@ cd toolboxai-solutions
 
 # Or if using external drive (macOS)
 cd "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
-```
-
+```text
 ### 2. Python Environment Setup
 
 ```bash
@@ -57,8 +55,7 @@ pip install -r requirements-dev.txt
 
 # Install pre-commit hooks
 pre-commit install
-```
-
+```text
 ### 3. Node.js Environment Setup
 
 ```bash
@@ -75,8 +72,7 @@ npm install -g prettier
 cd Dashboard/ToolboxAI-Dashboard
 npm install
 cd ../..
-```
-
+```text
 ### 4. Database Setup
 
 #### PostgreSQL with Docker
@@ -97,8 +93,7 @@ psql postgresql://toolboxai:toolboxai123@localhost:5432/toolboxai_dev
 
 # Run migrations
 alembic upgrade head
-```
-
+```text
 #### Redis with Docker
 
 ```bash
@@ -111,8 +106,7 @@ docker run -d \
 
 # Verify connection
 redis-cli ping
-```
-
+```text
 ### 5. Environment Configuration
 
 ```bash
@@ -121,8 +115,7 @@ cp .env.example .env
 
 # Edit .env file
 nano .env  # or use your preferred editor
-```
-
+```text
 Required environment variables:
 
 ```env
@@ -161,8 +154,7 @@ RELOAD=true
 ENABLE_CACHING=true
 ENABLE_RATE_LIMITING=false  # Disable for development
 ENABLE_MONITORING=true
-```
-
+```text
 ## IDE Configuration
 
 ### VS Code Setup
@@ -179,8 +171,7 @@ code --install-extension esbenp.prettier-vscode
 code --install-extension dsznajder.es7-react-js-snippets
 code --install-extension bradlc.vscode-tailwindcss
 code --install-extension ms-vscode.vscode-typescript-next
-```
-
+```text
 #### 2. Workspace Settings
 
 Create `.vscode/settings.json`:
@@ -221,8 +212,7 @@ Create `.vscode/settings.json`:
     "typescriptreact": "javascript"
   }
 }
-```
-
+```text
 #### 3. Launch Configuration
 
 Create `.vscode/launch.json`:
@@ -291,8 +281,7 @@ Create `.vscode/launch.json`:
     }
   ]
 }
-```
-
+```text
 ### PyCharm Setup
 
 #### 1. Project Interpreter
@@ -348,8 +337,7 @@ python mcp/server.py
 # Terminal 5: Dashboard
 cd Dashboard/ToolboxAI-Dashboard
 npm run dev
-```
-
+```text
 ### Using Make Commands
 
 ```bash
@@ -372,8 +360,7 @@ make clean
 make db-migrate
 make db-upgrade
 make db-downgrade
-```
-
+```text
 ### Using Docker Compose
 
 ```bash
@@ -388,8 +375,7 @@ docker-compose down
 
 # Reset everything
 docker-compose down -v
-```
-
+```text
 ## Debugging
 
 ### Python Debugging
@@ -409,8 +395,7 @@ import pdb; pdb.set_trace()
 
 # Or using Python 3.7+
 breakpoint()
-```
-
+```text
 #### Using ipdb (enhanced debugger)
 
 ```bash
@@ -419,8 +404,7 @@ pip install ipdb
 
 # In code
 import ipdb; ipdb.set_trace()
-```
-
+```text
 ### JavaScript/TypeScript Debugging
 
 #### Browser DevTools
@@ -441,8 +425,7 @@ import ipdb; ipdb.set_trace()
   "url": "http://localhost:3000",
   "webRoot": "${workspaceFolder}/Dashboard/ToolboxAI-Dashboard"
 }
-```
-
+```text
 ### Database Debugging
 
 ```bash
@@ -453,8 +436,7 @@ psql $DATABASE_URL
 \dt                          # List tables
 \d+ table_name              # Describe table
 SELECT * FROM users LIMIT 10;  # Query data
-```
-
+```text
 ### API Debugging
 
 #### Using curl
@@ -472,8 +454,7 @@ curl -X POST http://localhost:8008/api/auth/login \
 TOKEN="your-jwt-token"
 curl http://localhost:8008/api/user/profile \
   -H "Authorization: Bearer $TOKEN"
-```
-
+```text
 #### Using HTTPie
 
 ```bash
@@ -488,8 +469,7 @@ http POST :8008/api/auth/login email=test@example.com password=password123
 
 # Authenticated request
 http :8008/api/user/profile "Authorization: Bearer $TOKEN"
-```
-
+```text
 ## Testing
 
 ### Running Tests
@@ -515,8 +495,7 @@ pytest -x
 
 # Run only marked tests
 pytest -m "not slow"
-```
-
+```text
 ### Writing Tests
 
 #### Unit Test Example
@@ -542,8 +521,7 @@ class TestUserService:
         # Assert
         assert user.email == "test@example.com"
         assert user.name == "Test User"
-```
-
+```text
 #### Integration Test Example
 
 ```python
@@ -557,8 +535,7 @@ class TestAPIEndpoints:
         response = await async_client.get("/health")
         assert response.status_code == 200
         assert response.json()["status"] == "healthy"
-```
-
+```text
 ## Common Issues and Solutions
 
 ### Port Already in Use
@@ -572,8 +549,7 @@ kill -9 <PID>
 
 # Or use different port
 uvicorn server.main:app --port 8009
-```
-
+```text
 ### Module Import Errors
 
 ```bash
@@ -584,8 +560,7 @@ export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 "terminal.integrated.env.osx": {
   "PYTHONPATH": "${workspaceFolder}"
 }
-```
-
+```text
 ### Database Connection Failed
 
 ```bash
@@ -597,8 +572,7 @@ docker restart toolboxai-postgres
 
 # Check connection string
 echo $DATABASE_URL
-```
-
+```text
 ### Node Modules Issues
 
 ```bash
@@ -606,8 +580,7 @@ echo $DATABASE_URL
 rm -rf node_modules package-lock.json
 npm cache clean --force
 npm install
-```
-
+```text
 ### Virtual Environment Issues
 
 ```bash
@@ -617,8 +590,7 @@ rm -rf venv_clean
 python -m venv venv_clean
 source venv_clean/bin/activate
 pip install -r requirements.txt
-```
-
+```text
 ## Performance Profiling
 
 ### Python Profiling
@@ -638,8 +610,7 @@ profiler.disable()
 stats = pstats.Stats(profiler)
 stats.sort_stats('cumulative')
 stats.print_stats(10)
-```
-
+```text
 ### API Performance Testing
 
 ```bash
@@ -648,8 +619,7 @@ ab -n 1000 -c 10 http://localhost:8008/api/endpoint
 
 # Using wrk
 wrk -t12 -c400 -d30s http://localhost:8008/api/endpoint
-```
-
+```text
 ## Code Quality Tools
 
 ### Python Linting
@@ -666,8 +636,7 @@ black server/ agents/ mcp/
 
 # Run isort for import sorting
 isort server/ agents/ mcp/
-```
-
+```text
 ### JavaScript/TypeScript Linting
 
 ```bash
@@ -679,8 +648,7 @@ npm run lint:fix
 
 # Run Prettier
 npm run format
-```
-
+```text
 ## Git Workflow
 
 ### Branch Strategy
@@ -694,8 +662,7 @@ git checkout -b bugfix/issue-description
 
 # Create hotfix branch
 git checkout -b hotfix/critical-fix
-```
-
+```text
 ### Pre-commit Hooks
 
 ```bash
@@ -707,18 +674,16 @@ pre-commit install
 
 # Run manually
 pre-commit run --all-files
-```
-
+```text
 ### Commit Message Format
 
-```
+```text
 type(scope): subject
 
 body
 
 footer
-```
-
+```text
 Examples:
 
 - `feat(agents): add new quiz generation agent`
@@ -765,8 +730,7 @@ DASHBOARD_PID=$!
 
 echo "All services started. Press Ctrl+C to stop."
 wait
-```
-
+```text
 ### Database Reset Script
 
 Create `scripts/reset-db.sh`:
@@ -788,8 +752,7 @@ echo "Seeding database..."
 python scripts/seed_db.py
 
 echo "Database reset complete!"
-```
-
+```text
 ## Resources
 
 ### Documentation

@@ -156,8 +156,7 @@ describe('calculateFinalScore', () => {
     }).toThrow('No scores provided')
   })
 })
-```
-
+```text
 ... (full document continues with all sections as provided in your request) ...
 
 # Testing Guidelines
@@ -318,8 +317,7 @@ describe('calculateFinalScore', () => {
     }).toThrow('No scores provided')
   })
 })
-```
-
+```text
 ### Unit Testing Guidelines
 
 1. **Test Isolation**: Mock dependencies to ensure true unit testing.
@@ -368,8 +366,7 @@ describe('CourseService', () => {
     expect(MockedCourseRepository.prototype.getAllCourses).toHaveBeenCalledTimes(1)
   })
 })
-```
-
+```text
 ## Integration Testing
 
 ### Purpose
@@ -458,8 +455,7 @@ describe('Courses API', () => {
     expect(getCourseResponse.body.data.title).toBe(newCourse.title)
   })
 })
-```
-
+```text
 ### Example (Database Integration)
 
 ```typescript
@@ -528,8 +524,7 @@ describe('UserRepository', () => {
     expect(retrievedUser?.displayName).toBe('Updated Name')
   })
 })
-```
-
+```text
 ### Integration Testing Guidelines
 
 1. **Test Real Interactions**: Use actual databases and services when possible, not mocks.
@@ -611,8 +606,7 @@ test.describe('Course Enrollment Flow', () => {
     await expect(page.locator('[data-testid="course-progress"]')).toBeVisible()
   })
 })
-```
-
+```text
 ### Example (Roblox UI E2E Test)
 
 ```lua
@@ -698,8 +692,7 @@ end
 
 -- Run the tests
 TestRunner:RunSuite(LessonNavigationTest)
-```
-
+```text
 ### E2E Testing Guidelines
 
 1. **Focus on Critical Paths**: Prioritize tests for the most important user journeys.
@@ -777,8 +770,7 @@ export default function () {
   // Pause between iterations
   sleep(1)
 }
-```
-
+```text
 ### Performance Testing Guidelines
 
 1. **Define Clear Metrics**: Establish specific, measurable performance criteria.
@@ -856,8 +848,7 @@ test.describe('Accessibility Tests', () => {
     await expect(firstOption).toHaveAttribute('aria-checked', 'true')
   })
 })
-```
-
+```text
 ### Accessibility Testing Guidelines
 
 1. **Include in All Phases**: Integrate accessibility testing throughout development.
@@ -970,8 +961,7 @@ describe('API Authorization Tests', () => {
     })
   })
 })
-```
-
+```text
 ### Security Testing Guidelines
 
 1. **Regular Scanning**: Run automated security scans as part of CI/CD.
@@ -1121,8 +1111,7 @@ jobs:
         run: npm audit --production
       - name: Run SAST scan
         uses: github/codeql-action/analyze@v2
-```
-
+```text
 ## Test Data Management
 
 ### Test Data Principles
@@ -1212,8 +1201,7 @@ export class UserFactory {
     }
   }
 }
-```
-
+```text
 ### Database Seeding
 
 ```typescript
@@ -1302,8 +1290,7 @@ export async function clearTestDatabase() {
   await client.query('TRUNCATE users, courses, lessons, quizzes CASCADE')
   await client.end()
 }
-```
-
+```text
 ## Testing Tools
 
 ### JavaScript/TypeScript Testing

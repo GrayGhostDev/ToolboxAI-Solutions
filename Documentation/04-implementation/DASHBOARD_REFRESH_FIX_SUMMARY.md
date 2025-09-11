@@ -31,8 +31,7 @@ return schools.map((school) => ({
   createdAt: new Date(school.created_at).toLocaleDateString(),
   status: school.is_active ? 'active' : 'inactive',
 }))
-```
-
+```text
 ### 2. Enhanced Component State Management
 
 **Schools Component (`src/dashboard/src/components/pages/admin/Schools.tsx`):**
@@ -72,8 +71,7 @@ const { data, loading, error, create, update, remove, refresh } = useRealTimeDat
   deleteFn: deleteSchool,
   channel: 'schools_updates',
 })
-```
-
+```text
 ### 4. Enabled WebSocket Configuration (`src/dashboard/.env`)
 
 **Configuration:**
@@ -83,8 +81,7 @@ VITE_API_BASE_URL=http://localhost:8008
 VITE_WS_URL=ws://localhost:9876
 VITE_ENABLE_WEBSOCKET=true
 VITE_DEBUG_MODE=true
-```
-
+```text
 ### 5. Added Success Notifications
 
 **API Interceptor Updates:**

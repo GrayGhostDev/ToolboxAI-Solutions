@@ -101,23 +101,21 @@ Terminal 3 has successfully implemented the complete Roblox Integration Orchestr
 
 ### Flask Bridge Tests
 
-```
+```text
 ✅ Health Check: PASSED
 ✅ Plugin Registration: PASSED (with port parameter)
 ⚠️ Content Generation: Partial (auth required)
 ❌ Dashboard Sync: Failed (dashboard not running)
 ⚠️ Progress Update: Partial (missing parameters)
-```
-
+```text
 ### Communication Paths
 
-```
+```text
 Terminal 3 → Flask Bridge: ✅ Working
 Flask Bridge → FastAPI: ✅ Working
 Terminal 3 → Dashboard: ❌ Dashboard not running
 Terminal 3 → Debugger: ✅ Via Flask Bridge
-```
-
+```text
 ## 🚀 Usage Instructions
 
 ### To Start Terminal 3 Integration:
@@ -125,8 +123,7 @@ Terminal 3 → Debugger: ✅ Via Flask Bridge
 ```bash
 cd /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions
 ./scripts/terminal3_start.sh
-```
-
+```text
 ### In Roblox Studio:
 
 1. **Enable HTTP Requests**:
@@ -190,8 +187,7 @@ bridge:sendToTerminal1(endpoint, data)
 bridge:notifyDashboard(event, data)
 bridge:sendToDebugger(metrics)
 bridge:verifyAllTerminals()
-```
-
+```text
 ### ContentDeployer
 
 ```lua
@@ -199,8 +195,7 @@ deployer:deployLesson(lessonData)
 deployer:deployQuizContent(data, parent)
 deployer:deployTerrainContent(data, parent)
 deployer:cleanup(lessonId)
-```
-
+```text
 ### PerformanceMonitor
 
 ```lua
@@ -208,15 +203,13 @@ monitor:start()
 monitor:stop()
 monitor:getAverageMetrics()
 monitor:getReport()
-```
-
+```text
 ### IntegrationTests
 
 ```lua
 TestRunner.runTests()
 TestRunner:broadcastTestResults()
-```
-
+```text
 ## 🏆 Achievements
 
 - ✅ All 4 core modules implemented

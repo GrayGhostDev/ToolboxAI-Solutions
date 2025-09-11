@@ -56,7 +56,7 @@ Terminal 2 (Dashboard & User Experience) is **95% COMPLETE** and operational wit
 
 ## 📊 Integration Test Results
 
-```
+```text
 Dashboard Accessibility:    ✅ Working (HTTP 200)
 Backend API Health:        ✅ Connected
 Authentication System:     ✅ Functional (401 for invalid credentials)
@@ -65,8 +65,7 @@ Terminal 3 Bridge:         ✅ Connected
 Real Data Flow:           ✅ Active
 
 Success Rate: 83%
-```
-
+```text
 ## 🔄 Active Integrations
 
 ### Terminal 1 (Backend API)

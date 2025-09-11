@@ -42,8 +42,7 @@ This directory contains scripts for managing the Ghost Backend API with exclusiv
 
 # Start with custom port
 API_PORT=8000 ./run_api.sh
-```
-
+```text
 ## Port Management
 
 The scripts ensure **exclusive access** to ports 8000 and 8001 by:

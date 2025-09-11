@@ -27,7 +27,7 @@ The server implementation consists of two main components:
 
 ## 📁 File Structure
 
-```
+```text
 server/
 ├── __init__.py              # Package initialization
 ├── main.py                  # FastAPI application (port 8008)
@@ -40,8 +40,7 @@ server/
 ├── websocket.py             # WebSocket connection management
 ├── start_servers.py         # Server startup script
 └── README.md               # This documentation
-```
-
+```text
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -68,8 +67,7 @@ server/
 
 ```bash
 python server/start_servers.py
-```
-
+```text
 #### Option 2: Start servers manually
 
 ```bash
@@ -78,8 +76,7 @@ python server/roblox_server.py
 
 # Terminal 2 - FastAPI Main Server
 python server/main.py
-```
-
+```text
 ### Verification
 
 Once started, verify the servers are running:
@@ -123,8 +120,7 @@ CANVAS_TOKEN=your-canvas-token
 
 # Rate Limiting
 RATE_LIMIT_PER_MINUTE=100
-```
-
+```text
 ### Key Configuration Options
 
 | Setting                      | Default | Description                      |
@@ -228,8 +224,7 @@ HttpService:RequestAsync({
         port = 64989
     })
 })
-```
-
+```text
 ### Dashboard Integration
 
 The server provides APIs for the React dashboard at `/API/Dashboard/`:
@@ -246,8 +241,7 @@ const generateContent = async (request: ContentRequest) => {
   })
   return response.json()
 }
-```
-
+```text
 ### Ghost Backend Integration
 
 Coordinates with the Ghost CMS backend at `/API/GhostBackend/`:
@@ -317,8 +311,7 @@ lsof -i :5001
 # Check Python environment
 python --version
 pip list | grep fastapi
-```
-
+```text
 #### API Keys Not Working
 
 ```bash
@@ -329,8 +322,7 @@ env | grep API_KEY
 # Check API key validity
 curl -H "Authorization: Bearer $OPENAI_API_KEY" \
      https://api.openai.com/v1/models
-```
-
+```text
 #### Redis Connection Issues
 
 ```bash
@@ -339,8 +331,7 @@ redis-cli ping
 
 # Use alternative Redis URL
 export REDIS_URL=redis://localhost:6379/0
-```
-
+```text
 #### Agent System Errors
 
 ```bash
@@ -351,8 +342,7 @@ export LOG_LEVEL=DEBUG
 # Check agent dependencies
 python -c "import langchain; print('LangChain OK')"
 python -c "from agents import supervisor; print('Agents OK')"
-```
-
+```text
 ### Error Codes
 
 | Code | Description              | Solution                    |
@@ -392,8 +382,7 @@ python -c "from agents import supervisor; print('Agents OK')"
 ```bash
 # Use the startup script
 python server/start_servers.py
-```
-
+```text
 ### Production Deployment
 
 ```bash
@@ -403,8 +392,7 @@ gunicorn server.roblox_server:app --workers 2
 
 # Or use Docker
 docker-compose up -d
-```
-
+```text
 ### Environment-Specific Settings
 
 - **Development**: Debug enabled, verbose logging

@@ -6,7 +6,7 @@ This document outlines the comprehensive integration plan for the Roblox Studio 
 
 ## 🏗️ Architecture Overview
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────────────────┐
 │                         Complete Integration Architecture                 │
 ├──────────────────────────────────────────────────────────────────────────┤
@@ -46,8 +46,7 @@ This document outlines the comprehensive integration plan for the Roblox Studio 
 │  │  └──────────────┘  └──────────────┘  └──────────────┘         │      │
 │  └────────────────────────────────────────────────────────────────┘      │
 └──────────────────────────────────────────────────────────────────────────┘
-```
-
+```text
 ## 📋 Priority 1: Core Roblox Studio Plugin Development
 
 ### 1.1 Plugin Foundation
@@ -63,8 +62,7 @@ Tasks:
 □ Establish WebSocket connection to Flask bridge (:5001)
 □ Create plugin settings storage
 □ Add error handling and logging
-```
-
+```text
 ### 1.2 WebSocket Communication Layer
 
 ```lua
@@ -78,8 +76,7 @@ Tasks:
 □ Message serialization/deserialization
 □ Event subscription system
 □ Queue for offline messages
-```
-
+```text
 ### 1.3 Content Generation Interface
 
 ```lua
@@ -94,8 +91,7 @@ Tasks:
 □ Environment type selector
 □ Real-time generation progress display
 □ Preview generated content before applying
-```
-
+```text
 ## 📋 Priority 2: Roblox Game Scripts
 
 ### 2.1 Server-Side Architecture
@@ -111,8 +107,7 @@ Tasks:
 □ Implement security and validation
 □ Create data persistence layer
 □ Handle player join/leave events
-```
-
+```text
 ### 2.2 Game Manager
 
 ```lua
@@ -126,8 +121,7 @@ Tasks:
 □ Track student progress
 □ Implement adaptive difficulty
 □ Sync with backend analytics
-```
-
+```text
 ### 2.3 Quiz System Module
 
 ```lua
@@ -141,8 +135,7 @@ Tasks:
 □ Real-time scoring and feedback
 □ Progress tracking
 □ Results submission to backend
-```
-
+```text
 ### 2.4 Client-Side UI
 
 ```lua
@@ -156,8 +149,7 @@ Tasks:
 □ Progress indicators
 □ Notification system
 □ Settings panel
-```
-
+```text
 ### 2.5 Gamification Hub
 
 ```lua
@@ -171,8 +163,7 @@ Tasks:
 □ Leaderboard integration
 □ Badge unlocking
 □ Progress visualization
-```
-
+```text
 ## 📋 Priority 3: WebSocket Message Protocol
 
 ### 3.1 Dashboard → Backend Messages
@@ -215,8 +206,7 @@ Tasks:
     mode: "guided" | "self-paced"
   }
 }
-```
-
+```text
 ### 3.2 Backend → Roblox Messages
 
 ```typescript
@@ -259,8 +249,7 @@ Tasks:
     timestamp: "ISO-8601"
   }
 }
-```
-
+```text
 ### 3.3 Roblox → Backend Messages
 
 ```typescript
@@ -299,8 +288,7 @@ Tasks:
     }
   }
 }
-```
-
+```text
 ## 📋 Priority 4: API Endpoints for Roblox
 
 ### 4.1 Content Generation Endpoints
@@ -319,8 +307,7 @@ Response: GeneratedContent
 # Confirm content application in Roblox
 Request: ContentApplicationStatus
 Response: ConfirmationResponse
-```
-
+```text
 ### 4.2 Session Management Endpoints
 
 ```python
@@ -341,8 +328,7 @@ Response: Session
 # POST /api/roblox/sessions/{sessionId}/end
 # End educational session
 Response: SessionSummary
-```
-
+```text
 ### 4.3 Student Progress Endpoints
 
 ```python
@@ -359,8 +345,7 @@ Response: StudentProgress
 # Submit quiz answers
 Request: QuizSubmission
 Response: QuizResults
-```
-
+```text
 ### 4.4 Plugin Management Endpoints
 
 ```python
@@ -377,8 +362,7 @@ Response: PluginConfiguration
 # Plugin heartbeat for connection monitoring
 Request: Heartbeat
 Response: HeartbeatAck
-```
-
+```text
 ## 📋 Priority 5: Redux Integration Updates
 
 ### 5.1 New Redux Slices
@@ -413,8 +397,7 @@ interface RobloxState {
   startSession -
   endSession -
   updateStudentProgress
-```
-
+```text
 ### 5.2 WebSocket Middleware Updates
 
 ```typescript
@@ -434,8 +417,7 @@ case WebSocketMessageType.STUDENT_JOINED:
 case WebSocketMessageType.PROGRESS_UPDATE:
   dispatch(updateStudentProgress(payload));
   break;
-```
-
+```text
 ## 📋 Priority 6: Dashboard UI Components
 
 ### 6.1 Roblox Control Panel
@@ -448,8 +430,7 @@ Features:
 □ Active sessions list
 □ Connected students grid
 □ Real-time progress monitoring
-```
-
+```text
 ### 6.2 Content Generation Wizard
 
 ```typescript
@@ -462,8 +443,7 @@ Steps:
 5. Preview and generate
 6. Monitor generation progress
 7. Apply to Roblox Studio
-```
-
+```text
 ### 6.3 Live Session Manager
 
 ```typescript
@@ -474,8 +454,7 @@ Features:
 □ Real-time activity feed
 □ Progress charts
 □ Intervention tools
-```
-
+```text
 ## 📋 Priority 7: Testing & Quality Assurance
 
 ### 7.1 Unit Tests
@@ -498,8 +477,7 @@ Features:
 □ Component render tests
 □ WebSocket hook tests
 □ Integration tests
-```
-
+```text
 ### 7.2 Integration Tests
 
 ```typescript
@@ -509,8 +487,7 @@ Features:
 □ Student progress tracking
 □ Quiz submission and scoring
 □ Real-time synchronization
-```
-
+```text
 ### 7.3 Performance Tests
 
 ```typescript
@@ -520,8 +497,7 @@ Features:
 □ Content generation time (target: <30 sec)
 □ Database query performance
 □ WebSocket latency (target: <100ms)
-```
-
+```text
 ## 📋 Priority 8: Deployment & DevOps
 
 ### 8.1 CI/CD Pipeline Updates
@@ -558,8 +534,7 @@ jobs:
       - Build plugin package
       - Deploy to Roblox
       - Update documentation
-```
-
+```text
 ### 8.2 Monitoring & Observability
 
 ```yaml
@@ -572,8 +547,7 @@ jobs:
 - Student engagement metrics
 - Quiz completion rate
 - Session duration
-```
-
+```text
 ### 8.3 Documentation Updates
 
 ```markdown
@@ -586,8 +560,7 @@ jobs:
 □ WebSocket protocol specification
 □ Troubleshooting guide
 □ Video tutorials
-```
-
+```text
 ## 🚀 Implementation Timeline
 
 ### Week 1-2: Foundation (Priority 1-2)

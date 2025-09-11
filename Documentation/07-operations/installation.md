@@ -44,8 +44,7 @@ This comprehensive guide covers the installation and initial setup of ToolBoxAI-
 - Prometheus
 - Grafana
 - Elasticsearch
-```
-
+```text
 ### Service Accounts
 
 Create dedicated service accounts:
@@ -58,8 +57,7 @@ sudo usermod -aG sudo toolboxai
 # Set up directory permissions
 sudo mkdir -p /opt/toolboxai
 sudo chown -R toolboxai:toolboxai /opt/toolboxai
-```
-
+```text
 ### Network Requirements
 
 Open the following ports:
@@ -85,8 +83,7 @@ RAM: 4 GB
 Storage: 20 GB SSD
 Network: 10 Mbps
 OS: Ubuntu 20.04 / macOS 11 / Windows 10
-```
-
+```text
 ### Recommended Requirements (Production)
 
 ```yaml
@@ -97,8 +94,7 @@ Network: 100 Mbps
 OS: Ubuntu 22.04 LTS
 Database: Dedicated PostgreSQL server
 Cache: Dedicated Redis server
-```
-
+```text
 ### Enterprise Requirements (1000+ users)
 
 ```yaml
@@ -110,8 +106,7 @@ Load Balancer: Nginx/HAProxy
 Database: PostgreSQL cluster
 Cache: Redis cluster
 CDN: CloudFlare/AWS CloudFront
-```
-
+```text
 ## Installation Methods
 
 ### Method 1: Docker Compose (Recommended for Development)
@@ -132,8 +127,7 @@ docker-compose up -d
 
 # Check status
 docker-compose ps
-```
-
+```text
 ### Method 2: Kubernetes (Recommended for Production)
 
 ```bash
@@ -146,8 +140,7 @@ helm install toolboxai toolboxai/solutions \
   --namespace toolboxai \
   --create-namespace \
   --values values.yaml
-```
-
+```text
 ### Method 3: Manual Installation
 
 See [Production Installation](#production-installation) below.
@@ -177,8 +170,7 @@ sudo ufw allow 22/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw enable
-```
-
+```text
 ### Step 2: Install Python and Dependencies
 
 ```bash
@@ -195,8 +187,7 @@ source venv/bin/activate
 # Install Python packages
 pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
-```
-
+```text
 ### Step 3: Install Node.js and Frontend
 
 ```bash
@@ -211,8 +202,7 @@ npm run build
 
 # Copy static files
 sudo cp -r dist/* /var/www/toolboxai/
-```
-
+```text
 ### Step 4: Database Setup
 
 ```bash
@@ -235,8 +225,7 @@ sudo nano /etc/postgresql/14/main/postgresql.conf
 
 # Restart PostgreSQL
 sudo systemctl restart postgresql
-```
-
+```text
 ### Step 5: Redis Setup
 
 ```bash
@@ -255,8 +244,7 @@ echo "requirepass your_redis_password" | sudo tee -a /etc/redis/redis.conf
 
 # Restart Redis
 sudo systemctl restart redis-server
-```
-
+```text
 ### Step 6: Configure Application
 
 ```bash
@@ -265,8 +253,7 @@ sudo mkdir -p /etc/toolboxai
 
 # Create main configuration
 sudo nano /etc/toolboxai/config.yaml
-```
-
+```text
 ```yaml
 # /etc/toolboxai/config.yaml
 app:
@@ -311,15 +298,13 @@ logging:
   file: /var/log/toolboxai/app.log
   max_size: 100MB
   backup_count: 10
-```
-
+```text
 ### Step 7: Set Up Services
 
 ```bash
 # Create systemd service for API
 sudo nano /etc/systemd/system/toolboxai-api.service
-```
-
+```text
 ```ini
 [Unit]
 Description=ToolBoxAI API Server
@@ -342,13 +327,11 @@ RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
-```
-
+```text
 ```bash
 # Create worker service
 sudo nano /etc/systemd/system/toolboxai-worker.service
-```
-
+```text
 ```ini
 [Unit]
 Description=ToolBoxAI Background Worker
@@ -369,15 +352,13 @@ RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
-```
-
+```text
 ### Step 8: Configure Nginx
 
 ```bash
 # Create Nginx configuration
 sudo nano /etc/nginx/sites-available/toolboxai
-```
-
+```text
 ```nginx
 upstream toolboxai_api {
     server 127.0.0.1:8000;
@@ -442,8 +423,7 @@ server {
         add_header Content-Type text/plain;
     }
 }
-```
-
+```text
 ```bash
 # Enable site
 sudo ln -s /etc/nginx/sites-available/toolboxai /etc/nginx/sites-enabled/
@@ -452,8 +432,7 @@ sudo systemctl restart nginx
 
 # Set up SSL
 sudo certbot --nginx -d yourdomain.com
-```
-
+```text
 ### Step 9: Initialize Database
 
 ```bash
@@ -470,8 +449,7 @@ python manage.py loaddata initial_data.json
 
 # Collect static files
 python manage.py collectstatic --noinput
-```
-
+```text
 ### Step 10: Start Services
 
 ```bash
@@ -492,8 +470,7 @@ sudo systemctl start toolboxai-worker
 # Check status
 sudo systemctl status toolboxai-api
 sudo systemctl status toolboxai-worker
-```
-
+```text
 ## Development Installation
 
 ### Quick Start
@@ -543,8 +520,7 @@ npm run dev
 
 # Terminal 3: Worker
 celery -A app.worker worker --loglevel=debug
-```
-
+```text
 ## Configuration
 
 ### Environment Variables
@@ -600,8 +576,7 @@ GOOGLE_CLIENT_SECRET=your-secret
 # Roblox
 ROBLOX_API_KEY=your-roblox-key
 ROBLOX_WEBHOOK_SECRET=your-webhook-secret
-```
-
+```text
 ### Configuration Files
 
 Create these configuration files:
@@ -655,8 +630,7 @@ loggers:
     level: WARNING
     handlers: [file]
     propagate: no
-```
-
+```text
 ## Verification
 
 ### Step 1: Check Services
@@ -675,8 +649,7 @@ sudo netstat -tlpn | grep -E '(80|443|8000|5432|6379)'
 # Check logs
 sudo journalctl -u toolboxai-api -f
 sudo tail -f /var/log/toolboxai/app.log
-```
-
+```text
 ### Step 2: Test Endpoints
 
 ```bash
@@ -691,8 +664,7 @@ curl -I https://yourdomain.com
 
 # WebSocket test
 wscat -c wss://yourdomain.com/ws
-```
-
+```text
 ### Step 3: Run Test Suite
 
 ```bash
@@ -710,8 +682,7 @@ python manage.py test integration
 
 # Load testing
 locust -f tests/load_test.py --host=https://yourdomain.com
-```
-
+```text
 ### Step 4: Verify Integrations
 
 ```python
@@ -726,8 +697,7 @@ python manage.py sendtestemail admin@yourdomain.com
 
 # Test storage
 python manage.py test_storage
-```
-
+```text
 ## Troubleshooting
 
 ### Common Issues
@@ -747,8 +717,7 @@ sudo nano /etc/postgresql/14/main/pg_hba.conf
 
 # Restart PostgreSQL
 sudo systemctl restart postgresql
-```
-
+```text
 #### Redis Connection Failed
 
 ```bash
@@ -763,8 +732,7 @@ redis-cli -a your_password ping
 
 # Check Redis logs
 sudo tail -f /var/log/redis/redis-server.log
-```
-
+```text
 #### API Server Won't Start
 
 ```bash
@@ -779,8 +747,7 @@ sudo lsof -i :8000
 
 # Run in debug mode
 python manage.py runserver --debug
-```
-
+```text
 #### Frontend Build Fails
 
 ```bash
@@ -795,8 +762,7 @@ npm install
 
 # Check Node version
 node --version  # Should be 18.x
-```
-
+```text
 #### SSL Certificate Issues
 
 ```bash
@@ -808,8 +774,7 @@ sudo certbot renew --dry-run
 
 # Check certificate
 sudo openssl x509 -in /etc/letsencrypt/live/yourdomain.com/fullchain.pem -text -noout
-```
-
+```text
 ### Performance Issues
 
 ```bash
@@ -829,8 +794,7 @@ redis-cli INFO memory
 
 # Monitor API performance
 python manage.py monitor_performance
-```
-
+```text
 ### Security Audit
 
 ```bash
@@ -848,8 +812,7 @@ npm update
 # Check file permissions
 find /opt/toolboxai -type f -perm 0777
 find /opt/toolboxai -type d -perm 0777
-```
-
+```text
 ## Next Steps
 
 After successful installation:

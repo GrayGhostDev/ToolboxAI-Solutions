@@ -19,8 +19,7 @@ openssl rand -base64 64
 
 # Alternative using Node.js
 node -e "console.log(require('crypto').randomBytes(64).toString('base64'))"
-```
-
+```text
 ### 2. JWT Configuration in .env:
 
 ```env
@@ -29,8 +28,7 @@ JWT_SECRET_KEY=your-generated-64-character-random-key-here-replace-this-immediat
 JWT_ALGORITHM=HS256
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30      # Short-lived access tokens
 JWT_REFRESH_TOKEN_EXPIRE_DAYS=7         # Longer-lived refresh tokens
-```
-
+```text
 ## 🛡️ Password Security
 
 ### 1. Password Hashing Configuration:
@@ -45,8 +43,7 @@ PASSWORD_REQUIRE_UPPERCASE=true
 PASSWORD_REQUIRE_LOWERCASE=true
 PASSWORD_REQUIRE_NUMBERS=true
 PASSWORD_REQUIRE_SPECIAL=true
-```
-
+```text
 ### 2. Password Validation Example:
 
 ```python
@@ -68,8 +65,7 @@ def validate_password(password: str) -> bool:
 
 # Hash password before storing
 hashed_password = auth_manager.hash_password("user_password")
-```
-
+```text
 ## 🔒 API Security
 
 ### 1. API Key Management:
@@ -85,8 +81,7 @@ API_BURST_LIMIT=200/minute              # Allow brief bursts
 # Request size limits
 API_MAX_REQUEST_SIZE=10485760           # 10MB limit
 API_REQUEST_TIMEOUT=30                  # 30 second timeout
-```
-
+```text
 ### 2. CORS Configuration:
 
 ```env
@@ -95,8 +90,7 @@ API_CORS_ORIGINS=["https://yourdomain.com","https://www.yourdomain.com"]
 API_CORS_METHODS=["GET","POST","PUT","DELETE","PATCH"]
 API_CORS_HEADERS=["Content-Type","Authorization"]
 API_CORS_CREDENTIALS=true
-```
-
+```text
 ## 🌐 HTTPS and SSL/TLS
 
 ### 1. Force HTTPS in Production:
@@ -107,8 +101,7 @@ FORCE_HTTPS=true
 HSTS_MAX_AGE=31536000                   # 1 year HSTS
 HSTS_INCLUDE_SUBDOMAINS=true
 HSTS_PRELOAD=true
-```
-
+```text
 ### 2. SSL Certificate Setup:
 
 ```bash
@@ -117,8 +110,7 @@ sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
 
 # Or using Cloudflare Origin Certificates
 # Download certificates and configure in your reverse proxy
-```
-
+```text
 ### 3. Database SSL Configuration:
 
 ```env
@@ -130,8 +122,7 @@ DATABASE_SSL_MODE=require
 DATABASE_SSL_CERT=/path/to/client-cert.pem
 DATABASE_SSL_KEY=/path/to/client-key.pem
 DATABASE_SSL_ROOT_CERT=/path/to/ca-cert.pem
-```
-
+```text
 ## 🚨 Environment Security
 
 ### 1. Environment Variable Security:
@@ -144,8 +135,7 @@ chmod 600 .env
 echo ".env" >> .gitignore
 echo "*.env" >> .gitignore
 echo ".env.*" >> .gitignore
-```
-
+```text
 ### 2. Secrets Management (Production):
 
 ```bash
@@ -157,8 +147,7 @@ az keyvault secret set --vault-name "MyKeyVault" --name "database-password" --va
 
 # Using Google Secret Manager
 echo -n "your_db_password" | gcloud secrets create database-password --data-file=-
-```
-
+```text
 ## 🔍 Input Validation and Sanitization
 
 ### 1. Request Validation:
@@ -184,8 +173,7 @@ class UserCreate(BaseModel):
         if not v.replace('_', '').replace('-', '').isalnum():
             raise ValueError('Username can only contain letters, numbers, hyphens, and underscores')
         return v
-```
-
+```text
 ### 2. SQL Injection Prevention:
 
 ```python
@@ -203,8 +191,7 @@ result = session.execute(
 
 # NEVER do this (vulnerable to SQL injection)
 # query = f"SELECT * FROM users WHERE email = '{email}'"
-```
-
+```text
 ## 🛡️ Authorization and Access Control
 
 ### 1. Role-Based Access Control (RBAC):
@@ -229,8 +216,7 @@ def require_admin(current_user: User):
 async def list_users(current_user: User = Depends(get_current_user)):
     require_admin(current_user)
     # Admin-only logic here
-```
-
+```text
 ### 2. Resource-Level Permissions:
 
 ```python
@@ -243,8 +229,7 @@ async def get_user(user_id: str, current_user: User = Depends(get_current_user))
 
     # Fetch and return user data
     return await get_user_by_id(user_id)
-```
-
+```text
 ## 🔐 Session Security
 
 ### 1. Secure Session Configuration:
@@ -256,8 +241,7 @@ SESSION_COOKIE_SECURE=true              # HTTPS only
 SESSION_COOKIE_HTTPONLY=true            # No JavaScript access
 SESSION_COOKIE_SAMESITE=strict          # CSRF protection
 SESSION_COOKIE_MAX_AGE=1800             # 30 minutes
-```
-
+```text
 ### 2. Token Blacklisting:
 
 ```python
@@ -273,8 +257,7 @@ class TokenBlacklist:
     async def is_blacklisted(self, token: str) -> bool:
         """Check if token is blacklisted"""
         return await self.redis.exists(f"blacklist:{token}")
-```
-
+```text
 ## 🔍 Logging and Monitoring Security Events
 
 ### 1. Security Event Logging:
@@ -288,8 +271,7 @@ SECURITY_LOG_FILE=logs/security.log
 LOG_FAILED_LOGINS=true
 MAX_LOGIN_ATTEMPTS=5
 LOGIN_LOCKOUT_DURATION=1800             # 30 minutes
-```
-
+```text
 ### 2. Example Security Logger:
 
 ```python
@@ -322,8 +304,7 @@ async def log_suspicious_activity(user_id: str, activity: str, details: dict):
             "timestamp": datetime.utcnow()
         }
     )
-```
-
+```text
 ## 🛡️ Production Security Checklist
 
 ### Before Deployment:
@@ -375,8 +356,7 @@ class SecurityMonitor:
             self.logger.critical(f"Brute force attack detected from {ip}")
             return True
         return False
-```
-
+```text
 ### 2. Automatic Response:
 
 ```python
@@ -392,6 +372,5 @@ async def handle_security_incident(incident_type: str, details: dict):
 
     # Always notify administrators
     await send_security_alert(incident_type, details)
-```
-
+```text
 Remember: Security is an ongoing process, not a one-time setup. Regularly review and update your security configurations!

@@ -27,8 +27,7 @@ sudo -u postgres /opt/local/lib/postgresql16/bin/initdb \
   -U postgres
 # Start now and on login
 sudo port load postgresql16-server
-```
-
+```text
 #### Ubuntu/Debian:
 
 ```bash
@@ -36,8 +35,7 @@ sudo apt update
 sudo apt install postgresql postgresql-contrib
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
-```
-
+```text
 #### CentOS/RHEL:
 
 ```bash
@@ -45,8 +43,7 @@ sudo yum install postgresql-server postgresql-contrib
 sudo postgresql-setup initdb
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
-```
-
+```text
 ### 2. Create Database and User
 
 ```bash
@@ -68,8 +65,7 @@ GRANT CREATE ON SCHEMA public TO myapp_user;
 
 # Exit
 \q
-```
-
+```text
 ### 3. Configure PostgreSQL for Remote Connections (if needed)
 
 Edit PostgreSQL configuration files:
@@ -85,18 +81,16 @@ listen_addresses = 'localhost,192.168.1.100'
 
 # Connection limits
 max_connections = 200
-```
-
+```text
 #### pg_hba.conf:
 
-```
+```text
 # Allow connections from your app server
 host    myapp_db    myapp_user    192.168.1.0/24    md5
 
 # For local development
 host    myapp_db    myapp_user    127.0.0.1/32      md5
-```
-
+```text
 ### 4. Test Connection
 
 ```bash
@@ -105,8 +99,7 @@ psql -h localhost -U myapp_user -d myapp_db
 
 # Or with connection string
 psql "postgresql://myapp_user:your_secure_password@localhost:5432/myapp_db"
-```
-
+```text
 ## Redis Setup (Optional - for Caching and Sessions)
 
 ### 1. Install Redis
@@ -116,8 +109,7 @@ psql "postgresql://myapp_user:your_secure_password@localhost:5432/myapp_db"
 ```bash
 brew install redis
 brew services start redis
-```
-
+```text
 #### Ubuntu/Debian:
 
 ```bash
@@ -125,8 +117,7 @@ sudo apt update
 sudo apt install redis-server
 sudo systemctl start redis-server
 sudo systemctl enable redis-server
-```
-
+```text
 ### 2. Configure Redis Security
 
 Edit `/etc/redis/redis.conf`:
@@ -142,8 +133,7 @@ requirepass your_redis_password
 rename-command FLUSHDB ""
 rename-command FLUSHALL ""
 rename-command DEBUG ""
-```
-
+```text
 ### 3. Test Redis Connection
 
 ```bash
@@ -154,8 +144,7 @@ redis-cli -a your_redis_password
 # Test
 ping
 # Should return: PONG
-```
-
+```text
 ## MongoDB Setup (Optional - for Document Storage)
 
 ### 1. Install MongoDB
@@ -169,8 +158,7 @@ brew tap mongodb/brew
 # Install MongoDB Community Edition
 brew install mongodb-community
 brew services start mongodb-community
-```
-
+```text
 #### Ubuntu/Debian:
 
 ```bash
@@ -187,8 +175,7 @@ sudo apt install mongodb-org
 # Start MongoDB
 sudo systemctl start mongod
 sudo systemctl enable mongod
-```
-
+```text
 ### 2. Configure MongoDB Security
 
 ```bash
@@ -210,8 +197,7 @@ db.createUser({
   pwd: "your_app_password",
   roles: ["readWrite"]
 })
-```
-
+```text
 Edit `/etc/mongod.conf`:
 
 ```yaml
@@ -221,8 +207,7 @@ security:
 net:
   bindIp: 127.0.0.1 # Change as needed
   port: 27017
-```
-
+```text
 ## SQLite Setup (for Development/Testing)
 
 SQLite requires no installation - it's included with Python.
@@ -232,8 +217,7 @@ SQLite requires no installation - it's included with Python.
 ```env
 DB_DRIVER=sqlite
 DB_NAME=myapp.db  # Will be created automatically
-```
-
+```text
 ## Environment-Specific Database URLs
 
 ### Development (.env):
@@ -250,8 +234,7 @@ REDIS_URL=redis://:your_redis_password@localhost:6379/0
 
 # MongoDB
 MONGODB_URL=mongodb://myapp_user:your_app_password@localhost:27017/myapp_db
-```
-
+```text
 ### Production (.env):
 
 ```env
@@ -263,8 +246,7 @@ REDIS_URL=redis://:your_redis_password@redis.example.com:6379/0
 
 # MongoDB with authentication
 MONGODB_URL=mongodb://myapp_user:your_app_password@mongo.example.com:27017/myapp_db?authSource=myapp_db&ssl=true
-```
-
+```text
 ## Database Migration Setup
 
 Your Ghost Backend Framework includes Alembic for database migrations.
@@ -274,8 +256,7 @@ Your Ghost Backend Framework includes Alembic for database migrations.
 ```bash
 cd /Users/grayghostdataconsultants/Ghost
 alembic init alembic
-```
-
+```text
 ### 2. Configure alembic.ini:
 
 ```ini
@@ -284,8 +265,7 @@ sqlalchemy.url = postgresql://myapp_user:your_secure_password@localhost:5432/mya
 
 # Or use environment variable
 sqlalchemy.url = driver://user:pass@localhost/dbname
-```
-
+```text
 ### 3. Create and Run Migrations:
 
 ```bash
@@ -300,8 +280,7 @@ alembic current
 
 # View migration history
 alembic history
-```
-
+```text
 ## Database Performance Optimization
 
 ### PostgreSQL Optimization:
@@ -316,8 +295,7 @@ CREATE INDEX idx_posts_search ON posts USING GIN(to_tsvector('english', title ||
 
 -- Monitor slow queries
 ALTER SYSTEM SET log_min_duration_statement = 1000;  -- Log queries > 1 second
-```
-
+```text
 ### Connection Pooling Settings:
 
 ```env
@@ -326,8 +304,7 @@ DB_POOL_SIZE=20          # Number of connections to maintain
 DB_MAX_OVERFLOW=30       # Additional connections when needed
 DB_POOL_TIMEOUT=30       # Seconds to wait for connection
 DB_POOL_RECYCLE=3600     # Seconds before reconnecting
-```
-
+```text
 ## Backup and Recovery
 
 ### PostgreSQL Backup:
@@ -341,8 +318,7 @@ pg_dump -h localhost -U myapp_user myapp_db | gzip > backup.sql.gz
 
 # Restore from backup
 psql -h localhost -U myapp_user myapp_db < backup.sql
-```
-
+```text
 ### Redis Backup:
 
 ```bash
@@ -352,8 +328,7 @@ redis-cli BGSAVE
 
 # Copy the RDB file
 cp /var/lib/redis/dump.rdb /backup/location/
-```
-
+```text
 ## Health Checks
 
 Your Ghost Backend Framework includes database health checks:
@@ -372,8 +347,7 @@ async def health_check():
         "database": db_healthy,
         "timestamp": datetime.utcnow()
     }
-```
-
+```text
 ## Troubleshooting Common Issues
 
 ### 1. Connection Refused:
