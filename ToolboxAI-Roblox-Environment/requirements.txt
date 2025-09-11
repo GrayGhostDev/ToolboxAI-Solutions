@@ -72,6 +72,7 @@ faiss-cpu==1.8.0
 
 # Educational Content Tools
 wikipedia-api==0.8.1
+wikipedia==1.4.0
 duckduckgo-search==8.1.1
 
 # Utilities
