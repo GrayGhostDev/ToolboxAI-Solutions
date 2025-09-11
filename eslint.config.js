@@ -58,6 +58,7 @@ export default tseslint.config(
       'ToolboxAI-Roblox-Environment/venv_clean/**',
       'src/dashboard/backend/venv/**',
       'Documentation/**',
+      'Archive/**',
     ],
   },
 );
