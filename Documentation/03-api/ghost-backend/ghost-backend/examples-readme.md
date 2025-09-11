@@ -60,7 +60,7 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 
 # API
-API_HOST=0.0.0.0
+API_HOST=127.0.0.1
 API_PORT=8000
 JWT_SECRET=your-secret-key-here
 
@@ -91,7 +91,7 @@ redis:
   db: 0
 
 api:
-  host: 0.0.0.0
+  host: 127.0.0.1
   port: 8000
   debug: true
   cors_origins: ["*"]
@@ -346,7 +346,7 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", "8000"]
 ```
 
 ### Docker Compose

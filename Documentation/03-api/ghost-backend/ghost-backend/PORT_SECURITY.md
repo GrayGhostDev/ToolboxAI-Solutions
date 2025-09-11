@@ -18,7 +18,7 @@ This document provides comprehensive guidance on port configuration, network sec
 - **All services**: Bound to localhost only
 
 ### Docker Environment
-- **Container Internal**: 0.0.0.0:8888 (OK within container)
+- **Container Internal**: 127.0.0.1:8888 (OK within container)
 - **Host Binding**: 127.0.0.1:8888 (secure host exposure)
 - **Inter-container**: Via Docker network names
 
@@ -178,11 +178,11 @@ kill -9 $(lsof -ti :8000)
 
 ### Issue: Connection Refused
 1. Check service is running: `ps aux | grep python`
-2. Verify binding address: Should be 127.0.0.1, not 0.0.0.0
+2. Verify binding address: Should be 127.0.0.1, not 127.0.0.1
 3. Check firewall: `ufw status`
 
 ### Issue: Cannot Access from Browser
-- Development: Use `localhost:8000` not `0.0.0.0:8000`
+- Development: Use `localhost:8000` not `127.0.0.1:8000`
 - Production: Access via domain name (HTTPS) not IP:port
 
 ## Environment-Specific Configurations
@@ -204,7 +204,7 @@ FORCE_HTTPS=true
 
 ### Docker (.env.docker)
 ```env
-API_HOST=0.0.0.0  # Inside container
+API_HOST=127.0.0.1  # Inside container
 API_PORT=8888
 DB_HOST=postgres  # Docker service name
 REDIS_HOST=redis  # Docker service name

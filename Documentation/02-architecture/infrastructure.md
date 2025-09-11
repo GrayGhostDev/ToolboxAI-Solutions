@@ -125,7 +125,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 EXPOSE 8008
 
-CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8008"]
+CMD ["uvicorn", "server.main:app", "--host", "127.0.0.1", "--port", "8008"]
 ```
 
 #### Dashboard Dockerfile
@@ -362,7 +362,7 @@ module "vpc" {
   version = "5.0.0"
 
   name = "toolboxai-vpc"
-  cidr = "10.0.0.0/16"
+  cidr = "1127.0.0.1/16"
 
   azs             = ["${var.aws_region}a", "${var.aws_region}b", "${var.aws_region}c"]
   private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]

@@ -288,7 +288,7 @@ redis:
   db: 0
 
 api:
-  host: 0.0.0.0
+  host: 127.0.0.1
   port: 8000
   workers: 4
   timeout: 30
@@ -330,7 +330,7 @@ Group=toolboxai
 WorkingDirectory=/opt/toolboxai
 Environment="PATH=/opt/toolboxai/venv/bin"
 ExecStart=/opt/toolboxai/venv/bin/uvicorn main:app \
-    --host 0.0.0.0 \
+    --host 127.0.0.1 \
     --port 8000 \
     --workers 4 \
     --log-config /etc/toolboxai/logging.yaml

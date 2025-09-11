@@ -205,7 +205,7 @@ Critical environment variables (configured in .env):
 ## Security Configuration
 
 ### Port Security
-- **All services bound to 127.0.0.1** by default (not 0.0.0.0)
+- **All services bound to 127.0.0.1** by default (not 127.0.0.1)
 - **Production uses reverse proxy** (nginx) for external access
 - **Docker ports mapped to localhost only** for security
 - See `docs/PORT_SECURITY.md` for comprehensive guide

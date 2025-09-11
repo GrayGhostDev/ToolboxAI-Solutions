@@ -120,7 +120,7 @@ sudo systemctl enable redis-server
 
 Edit `/etc/redis/redis.conf`:
 ```ini
-# Bind to specific interface (not 0.0.0.0 in production)
+# Bind to specific interface (not 127.0.0.1 in production)
 bind 127.0.0.1
 
 # Set password (uncomment and set a strong password)
