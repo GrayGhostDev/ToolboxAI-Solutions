@@ -37,24 +37,24 @@ jobs:
       
       - name: Validate Lua syntax
         run: |
-          find src/roblox-environment/Roblox -name "*.lua" -exec luacheck {} \; || true
+          find ToolboxAI-Roblox-Environment/Roblox -name "*.lua" -exec luacheck {} \; || true
       
       - name: Check for common issues
         run: |
           echo "Checking for common Roblox script issues..."
           
           # Check for deprecated APIs
-          if grep -r "workspace.CurrentCamera" src/roblox-environment/Roblox/; then
+          if grep -r "workspace.CurrentCamera" ToolboxAI-Roblox-Environment/Roblox/; then
             echo "Warning: Found deprecated API usage"
           fi
           
           # Check for security issues
-          if grep -r "loadstring" src/roblox-environment/Roblox/; then
+          if grep -r "loadstring" ToolboxAI-Roblox-Environment/Roblox/; then
             echo "Warning: loadstring usage detected - potential security risk"
           fi
           
           # Check for performance issues
-          if grep -r "wait()" src/roblox-environment/Roblox/; then
+          if grep -r "wait()" ToolboxAI-Roblox-Environment/Roblox/; then
             echo "Warning: wait() usage detected - consider using task.wait()"
           fi
 

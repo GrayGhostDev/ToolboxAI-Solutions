@@ -479,7 +479,10 @@ class StreamingCompressionMiddleware:
 
 
 def create_compression_middleware(
-    minimum_size: int = 1024, compression_level: int = 6, streaming: bool = False
+    app: ASGIApp,
+    minimum_size: int = 1024,
+    compression_level: int = 6,
+    streaming: bool = False,
 ) -> BaseHTTPMiddleware:
     """Create compression middleware with configuration"""
 
@@ -488,6 +491,6 @@ def create_compression_middleware(
     )
 
     if streaming:
-        return StreamingCompressionMiddleware(config=config)
+        return StreamingCompressionMiddleware(app=app, config=config)
     else:
-        return CompressionMiddleware(config=config)
+        return CompressionMiddleware(app=app, config=config)

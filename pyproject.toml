@@ -62,7 +62,9 @@ exclude = [
     "**/venv_clean/include",
     "**/.git",
     "**/.vscode",
-    "**/.cursor"
+    "**/.cursor",
+    "Archive/**",
+    "**/deprecated/**"
 ]
 venvPath = "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment"
 venv = "venv_clean"
@@ -75,7 +77,7 @@ reportUnusedVariable = "warning"
 reportUnusedImport = "warning"
 useLibraryCodeForTypes = true
 autoImportCompletions = true
-stubPath = "./types"
+stubPath = "src/shared/types"
 extraPaths = [
     "./ToolboxAI-Roblox-Environment",
     "./ToolboxAI-Roblox-Environment/server",

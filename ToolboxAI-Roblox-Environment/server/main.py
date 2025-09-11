@@ -337,10 +337,11 @@ app.add_middleware(
 app.add_middleware(APIVersionMiddleware, version_manager=version_manager)
 
 # Compression middleware
+# Switch to factory that provides correct signature
 app.add_middleware(
     CompressionMiddleware,
     config=CompressionConfig(
-        minimum_size=1024,  # Compress responses larger than 1KB
+        minimum_size=1024,
         compression_level=6,
         prefer_brotli=True,
     ),

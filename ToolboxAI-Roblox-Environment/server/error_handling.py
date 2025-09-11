@@ -33,7 +33,7 @@ from fastapi import HTTPException, Request, Response, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -121,7 +121,7 @@ class ApplicationError(Exception):
         super().__init__(message)
 
 
-class ValidationError(ApplicationError):
+class AppValidationError(ApplicationError):
     """Validation error"""
 
     def __init__(self, message: str, details: Optional[List[ErrorDetail]] = None):
@@ -290,7 +290,7 @@ class ErrorHandler:
 
     def _setup_default_mappers(self):
         """Setup default error mappers"""
-        self.register_error_mapper(ValidationError, self._handle_validation_error)
+        self.register_error_mapper(AppValidationError, self._handle_validation_error)
         self.register_error_mapper(
             RequestValidationError, self._handle_request_validation_error
         )
@@ -368,7 +368,7 @@ class ErrorHandler:
         return error_response
 
     async def _handle_validation_error(
-        self, exc: ValidationError, context: ErrorContext
+        self, exc: AppValidationError, context: ErrorContext
     ) -> ErrorResponse:
         """Handle validation errors"""
         return ErrorResponse(

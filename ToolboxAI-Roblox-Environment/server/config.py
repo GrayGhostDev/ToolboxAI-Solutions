@@ -289,7 +289,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",
-    )
+    )  # type: ignore[misc]  # pydantic SettingsConfigDict type plugin quirk under pyright
 
     def get_database_url(self) -> str:
         if self.DATABASE_URL:

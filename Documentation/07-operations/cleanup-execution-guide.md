@@ -112,7 +112,7 @@ ToolBoxAI-Solutions/
 npm install
 
 # Install Python dependencies
-cd src/roblox-environment
+cd ToolboxAI-Roblox-Environment
 pip install -r requirements.txt
 ```
 
@@ -122,7 +122,7 @@ pip install -r requirements.txt
 npm run test
 
 # Test Python modules
-cd src/roblox-environment
+cd ToolboxAI-Roblox-Environment
 python -m pytest
 ```
 
