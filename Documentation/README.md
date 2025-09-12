@@ -1,25 +1,21 @@
-# ToolBoxAI-Solutions Documentation
+# Documentation Index
 
-Welcome to the comprehensive documentation for ToolBoxAI-Solutions.
+Canonical services (localhost-only):
 
-## 📚 Documentation Structure
+- FastAPI: 127.0.0.1:8008
+- Flask bridge: 127.0.0.1:5001
+- MCP WebSocket: 127.0.0.1:9876
+- Ghost Backend: 127.0.0.1:8000
+- Dashboard: 127.0.0.1:3000
+- Ghost CMS: 127.0.0.1:2368
+- Roblox Plugin: 127.0.0.1:64989
 
-All documentation has been reorganized into a clear hierarchical structure:
+Structure: 01-overview, 02-architecture, 03-api, 04-implementation, 05-features, 06-user-guides, 07-operations, 08-reference, 09-meta, 10-reports, 11-sdks, Archive/
 
-- **[01-overview/](01-overview/)** - Start here for project overview and getting started
-- **[02-architecture/](02-architecture/)** - Technical architecture and data models
-- **[03-api/](03-api/)** - API reference and integration guides
-- **[04-implementation/](04-implementation/)** - Development guidelines and deployment
-- **[05-features/](05-features/)** - Feature documentation
-- **[06-user-guides/](06-user-guides/)** - Role-specific user guides
-- **[07-operations/](07-operations/)** - Operations and maintenance
-- **[08-reference/](08-reference/)** - Technical references and requirements
-- **[09-meta/](09-meta/)** - Project metadata and contribution guidelines
+Archive policy:
 
-## 🚀 Quick Start
+- Ephemeral/status/progress/verification docs are archived under Documentation/Archive/YYYY-MM-DD/
 
-Begin with the [Overview Documentation](01-overview/README.md) for a comprehensive introduction and navigation guide.
+Ghost backend canonical path:
 
----
-
-*For detailed navigation, see [01-overview/README.md](01-overview/README.md)*
+- ToolboxAI-Roblox-Environment/API/GhostBackend

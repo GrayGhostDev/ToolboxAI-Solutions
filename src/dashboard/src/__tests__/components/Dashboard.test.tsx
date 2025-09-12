@@ -4,9 +4,9 @@ import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
-import Dashboard from '../../pages/Dashboard';
+import DashboardHome from '../../components/pages/DashboardHome';
 import { dashboardSlice } from '../../store/slices/dashboardSlice';
-import { authSlice } from '../../store/slices/authSlice';
+import { userSlice } from '../../store/slices/userSlice';
 import { uiSlice } from '../../store/slices/uiSlice';
 import * as apiService from '../../services/api';
 
@@ -18,7 +18,7 @@ const createTestStore = (initialState = {}) => {
   return configureStore({
     reducer: {
       dashboard: dashboardSlice.reducer,
-      auth: authSlice.reducer,
+      user: userSlice.reducer,
       ui: uiSlice.reducer,
     },
     preloadedState: initialState,
@@ -41,15 +41,17 @@ describe('Dashboard Component', () => {
   beforeEach(() => {
     // Reset store before each test
     store = createTestStore({
-      auth: {
-        isAuthenticated: true,
-        user: {
+      user: {
+        currentUser: {
           id: 'test-user-123',
           name: 'Test Teacher',
           email: 'teacher@test.com',
           role: 'teacher',
         },
+        isAuthenticated: true,
         token: 'test-token',
+        loading: false,
+        error: null,
       },
       dashboard: {
         overview: null,
@@ -78,7 +80,7 @@ describe('Dashboard Component', () => {
   it('should render dashboard with loading state initially', () => {
     render(
       <TestWrapper store={store}>
-        <Dashboard />
+        <DashboardHome />
       </TestWrapper>
     );
 
@@ -88,7 +90,7 @@ describe('Dashboard Component', () => {
   it('should fetch and display dashboard overview data', async () => {
     render(
       <TestWrapper store={store}>
-        <Dashboard />
+        <DashboardHome />
       </TestWrapper>
     );
 
@@ -109,7 +111,7 @@ describe('Dashboard Component', () => {
 
     render(
       <TestWrapper store={store}>
-        <Dashboard />
+        <DashboardHome />
       </TestWrapper>
     );
 
@@ -123,7 +125,7 @@ describe('Dashboard Component', () => {
     
     render(
       <TestWrapper store={store}>
-        <Dashboard />
+        <DashboardHome />
       </TestWrapper>
     );
 
@@ -142,7 +144,7 @@ describe('Dashboard Component', () => {
     // Test for teacher role
     render(
       <TestWrapper store={store}>
-        <Dashboard />
+        <DashboardHome />
       </TestWrapper>
     );
 
@@ -155,7 +157,7 @@ describe('Dashboard Component', () => {
     
     render(
       <TestWrapper store={store}>
-        <Dashboard />
+        <DashboardHome />
       </TestWrapper>
     );
 
@@ -172,7 +174,7 @@ describe('Dashboard Component', () => {
   it('should show correct statistics cards', async () => {
     render(
       <TestWrapper store={store}>
-        <Dashboard />
+        <DashboardHome />
       </TestWrapper>
     );
 
@@ -195,7 +197,7 @@ describe('Dashboard Component', () => {
 
     render(
       <TestWrapper store={store}>
-        <Dashboard />
+        <DashboardHome />
       </TestWrapper>
     );
 
@@ -210,7 +212,7 @@ describe('Dashboard Component', () => {
 
     render(
       <TestWrapper store={store}>
-        <Dashboard />
+        <DashboardHome />
       </TestWrapper>
     );
 

@@ -1,0 +1,17 @@
+{
+    "from": "terminal1",
+    "to": "terminal2",
+    "timestamp": "2025-09-10T14:15:43Z",
+    "type": "verification_complete",
+    "payload": {
+        "status": "backend_ready",
+        "services": ["api", "websocket", "auth", "database"],
+        "endpoints": {
+            "api": "http://localhost:8008",
+            "websocket": "ws://localhost:8008/socket.io/",
+            "auth": "http://localhost:8008/auth"
+        }
+    },
+    "requires_ack": true,
+    "priority": "high"
+}

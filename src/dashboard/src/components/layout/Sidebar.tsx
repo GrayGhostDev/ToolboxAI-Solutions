@@ -84,6 +84,10 @@ export default function Sidebar({ role }: Props) {
   const displayName = useAppSelector((s) => s.user.displayName);
 
   const progress = ((xp % 100) / 100) * 100;
+  
+  // Normalize role to match expected format (capitalize first letter)
+  const normalizedRole = (role?.charAt(0).toUpperCase() + role?.slice(1).toLowerCase()) as UserRole;
+  const menuItems = roleMenus[normalizedRole] || roleMenus.Student;
 
   return (
     <Drawer
@@ -110,7 +114,7 @@ export default function Sidebar({ role }: Props) {
         </Typography>
         
         {/* XP Progress for Students */}
-        {role === "Student" && (
+        {role === "student" && (
           <Box sx={{ mt: 2 }}>
             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
               <Typography variant="caption" sx={{ opacity: 0.8 }}>
@@ -140,7 +144,7 @@ export default function Sidebar({ role }: Props) {
       
       {/* Navigation Menu */}
       <List sx={{ px: 1, py: 2 }}>
-        {roleMenus[role].map((item) => {
+        {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
             <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
@@ -178,7 +182,7 @@ export default function Sidebar({ role }: Props) {
       </List>
       
       {/* Quick Stats for Teachers/Admins */}
-      {(role === "Teacher" || role === "Admin") && (
+      {(role === "teacher" || role === "admin") && (
         <>
           <Divider sx={{ bgcolor: "rgba(255,255,255,0.1)" }} />
           <Box sx={{ p: 2 }}>

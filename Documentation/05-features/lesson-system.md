@@ -5,6 +5,7 @@ The lesson system forms the core educational framework within the learning platf
 ## Overview
 
 The lesson system allows students to access educational content in a structured, sequential manner. It includes:
+
 - Interactive lesson content
 - Progress tracking
 - Navigation between lesson sections
@@ -19,22 +20,21 @@ The `LessonPageController` manages user interaction within lessons, including na
 ```lua
 -- Main controller initialization
 local controller = LessonPageController.new(gui)
-```
-
+```text
 #### Key Methods
 
-| Method | Description |
-|--------|-------------|
-| `switchLesson(lessonNumber)` | Navigates to a specific lesson and updates content |
-| `loadQuestion(questionNumber)` | For embedded quiz elements, loads a specific question |
-| `updateProgressBar()` | Updates visual progress indicators |
-| `startQuiz()` | Transitions to the quiz interface for lesson assessment |
+| Method                         | Description                                             |
+| ------------------------------ | ------------------------------------------------------- |
+| `switchLesson(lessonNumber)`   | Navigates to a specific lesson and updates content      |
+| `loadQuestion(questionNumber)` | For embedded quiz elements, loads a specific question   |
+| `updateProgressBar()`          | Updates visual progress indicators                      |
+| `startQuiz()`                  | Transitions to the quiz interface for lesson assessment |
 
 ### Lesson Content Structure
 
 Lessons are organized into a hierarchical structure:
 
-```
+```text
 Course
   └── Lesson 1
        ├── Introduction
@@ -44,9 +44,9 @@ Course
        └── Assessment
   └── Lesson 2
       ...
-```
-
+```text
 Each lesson typically contains:
+
 - Title and overview
 - Educational content (text, images, interactive elements)
 - Progress indicators
@@ -71,13 +71,13 @@ local LESSON_DESCRIPTIONS = {
     "Put your knowledge to the test with hands-on practice exercises...",
     "Apply everything you've learned in this comprehensive final project..."
 }
-```
-
+```text
 ## UI Components
 
 ### Content Display Area
 
 The main region where lesson content is presented:
+
 - Displays text, images, and interactive elements
 - Support for multimedia content
 - Adaptive layout for different screen sizes
@@ -85,6 +85,7 @@ The main region where lesson content is presented:
 ### Navigation Controls
 
 Controls for moving between lesson sections:
+
 - Previous/Next buttons
 - Lesson outline/table of contents
 - Quick navigation to specific sections
@@ -111,11 +112,11 @@ function LessonPageController:setupButtonCallbacks()
         end)
     end
 end
-```
-
+```text
 ### Progress Tracking
 
 Visual indicators showing student progress:
+
 - Overall course completion percentage
 - Current position within a lesson
 - Completed vs. remaining sections
@@ -135,8 +136,7 @@ function LessonPageController:updateProgressBar()
 
     progressText.Text = string.format("Progress: %d%%", math.floor(progress * 100))
 end
-```
-
+```text
 ## Integration Points
 
 ### Quiz System Integration
@@ -156,8 +156,7 @@ function LessonPageController:startQuiz()
     self.gui.MainFrame.ContentArea.Visible = false
     self.gui.MainFrame.QuizArea.Visible = true
 end
-```
-
+```text
 ### Gamification Integration
 
 Lessons integrate with the gamification system:
@@ -175,8 +174,7 @@ function LessonPageController:completeLesson()
     -- Show completion feedback
     self:showCompletionDialog(earnedXP)
 end
-```
-
+```text
 ## Accessibility Features
 
 The lesson system incorporates several accessibility enhancements:
@@ -197,8 +195,7 @@ function LessonPageController:setupAccessibility()
         self:setupKeyboardControls()
     end
 end
-```
-
+```text
 ## Implementation Guidelines
 
 ### Adding New Lessons

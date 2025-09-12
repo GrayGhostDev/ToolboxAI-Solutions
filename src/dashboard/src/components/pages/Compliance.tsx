@@ -236,7 +236,7 @@ export default function Compliance() {
                 >
                   Refresh
                 </Button>
-                {role === "Admin" && (
+                {role === "admin" && (
                   <>
                     <Button
                       variant="outlined"

@@ -66,7 +66,7 @@ export default function Users() {
     firstName: "",
     lastName: "",
     displayName: "",
-    role: "Student", // Default role to prevent validation error
+    role: "student", // Default role to prevent validation error
     schoolId: "",
   });
 
@@ -119,7 +119,7 @@ export default function Users() {
       firstName: "",
       lastName: "",
       displayName: "",
-      role: "Student", // Default role to prevent validation error
+      role: "student", // Default role to prevent validation error
       schoolId: "",
     });
     setOpenDialog(true);
@@ -142,11 +142,13 @@ export default function Users() {
 
   const handleSave = async () => {
     setError(null);
+    setLoading(true);
     
     // Validate required fields
     if (!formData.email || !formData.username || !formData.firstName || 
         !formData.lastName || !formData.role) {
       setError("Please fill in all required fields.");
+      setLoading(false);
       return;
     }
     
@@ -154,16 +156,19 @@ export default function Users() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError("Please enter a valid email address.");
+      setLoading(false);
       return;
     }
     
     // Validate password for new users
     if (!editingUser && (!formData.password || formData.password.length < 8)) {
       setError("Password must be at least 8 characters long.");
+      setLoading(false);
       return;
     }
     
     try {
+      let savedUser;
       if (editingUser) {
         // Update existing user
         const updateData: UserUpdate = {
@@ -179,7 +184,17 @@ export default function Users() {
         if (formData.password) {
           updateData.password = formData.password;
         }
-        await updateUser(editingUser.id, updateData);
+        savedUser = await updateUser(editingUser.id, updateData);
+        // Update the user in the list immediately
+        setUsers(prev => prev.map(user => 
+          user.id === editingUser.id ? { ...savedUser, 
+            firstName: savedUser.first_name || savedUser.firstName,
+            lastName: savedUser.last_name || savedUser.lastName,
+            displayName: savedUser.display_name || savedUser.displayName,
+            avatarUrl: savedUser.avatar_url || savedUser.avatarUrl,
+            schoolId: savedUser.school_id || savedUser.schoolId
+          } : user
+        ));
       } else {
         // Create new user
         const createData: UserCreate = {
@@ -192,14 +207,27 @@ export default function Users() {
           role: formData.role,
           schoolId: formData.schoolId || undefined,
         };
-        await createUser(createData);
+        savedUser = await createUser(createData);
+        // Add the new user to the list immediately
+        const newUser = {
+          ...savedUser,
+          firstName: savedUser.first_name || savedUser.firstName,
+          lastName: savedUser.last_name || savedUser.lastName,
+          displayName: savedUser.display_name || savedUser.displayName,
+          avatarUrl: savedUser.avatar_url || savedUser.avatarUrl,
+          schoolId: savedUser.school_id || savedUser.schoolId
+        };
+        setUsers(prev => [newUser, ...prev]);
       }
       
       setOpenDialog(false);
-      fetchUsers(); // Refresh the list
+      // Also refresh from server to ensure consistency
+      await fetchUsers();
     } catch (err) {
       setError("Failed to save user. Please try again.");
       console.error("Error saving user:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -209,12 +237,18 @@ export default function Users() {
     }
     
     setError(null);
+    setLoading(true);
     try {
       await deleteUser(userId);
-      fetchUsers(); // Refresh the list
+      // Remove the user from the list immediately
+      setUsers(prev => prev.filter(user => user.id !== userId));
+      // Also refresh from server to ensure consistency
+      await fetchUsers();
     } catch (err) {
       setError("Failed to delete user. Please try again.");
       console.error("Error deleting user:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -317,55 +351,75 @@ export default function Users() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Avatar src={user.avatarUrl}>
-                          {user.displayName.charAt(0)}
-                        </Avatar>
-                        <Typography fontWeight={500}>{user.displayName}</Typography>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={user.role}
-                        color={getRoleColor(user.role) as any}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={user.status}
-                        color={getStatusColor(user.status) as any}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : "Never"}
-                    </TableCell>
-                    <TableCell>
-                      <IconButton onClick={() => handleEdit(user)} size="small">
-                        <Edit />
-                      </IconButton>
-                      <Button
-                        size="small"
-                        onClick={() => handleSuspend(user.id)}
-                        color={user.status === "suspended" ? "success" : "warning"}
-                      >
-                        {user.status === "suspended" ? "Activate" : "Suspend"}
-                      </Button>
-                      <IconButton 
-                        onClick={() => handleDelete(user.id)} 
-                        size="small"
-                        color="error"
-                      >
-                        <Delete />
-                      </IconButton>
+                {loading && users.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      <Typography>Loading users...</Typography>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : users.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      <Typography>No users found. Add your first user!</Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <Stack direction="row" alignItems="center" spacing={2}>
+                          <Avatar src={user.avatarUrl}>
+                            {user.displayName?.charAt(0) || 'U'}
+                          </Avatar>
+                          <Typography fontWeight={500}>{user.displayName}</Typography>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={user.role}
+                          color={getRoleColor(user.role) as any}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={user.status}
+                          color={getStatusColor(user.status) as any}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : "Never"}
+                      </TableCell>
+                      <TableCell>
+                        <IconButton 
+                          onClick={() => handleEdit(user)} 
+                          size="small"
+                          disabled={loading}
+                        >
+                          <Edit />
+                        </IconButton>
+                        <Button
+                          size="small"
+                          onClick={() => handleSuspend(user.id)}
+                          color={user.status === "suspended" ? "success" : "warning"}
+                          disabled={loading}
+                        >
+                          {user.status === "suspended" ? "Activate" : "Suspend"}
+                        </Button>
+                        <IconButton 
+                          onClick={() => handleDelete(user.id)} 
+                          size="small"
+                          color="error"
+                          disabled={loading}
+                        >
+                          <Delete />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </TableContainer>

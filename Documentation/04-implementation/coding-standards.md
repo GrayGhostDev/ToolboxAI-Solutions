@@ -50,7 +50,7 @@ This document outlines the coding standards and best practices for developers wo
 
 The project follows this high-level structure:
 
-```
+```text
 educational-platform/
 ├── api/                  # Backend API services
 │   ├── controllers/      # API endpoint handlers
@@ -79,8 +79,7 @@ educational-platform/
     ├── unit/             # Unit tests
     ├── integration/      # Integration tests
     └── e2e/              # End-to-end tests
-```
-
+```text
 ### File Naming
 
 - Use descriptive, meaningful names that reflect the file's purpose
@@ -123,13 +122,12 @@ educational-platform/
 ```typescript
 // Good
 if (condition) {
-  doSomething();
+  doSomething()
 }
 
 // Avoid
-if (condition) doSomething();
-```
-
+if (condition) doSomething()
+```text
 ### Naming Conventions
 
 - Use `camelCase` for variables, functions, and methods
@@ -143,8 +141,7 @@ const maxRetryAttempts = 3;
 function calculateTotalScore(scores: number[]): number { ... }
 class UserAuthentication { ... }
 interface CourseProperties { ... }
-```
-
+```text
 ### Functional Programming
 
 - Prefer pure functions where appropriate
@@ -154,15 +151,14 @@ interface CourseProperties { ... }
 
 ```typescript
 // Good
-const newArray = originalArray.map(item => transformItem(item));
+const newArray = originalArray.map((item) => transformItem(item))
 
 // Avoid
-const newArray = [];
+const newArray = []
 for (let i = 0; i < originalArray.length; i++) {
-  newArray.push(transformItem(originalArray[i]));
+  newArray.push(transformItem(originalArray[i]))
 }
-```
-
+```text
 ### Asynchronous Code
 
 - Prefer async/await over Promise chains for readability
@@ -173,15 +169,14 @@ for (let i = 0; i < originalArray.length; i++) {
 // Good
 async function fetchUserData(userId: string): Promise<UserData> {
   try {
-    const response = await api.get(`/users/${userId}`);
-    return response.data;
+    const response = await api.get(`/users/${userId}`)
+    return response.data
   } catch (error) {
-    logger.error('Failed to fetch user data', { userId, error });
-    throw new Error('Failed to fetch user data');
+    logger.error('Failed to fetch user data', { userId, error })
+    throw new Error('Failed to fetch user data')
   }
 }
-```
-
+```text
 ### React-Specific Standards
 
 - Use functional components with hooks instead of class components
@@ -226,8 +221,7 @@ export function Component({ title, items, onSelect }: ComponentProps): JSX.Eleme
     </div>
   );
 }
-```
-
+```text
 ## Lua Standards
 
 ### Language Features
@@ -250,8 +244,7 @@ local function calculateDistance(pointA, pointB)
   local yDiff = pointA.Y - pointB.Y
   return math.sqrt(xDiff * xDiff + yDiff * yDiff)
 end
-```
-
+```text
 ### Naming Conventions
 
 - Use `PascalCase` for classes/modules
@@ -284,8 +277,7 @@ function PlayerController:move(direction)
   local velocity = calculateVelocity(direction, self._speed)
   -- Implementation
 end
-```
-
+```text
 ### Module Structure
 
 - Use the module pattern for all Lua modules
@@ -331,8 +323,7 @@ end
 
 -- Return the module
 return MyModule
-```
-
+```text
 ### Best Practices
 
 - Initialize all variables to avoid nil errors
@@ -370,8 +361,7 @@ return MyModule
   margin: 0;
   color: #fff;
 }
-```
-
+```text
 ### Naming Conventions
 
 - Use descriptive class names that reflect purpose, not presentation
@@ -390,8 +380,7 @@ return MyModule
     }
   }
 }
-```
-
+```text
 ### Best Practices
 
 - Use CSS variables for theming and reusable values
@@ -417,8 +406,7 @@ return MyModule
   <h2 class="content-section__title">Section Title</h2>
   <img src="image.jpg" alt="Descriptive text" />
 </section>
-```
-
+```text
 ### Semantic HTML
 
 - Use semantic HTML elements (`<article>`, `<section>`, `<nav>`, etc.)
@@ -436,20 +424,13 @@ return MyModule
 
 ```html
 <!-- Good -->
-<button
-  type="button"
-  aria-pressed="false"
-  class="toggle-button"
->
-  Toggle Feature
-</button>
+<button type="button" aria-pressed="false" class="toggle-button">Toggle Feature</button>
 
 <img src="chart.png" alt="Chart showing user growth over time" />
 
 <label for="username">Username</label>
 <input type="text" id="username" name="username" />
-```
-
+```text
 ## Database Access
 
 ### Query Standards
@@ -457,7 +438,7 @@ return MyModule
 - Use parameterized queries to prevent SQL injection
 - Avoid raw SQL in application code; use ORMs or query builders
 - Keep queries simple and focused on a single responsibility
-- Use explicit column names in SELECT statements, avoid SELECT *
+- Use explicit column names in SELECT statements, avoid SELECT \*
 - Include appropriate indexes for frequently queried fields
 
 ```typescript
@@ -467,12 +448,13 @@ const users = await db
   .from('users')
   .where('status', 'active')
   .orderBy('created_at', 'desc')
-  .limit(10);
+  .limit(10)
 
 // Avoid - raw SQL
-const users = await db.raw(`SELECT * FROM users WHERE status = 'active' ORDER BY created_at DESC LIMIT 10`);
-```
-
+const users = await db.raw(
+  `SELECT * FROM users WHERE status = 'active' ORDER BY created_at DESC LIMIT 10`
+)
+```text
 ### Database Access Layer
 
 - Encapsulate database operations in service or repository modules
@@ -487,28 +469,27 @@ export class UserService {
 
   async getUserById(id: string): Promise<User | null> {
     try {
-      return await this.db.users.findUnique({ where: { id } });
+      return await this.db.users.findUnique({ where: { id } })
     } catch (error) {
-      logger.error('Database error when fetching user', { userId: id, error });
-      throw new DatabaseError('Failed to fetch user');
+      logger.error('Database error when fetching user', { userId: id, error })
+      throw new DatabaseError('Failed to fetch user')
     }
   }
 
   async createUser(userData: UserCreateData): Promise<User> {
     return this.db.$transaction(async (tx) => {
-      const user = await tx.users.create({ data: userData });
+      const user = await tx.users.create({ data: userData })
       await tx.userPreferences.create({
         data: {
           userId: user.id,
           // Default preferences
-        }
-      });
-      return user;
-    });
+        },
+      })
+      return user
+    })
   }
 }
-```
-
+```text
 ## API Development
 
 ### RESTful API Design
@@ -519,7 +500,7 @@ export class UserService {
 - Use plural resource names for consistency
 - Structure URLs hierarchically
 
-```
+```text
 # Good
 GET    /api/courses                 # List courses
 POST   /api/courses                 # Create a course
@@ -527,8 +508,7 @@ GET    /api/courses/{id}            # Get a course
 PUT    /api/courses/{id}            # Update a course
 DELETE /api/courses/{id}            # Delete a course
 GET    /api/courses/{id}/lessons    # List lessons for a course
-```
-
+```text
 ### Response Format
 
 - Use consistent response formats across all endpoints
@@ -558,8 +538,7 @@ GET    /api/courses/{id}/lessons    # List lessons for a course
     }
   }
 }
-```
-
+```text
 ### API Documentation
 
 - Document all API endpoints using OpenAPI/Swagger
@@ -596,17 +575,16 @@ GET    /api/courses/{id}/lessons    # List lessons for a course
  * @throws {Error} If no valid submissions are found
  */
 function calculateAverageScore(submissions: QuizSubmission[]): number {
-  const validSubmissions = submissions.filter(sub => sub.status === 'completed');
+  const validSubmissions = submissions.filter((sub) => sub.status === 'completed')
 
   if (validSubmissions.length === 0) {
-    throw new Error('No valid submissions found');
+    throw new Error('No valid submissions found')
   }
 
-  const totalScore = validSubmissions.reduce((sum, sub) => sum + sub.score, 0);
-  return (totalScore / validSubmissions.length) * 100;
+  const totalScore = validSubmissions.reduce((sum, sub) => sum + sub.score, 0)
+  return (totalScore / validSubmissions.length) * 100
 }
-```
-
+```text
 ### Documentation Files
 
 - Maintain up-to-date README files in each major directory
@@ -645,7 +623,7 @@ function calculateAverageScore(submissions: QuizSubmission[]): number {
   - `test:` - Adding or correcting tests
   - `chore:` - Changes to the build process or auxiliary tools
 
-```
+```text
 feat(course): add pagination to course listing
 
 Add pagination support to the course listing API and UI to improve
@@ -657,8 +635,7 @@ Includes:
 - Unit tests for pagination logic
 
 Fixes #123
-```
-
+```text
 ### Pull Requests
 
 - Create descriptive pull request titles

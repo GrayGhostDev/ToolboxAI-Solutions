@@ -375,7 +375,7 @@ export default function Rewards() {
               </Box>
               
               <Stack direction="row" spacing={2}>
-                {role === "Teacher" && (
+                {role === "teacher" && (
                   <Button
                     variant="outlined"
                     startIcon={<AddIcon />}
@@ -413,7 +413,7 @@ export default function Rewards() {
                 <Tab label="Available Rewards" />
                 <Tab label="My Rewards" />
                 <Tab label="History" />
-                {role === "Teacher" && <Tab label="Manage" />}
+                {role === "teacher" && <Tab label="Manage" />}
               </Tabs>
             </Box>
 
@@ -622,7 +622,7 @@ export default function Rewards() {
             </TabPanel>
 
             {/* Manage Tab (Teachers Only) */}
-            {role === "Teacher" && (
+            {role === "teacher" && (
               <TabPanel value={activeTab} index={3}>
                 <Alert severity="info" sx={{ mb: 2 }}>
                   <AlertTitle>Manage Rewards</AlertTitle>

@@ -1,4 +1,4 @@
-export type UserRole = "Admin" | "Teacher" | "Student" | "Parent";
+export type UserRole = "admin" | "teacher" | "student" | "parent";
 
 export interface RolePermissions {
   viewDashboard: boolean;
@@ -18,7 +18,7 @@ export interface RolePermissions {
 }
 
 export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
-  Admin: {
+  admin: {
     viewDashboard: true,
     viewAnalytics: true,
     manageUsers: true,
@@ -34,7 +34,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     enterRobloxWorld: false,
     customizeAvatar: false,
   },
-  Teacher: {
+  teacher: {
     viewDashboard: true,
     viewAnalytics: true,
     manageUsers: false,
@@ -50,7 +50,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     enterRobloxWorld: true,
     customizeAvatar: false,
   },
-  Student: {
+  student: {
     viewDashboard: true,
     viewAnalytics: false,
     manageUsers: false,
@@ -66,7 +66,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     enterRobloxWorld: true,
     customizeAvatar: true,
   },
-  Parent: {
+  parent: {
     viewDashboard: true,
     viewAnalytics: false,
     manageUsers: false,

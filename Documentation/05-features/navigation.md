@@ -15,16 +15,15 @@ The `NavigationMenuController` manages the navigation panel, including display s
 ```lua
 -- Main controller initialization
 local controller = NavigationMenuController.new(gui)
-```
-
+```text
 #### Key Methods
 
-| Method | Description |
-|--------|-------------|
-| `toggleMenu()` | Expands or collapses the navigation panel |
+| Method                       | Description                                             |
+| ---------------------------- | ------------------------------------------------------- |
+| `toggleMenu()`               | Expands or collapses the navigation panel               |
 | `selectSection(sectionName)` | Highlights the selected section and triggers navigation |
-| `updateLayout()` | Adjusts layout based on screen size |
-| `handleSearch(searchText)` | Filters navigation items based on search query |
+| `updateLayout()`             | Adjusts layout based on screen size                     |
+| `handleSearch(searchText)`   | Filters navigation items based on search query          |
 
 ### MainController
 
@@ -48,13 +47,13 @@ function MainController:switchSection(sectionName)
 
     self.currentSection = sectionName
 end
-```
-
+```text
 ## UI Components
 
 ### Navigation Panel
 
 The main navigation sidebar that contains:
+
 - Profile section
 - Search functionality
 - Navigation items for different sections
@@ -71,11 +70,11 @@ local NAV_ITEMS = {
     {name = "Messages", icon = "✉️"},
     {name = "Settings", icon = "⚙️"}
 }
-```
-
+```text
 ### Responsive Elements
 
 Components designed to adapt to different screen sizes:
+
 - Collapsible sidebar that shows only icons on smaller screens
 - Mobile-friendly toggle button
 - Adaptive content layout
@@ -104,11 +103,11 @@ function NavigationMenuController:updateLayout()
         end
     end
 end
-```
-
+```text
 ### Visual Feedback Elements
 
 Components that provide interactive feedback:
+
 - Hover effects
 - Selection indicators
 - Transition animations
@@ -122,8 +121,7 @@ function NavigationMenuController:showHoverEffect(hoverEffect)
     )
     hoverTween:Play()
 end
-```
-
+```text
 ## Animation System
 
 The navigation incorporates smooth transitions for a polished user experience:
@@ -165,8 +163,7 @@ function NavigationMenuController:toggleMenu()
         end
     end
 end
-```
-
+```text
 ## Search Functionality
 
 The navigation includes a search mechanism to quickly find platform features:
@@ -185,8 +182,7 @@ function NavigationMenuController:handleSearch(searchText)
         end
     end
 end
-```
-
+```text
 ## User Profile Integration
 
 The navigation system includes user profile display:
@@ -202,6 +198,7 @@ The system supports different navigation options based on user roles:
 ### Student Navigation
 
 Focused on learning activities:
+
 - Dashboard
 - Lessons
 - Quizzes
@@ -211,6 +208,7 @@ Focused on learning activities:
 ### Educator Navigation
 
 Includes teaching and management tools:
+
 - Courses
 - Student Progress
 - Grading
@@ -238,8 +236,7 @@ function NavigationMenuController:setupKeyboardNavigation()
         end
     end)
 end
-```
-
+```text
 ## Implementation Guidelines
 
 ### Adding New Navigation Items

@@ -1,5 +1,5 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8001/api/v1";
-export const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8001";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8008";
+export const WS_URL = import.meta.env.VITE_WS_URL || "http://localhost:8008";
 
 export const AUTH_TOKEN_KEY = import.meta.env.VITE_AUTH_TOKEN_KEY || "toolboxai_auth_token";
 export const AUTH_REFRESH_TOKEN_KEY = import.meta.env.VITE_AUTH_REFRESH_TOKEN_KEY || "toolboxai_refresh_token";

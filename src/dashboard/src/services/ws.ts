@@ -24,10 +24,11 @@ class WebSocketService {
     }
     
     this.socket = io(WS_URL, {
+      path: '/socket.io/',
       auth: {
         token,
       },
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionAttempts: WS_CONFIG.maxReconnectAttempts,
       reconnectionDelay: WS_CONFIG.reconnectInterval,

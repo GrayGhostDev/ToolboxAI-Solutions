@@ -7,6 +7,7 @@ This document provides the detailed technical design of ToolBoxAI-Solutions, cov
 ## System Context
 
 ### External Systems
+
 - **Learning Management Systems**: Canvas, Schoology, Google Classroom
 - **Roblox Platform**: Game engine and multiplayer infrastructure
 - **Cloud Services**: AWS/Azure/GCP for infrastructure
@@ -14,6 +15,7 @@ This document provides the detailed technical design of ToolBoxAI-Solutions, cov
 - **Payment Systems**: Stripe for subscription management
 
 ### User Interfaces
+
 - **Web Application**: Primary interface for educators and administrators
 - **Roblox Client**: 3D learning environment for students
 - **Mobile Apps**: Companion apps for progress tracking (planned)
@@ -23,7 +25,7 @@ This document provides the detailed technical design of ToolBoxAI-Solutions, cov
 
 ### Service Topology
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                      Load Balancer                          │
 └─────────────────────────────────────────────────────────────┘
@@ -50,12 +52,13 @@ This document provides the detailed technical design of ToolBoxAI-Solutions, cov
 │   Agent     │ │   Agent     │ │      Agent          │
 │   Lesson    │ │ Environment │ │    Validation       │
 └─────────────┘ └─────────────┘ └───────────────────┘
-```
-
+```text
 ### Core Services
 
 #### 1. API Gateway Service
+
 **Responsibilities:**
+
 - Request routing and load balancing
 - Authentication and authorization
 - Rate limiting and throttling
@@ -63,55 +66,63 @@ This document provides the detailed technical design of ToolBoxAI-Solutions, cov
 - API versioning
 
 **Technology Stack:**
+
 - FastAPI for high-performance async handling
 - Redis for rate limiting
 - JWT for token validation
 
 **Key Endpoints:**
+
 ```python
 /api/v1/auth/*       # Authentication endpoints
 /api/v1/lessons/*    # Lesson management
 /api/v1/environments/* # 3D environment operations
 /api/v1/progress/*   # Progress tracking
 /api/v1/analytics/*  # Analytics and reporting
-```
-
+```text
 #### 2. Authentication Service
+
 **Responsibilities:**
+
 - User authentication and authorization
 - Session management
 - SSO integration
 - Role-based access control
 
 **Implementation:**
+
 ```python
 class AuthenticationService:
     def authenticate(credentials: UserCredentials) -> AuthToken
     def authorize(token: AuthToken, resource: str) -> bool
     def refresh_token(refresh_token: str) -> AuthToken
     def revoke_token(token: AuthToken) -> bool
-```
-
+```text
 #### 3. Content Management Service
+
 **Responsibilities:**
+
 - Lesson storage and retrieval
 - Version control for content
 - Media asset management
 - Content search and discovery
 
 **Data Flow:**
-```
-Upload → Validate → Process → Store → Index → Serve
-```
 
+```text
+Upload → Validate → Process → Store → Index → Serve
+```text
 #### 4. AI Orchestration Service
+
 **Responsibilities:**
+
 - Agent coordination
 - Workflow management
 - Result aggregation
 - Error handling and retry logic
 
 **Agent Pipeline:**
+
 ```python
 class AIOrchestrator:
     agents = [
@@ -121,23 +132,25 @@ class AIOrchestrator:
         ScriptAgent(),
         ValidationAgent()
     ]
-    
+
     async def process_lesson(lesson_content):
         context = {}
         for agent in agents:
             result = await agent.process(lesson_content, context)
             context.update(result)
         return context
-```
-
+```text
 #### 5. Progress Tracking Service
+
 **Responsibilities:**
+
 - Real-time progress updates
 - Achievement processing
 - Analytics data collection
 - LMS grade synchronization
 
 **Event Processing:**
+
 ```python
 class ProgressTracker:
     async def track_event(event: StudentEvent):
@@ -149,20 +162,21 @@ class ProgressTracker:
         await self.stream_to_analytics(event)
         # Sync with LMS
         await self.sync_to_lms(event)
-```
-
+```text
 #### 6. Roblox Integration Service
+
 **Responsibilities:**
+
 - Environment deployment
 - Asset management
 - Script injection
 - Multiplayer coordination
 
 **Deployment Flow:**
-```
-Generate → Validate → Package → Deploy → Monitor
-```
 
+```text
+Generate → Validate → Package → Deploy → Monitor
+```text
 ### Data Architecture
 
 #### Primary Database Schema
@@ -203,29 +217,30 @@ CREATE TABLE student_progress (
     progress_data JSONB,
     completed_at TIMESTAMP
 );
-```
-
+```text
 #### Caching Strategy
 
 **Cache Layers:**
+
 1. **Browser Cache**: Static assets, user preferences
 2. **CDN Cache**: Media files, 3D assets
 3. **Application Cache**: Session data, frequently accessed data
 4. **Database Cache**: Query results, computed values
 
 **Cache Invalidation:**
+
 ```python
 class CacheManager:
     def invalidate_pattern(pattern: str):
         # Invalidate all keys matching pattern
-        
+
     def invalidate_cascade(entity: str, id: str):
         # Invalidate related cache entries
-```
-
+```text
 ### AI Agent Architecture
 
 #### Agent Interface
+
 ```python
 class BaseAgent:
     async def process(self, input_data: dict, context: dict) -> dict:
@@ -236,9 +251,9 @@ class BaseAgent:
         # Validate output
         self.validate_output(result)
         return result
-```
-
+```text
 #### LessonAnalysisAgent
+
 ```python
 class LessonAnalysisAgent(BaseAgent):
     def __init__(self):
@@ -248,53 +263,53 @@ class LessonAnalysisAgent(BaseAgent):
         2. Key concepts
         3. Activities and assessments
         4. Required resources
-        
+
         Lesson: {lesson_content}
         """
-    
+
     async def llm_process(self, input_data, context):
         # Parse lesson content
         # Map to curriculum standards
         # Extract structured data
         return structured_lesson
-```
-
+```text
 #### EnvironmentAgent
+
 ```python
 class EnvironmentAgent(BaseAgent):
     def __init__(self):
         self.asset_library = AssetLibrary()
         self.layout_generator = LayoutGenerator()
-    
+
     async def llm_process(self, input_data, context):
         # Generate spatial layout
         # Select appropriate assets
         # Define interaction zones
         return environment_blueprint
-```
-
+```text
 ### Integration Architecture
 
 #### LMS Integration Pattern
+
 ```python
 class LMSAdapter:
     def __init__(self, lms_type: str):
         self.connector = self._get_connector(lms_type)
-    
+
     async def sync_grades(self, grades: List[Grade]):
         # Transform to LMS format
         transformed = self.transform_grades(grades)
         # Send to LMS
         await self.connector.post_grades(transformed)
-    
+
     async def fetch_assignments(self):
         # Get from LMS
         assignments = await self.connector.get_assignments()
         # Transform to internal format
         return self.transform_assignments(assignments)
-```
-
+```text
 #### Roblox Plugin Communication
+
 ```lua
 -- Roblox Plugin Script
 local HttpService = game:GetService("HttpService")
@@ -313,51 +328,52 @@ function deployEnvironment(blueprint)
     -- Set up interactions
     -- Configure scripts
 end
-```
-
+```text
 ### Security Architecture
 
 #### Authentication Flow
-```
-User Login → Validate Credentials → Generate JWT → Set Refresh Token → Return Access Token
-```
 
+```text
+User Login → Validate Credentials → Generate JWT → Set Refresh Token → Return Access Token
+```text
 #### Authorization Matrix
-| Role | Create Lesson | View Analytics | Manage Users | System Admin |
-|------|--------------|----------------|--------------|--------------|
-| Student | ❌ | Own Only | ❌ | ❌ |
-| Teacher | ✅ | Class Only | ❌ | ❌ |
-| Admin | ✅ | All | ✅ | ❌ |
-| Super Admin | ✅ | All | ✅ | ✅ |
+
+| Role        | Create Lesson | View Analytics | Manage Users | System Admin |
+| ----------- | ------------- | -------------- | ------------ | ------------ |
+| Student     | ❌            | Own Only       | ❌           | ❌           |
+| Teacher     | ✅            | Class Only     | ❌           | ❌           |
+| Admin       | ✅            | All            | ✅           | ❌           |
+| Super Admin | ✅            | All            | ✅           | ✅           |
 
 #### Data Protection
+
 ```python
 class DataProtection:
     def encrypt_pii(self, data: dict) -> dict:
         # Encrypt personally identifiable information
-        
+
     def anonymize_analytics(self, data: dict) -> dict:
         # Remove identifying information for analytics
-        
+
     def audit_access(self, user: str, resource: str, action: str):
         # Log all data access for audit trail
-```
-
+```text
 ### Performance Optimization
 
 #### Query Optimization
+
 ```python
 class QueryOptimizer:
     def add_indexes(self):
         # Frequently queried columns
         # Composite indexes for common joins
-        
+
     def partition_tables(self):
         # Partition by date for time-series data
         # Partition by tenant for multi-tenancy
-```
-
+```text
 #### Async Processing
+
 ```python
 class AsyncProcessor:
     async def process_heavy_task(self, task: Task):
@@ -365,29 +381,29 @@ class AsyncProcessor:
         await self.queue.put(task)
         # Return task ID immediately
         return task.id
-    
+
     async def worker(self):
         while True:
             task = await self.queue.get()
             await self.process_task(task)
-```
-
+```text
 ### Monitoring and Observability
 
 #### Metrics Collection
+
 ```python
 class MetricsCollector:
     def track_api_latency(self, endpoint: str, duration: float):
         # Track API response times
-        
+
     def track_error_rate(self, service: str, error_type: str):
         # Monitor error rates by service
-        
+
     def track_business_metrics(self, metric_name: str, value: float):
         # Track business KPIs
-```
-
+```text
 #### Logging Strategy
+
 ```python
 import structlog
 
@@ -399,17 +415,17 @@ class ServiceLogger:
                    endpoint=request.url,
                    method=request.method,
                    user_id=request.user_id)
-    
+
     def log_error(self, error: Exception, context: dict):
         logger.error("error_occurred",
                     error_type=type(error).__name__,
                     error_message=str(error),
                     **context)
-```
-
+```text
 ### Deployment Architecture
 
 #### Container Configuration
+
 ```dockerfile
 # Backend Service Dockerfile
 FROM python:3.10-slim
@@ -419,10 +435,10 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY . .
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
+CMD ["uvicorn", "main:app", "--host", "127.0.0.1", "--port", "8000"]
+```text
 #### Kubernetes Deployment
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -439,27 +455,28 @@ spec:
         app: api-service
     spec:
       containers:
-      - name: api
-        image: toolboxai/api:latest
-        ports:
-        - containerPort: 8000
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: db-secret
-              key: url
-```
-
+        - name: api
+          image: toolboxai/api:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: url
+```text
 ### Disaster Recovery
 
 #### Backup Strategy
+
 - **Database**: Daily automated backups with 30-day retention
 - **File Storage**: Continuous replication to secondary region
 - **Configuration**: Version controlled in Git
 - **Secrets**: Encrypted backup in secure vault
 
 #### Recovery Procedures
+
 ```python
 class DisasterRecovery:
     async def initiate_failover(self):
@@ -467,12 +484,11 @@ class DisasterRecovery:
         # Update DNS records
         # Notify monitoring systems
         # Validate system health
-```
-
+```text
 ## Conclusion
 
 This system design provides a robust, scalable foundation for ToolBoxAI-Solutions. The modular architecture allows for independent scaling and development while maintaining system cohesion through well-defined interfaces and contracts.
 
 ---
 
-*For implementation details, see [Implementation Documentation](../04-implementation/). For data specifications, see [Data Models](data-models/).*
+_For implementation details, see [Implementation Documentation](../04-implementation/). For data specifications, see [Data Models](data-models/)._

@@ -4,6 +4,9 @@
 # This script sets up the complete MCP environment for Cursor integration
 
 set -e
+# shellcheck source=common/lib.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$SCRIPT_DIR/common/lib.sh" 2>/dev/null || true
 
 # Colors for output
 RED='\033[0;31m'
@@ -12,9 +15,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Project root directory
-PROJECT_ROOT="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
-ROBLOX_ENV="$PROJECT_ROOT/src/roblox-environment"
+# Project root directory (computed dynamically; override with PROJECT_ROOT env var)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+ROBLOX_ENV="$PROJECT_ROOT/ToolboxAI-Roblox-Environment"
 VENV_PATH="$ROBLOX_ENV/venv_clean"
 
 echo -e "${BLUE}🚀 Setting up ToolboxAI MCP Environment${NC}"
@@ -260,9 +264,9 @@ echo "4. Configure Cursor to use mcpServers.json"
 echo ""
 echo -e "${BLUE}🔗 Useful URLs:${NC}"
 echo "==============="
-echo "FastAPI Server: http://127.0.0.1:8008"
-echo "API Documentation: http://127.0.0.1:8008/docs"
-echo "Flask Bridge: http://127.0.0.1:5001"
-echo "MCP WebSocket: ws://localhost:9876"
+echo "FastAPI Server: http://$API_HOST:$FASTAPI_PORT"
+echo "API Documentation: http://$API_HOST:$FASTAPI_PORT/docs"
+echo "Flask Bridge: http://$API_HOST:$FLASK_PORT"
+echo "MCP WebSocket: ws://$API_HOST:$MCP_PORT"
 echo ""
 echo -e "${GREEN}✨ Ready for Cursor MCP integration!${NC}"

@@ -45,8 +45,8 @@ exclude = [
 minversion = "6.0"
 addopts = "-ra -q --strict-markers"
 testpaths = [
-    "tests",
-    "ToolboxAI-Roblox-Environment/tests"
+    "tests/unit",
+    "tests/integration"
 ]
 python_files = "test_*.py"
 python_classes = "Test*"
@@ -62,11 +62,13 @@ exclude = [
     "**/venv_clean/include",
     "**/.git",
     "**/.vscode",
-    "**/.cursor"
+    "**/.cursor",
+    "Archive/**",
+    "**/deprecated/**"
 ]
 venvPath = "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment"
 venv = "venv_clean"
-pythonVersion = "3.12"
+pythonVersion = "3.11"
 pythonPlatform = "Darwin"
 typeCheckingMode = "standard"
 reportMissingImports = false
@@ -75,7 +77,7 @@ reportUnusedVariable = "warning"
 reportUnusedImport = "warning"
 useLibraryCodeForTypes = true
 autoImportCompletions = true
-stubPath = "./types"
+stubPath = "src/shared/types"
 extraPaths = [
     "./ToolboxAI-Roblox-Environment",
     "./ToolboxAI-Roblox-Environment/server",
@@ -85,5 +87,6 @@ extraPaths = [
     "./ToolboxAI-Roblox-Environment/swarm",
     "./ToolboxAI-Roblox-Environment/sparc",
     "./ToolboxAI-Roblox-Environment/toolboxai_utils",
-    "./API/GhostBackend/src"
+    "./src/shared/utils",
+    "./src/api/ghost-backend/src"
 ]

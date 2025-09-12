@@ -1,6 +1,5 @@
 # Gamification System
 
-
 # Gamification System
 
 The gamification system provides engagement mechanics to motivate students in the learning platform through rewards, achievements, and progress tracking.
@@ -8,6 +7,7 @@ The gamification system provides engagement mechanics to motivate students in th
 ## Overview
 
 The gamification system includes several interconnected features:
+
 - Experience points (XP) and level progression
 - Achievements and badges
 - Daily challenges
@@ -23,17 +23,16 @@ The `GamificationHubController` manages the user's interaction with the gamifica
 ```lua
 -- Main controller initialization
 local controller = GamificationHubController.new(gui)
-```
-
+```text
 #### Key Methods
 
-| Method | Description |
-|--------|-------------|
-| `updateXPDisplay()` | Updates the XP bar and level display based on current points |
-| `loadBadges()` | Loads and displays user's earned badges |
-| `loadChallenges()` | Populates the daily challenges list |
-| `loadRewards()` | Displays available rewards and their costs |
-| `purchaseReward(index)` | Processes reward redemption |
+| Method                  | Description                                                  |
+| ----------------------- | ------------------------------------------------------------ |
+| `updateXPDisplay()`     | Updates the XP bar and level display based on current points |
+| `loadBadges()`          | Loads and displays user's earned badges                      |
+| `loadChallenges()`      | Populates the daily challenges list                          |
+| `loadRewards()`         | Displays available rewards and their costs                   |
+| `purchaseReward(index)` | Processes reward redemption                                  |
 
 ### Reward Redemption System
 
@@ -51,8 +50,7 @@ local REWARD_DATA = {
 	},
 	-- Additional rewards...
 }
-```
-
+```text
 #### Reward Tiers
 
 Rewards are organized in tiers (gold, silver, bronze, basic) with corresponding visual indicators.
@@ -95,8 +93,7 @@ function GamificationHubController:updateXPDisplay()
 	-- Update XP text
 	xpText.Text = string.format("%d / %d XP", self.currentXP, self.maxXP)
 end
-```
-
+```text
 ## UI Components
 
 ### Badges Panel
@@ -106,6 +103,7 @@ Displays achievements earned by the student with visual indicators and hover inf
 ### Challenge Panel
 
 Shows active daily challenges:
+
 - Challenge description
 - XP reward amount
 - Progress indicator
@@ -114,6 +112,7 @@ Shows active daily challenges:
 ### Leaderboard
 
 Displays top performers within the learning community:
+
 - Rank
 - Player name
 - XP total
@@ -130,8 +129,7 @@ When a student completes a lesson, the system should:
 rewardXP(lessonXPValue)
 checkAchievements("lesson", lessonId)
 updateChallengeProgress("lessons", 1)
-```
-
+```text
 ### Quiz Completion Integration
 
 When a student completes a quiz, the system should:
@@ -142,8 +140,7 @@ local earnedXP = baseQuizXP * (score / maxScore)
 rewardXP(earnedXP)
 checkAchievements("quiz", quizId, score)
 updateChallengeProgress("quizzes", 1)
-```
-
+```text
 ## Implementation Guidelines
 
 ### Adding New Rewards

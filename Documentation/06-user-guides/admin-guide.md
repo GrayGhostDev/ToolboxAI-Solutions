@@ -22,30 +22,35 @@ This guide provides comprehensive instructions for platform administrators to ef
 The platform supports multiple administrative roles with varying permission levels:
 
 ### Super Administrator
+
 - Full access to all platform functions
 - Can create and manage other administrator accounts
 - Access to system configuration and security settings
 - Complete visibility of all data and analytics
 
 ### Content Administrator
+
 - Manages course content and educational resources
 - Reviews and approves educator-submitted content
 - Cannot access user management or system configuration
 - Limited access to analytics related to content performance
 
 ### User Administrator
+
 - Manages user accounts and permissions
 - Handles user support requests and issues
 - Cannot modify course content or system settings
 - Access to user-related analytics only
 
 ### Analytics Administrator
+
 - Access to all platform analytics and reporting tools
 - Can create custom reports and dashboards
 - Cannot modify content, users, or system settings
 - Export capabilities for all data reports
 
 ### Institution Administrator
+
 - Manages settings specific to their educational institution
 - Oversees users and content within their institution only
 - Limited system configuration for institution-specific settings
@@ -59,9 +64,9 @@ The platform supports multiple administrative roles with varying permission leve
 2. Enter your administrator credentials
 3. Complete two-factor authentication if enabled
 4. Upon first login, you'll be required to:
-	- Change your temporary password
-	- Set up two-factor authentication
-	- Review and accept administrator terms of service
+   - Change your temporary password
+   - Set up two-factor authentication
+   - Review and accept administrator terms of service
 
 ### Security Best Practices
 

@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
 import {
   listSchools,
   createSchool,
@@ -9,6 +8,7 @@ import {
   type School as SchoolType,
   type SchoolCreate,
 } from "../../../services/api";
+import { useRealTimeData } from "../../../hooks/useRealTimeData";
 import {
   Box,
   Card,
@@ -47,10 +47,23 @@ interface SchoolFormData {
 }
 
 export default function Schools() {
-  const [schools, setSchools] = useState<SchoolType[]>([
-  ]);
+  // Use real-time data hook
+  const {
+    data: schools,
+    loading,
+    error,
+    create: createSchoolOptimistic,
+    update: updateSchoolOptimistic,
+    remove: removeSchoolOptimistic,
+    refresh: fetchSchools
+  } = useRealTimeData<SchoolType>({
+    fetchFn: () => listSchools({ search: searchTerm }),
+    createFn: createSchool,
+    updateFn: updateSchool,
+    deleteFn: deleteSchool,
+    channel: 'schools_updates'
+  });
 
-  const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingSchool, setEditingSchool] = useState<SchoolType | null>(null);
   const [formData, setFormData] = useState<SchoolFormData>({
@@ -66,26 +79,11 @@ export default function Schools() {
     max_students: 500,
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch schools on component mount
-  useEffect(() => {
+  // Refetch when search term changes
+  React.useEffect(() => {
     fetchSchools();
-  }, []);
-
-  const fetchSchools = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await listSchools({ search: searchTerm });
-      setSchools(data);
-    } catch (err) {
-      setError("Failed to load schools. Please try again.");
-      console.error("Error fetching schools:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [searchTerm, fetchSchools]);
 
   const handleAdd = () => {
     setEditingSchool(null);
@@ -122,7 +120,6 @@ export default function Schools() {
   };
 
   const handleSave = async () => {
-    setError(null);
     try {
       const schoolData: SchoolCreate = {
         ...formData,
@@ -130,34 +127,23 @@ export default function Schools() {
       };
 
       if (editingSchool) {
-        // Update existing school
-        await updateSchool(editingSchool.id, schoolData);
+        // Update existing school with optimistic update
+        await updateSchoolOptimistic(editingSchool.id, schoolData);
       } else {
-        // Create new school
-        await createSchool(schoolData);
+        // Create new school with optimistic update
+        await createSchoolOptimistic(schoolData);
       }
       
       setOpenDialog(false);
-      fetchSchools(); // Refresh the list
     } catch (err) {
-      setError("Failed to save school. Please try again.");
       console.error("Error saving school:", err);
+      // Error handling is done by the real-time hook
     }
   };
 
   const handleDelete = async (schoolId: string) => {
-    if (!window.confirm("Are you sure you want to delete this school?")) {
-      return;
-    }
-    
-    setError(null);
-    try {
-      await deleteSchool(schoolId);
-      fetchSchools(); // Refresh the list
-    } catch (err) {
-      setError("Failed to delete school. Please try again.");
-      console.error("Error deleting school:", err);
-    }
+    // The confirmation and error handling is done by the real-time hook
+    await removeSchoolOptimistic(schoolId);
   };
 
   return (
@@ -177,6 +163,12 @@ export default function Schools() {
 
       <Card>
         <CardContent>
+          {error && (
+            <Box sx={{ mb: 2, p: 2, bgcolor: 'error.light', borderRadius: 1 }}>
+              <Typography color="error">{error}</Typography>
+            </Box>
+          )}
+          
           <TableContainer>
             <Table>
               <TableHead>
@@ -191,39 +183,58 @@ export default function Schools() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {schools.map((school) => (
-                  <TableRow key={school.id}>
-                    <TableCell>
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <School />
-                        <Typography fontWeight={500}>{school.name}</Typography>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>{school.address}</TableCell>
-                    <TableCell>{school.studentCount}</TableCell>
-                    <TableCell>{school.teacherCount}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={school.status}
-                        color={school.status === "active" ? "success" : "default"}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{school.createdAt}</TableCell>
-                    <TableCell>
-                      <IconButton onClick={() => handleEdit(school)} size="small">
-                        <Edit />
-                      </IconButton>
-                      <IconButton 
-                        onClick={() => handleDelete(school.id)} 
-                        size="small"
-                        color="error"
-                      >
-                        <Delete />
-                      </IconButton>
+                {loading && schools.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center">
+                      <Typography>Loading schools...</Typography>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : schools.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center">
+                      <Typography>No schools found. Add your first school!</Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  schools.map((school) => (
+                    <TableRow key={school.id}>
+                      <TableCell>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <School />
+                          <Typography fontWeight={500}>{school.name}</Typography>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>{school.address}</TableCell>
+                      <TableCell>{school.studentCount || 0}</TableCell>
+                      <TableCell>{school.teacherCount || 0}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={school.status}
+                          color={school.status === "active" ? "success" : "default"}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>{school.createdAt}</TableCell>
+                      <TableCell>
+                        <IconButton 
+                          onClick={() => handleEdit(school)} 
+                          size="small"
+                          disabled={loading}
+                        >
+                          <Edit />
+                        </IconButton>
+                        <IconButton 
+                          onClick={() => handleDelete(school.id)} 
+                          size="small"
+                          color="error"
+                          disabled={loading}
+                        >
+                          <Delete />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </TableContainer>
@@ -330,9 +341,18 @@ export default function Schools() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave}>
-            {editingSchool ? "Update" : "Create"}
+          <Button 
+            onClick={() => setOpenDialog(false)}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button 
+            variant="contained" 
+            onClick={handleSave}
+            disabled={loading || !formData.name || !formData.address || !formData.city || !formData.state || !formData.zip_code}
+          >
+            {loading ? "Saving..." : (editingSchool ? "Update" : "Create")}
           </Button>
         </DialogActions>
       </Dialog>

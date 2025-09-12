@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+coverage/
+.nyc_output/
+storybook-static/
+.playwright/
+playwright-report/
+test-results/
+cypress/
+.tmp/
+.tmp-*
+__pycache__/
+*.py[cod]
+

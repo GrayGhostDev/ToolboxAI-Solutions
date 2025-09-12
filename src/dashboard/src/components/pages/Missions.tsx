@@ -732,7 +732,7 @@ const Missions: React.FC = () => {
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">Missions & Challenges</Typography>
-        {(role === "Teacher" || role === "Admin") && (
+        {(role === "teacher" || role === "admin") && (
           <Button
             variant="contained"
             startIcon={<Add />}

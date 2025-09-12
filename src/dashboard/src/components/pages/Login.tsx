@@ -128,12 +128,14 @@ export default function Login() {
               <TextField
                 fullWidth
                 name="email"
-                label="Email Address"
-                type="email"
+                label="Username or Email"
+                type="text"
+                placeholder="e.g. john_teacher or john@teacher.com"
                 value={formData.email}
                 onChange={handleChange}
                 required
                 disabled={loading}
+                helperText="Enter your username or email address"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">

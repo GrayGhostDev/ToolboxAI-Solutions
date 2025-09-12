@@ -32,6 +32,7 @@
       "@utils/*": ["src/utils/*"]
     }
   },
-  "include": ["src", "vite.config.ts"],
+  "include": ["src"],
+  "exclude": ["src/__tests__", "**/*.test.ts", "**/*.test.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

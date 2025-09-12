@@ -37,28 +37,24 @@ ToolBoxAI.__index = ToolBoxAI
 
 -- SDK implementation (see GitHub for full code)
 return ToolBoxAI
-```
-
+```text
 ### Method 3: Wally Package Manager
 
 ```toml
 # wally.toml
 [dependencies]
 toolboxai = "toolboxai/sdk@1.0.0"
-```
-
+```text
 ```bash
 wally install
-```
-
+```text
 ### Method 4: GitHub Release
 
 ```lua
 -- Download from GitHub releases
 -- https://github.com/toolboxai/roblox-sdk/releases
 -- Place in ServerScriptService or ReplicatedStorage
-```
-
+```text
 ## Quick Start
 
 ### Basic Setup
@@ -82,8 +78,7 @@ client:testConnection():andThen(function(result)
 end):catch(function(error)
     warn("Connection failed:", error.message)
 end)
-```
-
+```text
 ### Studio Plugin Setup
 
 ```lua
@@ -98,12 +93,11 @@ local button = toolbar:CreateButton(
 button.Click:Connect(function()
     local ToolBoxAI = require(game.ServerScriptService.ToolBoxAI)
     local client = ToolBoxAI.new({ apiKey = settings.apiKey })
-    
+
     -- Deploy lesson
     client:deployLesson(lessonId, workspace)
 end)
-```
-
+```text
 ## Authentication
 
 ### API Key Authentication
@@ -116,8 +110,7 @@ local config = require(ServerStorage.Config)
 local client = ToolBoxAI.new({
     apiKey = config.TOOLBOXAI_API_KEY
 })
-```
-
+```text
 ### Studio Plugin Authentication
 
 ```lua
@@ -131,8 +124,7 @@ if not apiKey then
 end
 
 local client = ToolBoxAI.new({ apiKey = apiKey })
-```
-
+```text
 ### User Authentication (In-Game)
 
 ```lua
@@ -150,8 +142,7 @@ local function authenticatePlayer(player)
 end
 
 game.Players.PlayerAdded:Connect(authenticatePlayer)
-```
-
+```text
 ## Core Features
 
 ### Lessons Management
@@ -168,8 +159,7 @@ client:getLessons({
         print(lesson.title, lesson.id)
     end
 end)
-```
-
+```text
 #### Get Lesson Details
 
 ```lua
@@ -178,15 +168,14 @@ client:getLesson(lessonId):andThen(function(lesson)
     print("Objectives:", table.concat(lesson.objectives, ", "))
     print("Duration:", lesson.duration, "minutes")
 end)
-```
-
+```text
 #### Deploy Lesson to Workspace
 
 ```lua
 -- Deploy a lesson as 3D environment
 client:deployLesson(lessonId, workspace):andThen(function(environment)
     print("Environment deployed:", environment.name)
-    
+
     -- Setup spawned objects
     for _, object in ipairs(environment.objects) do
         local part = workspace:FindFirstChild(object.name)
@@ -200,8 +189,7 @@ client:deployLesson(lessonId, workspace):andThen(function(environment)
         end
     end
 end)
-```
-
+```text
 ### Quiz System
 
 #### Create Quiz Instance
@@ -217,8 +205,7 @@ local quiz = client:createQuizInstance({
 quiz:deploy():andThen(function(quizModel)
     print("Quiz deployed at:", quizModel.PrimaryPart.Position)
 end)
-```
-
+```text
 #### Submit Quiz Answer
 
 ```lua
@@ -238,8 +225,7 @@ client:submitAnswer({
         ShowIncorrectFeedback(player, result.hint)
     end
 end)
-```
-
+```text
 ### Progress Tracking
 
 #### Track Player Progress
@@ -264,8 +250,7 @@ client:saveCheckpoint({
     position = player.Character.HumanoidRootPart.Position,
     inventory = GetPlayerInventory(player)
 })
-```
-
+```text
 #### Get Player Statistics
 
 ```lua
@@ -278,8 +263,7 @@ client:getPlayerStats(player.UserId):andThen(function(stats)
         leaderstats.Achievements.Value = #stats.achievements
     end
 end)
-```
-
+```text
 ### Gamification
 
 #### Award XP and Achievements
@@ -297,8 +281,7 @@ end)
 client:unlockAchievement(player.UserId, "first_lesson"):andThen(function(achievement)
     ShowAchievementNotification(player, achievement)
 end)
-```
-
+```text
 #### Leaderboards
 
 ```lua
@@ -316,8 +299,7 @@ client:submitScore({
     score = score,
     leaderboardId = "weekly_challenge"
 })
-```
-
+```text
 ## API Reference
 
 ### Client Initialization
@@ -333,8 +315,7 @@ Options:
 - retryCount: number = 3
 - cacheEnabled: boolean = true
 - cacheTTL: number = 300
-```
-
+```text
 ### Lessons API
 
 ```lua
@@ -349,8 +330,7 @@ client:deployLesson(lessonId: string, parent: Instance) -> Promise<Environment>
 
 -- Create lesson (Studio only)
 client:createLesson(lessonData: table) -> Promise<Lesson>
-```
-
+```text
 ### Quiz API
 
 ```lua
@@ -365,8 +345,7 @@ client:submitAnswer(data: table) -> Promise<Result>
 
 -- Get quiz results
 client:getQuizResults(attemptId: string) -> Promise<QuizResults>
-```
-
+```text
 ### Progress API
 
 ```lua
@@ -381,8 +360,7 @@ client:saveCheckpoint(data: table) -> Promise<void>
 
 -- Load checkpoint
 client:loadCheckpoint(playerId: string, lessonId: string) -> Promise<Checkpoint>
-```
-
+```text
 ### Gamification API
 
 ```lua
@@ -400,8 +378,7 @@ client:getLeaderboard(options: table) -> Promise<Leaderboard>
 
 -- Submit score
 client:submitScore(data: table) -> Promise<void>
-```
-
+```text
 ### Analytics API
 
 ```lua
@@ -413,8 +390,7 @@ client:trackInteraction(player: Player, objectId: string) -> Promise<void>
 
 -- Get analytics
 client:getAnalytics(filters: table) -> Promise<Analytics>
-```
-
+```text
 ## Roblox-Specific Features
 
 ### 3D Environment Generation
@@ -435,8 +411,7 @@ environmentGenerator:generate({
     -- - Learning stations
     -- - Quiz zones
 end)
-```
-
+```text
 ### Interactive Objects
 
 ```lua
@@ -446,13 +421,13 @@ local function createInteractiveObject(objectData)
     part.Name = objectData.name
     part.Position = objectData.position
     part.Parent = workspace
-    
+
     -- Add interaction
     local proximity = Instance.new("ProximityPrompt")
     proximity.ActionText = objectData.action
     proximity.ObjectText = objectData.label
     proximity.Parent = part
-    
+
     proximity.Triggered:Connect(function(player)
         client:handleInteraction({
             player = player,
@@ -463,11 +438,10 @@ local function createInteractiveObject(objectData)
             ShowEducationalUI(player, result.content)
         end)
     end)
-    
+
     return part
 end
-```
-
+```text
 ### NPC Tutors
 
 ```lua
@@ -476,11 +450,11 @@ local function createTutorNPC(tutorData)
     local npc = game.ServerStorage.NPCTemplate:Clone()
     npc.Name = tutorData.name
     npc.Parent = workspace
-    
+
     -- Setup dialog system
     local dialog = Instance.new("Dialog")
     dialog.Parent = npc.Head
-    
+
     -- Add conversation options
     for _, topic in ipairs(tutorData.topics) do
         local choice = Instance.new("DialogChoice")
@@ -488,7 +462,7 @@ local function createTutorNPC(tutorData)
         choice.ResponseDialog = topic.answer
         choice.Parent = dialog
     end
-    
+
     -- Track interactions
     dialog.DialogChoiceSelected:Connect(function(player, choice)
         client:trackTutorInteraction({
@@ -497,11 +471,10 @@ local function createTutorNPC(tutorData)
             topic = choice.Name
         })
     end)
-    
+
     return npc
 end
-```
-
+```text
 ### Adaptive Difficulty
 
 ```lua
@@ -509,22 +482,21 @@ end
 local function adjustDifficulty(player)
     client:getPlayerPerformance(player.UserId):andThen(function(performance)
         local difficulty = "medium"
-        
+
         if performance.accuracy > 0.9 then
             difficulty = "hard"
         elseif performance.accuracy < 0.6 then
             difficulty = "easy"
         end
-        
+
         -- Apply difficulty adjustments
         ApplyDifficultySettings(player, difficulty)
-        
+
         -- Update server
         client:updatePlayerDifficulty(player.UserId, difficulty)
     end)
 end
-```
-
+```text
 ## Event System
 
 ### Event Subscription
@@ -543,8 +515,7 @@ end)
 client:on("levelUp", function(data)
     PlayLevelUpEffect(data.player, data.newLevel)
 end)
-```
-
+```text
 ### Custom Events
 
 ```lua
@@ -561,8 +532,7 @@ client:on("customEvent", function(data)
         client:unlockAchievement(data.player.UserId, "explorer")
     end
 end)
-```
-
+```text
 ### Real-time Updates
 
 ```lua
@@ -579,8 +549,7 @@ end)
 client:onRealtimeUpdate("leaderboard_update", function(data)
     UpdateLeaderboardDisplay(data.leaderboard)
 end)
-```
-
+```text
 ## Error Handling
 
 ### Promise-based Error Handling
@@ -609,8 +578,7 @@ client:getLesson(lessonId)
         -- Cleanup
         HideLoadingScreen()
     end)
-```
-
+```text
 ### Error Types
 
 ```lua
@@ -638,7 +606,7 @@ local function handleError(error)
             -- Retry
         end
     }
-    
+
     local handler = handlers[error.code]
     if handler then
         handler()
@@ -646,8 +614,7 @@ local function handleError(error)
         warn("Unhandled error:", error)
     end
 end
-```
-
+```text
 ## Best Practices
 
 ### 1. Security
@@ -670,8 +637,7 @@ RemoteEvent.OnServerEvent:Connect(function(player, action, data)
         end)
     end
 end)
-```
-
+```text
 ### 2. Performance
 
 ```lua
@@ -684,7 +650,7 @@ local function getCachedLesson(lessonId)
     if cached and (os.time() - cached.timestamp) < CACHE_TTL then
         return Promise.resolve(cached.data)
     end
-    
+
     return client:getLesson(lessonId):andThen(function(lesson)
         lessonCache[lessonId] = {
             data = lesson,
@@ -693,8 +659,7 @@ local function getCachedLesson(lessonId)
         return lesson
     end)
 end
-```
-
+```text
 ### 3. Memory Management
 
 ```lua
@@ -703,7 +668,7 @@ game.Players.PlayerRemoving:Connect(function(player)
     -- Clean up player data
     playerSessions[player] = nil
     playerProgress[player] = nil
-    
+
     -- Cancel pending requests
     if playerRequests[player] then
         for _, request in ipairs(playerRequests[player]) do
@@ -712,8 +677,7 @@ game.Players.PlayerRemoving:Connect(function(player)
         playerRequests[player] = nil
     end
 end)
-```
-
+```text
 ### 4. Rate Limiting
 
 ```lua
@@ -735,7 +699,7 @@ function RateLimiter:canRequest()
     self.requests = table.filter(self.requests, function(timestamp)
         return (now - timestamp) < self.timeWindow
     end)
-    
+
     if #self.requests < self.maxRequests then
         table.insert(self.requests, now)
         return true
@@ -751,8 +715,7 @@ if limiter:canRequest() then
 else
     warn("Rate limit exceeded")
 end
-```
-
+```text
 ## Examples
 
 ### Complete Learning Game Example
@@ -774,7 +737,7 @@ local function initializeGame()
     -- Load lesson
     client:getLesson("math-fractions-101"):andThen(function(lesson)
         gameState.currentLesson = lesson
-        
+
         -- Deploy environment
         return client:deployLesson(lesson.id, workspace)
     end):andThen(function(environment)
@@ -782,7 +745,7 @@ local function initializeGame()
         SetupLearningStations(environment.stations)
         SetupQuizZones(environment.quizZones)
         SpawnNPCTutors(environment.npcs)
-        
+
         print("Game initialized successfully")
     end):catch(function(error)
         warn("Failed to initialize game:", error)
@@ -801,10 +764,10 @@ game.Players.PlayerAdded:Connect(function(player)
             progress = 0,
             score = 0
         }
-        
+
         -- Setup player UI
         SetupPlayerUI(player)
-        
+
         -- Load previous progress
         return client:getProgress(player.UserId, gameState.currentLesson.id)
     end):andThen(function(progress)
@@ -822,17 +785,17 @@ end)
 local function onStationInteraction(player, station)
     local playerData = gameState.activePlayers[player]
     if not playerData then return end
-    
+
     -- Track interaction
     client:trackInteraction(player, station.id)
-    
+
     -- Show educational content
     ShowEducationalContent(player, station.content)
-    
+
     -- Award XP for interaction
     client:awardXP(player.UserId, 10, "station_interaction"):andThen(function(result)
         UpdatePlayerXP(player, result.totalXP)
-        
+
         if result.levelUp then
             ShowLevelUpEffect(player, result.newLevel)
         end
@@ -849,12 +812,12 @@ local function onQuizComplete(player, quizId, score)
     }):andThen(function(results)
         -- Show results
         ShowQuizResults(player, results)
-        
+
         -- Award achievements
         if results.perfectScore then
             client:unlockAchievement(player.UserId, "perfect_quiz")
         end
-        
+
         -- Update leaderboard
         return client:submitScore({
             playerId = player.UserId,
@@ -869,8 +832,7 @@ end
 
 -- Start game
 initializeGame()
-```
-
+```text
 ### Studio Plugin Example
 
 ```lua
@@ -911,13 +873,13 @@ deployButton.Click:Connect(function()
         plugin:SetSetting("ToolBoxAIApiKey", apiKey)
         pluginState.client = ToolBoxAI.new({ apiKey = apiKey })
     end
-    
+
     -- Show lesson selector
     ShowLessonSelector(function(lessonId)
         -- Deploy selected lesson
         pluginState.client:deployLesson(lessonId, workspace):andThen(function(environment)
             print("Lesson deployed:", environment.name)
-            
+
             -- Select deployed models
             game.Selection:Set(environment.objects)
         end):catch(function(error)
@@ -932,18 +894,17 @@ syncButton.Click:Connect(function()
         warn("Please configure API key first")
         return
     end
-    
+
     -- Sync local changes with platform
     local changes = DetectLocalChanges()
-    
+
     pluginState.client:syncChanges(changes):andThen(function(result)
         print("Sync complete:", result.message)
     end):catch(function(error)
         warn("Sync failed:", error)
     end)
 end)
-```
-
+```text
 ## Studio Plugin Development
 
 ### Plugin Architecture
@@ -964,7 +925,7 @@ function Plugin:init()
     self:loadSettings()
     self:createUI()
     self:connectEvents()
-    
+
     if self.settings.apiKey then
         self.client = ToolBoxAI.new({ apiKey = self.settings.apiKey })
     end
@@ -985,16 +946,15 @@ function Plugin:createUI()
             200    -- min height
         )
     )
-    
+
     self.widgets.main.Title = "ToolBoxAI Education"
-    
+
     -- Add UI components
     self:createLessonBrowser()
     self:createDeploymentPanel()
     self:createSettingsPanel()
 end
-```
-
+```text
 ### Lesson Browser
 
 ```lua
@@ -1003,16 +963,16 @@ function Plugin:createLessonBrowser()
     local browser = Instance.new("Frame")
     browser.Size = UDim2.new(1, 0, 0.5, 0)
     browser.Parent = self.widgets.main
-    
+
     -- Search bar
     local searchBar = Instance.new("TextBox")
     searchBar.PlaceholderText = "Search lessons..."
     searchBar.Parent = browser
-    
+
     -- Results list
     local resultsList = Instance.new("ScrollingFrame")
     resultsList.Parent = browser
-    
+
     -- Search functionality
     searchBar.FocusLost:Connect(function()
         if searchBar.Text ~= "" then
@@ -1029,8 +989,7 @@ function Plugin:searchLessons(query)
         self:displaySearchResults(results)
     end)
 end
-```
-
+```text
 ### Deployment Panel
 
 ```lua
@@ -1040,18 +999,18 @@ function Plugin:createDeploymentPanel()
     panel.Size = UDim2.new(1, 0, 0.5, 0)
     panel.Position = UDim2.new(0, 0, 0.5, 0)
     panel.Parent = self.widgets.main
-    
+
     -- Deploy button
     local deployBtn = Instance.new("TextButton")
     deployBtn.Text = "Deploy to Workspace"
     deployBtn.Parent = panel
-    
+
     deployBtn.MouseButton1Click:Connect(function()
         if self.selectedLesson then
             self:deployLesson(self.selectedLesson)
         end
     end)
-    
+
     -- Options
     local options = {
         includeScripts = true,
@@ -1059,7 +1018,7 @@ function Plugin:createDeploymentPanel()
         includeUI = true,
         targetLocation = workspace
     }
-    
+
     -- Create option checkboxes
     for optionName, defaultValue in pairs(options) do
         local checkbox = self:createCheckbox(optionName, defaultValue)
@@ -1070,7 +1029,7 @@ end
 function Plugin:deployLesson(lesson)
     -- Show progress
     local progressBar = self:createProgressBar()
-    
+
     self.client:deployLesson(lesson.id, workspace, {
         onProgress = function(progress)
             progressBar:Update(progress)
@@ -1078,18 +1037,17 @@ function Plugin:deployLesson(lesson)
     }):andThen(function(deployment)
         -- Track deployment
         table.insert(self.activeDeployments, deployment)
-        
+
         -- Select deployed objects
         game.Selection:Set(deployment.objects)
-        
+
         -- Show success
         self:showNotification("Lesson deployed successfully!")
     end):catch(function(error)
         self:showError("Deployment failed: " .. error.message)
     end)
 end
-```
-
+```text
 ## Performance Optimization
 
 ### Batching Requests
@@ -1111,7 +1069,7 @@ end
 
 function BatchProcessor:add(request)
     table.insert(self.queue, request)
-    
+
     if not self.processing then
         self:processBatch()
     end
@@ -1119,14 +1077,14 @@ end
 
 function BatchProcessor:processBatch()
     self.processing = true
-    
+
     spawn(function()
         while #self.queue > 0 do
             local batch = {}
             for i = 1, math.min(self.batchSize, #self.queue) do
                 table.insert(batch, table.remove(self.queue, 1))
             end
-            
+
             -- Process batch
             self.client:processBatch(batch):andThen(function(results)
                 -- Handle results
@@ -1134,10 +1092,10 @@ function BatchProcessor:processBatch()
                     batch[i].callback(result)
                 end
             end)
-            
+
             wait(self.delay)
         end
-        
+
         self.processing = false
     end)
 end
@@ -1154,8 +1112,7 @@ for _, player in ipairs(game.Players:GetPlayers()) do
         end
     })
 end
-```
-
+```text
 ### Caching Strategy
 
 ```lua
@@ -1202,14 +1159,13 @@ local function getCachedLesson(lessonId)
     if cached then
         return Promise.resolve(cached)
     end
-    
+
     return client:getLesson(lessonId):andThen(function(lesson)
         globalCache:set("lesson:" .. lessonId, lesson)
         return lesson
     end)
 end
-```
-
+```text
 ### Memory Management
 
 ```lua
@@ -1229,7 +1185,7 @@ end
 
 function ObjectPool:acquire()
     local obj = table.remove(self.available)
-    
+
     if not obj then
         if #self.inUse < self.maxSize then
             obj = self.createFunc()
@@ -1241,7 +1197,7 @@ function ObjectPool:acquire()
             until obj
         end
     end
-    
+
     table.insert(self.inUse, obj)
     return obj
 end
@@ -1261,8 +1217,7 @@ local quizUIPool = ObjectPool.new(
     function(ui) ResetQuizUI(ui) end,
     10
 )
-```
-
+```text
 ## Security
 
 ### API Key Management
@@ -1276,16 +1231,16 @@ function SecurityManager.getApiKey()
     if plugin then
         return plugin:GetSetting("ToolBoxAIApiKey")
     end
-    
+
     -- For server scripts
     local ServerStorage = game:GetService("ServerStorage")
     local configModule = ServerStorage:FindFirstChild("APIConfig")
-    
+
     if configModule then
         local config = require(configModule)
         return config.TOOLBOXAI_API_KEY
     end
-    
+
     error("API key not configured")
 end
 
@@ -1297,8 +1252,7 @@ end
 if not isServerContext() then
     error("ToolBoxAI SDK can only be used on the server")
 end
-```
-
+```text
 ### Input Validation
 
 ```lua
@@ -1309,23 +1263,23 @@ function Validator.validateLessonId(id)
     if type(id) ~= "string" then
         error("Lesson ID must be a string")
     end
-    
+
     if not string.match(id, "^[a-zA-Z0-9%-]+$") then
         error("Invalid lesson ID format")
     end
-    
+
     return true
 end
 
 function Validator.sanitizeUserInput(input)
     -- Remove potentially harmful characters
     input = string.gsub(input, "[<>\"']", "")
-    
+
     -- Limit length
     if #input > 1000 then
         input = string.sub(input, 1, 1000)
     end
-    
+
     return input
 end
 
@@ -1334,8 +1288,7 @@ local function safeGetLesson(lessonId)
     Validator.validateLessonId(lessonId)
     return client:getLesson(lessonId)
 end
-```
-
+```text
 ### Rate Limiting Protection
 
 ```lua
@@ -1346,25 +1299,25 @@ RateLimitProtection.limits = {}
 function RateLimitProtection.check(player, action)
     local key = tostring(player.UserId) .. ":" .. action
     local now = os.time()
-    
+
     if not RateLimitProtection.limits[key] then
         RateLimitProtection.limits[key] = {
             count = 0,
             resetTime = now + 60
         }
     end
-    
+
     local limit = RateLimitProtection.limits[key]
-    
+
     if now > limit.resetTime then
         limit.count = 0
         limit.resetTime = now + 60
     end
-    
+
     if limit.count >= 10 then -- 10 requests per minute
         return false, "Rate limit exceeded"
     end
-    
+
     limit.count = limit.count + 1
     return true
 end
@@ -1372,16 +1325,15 @@ end
 -- Apply to remote events
 game.ReplicatedStorage.RemoteEvent.OnServerEvent:Connect(function(player, action, data)
     local allowed, reason = RateLimitProtection.check(player, action)
-    
+
     if not allowed then
         warn("Rate limit exceeded for", player.Name, "-", reason)
         return
     end
-    
+
     -- Process request
 end)
-```
-
+```text
 ## Troubleshooting
 
 ### Common Issues
@@ -1394,10 +1346,10 @@ end)
 
 local function connectWithRetry(maxAttempts)
     local attempts = 0
-    
+
     local function attempt()
         attempts = attempts + 1
-        
+
         return client:testConnection():catch(function(error)
             if attempts < maxAttempts then
                 local delay = math.pow(2, attempts) -- Exponential backoff
@@ -1408,11 +1360,10 @@ local function connectWithRetry(maxAttempts)
             end
         end)
     end
-    
+
     return attempt()
 end
-```
-
+```text
 #### Memory Leaks
 
 ```lua
@@ -1438,8 +1389,7 @@ game:BindToClose(function()
     cleanupConnections()
     -- Other cleanup
 end)
-```
-
+```text
 #### Studio Plugin Issues
 
 ```lua
@@ -1451,26 +1401,25 @@ local function debugPlugin()
     if not plugin then
         error("Not running as a plugin")
     end
-    
+
     -- Check permissions
     local success, result = pcall(function()
         return plugin:GetSetting("test")
     end)
-    
+
     if not success then
         error("Plugin doesn't have settings permission")
     end
-    
+
     -- Check HTTP service
     local HttpService = game:GetService("HttpService")
     if not HttpService.HttpEnabled then
         error("HTTP requests are not enabled")
     end
-    
+
     print("Plugin environment OK")
 end
-```
-
+```text
 ### Debug Mode
 
 ```lua
@@ -1488,8 +1437,7 @@ client.debug = true
 client:on("debug", function(message)
     debugLog(message)
 end)
-```
-
+```text
 ### Performance Profiling
 
 ```lua
@@ -1514,7 +1462,7 @@ end
 
 function Profiler:report()
     for name, data in pairs(self.calls) do
-        print(string.format("%s: %d calls, avg %.2fms", 
+        print(string.format("%s: %d calls, avg %.2fms",
             name, data.count, data.avgTime * 1000))
     end
 end
@@ -1524,8 +1472,7 @@ Profiler:start("getLesson")
 client:getLesson(lessonId):finally(function()
     Profiler:stop("getLesson")
 end)
-```
-
+```text
 ## Migration Guide
 
 ### From Version 0.x to 1.0
@@ -1550,8 +1497,7 @@ local function migrateOldCode()
         return result
     end
 end
-```
-
+```text
 ## Support and Resources
 
 ### Documentation
@@ -1583,8 +1529,7 @@ client:getDiagnostics():andThen(function(diagnostics)
     print("API Status:", diagnostics.apiStatus)
     print("Latency:", diagnostics.latency, "ms")
 end)
-```
-
+```text
 ---
 
-*ToolBoxAI Roblox Lua SDK - Bringing education to life in 3D*
+_ToolBoxAI Roblox Lua SDK - Bringing education to life in 3D_

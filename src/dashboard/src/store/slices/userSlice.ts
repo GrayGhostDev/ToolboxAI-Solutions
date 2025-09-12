@@ -15,7 +15,7 @@ interface UserState {
 }
 
 const initialState: UserState = {
-  role: "Teacher",
+  role: "teacher",
   isAuthenticated: false,
 };
 

@@ -31,10 +31,11 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useAppDispatch, useAppSelector } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
 import { setClasses, removeClass, setClassOnlineStatus } from "../../store/slices/classesSlice";
-import { listClasses } from "../../services/api";
+import { listClasses, createClass } from "../../services/api";
 import { useApiData } from "../../hooks/useApiData";
 import { ROUTES, getClassDetailsRoute } from "../../config/routes";
 import CreateClassDialog from "../dialogs/CreateClassDialog";
+import StudentProgressTracker from "../widgets/StudentProgressTracker";
 
 interface ClassCardData {
   id: string;
@@ -177,7 +178,7 @@ export default function Classes() {
                     ),
                   }}
                 />
-                {role === "Teacher" && (
+                {role === "teacher" && (
                   <Button 
                     variant="contained" 
                     startIcon={<AddIcon />}
@@ -444,7 +445,24 @@ export default function Classes() {
         onClose={() => setCreateClassOpen(false)}
         onSave={async (classData) => {
           try {
-            // TODO: API call to create class
+            setLoading(true);
+            const newClass = await createClass(classData);
+            
+            // Add the new class to the list immediately
+            const transformedClass: ClassCardData = {
+              id: newClass.id,
+              name: newClass.name,
+              grade: newClass.grade_level || newClass.grade || 0,
+              studentCount: newClass.student_count || newClass.studentCount || 0,
+              schedule: newClass.schedule || "Schedule not set",
+              averageXP: Math.round((newClass.average_progress || 0) * 100),
+              completionRate: newClass.average_progress || 0,
+              nextLesson: newClass.next_lesson || "No upcoming lessons",
+              isOnline: newClass.is_online || false,
+              studentAvatars: [],
+            };
+            setClasses(prev => [transformedClass, ...prev]);
+            
             dispatch(
               addNotification({
                 type: "success",
@@ -452,17 +470,32 @@ export default function Classes() {
               })
             );
             setCreateClassOpen(false);
-            fetchClasses(); // Refresh the list
-          } catch (error) {
+            // Also refresh from server to ensure consistency
+            await fetchClasses();
+          } catch (error: any) {
+            console.error('Error creating class:', error);
+            const errorMessage = error.response?.data?.detail || 'Failed to create class';
             dispatch(
               addNotification({
                 type: "error",
-                message: "Failed to create class",
+                message: errorMessage,
               })
             );
+          } finally {
+            setLoading(false);
           }
         }}
       />
+      
+      {/* Student Progress Tracker for Teachers */}
+      {role === "teacher" && (
+        <Grid item xs={12}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+            Student Progress Tracker
+          </Typography>
+          <StudentProgressTracker />
+        </Grid>
+      )}
     </Grid>
   );
 }

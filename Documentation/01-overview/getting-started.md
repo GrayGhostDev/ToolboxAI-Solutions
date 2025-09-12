@@ -9,11 +9,13 @@ This guide will help you get up and running with ToolBoxAI-Solutions quickly. Wh
 ### 🎓 For Educators
 
 #### Step 1: Access the Platform
+
 1. Navigate to your school's ToolBoxAI-Solutions portal
 2. Log in using your school credentials or SSO
 3. Complete the brief onboarding tutorial (5 minutes)
 
 #### Step 2: Create Your First Interactive Lesson
+
 1. Click **"Create New Lesson"** from your dashboard
 2. Upload your existing lesson plan (PDF, Word, or paste text)
 3. Select your target grade level and subject
@@ -21,6 +23,7 @@ This guide will help you get up and running with ToolBoxAI-Solutions quickly. Wh
 5. Preview your 3D environment in the browser
 
 #### Step 3: Deploy to Students
+
 1. Review and customize the generated environment
 2. Set assignment parameters (due date, attempts, etc.)
 3. Click **"Publish to Class"**
@@ -31,6 +34,7 @@ This guide will help you get up and running with ToolBoxAI-Solutions quickly. Wh
 ### 👨‍💼 For Administrators
 
 #### Step 1: Initial Setup
+
 1. Access the admin portal with your credentials
 2. Configure your organization settings:
    - School/district information
@@ -38,11 +42,13 @@ This guide will help you get up and running with ToolBoxAI-Solutions quickly. Wh
    - Grading scales
 
 #### Step 2: User Management
+
 1. Import users via CSV or LMS sync
 2. Assign roles (Teacher, Student, Parent)
 3. Set up classes and enrollment
 
 #### Step 3: LMS Integration
+
 1. Navigate to **Settings → Integrations**
 2. Select your LMS (Canvas, Schoology, or Google Classroom)
 3. Follow the OAuth setup wizard
@@ -53,6 +59,7 @@ This guide will help you get up and running with ToolBoxAI-Solutions quickly. Wh
 ### 👨‍💻 For Developers
 
 #### Step 1: Environment Setup
+
 ```bash
 # Clone the repository
 git clone https://github.com/toolboxai/solutions.git
@@ -65,9 +72,9 @@ npm install
 # Set up environment variables
 cp .env.example .env
 # Edit .env with your configuration
-```
-
+```text
 #### Step 2: Local Development
+
 ```bash
 # Start the backend server
 uvicorn main:app --reload --port 8000
@@ -77,9 +84,9 @@ npm run dev
 
 # Access the application
 open http://localhost:3000
-```
-
+```text
 #### Step 3: Roblox Studio Plugin
+
 1. Open Roblox Studio
 2. Navigate to **Plugins → Manage Plugins**
 3. Install the ToolBoxAI plugin from the marketplace
@@ -90,16 +97,19 @@ open http://localhost:3000
 ### 👦 For Students
 
 #### Step 1: Join Your Class
+
 1. Get the class code from your teacher
 2. Visit the student portal
 3. Enter the class code to join
 
 #### Step 2: Access Your First Lesson
+
 1. Click on the assigned lesson
 2. Launch Roblox (will open automatically)
 3. Wait for the environment to load
 
 #### Step 3: Start Learning!
+
 1. Follow the on-screen instructions
 2. Complete activities to earn XP
 3. Check your progress on the dashboard
@@ -111,12 +121,14 @@ open http://localhost:3000
 ### Minimum Requirements
 
 #### For Web Access
+
 - **Browser**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
 - **Internet**: Broadband connection (10 Mbps+)
 - **RAM**: 4GB minimum
 - **Display**: 1280x720 resolution
 
 #### For Roblox Environments
+
 - **Operating System**: Windows 7+, macOS 10.13+, iOS 11+, Android 5.0+
 - **Processor**: 1.6 GHz or better
 - **RAM**: 4GB minimum (8GB recommended)
@@ -124,6 +136,7 @@ open http://localhost:3000
 - **Storage**: 20MB for plugin, varies for environments
 
 ### Recommended Requirements
+
 - **Processor**: 2.5 GHz quad-core
 - **RAM**: 8GB or more
 - **Graphics**: Dedicated graphics card
@@ -132,18 +145,21 @@ open http://localhost:3000
 ## First-Time Setup Checklist
 
 ### Essential Configuration
+
 - [ ] Create your account or get credentials
 - [ ] Complete profile setup
 - [ ] Verify email address
 - [ ] Set up two-factor authentication (recommended)
 
 ### For Educators
+
 - [ ] Create or import class rosters
 - [ ] Configure grading preferences
 - [ ] Set up LMS integration (if applicable)
 - [ ] Create first test lesson
 
 ### For Administrators
+
 - [ ] Configure organization settings
 - [ ] Set up user roles and permissions
 - [ ] Enable required integrations
@@ -151,6 +167,7 @@ open http://localhost:3000
 - [ ] Schedule admin training
 
 ### For Developers
+
 - [ ] Set up development environment
 - [ ] Configure API keys
 - [ ] Review API documentation
@@ -160,18 +177,21 @@ open http://localhost:3000
 ## Common First Tasks
 
 ### Creating Your First Lesson
+
 1. Start with a simple topic
 2. Use the template library for inspiration
 3. Test with a small group first
 4. Gather feedback and iterate
 
 ### Setting Up Classes
+
 1. Import existing rosters if available
 2. Create grade-appropriate groups
 3. Set default permissions
 4. Configure notification preferences
 
 ### Integrating with LMS
+
 1. Obtain admin approval if needed
 2. Generate API credentials
 3. Test with non-production data first
@@ -180,18 +200,21 @@ open http://localhost:3000
 ## Getting Help
 
 ### Self-Service Resources
+
 - **Documentation**: You're here! Explore other sections
 - **Video Tutorials**: Available in the Help Center
 - **Community Forum**: Connect with other users
 - **Knowledge Base**: Searchable solutions to common issues
 
 ### Support Channels
+
 - **Email Support**: support@toolboxai.com
 - **Live Chat**: Available 9 AM - 5 PM EST
 - **Phone Support**: 1-800-TOOLBOX (Enterprise only)
 - **Emergency Support**: 24/7 for critical issues (Enterprise)
 
 ### Training Options
+
 - **Webinars**: Weekly sessions for new users
 - **On-site Training**: Available for district deployments
 - **Certification Program**: Become a ToolBoxAI expert
@@ -200,24 +223,28 @@ open http://localhost:3000
 ## Best Practices for Getting Started
 
 ### Start Small
+
 - Begin with one class or subject
 - Create simple environments first
 - Gradually add complexity
 - Scale based on success
 
 ### Engage Early Adopters
+
 - Identify enthusiastic teachers
 - Provide extra support initially
 - Share success stories
 - Build internal champions
 
 ### Measure Success
+
 - Set clear goals upfront
 - Track engagement metrics
 - Gather regular feedback
 - Celebrate wins
 
 ### Iterate and Improve
+
 - Start with MVP implementations
 - Gather user feedback regularly
 - Make incremental improvements
@@ -226,24 +253,28 @@ open http://localhost:3000
 ## Troubleshooting Quick Fixes
 
 ### Can't Log In?
+
 1. Check your email for activation link
 2. Try password reset
 3. Verify you're using the correct portal URL
 4. Contact your administrator
 
 ### Lesson Won't Generate?
+
 1. Check file format (PDF, DOCX, TXT supported)
 2. Ensure file is under 10MB
 3. Verify content is text-based (not just images)
 4. Try with a simpler lesson first
 
 ### Students Can't Access Environment?
+
 1. Verify Roblox is installed and updated
 2. Check firewall settings
 3. Ensure student accounts are active
 4. Verify lesson is published
 
 ### Grades Not Syncing?
+
 1. Check LMS integration status
 2. Verify assignment mapping
 3. Ensure proper permissions
@@ -261,6 +292,7 @@ Now that you're set up, explore these resources:
 ## Welcome to the Community!
 
 Join thousands of educators transforming education:
+
 - Follow us on Twitter: @ToolBoxAI
 - Join our Discord: discord.gg/toolboxai
 - Subscribe to our newsletter for updates
@@ -268,4 +300,4 @@ Join thousands of educators transforming education:
 
 ---
 
-*Questions? Check the [FAQ](../09-meta/faq.md) or contact support. We're here to help you succeed!*
+_Questions? Check the [FAQ](../09-meta/faq.md) or contact support. We're here to help you succeed!_

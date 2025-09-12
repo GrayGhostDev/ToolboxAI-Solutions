@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+coverage/
+storybook-static/
+.nyc_output/
+__pycache__/
+*.py[cod]
+*.log
+*.tmp
+*.tgz
+*.tar.gz
+
