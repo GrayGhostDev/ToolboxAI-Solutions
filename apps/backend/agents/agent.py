@@ -26,9 +26,9 @@ from langchain.schema import AIMessage, BaseMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
-from .auth import get_current_user
-from .config import settings
-from .models import ContentRequest, ContentResponse, User
+from ..api.auth.auth import get_current_user
+from ..core.config import settings
+from ..models.schemas import ContentRequest, ContentResponse, User
 from .tools import ALL_TOOLS
 
 # Import placeholder agent classes

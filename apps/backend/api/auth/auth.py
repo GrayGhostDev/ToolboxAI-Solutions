@@ -21,9 +21,9 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 from requests_oauthlib import OAuth1Session
 
-from .config import settings
-from .models import Session, User
-from .rate_limit_manager import get_rate_limit_manager
+from ...core.config import settings
+from ...models.schemas import Session, User
+from ...core.security.rate_limiter import get_rate_limit_manager
 
 logger = logging.getLogger(__name__)
 

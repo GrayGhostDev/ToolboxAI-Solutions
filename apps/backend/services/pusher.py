@@ -18,7 +18,7 @@ try:
 except Exception:  # pragma: no cover-optional import in some environments
     pusher = None  # type: ignore
 
-from .config import settings
+from ..core.config import settings
 
 logger = logging.getLogger(__name__)
 

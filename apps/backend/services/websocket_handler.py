@@ -24,9 +24,9 @@ from fastapi import WebSocket, WebSocketDisconnect, status
 from fastapi.websockets import WebSocketState
 from pydantic import BaseModel, ValidationError
 
-from .auth import get_current_session
-from .config import settings
-from .models import Session, User, WebSocketMessage, WebSocketResponse
+from ..api.auth.auth import get_current_session
+from ..core.config import settings
+from ..models.schemas import Session, User, WebSocketMessage, WebSocketResponse
 from .websocket_auth import (
     websocket_authenticator,
     verify_websocket_token,
@@ -986,7 +986,7 @@ async def authenticate_websocket_connection(websocket: WebSocket) -> Optional[Us
             return None
 
         # Import auth utilities
-        from .auth import JWTManager
+        from ..api.auth.auth import JWTManager
 
         # Verify JWT token
         try:
@@ -1030,7 +1030,7 @@ async def authenticate_websocket_connection(websocket: WebSocket) -> Optional[Us
 async def refresh_websocket_token(websocket: WebSocket, new_token: str) -> bool:
     """Refresh WebSocket connection token"""
     try:
-        from .auth import JWTManager
+        from ..api.auth.auth import JWTManager
 
         # Verify new token
         payload = JWTManager.verify_token(new_token, raise_on_error=False)

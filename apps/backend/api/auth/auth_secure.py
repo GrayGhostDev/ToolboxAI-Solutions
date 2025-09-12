@@ -18,7 +18,7 @@ import time
 import hashlib
 import hmac
 
-from .config import settings
+from ...core.config import settings
 
 # Security configuration from environment - NEVER hardcode secrets
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")

@@ -12,8 +12,8 @@ Main FastAPI server (port 8008) with comprehensive features:
 """
 
 # Initialize Sentry BEFORE importing other modules
-from .config import settings
-from .sentry_config import initialize_sentry, configure_sentry_logging, sentry_manager
+from .core.config import settings
+from .core.monitoring import initialize_sentry, configure_sentry_logging, sentry_manager
 
 # Initialize Sentry with production-ready configuration
 sentry_initialized = initialize_sentry()
@@ -54,14 +54,14 @@ from fastapi.responses import JSONResponse, StreamingResponse, FileResponse  # p
 from fastapi.security import HTTPBearer  # pylint: disable=import-error
 from pydantic import ValidationError, Field, BaseModel
 
-from .agent import (
+from .agents.agent import (
     agent_manager,
     generate_educational_content,
     get_agent_health,
     initialize_agents,
     shutdown_agents,
 )
-from .auth import (
+from .api.auth.auth import (
     AuthenticationError,
     AuthorizationError,
     RateLimitError,
@@ -73,7 +73,7 @@ from .auth import (
 )
 
 # Import our modules (settings already imported for Sentry)
-from .models import (
+from .models.schemas import (
     BaseResponse,
     ContentRequest,
     ContentResponse,
@@ -86,39 +86,39 @@ from .models import (
     QuizResponse,
     User,
 )
-from .websocket import broadcast_content_update, websocket_endpoint, websocket_manager
-from .pusher_client import (
+from .services.websocket_handler import broadcast_content_update, websocket_endpoint, websocket_manager
+from .services.pusher import (
     trigger_event as pusher_trigger_event,
     authenticate_channel as pusher_authenticate,
     verify_webhook as pusher_verify_webhook,
     PusherUnavailable,
 )
-from .database_service import db_service
-from .socketio_server import create_socketio_app  # Socket.IO ASGI mounted at path '/socket.io'
+from .services.database import db_service
+from .services.socketio import create_socketio_app  # Socket.IO ASGI mounted at path '/socket.io'
 
 logger = logging.getLogger(__name__)
 
 
 # Import security modules
-from .security_middleware import (
+from .core.security.middleware import (
     SecurityMiddleware,
     RateLimitConfig,
     CircuitBreakerConfig,
 )
-from .secrets_manager import init_secrets_manager
+from .core.security.secrets import init_secrets_manager
 
 # Import new middleware modules
-from .api_versioning import (
+from .core.versioning import (
     VersionStrategy,
     APIVersionMiddleware,
     create_version_manager,
     create_versioned_endpoints,
 )
-from .compression_middleware import (
+from .core.security.compression import (
     CompressionMiddleware,
     CompressionConfig,
 )
-from .error_handling import (
+from .core.errors import (
     ErrorHandlingMiddleware,
 )
 
@@ -808,7 +808,7 @@ async def get_info():
     )
 
 
-from .websocket import set_rbac_overrides
+from .services.websocket_handler import set_rbac_overrides
 
 # Content API endpoints with proper authorization header handling
 @app.post("/api/v1/content/generate", response_model=ContentResponse, tags=["Content API"])
@@ -1069,7 +1069,7 @@ class RefreshTokenRequest(BaseModel):
 
 # Import and include dashboard router
 try:
-    from .dashboard_endpoints import dashboard_router
+    from .api.v1.endpoints.dashboard import dashboard_router
     app.include_router(dashboard_router)
     logger.info("Dashboard endpoints loaded successfully")
 except ImportError as e:
@@ -1077,7 +1077,7 @@ except ImportError as e:
 
 # Import and include classes router
 try:
-    from .classes_endpoints import classes_router
+    from .api.v1.endpoints.classes import classes_router
     app.include_router(classes_router)
     logger.info("Classes endpoints loaded successfully")
 except ImportError as e:
@@ -1085,7 +1085,7 @@ except ImportError as e:
 
 # Import and include lessons router
 try:
-    from .lessons_endpoints import lessons_router
+    from .api.v1.endpoints.lessons import lessons_router
     app.include_router(lessons_router)
     logger.info("Lessons endpoints loaded successfully")
 except ImportError as e:
@@ -1093,7 +1093,7 @@ except ImportError as e:
 
 # Import and include assessments router
 try:
-    from .assessments_endpoints import assessments_router
+    from .api.v1.endpoints.assessments import assessments_router
     app.include_router(assessments_router)
     logger.info("Assessments endpoints loaded successfully")
 except ImportError as e:
@@ -1101,7 +1101,7 @@ except ImportError as e:
 
 # Import and include reports router
 try:
-    from .reports_endpoints import reports_router
+    from .api.v1.endpoints.reports import reports_router
     app.include_router(reports_router)
     logger.info("Reports endpoints loaded successfully")
 except ImportError as e:
@@ -1109,7 +1109,7 @@ except ImportError as e:
 
 # Import and include messages router
 try:
-    from .messages_endpoints import messages_router
+    from .api.v1.endpoints.messages import messages_router
     app.include_router(messages_router)
     logger.info("Messages endpoints loaded successfully")
 except ImportError as e:
@@ -1117,7 +1117,7 @@ except ImportError as e:
 
 # Import and include analytics, gamification, compliance, users, and schools routers
 try:
-    from .analytics_endpoints import (
+    from .api.v1.endpoints.analytics import (
         analytics_router,
         gamification_router,
         compliance_router,
@@ -1135,7 +1135,7 @@ except ImportError as e:
 
 # Import and include API v1 endpoints (analytics, reports, admin)
 try:
-    from .api_v1_endpoints import (
+    from .api.v1.router import (
         analytics_router as analytics_v1_router,
         reports_router as reports_v1_router,
         admin_router as admin_v1_router
@@ -2488,7 +2488,7 @@ async def reset_ws_rbac(current_user: User = Depends(require_role("admin"))):
     """Reset runtime RBAC overrides to config-only defaults (admin only)"""
     try:
         # Clear runtime overrides
-        from .websocket import set_rbac_overrides
+        from .services.websocket_handler import set_rbac_overrides
         applied = set_rbac_overrides({})
         return {
             "status": "ok",

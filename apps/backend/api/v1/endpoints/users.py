@@ -8,8 +8,8 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from .auth import get_current_user, require_role
-from .models import User
+from ....api.auth.auth import get_current_user, require_role
+from ....models.schemas import User
 
 # Create routers for each role
 admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])

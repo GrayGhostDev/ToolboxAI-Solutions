@@ -14,7 +14,7 @@ from fastapi import WebSocket, Query, Header
 from fastapi.websockets import WebSocketState
 
 from .auth import JWTManager, User, AuthenticationError
-from .models import Session
+from ...models.schemas import Session
 
 logger = logging.getLogger(__name__)
 
