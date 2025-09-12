@@ -1,6 +1,6 @@
 import pytest
-from server.main import reset_ws_rbac
-from server.models import User
+from apps.backend.main import reset_ws_rbac
+from apps.backend.models import User
 
 
 @pytest.mark.asyncio

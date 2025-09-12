@@ -20,18 +20,18 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # Import all agents and systems
-from agents.testing_agent import TestingAgent
-from agents.orchestrator import Orchestrator, WorkflowType, OrchestrationRequest
-from agents.supervisor import SupervisorAgent
-from agents.content_agent import ContentAgent
-from agents.quiz_agent import QuizAgent
-from agents.terrain_agent import TerrainAgent
-from agents.script_agent import ScriptAgent
-from agents.review_agent import ReviewAgent
+from core.agents.testing_agent import TestingAgent
+from core.agents.orchestrator import Orchestrator, WorkflowType, OrchestrationRequest
+from core.agents.supervisor import SupervisorAgent
+from core.agents.content_agent import ContentAgent
+from core.agents.quiz_agent import QuizAgent
+from core.agents.terrain_agent import TerrainAgent
+from core.agents.script_agent import ScriptAgent
+from core.agents.review_agent import ReviewAgent
 
 # Import database integration
 try:
-    from agents.database_integration import agent_db
+    from core.agents.database_integration import agent_db
     DATABASE_AVAILABLE = True
 except ImportError:
     DATABASE_AVAILABLE = False
@@ -40,8 +40,8 @@ except ImportError:
 
 # Import SPARC framework
 try:
-    from sparc.state_manager import StateManager
-    from sparc.policy_engine import PolicyEngine
+    from core.sparc.state_manager import StateManager
+    from core.sparc.policy_engine import PolicyEngine
     SPARC_AVAILABLE = True
 except ImportError:
     SPARC_AVAILABLE = False
@@ -49,7 +49,7 @@ except ImportError:
 
 # Import Swarm intelligence
 try:
-    from swarm.swarm_controller import SwarmController
+    from core.swarm.swarm_controller import SwarmController
     SWARM_AVAILABLE = True
 except ImportError:
     SWARM_AVAILABLE = False
@@ -57,7 +57,7 @@ except ImportError:
 
 # Import MCP
 try:
-    from mcp.context_manager import ContextManager
+    from core.mcp.context_manager import ContextManager
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False
@@ -247,7 +247,7 @@ class AgentIntegrationTest:
             
         try:
             # Initialize swarm controller using factory function
-            from swarm import create_swarm
+            from core.swarm import create_swarm
             swarm = await create_swarm({"max_workers": 2})
             
             # Swarm is already started by create_swarm

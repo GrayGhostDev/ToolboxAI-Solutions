@@ -17,9 +17,9 @@ import os
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from mcp.server import MCPServer, ContextEntry, AuthenticatedClient
-from mcp.context_manager import ContextManager
-from mcp.memory_store import MemoryStore
+from core.mcp.server import MCPServer, ContextEntry, AuthenticatedClient
+from core.mcp.context_manager import ContextManager
+from core.mcp.memory_store import MemoryStore
 
 
 # Test fixtures

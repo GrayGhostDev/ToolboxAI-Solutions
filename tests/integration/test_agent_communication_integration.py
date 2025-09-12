@@ -24,20 +24,20 @@ import uuid
 sys.path.append('/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment')
 
 # Import agent system
-from agents.base_agent import BaseAgent, TaskResult
-from agents.supervisor import SupervisorAgent
-from agents.content_agent import ContentAgent
-from agents.quiz_agent import QuizAgent
-from agents.terrain_agent import TerrainAgent
-from agents.script_agent import ScriptAgent
-from agents.review_agent import ReviewAgent
-from agents.plugin_communication import PluginCommunicationHub, PluginRequest, PluginEventType
+from core.agents.base_agent import BaseAgent, TaskResult
+from core.agents.supervisor import SupervisorAgent
+from core.agents.content_agent import ContentAgent
+from core.agents.quiz_agent import QuizAgent
+from core.agents.terrain_agent import TerrainAgent
+from core.agents.script_agent import ScriptAgent
+from core.agents.review_agent import ReviewAgent
+from core.agents.plugin_communication import PluginCommunicationHub, PluginRequest, PluginEventType
 
 # Import frameworks
 try:
-    from sparc import SPARCFramework, SPARCConfig, create_sparc_system
-    from swarm import SwarmController, create_swarm, get_default_config
-    from mcp.context_manager import ContextManager
+    from core.sparc import SPARCFramework, SPARCConfig, create_sparc_system
+    from core.swarm import SwarmController, create_swarm, get_default_config
+    from core.mcp.context_manager import ContextManager
     FRAMEWORKS_AVAILABLE = True
 except ImportError as e:
     print(f"⚠️ Frameworks not available: {e}")

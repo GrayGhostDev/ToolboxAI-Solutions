@@ -16,7 +16,7 @@ from typing import Generator, Dict, Any
 from unittest.mock import Mock, patch
 
 # Import rate limiting components
-from server.rate_limit_manager import (
+from apps.backend.rate_limit_manager import (
     RateLimitManager, 
     RateLimitConfig, 
     RateLimitMode,
@@ -24,7 +24,7 @@ from server.rate_limit_manager import (
     clear_all_rate_limits,
     set_testing_mode
 )
-from server.config import settings
+from apps.backend.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ def mock_redis():
 @pytest.fixture
 def flask_client():
     """Create Flask test client with proper rate limit isolation"""
-    from server.roblox_server import app
+    from apps.backend.roblox_server import app
     
     # Ensure test mode is set
     app.config['TESTING'] = True

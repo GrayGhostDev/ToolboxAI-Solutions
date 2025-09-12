@@ -26,7 +26,7 @@ from core.database.models import (
     User, Course, Lesson, Quiz, QuizAttempt,
     UserProgress, Analytics, Content
 )
-from server.cache import cache_result
+from apps.backend.cache import cache_result
 import logging
 
 logger = logging.getLogger(__name__)

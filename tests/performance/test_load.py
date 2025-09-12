@@ -231,7 +231,7 @@ class TestAgentPoolPerformance:
     @pytest.mark.asyncio
     async def test_agent_pool_scaling(self):
         """Test agent pool scaling under increasing load"""
-        from agents.orchestrator import Orchestrator
+        from core.agents.orchestrator import Orchestrator
         
         orchestrator = Orchestrator()
         
@@ -290,7 +290,7 @@ class TestAgentPoolPerformance:
         import psutil
         import os
         
-        from agents.supervisor import SupervisorAgent
+        from core.agents.supervisor import SupervisorAgent
         
         supervisor = SupervisorAgent()
         process = psutil.Process(os.getpid())
@@ -451,7 +451,7 @@ class TestCachingPerformance:
     @pytest.mark.asyncio
     async def test_cache_hit_performance(self):
         """Test performance improvement with caching"""
-        from server.performance import cache_manager
+        from apps.backend.performance import cache_manager
         
         await cache_manager.initialize()
         

@@ -166,7 +166,7 @@ def check_integration_components() -> bool:
 def check_configuration() -> bool:
     """Check if configuration can be loaded"""
     try:
-        from coordinators.config import ConfigurationManager, get_development_config
+        from core.coordinators.config import ConfigurationManager, get_development_config
         
         # Test configuration loading
         config_manager = ConfigurationManager()
@@ -188,10 +188,10 @@ def run_basic_functionality_test() -> bool:
         print("Running basic functionality test...")
         
         # Test coordinator system import
-        from coordinators import CoordinatorSystem
+        from core.coordinators import CoordinatorSystem
         
         # Test config creation
-        from coordinators.config import get_development_config
+        from core.coordinators.config import get_development_config
         config = get_development_config()
         
         print("✓ Basic functionality test passed")

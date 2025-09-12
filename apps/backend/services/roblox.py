@@ -36,7 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.environment import get_environment_config
 settings = get_environment_config()
 from toolboxai_utils.async_utils import run_async
-from server.rate_limit_manager import get_rate_limit_manager
+from apps.backend.rate_limit_manager import get_rate_limit_manager
 
 # Import agent systems for integration
 try:
@@ -1758,8 +1758,8 @@ def query_database():
             return jsonify({"status": "error", "message": "Authentication required"}), 401
         
         # Import database helper
-        from database.roblox_models import RobloxDatabaseHelper
-        from database import get_db
+        from core.database.roblox_models import RobloxDatabaseHelper
+        from core.database import get_db
         
         query_type = request_data.get("query_type")
         params = request_data.get("params", {})

@@ -4,8 +4,8 @@ import pytest
 import json
 import time
 from unittest.mock import patch, Mock
-from server.roblox_server import app, plugin_manager, content_bridge
-from server.rate_limit_manager import (
+from apps.backend.roblox_server import app, plugin_manager, content_bridge
+from apps.backend.rate_limit_manager import (
     RateLimitManager, 
     RateLimitMode, 
     clear_all_rate_limits,

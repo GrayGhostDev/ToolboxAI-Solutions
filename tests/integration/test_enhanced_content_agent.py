@@ -36,8 +36,8 @@ async def test_enhanced_content_agent():
     
     try:
         # Import the enhanced Content Agent
-        from agents.content_agent import ContentAgent
-        from agents.base_agent import AgentConfig
+        from core.agents.content_agent import ContentAgent
+        from core.agents.base_agent import AgentConfig
         
         # Test 1: Initialize agent with real data configuration
         logger.info("\\n1. Testing Agent Initialization")
@@ -247,7 +247,7 @@ async def test_real_openai_integration():
     logger.info("="*60)
     
     try:
-        from agents.content_agent import ContentAgent
+        from core.agents.content_agent import ContentAgent
         
         # Force real data mode
         os.environ["USE_MOCK_LLM"] = "false"

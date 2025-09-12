@@ -10,8 +10,8 @@ import asyncio
 import json
 import websockets
 from datetime import datetime, timezone
-from server.auth import JWTManager, User
-from server.config import settings
+from apps.backend.auth import JWTManager, User
+from apps.backend.config import settings
 
 
 class WebSocketAuthClient:

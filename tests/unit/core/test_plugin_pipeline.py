@@ -11,15 +11,15 @@ from unittest.mock import Mock, patch, AsyncMock, MagicMock
 from typing import Dict, Any
 
 # Import components to test
-from agents.plugin_communication import (
+from core.agents.plugin_communication import (
     PluginCommunicationHub,
     PluginRequest,
     PluginResponse,
     PluginEventType as EventType
 )
-from agents.supervisor import SupervisorAgent
-from server.roblox_server import PluginManager, PluginSecurity
-from database.roblox_models import (
+from core.agents.supervisor import SupervisorAgent
+from apps.backend.roblox_server import PluginManager, PluginSecurity
+from core.database.roblox_models import (
     RobloxContent,
     PluginRequest as DBPluginRequest,
     RobloxSession,
@@ -429,7 +429,7 @@ class TestDatabaseIntegration:
         async_session = sessionmaker(engine, class_=AsyncSession)
         
         # Create tables
-        from database.roblox_models import Base
+        from core.database.roblox_models import Base
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         
@@ -645,7 +645,7 @@ class TestEndToEndPluginFlow:
             }
             
             # 5. Perform sync (would be called from Flask endpoint)
-            from server.roblox_server import sync_with_main_server
+            from apps.backend.roblox_server import sync_with_main_server
             result = sync_with_main_server(sync_request)
             
             assert result["status"] == "synced"

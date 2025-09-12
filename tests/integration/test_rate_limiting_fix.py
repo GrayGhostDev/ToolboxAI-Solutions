@@ -102,7 +102,7 @@ def test_rate_limit_manager_directly():
     logger.info("Testing rate limit manager directly...")
     
     try:
-        from server.rate_limit_manager import (
+        from apps.backend.rate_limit_manager import (
             RateLimitManager,
             RateLimitConfig,
             RateLimitMode,

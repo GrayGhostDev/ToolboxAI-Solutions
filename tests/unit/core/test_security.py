@@ -17,9 +17,9 @@ import os
 # Set test secret key
 os.environ["JWT_SECRET_KEY"] = "test-secret-key-for-testing-only-32-chars-minimum-length"
 
-from server.main import app
-from server.auth_secure import SecureAuth, RateLimiter, CSRFProtection
-from server.websocket import WebSocketConnectionManager, MessageHandler
+from apps.backend.main import app
+from apps.backend.auth_secure import SecureAuth, RateLimiter, CSRFProtection
+from apps.backend.websocket import WebSocketConnectionManager, MessageHandler
 
 class TestAuthentication:
     """Test authentication security"""

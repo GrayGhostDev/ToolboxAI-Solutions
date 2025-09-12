@@ -29,16 +29,16 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select, func
 
-from server.main import app
-from server.api_v1_endpoints import (
+from apps.backend.main import app
+from apps.backend.api_v1_endpoints import (
     RealtimeMetrics, SummaryAnalytics, ReportResponse,
     UserResponse, UserListResponse, ReportType, ReportFormat
 )
-from database.models import (
+from core.database.models import (
     User, EducationalContent, Quiz, QuizAttempt,
     UserProgress, UserSession, Class, Assignment
 )
-from server.auth import hash_password, create_access_token
+from apps.backend.auth import hash_password, create_access_token
 
 # Test client
 client = TestClient(app)

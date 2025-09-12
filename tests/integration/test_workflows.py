@@ -22,12 +22,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 try:
-    from database.connection import DatabaseManager, get_db
-    from database.repositories import (
+    from core.database.connection import DatabaseManager, get_db
+    from core.database.repositories import (
         UserRepository, CourseRepository, LessonRepository,
         QuizRepository, ProgressRepository, AnalyticsRepository
     )
-    from database.models import Base, UserRole
+    from core.database.models import Base, UserRole
 except ImportError:
     # Fallback to mock implementations for testing
     from unittest.mock import Mock
@@ -43,9 +43,9 @@ except ImportError:
     Base.metadata = Mock
     Base.metadata.create_all = Mock
     UserRole = Mock
-from agents.orchestrator import Orchestrator
-from agents.supervisor import SupervisorAgent
-from server.auth import JWTManager
+from core.agents.orchestrator import Orchestrator
+from core.agents.supervisor import SupervisorAgent
+from apps.backend.auth import JWTManager
 
 
 @pytest.fixture
@@ -162,7 +162,7 @@ class TestContentGenerationWorkflow:
     @pytest.mark.asyncio
     async def test_content_persistence(self, test_db, test_lesson):
         """Test saving generated content to database"""
-        from database.repositories import ContentRepository
+        from core.database.repositories import ContentRepository
         
         content_repo = ContentRepository(test_db)
         
@@ -191,8 +191,8 @@ class TestContentGenerationWorkflow:
     @pytest.mark.asyncio
     async def test_content_approval_workflow(self, test_db, test_user, test_lesson):
         """Test content review and approval workflow"""
-        from database.repositories import ContentRepository
-        from database.models import ContentStatus
+        from core.database.repositories import ContentRepository
+        from core.database.models import ContentStatus
         
         content_repo = ContentRepository(test_db)
         
@@ -246,7 +246,7 @@ class TestQuizWorkflow:
         )
         
         # Add questions
-        from database.models import QuizQuestion
+        from core.database.models import QuizQuestion
         questions = [
             QuizQuestion(
                 quiz_id=quiz.id,
@@ -514,7 +514,7 @@ class TestDatabaseIntegration:
     @pytest.mark.asyncio
     async def test_cascade_deletion(self, test_db, test_user, test_course, test_lesson):
         """Test cascade deletion of related records"""
-        from database.repositories import ContentRepository, QuizRepository
+        from core.database.repositories import ContentRepository, QuizRepository
         
         content_repo = ContentRepository(test_db)
         quiz_repo = QuizRepository(test_db)

@@ -22,36 +22,36 @@ import pytest_asyncio
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src" / "roblox-environment"))
 
 # Import all components
-from agents.orchestrator import Orchestrator
-from agents.supervisor import SupervisorAgent
-from agents.content_agent import ContentAgent
-from agents.quiz_agent import QuizAgent
-from agents.terrain_agent import TerrainAgent
-from agents.script_agent import ScriptAgent
-from agents.review_agent import ReviewAgent
+from core.agents.orchestrator import Orchestrator
+from core.agents.supervisor import SupervisorAgent
+from core.agents.content_agent import ContentAgent
+from core.agents.quiz_agent import QuizAgent
+from core.agents.terrain_agent import TerrainAgent
+from core.agents.script_agent import ScriptAgent
+from core.agents.review_agent import ReviewAgent
 
-from sparc.state_manager import StateManager
-from sparc.policy_engine import PolicyEngine
-from sparc.action_executor import ActionExecutor
-from sparc.reward_calculator import RewardCalculator
-from sparc.context_tracker import ContextTracker
+from core.sparc.state_manager import StateManager
+from core.sparc.policy_engine import PolicyEngine
+from core.sparc.action_executor import ActionExecutor
+from core.sparc.reward_calculator import RewardCalculator
+from core.sparc.context_tracker import ContextTracker
 
-from swarm.swarm_controller import SwarmController
-from swarm.worker_pool import WorkerPool
-from swarm.task_distributor import TaskDistributor, Task, TaskPriority
-from swarm.consensus_engine import ConsensusEngine
-from swarm.load_balancer import LoadBalancer
+from core.swarm.swarm_controller import SwarmController
+from core.swarm.worker_pool import WorkerPool
+from core.swarm.task_distributor import TaskDistributor, Task, TaskPriority
+from core.swarm.consensus_engine import ConsensusEngine
+from core.swarm.load_balancer import LoadBalancer
 
-from mcp.server import MCPServer
-from mcp.context_manager import ContextManager
-from mcp.memory_store import MemoryStore
+from core.mcp.server import MCPServer
+from core.mcp.context_manager import ContextManager
+from core.mcp.memory_store import MemoryStore
 
-from coordinators.main_coordinator import MainCoordinator
-from coordinators.resource_coordinator import ResourceCoordinator
-from coordinators.sync_coordinator import SyncCoordinator
-from coordinators.error_coordinator import ErrorCoordinator
+from core.coordinators.main_coordinator import MainCoordinator
+from core.coordinators.resource_coordinator import ResourceCoordinator
+from core.coordinators.sync_coordinator import SyncCoordinator
+from core.coordinators.error_coordinator import ErrorCoordinator
 
-from server.tools import ALL_TOOLS
+from apps.backend.tools import ALL_TOOLS
 
 
 @pytest.mark.integration
@@ -81,11 +81,11 @@ class TestAgentSystemIntegration:
             components['sparc'] = StateManager()
 
             # Initialize Swarm components
-            from swarm.swarm_controller import SwarmConfig
-            from swarm.worker_pool import WorkerPool
-            from swarm.task_distributor import TaskDistributor
-            from swarm.consensus_engine import ConsensusEngine
-            from swarm.load_balancer import LoadBalancer
+            from core.swarm.swarm_controller import SwarmConfig
+            from core.swarm.worker_pool import WorkerPool
+            from core.swarm.task_distributor import TaskDistributor
+            from core.swarm.consensus_engine import ConsensusEngine
+            from core.swarm.load_balancer import LoadBalancer
 
             swarm_config = SwarmConfig()
             worker_pool = WorkerPool(
@@ -142,7 +142,7 @@ class TestAgentSystemIntegration:
 
         # Mock agent responses
         with patch.object(system['orchestrator'], 'generate_environment') as mock_generate:
-            from agents.orchestrator import OrchestrationResult
+            from core.agents.orchestrator import OrchestrationResult
             mock_generate.return_value = OrchestrationResult(
                 success=True,
                 content={
@@ -321,7 +321,7 @@ class TestAgentSystemIntegration:
         # Simulate failures and recovery
         with patch.object(system['supervisor'], 'delegate_complex_task') as mock_route:
             # First call fails, second succeeds
-            from agents.base_agent import TaskResult
+            from core.agents.base_agent import TaskResult
             mock_route.side_effect = [
                 Exception("Agent temporarily unavailable"),
                 TaskResult(output="content", success=True)  # Successful routing after retry
@@ -356,7 +356,7 @@ class TestAgentSystemIntegration:
         # Mock consensus engine
         consensus = ConsensusEngine()
         with patch.object(consensus, 'evaluate_result') as mock_evaluate:
-            from swarm.consensus_engine import ConsensusResult, ConsensusType
+            from core.swarm.consensus_engine import ConsensusResult, ConsensusType
             mock_result = ConsensusResult(
                 consensus_id="test_consensus",
                 consensus_type=ConsensusType.QUALITY_VALIDATION,
@@ -464,7 +464,7 @@ class TestAgentCommunication:
 
         # Mock communication
         with patch.object(supervisor, 'delegate_complex_task') as mock_delegate:
-            from agents.base_agent import TaskResult
+            from core.agents.base_agent import TaskResult
             mock_delegate.return_value = TaskResult(
                 success=True,
                 output={"lesson": "Generated lesson"},
@@ -521,7 +521,7 @@ class TestAgentCommunication:
                         "metrics": {"lines": 10, "complexity": 1},
                         "approved": True
                     }
-                    from agents.base_agent import AgentState
+                    from core.agents.base_agent import AgentState
                     state = AgentState(
                         task="review_code",
                         context={"code": "test code", "language": "lua"},
@@ -585,7 +585,7 @@ class TestSystemPerformance:
 
         # Mock fast processing
         with patch.object(orchestrator, 'generate_environment') as mock_gen:
-            from agents.orchestrator import OrchestrationResult
+            from core.agents.orchestrator import OrchestrationResult
             mock_gen.return_value = OrchestrationResult(
                 success=True,
                 content={"status": "completed"},
@@ -619,7 +619,7 @@ class TestSystemPerformance:
         orchestrator = Orchestrator()
 
         with patch.object(orchestrator, 'generate_environment') as mock_gen:
-            from agents.orchestrator import OrchestrationResult
+            from core.agents.orchestrator import OrchestrationResult
             mock_gen.return_value = OrchestrationResult(
                 success=True,
                 content={"data": "x" * 1000},  # Small response
@@ -644,11 +644,11 @@ class TestSystemPerformance:
         import time
 
         # Initialize Swarm components
-        from swarm.swarm_controller import SwarmConfig
-        from swarm.worker_pool import WorkerPool
-        from swarm.task_distributor import TaskDistributor
-        from swarm.consensus_engine import ConsensusEngine
-        from swarm.load_balancer import LoadBalancer
+        from core.swarm.swarm_controller import SwarmConfig
+        from core.swarm.worker_pool import WorkerPool
+        from core.swarm.task_distributor import TaskDistributor
+        from core.swarm.consensus_engine import ConsensusEngine
+        from core.swarm.load_balancer import LoadBalancer
 
         swarm_config = SwarmConfig()
         worker_pool = WorkerPool(
@@ -676,7 +676,7 @@ class TestSystemPerformance:
 
         # Mock processing
         with patch.object(swarm, 'submit_task') as mock_submit:
-            from swarm.task_distributor import Task, TaskStatus
+            from core.swarm.task_distributor import Task, TaskStatus
             mock_submit.return_value = "task_123"
 
             # Measure response time

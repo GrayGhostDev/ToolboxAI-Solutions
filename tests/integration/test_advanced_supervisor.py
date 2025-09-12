@@ -18,7 +18,7 @@ import json
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, AsyncMock
 
-from agents.supervisor_advanced import (
+from core.agents.supervisor_advanced import (
     AdvancedSupervisorAgent,
     WorkflowStatus,
     WorkflowPriority,
@@ -26,7 +26,7 @@ from agents.supervisor_advanced import (
     WorkflowExecution,
     EnhancedAgentState
 )
-from agents.base_agent import AgentConfig, TaskResult
+from core.agents.base_agent import AgentConfig, TaskResult
 
 
 class TestAdvancedSupervisorAgent:
@@ -456,7 +456,7 @@ class TestBackwardsCompatibility:
     @pytest.fixture
     def basic_supervisor(self):
         """Create basic supervisor for compatibility testing"""
-        from agents.supervisor import SupervisorAgent
+        from core.agents.supervisor import SupervisorAgent
         
         return SupervisorAgent()
     
@@ -544,7 +544,7 @@ class TestRealDataIntegration:
         
         # Skip if database not available
         try:
-            from database.connection_manager import db_manager
+            from core.database.connection_manager import db_manager
             db_manager.initialize()
         except Exception as e:
             pytest.skip(f"Database not available: {e}")
@@ -579,7 +579,7 @@ class TestRealDataIntegration:
         """Test integration with actual MCP server"""
         
         try:
-            from mcp.context_manager import ContextManager
+            from core.mcp.context_manager import ContextManager
             context_manager = ContextManager()
         except Exception as e:
             pytest.skip(f"MCP not available: {e}")

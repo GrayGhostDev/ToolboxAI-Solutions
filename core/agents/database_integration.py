@@ -40,7 +40,7 @@ try:
         sys.path.insert(0, str(parent_dir))
     
     from core.database.connection_manager import get_async_session, get_session, get_redis_client
-    from database.repositories import (
+    from core.database.repositories import (
         UserRepository, CourseRepository, LessonRepository, 
         ContentRepository, QuizRepository, ProgressRepository,
         AnalyticsRepository

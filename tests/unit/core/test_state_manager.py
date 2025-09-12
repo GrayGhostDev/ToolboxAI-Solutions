@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime
 import pytest
 
-from sparc.state_manager import StateManager, StateType
+from core.sparc.state_manager import StateManager, StateType
 
 
 @pytest.mark.asyncio

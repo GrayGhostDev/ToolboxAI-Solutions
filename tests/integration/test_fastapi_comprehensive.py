@@ -456,9 +456,9 @@ class FastAPITester:
         
         try:
             # Import agent modules
-            from agents.supervisor import SupervisorAgent
-            from agents.content_agent import ContentAgent
-            from agents.quiz_agent import QuizAgent
+            from core.agents.supervisor import SupervisorAgent
+            from core.agents.content_agent import ContentAgent
+            from core.agents.quiz_agent import QuizAgent
             
             self.results.add_pass("Agent imports")
             
@@ -477,11 +477,11 @@ class FastAPITester:
         logger.info("\n⚡ Testing SPARC Framework...")
         
         try:
-            from sparc.state_manager import StateManager
-            from sparc.policy_engine import PolicyEngine
-            from sparc.action_executor import ActionExecutor
-            from sparc.reward_calculator import RewardCalculator
-            from sparc.context_tracker import ContextTracker
+            from core.sparc.state_manager import StateManager
+            from core.sparc.policy_engine import PolicyEngine
+            from core.sparc.action_executor import ActionExecutor
+            from core.sparc.reward_calculator import RewardCalculator
+            from core.sparc.context_tracker import ContextTracker
             
             self.results.add_pass("SPARC imports")
             
@@ -500,9 +500,9 @@ class FastAPITester:
         logger.info("\n🐝 Testing Swarm Intelligence...")
         
         try:
-            from swarm.swarm_controller import SwarmController
-            from swarm.worker_pool import WorkerPool
-            from swarm.task_distributor import TaskDistributor
+            from core.swarm.swarm_controller import SwarmController
+            from core.swarm.worker_pool import WorkerPool
+            from core.swarm.task_distributor import TaskDistributor
             
             self.results.add_pass("Swarm imports")
             

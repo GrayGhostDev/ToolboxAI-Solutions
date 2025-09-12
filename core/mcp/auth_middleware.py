@@ -380,7 +380,7 @@ async def validate_websocket_token(token: str) -> Optional[Dict[str, Any]]:
     Uses default JWT settings from server config
     """
     try:
-        # Try to import server config
+        # Try to import apps.backend config
         from config.environment import get_environment_config
         settings = get_environment_config()
         jwt_secret = settings.JWT_SECRET_KEY

@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 // import { wsService } from "../../services/ws";
 import { subscribeToChannel, unsubscribeFromChannel } from "../../services/websocket";
 import { ENABLE_WEBSOCKET } from "../../config";
+import { WebSocketMessageType } from "../../types/websocket";
 
 export default function RealtimeToast() {
   const [message, setMessage] = React.useState<{
@@ -42,9 +43,9 @@ export default function RealtimeToast() {
       });
     };
 
-    const sub1 = subscribeToChannel('public', handleClassOnline, (msg) => msg.type === 'class_online');
-    const sub2 = subscribeToChannel('public', handleAchievement, (msg) => msg.type === 'achievement_unlocked');
-    const sub3 = subscribeToChannel('public', handleAssignmentReminder, (msg) => msg.type === 'assignment_reminder');
+    const sub1 = subscribeToChannel('public', handleClassOnline, (msg) => msg.type === WebSocketMessageType.CLASS_ONLINE);
+    const sub2 = subscribeToChannel('public', handleAchievement, (msg) => msg.type === WebSocketMessageType.ACHIEVEMENT_UNLOCKED);
+    const sub3 = subscribeToChannel('public', handleAssignmentReminder, (msg) => msg.type === WebSocketMessageType.ASSIGNMENT_REMINDER);
 
     return () => {
       unsubscribeFromChannel(sub1);

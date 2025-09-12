@@ -19,10 +19,10 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent.parent / "src" / "roblox-environment"))
 
-from server.roblox_server import app as flask_app
-from server.main import app as fastapi_app
-from agents.terrain_agent import TerrainAgent
-from agents.script_agent import ScriptAgent
+from apps.backend.roblox_server import app as flask_app
+from apps.backend.main import app as fastapi_app
+from core.agents.terrain_agent import TerrainAgent
+from core.agents.script_agent import ScriptAgent
 
 
 @pytest.fixture

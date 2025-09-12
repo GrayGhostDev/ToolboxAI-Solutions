@@ -73,18 +73,18 @@ class ServiceFactory:
     
     def create_plugin_manager(self) -> 'PluginManager':
         """Create configured PluginManager"""
-        from server.roblox_server import PluginManager
+        from apps.backend.roblox_server import PluginManager
         return PluginManager()
     
     def create_content_bridge(self) -> 'ContentBridge':
         """Create configured ContentBridge"""
-        from server.roblox_server import ContentBridge
+        from apps.backend.roblox_server import ContentBridge
         return ContentBridge()
     
     def create_security_manager(self) -> 'PluginSecurity':
         """Create configured PluginSecurity"""
         from src.shared.utils.security import PluginSecurity
-        from server.config import settings
+        from apps.backend.config import settings
         
         secret_key = getattr(settings, 'JWT_SECRET_KEY', 'default-secret')
         return PluginSecurity(secret_key)

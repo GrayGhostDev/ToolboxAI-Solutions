@@ -11,15 +11,15 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.database.connection import get_db
-from server.auth import get_current_user
-from server.analytics_advanced import (
+from apps.backend.auth import get_current_user
+from apps.backend.analytics_advanced import (
     AdvancedAnalytics,
     generate_analytics_report,
     PredictionResult,
     InsightResult,
     AnalyticsReport
 )
-from server.cache import cache_result
+from apps.backend.cache import cache_result
 import json
 import io
 import pandas as pd

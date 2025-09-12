@@ -2,8 +2,8 @@ import pytest
 from unittest.mock import Mock
 from datetime import datetime, timezone, timedelta
 
-from server.websocket_auth import WebSocketAuthSession, authenticate_websocket_message
-from server.auth import User
+from apps.backend.websocket_auth import WebSocketAuthSession, authenticate_websocket_message
+from apps.backend.auth import User
 
 
 @pytest.mark.asyncio

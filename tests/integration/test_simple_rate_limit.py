@@ -16,7 +16,7 @@ os.environ["TESTING_MODE"] = "true"
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from server.rate_limit_manager import (
+from apps.backend.rate_limit_manager import (
     RateLimitManager,
     RateLimitConfig,
     RateLimitMode,

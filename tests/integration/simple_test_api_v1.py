@@ -17,7 +17,7 @@ def test_endpoint_integration():
     
     try:
         from fastapi.testclient import TestClient
-        from server.main import app
+        from apps.backend.main import app
         
         with TestClient(app) as client:
             # Test health endpoint
@@ -73,16 +73,16 @@ def test_imports():
     print("Testing imports...")
     
     try:
-        from server.api_v1_endpoints import analytics_router, reports_router, admin_router
+        from apps.backend.api_v1_endpoints import analytics_router, reports_router, admin_router
         print("✅ API v1 routers imported successfully")
         
-        from database.connection import get_db
+        from core.database.connection import get_db
         print("✅ Database connection imported successfully")
         
-        from database.models import User, Course, Lesson, Quiz
+        from core.database.models import User, Course, Lesson, Quiz
         print("✅ Database models imported successfully")
         
-        from server.auth import get_current_user, require_role
+        from apps.backend.auth import get_current_user, require_role
         print("✅ Auth functions imported successfully")
         
         return True
@@ -99,7 +99,7 @@ def test_router_structure():
     print("Testing router structure...")
     
     try:
-        from server.api_v1_endpoints import analytics_router, reports_router, admin_router
+        from apps.backend.api_v1_endpoints import analytics_router, reports_router, admin_router
         
         # Check analytics router
         analytics_routes = [route.path for route in analytics_router.routes]

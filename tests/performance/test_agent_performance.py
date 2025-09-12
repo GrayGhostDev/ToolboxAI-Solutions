@@ -21,7 +21,7 @@ class TestAgentPerformance:
     async def test_supervisor_agent_performance(self):
         """Test SupervisorAgent performance under load"""
         try:
-            from agents.supervisor import SupervisorAgent
+            from core.agents.supervisor import SupervisorAgent
             
             supervisor = SupervisorAgent()
             response_times = []
@@ -76,7 +76,7 @@ class TestAgentPerformance:
     async def test_orchestrator_scaling(self):
         """Test Orchestrator scaling with increasing load"""
         try:
-            from agents.orchestrator import Orchestrator
+            from core.agents.orchestrator import Orchestrator
             
             orchestrator = Orchestrator()
             scaling_results = {}
@@ -144,7 +144,7 @@ class TestAgentPerformance:
     async def test_content_agent_performance(self):
         """Test ContentAgent content generation performance"""
         try:
-            from agents.content_agent import ContentAgent
+            from core.agents.content_agent import ContentAgent
             
             content_agent = ContentAgent()
             generation_times = []
@@ -196,7 +196,7 @@ class TestAgentPerformance:
     async def test_agent_memory_usage(self):
         """Test agent memory usage during sustained operation"""
         try:
-            from agents.supervisor import SupervisorAgent
+            from core.agents.supervisor import SupervisorAgent
             
             process = psutil.Process(os.getpid())
             baseline_memory = process.memory_info().rss / 1024 / 1024  # MB
@@ -256,7 +256,7 @@ class TestAgentPerformance:
     async def test_agent_parallel_processing(self):
         """Test agent parallel processing capabilities"""
         try:
-            from agents.supervisor import SupervisorAgent
+            from core.agents.supervisor import SupervisorAgent
             
             supervisor = SupervisorAgent()
             
@@ -315,7 +315,7 @@ class TestAgentPerformance:
     async def test_agent_error_handling_performance(self):
         """Test agent performance under error conditions"""
         try:
-            from agents.supervisor import SupervisorAgent
+            from core.agents.supervisor import SupervisorAgent
             
             supervisor = SupervisorAgent()
             

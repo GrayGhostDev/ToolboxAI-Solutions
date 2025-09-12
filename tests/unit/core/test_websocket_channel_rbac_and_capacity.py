@@ -3,8 +3,8 @@ import pytest
 from unittest.mock import AsyncMock
 from fastapi.websockets import WebSocketState
 
-from server.websocket import WebSocketManager
-from server.config import settings
+from apps.backend.websocket import WebSocketManager
+from apps.backend.config import settings
 
 
 @pytest.mark.asyncio

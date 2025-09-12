@@ -20,7 +20,7 @@ import time
 from datetime import datetime
 from typing import Dict, Any
 
-from agents.supervisor_advanced import (
+from core.agents.supervisor_advanced import (
     AdvancedSupervisorAgent,
     WorkflowPriority,
     create_advanced_supervisor

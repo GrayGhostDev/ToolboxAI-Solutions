@@ -138,7 +138,7 @@ def get_mock_repositories():
 def configure_rate_limiting():
     """Configure rate limiting for tests"""
     try:
-        from server.rate_limit_manager import (
+        from apps.backend.rate_limit_manager import (
             RateLimitManager,
             RateLimitMode,
             RateLimitConfig
@@ -168,8 +168,8 @@ def configure_mock_llm():
     
     # Import to trigger mock LLM initialization
     try:
-        from agents.base_agent import BaseAgent
-        from agents.mock_llm import MockLLM
+        from core.agents.base_agent import BaseAgent
+        from core.agents.mock_llm import MockLLM
         
         # Force mock LLM usage
         BaseAgent._llm = None  # Reset cached LLM
@@ -205,7 +205,7 @@ def setup_test_environment():
 def cleanup_test_environment():
     """Cleanup after tests"""
     try:
-        from server.rate_limit_manager import RateLimitManager
+        from apps.backend.rate_limit_manager import RateLimitManager
         
         # Reset rate limiting
         manager = RateLimitManager.get_instance()

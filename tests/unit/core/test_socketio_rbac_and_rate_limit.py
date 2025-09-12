@@ -3,8 +3,8 @@ import pytest
 from unittest.mock import AsyncMock
 
 from server import socketio_server as sio_srv
-from server.config import settings
-from server.rate_limit_manager import get_rate_limit_manager, RateLimitMode
+from apps.backend.config import settings
+from apps.backend.rate_limit_manager import get_rate_limit_manager, RateLimitMode
 
 
 @pytest.mark.asyncio

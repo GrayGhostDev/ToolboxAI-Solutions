@@ -17,7 +17,7 @@ from sqlalchemy import text
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from database.connection_manager import db_manager, health_check, get_session, get_async_session
+from core.database.connection_manager import db_manager, health_check, get_session, get_async_session
 
 
 class DatabaseIntegrationTest:

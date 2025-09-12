@@ -1,5 +1,5 @@
 import pytest
-from server.main import websocket_status
+from apps.backend.main import websocket_status
 
 
 @pytest.mark.asyncio

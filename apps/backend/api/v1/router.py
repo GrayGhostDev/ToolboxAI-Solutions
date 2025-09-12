@@ -35,9 +35,9 @@ from core.database.models import (
     UserProgress, UserSession, UserRole, 
     Class, Assignment, Submission
 )
-from server.auth import get_current_user, require_role, require_any_role, hash_password
-from server.websocket import WebSocketManager
-from server.cache import redis_client, cache_result
+from apps.backend.auth import get_current_user, require_role, require_any_role, hash_password
+from apps.backend.websocket import WebSocketManager
+from apps.backend.cache import redis_client, cache_result
 
 logger = logging.getLogger(__name__)
 

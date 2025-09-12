@@ -4,7 +4,7 @@ import pytest
 import json
 from unittest.mock import Mock, patch, MagicMock
 # Import real implementations from server module
-from server.roblox_server import (
+from apps.backend.roblox_server import (
     PluginManager, 
     ContentBridge, 
     app,
@@ -130,7 +130,7 @@ class TestPluginSecurity:
     
     def test_rate_limiting(self):
         """Test rate limiting"""
-        from server.rate_limit_manager import RateLimitManager, RateLimitMode
+        from apps.backend.rate_limit_manager import RateLimitManager, RateLimitMode
         
         # Get the manager and temporarily set to production mode for this test
         manager = RateLimitManager.get_instance()

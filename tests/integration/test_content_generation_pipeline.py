@@ -22,17 +22,17 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # Import agents and systems
-from agents.orchestrator import Orchestrator, WorkflowType, OrchestrationRequest
-from agents.content_agent import ContentAgent
-from agents.quiz_agent import QuizAgent
-from agents.terrain_agent import TerrainAgent
-from agents.script_agent import ScriptAgent
-from agents.review_agent import ReviewAgent
-from agents.testing_agent import TestingAgent
+from core.agents.orchestrator import Orchestrator, WorkflowType, OrchestrationRequest
+from core.agents.content_agent import ContentAgent
+from core.agents.quiz_agent import QuizAgent
+from core.agents.terrain_agent import TerrainAgent
+from core.agents.script_agent import ScriptAgent
+from core.agents.review_agent import ReviewAgent
+from core.agents.testing_agent import TestingAgent
 
 # Import database integration if available
 try:
-    from agents.database_integration import AgentDatabaseIntegration
+    from core.agents.database_integration import AgentDatabaseIntegration
     agent_db = AgentDatabaseIntegration()
     DATABASE_AVAILABLE = True
 except ImportError:
@@ -42,23 +42,23 @@ except ImportError:
 
 # Import supporting systems
 try:
-    from sparc.state_manager import StateManager
-    from sparc.policy_engine import PolicyEngine
-    from sparc.action_executor import ActionExecutor
+    from core.sparc.state_manager import StateManager
+    from core.sparc.policy_engine import PolicyEngine
+    from core.sparc.action_executor import ActionExecutor
     SPARC_AVAILABLE = True
 except ImportError:
     SPARC_AVAILABLE = False
     logger.warning("SPARC framework not available")
 
 try:
-    from swarm.swarm_controller import SwarmController
+    from core.swarm.swarm_controller import SwarmController
     SWARM_AVAILABLE = True
 except ImportError:
     SWARM_AVAILABLE = False
     logger.warning("Swarm intelligence not available")
 
 try:
-    from mcp.context_manager import ContextManager
+    from core.mcp.context_manager import ContextManager
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False
@@ -532,7 +532,7 @@ class ContentGenerationPipelineTest:
             try:
                 print(f"\n  🐝 Testing Swarm integration...")
                 # Use the factory function from swarm module
-                from swarm import create_swarm
+                from core.swarm import create_swarm
                 swarm = await create_swarm({"max_workers": 2})
                 # Swarm is already started by create_swarm
                 

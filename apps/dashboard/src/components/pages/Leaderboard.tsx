@@ -31,6 +31,7 @@ import { useAppSelector, useAppDispatch } from "../../store";
 import { fetchLeaderboard, setLeaderboard } from "../../store/slices/gamificationSlice";
 // import { wsService } from "../../services/ws";
 import { sendWebSocketMessage, subscribeToChannel, unsubscribeFromChannel } from "../../services/websocket";
+import { WebSocketMessageType } from "../../types/websocket";
 
 export default function Leaderboard() {
   const dispatch = useAppDispatch();
@@ -49,7 +50,7 @@ export default function Leaderboard() {
   // Setup WebSocket listeners for real-time updates
   useEffect(() => {
     // Request initial leaderboard from realtime channel via server-triggered event
-    void sendWebSocketMessage('request_leaderboard', { classId: currentClassId }, { channel: 'public' });
+    void sendWebSocketMessage(WebSocketMessageType.REQUEST_LEADERBOARD, { classId: currentClassId }, { channel: 'public' });
 
     // Listen for leaderboard updates
     const handleLeaderboardUpdate = (message: any) => {
@@ -57,14 +58,14 @@ export default function Leaderboard() {
       dispatch(setLeaderboard(data.leaderboard || []));
     };
 
-    const subLeaderboard = subscribeToChannel('public', handleLeaderboardUpdate, (msg) => msg.type === 'leaderboard_update');
+    const subLeaderboard = subscribeToChannel('public', handleLeaderboardUpdate, (msg) => msg.type === WebSocketMessageType.LEADERBOARD_UPDATE);
 
     const refresh = () => {
       dispatch(fetchLeaderboard({ classId: currentClassId, timeframe }));
     };
 
-    const subXP = subscribeToChannel('public', refresh, (msg) => msg.type === 'xp_gained');
-    const subBadge = subscribeToChannel('public', refresh, (msg) => msg.type === 'badge_earned');
+    const subXP = subscribeToChannel('public', refresh, (msg) => msg.type === WebSocketMessageType.XP_GAINED);
+    const subBadge = subscribeToChannel('public', refresh, (msg) => msg.type === WebSocketMessageType.BADGE_EARNED);
 
     // Cleanup
     return () => {

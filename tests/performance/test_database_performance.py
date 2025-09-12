@@ -20,7 +20,7 @@ class TestDatabasePerformance:
     async def test_database_connection_performance(self):
         """Test database connection establishment and pooling"""
         try:
-            from database.connection_manager import DatabaseManager
+            from core.database.connection_manager import DatabaseManager
             
             db_manager = DatabaseManager()
             connection_times = []
@@ -60,7 +60,7 @@ class TestDatabasePerformance:
     async def test_query_performance(self):
         """Test database query performance for common operations"""
         try:
-            from database.repositories import (
+            from core.database.repositories import (
                 UserRepository, 
                 CourseRepository, 
                 ContentRepository
@@ -119,7 +119,7 @@ class TestDatabasePerformance:
     async def test_concurrent_database_access(self):
         """Test database performance under concurrent access"""
         try:
-            from database.connection_manager import DatabaseManager
+            from core.database.connection_manager import DatabaseManager
             
             db_manager = DatabaseManager()
             concurrent_queries = 50
@@ -188,7 +188,7 @@ class TestDatabasePerformance:
     async def test_transaction_performance(self):
         """Test database transaction performance"""
         try:
-            from database.connection_manager import DatabaseManager
+            from core.database.connection_manager import DatabaseManager
             
             db_manager = DatabaseManager()
             transaction_times = []
@@ -230,7 +230,7 @@ class TestDatabasePerformance:
     async def test_large_result_set_performance(self):
         """Test performance with large result sets"""
         try:
-            from database.connection_manager import DatabaseManager
+            from core.database.connection_manager import DatabaseManager
             
             db_manager = DatabaseManager()
             
@@ -290,7 +290,7 @@ class TestDatabasePerformance:
     async def test_connection_pool_efficiency(self):
         """Test database connection pool efficiency"""
         try:
-            from database.connection_manager import DatabaseManager
+            from core.database.connection_manager import DatabaseManager
             
             db_manager = DatabaseManager()
             

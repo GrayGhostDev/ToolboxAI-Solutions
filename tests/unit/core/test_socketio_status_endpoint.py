@@ -1,5 +1,5 @@
 import pytest
-from server.main import socketio_status
+from apps.backend.main import socketio_status
 
 
 @pytest.mark.asyncio

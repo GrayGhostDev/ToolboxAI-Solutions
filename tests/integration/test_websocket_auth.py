@@ -17,13 +17,13 @@ from datetime import datetime, timezone, timedelta
 from unittest.mock import Mock, AsyncMock, patch
 
 # Test imports
-from mcp.auth_middleware import WebSocketAuthMiddleware, WebSocketAuthError
-from server.websocket_auth import (
+from core.mcp.auth_middleware import WebSocketAuthMiddleware, WebSocketAuthError
+from apps.backend.websocket_auth import (
     WebSocketAuthSession, 
     FastAPIWebSocketAuthenticator,
     websocket_authenticator
 )
-from server.auth import JWTManager, User
+from apps.backend.auth import JWTManager, User
 
 
 class TestWebSocketAuthMiddleware:
@@ -380,7 +380,7 @@ class TestWebSocketEndpointIntegration:
     @pytest.mark.asyncio
     async def test_authenticated_connection_flow(self):
         """Test complete authenticated WebSocket connection flow"""
-        from server.websocket import websocket_endpoint
+        from apps.backend.websocket import websocket_endpoint
         
         # Create mock websocket with valid token
         mock_websocket = Mock()

@@ -201,27 +201,37 @@ roblox/{Plugins,Scripts,Tests}  # ✓ Roblox files moved
 apps/backend/{api,core,services,agents,models}  # ✓ Backend restructured
 ```
 
-### 1.5 Update All Import Paths
+### 1.5 Update All Import Paths ✅ COMPLETED (2025-09-12)
 
-**Python Import Updates:**
+**✅ COMPLETED**:
+- Created Python import update script (`scripts/maintenance/update_python_imports.py`)
+  - Updated 59 files with 281 total changes
+  - Fixed imports from old structure to new core/ structure
+  - Fixed server imports to apps.backend
+  - All critical Python imports verified working
+- Created TypeScript import update script (`scripts/maintenance/update_ts_imports.cjs`)
+  - No changes needed (dashboard structure already correct)
+- Fixed TypeScript compilation errors:
+  - Added missing WebSocketMessageType enum values
+  - Fixed RealtimeToast.tsx to use enum values
+  - Fixed Leaderboard.tsx to use enum values
+  - TypeScript compilation now passes without errors
+- Properly organized ToolboxAI-Roblox-Environment:
+  - Moved toolboxai_settings to root
+  - Moved toolboxai_utils to root  
+  - Moved examples to root
+  - Cleaned up duplicate directories
+  - Kept only venv_clean and generated files in ToolboxAI-Roblox-Environment
+
+**Import Update Scripts Created:**
 ```python
-# scripts/maintenance/update_python_imports.py
-REPLACEMENTS = {
-    'from ToolboxAI-Roblox-Environment.agents': 'from core.agents',
-    'from ToolboxAI-Roblox-Environment.database': 'from core.database',
-    'from ToolboxAI-Roblox-Environment.mcp': 'from core.mcp',
-    'import ToolboxAI-Roblox-Environment': 'import core',
-}
+# scripts/maintenance/update_python_imports.py - 152 lines
+# Comprehensive Python import updater with dry-run support
 ```
 
-**TypeScript Import Updates:**
-```typescript
-// scripts/maintenance/update_ts_imports.js
-const replacements = {
-  '../dashboard/dashboard/': '../',
-  '../../dashboard/dashboard/': '../../dashboard/',
-  '@/dashboard/dashboard': '@/dashboard',
-}
+```javascript
+// scripts/maintenance/update_ts_imports.cjs - 177 lines
+// TypeScript/JavaScript import updater
 ```
 
 ### 1.6 Testing After Restructure

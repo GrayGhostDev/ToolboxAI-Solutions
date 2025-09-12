@@ -90,8 +90,8 @@ async def test_authentication_with_real_users():
         # Test token generation directly
         print("\n🔍 Testing direct token generation:")
         try:
-            from server.auth import create_user_token
-            from server.models import User
+            from apps.backend.auth import create_user_token
+            from apps.backend.models import User
             
             # Create test user
             test_user = User(
@@ -129,8 +129,8 @@ async def test_protected_endpoints():
     base_url = "http://127.0.0.1:8008"
     
     # Generate a test token
-    from server.auth import create_user_token
-    from server.models import User
+    from apps.backend.auth import create_user_token
+    from apps.backend.models import User
     
     test_user = User(
         id="teacher-123",

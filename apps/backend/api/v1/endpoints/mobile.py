@@ -14,8 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from core.database.connection import get_db
 from core.database.models import User, Content, Quiz, UserProgress, Notification
-from server.auth import get_current_user, create_access_token
-from server.cache import cache_result
+from apps.backend.auth import get_current_user, create_access_token
+from apps.backend.cache import cache_result
 import hashlib
 import json
 import asyncio

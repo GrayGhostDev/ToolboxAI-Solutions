@@ -1,6 +1,6 @@
 import pytest
-from server.main import get_ws_rbac, set_ws_rbac, WSRoleOverrides
-from server.models import User
+from apps.backend.main import get_ws_rbac, set_ws_rbac, WSRoleOverrides
+from apps.backend.models import User
 
 
 @pytest.mark.asyncio

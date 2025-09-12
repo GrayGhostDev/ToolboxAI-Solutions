@@ -38,13 +38,13 @@ class CoreAgentCommunicationTester:
     def _initialize_agents(self):
         """Initialize agents with error handling"""
         try:
-            from agents.base_agent import BaseAgent, TaskResult
-            from agents.supervisor import SupervisorAgent
-            from agents.content_agent import ContentAgent
-            from agents.quiz_agent import QuizAgent
-            from agents.terrain_agent import TerrainAgent
-            from agents.script_agent import ScriptAgent
-            from agents.review_agent import ReviewAgent
+            from core.agents.base_agent import BaseAgent, TaskResult
+            from core.agents.supervisor import SupervisorAgent
+            from core.agents.content_agent import ContentAgent
+            from core.agents.quiz_agent import QuizAgent
+            from core.agents.terrain_agent import TerrainAgent
+            from core.agents.script_agent import ScriptAgent
+            from core.agents.review_agent import ReviewAgent
             
             self.agents = {
                 "supervisor": SupervisorAgent(),
@@ -205,7 +205,7 @@ class CoreAgentCommunicationTester:
     async def test_task_result_structure(self) -> bool:
         """Test TaskResult structure and methods"""
         try:
-            from agents.base_agent import TaskResult
+            from core.agents.base_agent import TaskResult
             
             # Create a test result
             result = TaskResult(

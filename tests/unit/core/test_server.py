@@ -25,20 +25,20 @@ from httpx import AsyncClient
 from jose import jwt
 
 # Add parent directory to path for imports
-from server.main import app as fastapi_app
-from server.roblox_server import app as flask_app
+from apps.backend.main import app as fastapi_app
+from apps.backend.roblox_server import app as flask_app
 
 # Create a test-specific app without rate limiting for certain tests
 def create_test_app_without_rate_limiting():
     """Create a FastAPI app instance without rate limiting middleware for testing."""
     from fastapi import FastAPI
-    from server.main import (
+    from apps.backend.main import (
         lifespan, settings, get_current_user, generate_educational_content,
         get_agent_health, check_flask_server, websocket_manager,
         ContentRequest, ContentResponse, User, BaseResponse, HealthCheck,
         PluginMessage, PluginRegistration, Quiz, QuizResponse
     )
-    from server.auth import create_user_token, authenticate_user
+    from apps.backend.auth import create_user_token, authenticate_user
     import uuid
     from datetime import datetime, timezone
     from fastapi import Depends, HTTPException, Request, BackgroundTasks
@@ -56,14 +56,14 @@ def create_test_app_without_rate_limiting():
             test_app.routes.append(route)
     
     return test_app
-from server.models import (
+from apps.backend.models import (
     ContentRequest,
     ContentResponse,
     QuizResponse,
     BaseResponse
 )
-from server.auth import JWTManager, verify_password, hash_password, create_user_token, authenticate_user, check_permission
-from server.models import User, Session
+from apps.backend.auth import JWTManager, verify_password, hash_password, create_user_token, authenticate_user, check_permission
+from apps.backend.models import User, Session
 
 # Additional imports for real auth
 from datetime import timedelta
@@ -77,7 +77,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 def verify_token(token: str, raise_on_error: bool = True):
     """Use real JWTManager to verify tokens"""
     return JWTManager.verify_token(token, raise_on_error=raise_on_error)
-from server.config import settings
+from apps.backend.config import settings
 
 
 class TestFastAPIEndpoints:
@@ -87,7 +87,7 @@ class TestFastAPIEndpoints:
     def setup_teardown(self):
         """Setup and teardown for each test with comprehensive rate limit state reset."""
         # Store original state
-        from server.auth import memory_store
+        from apps.backend.auth import memory_store
         
         # 1. Clear memory store rate limit entries
         original_memory_keys = list(memory_store.keys())
@@ -104,7 +104,7 @@ class TestFastAPIEndpoints:
             
         # 4. Clear Redis rate limit keys if Redis is available
         try:
-            from server.auth import redis_client
+            from apps.backend.auth import redis_client
             if redis_client:
                 # Clear all rate limit keys from Redis
                 keys = redis_client.keys('rate_limit:*')
@@ -127,7 +127,7 @@ class TestFastAPIEndpoints:
             fastapi_app.state.registered_plugins = {}
             
         try:
-            from server.auth import redis_client
+            from apps.backend.auth import redis_client
             if redis_client:
                 keys = redis_client.keys('rate_limit:*')
                 if keys:
@@ -162,7 +162,7 @@ class TestFastAPIEndpoints:
             
             # Method 2: Try to create new RateLimiter instances for middleware
             # This is more drastic but ensures clean state
-            from server.security_middleware import RateLimiter, RateLimitConfig
+            from apps.backend.security_middleware import RateLimiter, RateLimitConfig
             
             # Create a new RateLimiter instance with same config but fresh state
             # This won't directly replace the one in middleware, but at least ensures
@@ -242,7 +242,7 @@ class TestFastAPIEndpoints:
     async def test_generate_content_endpoint(self, async_client, auth_headers):
         """Test content generation endpoint."""
         # Clear rate limit state before this test
-        from server.auth import memory_store
+        from apps.backend.auth import memory_store
         rate_limit_keys = [key for key in memory_store.keys() if key.startswith('rate_limit:')]
         for key in rate_limit_keys:
             memory_store.pop(key, None)
@@ -260,7 +260,7 @@ class TestFastAPIEndpoints:
         
         with patch('server.main.generate_educational_content', new_callable=AsyncMock) as mock_generate:
             # Mock the response from generate_educational_content
-            from server.models import GeneratedScript
+            from apps.backend.models import GeneratedScript
             mock_generate.return_value = ContentResponse(
                 success=True,
                 message="Content generated successfully",
@@ -298,7 +298,7 @@ class TestFastAPIEndpoints:
     async def test_generate_quiz_endpoint(self, async_client, auth_headers):
         """Test quiz generation endpoint."""
         # Clear rate limit state before this test
-        from server.auth import memory_store
+        from apps.backend.auth import memory_store
         rate_limit_keys = [key for key in memory_store.keys() if key.startswith('rate_limit:')]
         for key in rate_limit_keys:
             memory_store.pop(key, None)
@@ -382,8 +382,8 @@ class TestFastAPIEndpoints:
     async def test_protected_endpoint_with_auth(self, async_client):
         """Test accessing protected endpoint with authentication."""
         # Create admin user token for this test
-        from server.auth import create_user_token
-        from server.models import User
+        from apps.backend.auth import create_user_token
+        from apps.backend.models import User
         
         admin_user = User(
             id="admin-test-id",
@@ -407,7 +407,7 @@ class TestFastAPIEndpoints:
     @pytest.mark.asyncio
     async def test_rate_limiting(self, async_client):
         """Test rate limiting on endpoints."""
-        from server.rate_limit_manager import RateLimitManager, RateLimitMode
+        from apps.backend.rate_limit_manager import RateLimitManager, RateLimitMode
         
         # Get the manager and temporarily set to production mode for this test
         manager = RateLimitManager.get_instance()
@@ -465,8 +465,8 @@ class TestFastAPIEndpoints:
             timeout=httpx.Timeout(30.0)  # Increased timeout
         ) as client:
             # Create auth headers for this specific test
-            from server.models import User
-            from server.auth import create_user_token
+            from apps.backend.models import User
+            from apps.backend.auth import create_user_token
             
             test_user = User(
                 id="test-error-user",
@@ -765,7 +765,7 @@ class TestAuthentication:
     
     def test_role_based_access_control(self):
         """Test role-based access control."""
-        from server.auth import check_permission
+        from apps.backend.auth import check_permission
         
         # Teacher permissions (teachers can access teacher and student permissions)
         teacher = User(
@@ -954,7 +954,7 @@ class TestPerformance:
     def setup_teardown(self):
         """Setup and teardown for each test."""
         # Clear rate limit state
-        from server.auth import memory_store
+        from apps.backend.auth import memory_store
         rate_limit_keys = [key for key in memory_store.keys() if key.startswith('rate_limit:')]
         for key in rate_limit_keys:
             memory_store.pop(key, None)
@@ -1011,8 +1011,8 @@ class TestPerformance:
     @pytest.mark.performance
     async def test_large_payload_handling(self):
         """Test handling large payloads."""
-        from server.models import User
-        from server.auth import create_user_token
+        from apps.backend.models import User
+        from apps.backend.auth import create_user_token
         
         # Use test app without rate limiting for this test
         test_app = create_test_app_without_rate_limiting()

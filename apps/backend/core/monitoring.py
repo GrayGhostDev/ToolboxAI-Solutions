@@ -23,7 +23,7 @@ from sentry_sdk.integrations.redis import RedisIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 
-from ..config import settings
+from .config import settings
 
 logger = logging.getLogger(__name__)
 

@@ -21,15 +21,15 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import Runnable
 
 # Import agent modules
-from agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
-from agents.content_agent import ContentAgent
-from agents.quiz_agent import QuizAgent
-from agents.terrain_agent import TerrainAgent
-from agents.script_agent import ScriptAgent
-from agents.review_agent import ReviewAgent
-from agents.supervisor import SupervisorAgent
-from agents.orchestrator import Orchestrator, OrchestrationResult
-from agents.testing_agent import TestingAgent, TestType, TestStatus, TestSuiteResult
+from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
+from core.agents.content_agent import ContentAgent
+from core.agents.quiz_agent import QuizAgent
+from core.agents.terrain_agent import TerrainAgent
+from core.agents.script_agent import ScriptAgent
+from core.agents.review_agent import ReviewAgent
+from core.agents.supervisor import SupervisorAgent
+from core.agents.orchestrator import Orchestrator, OrchestrationResult
+from core.agents.testing_agent import TestingAgent, TestType, TestStatus, TestSuiteResult
 
 
 # Create a concrete implementation of BaseAgent for testing

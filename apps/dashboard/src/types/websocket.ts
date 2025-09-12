@@ -102,7 +102,18 @@ export enum WebSocketMessageType {
   
   // Analytics
   ANALYTICS_EVENT = 'analytics_event',
-  METRICS_UPDATE = 'metrics_update'
+  METRICS_UPDATE = 'metrics_update',
+  
+  // Notification & Achievement Events (from RealtimeToast.tsx)
+  CLASS_ONLINE = 'class_online',
+  ACHIEVEMENT_UNLOCKED = 'achievement_unlocked',
+  ASSIGNMENT_REMINDER = 'assignment_reminder',
+  
+  // Leaderboard Events (from Leaderboard.tsx)
+  REQUEST_LEADERBOARD = 'request_leaderboard',
+  LEADERBOARD_UPDATE = 'leaderboard_update',
+  XP_GAINED = 'xp_gained',
+  BADGE_EARNED = 'badge_earned'
 }
 
 // Channel Types
