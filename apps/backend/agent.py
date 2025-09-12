@@ -31,24 +31,33 @@ from .config import settings
 from .models import ContentRequest, ContentResponse, User
 from .tools import ALL_TOOLS
 
+# Import placeholder agent classes
+from .agent_classes import (
+    ContentGenerationAgent,
+    QuizGenerationAgent,
+    TerrainGenerationAgent,
+    ScriptGenerationAgent,
+    CodeReviewAgent
+)
+
 logger = logging.getLogger(__name__)
 
 
 sys.path.append(str(Path(__file__).parent.parent))
 
 try:
-    from agents.content_agent import ContentAgent  # type: ignore
-    from agents.orchestrator import OrchestrationEngine  # type: ignore
-    from agents.quiz_agent import QuizAgent  # type: ignore
-    from agents.review_agent import ReviewAgent  # type: ignore
-    from agents.script_agent import ScriptAgent  # type: ignore
-    from agents.supervisor import SupervisorAgent  # type: ignore
-    from agents.terrain_agent import TerrainAgent  # type: ignore
-    from coordinators.main_coordinator import MainCoordinator  # type: ignore
-    from sparc.state_manager import StateManager  # type: ignore
-    from swarm.swarm_controller import SwarmController  # type: ignore
-    from mcp.context_manager import ContextManager  # type: ignore
-    from mcp.server import MCPServer  # type: ignore
+    from core.agents.content_agent import ContentAgent  # type: ignore
+    from core.agents.orchestrator import OrchestrationEngine  # type: ignore
+    from core.agents.quiz_agent import QuizAgent  # type: ignore
+    from core.agents.review_agent import ReviewAgent  # type: ignore
+    from core.agents.script_agent import ScriptAgent  # type: ignore
+    from core.agents.supervisor import SupervisorAgent  # type: ignore
+    from core.agents.terrain_agent import TerrainAgent  # type: ignore
+    from core.coordinators.main_coordinator import MainCoordinator  # type: ignore
+    from core.sparc.state_manager import StateManager  # type: ignore
+    from core.swarm.swarm_controller import SwarmController  # type: ignore
+    from core.mcp.context_manager import MCPContextManager as ContextManager  # type: ignore
+    from core.mcp.server import MCPServer  # type: ignore
 except ImportError as e:
     logger.warning(
         "Could not import agent modules: %s. Some features may be limited.", e
@@ -63,14 +72,9 @@ except ImportError as e:
             self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
             self.memory = ConversationBufferMemory(return_messages=True)
             
-            # Initialize sub-agent references
-            self.agents = {
-                "content": ContentGenerationAgent(self.llm),
-                "quiz": QuizGenerationAgent(self.llm),
-                "terrain": TerrainGenerationAgent(self.llm),
-                "script": ScriptGenerationAgent(self.llm),
-                "review": CodeReviewAgent(self.llm)
-            }
+            # Initialize sub-agent references (lazy initialization)
+            self.agents = {}
+            self._agents_initialized = False
             
             # Configure routing patterns
             self.routing_patterns = {
@@ -82,12 +86,27 @@ except ImportError as e:
             }
             
             # Agent load tracking
-            self.agent_load = {agent: 0 for agent in self.agents.keys()}
+            self.agent_load = {}
             self.max_retries = 3
-            logger.info("SupervisorAgent initialized with %d sub-agents", len(self.agents))
+            logger.info("SupervisorAgent initialized with routing patterns")
+        
+        def _init_agents(self):
+            """Initialize agents on first use"""
+            if not self._agents_initialized:
+                self.agents = {
+                    "content": ContentGenerationAgent(self.llm),
+                    "quiz": QuizGenerationAgent(self.llm),
+                    "terrain": TerrainGenerationAgent(self.llm),
+                    "script": ScriptGenerationAgent(self.llm),
+                    "review": CodeReviewAgent(self.llm)
+                }
+                self.agent_load = {agent: 0 for agent in self.agents.keys()}
+                self._agents_initialized = True
+                logger.info("SupervisorAgent initialized %d sub-agents", len(self.agents))
 
         async def route_task(self, task_description: str, context: dict = None, *args, **kwargs):
             "Route task to appropriate agent based on intelligent analysis"
+            self._init_agents()  # Initialize agents if not already done
             task_lower = task_description.lower()
             
             # Analyze task description for routing
@@ -120,173 +139,7 @@ except ImportError as e:
             logger.info("Routing task to %s agent: %s", selected_agent, task_description[:50])
             return selected_agent
 
-    class ContentGenerationAgent:
-        "Content generation agent for educational materials"
-
-        def __init__(self, llm=None, *args, **kwargs):
-            "Initialize content generation agent"
-            self.memory = ConversationBufferMemory(return_messages=True)
-            self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
-            self.content_templates = {
-                "lesson": "Create an engaging lesson about {topic} for grade {grade}",
-                "activity": "Design an interactive activity for {topic} suitable for {age} year olds",
-                "explanation": "Explain {concept} in simple terms for {grade} grade students"
-            }
-
-        async def generate_content(self, subject: str, grade_level: int, objectives: list, 
-                                  include_assessment: bool = True, *args, **kwargs):
-            "Generate educational content based on curriculum requirements"
-            # Parse educational requirements
-            age_range = grade_level + 5  # Approximate age from grade
-            
-            # Build content prompt
-            prompt = f"""
-            Create educational content for:
-            - Subject: {subject}
-            - Grade Level: {grade_level} (Age ~{age_range})
-            - Learning Objectives: {', '.join(objectives)}
-            
-            Requirements:
-            1. Age-appropriate language and concepts
-            2. Interactive elements for engagement
-            3. Clear learning outcomes
-            4. Roblox game integration opportunities
-            """
-            
-            if include_assessment:
-                prompt += "\n5. Include assessment questions to test understanding"
-            
-            # Generate content using LLM
-            messages = [
-                HumanMessage(content=prompt),
-                *self.memory.chat_memory.messages[-10:]  # Include recent context
-            ]
-            
-            response = await self.llm.ainvoke(messages)
-            
-            # Format for Roblox implementation
-            content = {
-                "subject": subject,
-                "grade_level": grade_level,
-                "objectives": objectives,
-                "content": response.content,
-                "interactive_elements": self._extract_interactive_elements(response.content),
-                "roblox_integration": self._generate_roblox_integration(subject, objectives)
-            }
-            
-            # Store in memory
-            self.memory.chat_memory.add_user_message(prompt)
-            self.memory.chat_memory.add_ai_message(response.content)
-            
-            logger.info("Generated content for %s grade %d", subject, grade_level)
-            return content
-        
-        def _extract_interactive_elements(self, content: str) -> list:
-            "Extract interactive elements from generated content"
-            elements = []
-            if "quiz" in content.lower():
-                elements.append("quiz")
-            if "activity" in content.lower():
-                elements.append("activity")
-            if "game" in content.lower():
-                elements.append("game")
-            return elements
-        
-        def _generate_roblox_integration(self, subject: str, objectives: list) -> dict:
-            "Generate Roblox-specific integration suggestions"
-            return {
-                "environment_type": self._suggest_environment(subject),
-                "game_mechanics": self._suggest_mechanics(objectives),
-                "ui_elements": ["lesson_display", "progress_tracker", "reward_system"]
-            }
-        
-        def _suggest_environment(self, subject: str) -> str:
-            "Suggest appropriate Roblox environment for subject"
-            environments = {
-                "science": "laboratory",
-                "history": "time_machine",
-                "math": "puzzle_world",
-                "geography": "world_map",
-                "language": "library"
-            }
-            return environments.get(subject.lower(), "classroom")
-        
-        def _suggest_mechanics(self, objectives: list) -> list:
-            "Suggest game mechanics based on learning objectives"
-            mechanics = []
-            for obj in objectives:
-                obj_lower = obj.lower()
-                if "solve" in obj_lower or "calculate" in obj_lower:
-                    mechanics.append("puzzle_solving")
-                elif "explore" in obj_lower or "discover" in obj_lower:
-                    mechanics.append("exploration")
-                elif "build" in obj_lower or "create" in obj_lower:
-                    mechanics.append("building")
-            return mechanics or ["quiz", "collection"]
-
-    class QuizGenerationAgent:
-        def __init__(self, *args, **kwargs):
-            # TODO: Initialize quiz generation agent
-            # - Set up question templates
-            # - Configure difficulty levels
-            # - Initialize answer validation logic
-            pass
-
-        async def generate_quiz(self, *args, **kwargs):
-            # TODO: Implement quiz generation
-            # - Generate questions based on learning objectives
-            # - Create multiple choice and free response options
-            # - Implement adaptive difficulty
-            # - Add hints and explanations
-            return {}
-
-    class TerrainGenerationAgent:
-        def __init__(self, *args, **kwargs):
-            # TODO: Initialize terrain generation agent
-            # - Load terrain templates
-            # - Set up biome configurations
-            # - Initialize Roblox terrain API interface
-            pass
-
-        async def generate_terrain(self, *args, **kwargs):
-            # TODO: Implement terrain generation
-            # - Select appropriate terrain type for subject
-            # - Generate Lua code for terrain creation
-            # - Add environmental details and props
-            # - Optimize for performance
-            return {}
-
-    class ScriptGenerationAgent:
-        def __init__(self, *args, **kwargs):
-            # TODO: Initialize script generation agent
-            # - Set up Lua code templates
-            # - Configure security constraints
-            # - Initialize syntax validation
-            pass
-
-        async def generate_script(self, *args, **kwargs):
-            # TODO: Implement Lua script generation
-            # - Generate game mechanics scripts
-            # - Create UI interaction scripts
-            # - Implement network communication code
-            # - Add error handling and validation
-            return {}
-
-    class CodeReviewAgent:
-        def __init__(self, *args, **kwargs):
-            # TODO: Initialize code review agent
-            # - Set up security checkers
-            # - Configure performance analyzers
-            # - Initialize best practice validators
-            pass
-
-        async def review_code(self, *args, **kwargs):
-            # TODO: Implement code review logic
-            # - Check for security vulnerabilities
-            # - Validate Roblox best practices
-            # - Analyze performance implications
-            # - Suggest optimizations
-            return {}
+    # Agent classes are now imported at module level from agent_classes.py
 
     class OrchestrationEngine:
         def __init__(self, *args, **kwargs):
@@ -721,12 +574,13 @@ class AgentManager:
         self.result_aggregator = ResultAggregator()
         self.orchestrator = OrchestrationEngine()
         self.sparc_manager = StateManager()
-        self.swarm_controller = SwarmController()
+        # Initialize swarm controller (disabled for now, requires full configuration)
+        self.swarm_controller = None  # SwarmController requires complex initialization
         self.main_coordinator = MainCoordinator()
         
         # Initialize MCP for context management
-        self.mcp_context = ContextManager(max_context_size=16384)
-        self.mcp_server = MCPServer(host="127.0.0.1", port=9876)
+        self.mcp_context = ContextManager(max_tokens=16384)
+        self.mcp_server = MCPServer(port=9876)
 
         # Task tracking
         self.active_tasks: Dict[str, Dict[str, Any]] = {}

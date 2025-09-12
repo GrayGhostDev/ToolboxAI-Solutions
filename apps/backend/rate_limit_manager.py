@@ -26,7 +26,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from uuid import uuid4
 
 import redis
-from server.config import settings
+from config.environment import get_environment_config
+settings = get_environment_config()
 
 logger = logging.getLogger(__name__)
 

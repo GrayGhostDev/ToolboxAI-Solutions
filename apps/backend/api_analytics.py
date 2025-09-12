@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.connection import get_db
+from core.database.connection import get_db
 from server.auth import get_current_user
 from server.analytics_advanced import (
     AdvancedAnalytics,

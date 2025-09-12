@@ -29,13 +29,13 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 
-from database.connection import get_db
-from database.models import (
+from core.database.connection import get_db
+from core.database.models import (
     User, EducationalContent, Quiz, QuizAttempt,
     UserProgress, UserSession, UserRole, 
     Class, Assignment, Submission
 )
-from server.auth import get_current_user, require_role, hash_password
+from server.auth import get_current_user, require_role, require_any_role, hash_password
 from server.websocket import WebSocketManager
 from server.cache import redis_client, cache_result
 
@@ -994,7 +994,6 @@ async def download_report(
 # ==========================================
 
 @admin_router.get("/users", response_model=UserListResponse)
-@require_role([UserRole.ADMIN, UserRole.TEACHER])
 async def list_users(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, le=100),
@@ -1005,7 +1004,7 @@ async def list_users(
     sort_by: str = Query(default="created_at"),
     sort_order: SortOrder = Query(default=SortOrder.DESC),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_any_role([UserRole.ADMIN.value, UserRole.TEACHER.value]))
 ):
     """
     List users with pagination and filtering.
@@ -1105,11 +1104,10 @@ async def list_users(
         raise HTTPException(status_code=500, detail="Failed to list users")
 
 @admin_router.post("/users", response_model=UserResponse)
-@require_role([UserRole.ADMIN])
 async def create_user(
     request: UserCreateRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_role(UserRole.ADMIN.value))
 ):
     """
     Create a new user.
@@ -1177,12 +1175,11 @@ async def create_user(
         raise HTTPException(status_code=500, detail="Failed to create user")
 
 @admin_router.put("/users/{user_id}", response_model=UserResponse)
-@require_role([UserRole.ADMIN])
 async def update_user(
     user_id: str,
     request: UserUpdateRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_role(UserRole.ADMIN.value))
 ):
     """
     Update an existing user.
@@ -1262,12 +1259,11 @@ async def update_user(
         raise HTTPException(status_code=500, detail="Failed to update user")
 
 @admin_router.delete("/users/{user_id}")
-@require_role([UserRole.ADMIN])
 async def delete_user(
     user_id: str,
     permanent: bool = Query(default=False),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_role(UserRole.ADMIN.value))
 ):
     """
     Delete or deactivate a user.

@@ -22,8 +22,9 @@ from sqlalchemy import text, pool, event
 from sqlalchemy.exc import DBAPIError, OperationalError, IntegrityError
 from sqlalchemy.pool import NullPool, QueuePool
 
-from database.models import Base
-from server.config import settings
+from core.database.models import Base
+from config.environment import get_environment_config
+settings = get_environment_config()
 
 logger = logging.getLogger(__name__)
 
@@ -352,6 +353,20 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
+async def get_async_session(database: str = "education") -> AsyncGenerator[AsyncSession, None]:
+    """
+    Get async database session
+    
+    Args:
+        database: Database name (default: "education")
+    
+    Yields:
+        Database session
+    """
+    async with db_manager.get_session() as session:
+        yield session
+
+
 # Utility functions for common database operations
 async def create_or_update(
     session: AsyncSession,
@@ -476,3 +491,17 @@ async def init_db():
 async def close_db():
     """Close database connection on shutdown"""
     await db_manager.close()
+
+
+# Export all public functions and classes
+__all__ = [
+    "DatabaseManager",
+    "db_manager",
+    "get_db",
+    "get_async_session",
+    "create_or_update",
+    "bulk_insert",
+    "paginate_query",
+    "init_db",
+    "close_db",
+]

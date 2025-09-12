@@ -22,7 +22,7 @@ import asyncio
 import json
 from sqlalchemy import select, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import (
+from core.database.models import (
     User, Course, Lesson, Quiz, QuizAttempt,
     UserProgress, Analytics, Content
 )

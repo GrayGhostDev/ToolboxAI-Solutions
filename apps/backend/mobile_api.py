@@ -12,8 +12,8 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
-from database.connection import get_db
-from database.models import User, Content, Quiz, UserProgress, Notification
+from core.database.connection import get_db
+from core.database.models import User, Content, Quiz, UserProgress, Notification
 from server.auth import get_current_user, create_access_token
 from server.cache import cache_result
 import hashlib

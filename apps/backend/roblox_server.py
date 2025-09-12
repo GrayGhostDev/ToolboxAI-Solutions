@@ -33,16 +33,17 @@ import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from server.config import settings
+from config.environment import get_environment_config
+settings = get_environment_config()
 from toolboxai_utils.async_utils import run_async
 from server.rate_limit_manager import get_rate_limit_manager
 
 # Import agent systems for integration
 try:
-    from agents.supervisor import SupervisorAgent
-    from sparc.state_manager import StateManager  # Fixed: was SPARCStateManager
-    from swarm.swarm_controller import SwarmController
-    from mcp.context_manager import ContextManager
+    from core.agents.supervisor import SupervisorAgent
+    from core.sparc.state_manager import StateManager  # Fixed: was SPARCStateManager
+    from core.swarm.swarm_controller import SwarmController
+    from core.mcp.context_manager import ContextManager
     AGENT_INTEGRATION = True
     print("Agent systems successfully imported for Flask bridge")
 except ImportError as e:
@@ -655,11 +656,11 @@ class ContentBridge:
                 self.sparc_manager = StateManager()  # Fixed: was SPARCStateManager
                 
                 # Initialize SwarmController with all required dependencies
-                from swarm.worker_pool import WorkerPool
-                from swarm.task_distributor import TaskDistributor
-                from swarm.consensus_engine import ConsensusEngine
-                from swarm.load_balancer import LoadBalancer
-                from swarm.swarm_controller import SwarmConfig
+                from core.swarm.worker_pool import WorkerPool
+                from core.swarm.task_distributor import TaskDistributor
+                from core.swarm.consensus_engine import ConsensusEngine
+                from core.swarm.load_balancer import LoadBalancer
+                from core.swarm.swarm_controller import SwarmConfig
                 
                 swarm_config = SwarmConfig()
                 worker_pool = WorkerPool(max_workers=swarm_config.max_workers)
@@ -1713,7 +1714,7 @@ def trigger_agent_pipeline():
         
         # Trigger agent pipeline
         if AGENT_INTEGRATION:
-            from agents.plugin_communication import PluginCommunicationHub
+            from core.agents.plugin_communication import PluginCommunicationHub
             
             hub = PluginCommunicationHub()
             result = run_async(hub.handle_plugin_request({

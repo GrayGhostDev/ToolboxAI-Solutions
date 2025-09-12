@@ -19,7 +19,8 @@ from fastapi import Request, Response
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from server.config import settings
+from config.environment import get_environment_config
+settings = get_environment_config()
 
 logger = logging.getLogger(__name__)
 

@@ -1148,7 +1148,8 @@ class MainCoordinator:
         self.supervisor = None
         self.orchestrator = OrchestrationEngine()
         self.sparc_manager = StateManager()
-        self.swarm_controller = SwarmController()
+        # Initialize swarm controller (disabled for now, requires full configuration)
+        self.swarm_controller = None  # SwarmController requires complex initialization
         
         self.active_sessions = {}
         self.performance_metrics = {}

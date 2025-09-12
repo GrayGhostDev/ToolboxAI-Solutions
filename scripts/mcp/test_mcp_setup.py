@@ -21,7 +21,7 @@ def test_imports():
     print("🔍 Testing imports...")
 
     try:
-        from mcp.server import MCPServer
+        from core.mcp.server import MCPServer
 
         print("✅ MCP Server imported successfully")
     except ImportError as e:
@@ -29,7 +29,7 @@ def test_imports():
         return False
 
     try:
-        from agents.orchestrator import Orchestrator
+        from core.agents.orchestrator import Orchestrator
 
         print("✅ Agent Orchestrator imported successfully")
     except ImportError as e:
@@ -37,7 +37,7 @@ def test_imports():
         return False
 
     try:
-        from sparc.state_manager import StateManager
+        from core.sparc.state_manager import StateManager
 
         print("✅ SPARC Manager imported successfully")
     except ImportError as e:
@@ -52,7 +52,7 @@ async def test_mcp_server():
     print("🔍 Testing MCP server...")
 
     try:
-        from mcp.server import MCPServer
+        from core.mcp.server import MCPServer
 
         server = MCPServer(port=9877, max_tokens=1000)  # Use different port for testing
         print("✅ MCP Server created successfully")
