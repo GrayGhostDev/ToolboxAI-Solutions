@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, AuthResponse } from '../types/api';
 import { UserRole } from '../types/roles';
 import { getUserConfig, TEST_USERS } from '../config/users';
-import ApiClient from '../services/api';
+import ApiClient, { getMyProfile, updateUser as apiUpdateUser } from '../services/api';
 import { store } from '../store';
 import { addNotification } from '../store/slices/uiSlice';
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from '../config';
@@ -22,7 +22,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   register: (userData: any) => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
-  refreshAuth: () => Promise<void>;
+  refreshAuth: () => Promise<AuthResponse>;
   checkPermission: (permission: string) => boolean;
   switchRole: (role: UserRole) => void; // For development/testing
 }
@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token) {
         try {
           // Verify token and get user data
-          const response = await apiClient.getCurrentUser();
+          const response = await getMyProfile();
           if (response) {
             setUser(response);
             const config = getUserConfig(response.role as UserRole);
@@ -219,12 +219,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [apiClient]);
 
   // Update user profile
-  const updateProfile = useCallback(async (updates: Partial<User>) => {
+const updateProfile = useCallback(async (updates: Partial<User>) => {
     if (!user) return;
     
     setIsLoading(true);
     try {
-      const updatedUser = await apiClient.updateUser(user.id, updates);
+      const updatedUser = await apiUpdateUser(user.id, updates);
       setUser(updatedUser);
       
       store.dispatch(addNotification({
@@ -268,7 +268,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [apiClient, handleAuthSuccess, logout]);
 
-  // Check permission based on user role
+// Check permission based on user role
   const checkPermission = useCallback((permission: string): boolean => {
     if (!userConfig) return false;
     
@@ -281,9 +281,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       'play.roblox': userConfig.features.dashboard.showRobloxIntegration,
       'send.messages': userConfig.features.notifications.types.includes('message'),
       // Add more permission mappings as needed
-    };
+    } as Record<string, boolean>;
     
-    return permissions[permission] || false;
+    return Boolean(permissions[permission]);
   }, [userConfig]);
 
   // Switch role (for development/testing)
@@ -308,10 +308,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [tokenRefreshTimer]);
   
-  // Initialize WebSocket connection when authenticated
+// Initialize WebSocket connection when authenticated
   useEffect(() => {
     const initWebSocket = async () => {
-      if (user && isAuthenticated) {
+      const isAuth = !!user;
+      if (user && isAuth) {
         const token = localStorage.getItem(AUTH_TOKEN_KEY);
         if (token) {
           const { websocketService } = await import('../services/websocket');
@@ -330,7 +331,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     
     initWebSocket();
-  }, [user, isAuthenticated, refreshAuth]);
+  }, [user, refreshAuth]);
 
   const value = {
     user,

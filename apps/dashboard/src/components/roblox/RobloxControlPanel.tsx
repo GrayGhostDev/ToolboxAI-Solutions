@@ -174,7 +174,7 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
   const [activeStep, setActiveStep] = useState(0);
   
   // Content generation form state
-  const [contentForm, setContentForm] = useState<ContentGenerationRequest>({
+  const [contentForm, setContentForm] = useState<Partial<ContentGenerationRequest> & { duration?: number; maxStudents?: number; difficulty?: string }>({
     requestId: '',
     subject: 'Mathematics',
     gradeLevel: 5,
@@ -264,9 +264,14 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
         .filter(obj => obj.length > 0);
       
       const request: ContentGenerationRequest = {
-        ...contentForm,
+        subject: contentForm.subject || 'Mathematics',
+        gradeLevel: contentForm.gradeLevel || 5,
+        learningObjectives: objectives,
+        environmentType: contentForm.environmentType || 'classroom',
+        includeQuiz: contentForm.includeQuiz,
+        difficultyLevel: (contentForm.difficulty as any) || 'medium',
         requestId: `req_${Date.now()}`,
-        learningObjectives: objectives
+        userId: (typeof window !== 'undefined' && localStorage.getItem('current_user_id')) || 'unknown'
       };
       
       // Send generation request

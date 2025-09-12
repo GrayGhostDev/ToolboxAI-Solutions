@@ -179,7 +179,7 @@ export default function Assessments() {
         </Grid>
 
         {/* Assessment Stats */}
-        <Grid size={{ xs: 12, md: 3 }}>
+        <Grid item xs={12} md={3}>
           <Card>
             <CardContent>
               <Stack spacing={1}>

@@ -92,17 +92,18 @@ const StudentProgressTracker: React.FC = () => {
   // Update data when real-time updates arrive
   useEffect(() => {
     if (progressData) {
-      setMetrics(progressData.metrics || {
-        totalStudents: progressData.students?.length || 0,
-        averageProgress: Math.round(
-          progressData.students?.reduce((acc: number, s: any) => acc + s.overallProgress, 0) / 
-          (progressData.students?.length || 1)
-        ),
-        topPerformers: progressData.students?.filter((s: any) => s.overallProgress >= 80).length || 0,
-        needsAttention: progressData.students?.filter((s: any) => s.overallProgress < 60).length || 0,
-        activeNow: progressData.students?.filter((s: any) => s.status === 'online').length || 0,
+const anyProgress: any = progressData as any;
+      setMetrics(anyProgress.metrics || {
+        totalStudents: anyProgress.students?.length || 0,
+        averageProgress: (
+          anyProgress.students?.reduce((acc: number, s: any) => acc + s.overallProgress, 0) /
+          (anyProgress.students?.length || 1)
+        ) || 0,
+        topPerformers: anyProgress.students?.filter((s: any) => s.overallProgress >= 80).length || 0,
+        needsAttention: anyProgress.students?.filter((s: any) => s.overallProgress < 60).length || 0,
+        activeNow: anyProgress.students?.filter((s: any) => s.status === 'online').length || 0,
       });
-      setStudents(progressData.students || mockStudents);
+      setStudents(anyProgress.students || mockStudents);
     } else {
       // Use mock data if no real data available
       setStudents(mockStudents);

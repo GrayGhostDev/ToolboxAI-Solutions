@@ -1,0 +1,33 @@
+# Sample SSH config for Kafka tunnels via a bastion
+# Copy the relevant parts into ~/.ssh/config and substitute values.
+
+Host *
+  AddKeysToAgent yes
+  UseKeychain yes
+  IdentitiesOnly yes
+  ServerAliveInterval 30
+  ServerAliveCountMax 3
+  TCPKeepAlive yes
+  HashKnownHosts yes
+  ControlMaster auto
+  ControlPath ~/.ssh/cm-%r@%h:%p
+  ControlPersist 10m
+
+# Bastion/Jump host used for Kafka tunneling
+Host bastion-kafka
+  HostName {{BASTION_HOST}}
+  User {{SSH_USER}}
+  Port 22
+  IdentityFile ~/.ssh/id_ed25519
+
+# Optional: If you prefer to manage tunnels straight from SSH config
+# (you can also use the scripts/network/kafka_tunnels.sh script instead).
+Host kafka-tunnels
+  HostName {{BASTION_HOST}}
+  User {{SSH_USER}}
+  IdentityFile ~/.ssh/id_ed25519
+  # Bind each broker to a unique loopback alias at its native port
+  # Adjust hostnames/ports to match your cluster
+  LocalForward 127.0.0.2:9092 BROKER1_HOST:9092
+  LocalForward 127.0.0.3:9092 BROKER2_HOST:9092
+  LocalForward 127.0.0.4:9092 BROKER3_HOST:9092

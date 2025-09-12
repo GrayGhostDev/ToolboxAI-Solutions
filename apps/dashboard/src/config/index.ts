@@ -5,6 +5,11 @@ export const API_BASE_URL = rawApi.replace(/\/+$/, '').replace(/\/api\/v1$/, '')
 const rawWs = (import.meta.env.VITE_WS_URL as string) || `http://${window.location.hostname}:8008`;
 export const WS_URL = rawWs.replace(/\/+$/, '');
 
+// Pusher configuration (Channels)
+export const PUSHER_KEY = (import.meta.env.VITE_PUSHER_KEY as string) || '';
+export const PUSHER_CLUSTER = (import.meta.env.VITE_PUSHER_CLUSTER as string) || 'us2';
+export const PUSHER_AUTH_ENDPOINT = (import.meta.env.VITE_PUSHER_AUTH_ENDPOINT as string) || `${API_BASE_URL}/pusher/auth`;
+
 export const AUTH_TOKEN_KEY = import.meta.env.VITE_AUTH_TOKEN_KEY || "toolboxai_auth_token";
 export const AUTH_REFRESH_TOKEN_KEY = import.meta.env.VITE_AUTH_REFRESH_TOKEN_KEY || "toolboxai_refresh_token";
 

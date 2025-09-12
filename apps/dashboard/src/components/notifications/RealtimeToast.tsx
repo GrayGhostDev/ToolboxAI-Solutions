@@ -4,7 +4,8 @@ import Alert from "@mui/material/Alert";
 import Avatar from "@mui/material/Avatar";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { wsService } from "../../services/ws";
+// import { wsService } from "../../services/ws";
+import { subscribeToChannel, unsubscribeFromChannel } from "../../services/websocket";
 import { ENABLE_WEBSOCKET } from "../../config";
 
 export default function RealtimeToast() {
@@ -17,38 +18,38 @@ export default function RealtimeToast() {
   React.useEffect(() => {
     if (!ENABLE_WEBSOCKET) return;
 
-    const handleClassOnline = (data: any) => {
+    const handleClassOnline = (message: any) => {
       setMessage({
-        text: `Class "${data.className}" is now online!`,
+        text: `Class \"${message.payload?.className || 'Unknown'}\" is now online!`,
         type: "info",
         icon: "🏫",
       });
     };
 
-    const handleAchievement = (data: any) => {
+    const handleAchievement = (message: any) => {
       setMessage({
-        text: data.message,
+        text: message.payload?.message || 'Achievement unlocked!',
         type: "success",
         icon: "🏆",
       });
     };
 
-    const handleAssignmentReminder = (data: any) => {
+    const handleAssignmentReminder = (message: any) => {
       setMessage({
-        text: data.message,
+        text: message.payload?.message || 'Assignment due soon',
         type: "warning",
         icon: "📝",
       });
     };
 
-    wsService.on("class_online", handleClassOnline);
-    wsService.on("achievement_unlocked", handleAchievement);
-    wsService.on("assignment_reminder", handleAssignmentReminder);
+    const sub1 = subscribeToChannel('public', handleClassOnline, (msg) => msg.type === 'class_online');
+    const sub2 = subscribeToChannel('public', handleAchievement, (msg) => msg.type === 'achievement_unlocked');
+    const sub3 = subscribeToChannel('public', handleAssignmentReminder, (msg) => msg.type === 'assignment_reminder');
 
     return () => {
-      wsService.off("class_online", handleClassOnline);
-      wsService.off("achievement_unlocked", handleAchievement);
-      wsService.off("assignment_reminder", handleAssignmentReminder);
+      unsubscribeFromChannel(sub1);
+      unsubscribeFromChannel(sub2);
+      unsubscribeFromChannel(sub3);
     };
   }, []);
 

@@ -1,36 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import * as api from '../../services/api';
-
-interface ComplianceStatus {
-  coppa: {
-    status: 'compliant' | 'warning' | 'violation';
-    score: number;
-    issues: string[];
-    lastAudit: string;
-    nextAudit: string;
-  };
-  ferpa: {
-    status: 'compliant' | 'warning' | 'violation';
-    score: number;
-    issues: string[];
-    lastAudit: string;
-    nextAudit: string;
-  };
-  gdpr: {
-    status: 'compliant' | 'warning' | 'violation';
-    score: number;
-    issues: string[];
-    lastAudit: string;
-    nextAudit: string;
-  };
-  ccpa?: {
-    status: 'compliant' | 'warning' | 'violation';
-    score: number;
-    issues: string[];
-    lastAudit: string;
-    nextAudit: string;
-  };
-}
+import type { ComplianceStatus as ApiComplianceStatus } from '../../types/api';
 
 interface AuditLog {
   id: string;
@@ -68,7 +38,7 @@ interface DataRetentionPolicy {
 }
 
 interface ComplianceState {
-  status: ComplianceStatus | null;
+  status: ApiComplianceStatus | null;
   auditLogs: AuditLog[];
   consentRecords: ConsentRecord[];
   dataRetention: DataRetentionPolicy[];
@@ -245,16 +215,14 @@ const complianceSlice = createSlice({
         state.status = action.payload;
         state.lastChecked = new Date().toISOString();
         
-        // Calculate overall score
-        const scores = [];
-        if (action.payload.coppa) scores.push(action.payload.coppa.score || 0);
-        if (action.payload.ferpa) scores.push(action.payload.ferpa.score || 0);
-        if (action.payload.gdpr) scores.push(action.payload.gdpr.score || 0);
-        if (action.payload.ccpa) scores.push(action.payload.ccpa.score || 0);
-        
-        state.overallScore = scores.length > 0 
-          ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-          : 0;
+        // Calculate overall score (simple heuristic based on issues count)
+        const issueCounts = [
+          action.payload.coppa?.issues?.length || 0,
+          action.payload.ferpa?.issues?.length || 0,
+          action.payload.gdpr?.issues?.length || 0,
+        ];
+        const maxIssues = Math.max(...issueCounts, 1);
+        state.overallScore = Math.max(0, 100 - Math.round((issueCounts.reduce((a, b) => a + b, 0) / (maxIssues * 3)) * 100));
           
         // Count pending consents (issues)
         let pendingCount = 0;

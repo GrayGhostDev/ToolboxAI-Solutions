@@ -194,7 +194,7 @@ export const StudentProgressDashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, [autoRefresh, isConnected]);
 
-  const updateStudentProgress = (update: ProgressUpdate) => {
+const updateStudentProgress = (update: ProgressUpdate) => {
     setStudents(prev => {
       const index = prev.findIndex(s => s.userId === update.userId);
       if (index === -1) {
@@ -205,8 +205,14 @@ export const StudentProgressDashboard: React.FC = () => {
       const updated = [...prev];
       updated[index] = {
         ...updated[index],
-        ...update,
-        lastUpdate: new Date()
+        progress: {
+          ...updated[index].progress,
+          overall: typeof update.progress === 'number' ? update.progress : updated[index].progress.overall,
+          objectives: updated[index].progress.objectives,
+          quizzes: updated[index].progress.quizzes,
+        },
+        achievements: update.achievements || updated[index].achievements,
+        lastUpdate: new Date(),
       };
       return updated;
     });

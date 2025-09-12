@@ -25,6 +25,9 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+# Ensure logs directory exists before configuring logging
+os.makedirs(PROJECT_ROOT / "logs", exist_ok=True)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -36,9 +39,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
-# Ensure logs directory exists
-os.makedirs(PROJECT_ROOT / "logs", exist_ok=True)
 
 # Version info
 __version__ = "1.0.0"

@@ -79,7 +79,7 @@ export default function Settings() {
   const [activeTab, setActiveTab] = React.useState(0);
   const [editMode, setEditMode] = React.useState(false);
   const [profileData, setProfileData] = React.useState({
-    displayName: user.name || "John Doe",
+    displayName: (user as any).displayName || "John Doe",
     email: user.email || "john@example.com",
     phone: "+1 (555) 123-4567",
     bio: "Passionate educator dedicated to innovative learning",
@@ -87,7 +87,7 @@ export default function Settings() {
     timezone: "PST",
   });
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
 
@@ -99,7 +99,7 @@ export default function Settings() {
   return (
     <Grid2 container spacing={3}>
       {/* Header */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card>
           <CardContent>
             <Stack
@@ -120,7 +120,7 @@ export default function Settings() {
       </Grid2>
 
       {/* Settings Tabs */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card>
           <CardContent>
             <Tabs value={activeTab} onChange={handleTabChange} aria-label="settings tabs">
@@ -136,7 +136,7 @@ export default function Settings() {
             {/* Profile Tab */}
             <TabPanel value={activeTab} index={0}>
               <Grid2 container spacing={3}>
-                <Grid2 size={{ xs: 12, md: 4 }}>
+                <Grid2 xs={12} md={4}>
                   <Stack alignItems="center" spacing={2}>
                     <Badge
                       overlap="circular"
@@ -155,10 +155,10 @@ export default function Settings() {
                       }
                     >
                       <Avatar
-                        src={user.avatar}
+                        src={(user as any).avatarUrl}
                         sx={{ width: 120, height: 120 }}
                       >
-                        {user.name?.[0]}
+                        {(user as any).displayName?.[0]}
                       </Avatar>
                     </Badge>
                     <Typography variant="h6">{profileData.displayName}</Typography>
@@ -193,7 +193,7 @@ export default function Settings() {
                     </Stack>
                   </Stack>
                 </Grid2>
-                <Grid2 size={{ xs: 12, md: 8 }}>
+                <Grid2 xs={12} md={8}>
                   <Stack spacing={2}>
                     <TextField
                       fullWidth
@@ -226,7 +226,7 @@ export default function Settings() {
                       disabled={!editMode}
                     />
                     <Grid2 container spacing={2}>
-                      <Grid2 size={6}>
+                      <Grid2 xs={12} md={6}>
                         <TextField
                           fullWidth
                           label="Location"
@@ -235,7 +235,7 @@ export default function Settings() {
                           disabled={!editMode}
                         />
                       </Grid2>
-                      <Grid2 size={6}>
+                      <Grid2 xs={12} md={6}>
                         <FormControl fullWidth disabled={!editMode}>
                           <InputLabel>Timezone</InputLabel>
                           <Select

@@ -35,6 +35,8 @@ export enum WebSocketMessageType {
   CONTENT_RESPONSE = 'content_response',
   CONTENT_UPDATE = 'content_update',
   CONTENT_PROGRESS = 'content_progress',
+  CONTENT_COMPLETE = 'content_complete',
+  CONTENT_CANCEL = 'content_cancel',
   CONTENT_ERROR = 'content_error',
   
   // Quiz Events
@@ -190,6 +192,13 @@ export interface ContentGenerationProgress {
     assets?: string[];
     quiz?: any;
   };
+  // Legacy/alternate fields used by components
+  agentId?: string;
+  status?: string;
+  progress?: number;
+  currentTask?: string;
+  metrics?: any;
+  sessionStatus?: string;
 }
 
 export interface ContentGenerationResponse {

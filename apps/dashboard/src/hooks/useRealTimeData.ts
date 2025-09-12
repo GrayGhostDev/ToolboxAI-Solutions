@@ -23,6 +23,8 @@ interface UseRealTimeDataOptions<T> {
   transformFn?: (item: any) => T;
   /** Auto-fetch on mount */
   autoFetch?: boolean;
+  /** Optional periodic refresh interval in ms */
+  refreshInterval?: number;
 }
 
 interface UseRealTimeDataReturn<T> {
@@ -30,6 +32,7 @@ interface UseRealTimeDataReturn<T> {
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
+  refetch: () => Promise<void>;
   create: (itemData: any) => Promise<T | null>;
   update: (id: string, itemData: any) => Promise<T | null>;
   remove: (id: string) => Promise<boolean>;
@@ -38,9 +41,22 @@ interface UseRealTimeDataReturn<T> {
   setError: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
+// Overload to support (channel, options) signature
 export function useRealTimeData<T extends { id: string }>(
   options: UseRealTimeDataOptions<T>
+): UseRealTimeDataReturn<T>;
+export function useRealTimeData<T extends { id: string }>(
+  channel: string,
+  options?: Partial<UseRealTimeDataOptions<T>>
+): UseRealTimeDataReturn<T>;
+export function useRealTimeData<T extends { id: string }>(
+  arg1: any,
+  arg2?: any
 ): UseRealTimeDataReturn<T> {
+  const options: UseRealTimeDataOptions<T> = typeof arg1 === 'string'
+    ? ({ channel: arg1, autoFetch: true, fetchFn: async () => [], ...(arg2 || {}) } as UseRealTimeDataOptions<T>)
+    : (arg1 as UseRealTimeDataOptions<T>);
+
   const {
     fetchFn,
     createFn,
@@ -48,7 +64,8 @@ export function useRealTimeData<T extends { id: string }>(
     deleteFn,
     channel,
     transformFn,
-    autoFetch = true
+    autoFetch = true,
+    refreshInterval
   } = options;
 
   const dispatch = useAppDispatch();
@@ -191,6 +208,15 @@ export function useRealTimeData<T extends { id: string }>(
     }
   }, [autoFetch, refresh]);
 
+  // Optional polling
+  useEffect(() => {
+    if (!refreshInterval || refreshInterval <= 0) return;
+    const id = setInterval(() => {
+      refresh();
+    }, refreshInterval);
+    return () => clearInterval(id);
+  }, [refresh, refreshInterval]);
+
   // WebSocket subscription for real-time updates
   useEffect(() => {
     if (!channel || !isConnected) return;
@@ -252,6 +278,7 @@ export function useRealTimeData<T extends { id: string }>(
     loading,
     error,
     refresh,
+    refetch: refresh,
     create,
     update,
     remove,

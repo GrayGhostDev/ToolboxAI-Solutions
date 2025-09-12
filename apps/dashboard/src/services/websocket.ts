@@ -5,8 +5,8 @@
  * and provides a robust real-time communication layer.
  */
 
-import { io, Socket } from 'socket.io-client';
-import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, WS_CONFIG, WS_URL, SIO_PATH } from '../config';
+import Pusher, { Channel } from 'pusher-js';
+import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, WS_CONFIG, WS_URL, PUSHER_KEY, PUSHER_CLUSTER, PUSHER_AUTH_ENDPOINT } from '../config';
 import {
   MessageAcknowledgment,
   QueuedMessage,
@@ -26,7 +26,8 @@ import ApiClient from './api';
 
 export class WebSocketService {
   private static instance: WebSocketService | null = null;
-  private socket: Socket | null = null;
+  private pusher: Pusher | null = null;
+  private channels: Map<string, Channel> = new Map();
   private options: WebSocketConnectionOptions;
   private state: WebSocketState = WebSocketState.DISCONNECTED;
   private subscriptions: Map<string, Set<WebSocketSubscription>> = new Map();
@@ -106,69 +107,42 @@ url: options.url || WS_URL,
         this.currentToken = authToken;
         this.scheduleTokenRefresh(authToken);
 
-        // Parse URL to separate protocol and host
-        const url = new URL(this.options.url);
-        const protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
-        const socketUrl = `${protocol}//${url.host}`;
-
-        this.log(`Connecting to WebSocket at ${socketUrl} with token: ${authToken.substring(0, 20)}...`);
-
-        // Create socket connection with JWT authentication
-        this.socket = io(socketUrl, {
-          path: SIO_PATH, // Match backend socketio_path (NO trailing slash)
-          transports: ['websocket', 'polling'], // Allow fallback to polling
-          auth: { 
-            token: authToken,
-            type: 'Bearer'
+        // Initialize Pusher
+        if (!PUSHER_KEY) {
+          throw new Error('Missing Pusher key configuration');
+        }
+        this.pusher = new Pusher(PUSHER_KEY, {
+          cluster: PUSHER_CLUSTER,
+          forceTLS: true,
+          authEndpoint: PUSHER_AUTH_ENDPOINT,
+          auth: {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
           },
-          reconnection: false, // We handle reconnection manually for better control
-          timeout: 10000,
-          query: {
-            token: authToken, // Include token in query params as backup
-            clientId: this.generateClientId(),
-            timestamp: Date.now().toString(),
-          },
-          extraHeaders: {
-            Authorization: `Bearer ${authToken}`,
-          },
+          enabledTransports: ['ws', 'wss'],
+          disableStats: true,
         });
 
-        // Setup event handlers
-        this.setupSocketHandlers();
-
-        // Connection success handler
-        const connectHandler = () => {
-          this.log('Connected successfully');
+        // Bind connection events
+        this.pusher.connection.bind('connected', () => {
+          this.log('Pusher connected');
           this.setState(WebSocketState.CONNECTED);
           this.reconnectAttempts = 0;
           this.startHeartbeat();
           this.flushMessageQueue();
+          this.resubscribeChannels();
           this.options.onConnect?.();
-          this.socket?.off('connect', connectHandler);
-          this.socket?.off('connect_error', errorHandler);
           resolve();
-        };
+        });
 
-        // Connection error handler
-        const errorHandler = (error: any) => {
-          this.log('Connection failed:', error);
-          this.socket?.off('connect', connectHandler);
-          this.socket?.off('connect_error', errorHandler);
-
-          // Handle different types of errors
+        this.pusher.connection.bind('error', (error: any) => {
           let errorMessage = 'Connection failed';
           if (error && typeof error === 'object') {
-            if (error.message) {
-              errorMessage = error.message;
-            } else if (error.description) {
-              errorMessage = error.description;
-            } else if (error.type) {
-              errorMessage = `Connection error: ${error.type}`;
-            }
+            errorMessage = error?.error?.data?.message || error.message || error.description || 'Connection error';
           } else if (typeof error === 'string') {
             errorMessage = error;
           }
-
           this.handleError({
             code: 'CONNECTION_FAILED',
             message: errorMessage,
@@ -176,10 +150,11 @@ url: options.url || WS_URL,
             recoverable: true,
           });
           reject(new Error(errorMessage));
-        };
+        });
 
-        this.socket.once('connect', connectHandler);
-        this.socket.once('connect_error', errorHandler);
+        this.pusher.connection.bind('disconnected', () => {
+          this.handleDisconnect('disconnected');
+        });
       } catch (error) {
         this.handleError({
           code: 'CONNECTION_ERROR',
@@ -203,10 +178,16 @@ url: options.url || WS_URL,
     this.clearReconnectTimer();
     this.clearTokenRefreshTimer();
 
-    if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
+    // Unbind and disconnect pusher
+    try {
+      this.channels.forEach((ch) => ch.unbind_all());
+      this.channels.clear();
+      this.pusher?.unbind_all();
+      this.pusher?.disconnect();
+    } catch (e) {
+      // ignore
     }
+    this.pusher = null;
 
     this.setState(WebSocketState.DISCONNECTED);
     this.options.onDisconnect?.(reason);
@@ -240,17 +221,27 @@ url: options.url || WS_URL,
       }
 
       try {
-        // Send message
-        this.socket?.emit('message', message, (ack?: MessageAcknowledgment) => {
-          this.stats.messagesSent++;
-          this.stats.bytesSent = (this.stats.bytesSent || 0) + JSON.stringify(message).length;
-
-          if (options.awaitAcknowledgment && ack) {
-            resolve(ack);
-          } else {
-            resolve();
-          }
-        });
+        // With Pusher, client cannot emit arbitrary server events.
+        // Use REST API endpoint to trigger the event on the server side.
+        this.getApiClient()
+          .realtimeTrigger({
+            channel: options.channel || 'public',
+            event: 'message',
+            type,
+            payload,
+          })
+          .then((ack: any) => {
+            this.stats.messagesSent++;
+            this.stats.bytesSent = (this.stats.bytesSent || 0) + JSON.stringify({ type, payload }).length;
+            if (options.awaitAcknowledgment) {
+              resolve({ ok: true, receivedAt: new Date().toISOString(), ...ack });
+            } else {
+              resolve();
+            }
+          })
+          .catch((err) => {
+            throw err;
+          });
 
         // Handle timeout
         if (options.awaitAcknowledgment && options.timeout) {
@@ -279,7 +270,7 @@ url: options.url || WS_URL,
     handler: WebSocketEventHandler,
     filter?: (message: WebSocketMessage) => boolean
   ): string {
-    // Validate and sanitize channel parameter to prevent NoSQL injection
+    // Validate and sanitize channel parameter
     const sanitizedChannel = this.sanitizeChannel(channel);
 
     const subscription: WebSocketSubscription = {
@@ -292,9 +283,21 @@ url: options.url || WS_URL,
     if (!this.subscriptions.has(sanitizedChannel)) {
       this.subscriptions.set(sanitizedChannel, new Set());
 
-      // Send subscription request to server
-      if (this.state === WebSocketState.CONNECTED) {
-        this.send(WebSocketMessageType.SUBSCRIBE, { channels: [sanitizedChannel] });
+      // Subscribe to Pusher channel and bind unified 'message' event
+      if (this.pusher) {
+        const ch = this.pusher.subscribe(sanitizedChannel);
+        ch.bind('message', (data: any) => {
+          // Expect server to send { type, payload, channel, timestamp }
+          const msg: WebSocketMessage = {
+            type: data?.type,
+            payload: data?.payload,
+            channel: sanitizedChannel,
+            timestamp: data?.timestamp || new Date().toISOString(),
+            messageId: data?.messageId || this.generateMessageId(),
+          };
+          this.handleMessage(msg);
+        });
+        this.channels.set(sanitizedChannel, ch);
       }
     }
 
@@ -322,12 +325,17 @@ url: options.url || WS_URL,
       if (subscription) {
         subs.delete(subscription);
 
-        // If no more subscriptions for this channel, unsubscribe from server
+        // If no more subscriptions for this channel, unsubscribe from Pusher
         if (subs.size === 0) {
           this.subscriptions.delete(channel);
-          if (this.state === WebSocketState.CONNECTED) {
-            this.send(WebSocketMessageType.UNSUBSCRIBE, { channels: [channel] });
+          const ch = this.channels.get(channel);
+          try {
+            ch?.unbind('message');
+          } catch (_) { /* noop */ }
+          if (this.pusher) {
+            this.pusher.unsubscribe(channel);
           }
+          this.channels.delete(channel);
         }
 
         this.log(`Unsubscribed from channel: ${channel}`);
@@ -396,104 +404,12 @@ url: options.url || WS_URL,
   // Private methods
 
   private setupSocketHandlers(): void {
-    if (!this.socket) return;
+    // Pusher channel/event bindings are set in subscribe
+    if (!this.pusher) return;
 
-    // Handle incoming messages
-    this.socket.on('message', (message: WebSocketMessage) => {
-      this.handleMessage(message);
-    });
-
-    // Handle disconnection
-    this.socket.on('disconnect', (reason: string) => {
-      this.handleDisconnect(reason);
-    });
-
-    // Handle errors
-    this.socket.on('error', (error: any) => {
-      let errorMessage = 'Socket error';
-      if (error && typeof error === 'object') {
-        errorMessage = error.message || error.description || 'Unknown socket error';
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-
-      this.handleError({
-        code: 'SOCKET_ERROR',
-        message: errorMessage,
-        timestamp: new Date().toISOString(),
-        details: error,
-        recoverable: true,
-      });
-    });
-
-    // Handle connect_error specifically
-    this.socket.on('connect_error', (error: any) => {
-      let errorMessage = 'Connection error';
-      if (error && typeof error === 'object') {
-        errorMessage = error.message || error.description || 'Failed to connect to server';
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-
-      this.log('Connect error:', errorMessage);
-      this.handleError({
-        code: 'CONNECT_ERROR',
-        message: errorMessage,
-        timestamp: new Date().toISOString(),
-        recoverable: true,
-      });
-    });
-
-    // Handle reconnection events
-    this.socket.on('reconnect', (attemptNumber: number) => {
-      this.log(`Reconnected after ${attemptNumber} attempts`);
-      this.setState(WebSocketState.CONNECTED);
-      this.reconnectAttempts = 0;
-      this.resubscribeChannels();
-    });
-
-    // Handle pong messages for heartbeat
-    this.socket.on('pong', () => {
-      this.updateLatency();
-    });
-
-    // Handle authentication events
-    this.socket.on('auth_success', (data) => {
-      this.log('Authentication successful:', data);
-    });
-
-    this.socket.on('auth_failed', async (error) => {
-      this.log('Authentication failed:', error);
-      
-      // Try to refresh token and reconnect
-      try {
-        const newToken = await this.refreshTokenWithAPI();
-        if (newToken) {
-          this.log('Token refreshed after auth failure, reconnecting...');
-          this.disconnect('Token refreshed');
-          await this.connect(newToken);
-        } else {
-          throw new Error('Token refresh failed');
-        }
-      } catch (refreshError) {
-        this.handleError({
-          code: 'AUTH_FAILED',
-          message: error.message || 'Authentication failed and token refresh failed',
-          timestamp: new Date().toISOString(),
-          recoverable: false,
-        });
-      }
-    });
-
-    // Handle token refresh events
-    this.socket.on('token_refreshed', (data) => {
-      this.log('Token refreshed:', data);
-      this.tokenRefreshCallbacks.forEach((callback) => callback());
-    });
-
-    this.socket.on('token_expired', () => {
-      this.log('Token expired, attempting refresh');
-      this.handleTokenExpiration();
+    // Handle connection state changes
+    this.pusher.connection.bind('state_change', (states: any) => {
+      this.log('Pusher state change:', states?.current);
     });
   }
 
@@ -703,10 +619,24 @@ url: options.url || WS_URL,
   }
 
   private resubscribeChannels(): void {
+    if (!this.pusher) return;
     const channels = Array.from(this.subscriptions.keys());
+    channels.forEach((chName) => {
+      const ch = this.pusher!.subscribe(chName);
+      ch.bind('message', (data: any) => {
+        const msg: WebSocketMessage = {
+          type: data?.type,
+          payload: data?.payload,
+          channel: chName,
+          timestamp: data?.timestamp || new Date().toISOString(),
+          messageId: data?.messageId || this.generateMessageId(),
+        };
+        this.handleMessage(msg);
+      });
+      this.channels.set(chName, ch);
+    });
     if (channels.length > 0) {
-      this.send(WebSocketMessageType.SUBSCRIBE, { channels });
-      this.log(`Resubscribed to ${channels.length} channels`);
+      this.log(`Resubscribed to ${channels.length} channel(s)`);
     }
   }
 
@@ -799,23 +729,18 @@ url: options.url || WS_URL,
   }
 
   public refreshToken(newToken: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (!this.socket || this.state !== WebSocketState.CONNECTED) {
-        reject(new Error('Not connected'));
-        return;
-      }
-
-      this.currentToken = newToken;
-
-      this.socket.emit('refresh_token', { token: newToken }, (ack: any) => {
-        if (ack?.success) {
-          this.log('Token refresh successful');
-          resolve();
-        } else {
-          this.log('Token refresh failed:', ack?.error);
-          reject(new Error(ack?.error || 'Token refresh failed'));
+    return new Promise(async (resolve, reject) => {
+      try {
+        this.currentToken = newToken;
+        localStorage.setItem(AUTH_TOKEN_KEY, newToken);
+        if (this.state === WebSocketState.CONNECTED) {
+          this.disconnect('Token refreshed');
+          await this.connect(newToken);
         }
-      });
+        resolve();
+      } catch (error) {
+        reject(error as Error);
+      }
     });
   }
 

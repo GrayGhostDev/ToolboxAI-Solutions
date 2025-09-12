@@ -301,31 +301,31 @@ export default function Analytics() {
                 </Stack>
               ) : (
                 <Stack spacing={2}>
-                  {(subjects?.subjects || subjectMastery || []).map((subject, index) => (
-                    <Box key={subject.name || subject.subject}>
+                  {(subjects?.subjects || subjectMastery || []).map((subject: any, index: number) => (
+                    <Box key={(subject as any).name || (subject as any).subject}>
                       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
                         <Typography variant="body2" fontWeight={500}>
-                          {subject.name || subject.subject}
+                          {(subject as any).name || (subject as any).subject}
                         </Typography>
                         <Typography variant="caption">
-                          {(subject.averageScore || subject.mastery || 0).toFixed(1)}%
+                          {(((subject as any).averageScore || (subject as any).mastery || 0) as number).toFixed(1)}%
                         </Typography>
                       </Stack>
                       <LinearProgress
                         variant="determinate"
-                        value={subject.completionRate || subject.mastery || 0}
+                        value={(subject as any).completionRate || (subject as any).mastery || 0}
                         sx={{ 
                           height: 8, 
                           borderRadius: 4,
                           bgcolor: 'grey.200',
                           '& .MuiLinearProgress-bar': {
-                            bgcolor: (subject.completionRate || subject.mastery || 0) >= 80 ? 'success.main' : 
-                                    (subject.completionRate || subject.mastery || 0) >= 60 ? 'warning.main' : 'error.main'
+                            bgcolor: (((subject as any).completionRate || (subject as any).mastery || 0) as number) >= 80 ? 'success.main' : 
+                                    (((subject as any).completionRate || (subject as any).mastery || 0) as number) >= 60 ? 'warning.main' : 'error.main'
                           }
                         }}
                       />
                       <Typography variant="caption" color="text.secondary">
-                        {(subject.completionRate || subject.mastery || 0).toFixed(1)}% mastery
+                        {(((subject as any).completionRate || (subject as any).mastery || 0) as number).toFixed(1)}% mastery
                       </Typography>
                     </Box>
                   ))}

@@ -11,7 +11,6 @@ import {
   Chip,
   IconButton,
   List,
-  ListItem,
   ListItemAvatar,
   ListItemText,
   ListItemButton,
@@ -32,13 +31,11 @@ import Grid2 from "@mui/material/Unstable_Grid2";
 import SendIcon from "@mui/icons-material/Send";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import SearchIcon from "@mui/icons-material/Search";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import StarIcon from "@mui/icons-material/Star";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import ReplyIcon from "@mui/icons-material/Reply";
 import ForwardIcon from "@mui/icons-material/Forward";
-import CircleIcon from "@mui/icons-material/Circle";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import CreateIcon from "@mui/icons-material/Create";
@@ -49,10 +46,8 @@ import DraftsIcon from "@mui/icons-material/Drafts";
 import { useAppSelector, useAppDispatch } from "../../store";
 import {
   fetchMessages,
-  fetchMessageById,
   sendMessage,
   replyToMessage,
-  forwardMessage,
   markAsRead,
   moveToFolder,
   deleteMessage,
@@ -84,7 +79,6 @@ interface Conversation {
 
 export default function Messages() {
   const dispatch = useAppDispatch();
-  const role = useAppSelector((s) => s.user.role);
   const { 
     messages, 
     currentMessage, 
@@ -101,7 +95,6 @@ export default function Messages() {
   const [searchTerm, setSearchTerm] = useState("");
   const [replyText, setReplyText] = useState("");
   const [showComposeDialog, setShowComposeDialog] = useState(false);
-  const [recipientSearch, setRecipientSearch] = useState("");
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   
   useEffect(() => {
@@ -266,7 +259,7 @@ export default function Messages() {
   return (
     <Grid2 container spacing={2} sx={{ height: "calc(100vh - 200px)" }}>
       {/* Conversations List */}
-      <Grid2 size={{ xs: 12, md: 3 }}>
+      <Grid2 xs={12} md={3}>
         <Card sx={{ height: "100%" }}>
           <CardContent sx={{ p: 0, height: "100%", display: "flex", flexDirection: "column" }}>
             {/* Search */}
@@ -364,7 +357,7 @@ export default function Messages() {
       </Grid2>
 
       {/* Messages List */}
-      <Grid2 size={{ xs: 12, md: 4 }}>
+      <Grid2 xs={12} md={4}>
         <Card sx={{ height: "100%" }}>
           <CardContent sx={{ p: 0, height: "100%", display: "flex", flexDirection: "column" }}>
             {/* Header */}
@@ -431,10 +424,10 @@ export default function Messages() {
                             <Typography variant="body2" sx={{ fontWeight: !message.read ? 600 : 400 }}>
                               {message.fromUserId}
                             </Typography>
-                            {message.attachments?.length > 0 && (
+                          {(message.attachments?.length ?? 0) > 0 && (
                               <Chip
                                 icon={<AttachFileIcon sx={{ fontSize: 14 }} />}
-                                label={message.attachments.length}
+                                label={message.attachments?.length || 0}
                                 size="small"
                                 sx={{ height: 20 }}
                               />
@@ -476,7 +469,7 @@ export default function Messages() {
       </Grid2>
 
       {/* Message Content */}
-      <Grid2 size={{ xs: 12, md: 5 }}>
+      <Grid2 xs={12} md={5}>
         <Card sx={{ height: "100%" }}>
           <CardContent sx={{ p: 0, height: "100%", display: "flex", flexDirection: "column" }}>
             {currentMessage ? (

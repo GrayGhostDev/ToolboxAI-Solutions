@@ -591,11 +591,12 @@ Always preserve important files and maintain project integrity.
     
     def _format_size(self, size_bytes: int) -> str:
         """Format size in human-readable format"""
+        size = float(size_bytes)
         for unit in ["B", "KB", "MB", "GB"]:
-            if size_bytes < 1024.0:
-                return f"{size_bytes:.2f} {unit}"
-            size_bytes /= 1024.0
-        return f"{size_bytes:.2f} TB"
+            if size < 1024.0:
+                return f"{size:.2f} {unit}"
+            size /= 1024.0
+        return f"{size:.2f} TB"
     
     async def schedule_cleanup(self, schedule: Dict[str, Any]) -> Dict[str, Any]:
         """Schedule regular cleanup operations"""

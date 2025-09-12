@@ -57,13 +57,13 @@ const DashboardRouter: React.FC = () => {
   // Route based on user role
   const getDashboardComponent = () => {
     switch (user.role) {
-      case 'Admin':
+      case 'admin':
         return <AdminDashboard />;
-      case 'Teacher':
+      case 'teacher':
         return <TeacherDashboard />;
-      case 'Student':
+      case 'student':
         return <StudentDashboard />;
-      case 'Parent':
+      case 'parent':
         return <ParentDashboard />;
       default:
         return <Navigate to="/login" replace />;
@@ -77,7 +77,7 @@ const DashboardRouter: React.FC = () => {
 
       {/* Admin Routes */}
       <Route path="/admin/*" element={
-        <ProtectedRoute requiredRole="Admin">
+        <ProtectedRoute requiredRole="admin">
           <Routes>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="users/*" element={<AdminDashboard section="users" />} />
@@ -94,7 +94,7 @@ const DashboardRouter: React.FC = () => {
 
       {/* Teacher Routes */}
       <Route path="/teacher/*" element={
-        <ProtectedRoute requiredRole="Teacher">
+        <ProtectedRoute requiredRole="teacher">
           <Routes>
             <Route path="dashboard" element={<TeacherDashboard />} />
             <Route path="classes/*" element={<TeacherDashboard section="classes" />} />
@@ -111,7 +111,7 @@ const DashboardRouter: React.FC = () => {
 
       {/* Student Routes */}
       <Route path="/student/*" element={
-        <ProtectedRoute requiredRole="Student">
+        <ProtectedRoute requiredRole="student">
           <Routes>
             <Route path="dashboard" element={<StudentDashboard />} />
             <Route path="classes" element={<StudentDashboard section="classes" />} />
@@ -128,7 +128,7 @@ const DashboardRouter: React.FC = () => {
 
       {/* Parent Routes */}
       <Route path="/parent/*" element={
-        <ProtectedRoute requiredRole="Parent">
+        <ProtectedRoute requiredRole="parent">
           <Routes>
             <Route path="dashboard" element={<ParentDashboard />} />
             <Route path="children" element={<ParentDashboard section="children" />} />

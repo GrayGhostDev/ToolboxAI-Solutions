@@ -34,9 +34,9 @@ export function useWebSocketStatus(): WebSocketStatusInfo {
     messagesSent: stats.messagesSent,
     messagesReceived: stats.messagesReceived,
     reconnectAttempts: stats.reconnectAttempts,
-    lastConnected: stats.lastConnected,
-    lastDisconnected: stats.lastDisconnected,
-    lastError: stats.lastError,
+    lastConnected: stats.connectedAt ? new Date(stats.connectedAt) : undefined,
+    lastDisconnected: undefined,
+    lastError: undefined,
     latency: stats.latency
-  }), [state, isConnected, stats, error]);
+  }), [state, isConnected, stats]);
 }

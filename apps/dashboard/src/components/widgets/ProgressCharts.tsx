@@ -78,7 +78,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
   return (
     <Grid2 container spacing={3}>
       {/* Weekly XP Progress */}
-      <Grid2 size={{ xs: 12, md: 6 }}>
+      <Grid2 xs={12} md={6}>
         <Card role="region" aria-label="Weekly XP chart">
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
@@ -123,7 +123,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
       </Grid2>
 
       {/* Subject Mastery */}
-      <Grid2 size={{ xs: 12, md: 6 }}>
+      <Grid2 xs={12} md={6}>
         <Card role="region" aria-label="Subject mastery bar chart">
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
@@ -155,7 +155,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
 
       {/* Skills Radar Chart */}
       {role === "student" && (
-        <Grid2 size={{ xs: 12, md: 6 }}>
+        <Grid2 xs={12} md={6}>
           <Card role="region" aria-label="Skills radar chart">
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
@@ -194,7 +194,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
       )}
 
       {/* Activity Distribution */}
-      <Grid2 size={{ xs: 12, md: role === "student" ? 6 : 4 }}>
+      <Grid2 xs={12} md={role === "student" ? 6 : 4}>
         <Card role="region" aria-label="Activity distribution pie chart">
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
@@ -232,8 +232,8 @@ export function ProgressCharts({ role }: { role: UserRole }) {
       </Grid2>
 
       {/* Level Progress (for Students) or Completion Rate (for others) */}
-      {role !== "Parent" && (
-        <Grid2 size={{ xs: 12, md: 4 }}>
+      {role !== "parent" && (
+        <Grid2 xs={12} md={4}>
           <Card role="region" aria-label="Progress radial chart">
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
@@ -280,7 +280,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
 
       {/* Monthly Trend (for Teachers and Admins) */}
       {(role === "teacher" || role === "admin") && (
-        <Grid2 size={{ xs: 12, md: 4 }}>
+        <Grid2 xs={12} md={4}>
           <Card role="region" aria-label="Monthly trend">
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>

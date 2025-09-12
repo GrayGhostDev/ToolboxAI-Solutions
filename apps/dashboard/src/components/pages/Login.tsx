@@ -20,7 +20,8 @@ import { login } from "../../services/api";
 import { useAppDispatch } from "../../store";
 import { signInSuccess } from "../../store/slices/userSlice";
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from "../../config";
-import { wsService } from "../../services/ws";
+// import { wsService } from "../../services/ws";
+import { connectWebSocket } from "../../services/websocket";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -55,8 +56,8 @@ export default function Login() {
       localStorage.setItem(AUTH_TOKEN_KEY, accessToken);
       localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
       
-      // Connect WebSocket after successful login
-      wsService.connect();
+      // Connect WebSocket after successful login via Pusher
+      await connectWebSocket(accessToken);
       
       // Update Redux state
       dispatch(signInSuccess({

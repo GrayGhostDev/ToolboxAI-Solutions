@@ -171,32 +171,32 @@ export const ContentGenerationMonitor: React.FC = () => {
     };
   }, [isConnected]);
 
-  const handleProgressUpdate = (progress: ContentGenerationProgress) => {
+const handleProgressUpdate = (prog: ContentGenerationProgress) => {
     setSession(prev => {
       if (!prev) return null;
 
       const updatedAgents = prev.agents.map(agent => {
-        if (agent.id === progress.agentId) {
+        if (agent.id === prog.agentId) {
           return {
             ...agent,
-            status: progress.status as AgentStatus['status'],
-            progress: progress.progress,
-            currentTask: progress.currentTask,
-            metrics: progress.metrics
+            status: (prog.status as AgentStatus['status']) || agent.status,
+            progress: prog.progress ?? agent.progress,
+            currentTask: prog.currentTask ?? agent.currentTask,
+            metrics: prog.metrics ?? agent.metrics
           };
         }
         return agent;
       });
 
-      const totalProgress = updatedAgents.reduce((sum, agent) => sum + agent.progress, 0) / updatedAgents.length;
+      const totalProgress = updatedAgents.reduce((sum, agent) => sum + (agent.progress ?? 0), 0) / updatedAgents.length;
 
-      addLog(`${progress.agentId}: ${progress.currentTask} (${progress.progress}%)`, 'info');
+      addLog(`${prog.agentId}: ${prog.currentTask} (${prog.progress ?? 0}%)`, 'info');
 
       return {
         ...prev,
         agents: updatedAgents,
         totalProgress,
-        status: progress.sessionStatus as GenerationSession['status'] || prev.status
+        status: (prog.sessionStatus as GenerationSession['status']) || prev.status
       };
     });
   };

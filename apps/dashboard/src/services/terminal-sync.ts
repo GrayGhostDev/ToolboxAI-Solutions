@@ -805,7 +805,13 @@ export class TerminalSyncService extends EventEmitter {
       const lastSeenAge = now - new Date(connection.lastSeen).getTime();
       if (lastSeenAge > staleThreshold && connection.status !== 'connected') {
         console.warn(`🧹 Cleaning up stale connection: ${id}`);
-        connection.socket?.disconnect?.();
+        if (connection.socket) {
+          if ('disconnect' in connection.socket) {
+            (connection.socket as Socket).disconnect();
+          } else if ('close' in connection.socket) {
+            (connection.socket as WebSocket).close();
+          }
+        }
         connection.messageQueue = [];
       }
     });

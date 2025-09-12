@@ -101,9 +101,12 @@ export const sendMessage = createAsyncThunk(
     isAnnouncement?: boolean;
     classId?: string;
   }) => {
+    const recipient_ids = Array.isArray(data.toUserId) ? data.toUserId : [data.toUserId];
     const response = await api.sendMessage({
-      ...data,
-      toUserId: Array.isArray(data.toUserId) ? data.toUserId[0] : data.toUserId,
+      subject: data.subject,
+      body: data.content,
+      recipient_ids,
+      class_id: data.classId,
     });
     return response;
   }
@@ -112,7 +115,7 @@ export const sendMessage = createAsyncThunk(
 export const replyToMessage = createAsyncThunk(
   'messages/reply',
   async ({ messageId, content }: { messageId: string; content: string }) => {
-    const response = await api.replyToMessage(messageId, { content });
+    const response = await api.replyToMessage(messageId, { subject: '', body: content, recipient_ids: [] });
     return response;
   }
 );
@@ -125,8 +128,9 @@ export const forwardMessage = createAsyncThunk(
     comment?: string;
   }) => {
     const response = await api.forwardMessage(messageId, {
-      toUserId: Array.isArray(toUserId) ? toUserId : [toUserId],
-      comment,
+      subject: `FWD`,
+      body: comment || '',
+      recipient_ids: Array.isArray(toUserId) ? toUserId : [toUserId],
     });
     return response;
   }
@@ -239,8 +243,9 @@ const messagesSlice = createSlice({
       .addCase(fetchMessages.fulfilled, (state, action) => {
         state.loading = false;
         state.messages = action.payload.messages;
-        const folder = action.payload.folder as keyof typeof state.folders;
-        if (folder && folder !== 'all') {
+        const folderName = action.payload.folder as MessagesState['filters']['folder'];
+        if (folderName !== 'all') {
+          const folder = folderName as keyof typeof state.folders;
           state.folders[folder] = action.payload.messages;
         }
       })

@@ -13,6 +13,7 @@ import { terminalVerifier } from '../utils/terminal-verify';
 import { terminalSync } from '../services/terminal-sync';
 import { performanceMonitor } from '../utils/performance-monitor';
 import type { VerificationResult, TerminalMessage } from '../utils/terminal-verify';
+import type { TerminalMessage as SyncTerminalMessage } from '../services/terminal-sync';
 import type { PerformanceSummary } from '../utils/performance-monitor';
 
 // ================================
@@ -179,7 +180,8 @@ export function useTerminalServices(): UseTerminalServicesReturn {
     message: Omit<TerminalMessage, 'id' | 'from' | 'timestamp'>
   ): Promise<boolean> => {
     try {
-      const success = await terminalSync.sendToTerminal(terminalId, message);
+      const adaptedMessage = { priority: 'normal', ...(message as any) } as Omit<SyncTerminalMessage, 'id' | 'from' | 'timestamp'>;
+      const success = await terminalSync.sendToTerminal(terminalId, adaptedMessage);
       updateStatus(); // Update status after sending
       return success;
     } catch (error) {

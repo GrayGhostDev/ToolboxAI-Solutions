@@ -8,16 +8,27 @@ Provides centralized configuration for all server components.
 import json
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type, Tuple
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict, PydanticBaseSettingsSource
 
 logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
     """Application settings with environment variable support"""
+    
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: Type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> Tuple[PydanticBaseSettingsSource, ...]:
+        return (init_settings, env_settings, dotenv_settings, file_secret_settings)
 
     # Application Info
     APP_NAME: str = "ToolboxAI Roblox Environment"
@@ -187,6 +198,13 @@ class Settings(BaseSettings):
         alias="WS_CHANNEL_ROLE_PREFIXES"
     )
 
+    # Pusher Channels Configuration
+    PUSHER_ENABLED: bool = Field(default=False, alias="PUSHER_ENABLED")
+    PUSHER_APP_ID: Optional[str] = Field(default=None, alias="PUSHER_APP_ID")
+    PUSHER_KEY: Optional[str] = Field(default=None, alias="PUSHER_KEY")
+    PUSHER_SECRET: Optional[str] = Field(default=None, alias="PUSHER_SECRET")
+    PUSHER_CLUSTER: str = Field(default="us2", alias="PUSHER_CLUSTER")
+
     # Socket.IO Configuration
     SIO_RATE_LIMIT_PER_MINUTE: int = Field(
         default=100, alias="SIO_RATE_LIMIT_PER_MINUTE"
@@ -222,8 +240,16 @@ class Settings(BaseSettings):
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, v):
+        # Handle JSON string or comma-separated values
         if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
+            # Try to parse as JSON first
+            if v.startswith('['):
+                try:
+                    return json.loads(v)
+                except json.JSONDecodeError:
+                    pass
+            # Fall back to comma-separated
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
 
     @field_validator("SUPPORTED_SUBJECTS", mode="before")
@@ -244,7 +270,11 @@ class Settings(BaseSettings):
     @classmethod
     def parse_terrain_limits(cls, v):
         if isinstance(v, str):
-            return json.loads(v)
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                # If JSON parsing fails, return default value
+                return {"small": 200, "medium": 500, "large": 1000, "xlarge": 2000}
         return v
 
     @field_validator("ALLOWED_FILE_TYPES", mode="before")
@@ -260,8 +290,9 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             try:
                 return json.loads(v)
-            except Exception:
-                return {}
+            except (json.JSONDecodeError, Exception):
+                # Return default if JSON parsing fails
+                return {"broadcast": "teacher", "content_request": "teacher", "roblox_event": "teacher"}
         return v
 
     @field_validator("WS_CHANNEL_ROLE_PREFIXES", mode="before")
@@ -270,8 +301,9 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             try:
                 return json.loads(v)
-            except Exception:
-                return {}
+            except (json.JSONDecodeError, Exception):
+                # Return default if JSON parsing fails
+                return {"admin_": "admin", "teacher_": "teacher"}
         return v
 
     @field_validator("SIO_RBAC_REQUIRED_ROLES", mode="before")
@@ -280,8 +312,17 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             try:
                 return json.loads(v)
-            except Exception:
-                return {}
+            except (json.JSONDecodeError, Exception):
+                # Return default if JSON parsing fails
+                return {
+                    "content_request": "teacher",
+                    "subscribe": "student",
+                    "unsubscribe": "student",
+                    "quiz_response": "student",
+                    "progress_update": "student",
+                    "collaboration_message": "student",
+                    "ping": "student"
+                }
         return v
 
     model_config = SettingsConfigDict(
@@ -289,7 +330,8 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",
-    )  # type: ignore[misc]  # pydantic SettingsConfigDict type plugin quirk under pyright
+        env_parse_none_str="",
+    )
 
     def get_database_url(self) -> str:
         if self.DATABASE_URL:

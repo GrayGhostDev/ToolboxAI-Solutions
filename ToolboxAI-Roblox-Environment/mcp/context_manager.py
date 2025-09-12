@@ -217,7 +217,7 @@ class ContextManager:
         }
 
     def save_snapshot(self, filepath: str):
-        """Save context snapshot to file"""
+        """Save context snapshot.json to file"""
         snapshot = {
             "timestamp": datetime.now().isoformat(),
             "stats": self.get_stats(),
@@ -238,7 +238,7 @@ class ContextManager:
             json.dump(snapshot, f, indent=2)
 
     def load_snapshot(self, filepath: str):
-        """Load context snapshot from file"""
+        """Load context snapshot.json from file"""
         with open(filepath, "r") as f:
             snapshot = json.load(f)
 

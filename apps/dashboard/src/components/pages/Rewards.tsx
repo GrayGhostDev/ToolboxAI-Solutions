@@ -1,9 +1,8 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
-  CardMedia,
   CardActions,
   Typography,
   Button,
@@ -22,7 +21,6 @@ import {
   Box,
   Tab,
   Tabs,
-  LinearProgress,
   Alert,
   AlertTitle,
   Grid,
@@ -32,7 +30,6 @@ import {
   ListItemAvatar,
   ListItemText,
   ListItemSecondaryAction,
-  Tooltip,
   Badge,
   Paper,
   InputAdornment,
@@ -46,12 +43,9 @@ import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import LockIcon from "@mui/icons-material/Lock";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import TimerIcon from "@mui/icons-material/Timer";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import SearchIcon from "@mui/icons-material/Search";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import AddIcon from "@mui/icons-material/Add";
-import RemoveIcon from "@mui/icons-material/Remove";
 import { useAppSelector, useAppDispatch } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
 
@@ -116,7 +110,7 @@ export default function Rewards() {
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [, setEditDialogOpen] = useState(false);
   const [cart, setCart] = useState<Reward[]>([]);
   
   // Mock rewards data
@@ -231,7 +225,7 @@ export default function Rewards() {
     },
   ];
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
 
@@ -314,15 +308,15 @@ export default function Rewards() {
     }));
   };
 
-  const removeFromCart = (rewardId: string) => {
-    setCart(cart.filter(r => r.id !== rewardId));
-  };
+  // const removeFromCart = (rewardId: string) => {
+  //   setCart(cart.filter(r => r.id !== rewardId));
+  // };
 
   const getTotalCartCost = () => {
     return cart.reduce((total, reward) => total + reward.cost, 0);
   };
 
-  const handleRemoveReward = (rewardId: string) => {
+  const handleRemoveReward = () => {
     // TODO: API call to remove reward from the system
     dispatch(addNotification({
       type: "success",
@@ -340,7 +334,7 @@ export default function Rewards() {
   return (
     <Grid2 container spacing={3}>
       {/* Header */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card>
           <CardContent>
             <Stack
@@ -405,7 +399,7 @@ export default function Rewards() {
       </Grid2>
 
       {/* Main Content */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card>
           <CardContent>
             <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
@@ -666,10 +660,10 @@ export default function Rewards() {
                               >
                                 Edit
                               </Button>
-                              <Button 
+                          <Button 
                                 size="small" 
                                 color="error"
-                                onClick={() => handleRemoveReward(reward.id)}
+                                onClick={handleRemoveReward}
                               >
                                 Remove
                               </Button>

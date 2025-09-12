@@ -32,7 +32,7 @@ const initialState: AssessmentsState = {
 export const fetchAssessments = createAsyncThunk(
   'assessments/fetchAll',
   async (filters?: { classId?: string; type?: string; status?: string }) => {
-    const response = await api.listAssessments(filters);
+    const response = await api.listAssessments(filters?.classId);
     return response;
   }
 );
@@ -94,7 +94,8 @@ export const submitAssessment = createAsyncThunk(
 export const fetchSubmissions = createAsyncThunk(
   'assessments/fetchSubmissions',
   async ({ assessmentId, studentId }: { assessmentId?: string; studentId?: string }) => {
-    const response = await api.getSubmissions(assessmentId, studentId);
+    if (!assessmentId) return [] as AssessmentSubmission[];
+    const response = await api.getAssessmentSubmissions(assessmentId, studentId);
     return response;
   }
 );

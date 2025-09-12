@@ -77,7 +77,7 @@ interface SubjectPerformance {
 }
 
 interface ContentMetricsProps {
-  timeRange?: "7d" | "30d" | "90d";
+  timeRange?: "24h" | "7d" | "30d" | "90d";
   autoRefresh?: boolean;
 }
 

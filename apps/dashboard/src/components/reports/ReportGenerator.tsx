@@ -25,6 +25,7 @@ import {
   ListItemIcon,
   ListItemText,
   ListItemSecondaryAction,
+  CircularProgress,
 } from '@mui/material';
 import {
   Download,
@@ -44,9 +45,9 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { format, subDays } from 'date-fns';
+import { format as formatDate, subDays } from 'date-fns';
 import { useAppSelector } from '../../store';
-import { apiClient } from '../../services/api';
+import { generateReport } from '../../services/api';
 
 interface ReportConfig {
   type: string;
@@ -114,7 +115,7 @@ const reportTypes: ReportConfig[] = [
 const ReportGenerator: React.FC = () => {
   const userRole = useAppSelector((state) => state.user.role);
   const [selectedReport, setSelectedReport] = useState<ReportConfig | null>(null);
-  const [format, setFormat] = useState<string>('pdf');
+  const [exportFormat, setExportFormat] = useState<string>('pdf');
   const [dateRange, setDateRange] = useState({
     start: subDays(new Date(), 30),
     end: new Date(),
@@ -196,10 +197,10 @@ const ReportGenerator: React.FC = () => {
       // Prepare report parameters
       const params = {
         type: selectedReport.type,
-        format,
+        format: exportFormat,
         dateRange: {
-          start: format(dateRange.start, 'yyyy-MM-dd'),
-          end: format(dateRange.end, 'yyyy-MM-dd'),
+          start: formatDate(dateRange.start, 'yyyy-MM-dd'),
+          end: formatDate(dateRange.end, 'yyyy-MM-dd'),
         },
         filters: {
           student: selectedStudent,
@@ -210,19 +211,32 @@ const ReportGenerator: React.FC = () => {
         schedule: scheduleTime,
       };
 
-      // Call API to generate report
-      const response = await apiClient.post('/api/v1/reports/generate', params);
+// Call API to generate report using the typed API helper
+      const typeMap: Record<string, 'progress' | 'attendance' | 'grades' | 'behavior' | 'assessment' | 'compliance' | 'gamification' | 'custom'> = {
+        'student-progress': 'progress',
+        'assessment-results': 'assessment',
+        'attendance': 'attendance',
+        'analytics-summary': 'custom',
+        'compliance': 'compliance',
+      };
+
+      const response = await generateReport({
+        name: selectedReport.name,
+        type: typeMap[selectedReport.type] || 'custom',
+        format: exportFormat as any,
+        parameters: params,
+      });
       
       // Add to recent reports
       const newReport: GeneratedReport = {
-        id: response.data.id,
-        name: response.data.name,
+        id: response.id,
+        name: response.name,
         type: selectedReport.type,
-        format,
+        format: exportFormat,
         generatedAt: new Date(),
-        size: response.data.size || 'Processing...',
-        status: 'pending',
-        url: response.data.url,
+        size: response.file_size ? `${Math.round(response.file_size / (1024 * 1024))} MB` : 'Processing...',
+        status: response.status === 'completed' ? 'ready' : 'pending',
+        url: response.file_path,
       };
 
       setRecentReports([newReport, ...recentReports]);
@@ -239,7 +253,7 @@ const ReportGenerator: React.FC = () => {
       // Reset form
       if (scheduleTime === 'now') {
         setSelectedReport(null);
-        setFormat('pdf');
+setExportFormat('pdf');
         setSelectedStudent('all');
         setSelectedClass('all');
         setSelectedSubjects([]);
@@ -353,8 +367,8 @@ const ReportGenerator: React.FC = () => {
                         <FormControl fullWidth>
                           <InputLabel>Export Format</InputLabel>
                           <Select
-                            value={format}
-                            onChange={(e) => setFormat(e.target.value)}
+                            value={exportFormat}
+                            onChange={(e) => setExportFormat(String(e.target.value))}
                             label="Export Format"
                           >
                             {selectedReport.formats.map((fmt) => (
@@ -505,7 +519,7 @@ const ReportGenerator: React.FC = () => {
                             variant="outlined"
                             onClick={() => {
                               setSelectedReport(null);
-                              setFormat('pdf');
+                              setExportFormat('pdf');
                               setSelectedStudent('all');
                               setSelectedClass('all');
                               setSelectedSubjects([]);
@@ -558,7 +572,7 @@ const ReportGenerator: React.FC = () => {
                         secondary={
                           <Stack spacing={0.5}>
                             <Typography variant="caption">
-                              {format(report.generatedAt, 'MMM dd, yyyy HH:mm')}
+{formatDate(report.generatedAt, 'MMM dd, yyyy HH:mm')}
                             </Typography>
                             <Stack direction="row" spacing={1} alignItems="center">
                               <Chip

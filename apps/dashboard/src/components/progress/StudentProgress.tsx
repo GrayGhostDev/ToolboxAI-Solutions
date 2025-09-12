@@ -12,24 +12,14 @@ import {
   IconButton,
   Skeleton,
   Alert,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
-  Tooltip,
   Badge,
   Grid,
 } from "@mui/material";
 import {
-  Person,
   EmojiEvents,
   TrendingUp,
-  Star,
   School,
-  AccessTime,
   Refresh,
   Assignment,
   PlayArrow,
@@ -37,11 +27,7 @@ import {
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import {
-  RadialBarChart,
-  RadialBar,
   ResponsiveContainer,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -50,7 +36,7 @@ import {
   Bar,
 } from "recharts";
 import { useWebSocketContext } from "../../contexts/WebSocketContext";
-import { apiClient, getStudentProgress, getWeeklyXP, getSubjectMastery } from "../../services/api";
+import { getStudentProgress, getWeeklyXP, getSubjectMastery } from "../../services/api";
 
 interface StudentData {
   id: string;
@@ -124,31 +110,31 @@ export function StudentProgress({
           getSubjectMastery(),
         ]);
 
-        // Transform progress data
+        // Transform progress data (align with StudentProgress API)
         const transformedStudent: StudentData = {
           id: progressResponse.studentId || "current_user",
-          name: progressResponse.studentName || "Current Student",
-          email: progressResponse.email || "student@example.com",
-          avatar: progressResponse.avatar,
-          level: progressResponse.level || 12,
-          totalXP: progressResponse.totalXP || 2847,
-          completionRate: progressResponse.completionRate || 78.5,
-          averageScore: progressResponse.averageScore || 85.3,
-          timeSpent: progressResponse.totalTimeSpent || 42.5,
-          streak: progressResponse.currentStreak || 7,
-          lastActive: progressResponse.lastActive || new Date().toISOString(),
-          achievements: progressResponse.achievements?.length || 15,
-          lessonsCompleted: progressResponse.lessonsCompleted || 28,
-          lessonsTotal: progressResponse.lessonsTotal || 36,
-          rank: progressResponse.globalRank || 127,
-          classRank: progressResponse.classRank || 5,
+          name: "Current Student",
+          email: "student@example.com",
+          avatar: undefined,
+          level: 0,
+          totalXP: 0,
+          completionRate: progressResponse.overallMastery ?? 0,
+          averageScore: 0,
+          timeSpent: 0,
+          streak: 0,
+          lastActive: new Date().toISOString(),
+          achievements: 0,
+          lessonsCompleted: 0,
+          lessonsTotal: 0,
+          rank: 0,
+          classRank: 0,
           subjects: subjectResponse?.map((subject: any, index: number) => ({
             name: subject.subject || `Subject ${index + 1}`,
-            mastery: subject.mastery || Math.floor(Math.random() * 30) + 70,
-            progress: subject.progress || Math.floor(Math.random() * 40) + 60,
+            mastery: subject.mastery || 0,
+            progress: subject.mastery || 0,
             color: ['#2563EB', '#22C55E', '#FACC15', '#9333EA', '#EF4444'][index % 5],
           })) || [],
-          recentActivity: progressResponse.recentActivity || [],
+          recentActivity: [],
         };
 
         setStudentData(transformedStudent);
@@ -170,35 +156,41 @@ export function StudentProgress({
           getSubjectMastery(studentId),
         ]);
 
-        // Transform data similar to above...
+        // Transform data similar to above (align with StudentProgress API)
         const transformedStudent: StudentData = {
           id: studentId,
-          name: progressResponse.studentName || `Student ${studentId}`,
-          email: progressResponse.email || "student@example.com",
-          avatar: progressResponse.avatar,
-          level: progressResponse.level || 12,
-          totalXP: progressResponse.totalXP || 2847,
-          completionRate: progressResponse.completionRate || 78.5,
-          averageScore: progressResponse.averageScore || 85.3,
-          timeSpent: progressResponse.totalTimeSpent || 42.5,
-          streak: progressResponse.currentStreak || 7,
-          lastActive: progressResponse.lastActive || new Date().toISOString(),
-          achievements: progressResponse.achievements?.length || 15,
-          lessonsCompleted: progressResponse.lessonsCompleted || 28,
-          lessonsTotal: progressResponse.lessonsTotal || 36,
-          rank: progressResponse.globalRank || 127,
-          classRank: progressResponse.classRank || 5,
+          name: `Student ${studentId}`,
+          email: "student@example.com",
+          avatar: undefined,
+          level: 0,
+          totalXP: 0,
+          completionRate: progressResponse.overallMastery ?? 0,
+          averageScore: 0,
+          timeSpent: 0,
+          streak: 0,
+          lastActive: new Date().toISOString(),
+          achievements: 0,
+          lessonsCompleted: 0,
+          lessonsTotal: 0,
+          rank: 0,
+          classRank: 0,
           subjects: subjectResponse?.map((subject: any, index: number) => ({
             name: subject.subject || `Subject ${index + 1}`,
-            mastery: subject.mastery || Math.floor(Math.random() * 30) + 70,
-            progress: subject.progress || Math.floor(Math.random() * 40) + 60,
+            mastery: subject.mastery || 0,
+            progress: subject.mastery || 0,
             color: ['#2563EB', '#22C55E', '#FACC15', '#9333EA', '#EF4444'][index % 5],
           })) || [],
-          recentActivity: progressResponse.recentActivity || [],
+          recentActivity: [],
         };
 
         setStudentData(transformedStudent);
-        setWeeklyProgress(weeklyResponse || []);
+        const transformedWeekly: WeeklyProgress[] = (weeklyResponse as any[])?.map((item: any) => ({
+          day: new Date(item.date).toLocaleDateString([], { weekday: 'short' }),
+          xp: item.xp || 0,
+          timeSpent: item.timeSpent || 0,
+          completions: item.completions || 0,
+        })) || [];
+        setWeeklyProgress(transformedWeekly);
       }
 
       // Use mock data if no real data available

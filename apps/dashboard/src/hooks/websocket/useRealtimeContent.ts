@@ -8,7 +8,7 @@ import { useWebSocket } from './useWebSocket';
 import { 
   ContentGenerationRequest,
   ContentGenerationProgress,
-  ContentGenerationComplete,
+  ContentGenerationResponse,
   WebSocketMessageType,
   WebSocketChannel
 } from '../../types/websocket';
@@ -17,13 +17,13 @@ export interface ContentGenerationState {
   requestId: string;
   status: 'idle' | 'pending' | 'processing' | 'completed' | 'error';
   progress: ContentGenerationProgress | null;
-  result: ContentGenerationComplete | null;
+  result: ContentGenerationResponse | null;
   error: string | null;
 }
 
 export interface UseRealtimeContentOptions {
   onProgress?: (progress: ContentGenerationProgress) => void;
-  onComplete?: (result: ContentGenerationComplete) => void;
+  onComplete?: (result: ContentGenerationResponse) => void;
   onError?: (error: string) => void;
   autoCleanup?: boolean;
   cleanupDelay?: number;
@@ -51,9 +51,9 @@ export function useRealtimeContent(
   const { 
     requestContent, 
     onContentProgress, 
-    onContentComplete,
     sendMessage,
-    isConnected 
+    isConnected,
+    on 
   } = useWebSocket();
   
   const {
@@ -97,7 +97,7 @@ export function useRealtimeContent(
   }, [state.requestId]);
   
   // Handle completion
-  const handleComplete = useCallback((result: ContentGenerationComplete) => {
+  const handleComplete = useCallback((result: ContentGenerationResponse) => {
     if (result.requestId !== state.requestId) return;
     
     setState(prev => ({
@@ -173,9 +173,9 @@ export function useRealtimeContent(
     if (!state.requestId || state.status === 'completed') return;
     
     sendMessage(
-      WebSocketMessageType.CANCEL_CONTENT_GENERATION,
+      WebSocketMessageType.CONTENT_CANCEL,
       { requestId: state.requestId },
-      { channel: WebSocketChannel.CONTENT_GENERATION }
+      { channel: WebSocketChannel.CONTENT_UPDATES }
     );
     
     setState(prev => ({
@@ -199,13 +199,14 @@ export function useRealtimeContent(
     if (!state.requestId || state.status === 'idle') return;
     
     const unsubscribeProgress = onContentProgress(handleProgress);
-    const unsubscribeComplete = onContentComplete(handleComplete);
+    // Subscribe to CONTENT_COMPLETE via generic on()
+    const unsubscribeComplete = on(WebSocketMessageType.CONTENT_COMPLETE, handleComplete as any);
     
     return () => {
       unsubscribeProgress();
       unsubscribeComplete();
     };
-  }, [state.requestId, state.status, onContentProgress, onContentComplete, handleProgress, handleComplete]);
+  }, [state.requestId, state.status, onContentProgress, on, handleProgress, handleComplete]);
   
   // Cleanup on unmount
   useEffect(() => {
@@ -239,7 +240,7 @@ export function useMultipleContentGeneration(
   clearCompleted: () => void;
 } {
   const [requests, setRequests] = useState<Map<string, ContentGenerationState>>(new Map());
-  const { requestContent, onContentProgress, onContentComplete, isConnected } = useWebSocket();
+  const { requestContent, onContentProgress, on, isConnected } = useWebSocket();
   
   const activeCount = Array.from(requests.values()).filter(
     r => r.status === 'pending' || r.status === 'processing'
@@ -321,7 +322,7 @@ export function useMultipleContentGeneration(
       });
     };
     
-    const handleComplete = (result: ContentGenerationComplete) => {
+    const handleComplete = (result: ContentGenerationResponse) => {
       setRequests(prev => {
         const next = new Map(prev);
         const state = next.get(result.requestId);
@@ -334,13 +335,13 @@ export function useMultipleContentGeneration(
     };
     
     const unsubscribeProgress = onContentProgress(handleProgress);
-    const unsubscribeComplete = onContentComplete(handleComplete);
+    const unsubscribeComplete = on(WebSocketMessageType.CONTENT_COMPLETE, handleComplete as any);
     
     return () => {
       unsubscribeProgress();
       unsubscribeComplete();
     };
-  }, [onContentProgress, onContentComplete]);
+  }, [onContentProgress, on]);
   
   return {
     requests,

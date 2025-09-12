@@ -68,9 +68,9 @@ class OrchestrationResult:
     quiz: Optional[Dict[str, Any]] = None
     review: Optional[Dict[str, Any]] = None
     testing: Optional[Dict[str, Any]] = None
-    errors: List[str] = None
+    errors: Optional[List[str]] = None
     execution_time: float = 0.0
-    workflow_path: List[str] = None
+    workflow_path: Optional[List[str]] = None
 
 
 class Orchestrator:
@@ -762,17 +762,22 @@ class Orchestrator:
     def _extract_results(self, final_state: AgentState) -> OrchestrationResult:
         """Extract results from final state"""
 
-        result_data = final_state.get("result", {}) if final_state.get("result") else {}
-        components = result_data.get("components", {}) if result_data.get("components") else {}
+        raw_result = final_state.get("result")
+        result_data: Dict[str, Any] = raw_result if isinstance(raw_result, dict) else {}
+        raw_components = result_data.get("components") if isinstance(result_data, dict) else None
+        components: Dict[str, Any] = raw_components if isinstance(raw_components, dict) else {}
 
         # Combine testing data
-        testing_data = {}
-        if components.get("testing"):
-            testing_data.update(components["testing"])
-        if components.get("coverage"):
-            testing_data["coverage"] = components["coverage"]
-        if components.get("failure_analysis"):
-            testing_data["failure_analysis"] = components["failure_analysis"]
+        testing_data: Dict[str, Any] = {}
+        comp_testing = components.get("testing")
+        if isinstance(comp_testing, dict):
+            testing_data.update(comp_testing)
+        comp_coverage = components.get("coverage")
+        if comp_coverage is not None:
+            testing_data["coverage"] = comp_coverage
+        comp_fail = components.get("failure_analysis")
+        if comp_fail is not None:
+            testing_data["failure_analysis"] = comp_fail
 
         return OrchestrationResult(
             success=result_data.get("success", False),
@@ -783,7 +788,7 @@ class Orchestrator:
             review=components.get("review"),
             testing=testing_data if testing_data else None,
             errors=result_data.get("errors", []),
-            workflow_path=result_data.get("workflow_path", []),
+            workflow_path=result_data.get("workflow_path") or [],
         )
 
     def _update_average_execution_time(self, new_time: float):

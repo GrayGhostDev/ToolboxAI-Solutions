@@ -22,7 +22,7 @@ export interface User {
   lastLogin?: string;
   createdAt: string;
   updatedAt: string;
-  status: "active" | "suspended" | "pending";
+  status: "active" | "suspended" | "pending" | "inactive";
 }
 
 export interface UserCreate {
@@ -239,10 +239,31 @@ export interface Notification {
 // Dashboard Overview
 export interface DashboardOverview {
   role: UserRole;
-  metrics: DashboardMetrics;
-  recentActivity: Activity[];
-  upcomingEvents: Event[];
-  notifications: Notification[];
+  metrics?: DashboardMetrics;
+  recentActivity?: Activity[];
+  upcomingEvents?: Event[];
+  notifications?: Notification[];
+  // Legacy/alternate fields used by some components
+  kpis?: {
+    activeClasses?: number;
+    totalStudents?: number;
+    todaysLessons?: number;
+    pendingAssessments?: number;
+    averageProgress?: number;
+    progressChange?: number;
+  };
+  compliance?: {
+    status?: string;
+    pendingAlerts?: number;
+  };
+  studentData?: {
+    xp?: number;
+    overallProgress?: number;
+    performanceRating?: string;
+    completedAssignments?: number;
+    totalAssignments?: number;
+    lastActive?: string;
+  };
 }
 
 export interface DashboardMetrics {

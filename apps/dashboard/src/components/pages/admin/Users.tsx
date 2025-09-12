@@ -6,10 +6,8 @@ import {
   updateUser,
   deleteUser,
   suspendUser,
-  type User as UserType,
-  type UserCreate,
-  type UserUpdate,
 } from "../../../services/api";
+import type { User as UserType, UserCreate, UserUpdate } from "@/types/api";
 import {
   Box,
   Card,
@@ -37,12 +35,12 @@ import {
   Avatar,
   InputAdornment,
 } from "@mui/material";
-import { Add, Edit, Delete, Person, Search, Email } from "@mui/icons-material";
+import { Add, Edit, Delete, Search, Email } from "@mui/icons-material";
 
 interface UserFormData {
   email: string;
   username: string;
-  password?: string;
+  password: string;
   firstName: string;
   lastName: string;
   displayName: string;
@@ -168,7 +166,7 @@ export default function Users() {
     }
     
     try {
-      let savedUser;
+      let savedUser: any;
       if (editingUser) {
         // Update existing user
         const updateData: UserUpdate = {

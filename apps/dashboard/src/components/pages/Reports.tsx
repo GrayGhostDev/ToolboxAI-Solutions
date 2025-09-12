@@ -45,9 +45,6 @@ import SchoolIcon from "@mui/icons-material/School";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import DescriptionIcon from "@mui/icons-material/Description";
-import TableChartIcon from "@mui/icons-material/TableChart";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import ViewListIcon from "@mui/icons-material/ViewList";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import TimelineIcon from "@mui/icons-material/Timeline";
@@ -65,21 +62,6 @@ import {
   Report as ApiReport,
   ReportGenerateRequest,
 } from "../../services/api";
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
 
 // Import our new analytics components
 import UserActivityChart from "../analytics/UserActivityChart";
@@ -395,7 +377,7 @@ export default function Reports() {
         return (
           <>
             {/* Quick Stats */}
-            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid2 xs={12} sm={6} md={3}>
               <Card>
                 <CardContent>
                   <Stack spacing={1}>
@@ -413,7 +395,7 @@ export default function Reports() {
               </Card>
             </Grid2>
 
-            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid2 xs={12} sm={6} md={3}>
               <Card>
                 <CardContent>
                   <Stack spacing={1}>
@@ -433,7 +415,7 @@ export default function Reports() {
               </Card>
             </Grid2>
 
-            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid2 xs={12} sm={6} md={3}>
               <Card>
                 <CardContent>
                   <Stack spacing={1}>
@@ -451,7 +433,7 @@ export default function Reports() {
               </Card>
             </Grid2>
 
-            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid2 xs={12} sm={6} md={3}>
               <Card>
                 <CardContent>
                   <Stack spacing={1}>
@@ -472,14 +454,14 @@ export default function Reports() {
             </Grid2>
 
             {/* Report Generator */}
-            <Grid2 size={{ xs: 12, lg: 8 }}>
+            <Grid2 xs={12} lg={8}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
                     Generate New Report
                   </Typography>
                   <Grid2 container spacing={2}>
-                    <Grid2 size={{ xs: 12, md: 6 }}>
+                    <Grid2 xs={12} md={6}>
                       <FormControl fullWidth>
                         <InputLabel>Report Type</InputLabel>
                         <Select
@@ -495,7 +477,7 @@ export default function Reports() {
                         </Select>
                       </FormControl>
                     </Grid2>
-                    <Grid2 size={{ xs: 12, md: 6 }}>
+                    <Grid2 xs={12} md={6}>
                       <FormControl fullWidth>
                         <InputLabel>Class/Student</InputLabel>
                         <Select defaultValue="all" label="Class/Student">
@@ -506,7 +488,7 @@ export default function Reports() {
                         </Select>
                       </FormControl>
                     </Grid2>
-                    <Grid2 size={{ xs: 12, md: 6 }}>
+                    <Grid2 xs={12} md={6}>
                       <DatePicker
                         label="Start Date"
                         value={dateRange[0]}
@@ -514,7 +496,7 @@ export default function Reports() {
                         slotProps={{ textField: { fullWidth: true } }}
                       />
                     </Grid2>
-                    <Grid2 size={{ xs: 12, md: 6 }}>
+                    <Grid2 xs={12} md={6}>
                       <DatePicker
                         label="End Date"
                         value={dateRange[1]}
@@ -522,7 +504,7 @@ export default function Reports() {
                         slotProps={{ textField: { fullWidth: true } }}
                       />
                     </Grid2>
-                    <Grid2 size={12}>
+                    <Grid2 xs={12}>
                       <Stack direction="row" gap={2}>
                         <Button
                           variant="contained"
@@ -558,7 +540,7 @@ export default function Reports() {
             </Grid2>
 
             {/* Report Templates */}
-            <Grid2 size={{ xs: 12, lg: 4 }}>
+            <Grid2 xs={12} lg={4}>
               <Card sx={{ height: "100%" }}>
                 <CardContent>
                   <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
@@ -594,7 +576,7 @@ export default function Reports() {
             </Grid2>
 
             {/* Recent Reports */}
-            <Grid2 size={12}>
+            <Grid2 xs={12}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
@@ -615,7 +597,7 @@ export default function Reports() {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {(reports.length > 0 ? reports : mockReports).slice(0, 5).map((report) => (
+                        {((reports.length > 0 ? (reports as any[]) : (mockReports as any[]))).slice(0, 5).map((report: any) => (
                           <TableRow key={report.id} hover>
                             <TableCell>
                               <Stack direction="row" alignItems="center" gap={1}>
@@ -675,10 +657,10 @@ export default function Reports() {
       case 1: // Analytics Dashboard
         return (
           <>
-            <Grid2 size={12}>
+            <Grid2 xs={12}>
               <UserActivityChart timeRange="30d" height={350} autoRefresh={true} />
             </Grid2>
-            <Grid2 size={12}>
+            <Grid2 xs={12}>
               <ContentMetrics timeRange="30d" autoRefresh={true} />
             </Grid2>
           </>
@@ -687,7 +669,7 @@ export default function Reports() {
       case 2: // Performance Metrics
         return (
           <>
-            <Grid2 size={12}>
+            <Grid2 xs={12}>
               <PerformanceIndicator showSystemHealth={role === "admin"} autoRefresh={true} />
             </Grid2>
           </>
@@ -695,7 +677,7 @@ export default function Reports() {
       
       default:
         return (
-          <Grid2 size={12}>
+          <Grid2 xs={12}>
             <Alert severity="info">
               Select a tab to view reports and analytics.
             </Alert>
@@ -708,7 +690,7 @@ export default function Reports() {
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Grid2 container spacing={3}>
         {/* Header */}
-        <Grid2 size={12}>
+        <Grid2 xs={12}>
           <Card>
             <CardContent>
               <Stack

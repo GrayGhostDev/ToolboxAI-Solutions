@@ -496,7 +496,7 @@ class AgentDatabaseIntegration:
         return mock_progress
             
     async def save_generated_content(self, content_type: str, content_data: Dict, 
-                                   created_by: Union[str, uuid.UUID] = None) -> bool:
+                                   created_by: Optional[Union[str, uuid.UUID]] = None) -> bool:
         """Save agent-generated content to database or simulate save in mock mode"""
         if not self._use_real_data or not self._initialized:
             logger.info(f"Mock mode: Simulating save of {content_type} content")
@@ -549,7 +549,9 @@ class AgentDatabaseIntegration:
                 if self._redis_client:
                     try:
                         cache_key = f"agent:generated_content:{content_id}"
-                        self._redis_client.setex(cache_key, 3600, json.dumps({"type": content_type, "created_at": datetime.now(timezone.utc).isoformat()}))
+                        value = json.dumps({"type": content_type, "created_at": datetime.now(timezone.utc).isoformat()})
+                        # Value is str; some clients may expect bytes; ignore typing mismatch if any
+                        self._redis_client.setex(cache_key, 3600, value)  # type: ignore[arg-type]
                     except Exception as cache_error:
                         logger.warning(f"Failed to cache content: {cache_error}")
                 

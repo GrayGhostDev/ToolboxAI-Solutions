@@ -207,7 +207,7 @@ export default function Compliance() {
   return (
     <Grid2 container spacing={3}>
       {/* Header */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card>
           <CardContent>
             <Stack
@@ -261,7 +261,7 @@ export default function Compliance() {
       </Grid2>
 
       {/* Overall Score Card */}
-      <Grid2 size={{ xs: 12, md: 4 }}>
+      <Grid2 xs={12} md={4}>
         <Card>
           <CardContent>
             <Stack alignItems="center" spacing={2}>
@@ -301,7 +301,7 @@ export default function Compliance() {
       </Grid2>
 
       {/* Pending Actions Card */}
-      <Grid2 size={{ xs: 12, md: 4 }}>
+      <Grid2 xs={12} md={4}>
         <Card>
           <CardContent>
             <Stack spacing={2}>
@@ -348,7 +348,7 @@ export default function Compliance() {
       </Grid2>
 
       {/* Quick Actions Card */}
-      <Grid2 size={{ xs: 12, md: 4 }}>
+      <Grid2 xs={12} md={4}>
         <Card>
           <CardContent>
             <Stack spacing={2}>
@@ -387,7 +387,7 @@ export default function Compliance() {
       </Grid2>
 
       {/* Compliance Status Cards */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card>
           <CardContent>
             <Typography variant="h6" sx={{ mb: 2 }}>
@@ -397,7 +397,7 @@ export default function Compliance() {
               {status && Object.entries(status)
                 .filter(([key]) => ['coppa', 'ferpa', 'gdpr'].includes(key))
                 .map(([regulation, data]) => (
-                <Grid2 key={regulation} size={{ xs: 12, sm: 6, md: 3 }}>
+                <Grid2 key={regulation} xs={12} sm={6} md={3}>
                   <Card variant="outlined">
                     <CardContent>
                       <Stack spacing={1}>
@@ -440,7 +440,7 @@ export default function Compliance() {
               ))}
               {loading && !status && (
                 [...Array(4)].map((_, i) => (
-                  <Grid2 key={i} size={{ xs: 12, sm: 6, md: 3 }}>
+                  <Grid2 key={i} xs={12} sm={6} md={3}>
                     <Skeleton variant="rectangular" height={200} />
                   </Grid2>
                 ))
@@ -451,7 +451,7 @@ export default function Compliance() {
       </Grid2>
 
       {/* Tabbed Content */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card>
           <CardContent>
             <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
@@ -734,7 +734,7 @@ export default function Compliance() {
 
       {/* Error Alert */}
       {error && (
-        <Grid2 size={12}>
+        <Grid2 xs={12}>
           <Alert severity="error" onClose={() => dispatch(clearError())}>
             {error}
           </Alert>

@@ -87,6 +87,12 @@ from .models import (
     User,
 )
 from .websocket import broadcast_content_update, websocket_endpoint, websocket_manager
+from .pusher_client import (
+    trigger_event as pusher_trigger_event,
+    authenticate_channel as pusher_authenticate,
+    verify_webhook as pusher_verify_webhook,
+    PusherUnavailable,
+)
 from .database_service import db_service
 from .socketio_server import create_socketio_app  # Socket.IO ASGI mounted at path '/socket.io'
 
@@ -258,6 +264,90 @@ version_manager = create_version_manager(
 
 # Security
 security = HTTPBearer()
+
+# ------------------------
+# Pusher endpoints (Channels)
+# ------------------------
+from fastapi import Body, Header
+
+@app.post("/pusher/auth")
+async def pusher_auth(
+    socket_id: str = Query(..., alias="socket_id"),
+    channel_name: str = Query(..., alias="channel_name"),
+    request: Request = None,
+):
+    """Authenticate private/presence channel subscription.
+    Relies on current user context to build presence data when needed.
+    """
+    try:
+        user = None
+        try:
+            # Optional: try to get current user, if auth headers are present
+            user = await get_current_user(request)
+        except Exception:
+            pass
+        user_id = getattr(user, "id", None)
+        user_info = {"role": getattr(user, "role", "guest")}
+        auth_payload = pusher_authenticate(socket_id, channel_name, str(user_id) if user_id else None, user_info)
+        return JSONResponse(content=auth_payload)
+    except PusherUnavailable as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        logger.error(f"Pusher auth failed: {e}")
+        raise HTTPException(status_code=400, detail="Pusher auth failed")
+
+
+@app.post("/realtime/trigger")
+async def realtime_trigger(payload: Dict[str, Any] = Body(...)):
+    """Trigger a Channels event from the server side.
+    Expected payload: { channel: str, event: str, type?: str, payload?: any }
+    If 'event' isn't provided, defaults to 'message' and wraps type/payload.
+    """
+    try:
+        channel = payload.get("channel") or "public"
+        event = payload.get("event") or "message"
+        data = payload.get("data")
+        if data is None:
+            # wrap unified message
+            data = {
+                "type": payload.get("type") or "message",
+                "payload": payload.get("payload"),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        res = pusher_trigger_event(channel, event, data)
+        return JSONResponse(content={"ok": True, **res})
+    except PusherUnavailable as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        logger.error(f"Realtime trigger failed: {e}")
+        raise HTTPException(status_code=400, detail="Trigger failed")
+
+
+@app.post("/pusher/webhook")
+async def pusher_webhook(
+    request: Request,
+    x_pusher_signature: str = Header(None, alias="X-Pusher-Signature"),
+    x_pusher_key: str = Header(None, alias="X-Pusher-Key"),
+):
+    """Handle Pusher webhooks: channel occupied/vacated, member added/removed, etc."""
+    try:
+        body = await request.body()
+        headers = {
+            "X-Pusher-Key": x_pusher_key or "",
+            "X-Pusher-Signature": x_pusher_signature or "",
+        }
+        events = pusher_verify_webhook(headers, body)
+        if not events:
+            raise HTTPException(status_code=400, detail="Invalid webhook")
+
+        # Basic logging; extend with business logic as needed
+        logger.info(f"Pusher webhook events: {events}")
+        return {"ok": True}
+    except PusherUnavailable as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        logger.error(f"Pusher webhook handling failed: {e}")
+        raise HTTPException(status_code=400, detail="Webhook handling failed")
 
 # Middleware configuration
 

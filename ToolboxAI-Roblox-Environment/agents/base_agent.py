@@ -94,6 +94,28 @@ class TaskResult(BaseModel):
     execution_time: float = 0.0
     tokens_used: int = 0
 
+    @classmethod
+    def create(
+        cls,
+        *,
+        success: bool,
+        output: Any,
+        metadata: Optional[Dict[str, Any]] = None,
+        error: Optional[str] = None,
+        execution_time: float = 0.0,
+        tokens_used: int = 0,
+    ) -> "TaskResult":
+        data = {
+            "success": success,
+            "output": output,
+            "metadata": metadata or {},
+            "error": error,
+            "execution_time": execution_time,
+            "tokens_used": tokens_used,
+        }
+        from typing import Any, cast
+        return cast(Any, cls)(**data)  # type: ignore[reportCallIssue]
+
 
 class BaseAgent(ABC):
     """
@@ -186,7 +208,7 @@ Always structure your responses clearly and provide Lua code when applicable.
             self._update_metrics(True, execution_time)
 
             # Create result
-            task_result = TaskResult(
+            task_result = TaskResult.create(
                 success=True,
                 output=result,
                 metadata={"agent": self.name, "task": task, "timestamp": datetime.now().isoformat()},
@@ -208,7 +230,7 @@ Always structure your responses clearly and provide Lua code when applicable.
 
             self.status = AgentStatus.ERROR
 
-            return TaskResult(success=False, output=None, error=str(e), execution_time=execution_time)
+            return TaskResult.create(success=False, output=None, error=str(e), execution_time=execution_time)
         finally:
             self.current_task = None
 
@@ -293,7 +315,7 @@ Always structure your responses clearly and provide Lua code when applicable.
         # Combine results
         combined_output = {self.name: results[0].output, other_agent.name: results[1].output}
         
-        collaboration_result = TaskResult(
+        collaboration_result = TaskResult.create(
             success=all(r.success for r in results),
             output=combined_output,
             metadata={"collaboration": True, "agents": [self.name, other_agent.name]},

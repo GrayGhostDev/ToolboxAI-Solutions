@@ -33,10 +33,8 @@ import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import CloudSyncIcon from "@mui/icons-material/CloudSync";
 import SchoolIcon from "@mui/icons-material/School";
 import StorageIcon from "@mui/icons-material/Storage";
-import SecurityIcon from "@mui/icons-material/Security";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
-import WarningIcon from "@mui/icons-material/Warning";
 import SyncIcon from "@mui/icons-material/Sync";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ApiIcon from "@mui/icons-material/Api";
@@ -73,7 +71,6 @@ interface ApiEndpoint {
 }
 
 export default function Integrations() {
-  const role = useAppSelector((s) => s.user.role);
   const [selectedIntegration, setSelectedIntegration] = React.useState<Integration | null>(null);
   const [configDialogOpen, setConfigDialogOpen] = React.useState(false);
   const [apiDialogOpen, setApiDialogOpen] = React.useState(false);
@@ -188,20 +185,6 @@ export default function Integrations() {
     },
   ];
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "connected":
-        return <CheckCircleIcon sx={{ color: "success.main" }} />;
-      case "disconnected":
-        return <ErrorIcon sx={{ color: "text.disabled" }} />;
-      case "error":
-        return <ErrorIcon sx={{ color: "error.main" }} />;
-      case "syncing":
-        return <SyncIcon sx={{ color: "info.main", animation: "spin 2s linear infinite" }} />;
-      default:
-        return null;
-    }
-  };
 
   const getStatusChip = (status: string) => {
     const statusConfig = {
@@ -228,7 +211,7 @@ export default function Integrations() {
   return (
     <Grid2 container spacing={3}>
       {/* Header */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card>
           <CardContent>
             <Stack
@@ -262,7 +245,7 @@ export default function Integrations() {
       </Grid2>
 
       {/* Stats Cards */}
-      <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+      <Grid2 xs={12} sm={6} md={3}>
         <Card>
           <CardContent>
             <Stack spacing={1}>
@@ -280,7 +263,7 @@ export default function Integrations() {
         </Card>
       </Grid2>
 
-      <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+      <Grid2 xs={12} sm={6} md={3}>
         <Card>
           <CardContent>
             <Stack spacing={1}>
@@ -298,7 +281,7 @@ export default function Integrations() {
         </Card>
       </Grid2>
 
-      <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+      <Grid2 xs={12} sm={6} md={3}>
         <Card>
           <CardContent>
             <Stack spacing={1}>
@@ -316,7 +299,7 @@ export default function Integrations() {
         </Card>
       </Grid2>
 
-      <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+      <Grid2 xs={12} sm={6} md={3}>
         <Card>
           <CardContent>
             <Stack spacing={1}>
@@ -335,7 +318,7 @@ export default function Integrations() {
       </Grid2>
 
       {/* Roblox Integration Highlight */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Alert severity="success" icon={<SportsEsportsIcon />}>
           <AlertTitle>Roblox Integration Active</AlertTitle>
           Your educational experiences are syncing with Roblox. Last sync: 5 minutes ago. 
@@ -356,13 +339,13 @@ export default function Integrations() {
       </Grid2>
 
       {/* Integration Cards */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
           Available Integrations
         </Typography>
         <Grid2 container spacing={2}>
           {integrations.map((integration) => (
-            <Grid2 key={integration.id} size={{ xs: 12, md: 6, lg: 4 }}>
+            <Grid2 key={integration.id} xs={12} md={6} lg={4}>
               <Card sx={{
                 height: "100%",
                 opacity: integration.status === "disconnected" ? 0.7 : 1,
@@ -458,7 +441,7 @@ export default function Integrations() {
       </Grid2>
 
       {/* API Endpoints */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card>
           <CardContent>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>

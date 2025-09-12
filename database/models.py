@@ -611,3 +611,8 @@ class Session(Base):
         Index('idx_session_user', 'user_id'),
         Index('idx_session_expires', 'expires_at'),
     )
+
+
+# Backward compatibility alias
+# Some older code expects EducationalContent instead of Content
+EducationalContent = Content

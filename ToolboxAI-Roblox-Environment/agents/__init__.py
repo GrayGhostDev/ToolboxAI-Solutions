@@ -5,6 +5,8 @@ This module provides a comprehensive agent-based system for generating
 AI-powered educational content in Roblox environments using LangChain/LangGraph.
 """
 
+from typing import Optional, Dict, Any, List
+
 from .base_agent import BaseAgent, AgentConfig, AgentState, TaskResult, AgentStatus, AgentPriority
 
 from .supervisor import SupervisorAgent, TaskType, SupervisorDecision
@@ -70,7 +72,7 @@ AGENT_REGISTRY = {
 }
 
 
-def create_orchestrator(config: dict = None) -> Orchestrator:
+def create_orchestrator(config: Optional[Dict[str, Any]] = None) -> Orchestrator:
     """
     Create and configure an orchestrator instance.
 
@@ -83,7 +85,7 @@ def create_orchestrator(config: dict = None) -> Orchestrator:
     return Orchestrator(config)
 
 
-def create_agent(agent_type: str, config: AgentConfig = None) -> BaseAgent:
+def create_agent(agent_type: str, config: Optional[AgentConfig] = None) -> BaseAgent:
     """
     Create a specific agent by type.
 
@@ -102,10 +104,10 @@ def create_agent(agent_type: str, config: AgentConfig = None) -> BaseAgent:
     if not agent_class:
         raise ValueError(f"Unknown agent type: {agent_type}. Available: {list(AGENT_REGISTRY.keys())}")
 
-    return agent_class(config)
+    return agent_class(config or AgentConfig())
 
 
-def get_available_agents() -> list:
+def get_available_agents() -> List[str]:
     """
     Get list of available agent types.
 

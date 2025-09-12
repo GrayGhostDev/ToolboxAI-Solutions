@@ -36,7 +36,7 @@ interface Props {
 }
 
 const roleMenus: Record<UserRole, { label: string; icon: React.ReactNode; path: string }[]> = {
-  Admin: [
+  admin: [
     { label: "Overview", icon: <DashboardIcon />, path: "/" },
     { label: "Schools", icon: <SchoolIcon />, path: "/schools" },
     { label: "Users", icon: <PeopleIcon />, path: "/users" },
@@ -46,7 +46,7 @@ const roleMenus: Record<UserRole, { label: string; icon: React.ReactNode; path: 
     { label: "Integrations", icon: <IntegrationInstructionsIcon />, path: "/integrations" },
     { label: "Settings", icon: <SettingsIcon />, path: "/settings" },
   ],
-  Teacher: [
+  teacher: [
     { label: "Overview", icon: <DashboardIcon />, path: "/" },
     { label: "Classes", icon: <PeopleIcon />, path: "/classes" },
     { label: "Lessons", icon: <AssignmentIcon />, path: "/lessons" },
@@ -56,7 +56,7 @@ const roleMenus: Record<UserRole, { label: string; icon: React.ReactNode; path: 
     { label: "Messages", icon: <MessageIcon />, path: "/messages" },
     { label: "Settings", icon: <SettingsIcon />, path: "/settings" },
   ],
-  Student: [
+  student: [
     { label: "Overview", icon: <DashboardIcon />, path: "/" },
     { label: "Missions", icon: <FlagIcon />, path: "/missions" },
     { label: "Progress", icon: <LeaderboardIcon />, path: "/progress" },
@@ -66,7 +66,7 @@ const roleMenus: Record<UserRole, { label: string; icon: React.ReactNode; path: 
     { label: "Play", icon: <SportsEsportsIcon />, path: "/play" },
     { label: "Settings", icon: <SettingsIcon />, path: "/settings" },
   ],
-  Parent: [
+  parent: [
     { label: "Overview", icon: <DashboardIcon />, path: "/" },
     { label: "Progress", icon: <LeaderboardIcon />, path: "/progress" },
     { label: "Reports", icon: <AssessmentIcon />, path: "/reports" },
@@ -85,9 +85,8 @@ export default function Sidebar({ role }: Props) {
 
   const progress = ((xp % 100) / 100) * 100;
   
-  // Normalize role to match expected format (capitalize first letter)
-  const normalizedRole = (role?.charAt(0).toUpperCase() + role?.slice(1).toLowerCase()) as UserRole;
-  const menuItems = roleMenus[normalizedRole] || roleMenus.Student;
+  // Roles are already normalized as lowercase strings matching UserRole
+  const menuItems = roleMenus[role] || roleMenus.student;
 
   return (
     <Drawer

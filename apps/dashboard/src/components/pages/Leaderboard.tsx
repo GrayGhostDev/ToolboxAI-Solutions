@@ -18,9 +18,6 @@ import {
   TextField,
   InputAdornment,
   Box,
-  IconButton,
-  Tooltip,
-  Skeleton,
 } from "@mui/material";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import SearchIcon from "@mui/icons-material/Search";
@@ -32,21 +29,8 @@ import WhatshotIcon from "@mui/icons-material/Whatshot";
 import StarIcon from "@mui/icons-material/Star";
 import { useAppSelector, useAppDispatch } from "../../store";
 import { fetchLeaderboard, setLeaderboard } from "../../store/slices/gamificationSlice";
-import { wsService } from "../../services/ws";
-
-interface LeaderboardEntry {
-  rank: number;
-  studentId: string;
-  displayName: string;
-  avatarUrl?: string;
-  xp: number;
-  level: number;
-  badgeCount: number;
-  streakDays: number;
-  change: number; // Position change from last period
-  classId?: string;
-  className?: string;
-}
+// import { wsService } from "../../services/ws";
+import { sendWebSocketMessage, subscribeToChannel, unsubscribeFromChannel } from "../../services/websocket";
 
 export default function Leaderboard() {
   const dispatch = useAppDispatch();
@@ -64,42 +48,29 @@ export default function Leaderboard() {
 
   // Setup WebSocket listeners for real-time updates
   useEffect(() => {
-    // Request initial leaderboard from WebSocket
-    wsService.requestLeaderboard(currentClassId);
+    // Request initial leaderboard from realtime channel via server-triggered event
+    void sendWebSocketMessage('request_leaderboard', { classId: currentClassId }, { channel: 'public' });
 
     // Listen for leaderboard updates
-    const handleLeaderboardUpdate = (data: any) => {
-      dispatch(setLeaderboard(data.leaderboard));
+    const handleLeaderboardUpdate = (message: any) => {
+      const data = message.payload || message;
+      dispatch(setLeaderboard(data.leaderboard || []));
     };
 
-    const handleXPUpdate = () => {
-      // Refresh leaderboard when any user gains XP
+    const subLeaderboard = subscribeToChannel('public', handleLeaderboardUpdate, (msg) => msg.type === 'leaderboard_update');
+
+    const refresh = () => {
       dispatch(fetchLeaderboard({ classId: currentClassId, timeframe }));
     };
 
-    const handleBadgeEarned = () => {
-      // Refresh leaderboard when any user earns a badge
-      dispatch(fetchLeaderboard({ classId: currentClassId, timeframe }));
-    };
-
-    // Subscribe to WebSocket events
-    wsService.on("leaderboard_update", handleLeaderboardUpdate);
-    wsService.on("xp_gained", handleXPUpdate);
-    wsService.on("badge_earned", handleBadgeEarned);
-
-    // Join class room for real-time updates
-    if (currentClassId) {
-      wsService.joinRoom(currentClassId);
-    }
+    const subXP = subscribeToChannel('public', refresh, (msg) => msg.type === 'xp_gained');
+    const subBadge = subscribeToChannel('public', refresh, (msg) => msg.type === 'badge_earned');
 
     // Cleanup
     return () => {
-      wsService.off("leaderboard_update", handleLeaderboardUpdate);
-      wsService.off("xp_gained", handleXPUpdate);
-      wsService.off("badge_earned", handleBadgeEarned);
-      if (currentClassId) {
-        wsService.leaveRoom(currentClassId);
-      }
+      unsubscribeFromChannel(subLeaderboard);
+      unsubscribeFromChannel(subXP);
+      unsubscribeFromChannel(subBadge);
     };
   }, [dispatch, currentClassId, timeframe]);
 
@@ -107,6 +78,7 @@ export default function Leaderboard() {
     event: React.MouseEvent<HTMLElement>,
     newTimeframe: "daily" | "weekly" | "monthly" | "all" | null
   ) => {
+    void event;
     if (newTimeframe !== null) {
       setTimeframe(newTimeframe);
     }
@@ -166,7 +138,7 @@ export default function Leaderboard() {
   return (
     <Grid2 container spacing={3}>
       {/* Header */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card>
           <CardContent>
             <Stack
@@ -220,7 +192,7 @@ export default function Leaderboard() {
       </Grid2>
 
       {/* Top 3 Podium */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card sx={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
           <CardContent>
             <Stack
@@ -296,7 +268,7 @@ export default function Leaderboard() {
       </Grid2>
 
       {/* Full Leaderboard Table */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card>
           <CardContent sx={{ p: 0 }}>
             <TableContainer>
@@ -327,7 +299,7 @@ export default function Leaderboard() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredLeaderboard.map((entry) => (
+                    filteredLeaderboard.map((entry: any) => (
                       <TableRow
                         key={entry.studentId}
                         hover

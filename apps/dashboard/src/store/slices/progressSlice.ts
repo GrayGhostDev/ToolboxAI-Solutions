@@ -95,15 +95,15 @@ export const fetchClassProgress = createAsyncThunk(
 
 export const fetchLessonAnalytics = createAsyncThunk(
   'progress/fetchLessonAnalytics',
-  async ({ lessonId, classId }: { lessonId: string; classId?: string }) => {
-    const response = await api.getLessonAnalytics(lessonId, classId);
+  async ({ lessonId }: { lessonId: string; classId?: string }) => {
+    const response = await api.getLessonAnalytics(lessonId);
     return { lessonId, data: response };
   }
 );
 
 export const updateStudentProgress = createAsyncThunk(
   'progress/updateStudent',
-  async ({ studentId, lessonId, data }: {
+  async ({ lessonId, data }: {
     studentId: string;
     lessonId: string;
     data: {
@@ -113,7 +113,7 @@ export const updateStudentProgress = createAsyncThunk(
       score?: number;
     };
   }) => {
-    const response = await api.updateProgress(studentId, lessonId, data);
+    const response = await api.updateProgress(lessonId, data.completion_percentage, data.time_spent_minutes, data.score);
     return response;
   }
 );

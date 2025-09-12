@@ -47,7 +47,7 @@ import {
   Settings,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
-import useRealTimeData from '../../../hooks/useRealTimeData';
+import { useRealTimeData } from '../../../hooks/useRealTimeData';
 
 interface ActivityLog {
   id: string;
@@ -73,7 +73,7 @@ const ActivityLogs: React.FC = () => {
   const [autoRefresh, setAutoRefresh] = useState(true);
 
   // Use real-time data hook for live updates
-  const { data: realTimeLogs } = useRealTimeData<ActivityLog[]>('activity-logs', {
+  const { data: realTimeLogs } = useRealTimeData<ActivityLog>('activity-logs', {
     refreshInterval: autoRefresh ? 5000 : 0,
   });
 

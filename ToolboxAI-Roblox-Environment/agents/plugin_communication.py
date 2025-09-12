@@ -44,6 +44,13 @@ try:
 except ImportError:
     FRAMEWORKS_AVAILABLE = False
     logging.warning("Advanced frameworks (SPARC/Swarm/MCP) not available")
+    # Provide stubs to satisfy type checker when frameworks are unavailable
+    from typing import Any
+    class StateManager: ...
+    class ActionExecutor: ...
+    class SwarmController: ...
+    class ContextManager:
+        def __init__(self, *args: Any, **kwargs: Any) -> None: ...
 
 logger = logging.getLogger(__name__)
 

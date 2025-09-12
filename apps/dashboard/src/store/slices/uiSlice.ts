@@ -26,7 +26,7 @@ const initialState: UIState = {
   globalError: null,
 };
 
-const uiSlice = createSlice({
+export const uiSlice = createSlice({
   name: "ui",
   initialState,
   reducers: {

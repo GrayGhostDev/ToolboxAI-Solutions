@@ -386,7 +386,7 @@ class SyncCoordinator:
             if version is None:
                 version = (current_state.version + 1) if current_state else 1
 
-            # Create new state snapshot
+            # Create new state snapshot.json
             new_snapshot = StateSnapshot(
                 component_id=component_id, state_data=state_data, version=version
             )

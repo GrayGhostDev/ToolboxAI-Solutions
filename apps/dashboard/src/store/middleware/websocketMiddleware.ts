@@ -8,10 +8,10 @@ import { WebSocketService } from '../../services/websocket';
 import { 
   WebSocketMessageType, 
   WebSocketChannel,
-  WebSocketMessage,
   ContentGenerationProgress,
-  ContentGenerationComplete,
-  SystemNotification
+  ContentGenerationResponse,
+  SystemNotification,
+  WebSocketState
 } from '../../types/websocket';
 import { 
   setWebSocketState,
@@ -22,7 +22,6 @@ import {
   setContentComplete,
   addSystemNotification,
   updateUserPresence,
-  updateClassroomState,
   updateQuizState
 } from '../slices/realtimeSlice';
 
@@ -121,12 +120,12 @@ export const websocketActions = {
 export const createWebSocketMiddleware = (
   webSocketService: WebSocketService
 ): Middleware => {
-  return store => next => action => {
+  return store => next => (action: any) => {
     // Handle WebSocket-specific actions
     switch (action.type) {
       case WEBSOCKET_CONNECT: {
-        const { url, token } = (action as WebSocketConnectAction).payload || {};
-        webSocketService.connect(url, token).catch(error => {
+        const { token } = (action as WebSocketConnectAction).payload || {};
+        webSocketService.connect(token).catch(error => {
           store.dispatch(setWebSocketError({
             message: error.message,
             code: 'CONNECTION_FAILED',
@@ -144,7 +143,7 @@ export const createWebSocketMiddleware = (
       
       case WEBSOCKET_SEND: {
         const { messageType, data, options } = (action as WebSocketSendAction).payload;
-        webSocketService.sendMessage(messageType, data, options).catch(error => {
+        webSocketService.send(messageType, data, options).catch(error => {
           store.dispatch(setWebSocketError({
             message: error.message,
             code: 'SEND_FAILED',
@@ -202,28 +201,18 @@ export const setupWebSocketListeners = (
   webSocketService: WebSocketService,
   dispatch: any
 ): void => {
-  // Connection state changes
-  webSocketService.on(WebSocketMessageType.CONNECT, () => {
-    dispatch(setWebSocketState('CONNECTED'));
-    dispatch(updateWebSocketStats({ connected: true }));
-  });
-  
-  webSocketService.on(WebSocketMessageType.DISCONNECT, () => {
-    dispatch(setWebSocketState('DISCONNECTED'));
-    dispatch(updateWebSocketStats({ connected: false }));
+  // Connection state changes via state handler
+  webSocketService.onStateChange((newState: WebSocketState) => {
+    dispatch(setWebSocketState(newState));
+    dispatch(updateWebSocketStats({ connected: newState === WebSocketState.CONNECTED }));
   });
   
   webSocketService.on(WebSocketMessageType.ERROR, (error: any) => {
-    dispatch(setWebSocketError({
-      message: error.message || 'WebSocket error occurred',
-      code: error.code || 'UNKNOWN_ERROR',
+dispatch(setWebSocketError({
+      message: (error as any)?.message || 'WebSocket error occurred',
+      code: (error as any)?.code || 'UNKNOWN_ERROR',
       timestamp: new Date()
     }));
-  });
-  
-  webSocketService.on(WebSocketMessageType.RECONNECTING, (attemptNumber: number) => {
-    dispatch(setWebSocketState('RECONNECTING'));
-    dispatch(updateWebSocketStats({ reconnectAttempts: attemptNumber }));
   });
   
   // System notifications
@@ -232,34 +221,29 @@ export const setupWebSocketListeners = (
   });
   
   // Content generation events
-  webSocketService.on(WebSocketMessageType.CONTENT_GENERATION_PROGRESS, (progress: ContentGenerationProgress) => {
+  webSocketService.on(WebSocketMessageType.CONTENT_PROGRESS, (progress: ContentGenerationProgress) => {
     dispatch(updateContentProgress(progress));
   });
   
-  webSocketService.on(WebSocketMessageType.CONTENT_GENERATION_COMPLETE, (result: ContentGenerationComplete) => {
+  webSocketService.on(WebSocketMessageType.CONTENT_COMPLETE, (result: ContentGenerationResponse) => {
     dispatch(setContentComplete(result));
   });
   
   // User presence events
-  webSocketService.on(WebSocketMessageType.USER_JOINED, (data: any) => {
-    dispatch(updateUserPresence({
+  webSocketService.on(WebSocketMessageType.USER_JOIN, (data: any) => {
+dispatch(updateUserPresence({
       userId: data.userId,
       status: 'online',
       lastSeen: new Date()
     }));
   });
   
-  webSocketService.on(WebSocketMessageType.USER_LEFT, (data: any) => {
-    dispatch(updateUserPresence({
+  webSocketService.on(WebSocketMessageType.USER_LEAVE, (data: any) => {
+dispatch(updateUserPresence({
       userId: data.userId,
       status: 'offline',
       lastSeen: new Date()
     }));
-  });
-  
-  // Classroom events
-  webSocketService.on(WebSocketMessageType.CLASSROOM_UPDATE, (data: any) => {
-    dispatch(updateClassroomState(data));
   });
   
   // Quiz events
@@ -267,38 +251,10 @@ export const setupWebSocketListeners = (
     dispatch(updateQuizState(data));
   });
   
-  webSocketService.on(WebSocketMessageType.QUIZ_ANSWER_SUBMITTED, (data: any) => {
-    dispatch(updateQuizState({
-      ...data,
-      type: 'answer_submitted'
-    }));
-  });
-  
   webSocketService.on(WebSocketMessageType.QUIZ_RESULTS, (data: any) => {
     dispatch(updateQuizState({
       ...data,
       type: 'results'
     }));
-  });
-  
-  // Achievement events
-  webSocketService.on(WebSocketMessageType.ACHIEVEMENT_UNLOCKED, (data: any) => {
-    dispatch(addSystemNotification({
-      id: `achievement_${Date.now()}`,
-      type: 'achievement',
-      title: 'Achievement Unlocked!',
-      message: data.achievementName,
-      severity: 'success',
-      timestamp: new Date(),
-      data
-    }));
-  });
-  
-  // Leaderboard updates
-  webSocketService.on(WebSocketMessageType.LEADERBOARD_UPDATE, (data: any) => {
-    dispatch({
-      type: 'realtime/updateLeaderboard',
-      payload: data
-    });
   });
 };

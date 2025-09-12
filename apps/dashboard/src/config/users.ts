@@ -393,10 +393,10 @@ export const PARENT_CONFIG: UserRoleConfig = {
 
 // Role configuration map
 export const USER_ROLE_CONFIGS: Record<UserRole, UserRoleConfig> = {
-  Admin: ADMIN_CONFIG,
-  Teacher: TEACHER_CONFIG,
-  Student: STUDENT_CONFIG,
-  Parent: PARENT_CONFIG,
+  admin: ADMIN_CONFIG,
+  teacher: TEACHER_CONFIG,
+  student: STUDENT_CONFIG,
+  parent: PARENT_CONFIG,
 };
 
 // Helper function to get user configuration

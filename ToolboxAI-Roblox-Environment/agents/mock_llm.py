@@ -5,7 +5,7 @@ Provides mock responses for testing without requiring OpenAI API keys
 
 import random
 import asyncio
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_core.language_models import BaseLLM
 from langchain_core.outputs import LLMResult, Generation
@@ -40,7 +40,7 @@ class MockLLM(BaseLLM):
             response = self._generate_mock_response(prompt)
             generations.append([Generation(text=response)])
         
-        return LLMResult(generations=generations)
+        return LLMResult(generations=generations)  # type: ignore[reportCallIssue]
     
     async def _agenerate(
         self,
@@ -215,7 +215,7 @@ class MockChatModel:
             return AIMessage(content=response)
         return AIMessage(content="Mock response")
     
-    async def ainvoke(self, messages_or_prompt, **kwargs) -> AIMessage:
+    async def ainvoke(self, messages_or_prompt: Union[str, List[BaseMessage]], **kwargs) -> AIMessage:
         """Async generate mock response."""
         await asyncio.sleep(0.1)
         

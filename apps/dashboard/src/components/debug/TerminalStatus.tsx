@@ -8,7 +8,7 @@
  * @version 1.0.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Card,
@@ -51,7 +51,6 @@ const TerminalStatus: React.FC = () => {
     status,
     runVerification,
     sendMessage,
-    getPerformanceSummary,
     startMonitoring,
     stopMonitoring,
     isHealthy,
@@ -86,12 +85,19 @@ const TerminalStatus: React.FC = () => {
     try {
       const success = await sendMessage('terminal1', {
         to: 'terminal1',
-        type: 'test_ping',
-        payload: { 
-          message: 'Hello from Terminal 2!', 
-          timestamp: new Date().toISOString() 
-        },
-        priority: 'normal'
+        type: 'status_update',
+        payload: {
+          services: [],
+          dashboard_status: {
+            running: true,
+            port: 3000,
+            components_loaded: 0,
+            errors: []
+          },
+          metadata: {
+            requires_response: false
+          }
+        }
       });
       
       if (success) {

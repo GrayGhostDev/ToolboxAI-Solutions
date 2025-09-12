@@ -11,7 +11,7 @@
 import { terminalSync } from './terminal-sync';
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, API_BASE_URL } from '../config';
 import { store } from '../store';
-import { loginSuccess, logout } from '../store/slices/userSlice';
+import { signInSuccess as loginSuccess, signOut as logout } from '../store/slices/userSlice';
 import { addNotification } from '../store/slices/uiSlice';
 
 // ================================
@@ -289,10 +289,16 @@ export class AuthSyncService {
 
         // Update Redux store
         if (data.user) {
-          store.dispatch(loginSuccess({
-            user: data.user,
-            accessToken: data.access_token,
-            refreshToken: data.refresh_token
+store.dispatch(loginSuccess({
+            userId: data.user?.id,
+            email: data.user?.email,
+            displayName: data.user?.display_name || data.user?.username || 'User',
+            avatarUrl: data.user?.avatar_url,
+            role: (data.user?.role || 'teacher') as any,
+            token: data.access_token,
+            refreshToken: data.refresh_token,
+            schoolId: data.user?.school_id,
+            classIds: data.user?.class_ids || [],
           }));
         }
 
@@ -461,7 +467,7 @@ export class AuthSyncService {
     });
 
     // Handle token invalidation
-    terminalSync.on('terminal1:token_invalidated', (data: any) => {
+terminalSync.on('terminal1:token_invalidated', (_data: any) => {
       console.warn('⚠️ Token invalidated by backend');
       this.handleAuthFailure('token_invalidated');
     });
@@ -469,7 +475,7 @@ export class AuthSyncService {
     console.log('🔄 Backend synchronization established');
   }
 
-  private notifyTokenRefresh(token: string): void {
+private notifyTokenRefresh(_token: string): void {
     if (!terminalSync) return;
 
     // Update WebSocket connections with new token
@@ -498,20 +504,10 @@ export class AuthSyncService {
   private showInactivityWarning(): void {
     const remainingMinutes = this.config.sessionTimeout - this.config.inactivityWarning;
     
-    store.dispatch(addNotification({
+store.dispatch(addNotification({
       type: 'warning',
       message: `Your session will expire in ${remainingMinutes} minutes due to inactivity`,
-      autoHide: false,
-      actions: [
-        {
-          label: 'Stay Logged In',
-          action: () => {
-            this.lastActivity = Date.now();
-            this.setupInactivityTimer();
-            console.log('✅ Session extended');
-          }
-        }
-      ]
+      autoHide: false
     }));
 
     console.warn(`⚠️ Inactivity warning: ${remainingMinutes} minutes until timeout`);
@@ -687,10 +683,16 @@ export class AuthSyncService {
       if (response.ok) {
         const userData = await response.json();
         // Update Redux store with fresh user data
-        store.dispatch(loginSuccess({
-          user: userData,
-          accessToken: token,
-          refreshToken: localStorage.getItem(AUTH_REFRESH_TOKEN_KEY) || undefined
+store.dispatch(loginSuccess({
+          userId: userData?.id,
+          email: userData?.email,
+          displayName: userData?.display_name || userData?.username || 'User',
+          avatarUrl: userData?.avatar_url,
+          role: (userData?.role || 'teacher') as any,
+          token: token,
+          refreshToken: localStorage.getItem(AUTH_REFRESH_TOKEN_KEY) || '',
+          schoolId: userData?.school_id,
+          classIds: userData?.class_ids || [],
         }));
       }
     } catch (error) {

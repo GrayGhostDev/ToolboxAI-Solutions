@@ -1,5 +1,4 @@
-import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import Card from "@mui/material/Card";
@@ -22,7 +21,6 @@ import { DashboardOverview } from "../../types/api";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import WarningIcon from "@mui/icons-material/Warning";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import SchoolIcon from "@mui/icons-material/School";
 import { ROUTES } from "../../config/routes";
@@ -30,42 +28,47 @@ import CreateLessonDialog from "../dialogs/CreateLessonDialog";
 import RealTimeAnalytics from "../widgets/RealTimeAnalytics";
 import ConnectionStatus from "../widgets/ConnectionStatus";
 
-export function DashboardHome({ role }: { role: UserRole }) {
+export function DashboardHome({ role }: { role?: UserRole }) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const xp = useAppSelector((s) => s.gamification.xp);
-  const level = useAppSelector((s) => s.gamification.level);
-  const badges = useAppSelector((s) => s.gamification.badges);
-  const streakDays = useAppSelector((s) => s.gamification.streakDays);
-  const userRole = useAppSelector((s) => s.user.role);
-  const userId = useAppSelector((s) => s.user.userId);
-  const userXP = useAppSelector((s) => s.user.userId) ? xp : 0;
+  const xp = useAppSelector((s) => s.gamification?.xp ?? 0);
+  const level = useAppSelector((s) => s.gamification?.level ?? 1);
+  const streakDays = useAppSelector((s) => s.gamification?.streakDays ?? 0);
+  const badgesCount = useAppSelector((s) => (s.gamification?.badges ? s.gamification.badges.length : 0));
+  const storeRole = useAppSelector((s) => (s as any).user?.role ?? (s as any).user?.currentUser?.role ?? null);
+  const effectiveRole = (role ?? storeRole) as UserRole | null;
+  const userXP = useAppSelector((s) => (s as any).user?.userId) ? xp : 0;
   
   const [dashboardData, setDashboardData] = useState<DashboardOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createLessonOpen, setCreateLessonOpen] = useState(false);
 
-  // Load dashboard data on mount
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      if (!userRole) return;
-      
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getDashboardOverview(userRole);
-        setDashboardData(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to load dashboard data");
-        console.error("Dashboard data load error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+// Data loader
+  const loadDashboardData = useCallback(async () => {
+    if (!effectiveRole) {
+      // No role available, nothing to load
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getDashboardOverview(effectiveRole);
+      setDashboardData(data);
+    } catch (err: any) {
+      setError(err.message || "Failed to load dashboard data");
+      console.error("Dashboard data load error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [effectiveRole]);
 
-    loadDashboardData();
-  }, [userRole]);
+  // Load on mount or role change
+  useEffect(() => {
+    void loadDashboardData();
+  }, [loadDashboardData]);
 
   // Simulate XP gain for demo
   const handleCompleteTask = () => {
@@ -96,7 +99,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
     <>
       <Grid2 container spacing={3}>
       {/* Welcome Banner */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card
           sx={{
             background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -196,6 +199,13 @@ export function DashboardHome({ role }: { role: UserRole }) {
                     </Button>
                   </>
                 )}
+                <Button 
+                  variant="outlined"
+                  sx={{ color: "white", borderColor: "white" }}
+                  onClick={() => void loadDashboardData()}
+                >
+                  Refresh
+                </Button>
               </Stack>
             </Stack>
           </CardContent>
@@ -205,7 +215,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
       {/* KPI Cards */}
       {role === "student" && (
         <>
-          <Grid2 size={{ xs: 12, md: 3 }}>
+          <Grid2 xs={12} md={3}>
             <Card role="region" aria-label="XP overview">
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={2}>
@@ -230,7 +240,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
               </CardContent>
             </Card>
           </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
+          <Grid2 xs={12} md={3}>
             <Card role="region" aria-label="Level status">
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={2}>
@@ -252,7 +262,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
               </CardContent>
             </Card>
           </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
+          <Grid2 xs={12} md={3}>
             <Card role="region" aria-label="Badges earned">
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={2}>
@@ -264,7 +274,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
                       Badges Earned
                     </Typography>
                     <Typography variant="h5" fontWeight={700}>
-                      {badges.length}
+                      {badgesCount}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       New this week: 2
@@ -274,7 +284,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
               </CardContent>
             </Card>
           </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
+          <Grid2 xs={12} md={3}>
             <Card role="region" aria-label="Streak days">
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={2}>
@@ -301,7 +311,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
 
       {(role === "teacher" || role === "admin") && (
         <>
-          <Grid2 size={{ xs: 12, md: 3 }}>
+          <Grid2 xs={12} md={3}>
             <Card role="region" aria-label="Active classes">
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={2}>
@@ -323,7 +333,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
               </CardContent>
             </Card>
           </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
+          <Grid2 xs={12} md={3}>
             <Card role="region" aria-label="Lessons scheduled">
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={2}>
@@ -345,7 +355,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
               </CardContent>
             </Card>
           </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
+          <Grid2 xs={12} md={3}>
             <Card role="region" aria-label="Average progress">
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={2}>
@@ -370,7 +380,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
               </CardContent>
             </Card>
           </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
+          <Grid2 xs={12} md={3}>
             <Card role="region" aria-label="Compliance status">
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={2}>
@@ -397,7 +407,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
 
       {role === "parent" && (
         <>
-          <Grid2 size={{ xs: 12, md: 3 }}>
+          <Grid2 xs={12} md={3}>
             <Card role="region" aria-label="Child's XP">
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={2}>
@@ -419,7 +429,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
               </CardContent>
             </Card>
           </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
+          <Grid2 xs={12} md={3}>
             <Card role="region" aria-label="Overall progress">
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={2}>
@@ -444,7 +454,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
               </CardContent>
             </Card>
           </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
+          <Grid2 xs={12} md={3}>
             <Card role="region" aria-label="Assignments completed">
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={2}>
@@ -466,7 +476,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
               </CardContent>
             </Card>
           </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
+          <Grid2 xs={12} md={3}>
             <Card role="region" aria-label="Last active">
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={2}>
@@ -493,7 +503,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
 
       {/* Real-Time Analytics for Admin and Teacher */}
       {(role === "admin" || role === "teacher") && (
-        <Grid2 size={12}>
+        <Grid2 xs={12}>
           <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
               Real-Time Analytics
@@ -505,15 +515,15 @@ export function DashboardHome({ role }: { role: UserRole }) {
       )}
 
       {/* Charts Section */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
           Analytics & Progress
         </Typography>
-        <ProgressCharts role={role} />
+        <ProgressCharts role={(effectiveRole ?? 'student') as UserRole} />
       </Grid2>
 
       {/* Recent Activity */}
-      <Grid2 size={{ xs: 12, md: 6 }}>
+      <Grid2 xs={12} md={6}>
         <Card>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
@@ -525,7 +535,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
                 { time: "5 hours ago", action: "Earned 'Problem Solver' badge", type: "achievement" },
                 { time: "Yesterday", action: "Submitted Science Assignment", type: "info" },
                 { time: "2 days ago", action: "Joined Roblox Chemistry Lab", type: "game" },
-              ]).map((activity, index) => (
+              ]).map((activity: any, index) => (
                 <Box
                   key={index}
                   sx={{
@@ -557,7 +567,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
       </Grid2>
 
       {/* Upcoming Events */}
-      <Grid2 size={{ xs: 12, md: 6 }}>
+      <Grid2 xs={12} md={6}>
         <Card>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
@@ -569,7 +579,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
                 { date: "Tomorrow, 10:00 AM", event: "Science Lab (Roblox)", type: "lesson" },
                 { date: "Friday, 3:00 PM", event: "Parent-Teacher Meeting", type: "meeting" },
                 { date: "Next Monday", event: "History Project Due", type: "deadline" },
-              ]).map((event, index) => (
+              ]).map((event: any, index) => (
                 <Box
                   key={index}
                   sx={{
@@ -620,8 +630,7 @@ export function DashboardHome({ role }: { role: UserRole }) {
         <CreateLessonDialog
           open={createLessonOpen}
           onClose={() => setCreateLessonOpen(false)}
-          onSave={(lessonData) => {
-            // Handle lesson creation
+          onSuccess={() => {
             setCreateLessonOpen(false);
             dispatch(
               addNotification({
@@ -635,3 +644,5 @@ export function DashboardHome({ role }: { role: UserRole }) {
     </>
   );
 }
+
+export default DashboardHome;

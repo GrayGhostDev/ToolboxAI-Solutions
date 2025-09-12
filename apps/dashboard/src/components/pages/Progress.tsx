@@ -100,8 +100,8 @@ export default function Progress() {
   
   // Fetch progress data on mount
   useEffect(() => {
-    if (user.role === "student" && user.id) {
-      dispatch(fetchStudentProgress({ studentId: user.id, daysBack: timeRange }));
+    if (user.role === "student" && (user as any).userId) {
+      dispatch(fetchStudentProgress({ studentId: (user as any).userId, daysBack: timeRange }));
     } else if (user.role === "teacher" && user.classIds?.[0]) {
       dispatch(fetchClassProgress({ classId: user.classIds[0], daysBack: timeRange }));
     }
@@ -186,7 +186,7 @@ export default function Progress() {
   return (
     <Grid2 container spacing={3}>
       {/* Header */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card>
           <CardContent>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -224,7 +224,7 @@ export default function Progress() {
       </Grid2>
       
       {error && (
-        <Grid2 size={12}>
+        <Grid2 xs={12}>
           <Alert severity="error" onClose={() => dispatch(clearError())}>
             {error}
           </Alert>
@@ -232,7 +232,7 @@ export default function Progress() {
       )}
       
       {/* Key Metrics */}
-      <Grid2 size={{ xs: 12, md: 3 }}>
+      <Grid2 xs={12} md={3}>
         <Card>
           <CardContent>
             <Stack spacing={2}>
@@ -251,7 +251,7 @@ export default function Progress() {
         </Card>
       </Grid2>
       
-      <Grid2 size={{ xs: 12, md: 3 }}>
+      <Grid2 xs={12} md={3}>
         <Card>
           <CardContent>
             <Stack spacing={2}>
@@ -275,7 +275,7 @@ export default function Progress() {
         </Card>
       </Grid2>
       
-      <Grid2 size={{ xs: 12, md: 3 }}>
+      <Grid2 xs={12} md={3}>
         <Card>
           <CardContent>
             <Stack spacing={2}>
@@ -294,7 +294,7 @@ export default function Progress() {
         </Card>
       </Grid2>
       
-      <Grid2 size={{ xs: 12, md: 3 }}>
+      <Grid2 xs={12} md={3}>
         <Card>
           <CardContent>
             <Stack spacing={2}>
@@ -316,7 +316,7 @@ export default function Progress() {
       </Grid2>
       
       {/* Charts Section */}
-      <Grid2 size={12}>
+      <Grid2 xs={12}>
         <Card>
           <CardContent>
             <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ mb: 3 }}>
@@ -373,7 +373,7 @@ export default function Progress() {
                 
                 <Grid2 container spacing={2} sx={{ mt: 3 }}>
                   {mockSubjectData.map((subject) => (
-                    <Grid2 key={subject.subject} size={{ xs: 12, sm: 6, md: 2.4 }}>
+                    <Grid2 key={subject.subject} xs={12} sm={6} md={3}>
                       <Paper sx={{ p: 2, textAlign: "center" }}>
                         <Typography variant="subtitle2" gutterBottom>
                           {subject.subject}
@@ -440,7 +440,7 @@ export default function Progress() {
                 </Typography>
                 <Grid2 container spacing={2}>
                   {mockBadges.map((badge) => (
-                    <Grid2 key={badge.id} size={{ xs: 6, sm: 4, md: 2 }}>
+                    <Grid2 key={badge.id} xs={6} sm={4} md={2}>
                       <Paper
                         sx={{
                           p: 2,
@@ -498,7 +498,7 @@ export default function Progress() {
       </Grid2>
       
       {/* Recent Activity */}
-      <Grid2 size={{ xs: 12, md: 6 }}>
+      <Grid2 xs={12} md={6}>
         <Card>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
@@ -537,7 +537,7 @@ export default function Progress() {
       </Grid2>
       
       {/* Improvement Suggestions */}
-      <Grid2 size={{ xs: 12, md: 6 }}>
+      <Grid2 xs={12} md={6}>
         <Card>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>

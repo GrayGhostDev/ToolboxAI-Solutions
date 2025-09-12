@@ -448,17 +448,20 @@ export default function Classes() {
             setLoading(true);
             const newClass = await createClass(classData);
             
+            // Normalize backend snake_case fields safely
+            const newClassAny: any = newClass as any;
+
             // Add the new class to the list immediately
             const transformedClass: ClassCardData = {
-              id: newClass.id,
-              name: newClass.name,
-              grade: newClass.grade_level || newClass.grade || 0,
-              studentCount: newClass.student_count || newClass.studentCount || 0,
-              schedule: newClass.schedule || "Schedule not set",
-              averageXP: Math.round((newClass.average_progress || 0) * 100),
-              completionRate: newClass.average_progress || 0,
-              nextLesson: newClass.next_lesson || "No upcoming lessons",
-              isOnline: newClass.is_online || false,
+              id: newClassAny.id,
+              name: newClassAny.name,
+              grade: newClassAny.grade_level ?? newClassAny.grade ?? 0,
+              studentCount: newClassAny.student_count ?? newClassAny.studentCount ?? 0,
+              schedule: newClassAny.schedule || "Schedule not set",
+              averageXP: Math.round(((newClassAny.average_progress ?? 0) as number) * 100),
+              completionRate: (newClassAny.average_progress ?? 0) as number,
+              nextLesson: newClassAny.next_lesson || "No upcoming lessons",
+              isOnline: (newClassAny.is_online ?? false) as boolean,
               studentAvatars: [],
             };
             setClasses(prev => [transformedClass, ...prev]);

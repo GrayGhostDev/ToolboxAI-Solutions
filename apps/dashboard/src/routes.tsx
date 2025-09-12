@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { DashboardHome } from "./components/pages/DashboardHome";
 import Lessons from "./components/pages/Lessons";
@@ -20,7 +19,6 @@ import Analytics from "./components/pages/admin/Analytics";
 import Play from "./components/pages/student/Play";
 import { WebSocketTest } from "./components/test/WebSocketTest";
 import RoleGuard from "./components/common/RoleGuard";
-import { UserRole } from "./types";
 import { useAppSelector } from "./store";
 import TeacherRobloxDashboard from "./components/pages/TeacherRobloxDashboard";
 
@@ -35,7 +33,7 @@ export default function AppRoutes() {
       <Route
         path="/lessons"
         element={
-          <RoleGuard allow={["Teacher", "Admin"]}>
+          <RoleGuard allow={["teacher", "admin"]}>
             <Lessons />
           </RoleGuard>
         }
@@ -43,7 +41,7 @@ export default function AppRoutes() {
       <Route
         path="/assessments"
         element={
-          <RoleGuard allow={["Teacher", "Admin"]}>
+          <RoleGuard allow={["teacher", "admin"]}>
             <Assessments />
           </RoleGuard>
         }
@@ -51,7 +49,7 @@ export default function AppRoutes() {
       <Route
         path="/classes"
         element={
-          <RoleGuard allow={["Teacher", "Admin"]}>
+          <RoleGuard allow={["teacher", "admin"]}>
             <Classes />
           </RoleGuard>
         }
@@ -61,7 +59,7 @@ export default function AppRoutes() {
       <Route
         path="/missions"
         element={
-          <RoleGuard allow={["Student"]}>
+          <RoleGuard allow={["student"]}>
             <Missions />
           </RoleGuard>
         }
@@ -69,7 +67,7 @@ export default function AppRoutes() {
       <Route
         path="/rewards"
         element={
-          <RoleGuard allow={["Student"]}>
+          <RoleGuard allow={["student"]}>
             <Rewards />
           </RoleGuard>
         }
@@ -77,7 +75,7 @@ export default function AppRoutes() {
       <Route
         path="/avatar"
         element={
-          <RoleGuard allow={["Student"]}>
+          <RoleGuard allow={["student"]}>
             <Avatar />
           </RoleGuard>
         }
@@ -85,7 +83,7 @@ export default function AppRoutes() {
       <Route
         path="/play"
         element={
-          <RoleGuard allow={["Student"]}>
+          <RoleGuard allow={["student"]}>
             <Play />
           </RoleGuard>
         }
@@ -95,7 +93,7 @@ export default function AppRoutes() {
       <Route
         path="/roblox/*"
         element={
-          <RoleGuard allow={["Teacher", "Admin"]}>
+          <RoleGuard allow={["teacher", "admin"]}>
             <TeacherRobloxDashboard />
           </RoleGuard>
         }
@@ -105,7 +103,7 @@ export default function AppRoutes() {
       <Route
         path="/leaderboard"
         element={
-          <RoleGuard allow={["Student", "Teacher", "Admin"]}>
+          <RoleGuard allow={["student", "teacher", "admin"]}>
             <Leaderboard />
           </RoleGuard>
         }
@@ -113,7 +111,7 @@ export default function AppRoutes() {
       <Route
         path="/progress"
         element={
-          <RoleGuard allow={["Student", "Parent", "Teacher", "Admin"]}>
+          <RoleGuard allow={["student", "parent", "teacher", "admin"]}>
             <Progress />
           </RoleGuard>
         }
@@ -121,7 +119,7 @@ export default function AppRoutes() {
       <Route
         path="/reports"
         element={
-          <RoleGuard allow={["Parent", "Teacher", "Admin"]}>
+          <RoleGuard allow={["parent", "teacher", "admin"]}>
             <Reports />
           </RoleGuard>
         }
@@ -131,7 +129,7 @@ export default function AppRoutes() {
       <Route
         path="/compliance"
         element={
-          <RoleGuard allow={["Admin"]}>
+          <RoleGuard allow={["admin"]}>
             <Compliance />
           </RoleGuard>
         }
@@ -139,7 +137,7 @@ export default function AppRoutes() {
       <Route
         path="/integrations"
         element={
-          <RoleGuard allow={["Admin"]}>
+          <RoleGuard allow={["admin"]}>
             <Integrations />
           </RoleGuard>
         }
@@ -147,7 +145,7 @@ export default function AppRoutes() {
       <Route
         path="/schools"
         element={
-          <RoleGuard allow={["Admin"]}>
+          <RoleGuard allow={["admin"]}>
             <Schools />
           </RoleGuard>
         }
@@ -155,7 +153,7 @@ export default function AppRoutes() {
       <Route
         path="/users"
         element={
-          <RoleGuard allow={["Admin"]}>
+          <RoleGuard allow={["admin"]}>
             <Users />
           </RoleGuard>
         }
@@ -163,7 +161,7 @@ export default function AppRoutes() {
       <Route
         path="/analytics"
         element={
-          <RoleGuard allow={["Admin"]}>
+          <RoleGuard allow={["admin"]}>
             <Analytics />
           </RoleGuard>
         }
@@ -173,7 +171,7 @@ export default function AppRoutes() {
       <Route
         path="/messages"
         element={
-          <RoleGuard allow={["Parent", "Teacher", "Admin"]}>
+          <RoleGuard allow={["parent", "teacher", "admin"]}>
             <Messages />
           </RoleGuard>
         }

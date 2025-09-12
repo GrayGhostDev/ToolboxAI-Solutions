@@ -644,14 +644,11 @@ describe('API Service', () => {
         score: 90
       };
 
-      // updateProgress sends params, not body
-      mock.onPost(`${API_BASE_URL}/progress/update`, null, {
-        params: {
-          lesson_id: lessonId,
-          progress_percentage: progressData.progressPercentage,
-          time_spent_minutes: progressData.timeSpentMinutes,
-          score: progressData.score
-        }
+mock.onPost(`${API_BASE_URL}/progress/update`, {
+        lesson_id: lessonId,
+        progress_percentage: progressData.progressPercentage,
+        time_spent_minutes: progressData.timeSpentMinutes,
+        score: progressData.score
       }).reply(200, {
         lessonId,
         ...progressData,

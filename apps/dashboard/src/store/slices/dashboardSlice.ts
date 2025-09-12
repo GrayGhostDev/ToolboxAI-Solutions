@@ -19,7 +19,7 @@ const initialState: DashboardState = {
   lastUpdated: null,
 };
 
-const dashboardSlice = createSlice({
+export const dashboardSlice = createSlice({
   name: "dashboard",
   initialState,
   reducers: {

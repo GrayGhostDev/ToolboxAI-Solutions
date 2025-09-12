@@ -1,6 +1,4 @@
-import * as React from "react";
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Box,
   Card,

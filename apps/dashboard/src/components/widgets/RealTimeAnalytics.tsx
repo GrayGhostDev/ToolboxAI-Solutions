@@ -105,7 +105,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon, col
 
 const RealTimeAnalytics: React.FC = () => {
   const { isConnected } = useWebSocketContext();
-  const { data: analyticsData, loading } = useRealTimeData<any>('analytics', {
+  const { data: analyticsData, loading } = useRealTimeData<any | Record<string, any>>('analytics', {
     refreshInterval: 5000,
   });
 
@@ -181,20 +181,21 @@ const RealTimeAnalytics: React.FC = () => {
 
   // Update metrics when analytics data changes
   useEffect(() => {
-    if (analyticsData) {
+    if (analyticsData && typeof analyticsData === 'object' && !Array.isArray(analyticsData)) {
+      const anyData = analyticsData as any;
       setMetrics({
-        activeUsers: analyticsData.activeUsers || Math.floor(Math.random() * 100) + 150,
-        completedLessons: analyticsData.completedLessons || Math.floor(Math.random() * 50) + 200,
-        averageScore: analyticsData.averageScore || Math.floor(Math.random() * 20) + 75,
-        engagementRate: analyticsData.engagementRate || Math.floor(Math.random() * 30) + 65,
+        activeUsers: anyData.activeUsers || Math.floor(Math.random() * 100) + 150,
+        completedLessons: anyData.completedLessons || Math.floor(Math.random() * 50) + 200,
+        averageScore: anyData.averageScore || Math.floor(Math.random() * 20) + 75,
+        engagementRate: anyData.engagementRate || Math.floor(Math.random() * 30) + 65,
       });
 
       // Update charts if new data available
-      if (analyticsData.activityChart) {
-        setActivityData(analyticsData.activityChart);
+      if (anyData.activityChart) {
+        setActivityData(anyData.activityChart);
       }
-      if (analyticsData.performanceChart) {
-        setPerformanceData(analyticsData.performanceChart);
+      if (anyData.performanceChart) {
+        setPerformanceData(anyData.performanceChart);
       }
     }
   }, [analyticsData]);

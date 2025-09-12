@@ -71,11 +71,9 @@ import {
   updateUser, 
   deleteUser, 
   suspendUser, 
-  listSchools,
-  User,
-  UserCreate,
-  UserUpdate 
+  listSchools
 } from "../../services/api";
+import type { User, UserCreate, UserUpdate } from "@/types/api";
 
 interface UserWithStats extends User {
   lastLogin?: string;
@@ -799,8 +797,8 @@ export function UserManagement({
               <FormControlLabel
                 control={
                   <Switch
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                    checked={(formData as any).isActive ?? true}
+                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked } as any)}
                   />
                 }
                 label="Active Account"

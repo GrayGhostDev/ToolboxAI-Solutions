@@ -467,7 +467,7 @@ export function MCPAgentDashboard({
       };
 
       if (sendMessage) {
-        sendMessage('mcp_agents', message);
+        (sendMessage as any)('mcp_agents', message);
       }
 
       dispatch(addNotification({
@@ -564,7 +564,7 @@ export function MCPAgentDashboard({
                     setReconnectAttempts(0);
                     connectToMCP();
                   }}
-                  disabled={mcpWebSocket && mcpWebSocket.readyState === WebSocket.CONNECTING}
+                  disabled={!!(mcpWebSocket && mcpWebSocket.readyState === WebSocket.CONNECTING)}
                 >
                   <Refresh />
                 </IconButton>

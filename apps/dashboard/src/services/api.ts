@@ -347,6 +347,15 @@ class ApiClient {
     });
   }
 
+  // Realtime (Pusher) trigger helper
+  async realtimeTrigger(payload: { channel: string; event?: string; type?: string; payload?: any }): Promise<any> {
+    return this.request<any>({
+      method: 'POST',
+      url: '/realtime/trigger',
+      data: payload,
+    });
+  }
+
   async getWeeklyXP(studentId?: string): Promise<ProgressPoint[]> {
     return this.request<ProgressPoint[]>({
       method: "GET",
@@ -526,7 +535,7 @@ class ApiClient {
     return this.request<any>({
       method: "POST",
       url: `/progress/update`,
-      params: { lesson_id: lessonId, progress_percentage: progressPercentage, time_spent_minutes: timeSpentMinutes, score },
+      data: { lesson_id: lessonId, progress_percentage: progressPercentage, time_spent_minutes: timeSpentMinutes, score },
     });
   }
 
@@ -780,6 +789,7 @@ export const sendMessage = apiClient.sendMessage.bind(apiClient);
 export const connectGoogleClassroom = apiClient.connectGoogleClassroom.bind(apiClient);
 export const connectCanvas = apiClient.connectCanvas.bind(apiClient);
 export const syncLMSData = apiClient.syncLMSData.bind(apiClient);
+export const realtimeTrigger = apiClient.realtimeTrigger.bind(apiClient);
 
 // Additional API methods for Redux slices
 // Assessment-related exports

@@ -205,7 +205,8 @@ class ContentAgent(BaseAgent):
         
         # Initialize MCP context management
         self.mcp_available = MCP_AVAILABLE
-        self.mcp_url = self.env_config.get_service_url("mcp") if hasattr(self.env_config, 'get_service_url') else "ws://127.0.0.1:9876"
+        get_svc = getattr(self.env_config, "get_service_url", None)
+        self.mcp_url = get_svc("mcp") if callable(get_svc) else "ws://127.0.0.1:9876"
         
         if config is None:
             # Use appropriate model based on availability
@@ -708,10 +709,10 @@ For each element provide:
         response = await self.llm.ainvoke(prompt)
 
         # Parse response into structured elements
-        elements = []
+        elements: List[Dict[str, Any]] = []
 
         # Simple parsing - in production, use more sophisticated parsing
-        element_texts = response.content.split("\n\n")
+        element_texts = str(response.content).split("\n\n")
         for text in element_texts[:5]:  # Limit to 5 elements
             if text.strip():
                 elements.append(
@@ -1248,6 +1249,7 @@ Make it engaging and appropriate for Roblox platform."""
             return False
         
         try:
+            assert websockets is not None
             async with websockets.connect(self.mcp_url) as websocket:
                 message = {
                     "type": "context_update",
@@ -1279,6 +1281,7 @@ Make it engaging and appropriate for Roblox platform."""
             return {}
         
         try:
+            assert websockets is not None
             async with websockets.connect(self.mcp_url) as websocket:
                 message = {
                     "type": "context_query",
@@ -1337,9 +1340,14 @@ Make it engaging and appropriate for Roblox platform."""
     
     async def _save_with_retry(self, content_type: str, content_data: Dict[str, Any], max_retries: int = 3) -> bool:
         """Save content to database with retry logic"""
+        if not DATABASE_AVAILABLE or self.agent_db is None:
+            logger.info("Database not available; skipping save")
+            return False
+        
+        db = self.agent_db
         for attempt in range(max_retries):
             try:
-                success = await self.agent_db.save_generated_content(content_type, content_data)
+                success = await db.save_generated_content(content_type, content_data)
                 if success:
                     return True
                 logger.warning(f"Save attempt {attempt + 1} failed, retrying...")

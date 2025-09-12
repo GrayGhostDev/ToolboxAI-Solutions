@@ -24,7 +24,8 @@ import { toggleSidebar, setTheme, setLanguage } from "../../store/slices/uiSlice
 import { setRole, signOut } from "../../store/slices/userSlice";
 import { useNavigate } from "react-router-dom";
 import { LANGUAGES } from "../../config";
-import { wsService } from "../../services/ws";
+// import { wsService } from "../../services/ws";
+import { disconnectWebSocket } from "../../services/websocket";
 import ConnectionStatus from "../widgets/ConnectionStatus";
 
 export default function Topbar() {
@@ -58,7 +59,7 @@ export default function Topbar() {
 
   const handleSignOut = () => {
     // Disconnect WebSocket before signing out
-    wsService.disconnect();
+    disconnectWebSocket('user signout');
     dispatch(signOut());
     handleProfileMenuClose();
     navigate("/");
