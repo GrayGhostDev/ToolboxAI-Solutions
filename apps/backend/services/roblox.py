@@ -36,7 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from toolboxai_settings import settings
 settings = settings
 from toolboxai_utils.async_utils import run_async
-from apps.backend.rate_limit_manager import get_rate_limit_manager
+from apps.backend.core.security.rate_limit_manager import get_rate_limit_manager
 
 # Import agent systems for integration
 try:
@@ -638,7 +638,7 @@ class ContentBridge:
 
     def __init__(self):
         self.fastapi_base_url = "http://{}:{}".format(
-            settings.FASTAPI_HOST, settings.FASTAPI_PORT
+            settings.API_HOST, settings.API_PORT
         )
         self.cache = LRUCache(
             max_size=config_manager.get("cache_max_size", 1000),
@@ -1613,7 +1613,7 @@ def sync_with_main_server(sync_data: Dict[str, Any]) -> Dict[str, Any]:
     """Synchronize data with FastAPI main server"""
     try:
         # Build sync request
-        sync_url = f"http://{settings.FASTAPI_HOST}:{settings.FASTAPI_PORT}/sync"
+        sync_url = f"http://{settings.API_HOST}:{settings.API_PORT}/sync"
         headers = {
             "Content-Type": "application/json",
             "Authorization": "Bearer demo-token"
@@ -1733,7 +1733,7 @@ def trigger_agent_pipeline():
         else:
             # Fallback to direct FastAPI call
             response = requests.post(
-                f"http://{settings.FASTAPI_HOST}:{settings.FASTAPI_PORT}/plugin/trigger-agents",
+                f"http://{settings.API_HOST}:{settings.API_PORT}/plugin/trigger-agents",
                 json=request_data,
                 headers={"Authorization": auth_header},
                 timeout=REQUEST_TIMEOUT_SECONDS
@@ -1941,7 +1941,7 @@ def update_progress():
         
         # Forward to main server for persistence
         response = requests.post(
-            f"http://{settings.FASTAPI_HOST}:{settings.FASTAPI_PORT}/progress/update",
+            f"http://{settings.API_HOST}:{settings.API_PORT}/progress/update",
             json=progress_data,
             timeout=REQUEST_TIMEOUT_SECONDS
         )
@@ -2098,7 +2098,7 @@ if __name__ == "__main__":
 
     # Run server
     flask_app.run(
-        host=settings.FLASK_HOST,
+        host="0.0.0.0",  # Flask typically listens on all interfaces
         port=settings.FLASK_PORT,
         debug=settings.DEBUG,
         threaded=True,

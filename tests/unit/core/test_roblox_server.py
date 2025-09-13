@@ -7,10 +7,11 @@ from unittest.mock import Mock, patch, MagicMock
 from apps.backend.roblox_server import (
     PluginManager, 
     ContentBridge, 
-    app,
     PluginSecurity,  # Use real security implementation
     LRUCache  # Use real cache implementation
 )
+# Import Flask app from services.roblox for Flask endpoint tests
+from apps.backend.services.roblox import app as flask_app
 
 
 class TestPluginManager:
@@ -232,8 +233,8 @@ class TestLRUCache:
 @pytest.fixture
 def client():
     """Flask test client"""
-    app.config['TESTING'] = True
-    with app.test_client() as client:
+    flask_app.config['TESTING'] = True
+    with flask_app.test_client() as client:
         yield client
 
 

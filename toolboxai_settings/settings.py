@@ -196,6 +196,8 @@ class Settings:
         self.DEBUG = DEBUG
         self.API_HOST = API_HOST
         self.API_PORT = API_PORT
+        self.FLASK_PORT = FLASK_PORT
+        self.ROBLOX_PLUGIN_PORT = ROBLOX_PLUGIN_PORT
         self.DATABASE_URL = DATABASE_URL
         self.REDIS_URL = REDIS_URL
         self.OPENAI_API_KEY = OPENAI_API_KEY

@@ -27,6 +27,8 @@ from jose import jwt
 # Add parent directory to path for imports
 from apps.backend.main import app as fastapi_app
 from apps.backend.roblox_server import roblox_server
+# Import Flask app from the services module
+from apps.backend.services.roblox import app as flask_app
 from apps.backend.models.schemas import (
     ContentRequest,
     ContentResponse,
@@ -513,10 +515,18 @@ class TestFlaskEndpoints:
     """Test cases for Flask bridge server endpoints."""
     
     @pytest.fixture
-    def client(self):
+    def flask_test_app(self):
+        """Create Flask app for testing."""
+        flask_app.config.update({
+            'TESTING': True,
+            'DEBUG': False
+        })
+        return flask_app
+    
+    @pytest.fixture
+    def client(self, flask_test_app):
         """Create a test client for Flask app."""
-        flask_app.config['TESTING'] = True
-        return flask_app.test_client()
+        return flask_test_app.test_client()
     
     def test_flask_health_check(self, client):
         """Test Flask health check endpoint."""
@@ -524,7 +534,7 @@ class TestFlaskEndpoints:
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data["status"] == "healthy"
-        assert data["service"] == "ToolboxAI-Flask-Bridge"
+        assert data["service"] == "ToolboxAI-Roblox-Flask-Bridge"
     
     def test_register_plugin(self, client):
         """Test Roblox plugin registration endpoint."""
@@ -555,7 +565,7 @@ class TestFlaskEndpoints:
             }
         }
         
-        with patch('server.roblox_server.handle_plugin_request') as mock_handler:
+        with patch('apps.backend.services.roblox.handle_plugin_request') as mock_handler:
             mock_handler.return_value = {
                 "status": "success",
                 "result": {"content": "Generated content"}
@@ -579,8 +589,13 @@ class TestFlaskEndpoints:
             "data": {"lesson": "Updated lesson"}
         }
         
-        with patch('server.roblox_server.sync_with_main_server') as mock_sync:
-            mock_sync.return_value = {"status": "synced"}
+        # Mock the requests.post call inside sync_with_main_server
+        with patch('apps.backend.services.roblox.requests.post') as mock_post:
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {"status": "synced", "success": True}
+            mock_response.raise_for_status = Mock()
+            mock_post.return_value = mock_response
             
             response = client.post(
                 '/sync',
@@ -602,7 +617,7 @@ class TestFlaskEndpoints:
             }
         }
         
-        with patch('server.roblox_server.generate_roblox_script') as mock_gen:
+        with patch('apps.backend.services.roblox.generate_roblox_script') as mock_gen:
             mock_gen.return_value = """
             -- Generated Quiz UI Script
             local gui = Instance.new("ScreenGui")

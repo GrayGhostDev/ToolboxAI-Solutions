@@ -6,6 +6,8 @@ fastapi==0.116.1
 uvicorn[standard]==0.35.0
 flask==3.0.0
 Flask-Cors==4.0.0
+asgiref>=3.8.1  # For Flask async support
+greenlet>=3.2.4  # For Flask async/await compatibility
 
 # LangChain & AI
 langchain==0.3.27
