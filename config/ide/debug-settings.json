@@ -1,0 +1,65 @@
+{
+    "debugging": {
+        "python": {
+            "debugger": "debugpy",
+            "defaultPort": 5678,
+            "defaultHost": "localhost",
+            "logLevel": "DEBUG",
+            "justMyCode": false,
+            "stopOnEntry": false,
+            "showReturnValue": true,
+            "subProcess": true
+        },
+        "node": {
+            "debugger": "node",
+            "defaultPort": 9229,
+            "defaultHost": "localhost",
+            "logLevel": "debug",
+            "skipFiles": ["<node_internals>/**"]
+        },
+        "general": {
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    },
+    "profiling": {
+        "enabled": true,
+        "memoryProfiling": true,
+        "performanceProfiling": true,
+        "coverageProfiling": true,
+        "outputDirectory": "debug-reports"
+    },
+    "testing": {
+        "pytest": {
+            "configFile": "config/testing/pytest-debug.ini",
+            "timeout": 30,
+            "parallel": false,
+            "coverage": true,
+            "htmlReport": true,
+            "jsonReport": true
+        },
+        "vitest": {
+            "configFile": "apps/dashboard/vitest.config.ts",
+            "timeout": 10000,
+            "coverage": true,
+            "ui": true
+        }
+    },
+    "logging": {
+        "level": "DEBUG",
+        "format": "%(asctime)s [%(levelname)8s] %(name)s: %(message)s",
+        "dateFormat": "%Y-%m-%d %H:%M:%S",
+        "file": "logs/debug.log",
+        "maxSize": "10MB",
+        "backupCount": 5
+    }
+}

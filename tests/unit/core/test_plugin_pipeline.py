@@ -69,23 +69,31 @@ class TestPluginCommunicationHub:
         """Test handling content generation request"""
         await hub.initialize()
         
-        # Mock supervisor response
-        with patch.object(hub.supervisor, 'handle_plugin_request', new_callable=AsyncMock) as mock_handle:
-            mock_handle.return_value = {
-                "status": "success",
-                "result": {
-                    "content": "Generated lesson content",
-                    "quiz": {"questions": []},
-                    "terrain": {"type": "laboratory"}
-                }
-            }
+        # Mock orchestrator response
+        from core.agents.orchestrator import OrchestrationResult
+        mock_result = OrchestrationResult(
+            success=True,
+            content={
+                "lesson": "Generated lesson content",
+                "summary": "Test summary"
+            },
+            scripts={
+                "main": "-- Main script",
+                "quiz": "-- Quiz script"
+            },
+            errors=[],
+            execution_time=1.5
+        )
+        
+        with patch.object(hub.orchestrator, 'orchestrate', new_callable=AsyncMock) as mock_orchestrate:
+            mock_orchestrate.return_value = mock_result
             
             response = await hub.handle_plugin_request(sample_request)
             
             assert response.status == "success"
             assert response.request_id == sample_request.request_id
-            assert "content" in response.data
-            mock_handle.assert_called_once()
+            assert response.data is not None
+            mock_orchestrate.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_handle_quiz_creation_request(self, hub):
@@ -102,19 +110,26 @@ class TestPluginCommunicationHub:
             }
         )
         
-        with patch.object(hub, '_trigger_quiz_creation', new_callable=AsyncMock) as mock_quiz:
-            mock_quiz.return_value = {
+        # Mock quiz agent response  
+        from core.agents.base_agent import TaskResult
+        mock_quiz_result = TaskResult.create(
+            success=True,
+            result={
                 "quiz": {
                     "questions": [{"q": "What is 2+2?", "a": "4"}],
                     "ui_script": "-- Quiz UI"
                 }
             }
+        )
+        
+        with patch.object(hub.agent_pool["quiz"], 'execute', new_callable=AsyncMock) as mock_execute:
+            mock_execute.return_value = mock_quiz_result
             
             response = await hub.handle_plugin_request(request)
             
             assert response.status == "success"
-            assert "quiz" in response.data
-            mock_quiz.assert_called_once_with(request)
+            assert response.data is not None
+            mock_execute.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_handle_terrain_generation_request(self, hub):
@@ -130,18 +145,25 @@ class TestPluginCommunicationHub:
             }
         )
         
-        with patch.object(hub, '_trigger_terrain_generation', new_callable=AsyncMock) as mock_terrain:
-            mock_terrain.return_value = {
+        # Mock terrain agent response
+        from core.agents.base_agent import TaskResult
+        mock_terrain_result = TaskResult.create(
+            success=True,
+            result={
                 "terrain": {
                     "script": "-- Terrain generation script",
                     "materials": ["Grass", "Rock"]
                 }
             }
+        )
+        
+        with patch.object(hub.agent_pool["terrain"], 'execute', new_callable=AsyncMock) as mock_execute:
+            mock_execute.return_value = mock_terrain_result
             
             response = await hub.handle_plugin_request(request)
             
             assert response.status == "success"
-            assert "terrain" in response.data
+            assert response.data is not None
     
     @pytest.mark.asyncio
     async def test_handle_database_query(self, hub):

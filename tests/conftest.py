@@ -39,6 +39,20 @@ def test_environment():
     os.environ["TESTING_MODE"] = "true"
     os.environ["BYPASS_RATE_LIMIT_IN_TESTS"] = "true"
     os.environ["DEBUG"] = "true"
+    
+    # Setup debugpy for test debugging if not already connected
+    try:
+        import debugpy
+        if not debugpy.is_client_connected():
+            # Only setup if not already listening
+            if not hasattr(debugpy, '_listening'):
+                debugpy.listen(('localhost', 5678))
+                logger.info("Debugpy listening on localhost:5678 for test debugging")
+    except ImportError:
+        logger.warning("debugpy not available for test debugging")
+    except Exception as e:
+        logger.warning(f"Failed to setup debugpy for tests: {e}")
+    
     yield
     # Cleanup after all tests
     os.environ.pop("ENVIRONMENT", None)
@@ -340,6 +354,42 @@ pytestmark = [
     pytest.mark.filterwarnings("ignore::DeprecationWarning"),
     pytest.mark.filterwarnings("ignore::PendingDeprecationWarning")
 ]
+
+
+@pytest.fixture
+def debugpy_helper():
+    """Helper fixture for debugpy integration in tests"""
+    class DebugpyHelper:
+        def __init__(self):
+            self.debugpy_available = False
+            try:
+                import debugpy
+                self.debugpy_available = True
+                self.debugpy = debugpy
+            except ImportError:
+                logger.warning("debugpy not available")
+        
+        def breakpoint(self, message: str = "Debug breakpoint"):
+            """Set a breakpoint in the test"""
+            if self.debugpy_available:
+                logger.info(f"Setting breakpoint: {message}")
+                self.debugpy.breakpoint()
+            else:
+                logger.warning("debugpy not available, breakpoint ignored")
+        
+        def is_connected(self) -> bool:
+            """Check if debugger is connected"""
+            if self.debugpy_available:
+                return self.debugpy.is_client_connected()
+            return False
+        
+        def wait_for_client(self, timeout: float = None):
+            """Wait for debugger to connect"""
+            if self.debugpy_available and not self.is_connected():
+                logger.info("Waiting for debugger to connect...")
+                self.debugpy.wait_for_client()
+    
+    return DebugpyHelper()
 
 
 # =============================================================================

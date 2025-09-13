@@ -1,99 +1,156 @@
-import '@testing-library/jest-dom';
-import { vi, beforeAll, afterAll } from 'vitest';
+/**
+ * Debug Test Setup for ToolBoxAI Dashboard
+ *
+ * This file configures the test environment with debugging capabilities
+ * including enhanced logging, error handling, and debugging utilities.
+ */
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-  length: 0,
-  key: vi.fn(),
-};
-global.localStorage = localStorageMock as Storage;
+import '@testing-library/jest-dom'
+import { beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest'
+import { cleanup } from '@testing-library/react'
 
-// Fix for DataCloneError with axios in Vitest
-// Override structuredClone to handle non-serializable objects
-if (typeof structuredClone === 'undefined') {
-  global.structuredClone = (obj: any) => {
-    return JSON.parse(JSON.stringify(obj));
-  };
-} else {
-  // Override existing structuredClone to handle axios config objects
-  const originalStructuredClone = global.structuredClone;
-  global.structuredClone = (obj: any, options?: any) => {
-    try {
-      // Try the original first
-      return originalStructuredClone(obj, options);
-    } catch (e) {
-      // If it fails (e.g., with functions), fallback to JSON serialization
-      // This removes functions but preserves data structure
-      const serializable = JSON.parse(JSON.stringify(obj, (key, value) => {
-        if (typeof value === 'function') {
-          return undefined; // Remove functions
-        }
-        return value;
-      }));
-      return serializable;
-    }
-  };
+// Debug logging configuration
+const originalConsoleError = console.error
+const originalConsoleWarn = console.warn
+
+// Enhanced error logging for debugging
+console.error = (...args: any[]) => {
+  if (args[0]?.includes?.('Warning:') || args[0]?.includes?.('Error:')) {
+    originalConsoleError(...args)
+  }
 }
 
-// Mock WebSocket
-class WebSocketMock {
-  constructor(public url: string) {}
-  send = vi.fn();
-  close = vi.fn();
-  addEventListener = vi.fn();
-  removeEventListener = vi.fn();
+console.warn = (...args: any[]) => {
+  if (args[0]?.includes?.('Warning:')) {
+    originalConsoleWarn(...args)
+  }
 }
-global.WebSocket = WebSocketMock as any;
 
-// Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
-
-// Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
-
-// Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
-
-// Suppress console errors in tests
-const originalError = console.error;
+// Debug test environment setup
 beforeAll(() => {
-  console.error = (...args: any[]) => {
-    if (
-      typeof args[0] === 'string' &&
-      (args[0].includes('Warning: ReactDOM.render') ||
-       args[0].includes('Warning: useLayoutEffect') ||
-       args[0].includes('Not implemented: navigation'))
-    ) {
-      return;
-    }
-    originalError.call(console, ...args);
-  };
-});
+  // Enable debug mode
+  process.env.NODE_ENV = 'test'
+  process.env.DEBUG = 'true'
 
+  // Mock environment variables for testing
+  process.env.VITE_API_BASE_URL = 'http://localhost:8008'
+  process.env.VITE_WS_URL = 'ws://localhost:8008'
+
+  // Setup global test utilities
+  global.testUtils = {
+    debug: true,
+    logLevel: 'debug',
+    mockData: {},
+    testHelpers: {}
+  }
+})
+
+// Debug test cleanup
 afterAll(() => {
-  console.error = originalError;
-});
+  // Restore original console methods
+  console.error = originalConsoleError
+  console.warn = originalConsoleWarn
+
+  // Cleanup global test utilities
+  delete global.testUtils
+})
+
+// Debug test setup for each test
+beforeEach(() => {
+  // Clear all mocks
+  vi.clearAllMocks()
+
+  // Reset DOM
+  document.body.innerHTML = ''
+
+  // Setup debug logging for current test
+  if (global.testUtils?.debug) {
+    console.log(`[DEBUG] Starting test: ${expect.getState().currentTestName}`)
+  }
+})
+
+// Debug test cleanup for each test
+afterEach(() => {
+  // Cleanup DOM
+  cleanup()
+
+  // Debug test completion
+  if (global.testUtils?.debug) {
+    console.log(`[DEBUG] Completed test: ${expect.getState().currentTestName}`)
+  }
+})
+
+// Debug error handling
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[DEBUG] Unhandled Rejection at:', promise, 'reason:', reason)
+})
+
+process.on('uncaughtException', (error) => {
+  console.error('[DEBUG] Uncaught Exception:', error)
+})
+
+// Debug test utilities
+export const debugTestUtils = {
+  // Log test information
+  logTestInfo: (testName: string, info: any) => {
+    if (global.testUtils?.debug) {
+      console.log(`[DEBUG] ${testName}:`, info)
+    }
+  },
+
+  // Mock API responses
+  mockApiResponse: (url: string, response: any) => {
+    if (global.testUtils?.mockData) {
+      global.testUtils.mockData[url] = response
+    }
+  },
+
+  // Get mock data
+  getMockData: (url: string) => {
+    return global.testUtils?.mockData?.[url] || null
+  },
+
+  // Clear mock data
+  clearMockData: () => {
+    if (global.testUtils?.mockData) {
+      global.testUtils.mockData = {}
+    }
+  },
+
+  // Debug component rendering
+  debugRender: (component: any, props: any = {}) => {
+    if (global.testUtils?.debug) {
+      console.log('[DEBUG] Rendering component:', component.name || 'Unknown', 'with props:', props)
+    }
+  },
+
+  // Debug API calls
+  debugApiCall: (method: string, url: string, data?: any) => {
+    if (global.testUtils?.debug) {
+      console.log(`[DEBUG] API ${method.toUpperCase()}:`, url, data ? `with data:`, data : '')
+    }
+  },
+
+  // Debug state changes
+  debugStateChange: (stateName: string, oldState: any, newState: any) => {
+    if (global.testUtils?.debug) {
+      console.log(`[DEBUG] State change in ${stateName}:`, {
+        from: oldState,
+        to: newState
+      })
+    }
+  }
+}
+
+// Global type declarations for test utilities
+declare global {
+  var testUtils: {
+    debug: boolean
+    logLevel: string
+    mockData: Record<string, any>
+    testHelpers: Record<string, any>
+  } | undefined
+}
+
+// Export debug utilities
+export default debugTestUtils

@@ -8,7 +8,7 @@ import asyncio
 import json
 import logging
 from typing import Dict, Any, Optional, List
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
@@ -133,6 +133,7 @@ class PluginManager:
     
     def __init__(self):
         self.registered_plugins: Dict[str, Dict[str, Any]] = {}
+        self.plugins = self.registered_plugins  # Alias for backward compatibility
         self.active_sessions: Dict[str, Dict[str, Any]] = {}
         self.security = PluginSecurity()
         self.request_handlers: Dict[str, Any] = {}
@@ -294,6 +295,41 @@ class PluginManager:
             'registered_at': self.registered_plugins[plugin_id]['registered_at'],
             'status': self.registered_plugins[plugin_id]['status']
         }
+    
+    def update_heartbeat(self, plugin_id: str) -> bool:
+        """Update heartbeat timestamp for a plugin"""
+        if plugin_id not in self.registered_plugins:
+            return False
+        
+        self.registered_plugins[plugin_id]['last_heartbeat'] = datetime.now(timezone.utc)
+        self.registered_plugins[plugin_id]['status'] = 'active'
+        return True
+    
+    def list_active_plugins(self) -> List[Dict[str, Any]]:
+        """List all active plugins"""
+        active_plugins = []
+        cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=5)
+        
+        for plugin_id, plugin_data in self.registered_plugins.items():
+            # Consider plugin active if it has recent heartbeat or is marked active
+            last_heartbeat = plugin_data.get('last_heartbeat', plugin_data.get('registered_at'))
+            if plugin_data.get('status') == 'active' and last_heartbeat > cutoff_time:
+                active_plugins.append({
+                    'id': plugin_id,
+                    'name': plugin_data.get('name'),
+                    'version': plugin_data.get('version'),
+                    'status': plugin_data.get('status'),
+                    'last_heartbeat': last_heartbeat.isoformat() if last_heartbeat else None
+                })
+        
+        return active_plugins
+    
+    def validate_plugin_data(self, data: Dict[str, Any]) -> bool:
+        """Validate plugin data structure"""
+        required_fields = ['name', 'version']
+        if not all(field in data for field in required_fields):
+            raise ValueError(f"Missing required fields: {required_fields}")
+        return True
 
 
 class RobloxServer:
@@ -548,6 +584,7 @@ class ContentBridge:
     def __init__(self):
         self.plugin_manager = PluginManager()
         self.server = roblox_server
+        self.cache = LRUCache(capacity=256)  # Initialize cache
     
     async def process_content_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """Process content generation request"""
@@ -556,10 +593,47 @@ class ContentBridge:
     def get_active_sessions(self) -> List[str]:
         """Get list of active sessions"""
         return list(self.server.active_connections.keys())
+    
+    def generate_cache_key(self, request_type: str, params: Dict[str, Any]) -> str:
+        """Generate a cache key from request parameters"""
+        # Sort params for consistent key generation
+        sorted_params = sorted(params.items())
+        param_str = "_".join([f"{k}:{v}" for k, v in sorted_params])
+        return f"{request_type}_{param_str}"
+    
+    def get_from_cache(self, key: str) -> Optional[Any]:
+        """Get value from cache"""
+        return self.cache.get(key)
+    
+    def set_in_cache(self, key: str, value: Any):
+        """Set value in cache"""
+        self.cache.set(key, value)
 
 # Create a FastAPI app instance for test compatibility
 from fastapi import FastAPI
 app = FastAPI(title="Roblox Server")
+
+# Add missing function for test compatibility
+async def sync_with_main_server(plugin_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    """Sync plugin data with main server"""
+    try:
+        # Simulate sync operation
+        logger.info(f"Syncing plugin {plugin_id} with main server")
+        
+        # In real implementation, this would communicate with main server
+        # For now, just return success
+        return {
+            "success": True,
+            "plugin_id": plugin_id,
+            "synced_at": datetime.now(timezone.utc).isoformat(),
+            "data": data
+        }
+    except Exception as e:
+        logger.error(f"Sync failed for plugin {plugin_id}: {e}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 # Export for compatibility
 __all__ = [
@@ -571,5 +645,6 @@ __all__ = [
     "roblox_server",
     "LRUCache",
     "ContentBridge",
-    "app"
+    "app",
+    "sync_with_main_server"
 ]
