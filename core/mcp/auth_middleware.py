@@ -381,8 +381,8 @@ async def validate_websocket_token(token: str) -> Optional[Dict[str, Any]]:
     """
     try:
         # Try to import apps.backend config
-        from config.environment import get_environment_config
-        settings = get_environment_config()
+        from toolboxai_settings import settings
+        settings = settings
         jwt_secret = settings.JWT_SECRET_KEY
         jwt_algorithm = settings.JWT_ALGORITHM
     except ImportError:
@@ -399,8 +399,8 @@ def extract_token_from_request(websocket, path: str) -> Optional[str]:
     Standalone function to extract token from WebSocket request
     """
     try:
-        from config.environment import get_environment_config
-        settings = get_environment_config()
+        from toolboxai_settings import settings
+        settings = settings
         jwt_secret = settings.JWT_SECRET_KEY
         jwt_algorithm = settings.JWT_ALGORITHM
     except ImportError:

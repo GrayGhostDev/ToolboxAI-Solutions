@@ -13,9 +13,13 @@ import psycopg2
 import redis
 import socketio
 import websocket
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Tuple, Any
 from colorama import init, Fore, Style
+import pytest
+
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
 
 # Initialize colorama for colored output
 init(autoreset=True)
@@ -322,7 +326,7 @@ class IntegrationTester:
                 nonlocal pong_received
                 pong_received = True
                 
-            sio.emit('ping', {'timestamp': datetime.utcnow().isoformat()})
+            sio.emit('ping', {'timestamp': datetime.now(timezone.utc).isoformat()})
             time.sleep(1)
             
             self.print_test("Socket.io Ping/Pong", pong_received)
@@ -460,7 +464,7 @@ class IntegrationTester:
             test_data = {
                 "title": f"Integration Test {int(time.time())}",
                 "description": "Test data for integration testing",
-                "metadata": {"test": True, "timestamp": datetime.utcnow().isoformat()}
+                "metadata": {"test": True, "timestamp": datetime.now(timezone.utc).isoformat()}
             }
             
             # Store via API

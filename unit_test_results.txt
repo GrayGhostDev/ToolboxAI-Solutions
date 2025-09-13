@@ -1,0 +1,116 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-8.4.2, pluggy-1.6.0
+rootdir: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions
+configfile: pytest.ini
+plugins: asyncio-1.1.0, timeout-2.4.0, anyio-4.10.0, cov-6.2.1, mock-3.12.0, langsmith-0.4.27
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+timeout: 5.0s
+timeout method: thread
+timeout func_only: False
+collected 183 items
+
+tests/unit/core/test_agents.py ......................................... [ 22%]
+..F                                                                      [ 24%]
+tests/unit/core/test_mcp.py .FFF..FFFFFFFFFFFFFFF....FFF                 [ 39%]
+tests/unit/core/test_mcp_fixed.py .FFFFFF                                [ 43%]
+tests/unit/core/test_plugin_pipeline.py FEFFFFFFFFFFFFFFFEEEEFF          [ 55%]
+tests/unit/core/test_roblox_server.py FFFFFEEEEEEEEEEE                   [ 64%]
+tests/unit/core/test_security.py ....FF.FFFFFF...                        [ 73%]
+tests/unit/core/test_server.py FFEEFFFF.FEEEEE+++++++++++++++++++++++++++++++++++ Timeout ++++++++++++++++++++++++++++++++++++
+~~~~~~~~~~~~~~~~ Stack of asyncio-portal-147858e60 (6125006848) ~~~~~~~~~~~~~~~~
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/anyio/from_thread.py", line 489, in run_blocking_portal
+    _eventloop.run(
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/anyio/_core/_eventloop.py", line 74, in run
+    return async_backend.run(func, args, {}, backend_options)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2316, in run
+    return runner.run(wrapper())
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/asyncio/base_events.py", line 678, in run_until_complete
+    self.run_forever()
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/asyncio/base_events.py", line 645, in run_forever
+    self._run_once()
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/asyncio/base_events.py", line 1961, in _run_once
+    event_list = self._selector.select(timeout)
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/selectors.py", line 566, in select
+    kev_list = self._selector.control(None, max_ev, timeout)
+~~~~~~~~~~~~~~~~~~~~~~~ Stack of MainThread (8624251072) ~~~~~~~~~~~~~~~~~~~~~~~
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/./ToolboxAI-Roblox-Environment/venv_clean/bin/pytest", line 9, in <module>
+    sys.exit(console_main())
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201, in console_main
+    code = main()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 336, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 289, in wrap_session
+    session.exitstatus = doit(config, session) or 0
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 343, in _main
+    config.hook.pytest_runtestloop(session=session)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 367, in pytest_runtestloop
+    item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/runner.py", line 117, in pytest_runtest_protocol
+    runtestprotocol(item, nextitem=nextitem)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/runner.py", line 136, in runtestprotocol
+    reports.append(call_and_report(item, "call", log))
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/runner.py", line 245, in call_and_report
+    call = CallInfo.from_call(
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/runner.py", line 344, in from_call
+    result: TResult | None = func()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/runner.py", line 246, in <lambda>
+    lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/runner.py", line 178, in pytest_runtest_call
+    item.runtest()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/python.py", line 1671, in runtest
+    self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/python.py", line 157, in pytest_pyfunc_call
+    result = testfunction(**testargs)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/unit/core/test_server.py", line 633, in test_websocket_connection
+    with client.websocket_connect("/ws") as websocket:
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/starlette/testclient.py", line 120, in __enter__
+    message = self.receive()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/starlette/testclient.py", line 183, in receive
+    return self.portal.call(self._send_rx.receive)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/anyio/from_thread.py", line 291, in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/concurrent/futures/_base.py", line 451, in result
+    self._condition.wait(timeout)
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/threading.py", line 355, in wait
+    waiter.acquire()
++++++++++++++++++++++++++++++++++++ Timeout ++++++++++++++++++++++++++++++++++++

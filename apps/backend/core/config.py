@@ -2,11 +2,11 @@
 Configuration wrapper for backend app using centralized config
 """
 
-from config.environment import get_environment_config
+from toolboxai_settings import settings
 import os
 
 # Get the centralized configuration
-_env_config = get_environment_config()
+_env_config = settings
 
 class Settings:
     """Settings wrapper for backward compatibility"""
@@ -157,6 +157,16 @@ class Settings:
     @property
     def WS_RATE_LIMIT_PER_MINUTE(self):
         return int(os.getenv("WS_RATE_LIMIT_PER_MINUTE", "100"))
+    
+    # Testing Configuration
+    @property
+    def SKIP_AUTH(self):
+        return os.getenv("SKIP_AUTH", "false").lower() in ("true", "1", "yes")
+    
+    @property
+    def env_name(self):
+        """Alias for ENVIRONMENT for compatibility"""
+        return self.ENVIRONMENT
     
     # Add other properties as needed...
     

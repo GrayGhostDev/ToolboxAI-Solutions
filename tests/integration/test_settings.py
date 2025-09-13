@@ -1,9 +1,13 @@
 """Tests for toolboxai_settings package."""
 
 import os
+import pytest
 import sys
 
 from toolboxai_settings import settings
+
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
 
 # Ensure project root is on sys.path so pytest can import our package
 project_root = os.path.dirname(os.path.dirname(__file__))

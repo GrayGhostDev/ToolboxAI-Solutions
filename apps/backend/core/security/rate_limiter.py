@@ -26,8 +26,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from uuid import uuid4
 
 import redis
-from config.environment import get_environment_config
-settings = get_environment_config()
+from toolboxai_settings import settings
+settings = settings
 
 logger = logging.getLogger(__name__)
 

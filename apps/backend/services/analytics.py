@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.database.connection import get_db
-from apps.backend.auth import get_current_user
+from apps.backend.api.auth.auth import get_current_user
 from apps.backend.analytics_advanced import (
     AdvancedAnalytics,
     generate_analytics_report,
@@ -106,7 +106,7 @@ async def get_analytics_dashboard(
     
     Returns metrics, trends, predictions, and insights for the dashboard.
     """
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=days)
     
     analytics = AdvancedAnalytics(db)
@@ -312,7 +312,7 @@ async def generate_report(
                 io.BytesIO(csv_buffer.getvalue().encode()),
                 media_type="text/csv",
                 headers={
-                    "Content-Disposition": f"attachment; filename=report_{request.report_type}_{datetime.utcnow().strftime('%Y%m%d')}.csv"
+                    "Content-Disposition": f"attachment; filename=report_{request.report_type}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.csv"
                 }
             )
         
@@ -329,7 +329,7 @@ async def generate_report(
                 excel_buffer,
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 headers={
-                    "Content-Disposition": f"attachment; filename=report_{request.report_type}_{datetime.utcnow().strftime('%Y%m%d')}.xlsx"
+                    "Content-Disposition": f"attachment; filename=report_{request.report_type}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.xlsx"
                 }
             )
         
@@ -395,7 +395,7 @@ async def detect_anomalies(
                 "scope": scope,
                 "anomaly_count": len(anomalies),
                 "affected_users": anomalies[:20],  # Limit to 20
-                "detection_timestamp": datetime.utcnow().isoformat()
+                "detection_timestamp": datetime.now(timezone.utc).isoformat()
             }
         else:
             # Other anomaly types would be implemented similarly
@@ -425,7 +425,7 @@ async def get_metric_trends(
     - engagement: Engagement metrics over time
     - performance: Performance trends
     """
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - timedelta(days=days)
     
     # This would fetch and aggregate trend data based on the metric and granularity

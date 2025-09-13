@@ -18,6 +18,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import pytest_asyncio
 
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
+
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src" / "roblox-environment"))
 

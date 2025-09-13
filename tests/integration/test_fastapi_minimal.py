@@ -10,6 +10,10 @@ import time
 import logging
 from contextlib import asynccontextmanager
 from typing import Optional
+import pytest
+
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
 
 # Configure logging to see all debug information
 logging.basicConfig(

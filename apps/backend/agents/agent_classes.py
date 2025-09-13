@@ -5,8 +5,8 @@ These are placeholder/fallback agent classes used when the core agents are not a
 
 import logging
 from typing import Dict, Any, List, Optional
-from langchain.memory import ConversationBufferMemory
-from langchain_core.messages import HumanMessage
+from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain_core.messages import HumanMessage, AIMessage
 from langchain_openai import ChatOpenAI
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ class ContentGenerationAgent:
 
     def __init__(self, llm=None, *args, **kwargs):
         """Initialize content generation agent"""
-        self.memory = ConversationBufferMemory(return_messages=True)
+        self.chat_history = InMemoryChatMessageHistory()
         self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
         self.content_templates = {
             "lesson": "Create an engaging lesson about {topic} for grade {grade}",
@@ -49,9 +49,11 @@ class ContentGenerationAgent:
             prompt += "\n5. Include assessment questions to test understanding"
         
         # Generate content using LLM
+        # Get recent messages from chat history
+        recent_messages = list(self.chat_history.messages)[-10:] if self.chat_history.messages else []
         messages = [
             HumanMessage(content=prompt),
-            *self.memory.chat_memory.messages[-10:]  # Include recent context
+            *recent_messages  # Include recent context
         ]
         
         response = await self.llm.ainvoke(messages)
@@ -66,9 +68,9 @@ class ContentGenerationAgent:
             "roblox_integration": self._generate_roblox_integration(subject, objectives)
         }
         
-        # Store in memory
-        self.memory.chat_memory.add_user_message(prompt)
-        self.memory.chat_memory.add_ai_message(response.content)
+        # Store in chat history
+        self.chat_history.add_user_message(prompt)
+        self.chat_history.add_ai_message(response.content)
         
         logger.info("Generated content for %s grade %d", subject, grade_level)
         return content

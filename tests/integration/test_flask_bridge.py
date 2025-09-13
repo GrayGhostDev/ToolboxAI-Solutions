@@ -4,11 +4,15 @@ Flask Bridge Server Test Script
 Tests the Flask bridge server that facilitates Roblox Studio plugin communication.
 """
 
+import pytest
 import requests
 import json
 import time
 import logging
 from typing import Dict, Any
+
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

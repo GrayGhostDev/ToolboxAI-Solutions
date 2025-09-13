@@ -10,13 +10,16 @@ import json
 import logging
 import os
 import pytest
+import signal
+import sys
 import tempfile
+import threading
 from pathlib import Path
 from typing import Generator, Dict, Any
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, AsyncMock
 
 # Import rate limiting components
-from apps.backend.rate_limit_manager import (
+from apps.backend.core.security.rate_limit_manager import (
     RateLimitManager, 
     RateLimitConfig, 
     RateLimitMode,
@@ -24,7 +27,7 @@ from apps.backend.rate_limit_manager import (
     clear_all_rate_limits,
     set_testing_mode
 )
-from apps.backend.config import settings
+from apps.backend.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -127,22 +130,26 @@ def mock_redis():
 
 
 @pytest.fixture
-def flask_client():
-    """Create Flask test client with proper rate limit isolation"""
-    from apps.backend.roblox_server import app
+def test_client():
+    """Create FastAPI test client with proper rate limit isolation"""
+    from fastapi.testclient import TestClient
+    from apps.backend.main import app
     
-    # Ensure test mode is set
-    app.config['TESTING'] = True
+    # Clear rate limits before test
+    clear_all_rate_limits()
+    set_testing_mode(True)
     
-    with app.test_client() as client:
-        # Clear rate limits before test
-        clear_all_rate_limits()
-        set_testing_mode(True)
-        
+    with TestClient(app) as client:
         yield client
         
-        # Clear rate limits after test
-        clear_all_rate_limits()
+    # Clear rate limits after test
+    clear_all_rate_limits()
+
+# Legacy fixture alias for backward compatibility
+@pytest.fixture
+def flask_client(test_client):
+    """Legacy alias for test_client fixture"""
+    return test_client
 
 
 @pytest.fixture
@@ -333,3 +340,174 @@ pytestmark = [
     pytest.mark.filterwarnings("ignore::DeprecationWarning"),
     pytest.mark.filterwarnings("ignore::PendingDeprecationWarning")
 ]
+
+
+# =============================================================================
+# TIMEOUT AND ASYNC HANDLING FIXES
+# =============================================================================
+
+@pytest.fixture(scope="function", autouse=True)
+def cleanup_async_tasks(request):
+    """Clean up any lingering async tasks to prevent hangs"""
+    # Setup - ensure clean state
+    try:
+        # Get or create event loop
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+    except Exception:
+        pass
+    
+    yield
+    
+    # Cleanup - cancel all pending tasks
+    try:
+        loop = asyncio.get_event_loop()
+        
+        # Cancel all pending tasks
+        pending = asyncio.all_tasks(loop) if hasattr(asyncio, 'all_tasks') else asyncio.Task.all_tasks(loop)
+        for task in pending:
+            task.cancel()
+        
+        # Wait briefly for cancellation
+        if pending and not loop.is_running():
+            loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+        
+        # Close any open connections
+        loop.run_until_complete(asyncio.sleep(0.01))
+    except Exception:
+        pass  # Ignore errors during cleanup
+
+
+@pytest.fixture(scope="function", autouse=True)
+def mock_external_connections(monkeypatch):
+    """Mock external connections that might cause timeouts"""
+    
+    # Mock Redis connections
+    def mock_redis_init(*args, **kwargs):
+        mock = Mock()
+        mock.ping.return_value = True
+        mock.pipeline.return_value.execute.return_value = [None, 0, None, None]
+        return mock
+    
+    # Mock WebSocket connections
+    async def mock_websocket_connect(*args, **kwargs):
+        mock = AsyncMock()
+        mock.send = AsyncMock()
+        mock.recv = AsyncMock(return_value='{"type": "pong"}')
+        mock.close = AsyncMock()
+        return mock
+    
+    # Mock HTTP session timeouts
+    class MockResponse:
+        def __init__(self):
+            self.status = 200
+            self.headers = {}
+        
+        async def json(self):
+            return {"success": True}
+        
+        async def text(self):
+            return "OK"
+        
+        async def __aenter__(self):
+            return self
+        
+        async def __aexit__(self, *args):
+            pass
+    
+    class MockSession:
+        async def get(self, *args, **kwargs):
+            return MockResponse()
+        
+        async def post(self, *args, **kwargs):
+            return MockResponse()
+        
+        async def close(self):
+            pass
+    
+    # Apply mocks conditionally based on test markers
+    def apply_mocks(item):
+        markers = [m.name for m in item.iter_markers()]
+        
+        if "requires_redis" not in markers:
+            try:
+                import redis
+                monkeypatch.setattr(redis, "Redis", mock_redis_init)
+            except ImportError:
+                pass
+        
+        if "websocket" not in markers:
+            try:
+                import websockets
+                monkeypatch.setattr(websockets, "connect", mock_websocket_connect)
+            except ImportError:
+                pass
+        
+        if "integration" not in markers:
+            try:
+                import aiohttp
+                monkeypatch.setattr(aiohttp, "ClientSession", MockSession)
+            except ImportError:
+                pass
+    
+    # Store the apply_mocks function for use in collection
+    pytest.apply_timeout_mocks = apply_mocks
+
+
+def pytest_collection_modifyitems(config, items):
+    """Modify test collection to add timeout markers and fix async tests"""
+    
+    for item in items:
+        # Apply timeout mocks if available
+        if hasattr(pytest, "apply_timeout_mocks"):
+            pytest.apply_timeout_mocks(item)
+        
+        # Add reasonable timeout to all async tests
+        if asyncio.iscoroutinefunction(item.function):
+            item.add_marker(pytest.mark.timeout(10))
+        
+        # Fix async event loop issues
+        if "asyncio" in str(item.keywords):
+            item.add_marker(pytest.mark.asyncio)
+
+
+def pytest_addoption(parser):
+    """Add custom command line options"""
+    parser.addoption(
+        "--run-all",
+        action="store_true",
+        default=False,
+        help="Run all tests including those that might timeout"
+    )
+
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create an event loop for the test session"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    # Set a default timeout for all async operations
+    loop.set_debug(False)  # Disable debug mode to improve performance
+    
+    yield loop
+    
+    # Cleanup
+    try:
+        # Cancel all pending tasks
+        pending = asyncio.all_tasks(loop)
+        for task in pending:
+            task.cancel()
+        # Wait for tasks to complete cancellation
+        loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+    except Exception:
+        pass
+    finally:
+        loop.close()
+
+
+
+

@@ -2,9 +2,14 @@ import json
 import pytest
 from unittest.mock import AsyncMock
 
-from server import socketio_server as sio_srv
-from apps.backend.config import settings
-from apps.backend.rate_limit_manager import get_rate_limit_manager, RateLimitMode
+import os
+os.environ['TESTING'] = 'true'
+os.environ['SKIP_AGENTS'] = 'true'
+
+from apps.backend.services.socketio import sio as sio_srv, connected_clients, content_request, ping
+from apps.backend.core.config import settings
+from apps.backend.services.rate_limit_manager import get_rate_limit_manager
+from apps.backend.core.security.rate_limit_manager import RateLimitMode
 
 
 @pytest.mark.asyncio
@@ -17,7 +22,7 @@ async def test_socketio_rbac_blocks_teacher_event_for_student(monkeypatch):
 
         # Prepare connected client with student role
         sid = "sid-student-1"
-        sio_srv.connected_clients[sid] = {
+        connected_clients[sid] = {
             "authenticated": True,
             "user_id": "u-student",
             "role": "student",
@@ -25,10 +30,10 @@ async def test_socketio_rbac_blocks_teacher_event_for_student(monkeypatch):
 
         # Patch emit to capture emissions
         emit_mock = AsyncMock()
-        monkeypatch.setattr(sio_srv.sio, "emit", emit_mock)
+        monkeypatch.setattr(sio_srv, "emit", emit_mock)
 
-        # Attempt teacher-only event
-        await sio_srv.content_request(sid, {"topic": "Math"})
+        # Attempt teacher-only event - call the handler function directly
+        await content_request(sid, {"topic": "Math"})
 
         # Expect an error emission with Forbidden
         assert emit_mock.await_count >= 1
@@ -43,7 +48,7 @@ async def test_socketio_rbac_blocks_teacher_event_for_student(monkeypatch):
         assert "Forbidden" in payload.get("error", "")
     finally:
         settings.SIO_RBAC_REQUIRED_ROLES = original_roles
-        sio_srv.connected_clients.pop("sid-student-1", None)
+        connected_clients.pop("sid-student-1", None)
 
 
 @pytest.mark.asyncio
@@ -57,19 +62,19 @@ async def test_socketio_rate_limit_enforced_for_ping(monkeypatch):
     
     try:
         sid = "sid-rate-1"
-        sio_srv.connected_clients[sid] = {
+        connected_clients[sid] = {
             "authenticated": True,
             "user_id": "u-rl",
             "role": "student",
         }
 
         emit_mock = AsyncMock()
-        monkeypatch.setattr(sio_srv.sio, "emit", emit_mock)
+        monkeypatch.setattr(sio_srv, "emit", emit_mock)
 
-        # First ping allowed
-        await sio_srv.ping(sid, None)
+        # First ping allowed - call the handler function directly
+        await ping(sid, None)
         # Second ping should be rate limited
-        await sio_srv.ping(sid, None)
+        await ping(sid, None)
 
         # Ensure rate limit error was emitted
         # Look for an 'error' event with 'Rate limit' text
@@ -83,5 +88,5 @@ async def test_socketio_rate_limit_enforced_for_ping(monkeypatch):
     finally:
         settings.SIO_RATE_LIMIT_PER_MINUTE = original_limit
         rlm.clear_all_limits()
-        sio_srv.connected_clients.pop("sid-rate-1", None)
+        connected_clients.pop("sid-rate-1", None)
 

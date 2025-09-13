@@ -47,14 +47,18 @@ __description__ = "AI-Powered Educational Roblox Environment Server"
 
 # Export main components
 from .main import app as fastapi_app
-from .roblox_server import app as flask_app
-from .tools import ALL_TOOLS
+from .roblox_server import roblox_server
+from .agents.tools import ALL_TOOLS
 from .models import *
-from .config import settings
+from .core.config import settings
+
+# For backward compatibility with tests expecting flask_app
+app = fastapi_app  # Tests can use this
 
 __all__ = [
     "fastapi_app",
-    "flask_app", 
+    "roblox_server", 
+    "app",  # Backward compatibility
     "ALL_TOOLS",
     "settings",
     "__version__",

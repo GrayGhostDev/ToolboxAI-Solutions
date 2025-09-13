@@ -141,7 +141,7 @@ class SentryManager:
             
             # Add custom context
             event.setdefault("extra", {}).update({
-                "server_time": datetime.utcnow().isoformat(),
+                "server_time": datetime.now(timezone.utc).isoformat(),
                 "settings_environment": settings.ENVIRONMENT,
                 "debug_mode": settings.DEBUG,
             })
@@ -232,7 +232,7 @@ class SentryManager:
             "request_id": request_id,
             "method": method,
             "path": path,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         context_data.update(kwargs)
         
@@ -248,7 +248,7 @@ class SentryManager:
             category=category,
             level=level,
             data=data or {},
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
     
     def set_tag(self, key: str, value: str):
@@ -548,7 +548,7 @@ def capture_roblox_plugin_error(plugin_id: str, action: str, error: Exception):
     sentry_manager.set_context("roblox_plugin", {
         "plugin_id": plugin_id,
         "action": action,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     })
     
     sentry_manager.set_tag("component", "roblox_plugin")
@@ -563,7 +563,7 @@ def capture_agent_system_error(agent_name: str, task_type: str, error: Exception
     sentry_manager.set_context("agent_system", {
         "agent": agent_name,
         "task_type": task_type,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     })
     
     sentry_manager.set_tag("component", "ai_agents")

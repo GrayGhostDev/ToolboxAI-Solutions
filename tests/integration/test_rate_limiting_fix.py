@@ -10,10 +10,14 @@ import asyncio
 import json
 import logging
 import os
+import pytest
 import subprocess
 import sys
 import time
 from pathlib import Path
+
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

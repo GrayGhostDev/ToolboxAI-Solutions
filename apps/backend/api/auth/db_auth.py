@@ -116,14 +116,14 @@ class DatabaseAuth:
             'username': user['username'],
             'email': user['email'],
             'role': user['role'],
-            'exp': datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS)
+            'exp': datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
         }
         
         # Refresh token payload (longer expiration)
         refresh_payload = {
             'user_id': str(user['id']),
             'type': 'refresh',
-            'exp': datetime.utcnow() + timedelta(days=30)
+            'exp': datetime.now(timezone.utc) + timedelta(days=30)
         }
         
         access_token = jwt.encode(access_payload, JWT_SECRET, algorithm=JWT_ALGORITHM)

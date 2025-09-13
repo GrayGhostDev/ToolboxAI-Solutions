@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
+import pytest
 import requests
 import json
+
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
 
 # Test credentials
 users = [

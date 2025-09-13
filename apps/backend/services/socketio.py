@@ -761,9 +761,13 @@ def create_socketio_app(app: FastAPI) -> socketio.ASGIApp:
 
     return socketio_app
 
+# Create alias for backward compatibility
+socketio_server = sio
+
 # Export for use in main.py
 __all__ = [
     'sio',
+    'socketio_server',  # Alias for backward compatibility
     'create_socketio_app',
     'emit_to_user',
     'emit_to_channel',

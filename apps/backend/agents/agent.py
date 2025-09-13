@@ -21,7 +21,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 import redis
 from langchain.agents import AgentExecutor
-from langchain.memory import ConversationBufferMemory
+from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain.schema import AIMessage, BaseMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
@@ -70,7 +70,7 @@ except ImportError as e:
         def __init__(self, llm=None, *args, **kwargs):
             "Initialize supervisor agent with LangGraph state management"
             self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
-            self.memory = ConversationBufferMemory(return_messages=True)
+            self.chat_history = InMemoryChatMessageHistory()
             
             # Initialize sub-agent references (lazy initialization)
             self.agents = {}
@@ -194,7 +194,8 @@ except ImportError as e:
     class ContextManager:
         "Context manager for MCP (Model Context Protocol)"
         
-        def __init__(self, max_context_size=8192):
+        def __init__(self, max_tokens=128000, max_context_size=8192, **kwargs):
+            self.max_tokens = max_tokens
             self.max_context_size = max_context_size
             self.context_history = []
             self.current_context = {}

@@ -1,0 +1,143 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-8.4.2, pluggy-1.6.0
+rootdir: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions
+configfile: pytest.ini
+plugins: asyncio-1.1.0, timeout-2.4.0, anyio-4.10.0, cov-6.2.1, mock-3.12.0, langsmith-0.4.27
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+timeout: 10.0s
+timeout method: thread
+timeout func_only: False
+collected 183 items
+
+tests/unit/core/test_agents.py ......................................... [ 22%]
+...                                                                      [ 24%]
+tests/unit/core/test_mcp.py ............FFFFFFFFF....F2025-09-13 15:08:21,622 - tests.conftest - INFO - Test session finished, cleaning up rate limit state
+
+
+=================================== FAILURES ===================================
+______________________ TestMemoryStore.test_store_memory _______________________
+tests/unit/core/test_mcp.py:351: in test_store_memory
+    memory_id = await memory_store.store_memory("test_key", memory_data)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: object str can't be used in 'await' expression
+---------------------------- Captured stderr setup -----------------------------
+2025-09-13 15:08:21,477 - apps.backend.core.security.rate_limit_manager - INFO - Rate limiting testing mode enabled
+------------------------------ Captured log setup ------------------------------
+INFO     apps.backend.core.security.rate_limit_manager:rate_limit_manager.py:210 Rate limiting testing mode enabled
+----------------------------- Captured stderr call -----------------------------
+2025-09-13 15:08:21,478 - core.mcp.memory_store - INFO - Stored memory: 92488e1e3eeecdf9
+------------------------------ Captured log call -------------------------------
+INFO     core.mcp.memory_store:memory_store.py:126 Stored memory: 92488e1e3eeecdf9
+_____________________ TestMemoryStore.test_retrieve_memory _____________________
+tests/unit/core/test_mcp.py:362: in test_retrieve_memory
+    memory_id = await memory_store.store_memory("test_key", memory_data)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: object str can't be used in 'await' expression
+---------------------------- Captured stderr setup -----------------------------
+2025-09-13 15:08:21,569 - apps.backend.core.security.rate_limit_manager - INFO - Rate limiting testing mode enabled
+------------------------------ Captured log setup ------------------------------
+INFO     apps.backend.core.security.rate_limit_manager:rate_limit_manager.py:210 Rate limiting testing mode enabled
+----------------------------- Captured stderr call -----------------------------
+2025-09-13 15:08:21,569 - core.mcp.memory_store - INFO - Stored memory: 92488e1e3eeecdf9
+------------------------------ Captured log call -------------------------------
+INFO     core.mcp.memory_store:memory_store.py:126 Stored memory: 92488e1e3eeecdf9
+_____________________ TestMemoryStore.test_search_memories _____________________
+tests/unit/core/test_mcp.py:372: in test_search_memories
+    await memory_store.store_memory("key1", {
+E   TypeError: object str can't be used in 'await' expression
+---------------------------- Captured stderr setup -----------------------------
+2025-09-13 15:08:21,574 - apps.backend.core.security.rate_limit_manager - INFO - Rate limiting testing mode enabled
+------------------------------ Captured log setup ------------------------------
+INFO     apps.backend.core.security.rate_limit_manager:rate_limit_manager.py:210 Rate limiting testing mode enabled
+----------------------------- Captured stderr call -----------------------------
+2025-09-13 15:08:21,574 - core.mcp.memory_store - INFO - Stored memory: 8174099687a26621
+------------------------------ Captured log call -------------------------------
+INFO     core.mcp.memory_store:memory_store.py:126 Stored memory: 8174099687a26621
+______________________ TestMemoryStore.test_delete_memory ______________________
+tests/unit/core/test_mcp.py:390: in test_delete_memory
+    memory_id = await memory_store.store_memory("test_key", memory_data)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: object str can't be used in 'await' expression
+---------------------------- Captured stderr setup -----------------------------
+2025-09-13 15:08:21,578 - apps.backend.core.security.rate_limit_manager - INFO - Rate limiting testing mode enabled
+------------------------------ Captured log setup ------------------------------
+INFO     apps.backend.core.security.rate_limit_manager:rate_limit_manager.py:210 Rate limiting testing mode enabled
+----------------------------- Captured stderr call -----------------------------
+2025-09-13 15:08:21,578 - core.mcp.memory_store - INFO - Stored memory: 92488e1e3eeecdf9
+------------------------------ Captured log call -------------------------------
+INFO     core.mcp.memory_store:memory_store.py:126 Stored memory: 92488e1e3eeecdf9
+____________________ TestMemoryStore.test_memory_expiration ____________________
+tests/unit/core/test_mcp.py:405: in test_memory_expiration
+    memory_id = await memory_store.store_memory("test_key", memory_data, ttl_seconds=1)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: MemoryStore.store_memory() got an unexpected keyword argument 'ttl_seconds'
+---------------------------- Captured stderr setup -----------------------------
+2025-09-13 15:08:21,582 - apps.backend.core.security.rate_limit_manager - INFO - Rate limiting testing mode enabled
+------------------------------ Captured log setup ------------------------------
+INFO     apps.backend.core.security.rate_limit_manager:rate_limit_manager.py:210 Rate limiting testing mode enabled
+_________________ TestRobloxProtocol.test_format_terrain_data __________________
+tests/unit/core/test_mcp.py:426: in test_format_terrain_data
+    formatted = roblox_protocol.format_terrain_data(terrain_data)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'RobloxProtocol' object has no attribute 'format_terrain_data'
+---------------------------- Captured stderr setup -----------------------------
+2025-09-13 15:08:21,586 - apps.backend.core.security.rate_limit_manager - INFO - Rate limiting testing mode enabled
+------------------------------ Captured log setup ------------------------------
+INFO     apps.backend.core.security.rate_limit_manager:rate_limit_manager.py:210 Rate limiting testing mode enabled
+___________________ TestRobloxProtocol.test_format_quiz_data ___________________
+tests/unit/core/test_mcp.py:439: in test_format_quiz_data
+    formatted = roblox_protocol.format_quiz_data(quiz_data)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'RobloxProtocol' object has no attribute 'format_quiz_data'
+---------------------------- Captured stderr setup -----------------------------
+2025-09-13 15:08:21,592 - apps.backend.core.security.rate_limit_manager - INFO - Rate limiting testing mode enabled
+------------------------------ Captured log setup ------------------------------
+INFO     apps.backend.core.security.rate_limit_manager:rate_limit_manager.py:210 Rate limiting testing mode enabled
+__________________ TestRobloxProtocol.test_validate_place_id ___________________
+tests/unit/core/test_mcp.py:446: in test_validate_place_id
+    assert roblox_protocol.validate_place_id(12345) is True
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'RobloxProtocol' object has no attribute 'validate_place_id'
+---------------------------- Captured stderr setup -----------------------------
+2025-09-13 15:08:21,598 - apps.backend.core.security.rate_limit_manager - INFO - Rate limiting testing mode enabled
+------------------------------ Captured log setup ------------------------------
+INFO     apps.backend.core.security.rate_limit_manager:rate_limit_manager.py:210 Rate limiting testing mode enabled
+________________ TestRobloxProtocol.test_generate_remote_events ________________
+tests/unit/core/test_mcp.py:456: in test_generate_remote_events
+    script = roblox_protocol.generate_remote_events(events)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'RobloxProtocol' object has no attribute 'generate_remote_events'
+---------------------------- Captured stderr setup -----------------------------
+2025-09-13 15:08:21,603 - apps.backend.core.security.rate_limit_manager - INFO - Rate limiting testing mode enabled
+------------------------------ Captured log setup ------------------------------
+INFO     apps.backend.core.security.rate_limit_manager:rate_limit_manager.py:210 Rate limiting testing mode enabled
+__________________ TestMCPIntegration.test_full_context_flow ___________________
+tests/unit/core/test_mcp.py:548: in test_full_context_flow
+    entry_id = mcp_server.add_context(entry)
+               ^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'MCPServer' object has no attribute 'add_context'. Did you mean: 'send_context'?
+---------------------------- Captured stderr setup -----------------------------
+2025-09-13 15:08:21,614 - apps.backend.core.security.rate_limit_manager - INFO - Rate limiting testing mode enabled
+2025-09-13 15:08:21,614 - core.mcp.server - INFO - Loaded JWT configuration from server settings
+------------------------------ Captured log setup ------------------------------
+INFO     apps.backend.core.security.rate_limit_manager:rate_limit_manager.py:210 Rate limiting testing mode enabled
+INFO     core.mcp.server:server.py:92 Loaded JWT configuration from server settings
+----------------------------- Captured stderr call -----------------------------
+2025-09-13 15:08:21,615 - core.mcp.server - INFO - Client c17d9e6f authenticated for user test_user
+2025-09-13 15:08:21,615 - core.mcp.server - INFO - Client c17d9e6f registered (user: test_user)
+------------------------------ Captured log call -------------------------------
+INFO     core.mcp.server:server.py:133 Client c17d9e6f authenticated for user test_user
+INFO     core.mcp.server:server.py:154 Client c17d9e6f registered (user: test_user)
+=========================== short test summary info ============================
+FAILED tests/unit/core/test_mcp.py::TestMemoryStore::test_store_memory - Type...
+FAILED tests/unit/core/test_mcp.py::TestMemoryStore::test_retrieve_memory - T...
+FAILED tests/unit/core/test_mcp.py::TestMemoryStore::test_search_memories - T...
+FAILED tests/unit/core/test_mcp.py::TestMemoryStore::test_delete_memory - Typ...
+FAILED tests/unit/core/test_mcp.py::TestMemoryStore::test_memory_expiration
+FAILED tests/unit/core/test_mcp.py::TestRobloxProtocol::test_format_terrain_data
+FAILED tests/unit/core/test_mcp.py::TestRobloxProtocol::test_format_quiz_data
+FAILED tests/unit/core/test_mcp.py::TestRobloxProtocol::test_validate_place_id
+FAILED tests/unit/core/test_mcp.py::TestRobloxProtocol::test_generate_remote_events
+FAILED tests/unit/core/test_mcp.py::TestMCPIntegration::test_full_context_flow
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 10 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+================== 10 failed, 60 passed, 17 warnings in 1.08s ==================

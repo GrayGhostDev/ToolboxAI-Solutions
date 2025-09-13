@@ -19,7 +19,7 @@ from sqlalchemy import (
     ForeignKey, UniqueConstraint, Index, CheckConstraint, Enum
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
 

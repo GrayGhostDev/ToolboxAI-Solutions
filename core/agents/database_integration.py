@@ -22,13 +22,13 @@ import websockets
 
 # Import project components
 try:
-    from config.environment import get_environment_config, should_use_real_data
+    from toolboxai_settings import settings, should_use_real_data
 except ImportError:
     # Fallback for when running from different directory
     import sys
     import os
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from config.environment import get_environment_config, should_use_real_data
+    from toolboxai_settings import settings, should_use_real_data
 
 # Import database components from correct paths
 try:
@@ -59,7 +59,7 @@ class AgentDatabaseIntegration:
     """Provides database access for all agents with environment-aware real/mock data switching"""
     
     def __init__(self):
-        self.env_config = get_environment_config()
+        self.env_config = settings
         self.mcp_url = self.env_config.get_service_url("mcp")
         self._use_real_data = should_use_real_data() and not self.env_config.use_mock_database
         self._connection_pool = None
@@ -67,8 +67,13 @@ class AgentDatabaseIntegration:
         self._initialized = False
         self._session_factory = None
         
-        # Initialize connections if using real data
-        if self._use_real_data:
+        # Skip initialization during testing/imports
+        if os.getenv("TESTING", "false").lower() == "true" or os.getenv("SKIP_DB_INIT", "false").lower() == "true":
+            logger.debug("Skipping database initialization (testing mode or SKIP_DB_INIT set)")
+            self._use_real_data = False
+            self._initialized = False
+        # Initialize connections if using real data (but not during imports)
+        elif self._use_real_data and os.getenv("SKIP_AGENTS", "false").lower() != "true":
             self._init_connections()
         
     def _init_connections(self):
@@ -754,5 +759,15 @@ def get_agent_database() -> AgentDatabaseIntegration:
     return _agent_db_instance
 
 
-# For backward compatibility
-agent_db = get_agent_database()
+# For backward compatibility - create a lazy property
+class LazyAgentDB:
+    """Lazy wrapper for agent database to avoid initialization at import time"""
+    def __getattr__(self, name):
+        return getattr(get_agent_database(), name)
+    
+    def __repr__(self):
+        return "<LazyAgentDB (not yet initialized)>"
+
+
+# Use lazy wrapper instead of direct instantiation
+agent_db = LazyAgentDB()

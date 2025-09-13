@@ -1,6 +1,6 @@
 import pytest
 from apps.backend.main import get_ws_rbac, set_ws_rbac, WSRoleOverrides
-from apps.backend.models import User
+from apps.backend.api.auth.auth import User
 
 
 @pytest.mark.asyncio

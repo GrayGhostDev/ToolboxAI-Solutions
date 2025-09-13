@@ -18,8 +18,8 @@ import os
 os.environ["JWT_SECRET_KEY"] = "test-secret-key-for-testing-only-32-chars-minimum-length"
 
 from apps.backend.main import app
-from apps.backend.auth_secure import SecureAuth, RateLimiter, CSRFProtection
-from apps.backend.websocket import WebSocketConnectionManager, MessageHandler
+from apps.backend.api.auth.auth_secure import SecureAuth, RateLimiter, CSRFProtection
+from apps.backend.services.websocket_handler import WebSocketManager, MessageHandler
 
 class TestAuthentication:
     """Test authentication security"""
@@ -146,11 +146,11 @@ class TestWebSocketSecurity:
     
     @pytest.fixture
     def connection_manager(self):
-        return WebSocketConnectionManager()
+        return WebSocketManager()
     
     @pytest.fixture
     def message_handler(self):
-        return MessageHandler(WebSocketConnectionManager())
+        return MessageHandler(WebSocketManager())
     
     async def test_websocket_rbac(self, message_handler):
         """Test WebSocket RBAC enforcement"""

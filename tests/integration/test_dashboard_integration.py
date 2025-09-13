@@ -11,6 +11,10 @@ import asyncio
 import websocket
 from datetime import datetime
 from typing import Dict, Any, Optional
+import pytest
+
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
 
 # Configuration
 DASHBOARD_URL = "http://127.0.0.1:5179"

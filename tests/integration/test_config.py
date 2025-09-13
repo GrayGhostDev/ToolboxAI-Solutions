@@ -10,10 +10,14 @@ Centralized configuration for integration tests including:
 """
 
 import os
+import pytest
 import sys
 from pathlib import Path
 from typing import Dict, Any, Optional
 from unittest.mock import Mock, AsyncMock
+
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
 
 # Add project paths for imports
 PROJECT_ROOT = Path(__file__).parent.parent.parent

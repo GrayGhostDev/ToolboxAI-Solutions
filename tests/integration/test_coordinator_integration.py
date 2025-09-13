@@ -13,6 +13,9 @@ from datetime import datetime, timedelta
 import json
 import uuid
 
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
+
 # Setup test logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -144,7 +144,7 @@ class AdvancedAnalytics:
             confidence=confidence,
             factors=factors,
             recommendation=recommendation,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
     
     async def _predict_performance_trend(self, user_id: str) -> PredictionResult:
@@ -164,7 +164,7 @@ class AdvancedAnalytics:
                 confidence=0.0,
                 factors={},
                 recommendation="Insufficient data for prediction",
-                timestamp=datetime.utcnow()
+                timestamp=datetime.now(timezone.utc)
             )
         
         # Prepare time series data
@@ -202,7 +202,7 @@ class AdvancedAnalytics:
             confidence=r2,
             factors=factors,
             recommendation=recommendation,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
     
     async def _predict_engagement_forecast(self, course_id: str) -> PredictionResult:
@@ -227,7 +227,7 @@ class AdvancedAnalytics:
                 confidence=0.0,
                 factors={},
                 recommendation="Insufficient data for engagement forecast",
-                timestamp=datetime.utcnow()
+                timestamp=datetime.now(timezone.utc)
             )
         
         # Prepare time series
@@ -259,7 +259,7 @@ class AdvancedAnalytics:
             confidence=confidence,
             factors=factors,
             recommendation=recommendation,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
     
     async def _predict_dropout_risk(
@@ -299,7 +299,7 @@ class AdvancedAnalytics:
             confidence=confidence,
             factors=factors,
             recommendation=recommendation,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
     
     async def get_ml_insights(
@@ -539,7 +539,7 @@ class AdvancedAnalytics:
         Returns:
             AnalyticsReport with comprehensive data
         """
-        report_id = f"{report_type}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+        report_id = f"{report_type}_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
         
         sections = []
         insights = []
@@ -584,7 +584,7 @@ class AdvancedAnalytics:
         return AnalyticsReport(
             report_id=report_id,
             title=f"{report_type.replace('_', ' ').title()} Report",
-            generated_at=datetime.utcnow(),
+            generated_at=datetime.now(timezone.utc),
             period_start=start_date,
             period_end=end_date,
             sections=sections,

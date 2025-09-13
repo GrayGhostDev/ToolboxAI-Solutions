@@ -7,8 +7,8 @@ import asyncio
 import json
 import logging
 from typing import Any, Dict, List, Optional
-from langchain.memory import ConversationBufferMemory
-from langchain.schema import HumanMessage
+from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain.schema import HumanMessage, AIMessage
 from langchain_openai import ChatOpenAI
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone

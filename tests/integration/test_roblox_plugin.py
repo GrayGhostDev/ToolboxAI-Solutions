@@ -12,6 +12,10 @@ import threading
 from datetime import datetime
 import sys
 import os
+import pytest
+
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

@@ -82,7 +82,7 @@ def test_imports():
         from core.database.models import User, Course, Lesson, Quiz
         print("✅ Database models imported successfully")
         
-        from apps.backend.auth import get_current_user, require_role
+        from apps.backend.api.auth.auth import get_current_user, require_role
         print("✅ Auth functions imported successfully")
         
         return True

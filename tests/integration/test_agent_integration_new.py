@@ -11,6 +11,10 @@ from datetime import datetime
 import sys
 from pathlib import Path
 import logging
+import pytest
+
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent))

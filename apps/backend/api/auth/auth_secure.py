@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 from fastapi import HTTPException, Security, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 import redis
 from functools import wraps
 import time
@@ -51,7 +51,8 @@ class TokenData(BaseModel):
     iat: datetime
     jti: str  # JWT ID for revocation
     
-    @validator('role')
+    @field_validator('role')
+    @classmethod
     def validate_role(cls, v):
         allowed_roles = ['admin', 'teacher', 'student', 'parent', 'developer']
         if v not in allowed_roles:

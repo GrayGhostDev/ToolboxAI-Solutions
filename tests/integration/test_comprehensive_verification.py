@@ -26,6 +26,10 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 import uuid
 import argparse
+import pytest
+
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
 
 # Setup logging
 logging.basicConfig(

@@ -23,8 +23,8 @@ from sqlalchemy.exc import DBAPIError, OperationalError, IntegrityError
 from sqlalchemy.pool import NullPool, QueuePool
 
 from core.database.models import Base
-from config.environment import get_environment_config
-settings = get_environment_config()
+from toolboxai_settings import settings
+settings = settings
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ class DatabaseManager:
                     logger.info("Database tables created/verified")
             
             self._initialized = True
-            self._last_health_check = datetime.utcnow()
+            self._last_health_check = datetime.now(timezone.utc)
             
         except Exception as e:
             logger.error(f"Failed to initialize database: {e}")
@@ -185,14 +185,14 @@ class DatabaseManager:
         """
         health_status = {
             "status": "unknown",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "details": {}
         }
         
         try:
             # Check if we need to perform health check
             if self._last_health_check:
-                time_since_check = datetime.utcnow() - self._last_health_check
+                time_since_check = datetime.now(timezone.utc) - self._last_health_check
                 if time_since_check.seconds < self._health_check_interval:
                     health_status["status"] = "healthy"
                     health_status["details"]["cached"] = True
@@ -231,7 +231,7 @@ class DatabaseManager:
                     }
                 }
                 
-                self._last_health_check = datetime.utcnow()
+                self._last_health_check = datetime.now(timezone.utc)
                 
         except Exception as e:
             health_status["status"] = "unhealthy"
@@ -303,7 +303,7 @@ class DatabaseManager:
             Optimization results
         """
         results = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "optimizations": []
         }
         

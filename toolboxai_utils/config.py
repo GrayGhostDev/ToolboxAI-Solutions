@@ -2,7 +2,7 @@
 
 import os
 from typing import Any, Dict, List, Optional, Type, Union
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import logging
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,8 @@ class ServerConfig(BaseModel):
     # Security
     token_expiry_hours: int = Field(default=24, ge=1, le=168)
     
-    @validator('thread_pool_size')
+    @field_validator('thread_pool_size')
+    @classmethod
     def validate_thread_pool_size(cls, v):
         cpu_count = os.cpu_count() or 4
         if v > cpu_count * 2:

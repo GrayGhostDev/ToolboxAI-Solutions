@@ -65,6 +65,7 @@ class AgentConfig:
     verbose: bool = False
     memory_enabled: bool = True
     max_context_length: int = 128000
+    max_tokens: int = 4096  # Maximum tokens for response generation
     tools: List[Any] = field(default_factory=list)
     system_prompt: str = ""
 

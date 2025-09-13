@@ -5,9 +5,10 @@ from unittest.mock import AsyncMock
 
 from fastapi.websockets import WebSocketState
 
-from apps.backend.websocket import WebSocketManager
-from apps.backend.config import settings
-from apps.backend.rate_limit_manager import get_rate_limit_manager, RateLimitMode
+from apps.backend.services.websocket_handler import WebSocketManager
+from apps.backend.core.config import settings
+from apps.backend.services.rate_limit_manager import get_rate_limit_manager
+from apps.backend.core.security.rate_limit_manager import RateLimitMode
 
 
 @pytest.mark.asyncio

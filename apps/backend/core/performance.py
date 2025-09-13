@@ -19,8 +19,8 @@ from fastapi import Request, Response
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from config.environment import get_environment_config
-settings = get_environment_config()
+from toolboxai_settings import settings
+settings = settings
 
 logger = logging.getLogger(__name__)
 

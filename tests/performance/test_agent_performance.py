@@ -12,6 +12,9 @@ import json
 import psutil
 import os
 
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Performance tests require external services - run with --run-performance")
+
 
 @pytest.mark.performance
 class TestAgentPerformance:

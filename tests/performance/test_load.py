@@ -21,6 +21,9 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent.parent / "src" / "roblox-environment"))
 
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Performance tests require external services - run with --run-performance")
+
 
 class PerformanceMetrics:
     """Track and calculate performance metrics"""

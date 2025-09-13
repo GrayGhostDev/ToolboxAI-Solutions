@@ -3,9 +3,9 @@ import pytest
 from unittest.mock import AsyncMock, patch, Mock
 from datetime import datetime, timezone, timedelta
 
-from apps.backend.websocket import websocket_endpoint, websocket_manager
-from apps.backend.websocket_auth import WebSocketAuthSession
-from apps.backend.auth import User
+from apps.backend.services.websocket_handler import websocket_endpoint, websocket_manager
+from apps.backend.services.websocket_auth import WebSocketAuthSession
+from apps.backend.api.auth.auth import User
 
 
 @pytest.mark.asyncio

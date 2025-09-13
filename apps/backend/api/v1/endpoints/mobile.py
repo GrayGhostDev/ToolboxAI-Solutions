@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from core.database.connection import get_db
 from core.database.models import User, Content, Quiz, UserProgress, Notification
-from apps.backend.auth import get_current_user, create_access_token
+from apps.backend.api.auth.auth import get_current_user, create_access_token
 from apps.backend.cache import cache_result
 import hashlib
 import json
@@ -222,7 +222,7 @@ class OfflineSyncManager:
         """
         result = {
             "status": "success",
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.now(timezone.utc),
             "uploaded": 0,
             "downloaded": 0,
             "conflicts": [],
@@ -518,7 +518,7 @@ async def batch_update_progress(
         "success_count": success_count,
         "failed_count": len(failed_updates),
         "failed_updates": failed_updates,
-        "sync_timestamp": datetime.utcnow().isoformat()
+        "sync_timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 
@@ -608,7 +608,7 @@ async def download_content_for_offline(
         "metadata": {
             "version": content.version or 1,
             "last_updated": content.updated_at.isoformat(),
-            "expires": (datetime.utcnow() + timedelta(days=7)).isoformat()
+            "expires": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
         }
     }
     
@@ -716,7 +716,7 @@ async def send_scheduled_notification(
 ):
     """Background task to send scheduled notifications"""
     # Wait until scheduled time
-    wait_seconds = (scheduled_time - datetime.utcnow()).total_seconds()
+    wait_seconds = (scheduled_time - datetime.now(timezone.utc)).total_seconds()
     if wait_seconds > 0:
         await asyncio.sleep(wait_seconds)
     

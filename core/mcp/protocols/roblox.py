@@ -492,3 +492,238 @@ end
         """Clear generation cache"""
         self.generation_cache.clear()
         logger.info("Roblox generation cache cleared")
+    
+    def format_terrain_data(self, terrain_data: Dict) -> Dict:
+        """Format terrain data for Roblox Studio following Roblox Terrain API"""
+        terrain_type = terrain_data.get("type", "grass")
+        size = terrain_data.get("size", {"x": 100, "y": 50, "z": 100})
+        material = terrain_data.get("material", "Grass")
+        
+        # Handle different size formats
+        if isinstance(size, dict):
+            size_x, size_y, size_z = size.get("x", 100), size.get("y", 50), size.get("z", 100)
+        else:
+            size_x, size_y, size_z = 100, 50, 100
+        
+        script = f'''-- Terrain Generation Script
+local Terrain = workspace.Terrain
+local Region3 = Region3.new(Vector3.new(0, 0, 0), Vector3.new({size_x}, {size_y}, {size_z}))
+Region3 = Region3:ExpandToGrid(4)
+
+-- Fill base terrain
+Terrain:FillBall(Vector3.new({size_x/2}, {size_y/2}, {size_z/2}), 30, Enum.Material.{material})
+
+-- Add terrain features based on type
+if "{terrain_type}" == "mountain" then
+    for i = 1, 5 do
+        local pos = Vector3.new(math.random(0, {size_x}), 0, math.random(0, {size_z}))
+        local height = math.random(20, 50)
+        Terrain:FillWedge(CFrame.new(pos), Vector3.new(20, height, 20), Enum.Material.Rock)
+    end
+elseif "{terrain_type}" == "forest" then
+    -- Add trees and foliage
+    for i = 1, 10 do
+        local pos = Vector3.new(math.random(10, {size_x-10}), 0, math.random(10, {size_z-10}))
+        Terrain:FillCylinder(CFrame.new(pos), 5, 3, Enum.Material.Wood)
+    end
+end
+
+print("Terrain generated: " .. "{terrain_type}")'''
+        
+        return {
+            "terrain_script": script,
+            "type": terrain_type,
+            "material": material,
+            "size": {"x": size_x, "y": size_y, "z": size_z}
+        }
+    
+    def format_quiz_data(self, quiz_data: Dict) -> Dict:
+        """Format quiz data for Roblox GUI using ScreenGui API"""
+        question = quiz_data.get("question", "")
+        options = quiz_data.get("options", [])
+        correct = quiz_data.get("correct_answer", 0)
+        explanation = quiz_data.get("explanation", "")
+        
+        script = f'''-- Quiz GUI Script
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "QuizGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Main Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0.5, 0, 0.6, 0)
+frame.Position = UDim2.new(0.25, 0, 0.2, 0)
+frame.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+frame.BorderSizePixel = 2
+frame.BorderColor3 = Color3.new(0.4, 0.4, 0.4)
+frame.Parent = screenGui
+
+-- Question Label
+local questionLabel = Instance.new("TextLabel")
+questionLabel.Text = "{question}"
+questionLabel.Size = UDim2.new(1, -20, 0.3, 0)
+questionLabel.Position = UDim2.new(0, 10, 0, 10)
+questionLabel.TextScaled = true
+questionLabel.TextColor3 = Color3.new(1, 1, 1)
+questionLabel.BackgroundTransparency = 1
+questionLabel.Font = Enum.Font.SourceSansBold
+questionLabel.Parent = frame
+
+-- Feedback Label
+local feedbackLabel = Instance.new("TextLabel")
+feedbackLabel.Text = ""
+feedbackLabel.Size = UDim2.new(1, -20, 0.1, 0)
+feedbackLabel.Position = UDim2.new(0, 10, 0.85, 0)
+feedbackLabel.TextScaled = true
+feedbackLabel.TextColor3 = Color3.new(1, 1, 1)
+feedbackLabel.BackgroundTransparency = 1
+feedbackLabel.Font = Enum.Font.SourceSans
+feedbackLabel.Parent = frame
+'''
+        
+        # Add option buttons
+        for i, option in enumerate(options):
+            script += f'''
+-- Option {i+1}: {option}
+local button{i} = Instance.new("TextButton")
+button{i}.Text = "{option}"
+button{i}.Size = UDim2.new(0.8, 0, 0.1, 0)
+button{i}.Position = UDim2.new(0.1, 0, {0.4 + i*0.12}, 0)
+button{i}.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+button{i}.TextColor3 = Color3.new(1, 1, 1)
+button{i}.Font = Enum.Font.SourceSans
+button{i}.TextScaled = true
+button{i}.Parent = frame
+
+button{i}.MouseButton1Click:Connect(function()
+    if {i} == {correct} then
+        feedbackLabel.Text = "Correct! {explanation}"
+        feedbackLabel.TextColor3 = Color3.new(0, 1, 0)
+        button{i}.BackgroundColor3 = Color3.new(0, 0.6, 0)
+    else
+        feedbackLabel.Text = "Try again!"
+        feedbackLabel.TextColor3 = Color3.new(1, 0, 0)
+        button{i}.BackgroundColor3 = Color3.new(0.6, 0, 0)
+    end
+end)
+'''
+        
+        script += '''
+-- Close button
+local closeButton = Instance.new("TextButton")
+closeButton.Text = "X"
+closeButton.Size = UDim2.new(0, 30, 0, 30)
+closeButton.Position = UDim2.new(1, -35, 0, 5)
+closeButton.BackgroundColor3 = Color3.new(0.8, 0, 0)
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.Font = Enum.Font.SourceSansBold
+closeButton.Parent = frame
+
+closeButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)'''
+        
+        return {
+            "quiz_gui": script,
+            "question": question,
+            "options": options,
+            "correct_answer": correct
+        }
+    
+    def validate_place_id(self, place_id) -> bool:
+        """Validate Roblox place ID"""
+        if isinstance(place_id, int):
+            return place_id > 0
+        if isinstance(place_id, str):
+            try:
+                pid = int(place_id)
+                return pid > 0
+            except (ValueError, TypeError):
+                return False
+        return False
+    
+    def generate_remote_events(self, events: List[str]) -> str:
+        """Generate RemoteEvent setup script following Roblox networking patterns"""
+        script = '''-- RemoteEvents Setup Script
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Create RemoteEvents folder if it doesn't exist
+local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
+if not remoteEvents then
+    remoteEvents = Instance.new("Folder")
+    remoteEvents.Name = "RemoteEvents"
+    remoteEvents.Parent = ReplicatedStorage
+end
+
+-- Create RemoteFunctions folder
+local remoteFunctions = ReplicatedStorage:FindFirstChild("RemoteFunctions")
+if not remoteFunctions then
+    remoteFunctions = Instance.new("Folder")
+    remoteFunctions.Name = "RemoteFunctions"
+    remoteFunctions.Parent = ReplicatedStorage
+end
+'''
+        
+        for event in events:
+            script += f'''
+-- Create {event} RemoteEvent
+local {event} = remoteEvents:FindFirstChild("{event}")
+if not {event} then
+    {event} = Instance.new("RemoteEvent")
+    {event}.Name = "{event}"
+    {event}.Parent = remoteEvents
+end
+
+-- Setup example server handler for {event}
+{event}.OnServerEvent:Connect(function(player, ...)
+    print("Received {event} from", player.Name)
+    -- Handle event data here
+end)
+'''
+        
+        script += '''
+print("RemoteEvents initialized successfully")
+return remoteEvents'''
+        
+        return script
+    
+    def handle_message(self, message: Dict) -> Dict:
+        """Generic message handler for Roblox protocol messages"""
+        message_type = message.get("type")
+        
+        # Map message types to handlers
+        if message_type == "terrain_request":
+            # Process as studio message
+            return self.process_studio_message(message)
+        elif message_type == "quiz_request":
+            # Handle quiz generation
+            quiz_data = message.get("data", {})
+            formatted = self.format_quiz_data(quiz_data)
+            return {
+                "status": "success",
+                "type": "quiz_response",
+                "data": formatted
+            }
+        elif message_type == "validation_request":
+            # Validate place ID
+            place_id = message.get("place_id")
+            is_valid = self.validate_place_id(place_id)
+            return {
+                "status": "success",
+                "type": "validation_response",
+                "valid": is_valid,
+                "place_id": place_id
+            }
+        else:
+            # Default processing
+            return {
+                "status": "processed",
+                "type": message_type,
+                "message": f"Message type '{message_type}' processed"
+            }

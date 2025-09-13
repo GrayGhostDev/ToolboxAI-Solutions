@@ -79,13 +79,13 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 try:
-    from config.environment import get_environment_config
-    env_config = get_environment_config()
+    from toolboxai_settings import settings
+    env_config = settings
 except ImportError as e:
     # If still can't import, create a minimal fallback
     import logging
     logger = logging.getLogger(__name__)
-    logger.warning(f"Could not import config.environment: {e}")
+    logger.warning(f"Could not import toolboxai_settings: {e}")
     
     class FallbackConfig:
         def __init__(self):

@@ -10,7 +10,7 @@ import asyncio
 import json
 import websockets
 from datetime import datetime, timezone
-from apps.backend.auth import JWTManager, User
+from apps.backend.api.auth.auth import JWTManager, User
 from apps.backend.config import settings
 
 

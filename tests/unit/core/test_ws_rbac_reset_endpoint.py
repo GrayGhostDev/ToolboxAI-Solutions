@@ -1,6 +1,6 @@
 import pytest
 from apps.backend.main import reset_ws_rbac
-from apps.backend.models import User
+from apps.backend.api.auth.auth import User
 
 
 @pytest.mark.asyncio

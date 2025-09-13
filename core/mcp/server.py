@@ -85,8 +85,8 @@ class MCPServer:
         
         # Load JWT secret from environment or config if available
         try:
-            from config.environment import get_environment_config
-            settings = get_environment_config()
+            from toolboxai_settings import settings
+            settings = settings
             self.jwt_secret = settings.JWT_SECRET_KEY
             self.jwt_algorithm = settings.JWT_ALGORITHM
             logger.info("Loaded JWT configuration from server settings")
@@ -567,6 +567,18 @@ class MCPServer:
                 "features": ["jwt_auth", "token_refresh", "context_management", "secure_connections"]
             }
         }
+    
+    def add_context(self, entry: ContextEntry) -> str:
+        """Add context entry to store"""
+        import uuid
+        entry_id = str(uuid.uuid4())[:8]
+        self.context_store[entry_id] = entry
+        
+        # Trigger pruning if needed
+        self._prune_context()
+        
+        logger.info(f"Added context entry: {entry_id}")
+        return entry_id
 
 
 async def main():

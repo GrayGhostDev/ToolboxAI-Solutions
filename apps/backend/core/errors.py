@@ -248,18 +248,18 @@ class ErrorMetrics:
     def record_error(self, error: Dict[str, Any], category: str):
         """Record an error occurrence"""
         self.error_counts[category] += 1
-        self.error_rates[category].append(datetime.utcnow())
+        self.error_rates[category].append(datetime.now(timezone.utc))
         self.last_errors[category] = error
 
         # Clean old entries (keep last hour)
-        cutoff = datetime.utcnow() - timedelta(hours=1)
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
         self.error_rates[category] = [
             dt for dt in self.error_rates[category] if dt > cutoff
         ]
 
     def get_error_rate(self, category: str, window_minutes: int = 5) -> float:
         """Get error rate for a category"""
-        cutoff = datetime.utcnow() - timedelta(minutes=window_minutes)
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=window_minutes)
         recent_errors = [dt for dt in self.error_rates[category] if dt > cutoff]
         return len(recent_errors) / window_minutes if window_minutes > 0 else 0
 

@@ -706,6 +706,12 @@ def initialize_auth():
 
 
 # Export public functions and classes
+# Module-level function for verify_token
+def verify_token(token: str, raise_on_error: bool = True) -> Optional[Dict[str, Any]]:
+    """Verify and decode JWT token (delegates to JWTManager)"""
+    return JWTManager.verify_token(token, raise_on_error)
+
+
 __all__ = [
     "JWTManager",
     "SessionManager",
@@ -723,6 +729,7 @@ __all__ = [
     "require_any_role",
     "hash_password",
     "verify_password",
+    "verify_token",
     "create_user_token",
     "rate_limit",
     "initialize_auth",

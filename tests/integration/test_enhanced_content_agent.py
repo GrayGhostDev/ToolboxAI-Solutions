@@ -15,6 +15,10 @@ import os
 import sys
 import logging
 from pathlib import Path
+import pytest
+
+# Skip all tests in this module as they require external services
+pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
 
 # Add project root to Python path
 project_root = Path(__file__).parent

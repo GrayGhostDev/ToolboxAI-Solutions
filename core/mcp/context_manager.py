@@ -215,6 +215,19 @@ class MCPContextManager:
             "utilization": f"{(total_tokens / self.max_tokens) * 100:.1f}%",
             "categories": dict(category_stats),
         }
+    
+    def add_segment(self, content: str, category: str, source: str, importance: float):
+        """Public method to add a segment"""
+        return self._add_segment(content, category, source, importance)
+    
+    def get_segment_by_id(self, segment_id: str):
+        """Get segment by ID"""
+        # Since segments don't have IDs in current implementation, 
+        # we'll return the first matching segment or None
+        for segment in self.segments:
+            if hasattr(segment, 'id') and segment.id == segment_id:
+                return segment
+        return None
 
     def save_snapshot(self, filepath: str):
         """Save context snapshot.json to file"""

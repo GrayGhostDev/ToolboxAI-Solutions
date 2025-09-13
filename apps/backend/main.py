@@ -27,6 +27,7 @@ import asyncio
 import io
 import json
 import logging
+import os
 import subprocess
 import time
 import uuid
@@ -127,13 +128,30 @@ from .core.errors import (
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application startup and shutdown"""
+    # Check if we're in testing mode
+    if os.getenv("TESTING", "false").lower() == "true":
+        logger.info("Running in testing mode - skipping startup operations")
+        yield
+        logger.info("Testing mode - skipping shutdown operations")
+        return
+    
+    # Check if we should skip lifespan operations
+    if os.getenv("SKIP_LIFESPAN", "false").lower() == "true":
+        logger.info("SKIP_LIFESPAN set - minimal startup")
+        yield
+        logger.info("SKIP_LIFESPAN set - minimal shutdown")
+        return
+    
     # Startup
     logger.info("Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
 
-    # Initialize secrets manager
+    # Initialize secrets manager with timeout
     try:
-        init_secrets_manager(auto_rotate=True)
-        logger.info("Secrets manager initialized")
+        async with asyncio.timeout(5):  # 5 second timeout
+            init_secrets_manager(auto_rotate=True)
+            logger.info("Secrets manager initialized")
+    except asyncio.TimeoutError:
+        logger.warning("Secrets manager initialization timed out")
     except Exception as e:
         logger.error(f"Failed to initialize secrets manager: {e}")
         # Continue with environment variables as fallback
@@ -167,21 +185,33 @@ async def lifespan(app: FastAPI):
         logger.error(f"Failed to initialize database service: {e}")
         logger.warning("Dashboard will use fallback data")
 
-    # Initialize agent system with error handling
-    try:
-        await initialize_agents()
-        logger.info("Agent system initialized successfully")
-    except (ImportError, AttributeError, RuntimeError, ValueError) as e:
-        logger.error(f"Failed to initialize agent system: {e}")
-        logger.warning("Agent features will be limited - running in fallback mode")
+    # Initialize agent system with error handling and timeout
+    if not os.getenv("SKIP_AGENTS", "false").lower() == "true":
+        try:
+            async with asyncio.timeout(10):  # 10 second timeout
+                await initialize_agents()
+                logger.info("Agent system initialized successfully")
+        except asyncio.TimeoutError:
+            logger.warning("Agent initialization timed out - running in fallback mode")
+        except (ImportError, AttributeError, RuntimeError, ValueError) as e:
+            logger.error(f"Failed to initialize agent system: {e}")
+            logger.warning("Agent features will be limited - running in fallback mode")
+    else:
+        logger.info("Skipping agent initialization (SKIP_AGENTS=true)")
 
-    # Start Flask bridge server if not running
-    try:
-        await ensure_flask_server_running()
-        logger.info("Flask bridge server started successfully")
-    except (subprocess.SubprocessError, OSError, RuntimeError) as e:
-        logger.error(f"Failed to start Flask bridge server: {e}")
-        logger.warning("Roblox plugin communication may be unavailable")
+    # Start Flask bridge server if not running and not skipped
+    if not os.getenv("SKIP_FLASK", "false").lower() == "true":
+        try:
+            async with asyncio.timeout(5):  # 5 second timeout
+                await ensure_flask_server_running()
+                logger.info("Flask bridge server started successfully")
+        except asyncio.TimeoutError:
+            logger.warning("Flask server startup timed out")
+        except (subprocess.SubprocessError, OSError, RuntimeError) as e:
+            logger.error(f"Failed to start Flask bridge server: {e}")
+            logger.warning("Roblox plugin communication may be unavailable")
+    else:
+        logger.info("Skipping Flask server startup (SKIP_FLASK=true)")
 
     # Start background tasks and track them for proper shutdown
     try:
@@ -247,15 +277,30 @@ async def lifespan(app: FastAPI):
 
 
 # FastAPI app initialization
-app = FastAPI(
-    title=settings.APP_NAME,
-    version=settings.APP_VERSION,
-    description="AI-Powered Educational Roblox Environment - Generate immersive educational content with AI agents",
-    docs_url="/docs",  # Enable API documentation
-    redoc_url="/redoc",  # Enable ReDoc documentation
-    openapi_url="/openapi.json",  # Enable OpenAPI schema
-    lifespan=lifespan,
-)
+# Check if we should use test mode
+if os.getenv("TESTING", "false").lower() == "true" or os.getenv("SKIP_LIFESPAN", "false").lower() == "true":
+    # Create app without lifespan for testing/import scenarios
+    app = FastAPI(
+        title=settings.APP_NAME,
+        version=settings.APP_VERSION,
+        description="AI-Powered Educational Roblox Environment - Generate immersive educational content with AI agents",
+        docs_url="/docs",  # Enable API documentation
+        redoc_url="/redoc",  # Enable ReDoc documentation
+        openapi_url="/openapi.json",  # Enable OpenAPI schema
+    )
+    logger.info("Created FastAPI app without lifespan (testing/import mode)")
+else:
+    # Create app with full lifespan for production
+    app = FastAPI(
+        title=settings.APP_NAME,
+        version=settings.APP_VERSION,
+        description="AI-Powered Educational Roblox Environment - Generate immersive educational content with AI agents",
+        docs_url="/docs",  # Enable API documentation
+        redoc_url="/redoc",  # Enable ReDoc documentation
+        openapi_url="/openapi.json",  # Enable OpenAPI schema
+        lifespan=lifespan,
+    )
+    logger.info("Created FastAPI app with full lifespan")
 
 # Initialize version manager
 version_manager = create_version_manager(
@@ -440,10 +485,14 @@ app.add_middleware(
 # Error handling middleware (must be first to be added, last to execute to catch all errors)
 app.add_middleware(ErrorHandlingMiddleware, debug=settings.DEBUG)
 
-# Create Socket.io app wrapper
-# Re-enabled for WebSocket authentication fix
-socketio_app = create_socketio_app(app)
-# socketio_app = app  # Use regular app for now
+# Create Socket.io app wrapper (lazy initialization)
+# Only create if not in testing mode to avoid import issues
+if os.getenv("TESTING", "false").lower() == "true" or os.getenv("SKIP_SOCKETIO", "false").lower() == "true":
+    socketio_app = app  # Use regular app for testing
+    logger.info("Skipping Socket.IO wrapper (testing/import mode)")
+else:
+    socketio_app = create_socketio_app(app)
+    logger.info("Created Socket.IO app wrapper")
 
 
 # Global exception handlers
@@ -3012,6 +3061,44 @@ async def send_plugin_message(message: PluginMessage):
         )
 
 
+# Native WebSocket endpoint without authentication (for testing)
+# IMPORTANT: This must come BEFORE the parametric /ws/{client_id} route
+@app.websocket("/ws/native")
+async def native_websocket_endpoint(websocket: WebSocket):
+    """Native WebSocket endpoint for testing and basic connections - follows MDN WebSocket API standards"""
+    client_id = None
+    try:
+        # Accept connection immediately
+        await websocket.accept()
+        client_id = str(uuid.uuid4())
+        logger.debug(f"Native WebSocket connected: {client_id}")
+        
+        # Simple echo loop - no JSON, no authentication, just echo
+        while True:
+            try:
+                # Receive text message
+                data = await websocket.receive_text()
+                
+                # Echo back with "Echo: " prefix
+                await websocket.send_text(f"Echo: {data}")
+                
+            except WebSocketDisconnect:
+                logger.debug(f"Native WebSocket disconnected: {client_id}")
+                break
+            except Exception as e:
+                logger.error(f"Native WebSocket message error for {client_id}: {e}")
+                break
+                
+    except Exception as e:
+        logger.error(f"Native WebSocket connection error: {e}")
+    finally:
+        # Proper cleanup as per MDN best practices
+        try:
+            await websocket.close(code=1000, reason="Normal closure")
+        except Exception:
+            pass  # Connection already closed
+
+
 # WebSocket endpoint
 @app.websocket("/ws")
 async def websocket_endpoint_route(websocket: WebSocket):
@@ -3035,58 +3122,6 @@ async def websocket_endpoint_with_id(websocket: WebSocket, client_id: str):
         logger.error(f"WebSocket connection error for client {client_id}: {e}")
         try:
             await websocket.close(code=1011, reason="Internal server error")
-        except Exception:
-            pass
-
-
-# Native WebSocket endpoint without authentication (for testing)
-@app.websocket("/ws/native")
-async def native_websocket_endpoint(websocket: WebSocket):
-    """Native WebSocket endpoint for testing and basic connections"""
-    try:
-        await websocket.accept()
-        client_id = str(uuid.uuid4())
-        
-        # Send welcome message
-        welcome_message = {
-            "type": "connected",
-            "client_id": client_id,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "authenticated": False,
-            "note": "This is a test connection. Use /ws for authenticated connections."
-        }
-        await websocket.send_text(json.dumps(welcome_message))
-        
-        # Basic message echo loop
-        while True:
-            try:
-                data = await websocket.receive_text()
-                try:
-                    message = json.loads(data)
-                    response = {
-                        "type": "echo",
-                        "original_message": message,
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                        "client_id": client_id
-                    }
-                    await websocket.send_text(json.dumps(response))
-                except json.JSONDecodeError:
-                    error_response = {
-                        "type": "error",
-                        "message": "Invalid JSON format",
-                        "timestamp": datetime.now(timezone.utc).isoformat()
-                    }
-                    await websocket.send_text(json.dumps(error_response))
-            except WebSocketDisconnect:
-                break
-            except Exception as e:
-                logger.error(f"Native WebSocket error: {e}")
-                break
-                
-    except Exception as e:
-        logger.error(f"Native WebSocket connection error: {e}")
-        try:
-            await websocket.close(code=1011, reason="Server error")
         except Exception:
             pass
 

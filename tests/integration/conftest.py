@@ -32,8 +32,8 @@ logger = logging.getLogger(__name__)
 
 # Import environment configuration
 try:
-    from config.environment import get_environment_config, Environment
-    env_config = get_environment_config()
+    from toolboxai_settings import settings, Environment
+    env_config = settings
 except ImportError:
     # Fallback if environment module not available
     env_config = None

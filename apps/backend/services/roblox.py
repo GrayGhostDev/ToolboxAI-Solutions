@@ -33,8 +33,8 @@ import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config.environment import get_environment_config
-settings = get_environment_config()
+from toolboxai_settings import settings
+settings = settings
 from toolboxai_utils.async_utils import run_async
 from apps.backend.rate_limit_manager import get_rate_limit_manager
 

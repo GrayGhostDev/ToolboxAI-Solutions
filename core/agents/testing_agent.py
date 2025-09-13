@@ -78,7 +78,7 @@ except ImportError as e:
 logger = logging.getLogger(__name__)
 
 # Get the project root directory
-PROJECT_ROOT = Path(__file__).parent.parent.absolute()
+PROJECT_ROOT = Path(__file__).parent.parent.parent.absolute()  # Go up one more level to get repository root
 TESTS_DIR = PROJECT_ROOT / "tests"
 
 

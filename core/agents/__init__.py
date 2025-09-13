@@ -5,20 +5,26 @@ This module provides a comprehensive agent-based system for generating
 AI-powered educational content in Roblox environments using LangChain/LangGraph.
 """
 
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, TYPE_CHECKING
 
 from .base_agent import BaseAgent, AgentConfig, AgentState, TaskResult, AgentStatus, AgentPriority
 
-from .supervisor import SupervisorAgent, TaskType, SupervisorDecision
+# Import only essential types at module level
+from .supervisor import TaskType, SupervisorDecision
+from .review_agent import ReviewSeverity, ReviewFinding
+from .testing_agent import TestType, TestStatus, TestResult, TestSuiteResult
+from .orchestrator import OrchestrationRequest, OrchestrationResult, WorkflowType
 
-from .content_agent import ContentAgent
-from .quiz_agent import QuizAgent
-from .terrain_agent import TerrainAgent
-from .script_agent import ScriptAgent
-from .review_agent import ReviewAgent, ReviewSeverity, ReviewFinding
-from .testing_agent import TestingAgent, TestType, TestStatus, TestResult, TestSuiteResult
-
-from .orchestrator import Orchestrator, OrchestrationRequest, OrchestrationResult, WorkflowType
+# Import agent classes lazily to avoid circular imports
+if TYPE_CHECKING:
+    from .supervisor import SupervisorAgent
+    from .content_agent import ContentAgent
+    from .quiz_agent import QuizAgent
+    from .terrain_agent import TerrainAgent
+    from .script_agent import ScriptAgent
+    from .review_agent import ReviewAgent
+    from .testing_agent import TestingAgent
+    from .orchestrator import Orchestrator
 
 # Version
 __version__ = "1.0.0"
@@ -60,19 +66,29 @@ __all__ = [
     "get_available_agents",
 ]
 
-# Agent registry
-AGENT_REGISTRY = {
-    "supervisor": SupervisorAgent,
-    "content": ContentAgent,
-    "quiz": QuizAgent,
-    "terrain": TerrainAgent,
-    "script": ScriptAgent,
-    "review": ReviewAgent,
-    "testing": TestingAgent,
-}
+# Agent registry - lazy loading
+def _get_agent_registry():
+    """Get agent registry with lazy loading to avoid circular imports"""
+    from .supervisor import SupervisorAgent
+    from .content_agent import ContentAgent
+    from .quiz_agent import QuizAgent
+    from .terrain_agent import TerrainAgent
+    from .script_agent import ScriptAgent
+    from .review_agent import ReviewAgent
+    from .testing_agent import TestingAgent
+    
+    return {
+        "supervisor": SupervisorAgent,
+        "content": ContentAgent,
+        "quiz": QuizAgent,
+        "terrain": TerrainAgent,
+        "script": ScriptAgent,
+        "review": ReviewAgent,
+        "testing": TestingAgent,
+    }
 
 
-def create_orchestrator(config: Optional[Dict[str, Any]] = None) -> Orchestrator:
+def create_orchestrator(config: Optional[Dict[str, Any]] = None):
     """
     Create and configure an orchestrator instance.
 
@@ -82,6 +98,7 @@ def create_orchestrator(config: Optional[Dict[str, Any]] = None) -> Orchestrator
     Returns:
         Configured Orchestrator instance
     """
+    from .orchestrator import Orchestrator
     return Orchestrator(config)
 
 
@@ -99,10 +116,11 @@ def create_agent(agent_type: str, config: Optional[AgentConfig] = None) -> BaseA
     Raises:
         ValueError: If agent type is not recognized
     """
-    agent_class = AGENT_REGISTRY.get(agent_type.lower())
+    registry = _get_agent_registry()
+    agent_class = registry.get(agent_type.lower())
 
     if not agent_class:
-        raise ValueError(f"Unknown agent type: {agent_type}. Available: {list(AGENT_REGISTRY.keys())}")
+        raise ValueError(f"Unknown agent type: {agent_type}. Available: {list(registry.keys())}")
 
     return agent_class(config or AgentConfig())
 
@@ -114,7 +132,8 @@ def get_available_agents() -> List[str]:
     Returns:
         List of agent type names
     """
-    return list(AGENT_REGISTRY.keys())
+    registry = _get_agent_registry()
+    return list(registry.keys())
 
 
 # Module initialization message

@@ -85,13 +85,28 @@ class MemoryStore:
 
     def store_memory(
         self,
-        content: str,
-        metadata: Optional[Dict] = None,
+        key_or_content: str,
+        content_or_metadata: Optional[Dict] = None,
         embedding: Optional[np.ndarray] = None,
     ) -> str:
-        """Store a new memory"""
-        # Generate unique ID
-        memory_id = self._generate_id(content)
+        """Store a new memory
+        
+        Can be called two ways:
+        1. store_memory(content, metadata, embedding) - original signature
+        2. store_memory(key, content_dict) - test signature where content_dict contains all data
+        """
+        # Handle both calling patterns
+        if isinstance(content_or_metadata, dict) and embedding is None:
+            # Test pattern: store_memory("key", {"content": ..., "metadata": ...})
+            memory_id = self._generate_id(key_or_content)
+            content = json.dumps(content_or_metadata) if not isinstance(content_or_metadata.get("content"), str) else content_or_metadata.get("content", json.dumps(content_or_metadata))
+            metadata = content_or_metadata.get("metadata", content_or_metadata)
+            embedding = None
+        else:
+            # Original pattern: store_memory(content, metadata, embedding)
+            content = key_or_content
+            metadata = content_or_metadata or {}
+            memory_id = self._generate_id(content)
 
         # Prepare data
         metadata = metadata or {}
@@ -130,7 +145,7 @@ class MemoryStore:
 
         return memory_id
 
-    def retrieve_memory(self, memory_id: str) -> Optional[Memory]:
+    def retrieve_memory(self, memory_id: str) -> Optional[Dict]:
         """Retrieve a specific memory by ID"""
         cursor = self.conn.cursor()
         cursor.execute(
@@ -158,17 +173,16 @@ class MemoryStore:
             last_accessed_str,
         ) = row
 
-        return Memory(
-            id=memory_id,
-            content=content,
-            embedding=np.array(json.loads(embedding_blob)) if embedding_blob else None,
-            metadata=json.loads(metadata_json),
-            timestamp=datetime.fromisoformat(timestamp_str),
-            access_count=access_count + 1,
-            last_accessed=(
-                datetime.fromisoformat(last_accessed_str) if last_accessed_str else None
-            ),
-        )
+        # Return as dictionary for JSON serialization
+        return {
+            "id": memory_id,
+            "content": content,
+            "embedding": json.loads(embedding_blob) if embedding_blob else None,
+            "metadata": json.loads(metadata_json) if metadata_json else {},
+            "timestamp": timestamp_str,
+            "access_count": access_count + 1,
+            "last_accessed": last_accessed_str
+        }
 
     def search_similar(
         self, query_embedding: np.ndarray, limit: int = 10, threshold: float = 0.7
@@ -479,6 +493,45 @@ class MemoryStore:
                 Path(self.db_path).stat().st_size if Path(self.db_path).exists() else 0
             ),
         }
+
+    def delete_memory(self, memory_id: str) -> bool:
+        """Delete a memory by ID and return success status"""
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM memories WHERE id = ?", (memory_id,))
+        deleted = cursor.rowcount > 0
+        self.conn.commit()
+        
+        if deleted:
+            logger.info(f"Deleted memory: {memory_id}")
+        else:
+            logger.warning(f"Memory not found for deletion: {memory_id}")
+        
+        return deleted
+    
+    def search_memories(self, query: str) -> List[Dict]:
+        """Search memories by content using full-text search"""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT id, content, metadata, timestamp, importance
+            FROM memories 
+            WHERE content LIKE ? 
+            ORDER BY importance DESC, timestamp DESC
+            LIMIT 20
+        """, (f"%{query}%",))
+        
+        results = []
+        for row in cursor.fetchall():
+            memory_id, content, metadata_json, timestamp_str, importance = row
+            results.append({
+                "id": memory_id,
+                "content": content,
+                "metadata": json.loads(metadata_json) if metadata_json else {},
+                "timestamp": timestamp_str,
+                "importance": importance
+            })
+        
+        logger.info(f"Found {len(results)} memories matching query: {query}")
+        return results
 
     def close(self):
         """Close database connection"""

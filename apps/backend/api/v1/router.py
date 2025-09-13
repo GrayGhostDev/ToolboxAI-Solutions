@@ -10,14 +10,14 @@ import asyncio
 import io
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Dict, List, Optional, Any, Union
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, File, UploadFile
 from fastapi.responses import StreamingResponse, FileResponse
-from pydantic import BaseModel, Field, EmailStr, validator
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from sqlalchemy import select, func, and_, or_, desc, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -35,9 +35,9 @@ from core.database.models import (
     UserProgress, UserSession, UserRole, 
     Class, Assignment, Submission
 )
-from apps.backend.auth import get_current_user, require_role, require_any_role, hash_password
-from apps.backend.websocket import WebSocketManager
-from apps.backend.cache import redis_client, cache_result
+from apps.backend.api.auth.auth import get_current_user, require_role, require_any_role, hash_password
+from apps.backend.services.websocket_handler import WebSocketManager
+from apps.backend.core.cache import redis_client, cache_result
 
 logger = logging.getLogger(__name__)
 
@@ -124,9 +124,10 @@ class ReportRequest(BaseModel):
     include_charts: bool = True
     email_delivery: Optional[EmailStr] = None
     
-    @validator('end_date')
-    def end_date_after_start(cls, v, values):
-        if 'start_date' in values and v < values['start_date']:
+    @field_validator('end_date')
+    @classmethod
+    def end_date_after_start(cls, v, info):
+        if 'start_date' in info.data and v < info.data['start_date']:
             raise ValueError('end_date must be after start_date')
         return v
 
@@ -203,7 +204,7 @@ async def get_redis_connection():
 
 async def get_active_users_count(db: AsyncSession) -> int:
     """Get count of currently active users"""
-    fifteen_minutes_ago = datetime.utcnow() - timedelta(minutes=15)
+    fifteen_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=15)
     result = await db.execute(
         select(func.count(User.id))
         .where(User.last_active > fifteen_minutes_ago)
@@ -298,7 +299,7 @@ async def generate_pdf_report(data: Dict, report_type: str) -> bytes:
     
     # Report metadata
     metadata = Paragraph(
-        f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}<br/>"
+        f"Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}<br/>"
         f"Period: {data.get('start_date', 'N/A')} to {data.get('end_date', 'N/A')}",
         styles['Normal']
     )
@@ -449,7 +450,7 @@ async def get_realtime_analytics(
         }
         
         # Get live metrics from last 5 minutes
-        five_minutes_ago = datetime.utcnow() - timedelta(minutes=5)
+        five_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=5)
         
         # Count recent quiz completions
         recent_completions = await db.execute(
@@ -471,7 +472,7 @@ async def get_realtime_analytics(
         }
         
         return RealtimeMetrics(
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             active_users=active_users,
             active_sessions=active_sessions,
             ongoing_quiz_attempts=ongoing_quizzes,
@@ -488,8 +489,8 @@ async def get_realtime_analytics(
 @analytics_router.get("/summary", response_model=SummaryAnalytics)
 @cache_result(expire=300)  # Cache for 5 minutes
 async def get_summary_analytics(
-    start_date: datetime = Query(default=datetime.utcnow() - timedelta(days=30)),
-    end_date: datetime = Query(default=datetime.utcnow()),
+    start_date: datetime = Query(default=datetime.now(timezone.utc) - timedelta(days=30)),
+    end_date: datetime = Query(default=datetime.now(timezone.utc)),
     subject: Optional[str] = None,
     grade_level: Optional[int] = None,
     db: AsyncSession = Depends(get_db),
@@ -716,7 +717,7 @@ async def generate_report(
         # Estimate completion time based on date range and report type
         days_range = (request.end_date - request.start_date).days
         estimated_seconds = min(days_range * 2, 300)  # Max 5 minutes
-        estimated_completion = datetime.utcnow() + timedelta(seconds=estimated_seconds)
+        estimated_completion = datetime.now(timezone.utc) + timedelta(seconds=estimated_seconds)
         
         # For JSON format and small date ranges, generate immediately
         if request.format == ReportFormat.JSON and days_range <= 30:
@@ -776,7 +777,7 @@ async def generate_report_data(
         "report_type": report_type.value,
         "start_date": start_date.isoformat(),
         "end_date": end_date.isoformat(),
-        "generated_at": datetime.utcnow().isoformat(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "filters": filters
     }
     
@@ -916,7 +917,7 @@ async def generate_report_background(
                 json.dumps({
                     "content_type": content_type,
                     "file_extension": file_extension,
-                    "generated_at": datetime.utcnow().isoformat(),
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
                     "user_id": user_id
                 })
             )
@@ -1144,7 +1145,7 @@ async def create_user(
             grade_level=request.grade_level,
             subjects=request.subjects,
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
             metadata=request.metadata or {}
         )
         
@@ -1231,7 +1232,7 @@ async def update_user(
         if request.metadata is not None:
             user.metadata = {**(user.metadata or {}), **request.metadata}
         
-        user.updated_at = datetime.utcnow()
+        user.updated_at = datetime.now(timezone.utc)
         
         await db.commit()
         await db.refresh(user)
@@ -1297,7 +1298,7 @@ async def delete_user(
         else:
             # Soft delete - just deactivate
             user.is_active = False
-            user.deleted_at = datetime.utcnow()
+            user.deleted_at = datetime.now(timezone.utc)
             message = "User deactivated successfully"
         
         await db.commit()
