@@ -14,7 +14,3 @@
 
 - Log of changes based on feedback
 - Planned features and fixes
-
----
-
-**Last Updated**: 2025-09-14

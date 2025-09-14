@@ -4,6 +4,12 @@
 
 This document outlines the comprehensive integration plan for the Roblox Studio Plugin with the ToolboxAI educational platform, enabling real-time content generation, bidirectional communication, and seamless workflow between Dashboard, Backend, and Roblox environments.
 
+> **📚 Updated for 2025 Standards**: This document has been superseded by our comprehensive 2025 documentation. For the latest implementation details, see:
+> - [Roblox Integration Architecture 2025](roblox-integration-2025.md) - Complete 2025 architecture with Open Cloud API
+> - [Roblox API Reference 2025](../03-api/roblox-api-reference.md) - Full API documentation
+> - [Roblox Development Guide 2025](../04-implementation/roblox-development-guide.md) - Development best practices
+> - [Roblox Security & Compliance 2025](../07-operations/roblox-security-compliance.md) - Security and compliance standards
+
 ## 🏗️ Architecture Overview
 
 ```text

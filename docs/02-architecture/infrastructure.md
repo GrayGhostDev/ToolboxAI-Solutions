@@ -4,6 +4,13 @@
 
 The ToolboxAI Solutions platform uses a microservices architecture deployed on Kubernetes with automated CI/CD pipelines and comprehensive monitoring.
 
+> **📚 Updated for 2025 Standards**: This document has been superseded by comprehensive 2025 infrastructure documentation. For the latest implementation details, see:
+> - [Infrastructure Overview 2025](infrastructure-overview-2025.md) - Complete 2025 infrastructure architecture
+> - [Docker Deployment Guide 2025](../04-implementation/docker-deployment-guide.md) - Container deployment strategy
+> - [Kubernetes Deployment Guide 2025](../04-implementation/kubernetes-deployment-guide.md) - Orchestration and scaling
+> - [Infrastructure Monitoring 2025](../07-operations/infrastructure-monitoring.md) - Monitoring and observability
+> - [Infrastructure Security 2025](../07-operations/infrastructure-security.md) - Security and compliance
+
 ## Infrastructure Components
 
 ### Container Orchestration
