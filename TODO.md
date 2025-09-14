@@ -300,11 +300,16 @@ git push origin refactor/filesystem-restructure
 
 ---
 
-## PHASE 2: CRITICAL INFRASTRUCTURE FIXES ⚡ IN PROGRESS (2025-09-14)
-**Timeline**: 3-4 days | **Priority**: CRITICAL | **Branch**: `fix/critical-infrastructure`
+## PHASE 2: CRITICAL INFRASTRUCTURE FIXES ⚡ IN PROGRESS
+**Timeline**: 3-4 days | **Priority**: CRITICAL | **Branch**: `chore/repo-structure-cleanup`
 **Current Test Status**: 223/316 passing (70.6%) → Target: 505/532 (95%)
+**Last Update**: 2025-09-14 | **Last Commit**: `2265784`
 
-### 2.1 Database Model Fixes 🟡 PARTIALLY COMPLETE
+### 2.1 Database Model Fixes ✅ COMPLETED (2025-09-14)
+
+**Git Commit**: `2265784` - feat(database): implement Task 2.1 database model fixes
+**Branch**: `chore/repo-structure-cleanup`
+**GitHub**: Successfully pushed to remote repository
 
 **Major Improvements Completed (2025-09-14)**:
 - ✅ Fixed pytest-asyncio to v0.24.0 with proper loop_scope
@@ -381,37 +386,18 @@ async def test_educational_content_crud():
         assert deleted is True
 ```
 
-### 2.2 Redis Helper Implementation
+### 2.2 Redis Helper Implementation ✅ COMPLETED (2025-09-14)
 
-```python
-# core/database/connection_manager.py
-import redis
-from typing import Optional
-from .config import settings
+**Implemented in**: `core/database/connection_manager.py`
+**Features Added**:
+- ✅ Singleton pattern for connection management
+- ✅ Async and sync Redis client support
+- ✅ Automatic retry logic with exponential backoff
+- ✅ Health check functionality
+- ✅ Connection pool configuration
+- ✅ Graceful error handling
 
-class RedisManager:
-    _instance: Optional[redis.Redis] = None
-    
-    @classmethod
-    def get_client(cls) -> redis.Redis:
-        if cls._instance is None:
-            cls._instance = redis.from_url(
-                settings.REDIS_URL,
-                decode_responses=True,
-                socket_connect_timeout=5,
-                socket_timeout=5
-            )
-        return cls._instance
-    
-    @classmethod
-    def close(cls):
-        if cls._instance:
-            cls._instance.close()
-            cls._instance = None
-
-def get_redis_client() -> redis.Redis:
-    """Get Redis client instance."""
-    return RedisManager.get_client()
+The RedisManager class has been fully implemented with enhanced features beyond the original specification, including async support and robust error handling.
 ```
 
 **Testing:**
@@ -443,43 +429,44 @@ async def test_cache_integration():
     assert result == cached_result
 ```
 
-### 2.3 Path Configuration Fixes
+### 2.3 Path Configuration Fixes ✅ COMPLETED (2025-09-14)
 
-```python
-# config/settings.py
-from pydantic_settings import BaseSettings
-from pathlib import Path
+**Implemented in**: `config/settings.py` and `toolboxai_settings/settings.py`
+**Features Added**:
+- ✅ Centralized path configuration
+- ✅ Environment-based settings with Pydantic v2
+- ✅ JWT security configuration with auto-generation
+- ✅ Database connection pooling settings
+- ✅ Redis configuration with fallbacks
+- ✅ Testing environment detection
 
-class Settings(BaseSettings):
-    # Paths
-    BASE_DIR: Path = Path(__file__).parent.parent
-    APPS_DIR: Path = BASE_DIR / "apps"
-    CORE_DIR: Path = BASE_DIR / "core"
-    TESTS_DIR: Path = BASE_DIR / "tests"
-    
-    # Database
-    DATABASE_URL: str = "postgresql://user:pass@localhost/db"
-    REDIS_URL: str = "redis://localhost:6379"
-    
-    # API
-    API_HOST: str = "127.0.0.1"
-    API_PORT: int = 8008
-    
-    # Dashboard
-    DASHBOARD_URL: str = "http://localhost:5179"
-    
-    # Pusher
-    PUSHER_APP_ID: str = ""
-    PUSHER_KEY: str = ""
-    PUSHER_SECRET: str = ""
-    PUSHER_CLUSTER: str = "us2"
-    
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-```
+### 2.4 Next Priority Tasks 🎯 READY TO START
 
-### 2.4 TypeScript WebSocketMessageType Fixes
+Based on test results analysis, the following tasks should be prioritized to reach 95% pass rate:
+
+**High Impact Fixes** (Will fix ~150 tests):
+1. **Agent Integration Errors** (39 errors)
+   - Fix SwarmController initialization issues
+   - Update agent test fixtures
+   - Resolve async/await patterns in agent tests
+
+2. **Server Endpoint Tests** (54 failures)
+   - Fix 404/500 error handling tests
+   - Update validation error responses
+   - Fix WebSocket authentication tests
+
+3. **Frontend Test Environment** (Multiple failures)
+   - Configure jsdom properly for React Testing Library
+   - Add ResizeObserver and canvas mocks
+   - Fix Vitest configuration for dashboard tests
+
+**Quick Wins** (Can fix ~50 tests quickly):
+- Add missing test markers (`@pytest.mark.asyncio`)
+- Fix import paths in remaining test files
+- Update deprecated test assertions
+- Configure proper test timeouts
+
+### 2.5 TypeScript WebSocketMessageType Fixes
 
 **Critical TypeScript compilation errors found during Task 1.2:**
 ```typescript
