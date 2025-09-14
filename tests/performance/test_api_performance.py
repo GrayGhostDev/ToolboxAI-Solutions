@@ -19,7 +19,7 @@ pytestmark = pytest.mark.skip(reason="Performance tests require external service
 class TestAPIPerformanceSpecific:
     """Specific API performance tests"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_health_endpoint_performance(self):
         """Test health endpoint response time under load"""
         url = "http://localhost:8008/health"
@@ -66,7 +66,7 @@ class TestAPIPerformanceSpecific:
         print(f"  Min: {min(response_times)*1000:.2f}ms")
         print(f"  Max: {max(response_times)*1000:.2f}ms")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_content_generation_performance(self):
         """Test content generation endpoint performance"""
         url = "http://localhost:8008/generate_content"
@@ -116,7 +116,7 @@ class TestAPIPerformanceSpecific:
         else:
             pytest.fail("No successful content generation requests")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_database_query_performance(self):
         """Test database query performance"""
         endpoints = [
@@ -161,7 +161,7 @@ class TestAPIPerformanceSpecific:
             print(f"  Min: {stats['min']*1000:.2f}ms")
             print(f"  Max: {stats['max']*1000:.2f}ms")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_rate_limiting_performance(self):
         """Test API rate limiting behavior"""
         url = "http://localhost:8008/health"

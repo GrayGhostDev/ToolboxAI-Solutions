@@ -11,7 +11,7 @@ from apps.backend.services.rate_limit_manager import get_rate_limit_manager
 from apps.backend.core.security.rate_limit_manager import RateLimitMode
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_rbac_blocks_broadcast_for_student(monkeypatch):
     # Prepare mocked websocket
     ws = AsyncMock()
@@ -36,7 +36,7 @@ async def test_rbac_blocks_broadcast_for_student(monkeypatch):
     assert manager._stats.get("rbac_denied", 0) >= 1
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_rate_limit_enforced(monkeypatch):
     # Prepare mocked websocket
     ws = AsyncMock()

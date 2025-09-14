@@ -72,7 +72,7 @@ class TestBaseAgent:
         assert hasattr(base_agent, 'tools')
         assert hasattr(base_agent, 'memory')
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_base_agent_execute(self, base_agent):
         """Test base agent execute method."""
         result = await base_agent.execute("Test task")
@@ -123,7 +123,7 @@ class TestContentAgent:
             if hasattr(agent, 'cleanup'):
                 await agent.cleanup()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_generate_educational_content(self, content_agent):
         """Test generating educational content."""
         # Mock the LLM response
@@ -143,7 +143,7 @@ class TestContentAgent:
         assert "content" in result.output
         content_agent.llm.ainvoke.assert_called()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_content_with_interactive_elements(self, content_agent):
         """Test generating content with interactive elements."""
         content_agent.llm.ainvoke = AsyncMock(return_value=AIMessage(content="Interactive content"))
@@ -205,7 +205,7 @@ class TestQuizAgent:
             if hasattr(agent, 'cleanup'):
                 await agent.cleanup()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_generate_quiz(self, quiz_agent):
         """Test generating a quiz."""
         # Mock the LLM response
@@ -229,7 +229,7 @@ class TestQuizAgent:
         assert result.success == True
         quiz_agent.llm.ainvoke.assert_called()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_generate_adaptive_quiz(self, quiz_agent):
         """Test generating adaptive quiz based on performance."""
         quiz_agent.llm.ainvoke = AsyncMock(return_value=AIMessage(content=json.dumps({
@@ -283,7 +283,7 @@ class TestTerrainAgent:
             agent.llm = mock_llm
             return agent
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_generate_terrain(self, terrain_agent):
         """Test generating terrain."""
         request = {
@@ -298,7 +298,7 @@ class TestTerrainAgent:
         assert "Terrain" in result
         assert terrain_agent.llm.invoke.called  # Changed from assert_called_once()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_generate_educational_environment(self, terrain_agent):
         """Test generating educational environment."""
         subject = "Geography"
@@ -351,7 +351,7 @@ class TestScriptAgent:
             agent.llm = mock_llm
             return agent
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_generate_game_script(self, script_agent):
         """Test generating game script."""
         request = {
@@ -366,7 +366,7 @@ class TestScriptAgent:
         assert "Players" in result
         assert script_agent.llm.invoke.called
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_generate_ui_script(self, script_agent):
         """Test generating UI script."""
         ui_elements = ["quiz_panel", "score_display", "timer"]
@@ -376,7 +376,7 @@ class TestScriptAgent:
         assert result is not None
         assert script_agent.llm.invoke.called
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_optimize_script(self, script_agent):
         """Test script optimization."""
         unoptimized_script = """
@@ -422,7 +422,7 @@ class TestReviewAgent:
             agent.llm = mock_llm
             return agent
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_review_content(self, review_agent):
         """Test reviewing educational content."""
         content = {
@@ -439,7 +439,7 @@ class TestReviewAgent:
         assert "quality_score" in json.loads(result.content)["review"]
         assert review_agent.llm.invoke.called
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_review_lua_script(self, review_agent):
         """Test reviewing Lua scripts."""
         script = """
@@ -498,7 +498,7 @@ class TestSupervisorAgent:
                 agent.managed_agents = mock_agents
                 return agent
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_route_task(self, supervisor_agent):
         """Test task routing to appropriate agent."""
         with patch('agents.base_agent.ChatOpenAI'):
@@ -526,7 +526,7 @@ class TestSupervisorAgent:
             decision = supervisor_agent._routing_decision(state)
             assert decision == "direct"
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_delegate_complex_task(self, supervisor_agent):
         """Test delegating complex tasks to multiple agents."""
         # Mock the execute method for managed agents
@@ -617,7 +617,7 @@ class TestOrchestrator:
                                     orch.supervisor = mock_supervisor
                                     return orch
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_generate_environment(self, orchestrator):
         """Test generating complete educational environment."""
         # Mock the orchestrate method which is called by generate_environment
@@ -646,7 +646,7 @@ class TestOrchestrator:
         assert result.success == True
         assert result.content is not None
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_review_code(self, orchestrator):
         """Test reviewing generated code."""
         # Mock the review_code method
@@ -692,9 +692,9 @@ class TestOrchestrator:
 class TestAgentIntegration:
     """Integration tests for agent interactions."""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.integration
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_full_content_generation_pipeline(self):
         """Test complete content generation pipeline."""
         # This would test real agent interactions if not mocked
@@ -720,9 +720,9 @@ class TestAgentIntegration:
             assert result is not None
             assert result["review"]["approved"] == True
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.integration
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_error_handling(self):
         """Test error handling in agent pipeline."""
         with patch('agents.content_agent.ContentAgent') as MockContentAgent:
@@ -734,9 +734,9 @@ class TestAgentIntegration:
             
             assert "API Error" in str(exc_info.value)
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.integration
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_retry_mechanism(self):
         """Test retry mechanism for failed agent tasks."""
         with patch('agents.quiz_agent.QuizAgent') as MockQuizAgent:
@@ -768,9 +768,9 @@ class TestAgentIntegration:
 class TestAgentPerformance:
     """Performance tests for agents."""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.performance
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_response_time(self):
         """Test agent response time is within acceptable limits."""
         import time
@@ -786,9 +786,9 @@ class TestAgentPerformance:
             response_time = end_time - start_time
             assert response_time < 5.0  # Should respond within 5 seconds
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.performance
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_parallel_agent_execution(self):
         """Test parallel execution of multiple agents."""
         agents = []
@@ -842,7 +842,7 @@ class TestTestingAgent:
         assert TestType.UNIT in testing_agent.test_commands
         assert TestType.INTEGRATION in testing_agent.test_commands
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_execute_unit_tests(self, testing_agent, mock_subprocess_run):
         """Test executing unit tests"""
         task = "run unit tests"
@@ -856,7 +856,7 @@ class TestTestingAgent:
         assert result.output["test_type"] == "unit"
         mock_subprocess_run.assert_called()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_execute_integration_tests(self, testing_agent, mock_subprocess_run):
         """Test executing integration tests"""
         task = "run integration tests"
@@ -869,7 +869,7 @@ class TestTestingAgent:
         assert "test_type" in result.output
         assert result.output["test_type"] == "integration"
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_execute_all_tests(self, testing_agent, mock_subprocess_run):
         """Test executing all tests with coverage"""
         # Mock coverage output
@@ -884,7 +884,7 @@ class TestTestingAgent:
         assert result.success == True
         assert "result" in result.output
     
-    @pytest.mark.asyncio 
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_generate_coverage_report(self, testing_agent, mock_subprocess_run):
         """Test generating coverage report"""
         # Mock coverage JSON data
@@ -923,7 +923,7 @@ class TestTestingAgent:
         assert result.skipped == 1
         assert result.duration == 2.5
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_trigger_post_completion_tests(self, testing_agent, mock_subprocess_run):
         """Test triggering tests after another agent completes"""
         agent_name = "ContentAgent"
@@ -944,7 +944,7 @@ class TestTestingAgent:
         assert testing_agent._determine_test_type_for_agent("ScriptAgent", {}) == TestType.UNIT
         assert testing_agent._determine_test_type_for_agent("UnknownAgent", {}) == TestType.UNIT
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_validate_agent_output(self, testing_agent, mock_subprocess_run):
         """Test validating output from another agent"""
         agent_name = "ScriptAgent"
@@ -974,7 +974,7 @@ class TestTestingAgent:
         assert "average_pass_rate" in metrics
         assert metrics["total_test_runs"] == 2
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_health_check(self, testing_agent):
         """Test testing system health check"""
         with patch('subprocess.run') as mock_run:

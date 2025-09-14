@@ -5,7 +5,7 @@ import pytest
 from core.sparc.state_manager import StateManager, StateType
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_initialize_state_defaults_populates_metadata_and_history():
     manager = StateManager(history_size=10)
 
@@ -25,7 +25,7 @@ async def test_initialize_state_defaults_populates_metadata_and_history():
     assert len(manager.get_recent_states(5)) >= 1
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_initialize_state_with_custom_data_sets_educational_context():
     manager = StateManager(history_size=10)
 
@@ -41,7 +41,7 @@ async def test_initialize_state_with_custom_data_sets_educational_context():
     assert state.state_type == StateType.EDUCATIONAL_CONTENT
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_calculate_reward_balances_objectives_and_time():
     manager = StateManager()
 

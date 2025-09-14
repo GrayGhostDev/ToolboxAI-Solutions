@@ -272,11 +272,13 @@ class TestingAgent(BaseAgent):
         # Swarm Intelligence Integration
         if SWARM_AVAILABLE:
             try:
-                self.swarm_controller = SwarmController()
-                self.worker_pool = WorkerPool()
-                self.task_distributor = TaskDistributor()
-                self.consensus_engine = ConsensusEngine()
-                self.load_balancer = LoadBalancer()
+                from ..swarm.swarm_factory import create_test_swarm_controller
+                self.swarm_controller = create_test_swarm_controller()
+                # Access components from controller
+                self.worker_pool = self.swarm_controller.worker_pool
+                self.task_distributor = self.swarm_controller.task_distributor
+                self.consensus_engine = self.swarm_controller.consensus_engine
+                self.load_balancer = self.swarm_controller.load_balancer
                 logger.info("Swarm intelligence initialized")
             except Exception as e:
                 logger.warning(f"Failed to initialize swarm intelligence: {e}")

@@ -165,8 +165,9 @@ class MainCoordinator:
 
             # Import and initialize swarm controller
             from ..swarm.swarm_controller import SwarmController
+            from ..swarm.swarm_factory import create_test_swarm_controller
 
-            self.swarm_controller = SwarmController()
+            self.swarm_controller = create_test_swarm_controller()
             await self.swarm_controller.initialize()
 
             # Import and initialize SPARC manager

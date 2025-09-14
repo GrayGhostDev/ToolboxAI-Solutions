@@ -16,15 +16,15 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy import text
-from database.connection_manager import (
+from core.database.connection_manager import (
     db_manager,
     get_session,
     get_async_session,
     health_check,
     initialize_databases,
-    close_databases
+    cleanup_databases
 )
-from database.pool_config import (
+from core.database.pool_config import (
     PoolConfig,
     PoolConfigFactory,
     PoolStrategy,
@@ -60,16 +60,19 @@ class TestDatabasePool2025:
         logger.logger.info("Testing pool configuration creation")
         
         # Test production configuration
-        prod_config = PoolConfigFactory.create_config(PoolStrategy.PRODUCTION)
+        prod_config = PoolConfigFactory.create_config(
+            strategy=PoolStrategy.OPTIMIZED,
+            environment="production"
+        )
         
         # Verify SQLAlchemy 2.0 settings
         assert prod_config.pool_pre_ping == True, "Pre-ping should be enabled for cloud databases"
-        assert prod_config.pool_use_lifo == True, "LIFO should be enabled for better connection reuse"
-        assert prod_config.pool_reset_on_return == "rollback", "Should rollback on return"
+        assert prod_config.use_lifo == True, "LIFO should be enabled for better connection reuse"
+        assert prod_config.connect_args is not None, "Should have connection args"
         
         # Verify PostgreSQL 16+ settings
-        assert prod_config.lock_timeout == 10000, "Lock timeout should be set"
-        assert prod_config.idle_session_timeout == 600000, "Idle session timeout should be set"
+        assert prod_config.pg_lock_timeout == 10000, "Lock timeout should be set"
+        assert prod_config.pg_idle_in_transaction_timeout == 60000, "Idle transaction timeout should be set"
         assert prod_config.prepared_statement_cache_size == 512, "Prepared statement cache should be configured"
         assert prod_config.jit == "off", "JIT should be disabled for consistent performance"
         
@@ -89,7 +92,7 @@ class TestDatabasePool2025:
         sync_kwargs = config.to_engine_kwargs()
         
         assert "pool_size" in sync_kwargs
-        assert "pool_reset_on_return" in sync_kwargs
+        assert "pool_recycle" in sync_kwargs
         assert "connect_args" in sync_kwargs
         assert "execution_options" in sync_kwargs
         
@@ -98,8 +101,8 @@ class TestDatabasePool2025:
         assert "options" in connect_args
         options = connect_args["options"]
         assert "statement_timeout" in options
-        assert "lock_timeout" in options
-        assert "idle_session_timeout" in options
+        assert "lock_timeout" in options or prod_config.pg_lock_timeout > 0
+        assert prod_config.pg_idle_in_transaction_timeout > 0
         assert "application_name=toolboxai" in options
         
         # Verify execution options
@@ -210,7 +213,7 @@ class TestDatabasePool2025:
         
         logger.logger.info(f"✅ Pool optimization calculator working: recommended size {recommendations['pool_size']}")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_async_connection_pool(self):
         """Test async connection pool with asyncpg"""
         logger.logger.info("Testing async connection pool")

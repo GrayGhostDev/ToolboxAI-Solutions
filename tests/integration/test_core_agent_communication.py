@@ -100,6 +100,7 @@ class CoreAgentCommunicationTester:
         
         return self._generate_test_report()
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_initialization(self) -> bool:
         """Test that all agents initialize properly"""
         try:
@@ -126,6 +127,7 @@ class CoreAgentCommunicationTester:
             logger.error(f"Agent initialization test failed: {e}")
             return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_execution(self) -> bool:
         """Test individual agent execution"""
         try:
@@ -165,6 +167,7 @@ class CoreAgentCommunicationTester:
             logger.error(f"Agent execution test failed: {e}")
             return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_collaboration(self) -> bool:
         """Test agent-to-agent collaboration"""
         try:
@@ -210,6 +213,7 @@ class CoreAgentCommunicationTester:
             logger.error(f"Agent collaboration test failed: {e}")
             return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_task_result_structure(self) -> bool:
         """Test TaskResult structure and methods"""
         try:
@@ -244,6 +248,7 @@ class CoreAgentCommunicationTester:
             logger.error(f"TaskResult structure test failed: {e}")
             return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_error_handling(self) -> bool:
         """Test error handling in agents"""
         try:

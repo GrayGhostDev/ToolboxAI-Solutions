@@ -10,6 +10,7 @@ pytestmark = pytest.mark.skipif(
     reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
 )
 
+@pytest.mark.asyncio(loop_scope="function")
 async def test_databases():
     """Test all database connections with real queries"""
     

@@ -18,14 +18,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import pytest_asyncio
 
-# Skip integration tests by default, enable with RUN_INTEGRATION_TESTS=1
+# Integration tests are now enabled by default since we've fixed the issues
+# To skip, set SKIP_INTEGRATION_TESTS=1
 pytestmark = pytest.mark.skipif(
-    not os.environ.get('RUN_INTEGRATION_TESTS'),
-    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+    os.environ.get('SKIP_INTEGRATION_TESTS'),
+    reason="Integration tests manually disabled. Remove SKIP_INTEGRATION_TESTS to enable"
 )
 
 # Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src" / "roblox-environment"))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Import all components
 from core.agents.orchestrator import Orchestrator
@@ -124,7 +125,7 @@ class TestAgentSystemIntegration:
             # Close MCP server if running
             pass
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_complete_content_generation_workflow(self, setup_system):
         """Test the complete content generation workflow."""
         system = setup_system
@@ -197,7 +198,7 @@ class TestAgentSystemIntegration:
             assert result.review is not None
             assert result.review["approved"] is True
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_sparc_framework_integration(self, setup_system):
         """Test SPARC framework integration with agents."""
         system = setup_system
@@ -221,7 +222,7 @@ class TestAgentSystemIntegration:
             assert state is not None
             assert state == initial_state
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_swarm_parallel_execution(self, setup_system):
         """Test swarm intelligence parallel task execution."""
         system = setup_system
@@ -252,7 +253,7 @@ class TestAgentSystemIntegration:
         assert len(results) == len(tasks)
         assert all(task_id is not None for task_id in results)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_mcp_context_management(self, setup_system):
         """Test MCP context management across agents."""
         system = setup_system
@@ -279,7 +280,7 @@ class TestAgentSystemIntegration:
                 retrieved = await mcp._handle_query_context({"query": "session"}, None)
                 assert retrieved["session_id"] == "test-session"
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_coordinator_orchestration(self, setup_system):
         """Test main coordinator orchestrating all components."""
         system = setup_system
@@ -319,7 +320,7 @@ class TestAgentSystemIntegration:
             assert len(result["components_generated"]) == 5
             assert result["time_taken"] < 10  # Should be reasonably fast
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_error_recovery_workflow(self, setup_system):
         """Test error recovery in agent workflow."""
         system = setup_system
@@ -347,7 +348,7 @@ class TestAgentSystemIntegration:
             assert result is not None
             assert result.output == "content"
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_consensus_mechanism(self, setup_system):
         """Test consensus mechanism for quality control."""
         system = setup_system
@@ -381,7 +382,7 @@ class TestAgentSystemIntegration:
             assert result.confidence > 0.9
             assert result.final_result == "Content C"
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_resource_optimization(self, setup_system):
         """Test resource optimization in agent system."""
         system = setup_system
@@ -403,7 +404,7 @@ class TestAgentSystemIntegration:
             assert sum(optimization["memory_allocation"].values()) == 1.0
             assert optimization["optimizations_applied"]  # Check list is not empty
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_end_to_end_educational_experience(self, setup_system):
         """Test complete educational experience generation."""
         system = setup_system
@@ -462,7 +463,7 @@ class TestAgentSystemIntegration:
 class TestAgentCommunication:
     """Test agent-to-agent communication and coordination."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_supervisor_to_agent_communication(self):
         """Test supervisor communicating with sub-agents."""
         supervisor = SupervisorAgent()
@@ -485,7 +486,7 @@ class TestAgentCommunication:
             assert result.success is True
             assert "lesson" in result.output
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_pipeline_flow(self):
         """Test data flow through agent pipeline."""
         # Create pipeline: Content -> Quiz -> Review
@@ -548,7 +549,7 @@ class TestAgentCommunication:
         assert "quiz" in data
         assert data["approved"] is True
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_state_synchronization(self):
         """Test state synchronization between agents."""
         sync_coordinator = SyncCoordinator()
@@ -575,7 +576,7 @@ class TestAgentCommunication:
 class TestSystemPerformance:
     """Performance tests for the integrated system."""
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.performance
     async def test_system_throughput(self):
         """Test system throughput with multiple concurrent requests."""
@@ -611,7 +612,7 @@ class TestSystemPerformance:
             assert all(r.success is True for r in results)
             assert throughput > 1  # At least 1 request per second
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.performance
     async def test_memory_efficiency(self):
         """Test memory efficiency of the system."""
@@ -643,7 +644,7 @@ class TestSystemPerformance:
             # Should not leak excessive memory
             assert memory_increase < 100  # Less than 100MB increase
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.performance
     async def test_response_time_under_load(self):
         """Test response time under heavy load."""

@@ -19,7 +19,7 @@ pytestmark = pytest.mark.skip(reason="Performance tests require external service
 class TestDatabasePerformance:
     """Database performance and optimization tests"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_database_connection_performance(self):
         """Test database connection establishment and pooling"""
         try:
@@ -59,7 +59,7 @@ class TestDatabasePerformance:
         except ImportError:
             pytest.skip("DatabaseManager not available")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_query_performance(self):
         """Test database query performance for common operations"""
         try:
@@ -118,7 +118,7 @@ class TestDatabasePerformance:
         except ImportError:
             pytest.skip("Database repositories not available")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_concurrent_database_access(self):
         """Test database performance under concurrent access"""
         try:
@@ -187,7 +187,7 @@ class TestDatabasePerformance:
         except ImportError:
             pytest.skip("DatabaseManager not available")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_transaction_performance(self):
         """Test database transaction performance"""
         try:
@@ -229,7 +229,7 @@ class TestDatabasePerformance:
         except ImportError:
             pytest.skip("DatabaseManager not available")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_large_result_set_performance(self):
         """Test performance with large result sets"""
         try:
@@ -289,7 +289,7 @@ class TestDatabasePerformance:
         except ImportError:
             pytest.skip("DatabaseManager not available")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_connection_pool_efficiency(self):
         """Test database connection pool efficiency"""
         try:

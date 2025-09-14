@@ -56,6 +56,7 @@ from apps.backend.api.auth.auth import JWTManager
 
 
 @pytest.fixture
+@pytest.mark.asyncio(loop_scope="function")
 async def test_db():
     """Create test database session"""
     # Use in-memory SQLite for testing
@@ -75,6 +76,7 @@ async def test_db():
 
 
 @pytest.fixture
+@pytest.mark.asyncio(loop_scope="function")
 async def test_user(test_db):
     """Create test user"""
     user_repo = UserRepository(test_db)
@@ -91,6 +93,7 @@ async def test_user(test_db):
 
 
 @pytest.fixture
+@pytest.mark.asyncio(loop_scope="function")
 async def test_course(test_db, test_user):
     """Create test course"""
     course_repo = CourseRepository(test_db)
@@ -108,6 +111,7 @@ async def test_course(test_db, test_user):
 
 
 @pytest.fixture
+@pytest.mark.asyncio(loop_scope="function")
 async def test_lesson(test_db, test_course):
     """Create test lesson"""
     lesson_repo = LessonRepository(test_db)
@@ -126,7 +130,7 @@ async def test_lesson(test_db, test_course):
 class TestContentGenerationWorkflow:
     """Test end-to-end content generation workflow"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_complete_content_generation(self, test_db, test_user, test_course, test_lesson):
         """Test generating complete educational content"""
         # Initialize orchestrator
@@ -166,7 +170,7 @@ class TestContentGenerationWorkflow:
         assert result["terrain"]["script"] is not None
         assert len(result["gamification"]["achievements"]) > 0
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_content_persistence(self, test_db, test_lesson):
         """Test saving generated content to database"""
         from core.database.repositories import ContentRepository
@@ -195,7 +199,7 @@ class TestContentGenerationWorkflow:
         assert retrieved.title == "Variables Introduction"
         assert retrieved.ai_generated is True
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_content_approval_workflow(self, test_db, test_user, test_lesson):
         """Test content review and approval workflow"""
         from core.database.repositories import ContentRepository
@@ -237,7 +241,7 @@ class TestContentGenerationWorkflow:
 class TestQuizWorkflow:
     """Test quiz creation and attempt workflow"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_quiz_generation_and_attempt(self, test_db, test_user, test_lesson):
         """Test complete quiz workflow from generation to completion"""
         quiz_repo = QuizRepository(test_db)
@@ -312,7 +316,7 @@ class TestQuizWorkflow:
         assert completed.passed is True
         assert completed.score == 20  # Both questions correct
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_adaptive_quiz_generation(self, test_db, test_user, test_lesson):
         """Test adaptive quiz generation based on user performance"""
         progress_repo = ProgressRepository(test_db)
@@ -352,7 +356,7 @@ class TestQuizWorkflow:
 class TestProgressTrackingWorkflow:
     """Test user progress tracking workflow"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_lesson_progress_tracking(self, test_db, test_user, test_course, test_lesson):
         """Test tracking user progress through lessons"""
         progress_repo = ProgressRepository(test_db)
@@ -389,7 +393,7 @@ class TestProgressTrackingWorkflow:
         assert progress.completion_status == "completed"
         assert progress.completed_at is not None
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_course_progress_calculation(self, test_db, test_user, test_course):
         """Test calculating overall course progress"""
         lesson_repo = LessonRepository(test_db)
@@ -439,7 +443,7 @@ class TestProgressTrackingWorkflow:
 class TestAnalyticsWorkflow:
     """Test analytics tracking and reporting workflow"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_event_tracking(self, test_db, test_user):
         """Test tracking various analytics events"""
         analytics_repo = AnalyticsRepository(test_db)
@@ -480,7 +484,7 @@ class TestAnalyticsWorkflow:
         assert stats["total_events"] == 1
         assert stats["unique_users"] == 1
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_performance_analytics(self, test_db, test_user, test_course):
         """Test performance analytics generation"""
         analytics_repo = AnalyticsRepository(test_db)
@@ -518,7 +522,7 @@ class TestAnalyticsWorkflow:
 class TestDatabaseIntegration:
     """Test database transaction and relationship handling"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_cascade_deletion(self, test_db, test_user, test_course, test_lesson):
         """Test cascade deletion of related records"""
         from core.database.repositories import ContentRepository, QuizRepository
@@ -550,7 +554,7 @@ class TestDatabaseIntegration:
         assert await content_repo.get(content.id) is None
         assert await quiz_repo.get(quiz.id) is None
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_transaction_rollback(self, test_db, test_user):
         """Test transaction rollback on error"""
         user_repo = UserRepository(test_db)
@@ -577,7 +581,7 @@ class TestDatabaseIntegration:
 class TestAgentCoordination:
     """Test multi-agent coordination in workflows"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_parallel_agent_execution(self):
         """Test parallel execution of multiple agents"""
         supervisor = SupervisorAgent()
@@ -604,7 +608,7 @@ class TestAgentCoordination:
         # Assuming each task takes at least 0.5 seconds if serial
         assert execution_time < len(tasks) * 0.5
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_error_recovery(self):
         """Test agent error handling and recovery"""
         orchestrator = Orchestrator()

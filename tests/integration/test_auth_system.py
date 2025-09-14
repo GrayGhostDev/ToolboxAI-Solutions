@@ -17,6 +17,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+@pytest.mark.asyncio(loop_scope="function")
 async def test_authentication_with_real_users():
     """Test authentication using real users from database"""
     
@@ -128,6 +129,7 @@ async def test_authentication_with_real_users():
     return True
 
 
+@pytest.mark.asyncio(loop_scope="function")
 async def test_protected_endpoints():
     """Test protected endpoints with authentication"""
     

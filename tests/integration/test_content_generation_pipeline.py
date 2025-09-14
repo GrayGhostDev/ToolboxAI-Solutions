@@ -104,6 +104,7 @@ class ContentGenerationPipelineTest:
             logger.error(f"❌ Login error: {e}")
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_educational_content_creation(self):
         """Test 1: Educational Content Creation"""
         print("\n" + "="*60)
@@ -171,6 +172,7 @@ class ContentGenerationPipelineTest:
             })
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_quiz_generation(self):
         """Test 2: Quiz Generation Functionality"""
         print("\n" + "="*60)
@@ -225,6 +227,7 @@ class ContentGenerationPipelineTest:
             })
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_terrain_generation(self):
         """Test 3: Terrain/Environment Generation"""
         print("\n" + "="*60)
@@ -275,6 +278,7 @@ class ContentGenerationPipelineTest:
             })
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_script_generation(self):
         """Test 4: Script Generation for Roblox"""
         print("\n" + "="*60)
@@ -330,6 +334,7 @@ class ContentGenerationPipelineTest:
             })
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_review_process(self):
         """Test 5: Review and Optimization Process"""
         print("\n" + "="*60)
@@ -391,6 +396,7 @@ class ContentGenerationPipelineTest:
             })
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_end_to_end_workflow(self):
         """Test 6: Complete End-to-End Workflow"""
         print("\n" + "="*60)
@@ -498,6 +504,7 @@ class ContentGenerationPipelineTest:
             })
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_integration_with_systems(self):
         """Test 7: Integration with Supporting Systems"""
         print("\n" + "="*60)
@@ -592,6 +599,7 @@ class ContentGenerationPipelineTest:
         print("\n✅ System integration tested!")
         return True
         
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_performance_metrics(self):
         """Test 8: Performance and Optimization Metrics"""
         print("\n" + "="*60)

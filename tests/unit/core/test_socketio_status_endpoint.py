@@ -2,7 +2,7 @@ import pytest
 from apps.backend.main import socketio_status
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_socketio_status_endpoint_runs():
     result = await socketio_status()
     assert isinstance(result, dict)

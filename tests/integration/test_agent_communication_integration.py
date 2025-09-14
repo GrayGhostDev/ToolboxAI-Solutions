@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """
+import pytest
 Comprehensive Agent Communication and Framework Integration Test
 
 This test validates:
@@ -122,6 +123,7 @@ class AgentCommunicationTester:
         
         return self._generate_test_report()
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_initialization(self) -> bool:
         """Test that all agents initialize properly"""
         try:
@@ -150,6 +152,7 @@ class AgentCommunicationTester:
             logger.error(f"Agent initialization test failed: {e}")
             return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_to_agent_communication(self) -> bool:
         """Test agent-to-agent communication and collaboration"""
         try:
@@ -188,6 +191,7 @@ class AgentCommunicationTester:
             logger.error(f"Agent communication test failed: {e}")
             return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_sparc_framework_integration(self) -> bool:
         """Test SPARC framework integration"""
         if not FRAMEWORKS_AVAILABLE:
@@ -226,6 +230,7 @@ class AgentCommunicationTester:
             logger.error(f"SPARC framework test failed: {e}")
             return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_swarm_controller_coordination(self) -> bool:
         """Test Swarm controller coordination"""
         if not FRAMEWORKS_AVAILABLE:
@@ -276,6 +281,7 @@ class AgentCommunicationTester:
             logger.error(f"Swarm controller test failed: {e}")
             return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_mcp_websocket_integration(self) -> bool:
         """Test MCP WebSocket integration"""
         if not FRAMEWORKS_AVAILABLE:
@@ -313,6 +319,7 @@ class AgentCommunicationTester:
             logger.error(f"MCP WebSocket test failed: {e}")
             return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_content_generation_pipeline(self) -> bool:
         """Test end-to-end content generation pipeline"""
         try:
@@ -357,6 +364,7 @@ class AgentCommunicationTester:
             logger.error(f"Content generation pipeline test failed: {e}")
             return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_environment_creation_system(self) -> bool:
         """Test environment creation system (terrain, objects, scripts, UI)"""
         try:
@@ -407,6 +415,7 @@ class AgentCommunicationTester:
             logger.error(f"Environment creation system test failed: {e}")
             return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_plugin_communication_hub(self) -> bool:
         """Test plugin communication hub functionality"""
         try:
@@ -434,6 +443,7 @@ class AgentCommunicationTester:
             logger.error(f"Plugin communication hub test failed: {e}")
             return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_end_to_end_workflow(self) -> bool:
         """Test complete end-to-end workflow"""
         try:

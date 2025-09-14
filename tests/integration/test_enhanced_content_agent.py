@@ -34,6 +34,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@pytest.mark.asyncio(loop_scope="function")
 async def test_enhanced_content_agent():
     """Test the enhanced Content Agent with real data integration"""
     
@@ -242,6 +243,7 @@ async def test_enhanced_content_agent():
         logger.error("Check the error details above for troubleshooting")
         return False
 
+@pytest.mark.asyncio(loop_scope="function")
 async def test_real_openai_integration():
     """Test real OpenAI API integration if available"""
     

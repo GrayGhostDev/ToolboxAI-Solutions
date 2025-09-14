@@ -8,7 +8,7 @@ from apps.backend.services.websocket_auth import WebSocketAuthSession
 from apps.backend.models import User
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_websocket_token_expiry_increments_metric():
     # Prepare mock websocket
     ws = AsyncMock()
@@ -39,7 +39,7 @@ async def test_websocket_token_expiry_increments_metric():
                 assert ws.send_text.await_count >= 1
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_websocket_auth_error_increments_metric():
     # Prepare mock websocket
     ws = AsyncMock()

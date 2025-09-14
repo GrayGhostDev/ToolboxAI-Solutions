@@ -18,9 +18,11 @@ from datetime import datetime, timezone, timedelta
 from unittest.mock import Mock, AsyncMock, patch
 
 # Skip all tests in this module as they require external services
+# Tests are now enabled by default since we've fixed the issues
+# To skip, set SKIP_INTEGRATION_TESTS=1
 pytestmark = pytest.mark.skipif(
-    not os.environ.get('RUN_INTEGRATION_TESTS'),
-    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+    os.environ.get('SKIP_INTEGRATION_TESTS'),
+    reason="Tests manually disabled. Remove SKIP_INTEGRATION_TESTS to enable"
 )
 
 # Test imports
@@ -80,7 +82,7 @@ class TestWebSocketAuthMiddleware:
         assert not auth_middleware._is_valid_jwt_format("too.many.parts.here")
         assert not auth_middleware._is_valid_jwt_format("")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_valid_token_validation(self, auth_middleware, valid_token):
         """Test validation of valid JWT token"""
         user_info = await auth_middleware.validate_websocket_token(valid_token)
@@ -92,7 +94,7 @@ class TestWebSocketAuthMiddleware:
         assert user_info["role"] == "student"
         assert "full_payload" in user_info
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_expired_token_validation(self, auth_middleware, expired_token):
         """Test validation of expired JWT token"""
         with pytest.raises(WebSocketAuthError) as exc_info:
@@ -101,7 +103,7 @@ class TestWebSocketAuthMiddleware:
         assert exc_info.value.code == 4001
         assert "expired" in exc_info.value.message.lower()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_invalid_token_validation(self, auth_middleware):
         """Test validation of invalid JWT token"""
         with pytest.raises(WebSocketAuthError) as exc_info:
@@ -109,7 +111,7 @@ class TestWebSocketAuthMiddleware:
         
         assert exc_info.value.code == 4001
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_missing_token_validation(self, auth_middleware):
         """Test validation with missing token"""
         with pytest.raises(WebSocketAuthError) as exc_info:
@@ -172,7 +174,7 @@ class TestWebSocketAuthMiddleware:
         assert auth_middleware.unregister_connection(client_id)
         assert not auth_middleware.is_connection_valid(client_id)
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_token_refresh_validation(self, auth_middleware, valid_token):
         """Test token refresh validation"""
         # Register a connection first
@@ -261,7 +263,7 @@ class TestFastAPIWebSocketAuthenticator:
         }
         return JWTManager.create_access_token(user_data)
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_successful_authentication(self, authenticator, mock_websocket, valid_token):
         """Test successful WebSocket authentication"""
         # Set token in query params
@@ -288,7 +290,7 @@ class TestFastAPIWebSocketAuthenticator:
             sent_message = json.loads(mock_websocket.send_text.call_args[0][0])
             assert sent_message["type"] == "auth_success"
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_authentication_without_token(self, authenticator, mock_websocket):
         """Test authentication failure when no token provided"""
         session = await authenticator.authenticate_connection(mock_websocket)
@@ -302,7 +304,7 @@ class TestFastAPIWebSocketAuthenticator:
         assert sent_message["type"] == "auth_error"
         assert "token required" in sent_message["message"].lower()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_authentication_with_invalid_token(self, authenticator, mock_websocket):
         """Test authentication failure with invalid token"""
         mock_websocket.query_params = {"token": "invalid-token"}
@@ -316,7 +318,7 @@ class TestFastAPIWebSocketAuthenticator:
             mock_websocket.send_text.assert_called_once()
             mock_websocket.close.assert_called_once()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_session_token_refresh(self, authenticator, mock_websocket, valid_token):
         """Test session token refresh"""
         # First authenticate
@@ -384,7 +386,7 @@ class TestFastAPIWebSocketAuthenticator:
 class TestWebSocketEndpointIntegration:
     """Integration tests for WebSocket endpoint authentication"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_authenticated_connection_flow(self):
         """Test complete authenticated WebSocket connection flow"""
         from apps.backend.websocket import websocket_endpoint
@@ -439,7 +441,7 @@ class TestWebSocketEndpointIntegration:
 class TestErrorHandling:
     """Test error handling in WebSocket authentication"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_auth_error_handling(self):
         """Test proper error handling for authentication failures"""
         auth_middleware = WebSocketAuthMiddleware("test-secret", "HS256")

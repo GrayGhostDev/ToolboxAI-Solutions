@@ -166,7 +166,7 @@ class TestPluginCommunication:
 class TestScriptGeneration:
     """Test Lua script generation and validation"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_terrain_script_generation(self):
         """Test generating Roblox terrain scripts"""
         terrain_agent = TerrainAgent()
@@ -203,7 +203,7 @@ class TestScriptGeneration:
         # Validate terrain type implementation (theme should be in the script somehow)
         assert "forest" in script.lower() or "tree" in script.lower() or terrain_config["theme"] in script.lower()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_quiz_ui_script_generation(self):
         """Test generating quiz UI scripts"""
         script_agent = ScriptAgent()
@@ -239,7 +239,7 @@ class TestScriptGeneration:
         # Validate quiz elements are referenced
         assert "quiz" in script_content.lower() or any(elem in script_content.lower() for elem in ui_elements)
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_gamification_script_generation(self):
         """Test generating gamification scripts"""
         script_agent = ScriptAgent()
@@ -287,7 +287,7 @@ class TestScriptGeneration:
         result_str = str(result)
         assert "achievement" in result_str.lower() or "First Steps" in result_str
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_script_validation(self):
         """Test Lua script validation"""
         script_agent = ScriptAgent()
@@ -325,7 +325,7 @@ class TestScriptGeneration:
 class TestRealTimeSync:
     """Test real-time synchronization between server and Roblox"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_connection(self, mock_websocket):
         """Test WebSocket connection for real-time updates"""
         # Always use mock but test real WebSocket logic
@@ -344,7 +344,7 @@ class TestRealTimeSync:
         assert data["type"] == "subscribed"
         assert data["channel"] == "roblox_updates"
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_content_update_sync(self, mock_websocket):
         """Test content update synchronization"""
         websocket = mock_websocket
@@ -379,7 +379,7 @@ class TestRealTimeSync:
         assert update_message["type"] == "content_update"
         assert update_message["data"]["lesson_id"] == "123"
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_progress_sync(self):
         """Test progress synchronization between Roblox and server"""
         # Mock HTTP responses directly
@@ -429,7 +429,7 @@ class TestRealTimeSync:
             assert data["progress"] == 75
             assert data["checkpoint"] == "quiz_started"
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_multiplayer_sync(self, mock_websocket):
         """Test multiplayer synchronization in educational games"""
         # Simulate WebSocket connection for multiplayer sync
@@ -466,7 +466,7 @@ class TestRealTimeSync:
 class TestRobloxAPIIntegration:
     """Test integration with Roblox platform APIs"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_place_publishing(self):
         """Test publishing educational content to Roblox place"""
         from unittest.mock import AsyncMock
@@ -510,7 +510,7 @@ class TestRobloxAPIIntegration:
             assert data["status"] == "published"
             assert "place_url" in data
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_asset_upload(self):
         """Test uploading educational assets to Roblox"""
         from unittest.mock import AsyncMock
@@ -552,7 +552,7 @@ class TestRobloxAPIIntegration:
             assert "asset_id" in data
             assert data["status"] == "uploaded"
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_user_authentication(self):
         """Test Roblox user authentication and verification"""
         from unittest.mock import AsyncMock
@@ -598,7 +598,7 @@ class TestRobloxAPIIntegration:
 class TestErrorRecovery:
     """Test error recovery in Roblox integration"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_connection_recovery(self):
         """Test recovery from lost Roblox connection"""
         reconnect_attempts = 0
@@ -624,7 +624,7 @@ class TestErrorRecovery:
         assert reconnect_attempts == max_attempts
         assert result["status"] == "connected"
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_partial_sync_recovery(self):
         """Test recovery from partial synchronization failure"""
         sync_queue = []
@@ -661,7 +661,7 @@ class TestErrorRecovery:
 class TestPerformanceOptimization:
     """Test performance optimizations for Roblox integration"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_batch_script_generation(self, agent_cache):
         """Test batch generation of Lua scripts for efficiency"""
         script_agent = ScriptAgent()
@@ -696,7 +696,7 @@ class TestPerformanceOptimization:
             # Each script should contain Players service
             assert "Players" in script
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_script_caching(self, agent_cache):
         """Test caching of generated scripts"""
         script_agent = ScriptAgent()
@@ -727,7 +727,7 @@ class TestPerformanceOptimization:
         # Cached should be faster (though the difference may be small in tests)
         assert cached_time <= first_time + 0.1  # Allow some tolerance for test timing
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_asset_compression(self):
         """Test compression of assets for Roblox"""
         # Create large asset data

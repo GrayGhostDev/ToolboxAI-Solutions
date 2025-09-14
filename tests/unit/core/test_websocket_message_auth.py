@@ -6,7 +6,7 @@ from apps.backend.services.websocket_auth import WebSocketAuthSession, authentic
 from apps.backend.api.auth.auth import User
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_message_auth_token_expiry_denies():
     # Prepare a session with expired token
     user = User(id="u1", username="user123", email="u@example.com", role="student")

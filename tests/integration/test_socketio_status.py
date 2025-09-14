@@ -10,7 +10,7 @@ pytestmark = pytest.mark.skipif(
     reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
 )
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_socketio_status_endpoint_acks_and_path():
     url = f"{FASTAPI_BASE}/socketio/status"
     async with aiohttp.ClientSession() as session:

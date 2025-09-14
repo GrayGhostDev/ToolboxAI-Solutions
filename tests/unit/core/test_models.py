@@ -400,7 +400,7 @@ class TestSessionModel:
 
 
 # Integration test for model relationships
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_model_relationships():
     """Test relationships between models"""
     # This would require a database session in a real test

@@ -30,6 +30,7 @@ from apps.backend.core.security.rate_limit_manager import (
     clear_all_rate_limits
 )
 
+@pytest.mark.asyncio(loop_scope="function")
 async def test_rate_limiting():
     """Test rate limiting in isolation"""
     

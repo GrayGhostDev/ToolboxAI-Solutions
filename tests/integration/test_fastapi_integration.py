@@ -43,6 +43,7 @@ class FastAPIIntegrationTest:
         }
         return jwt.encode(payload, self.jwt_secret, algorithm="HS256")
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_health_endpoint(self):
         """Test health check endpoint"""
         print("\n🔍 Testing Health Endpoint...")
@@ -65,6 +66,7 @@ class FastAPIIntegrationTest:
             
             return result["success"]
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_authentication(self):
         """Test authentication endpoints"""
         print("\n🔍 Testing Authentication...")
@@ -102,6 +104,7 @@ class FastAPIIntegrationTest:
                 print(f"  📝 Using test JWT token for remaining tests")
                 return test_token
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_content_generation(self, token: str):
         """Test content generation endpoint"""
         print("\n🔍 Testing Content Generation...")
@@ -143,6 +146,7 @@ class FastAPIIntegrationTest:
             
             return result["success"]
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_connection(self):
         """Test WebSocket connection"""
         print("\n🔍 Testing WebSocket Connection...")
@@ -184,6 +188,7 @@ class FastAPIIntegrationTest:
             print(f"  ⚠️  WebSocket connection failed: {e}")
             return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_api_documentation(self):
         """Test API documentation endpoints"""
         print("\n🔍 Testing API Documentation...")
@@ -215,6 +220,7 @@ class FastAPIIntegrationTest:
             
             return result["success"]
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_rate_limiting(self, token: str):
         """Test rate limiting functionality"""
         print("\n🔍 Testing Rate Limiting...")

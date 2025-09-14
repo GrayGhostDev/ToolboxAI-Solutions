@@ -82,7 +82,7 @@ class PerformanceMetrics:
 class TestAPILoadPerformance:
     """Test API endpoint load handling"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_content_generation_load(self):
         """Test content generation endpoint under load"""
         url = "http://localhost:8008/generate_content"
@@ -137,7 +137,7 @@ class TestAPILoadPerformance:
         print(f"\nContent Generation Load Test Results:")
         print(json.dumps(stats, indent=2))
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_authentication_load(self):
         """Test authentication endpoint under load"""
         url = "http://localhost:8008/auth/login"
@@ -180,7 +180,7 @@ class TestAPILoadPerformance:
         print(f"\nAuthentication Load Test Results:")
         print(json.dumps(stats, indent=2))
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_database_query_load(self):
         """Test database query performance under load"""
         url = "http://localhost:8008/courses/search"
@@ -231,7 +231,7 @@ class TestAPILoadPerformance:
 class TestAgentPoolPerformance:
     """Test agent pool performance and scaling"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_pool_scaling(self):
         """Test agent pool scaling under increasing load"""
         from core.agents.orchestrator import Orchestrator
@@ -287,7 +287,7 @@ class TestAgentPoolPerformance:
         print(f"\nAgent Pool Scaling Test Results:")
         print(json.dumps(results, indent=2))
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_memory_usage(self):
         """Test agent memory usage under sustained load"""
         import psutil
@@ -343,7 +343,7 @@ class TestAgentPoolPerformance:
 class TestWebSocketPerformance:
     """Test WebSocket connection limits and performance"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_connection_limit(self):
         """Test maximum concurrent WebSocket connections"""
         url = "ws://localhost:9876"
@@ -390,7 +390,7 @@ class TestWebSocketPerformance:
         print(f"Successful: {successful_count}")
         print(f"Failed: {failed_connections}")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_message_throughput(self):
         """Test WebSocket message throughput"""
         url = "ws://localhost:9876"
@@ -451,7 +451,7 @@ class TestWebSocketPerformance:
 class TestCachingPerformance:
     """Test caching layer performance"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_cache_hit_performance(self):
         """Test performance improvement with caching"""
         from apps.backend.performance import cache_manager
@@ -524,7 +524,7 @@ class TestCachingPerformance:
 class TestSystemPerformance:
     """Test overall system performance"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_end_to_end_latency(self):
         """Test end-to-end latency for complete workflow"""
         metrics = PerformanceMetrics()
@@ -577,7 +577,7 @@ class TestSystemPerformance:
         print(f"\nEnd-to-End Latency Test:")
         print(json.dumps(stats, indent=2))
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_resource_usage(self):
         """Test system resource usage under normal load"""
         import psutil

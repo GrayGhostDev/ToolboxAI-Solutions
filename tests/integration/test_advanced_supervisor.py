@@ -17,9 +17,11 @@ import asyncio
 import os
 
 # Skip integration tests by default, enable with RUN_INTEGRATION_TESTS=1
+# Tests are now enabled by default since we've fixed the issues
+# To skip, set SKIP_INTEGRATION_TESTS=1
 pytestmark = pytest.mark.skipif(
-    not os.environ.get('RUN_INTEGRATION_TESTS'),
-    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+    os.environ.get('SKIP_INTEGRATION_TESTS'),
+    reason="Tests manually disabled. Remove SKIP_INTEGRATION_TESTS to enable"
 )
 import json
 from datetime import datetime, timedelta
@@ -54,7 +56,7 @@ class TestAdvancedSupervisorAgent:
         # Cleanup
         await supervisor.shutdown()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_supervisor_initialization(self, supervisor):
         """Test supervisor initialization"""
         
@@ -66,7 +68,7 @@ class TestAdvancedSupervisorAgent:
         # Check that background tasks are started
         assert len(supervisor._background_tasks) > 0
     
-    @pytest.mark.asyncio 
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_educational_content_workflow(self, supervisor):
         """Test complete educational content generation workflow"""
         
@@ -108,7 +110,7 @@ class TestAdvancedSupervisorAgent:
         print(f"Workflow Status: {execution.status}")
         print(f"Execution Time: {execution.metrics.get('execution_time', 0):.2f}s")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_lesson_creation_workflow(self, supervisor):
         """Test lesson creation workflow"""
         
@@ -140,7 +142,7 @@ class TestAdvancedSupervisorAgent:
         print(f"Lesson Creation Status: {execution.status}")
         print(f"User ID: {execution.user_id}")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_roblox_environment_workflow(self, supervisor):
         """Test Roblox environment creation workflow"""
         
@@ -169,7 +171,7 @@ class TestAdvancedSupervisorAgent:
         assert execution.workflow_name == "roblox_environment"
         print(f"Roblox Environment Status: {execution.status}")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_assessment_generation_workflow(self, supervisor):
         """Test assessment generation workflow"""
         
@@ -199,7 +201,7 @@ class TestAdvancedSupervisorAgent:
         assert execution.workflow_name == "assessment_generation"
         print(f"Assessment Generation Status: {execution.status}")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_health_monitoring(self, supervisor):
         """Test agent health monitoring and circuit breaker"""
         
@@ -226,7 +228,7 @@ class TestAdvancedSupervisorAgent:
         
         print(f"Health Report: {json.dumps(health_report, indent=2, default=str)}")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.skip(reason="Requires external services - hangs in test environment")
     async def test_performance_monitoring(self, supervisor):
         """Test performance monitoring and metrics"""
@@ -259,7 +261,7 @@ class TestAdvancedSupervisorAgent:
         
         print(f"Performance Report: {json.dumps(performance_report, indent=2, default=str)}")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_workflow_cancellation(self, supervisor):
         """Test workflow cancellation"""
         
@@ -278,7 +280,7 @@ class TestAdvancedSupervisorAgent:
         assert status is not None
         assert status.execution_id == execution_id
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_workflow_templates(self, supervisor):
         """Test workflow template management"""
         
@@ -307,7 +309,7 @@ class TestAdvancedSupervisorAgent:
         
         assert execution.workflow_name == "science_lab"
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @patch('agents.supervisor_advanced.DATABASE_AVAILABLE', True)
     @patch('agents.supervisor_advanced.get_async_session')
     async def test_database_integration(self, mock_session, supervisor):
@@ -330,7 +332,7 @@ class TestAdvancedSupervisorAgent:
         assert execution.execution_id is not None
         print(f"Database Integration Test Status: {execution.status}")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @patch('agents.supervisor_advanced.SPARC_AVAILABLE', True)
     async def test_sparc_integration(self, supervisor):
         """Test SPARC framework integration"""
@@ -349,7 +351,7 @@ class TestAdvancedSupervisorAgent:
             assert execution.execution_id is not None
             print(f"SPARC Integration Test Status: {execution.status}")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_error_handling_and_recovery(self, supervisor):
         """Test error handling and recovery mechanisms"""
         
@@ -385,7 +387,7 @@ class TestAdvancedSupervisorAgent:
         assert execution.error is not None
         print(f"Error Handling Test - Status: {execution.status}, Error: {execution.error}")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_concurrent_workflows(self, supervisor):
         """Test concurrent workflow execution"""
         
@@ -414,7 +416,7 @@ class TestAdvancedSupervisorAgent:
         
         print(f"Concurrent Workflows: {len(results)} total, {successful_executions} successful")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_workflow_state_persistence(self, supervisor):
         """Test workflow state persistence and recovery"""
         
@@ -434,7 +436,7 @@ class TestAdvancedSupervisorAgent:
         assert retrieved_execution.execution_id == execution_id
         assert retrieved_execution.workflow_name == execution.workflow_name
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_quality_validation(self, supervisor):
         """Test result quality validation"""
         
@@ -468,7 +470,7 @@ class TestBackwardsCompatibility:
         
         return SupervisorAgent()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_advanced_workflow_integration(self, basic_supervisor):
         """Test advanced workflow integration through basic supervisor"""
         
@@ -502,7 +504,7 @@ class TestBackwardsCompatibility:
         except Exception as e:
             print(f"Advanced features not available: {e}")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_workflow_templates_access(self, basic_supervisor):
         """Test access to workflow templates through basic supervisor"""
         
@@ -522,7 +524,7 @@ class TestBackwardsCompatibility:
         
         print(f"Available templates: {list(templates.keys())}")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_system_health_access(self, basic_supervisor):
         """Test system health access through basic supervisor"""
         
@@ -545,7 +547,7 @@ class TestBackwardsCompatibility:
 class TestRealDataIntegration:
     """Test integration with real database and external services"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.integration
     async def test_real_database_workflow(self):
         """Test workflow with actual database connection"""
@@ -581,7 +583,7 @@ class TestRealDataIntegration:
             await supervisor.shutdown()
             db_manager.close_all()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.integration  
     async def test_real_mcp_integration(self):
         """Test integration with actual MCP server"""
@@ -616,7 +618,7 @@ class TestRealDataIntegration:
 class TestPerformanceAndLoad:
     """Test performance and load handling"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.performance
     async def test_high_load_workflow_execution(self):
         """Test system under high workflow load"""
@@ -662,7 +664,7 @@ class TestPerformanceAndLoad:
         finally:
             await supervisor.shutdown()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.performance
     async def test_memory_usage_monitoring(self):
         """Test memory usage during extended operation"""

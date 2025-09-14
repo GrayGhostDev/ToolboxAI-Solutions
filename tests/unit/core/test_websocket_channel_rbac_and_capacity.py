@@ -7,7 +7,7 @@ from apps.backend.services.websocket_handler import WebSocketManager
 from apps.backend.core.config import settings
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_websocket_channel_rbac_by_prefix():
     # Configure prefixes for this test
     original_prefixes = dict(getattr(settings, "WS_CHANNEL_ROLE_PREFIXES", {}))
@@ -32,7 +32,7 @@ async def test_websocket_channel_rbac_by_prefix():
         settings.WS_CHANNEL_ROLE_PREFIXES = original_prefixes
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_ws_capacity_enforcement():
     # Enforce small capacity
     original_max = settings.WS_MAX_CONNECTIONS

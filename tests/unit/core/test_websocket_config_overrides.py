@@ -9,7 +9,7 @@ from apps.backend.services.rate_limit_manager import get_rate_limit_manager
 from apps.backend.core.security.rate_limit_manager import RateLimitMode
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_rbac_override_via_settings():
     # Override RBAC so that user_message requires teacher
     original = dict(getattr(settings, "WS_RBAC_REQUIRED_ROLES", {}))
@@ -34,7 +34,7 @@ async def test_rbac_override_via_settings():
         settings.WS_RBAC_REQUIRED_ROLES = original
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_ws_rate_limit_override(monkeypatch):
     # Set WS rate limit to 1 for quick test
     original_ws = getattr(settings, "WS_RATE_LIMIT_PER_MINUTE", 100)

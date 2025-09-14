@@ -12,7 +12,7 @@ from apps.backend.services.rate_limit_manager import get_rate_limit_manager
 from apps.backend.core.security.rate_limit_manager import RateLimitMode
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_socketio_rbac_blocks_teacher_event_for_student(monkeypatch):
     # Save originals
     original_roles = dict(getattr(settings, "SIO_RBAC_REQUIRED_ROLES", {}))
@@ -51,7 +51,7 @@ async def test_socketio_rbac_blocks_teacher_event_for_student(monkeypatch):
         connected_clients.pop("sid-student-1", None)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_socketio_rate_limit_enforced_for_ping(monkeypatch):
     # Configure tight rate limit
     original_limit = getattr(settings, "SIO_RATE_LIMIT_PER_MINUTE", 100)

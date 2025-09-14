@@ -114,6 +114,7 @@ class FastAPITester:
         # Print summary
         self.print_summary()
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_imports(self):
         """Test all required imports"""
         logger.info("\n🔍 Testing Python Imports...")
@@ -140,6 +141,7 @@ class FastAPITester:
             except ImportError as e:
                 self.results.add_fail(f"Import {display_name}", str(e))
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_dependencies(self):
         """Test external service dependencies"""
         logger.info("\n🔗 Testing External Dependencies...")
@@ -177,6 +179,7 @@ class FastAPITester:
         else:
             self.results.add_skip("OpenAI API key", "Not configured")
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_server_startup(self):
         """Test server startup and health"""
         logger.info("\n🚀 Testing Server Startup...")
@@ -197,6 +200,7 @@ class FastAPITester:
         except Exception as e:
             self.results.add_fail("Server connection", str(e))
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_basic_endpoints(self):
         """Test basic API endpoints"""
         logger.info("\n📡 Testing Basic Endpoints...")
@@ -224,6 +228,7 @@ class FastAPITester:
         except Exception as e:
             self.results.add_fail("HTTP client", str(e))
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_authentication(self):
         """Test authentication system"""
         logger.info("\n🔐 Testing Authentication...")
@@ -263,6 +268,7 @@ class FastAPITester:
         except Exception as e:
             self.results.add_skip("Authentication tests", str(e))
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_content_generation(self):
         """Test content generation endpoint"""
         logger.info("\n📝 Testing Content Generation...")
@@ -297,6 +303,7 @@ class FastAPITester:
         except Exception as e:
             self.results.add_skip("Content generation", str(e))
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_quiz_generation(self):
         """Test quiz generation endpoint"""
         logger.info("\n❓ Testing Quiz Generation...")
@@ -331,6 +338,7 @@ class FastAPITester:
         except Exception as e:
             self.results.add_skip("Quiz generation", str(e))
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_terrain_generation(self):
         """Test terrain generation endpoint"""
         logger.info("\n🏔️ Testing Terrain Generation...")
@@ -363,6 +371,7 @@ class FastAPITester:
         except Exception as e:
             self.results.add_skip("Terrain generation", str(e))
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_connection(self):
         """Test WebSocket connection"""
         logger.info("\n🔌 Testing WebSocket Connection...")
@@ -396,6 +405,7 @@ class FastAPITester:
         except ImportError:
             self.results.add_skip("WebSocket tests", "websockets module not installed")
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_flask_bridge(self):
         """Test Flask bridge server integration"""
         logger.info("\n🌉 Testing Flask Bridge Server...")
@@ -431,6 +441,7 @@ class FastAPITester:
         except Exception as e:
             self.results.add_skip("Flask bridge tests", str(e))
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_mcp_integration(self):
         """Test MCP (Model Context Protocol) integration"""
         logger.info("\n🧠 Testing MCP Integration...")
@@ -457,6 +468,7 @@ class FastAPITester:
         except ImportError:
             self.results.add_skip("MCP tests", "websockets module not installed")
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_system(self):
         """Test LangChain agent system"""
         logger.info("\n🤖 Testing Agent System...")
@@ -479,6 +491,7 @@ class FastAPITester:
         except ImportError as e:
             self.results.add_skip("Agent system", str(e))
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_sparc_framework(self):
         """Test SPARC framework components"""
         logger.info("\n⚡ Testing SPARC Framework...")
@@ -502,6 +515,7 @@ class FastAPITester:
         except ImportError as e:
             self.results.add_skip("SPARC framework", str(e))
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_swarm_intelligence(self):
         """Test swarm intelligence system"""
         logger.info("\n🐝 Testing Swarm Intelligence...")
@@ -523,6 +537,7 @@ class FastAPITester:
         except ImportError as e:
             self.results.add_skip("Swarm intelligence", str(e))
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_error_handling(self):
         """Test error handling and validation"""
         logger.info("\n⚠️ Testing Error Handling...")
@@ -556,6 +571,7 @@ class FastAPITester:
         except Exception as e:
             self.results.add_skip("Error handling tests", str(e))
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_performance(self):
         """Test performance metrics"""
         logger.info("\n⚡ Testing Performance...")

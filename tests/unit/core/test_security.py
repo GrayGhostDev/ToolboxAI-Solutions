@@ -152,6 +152,7 @@ class TestWebSocketSecurity:
     def message_handler(self):
         return MessageHandler(WebSocketManager())
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_rbac(self, message_handler):
         """Test WebSocket RBAC enforcement"""
         # Create mock connections with different roles
@@ -187,6 +188,7 @@ class TestWebSocketSecurity:
         call_args = teacher_conn.send.call_args[0][0]
         assert call_args.get("type") == "broadcast_sent"
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_rate_limiting(self, connection_manager):
         """Test WebSocket rate limiting"""
         client_id = "test_client"

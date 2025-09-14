@@ -79,6 +79,7 @@ class AgentIntegrationTest:
         self.test_results = []
         self.start_time = datetime.now()
         
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_initialization(self):
         """Test 1: Initialize all agents"""
         print("\n" + "="*60)
@@ -121,6 +122,7 @@ class AgentIntegrationTest:
             })
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_database_integration(self):
         """Test 2: Database Integration"""
         print("\n" + "="*60)
@@ -181,6 +183,7 @@ class AgentIntegrationTest:
             })
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_sparc_integration(self):
         """Test 3: SPARC Framework Integration"""
         print("\n" + "="*60)
@@ -238,6 +241,7 @@ class AgentIntegrationTest:
             })
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_swarm_integration(self):
         """Test 4: Swarm Intelligence Integration"""
         print("\n" + "="*60)
@@ -293,6 +297,7 @@ class AgentIntegrationTest:
             })
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_mcp_integration(self):
         """Test 5: MCP Context Management Integration"""
         print("\n" + "="*60)
@@ -347,6 +352,7 @@ class AgentIntegrationTest:
             })
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_orchestrator_workflow(self):
         """Test 6: Orchestrator Workflow Execution"""
         print("\n" + "="*60)
@@ -396,6 +402,7 @@ class AgentIntegrationTest:
             })
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_testing_agent_integration(self):
         """Test 7: Testing Agent Comprehensive Integration"""
         print("\n" + "="*60)

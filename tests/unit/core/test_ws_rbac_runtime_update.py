@@ -3,7 +3,7 @@ from apps.backend.main import get_ws_rbac, set_ws_rbac, WSRoleOverrides
 from apps.backend.api.auth.auth import User
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_rbac_get_and_set_runtime_mapping():
     # Start with fetching current mapping using an admin user
     admin = User(id="admin-001", username="admin", email="admin@ex.com", role="admin")

@@ -10,9 +10,11 @@ import json
 from typing import Dict, Any
 
 # Skip all tests in this module as they require external services
+# Tests are now enabled by default since we've fixed the issues
+# To skip, set SKIP_INTEGRATION_TESTS=1
 pytestmark = pytest.mark.skipif(
-    not os.environ.get('RUN_INTEGRATION_TESTS'),
-    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+    os.environ.get('SKIP_INTEGRATION_TESTS'),
+    reason="Tests manually disabled. Remove SKIP_INTEGRATION_TESTS to enable"
 )
 
 # Test configuration

@@ -77,6 +77,7 @@ def create_test_app_without_rate_limiting():
     from contextlib import asynccontextmanager
     
     @asynccontextmanager
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_lifespan(app: FastAPI):
         """Minimal lifespan for testing"""
         yield
@@ -254,7 +255,7 @@ class TestFastAPIEndpoints:
         response = client.get("/redoc")
         assert response.status_code == status.HTTP_200_OK
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_generate_content_endpoint(self, async_client, auth_headers):
         """Test content generation endpoint."""
         # Clear rate limit state before this test
@@ -310,7 +311,7 @@ class TestFastAPIEndpoints:
             assert "content" in data
             assert "scripts" in data
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_generate_quiz_endpoint(self, async_client, auth_headers):
         """Test quiz generation endpoint."""
         # Clear rate limit state before this test
@@ -361,7 +362,7 @@ class TestFastAPIEndpoints:
             assert "quiz" in data
             assert len(data["quiz"]["questions"]) > 0
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_authentication_endpoints(self, async_client):
         """Test authentication endpoints."""
         # Test login
@@ -388,13 +389,13 @@ class TestFastAPIEndpoints:
             assert "token_type" in data
             assert data["token_type"] == "bearer"
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_protected_endpoint_without_auth(self, async_client):
         """Test accessing protected endpoint without authentication."""
         response = await async_client.get("/admin/status")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_protected_endpoint_with_auth(self, async_client):
         """Test accessing protected endpoint with authentication."""
         # Create admin user token for this test
@@ -420,7 +421,7 @@ class TestFastAPIEndpoints:
         assert "timestamp" in data
         assert "system_info" in data
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_rate_limiting(self, async_client):
         """Test rate limiting on endpoints."""
         from apps.backend.rate_limit_manager import RateLimitManager, RateLimitMode
@@ -457,7 +458,7 @@ class TestFastAPIEndpoints:
             manager.set_mode(original_mode)
             manager.clear_all_limits()
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_cors_headers(self, async_client):
         """Test CORS headers in responses."""
         response = await async_client.options(
@@ -468,7 +469,7 @@ class TestFastAPIEndpoints:
         assert "access-control-allow-origin" in response.headers
         assert "access-control-allow-methods" in response.headers
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_error_handling(self):
         """Test error handling in endpoints."""
         # Use a test app without rate limiting for this test
@@ -851,7 +852,7 @@ class TestAuthentication:
 class TestServerIntegration:
     """Integration tests for server components."""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.integration
     async def test_full_content_generation_flow(self):
         """Test complete content generation flow."""
@@ -902,7 +903,7 @@ class TestServerIntegration:
                 )
                 assert get_response.status_code == 200
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.integration
     async def test_server_to_server_communication(self):
         """Test communication between FastAPI and Flask servers."""
@@ -1012,7 +1013,7 @@ class TestPerformance:
         if hasattr(fastapi_app.state, 'registered_plugins'):
             fastapi_app.state.registered_plugins = {}
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.performance
     async def test_endpoint_response_time(self):
         """Test endpoint response time."""
@@ -1029,7 +1030,7 @@ class TestPerformance:
             assert response.status_code == 200
             assert (end - start) < 2.0  # Should respond within 2000ms (more realistic for CI)
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.performance
     async def test_concurrent_requests(self):
         """Test handling concurrent requests."""
@@ -1048,7 +1049,7 @@ class TestPerformance:
             # All should succeed
             assert all(r.status_code == 200 for r in responses)
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.performance
     async def test_large_payload_handling(self):
         """Test handling large payloads."""

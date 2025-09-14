@@ -150,7 +150,7 @@ class TestSecureCORSConfig:
 class TestCORSMiddlewareWithLogging:
     """Test CORSMiddlewareWithLogging class"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_cors_violation_logging(self):
         """Test that CORS violations are logged"""
         config = SecureCORSConfig(

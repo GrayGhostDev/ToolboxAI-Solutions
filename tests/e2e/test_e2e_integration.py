@@ -71,6 +71,7 @@ class E2EIntegrationTester:
             logger.error(f"❌ {service_name} health check failed: {e}")
         return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_authentication_flow(self) -> Dict[str, Any]:
         """Test 1: Complete authentication flow across services"""
         result = {
@@ -127,6 +128,7 @@ class E2EIntegrationTester:
             
         return result
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_content_generation_pipeline(self) -> Dict[str, Any]:
         """Test 2: Complete content generation pipeline"""
         result = {
@@ -217,6 +219,7 @@ class E2EIntegrationTester:
             
         return result
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_data_synchronization(self) -> Dict[str, Any]:
         """Test 3: Data synchronization across services"""
         result = {
@@ -290,6 +293,7 @@ class E2EIntegrationTester:
             
         return result
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_roblox_plugin_communication(self) -> Dict[str, Any]:
         """Test 4: Roblox plugin communication simulation"""
         result = {
@@ -368,6 +372,7 @@ class E2EIntegrationTester:
             
         return result
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_error_handling_recovery(self) -> Dict[str, Any]:
         """Test 5: Error handling and recovery"""
         result = {
@@ -421,6 +426,7 @@ class E2EIntegrationTester:
             
         return result
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_performance_load(self) -> Dict[str, Any]:
         """Test 6: Performance under load"""
         result = {

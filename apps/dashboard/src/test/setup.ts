@@ -28,6 +28,97 @@ global.localStorage = localStorageMock as Storage
 // Mock sessionStorage
 global.sessionStorage = localStorageMock as Storage
 
+// Mock ResizeObserver for Material-UI components
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn()
+}))
+
+// Mock IntersectionObserver for lazy loading components
+global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+  root: null,
+  rootMargin: '',
+  thresholds: []
+}))
+
+// Mock matchMedia for responsive components
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn()
+  }))
+})
+
+// Mock Canvas API for chart components
+HTMLCanvasElement.prototype.getContext = vi.fn().mockImplementation((contextType) => {
+  if (contextType === '2d') {
+    return {
+      fillStyle: '',
+      strokeStyle: '',
+      lineWidth: 1,
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      closePath: vi.fn(),
+      fill: vi.fn(),
+      stroke: vi.fn(),
+      rect: vi.fn(),
+      fillRect: vi.fn(),
+      strokeRect: vi.fn(),
+      clearRect: vi.fn(),
+      arc: vi.fn(),
+      arcTo: vi.fn(),
+      createLinearGradient: vi.fn(() => ({
+        addColorStop: vi.fn()
+      })),
+      createRadialGradient: vi.fn(() => ({
+        addColorStop: vi.fn()
+      })),
+      measureText: vi.fn(() => ({ width: 0 })),
+      fillText: vi.fn(),
+      strokeText: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      scale: vi.fn(),
+      rotate: vi.fn(),
+      translate: vi.fn(),
+      transform: vi.fn(),
+      setTransform: vi.fn()
+    }
+  }
+  return null
+})
+
+// Mock scrollIntoView for navigation tests
+Element.prototype.scrollIntoView = vi.fn()
+
+// Mock Web Audio API for notification sounds
+global.AudioContext = vi.fn().mockImplementation(() => ({
+  createOscillator: vi.fn(),
+  createGain: vi.fn(),
+  destination: {}
+}))
+
+// Mock requestAnimationFrame
+global.requestAnimationFrame = vi.fn().mockImplementation(cb => {
+  setTimeout(cb, 0)
+  return 0
+})
+
+// Mock cancelAnimationFrame
+global.cancelAnimationFrame = vi.fn()
+
 // Debug logging configuration
 const originalConsoleError = console.error
 const originalConsoleWarn = console.warn

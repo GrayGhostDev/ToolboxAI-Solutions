@@ -133,6 +133,7 @@ async def health_check():
     }
 
 @app.get("/test-endpoint")
+@pytest.mark.asyncio(loop_scope="function")
 async def test_endpoint():
     """Simple test endpoint"""
     return {"message": "Test endpoint working", "data": [1, 2, 3]}

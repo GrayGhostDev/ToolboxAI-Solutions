@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """
+import pytest
 Comprehensive Verification Test Script for ToolboxAI Platform
 
 This script tests:
@@ -80,6 +81,7 @@ class ComprehensiveVerificationTest:
         if self.verbose and details:
             print(f"   Details: {details}")
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_database_connectivity(self) -> bool:
         """Test database connectivity with correct credentials"""
         start_time = time.time()
@@ -138,6 +140,7 @@ class ComprehensiveVerificationTest:
             )
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_api_health_check(self) -> bool:
         """Test API health endpoint"""
         start_time = time.time()
@@ -172,6 +175,7 @@ class ComprehensiveVerificationTest:
             )
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_authentication_system(self) -> bool:
         """Test authentication endpoints"""
         start_time = time.time()
@@ -260,6 +264,7 @@ class ComprehensiveVerificationTest:
             )
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_protected_endpoints(self) -> bool:
         """Test protected API endpoints"""
         start_time = time.time()
@@ -310,6 +315,7 @@ class ComprehensiveVerificationTest:
             )
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_content_generation(self) -> bool:
         """Test content generation endpoints"""
         start_time = time.time()
@@ -377,6 +383,7 @@ class ComprehensiveVerificationTest:
             )
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_authentication(self) -> bool:
         """Test WebSocket authentication and messaging"""
         start_time = time.time()
@@ -445,6 +452,7 @@ class ComprehensiveVerificationTest:
             )
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_database_performance(self) -> bool:
         """Test database query performance"""
         start_time = time.time()
@@ -489,6 +497,7 @@ class ComprehensiveVerificationTest:
             )
             return False
             
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_endpoints(self) -> bool:
         """Test WebSocket status endpoints"""
         start_time = time.time()

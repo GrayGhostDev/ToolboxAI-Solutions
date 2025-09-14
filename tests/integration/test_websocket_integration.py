@@ -16,9 +16,11 @@ import pytest
 from datetime import datetime, timezone
 
 # Skip all tests in this module as they require external services
+# Tests are now enabled by default since we've fixed the issues
+# To skip, set SKIP_INTEGRATION_TESTS=1
 pytestmark = pytest.mark.skipif(
-    not os.environ.get('RUN_INTEGRATION_TESTS'),
-    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+    os.environ.get('SKIP_INTEGRATION_TESTS'),
+    reason="Tests manually disabled. Remove SKIP_INTEGRATION_TESTS to enable"
 )
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -67,6 +69,7 @@ class WebSocketTester:
             logger.warning(f"⚠️ {service_name} health check failed: {e}")
         return False
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_connection(self, service_name: str) -> Dict[str, Any]:
         """Test basic WebSocket connection"""
         config = SERVICES[service_name]
@@ -105,6 +108,7 @@ class WebSocketTester:
             
         return result
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_message_broadcasting(self) -> Dict[str, Any]:
         """Test message broadcasting within a service"""
         result = {
@@ -165,6 +169,7 @@ class WebSocketTester:
             
         return result
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_cross_service_communication(self) -> Dict[str, Any]:
         """Test communication between different services"""
         result = {
@@ -207,6 +212,7 @@ class WebSocketTester:
             
         return result
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_authentication_over_websocket(self) -> Dict[str, Any]:
         """Test WebSocket authentication"""
         result = {
@@ -248,6 +254,7 @@ class WebSocketTester:
             
         return result
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_realtime_updates(self) -> Dict[str, Any]:
         """Test real-time update propagation"""
         result = {
@@ -296,6 +303,7 @@ class WebSocketTester:
             
         return result
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_connection_resilience(self) -> Dict[str, Any]:
         """Test WebSocket reconnection and error handling"""
         result = {
@@ -335,6 +343,7 @@ class WebSocketTester:
             
         return result
     
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_performance(self) -> Dict[str, Any]:
         """Test WebSocket performance and throughput"""
         result = {
@@ -475,7 +484,7 @@ class WebSocketTester:
 
 
 # Pytest integration
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_websocket_connections():
     """Pytest: Test WebSocket connections"""
     tester = WebSocketTester()
@@ -485,7 +494,7 @@ async def test_websocket_connections():
             assert result["connection"], f"{service} connection failed"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_websocket_broadcasting():
     """Pytest: Test WebSocket broadcasting"""
     tester = WebSocketTester()
@@ -493,7 +502,7 @@ async def test_websocket_broadcasting():
     assert result["success"], "Broadcasting test failed"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_websocket_performance():
     """Pytest: Test WebSocket performance"""
     tester = WebSocketTester()

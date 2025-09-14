@@ -48,6 +48,7 @@ async def error(data):
 async def pong(data):
     print(f"🏓 Received pong: {data}")
 
+@pytest.mark.asyncio(loop_scope="function")
 async def test_with_token(token):
     """Test connection with authentication token"""
     try:
@@ -71,6 +72,7 @@ async def test_with_token(token):
     except Exception as e:
         print(f"❌ Error: {e}")
 
+@pytest.mark.asyncio(loop_scope="function")
 async def test_without_token():
     """Test connection without authentication token"""
     try:
@@ -100,7 +102,7 @@ async def main():
         print("python test_socketio.py YOUR_JWT_TOKEN")
         print("💡 Get a token by logging in at the dashboard")
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
 async def test_socketio_message_ack():
     """Ensure that the server returns an acknowledgment for typed messages."""
     client = socketio.AsyncClient(reconnection=False)

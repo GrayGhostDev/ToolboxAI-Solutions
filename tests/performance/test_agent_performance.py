@@ -20,7 +20,7 @@ pytestmark = pytest.mark.skip(reason="Performance tests require external service
 class TestAgentPerformance:
     """Agent system performance tests"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_supervisor_agent_performance(self):
         """Test SupervisorAgent performance under load"""
         try:
@@ -75,7 +75,7 @@ class TestAgentPerformance:
         except ImportError:
             pytest.skip("SupervisorAgent not available")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_orchestrator_scaling(self):
         """Test Orchestrator scaling with increasing load"""
         try:
@@ -143,7 +143,7 @@ class TestAgentPerformance:
         except ImportError:
             pytest.skip("Orchestrator not available")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_content_agent_performance(self):
         """Test ContentAgent content generation performance"""
         try:
@@ -195,7 +195,7 @@ class TestAgentPerformance:
         except ImportError:
             pytest.skip("ContentAgent not available")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_memory_usage(self):
         """Test agent memory usage during sustained operation"""
         try:
@@ -255,7 +255,7 @@ class TestAgentPerformance:
         except ImportError:
             pytest.skip("SupervisorAgent not available")
     
-    @pytest.mark.asyncio 
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_parallel_processing(self):
         """Test agent parallel processing capabilities"""
         try:
@@ -314,7 +314,7 @@ class TestAgentPerformance:
         except ImportError:
             pytest.skip("SupervisorAgent not available")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_error_handling_performance(self):
         """Test agent performance under error conditions"""
         try:

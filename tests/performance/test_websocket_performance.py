@@ -20,7 +20,7 @@ pytestmark = pytest.mark.skip(reason="Performance tests require external service
 class TestWebSocketPerformance:
     """WebSocket performance and scalability tests"""
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_connection_establishment(self):
         """Test WebSocket connection establishment time"""
         url = "ws://localhost:9876"
@@ -54,7 +54,7 @@ class TestWebSocketPerformance:
             print(f"  Min time: {min(connection_times)*1000:.2f}ms")
             print(f"  Max time: {max(connection_times)*1000:.2f}ms")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_message_latency(self):
         """Test WebSocket message round-trip latency"""
         url = "ws://localhost:9876"
@@ -102,7 +102,7 @@ class TestWebSocketPerformance:
         else:
             pytest.fail("No successful message exchanges")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_concurrent_connections(self):
         """Test handling of many concurrent WebSocket connections"""
         url = "ws://localhost:9876"
@@ -148,7 +148,7 @@ class TestWebSocketPerformance:
         # Should handle most connections successfully
         assert successful >= target_connections * 0.8, f"Too many failed connections: {successful}/{target_connections}"
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_message_throughput(self):
         """Test WebSocket message throughput"""
         url = "ws://localhost:9876"
@@ -221,7 +221,7 @@ class TestWebSocketPerformance:
         else:
             pytest.fail("Could not measure throughput")
     
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio(loop_scope="function")
     async def test_websocket_memory_usage(self):
         """Test WebSocket memory usage with many connections"""
         import psutil

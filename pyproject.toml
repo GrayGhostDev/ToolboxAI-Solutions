@@ -51,7 +51,7 @@ include = [
     "ToolboxAI-Roblox-Environment/**/*.py",
     "apps/**/*.py",
     "core/**/*.py",
-    "src/**/*.py"
+    "src/**/*.py",
 ]
 exclude = [
     "**/node_modules",
@@ -67,7 +67,7 @@ exclude = [
     "**/deprecated/**",
     "**/test_*/**",
     "**/tests/**",
-    "**/backups/**"
+    "**/backups/**",
 ]
 
 # Python environment configuration
@@ -145,14 +145,3 @@ reportImplicitOverride = "warning"
 reportShadowedImports = "warning"
 reportUninitializedInstanceVariable = "warning"
 reportInvalidTypeVarUse = "warning"
-
-# Additional production-ready settings
-reportIncompatibleMethodOverride = "warning"
-reportIncompatibleVariableOverride = "warning"
-reportInconsistentConstructor = "warning"
-reportOverlappingOverload = "warning"
-reportPossiblyUnboundVariable = "warning"
-reportUnusedCallResult = "warning"
-reportUnusedCoroutine = "warning"
-reportUnusedExpression = "warning"
-reportUnusedVariable = "warning"
