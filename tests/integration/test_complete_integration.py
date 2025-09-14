@@ -6,6 +6,18 @@ Tests all services, APIs, databases, and integrations without shortcuts.
 
 import asyncio
 import os
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import time
 import sys
@@ -351,7 +363,7 @@ class IntegrationTester:
             ws = websocket.create_connection(f"{FASTAPI_URL}/ws", timeout=5)
             
             # Send test message
-            test_message = json.dumps({"type": "ping", "data": "test"})
+            test_message = json.dumps({"type": "ping", "data": "test"}, default=make_json_serializable)
             ws.send(test_message)
             
             # Try to receive response (may timeout if no response)
@@ -376,7 +388,7 @@ class IntegrationTester:
             hello_msg = json.dumps({
                 "type": "hello",
                 "client": "integration_test"
-            })
+            }, default=make_json_serializable)
             ws.send(hello_msg)
             
             # Try to receive response

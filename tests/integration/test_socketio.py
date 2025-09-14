@@ -86,20 +86,20 @@ async def test_without_token():
     except Exception as e:
         print(f"❌ Error: {e}")
 
-async def main():
-    # Test token (you should replace this with a real JWT token)
-    test_token = sys.argv[1] if len(sys.argv) > 1 else None
-    
-    if test_token:
-        print("🧪 Testing with provided token...")
-        await test_with_token(test_token)
-    else:
-        print("🧪 Testing without authentication...")
-        await test_without_token()
+    async def main():
+        # Test token (you should replace this with a real JWT token)
+        test_token = sys.argv[1] if len(sys.argv) > 1 else None
         
-        print("\n" + "="*50)
-        print("💡 To test with authentication, run:")
-        print("python test_socketio.py YOUR_JWT_TOKEN")
+        if test_token:
+            print("🧪 Testing with provided token...")
+            await test_with_token(test_token)
+        else:
+            print("🧪 Testing without authentication...")
+            await test_without_token()
+            
+            print("\n" + "="*50)
+            print("💡 To test with authentication, run:")
+            print("python test_socketio.py YOUR_JWT_TOKEN")
         print("💡 Get a token by logging in at the dashboard")
 
 @pytest.mark.asyncio(loop_scope="function")

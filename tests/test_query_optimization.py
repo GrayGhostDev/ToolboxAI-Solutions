@@ -3,6 +3,15 @@ Test Database Query Optimization
 
 Verifies that N+1 queries are prevented and query optimization works correctly.
 """
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+
 
 import asyncio
 import time
@@ -11,6 +20,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
 import pytest
+from tests.fixtures.agents import mock_llm
 from sqlalchemy import create_engine, event, select, Column, String, Integer, ForeignKey
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import selectinload, joinedload, relationship, declarative_base
@@ -370,7 +380,7 @@ class TestRepositoryOptimization:
         return session
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_user_repository_optimized_queries(self, mock_session):
+    async def test_user_repository_optimized_queries(self, mock_session, mock_llm):
         """Test UserRepository prevents N+1 queries"""
         repo = UserRepository(mock_session)
         
@@ -393,7 +403,7 @@ class TestRepositoryOptimization:
         assert mock_session.execute.call_count == 1
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_course_repository_enrollment_count(self, mock_session):
+    async def test_course_repository_enrollment_count(self, mock_session, mock_llm):
         """Test CourseRepository gets enrollment count efficiently"""
         repo = CourseRepository(mock_session)
         
@@ -428,7 +438,7 @@ class TestN1QueryPrevention:
         return session
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_prevents_n_plus_one_in_dashboard(self, mock_session):
+    async def test_prevents_n_plus_one_in_dashboard(self, mock_session, mock_llm):
         """Test that dashboard data loading prevents N+1"""
         repo = UserRepository(mock_session)
         

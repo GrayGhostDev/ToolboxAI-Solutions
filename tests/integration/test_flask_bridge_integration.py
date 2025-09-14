@@ -6,6 +6,18 @@ Tests Flask bridge server (port 5001) communication with FastAPI (port 8008)
 
 import asyncio
 import os
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import time
 from datetime import datetime
@@ -275,7 +287,7 @@ class FlaskBridgeIntegrationTest:
                 data = response.json()
                 
                 # Check if SPARC, Swarm, or MCP are mentioned
-                status_str = json.dumps(data)
+                status_str = json.dumps(data, default=make_json_serializable)
                 has_sparc = "sparc" in status_str.lower()
                 has_swarm = "swarm" in status_str.lower()
                 has_mcp = "mcp" in status_str.lower()

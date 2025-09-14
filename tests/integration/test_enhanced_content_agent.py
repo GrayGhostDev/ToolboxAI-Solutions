@@ -16,6 +16,8 @@ import sys
 import logging
 from pathlib import Path
 import pytest
+from tests.fixtures.agents import mock_llm
+from unittest.mock import Mock, patch, AsyncMock
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skipif(
@@ -35,7 +37,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 @pytest.mark.asyncio(loop_scope="function")
-async def test_enhanced_content_agent():
+async def test_enhanced_content_agent(mock_llm):
     """Test the enhanced Content Agent with real data integration"""
     
     logger.info("="*60)
@@ -244,7 +246,7 @@ async def test_enhanced_content_agent():
         return False
 
 @pytest.mark.asyncio(loop_scope="function")
-async def test_real_openai_integration():
+async def test_real_openai_integration(mock_llm):
     """Test real OpenAI API integration if available"""
     
     if not os.getenv("OPENAI_API_KEY"):

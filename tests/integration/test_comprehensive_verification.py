@@ -17,6 +17,18 @@ Usage:
 import asyncio
 import aiohttp
 import asyncpg
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import logging
 import os
@@ -412,7 +424,7 @@ class ComprehensiveVerificationTest:
                         "type": "ping",
                         "timestamp": datetime.now().isoformat()
                     }
-                    await websocket.send(json.dumps(ping_msg))
+                    await websocket.send(json.dumps(ping_msg, default=make_json_serializable))
                     
                     # Wait for pong response
                     response_msg = await asyncio.wait_for(websocket.recv(), timeout=5)

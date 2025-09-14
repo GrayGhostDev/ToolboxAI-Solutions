@@ -4,6 +4,18 @@ Unit tests for MCP (Model Context Protocol) components - Fixed Version.
 
 import pytest
 import asyncio
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import tempfile
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
@@ -61,7 +73,7 @@ class MockWebSocket:
 
     async def recv(self):
         # For testing, return a mock message
-        return json.dumps({"type": "test", "data": "mock"})
+        return json.dumps({"type": "test", "data": "mock"}, default=make_json_serializable)
 
 
 class TestMCPServer:
@@ -121,7 +133,7 @@ class TestContextManager:
         # Mock the add_segment to return a segment ID
         with patch.object(context_manager, 'add_segment', return_value="segment_123"):
             result = context_manager.add_segment(
-                content=json.dumps(context),
+                content=json.dumps(context, default=make_json_serializable),
                 importance=0.8,
                 category="test",
                 source="test_source"
@@ -136,14 +148,14 @@ class TestContextManager:
         # Mock the context manager methods
         with patch.object(context_manager, 'add_segment', return_value="segment_123"):
             context_manager.add_segment(
-                content=json.dumps(context),
+                content=json.dumps(context, default=make_json_serializable),
                 importance=0.8, 
                 category="test",
                 source="test_source"
             )
         
         # Mock get_context to return formatted context
-        with patch.object(context_manager, 'get_context', return_value=json.dumps(context)):
+        with patch.object(context_manager, 'get_context', return_value=json.dumps(context, default=make_json_serializable)):
             formatted_context = context_manager.get_context(categories=["test"])
         
         assert formatted_context is not None

@@ -32,7 +32,7 @@ sys.path.insert(0, str(project_root))
 
 def run_pytest_command(test_path: str, verbose: bool = True) -> tuple[int, str, str]:
     """Run a pytest command and return exit code, stdout, stderr"""
-    cmd = ["python", "-m", "pytest", test_path, "-v" if verbose else "-q"]
+    cmd = ["python", "-m", [sys.executable, "-m", "pytest"], test_path, "-v" if verbose else "-q"]
     
     try:
         result = subprocess.run(

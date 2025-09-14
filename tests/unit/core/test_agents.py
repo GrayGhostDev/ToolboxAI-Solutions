@@ -10,13 +10,35 @@ Tests all agent classes including:
 - Supervisor agent
 - Orchestrator
 """
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+
 
 import asyncio
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, Mock, patch, mock_open
 
 import pytest
+from tests.fixtures.agents import mock_llm
 import pytest_asyncio
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import Runnable
@@ -56,7 +78,7 @@ class TestBaseAgent:
     @pytest_asyncio.fixture(loop_scope="function")
     async def base_agent(self, mock_llm):
         """Create a base agent instance with proper cleanup."""
-        with patch('agents.base_agent.ChatOpenAI', return_value=mock_llm):
+        with patch('core.agents.base_agent.ChatOpenAI', return_value=mock_llm):
             config = AgentConfig(name="TestAgent")
             agent = ConcreteTestAgent(config)
             agent.llm = mock_llm
@@ -108,13 +130,13 @@ class TestContentAgent:
             "description": "Test description",
             "learning_objectives": ["Objective 1", "Objective 2"],
             "content": "Educational content here"
-        })))
+        }, default=make_json_serializable)))
         return llm
     
     @pytest_asyncio.fixture(loop_scope="function")
     async def content_agent(self, mock_llm):
         """Create a content agent instance with proper cleanup."""
-        with patch('agents.base_agent.ChatOpenAI', return_value=mock_llm):
+        with patch('core.agents.base_agent.ChatOpenAI', return_value=mock_llm):
             config = AgentConfig(name="ContentAgent", system_prompt="Educational content generator")
             agent = ContentAgent(config)
             agent.llm = mock_llm
@@ -190,13 +212,13 @@ class TestQuizAgent:
                     }
                 ]
             }
-        })))
+        }, default=make_json_serializable)))
         return llm
     
     @pytest_asyncio.fixture(loop_scope="function")
     async def quiz_agent(self, mock_llm):
         """Create a quiz agent instance with proper cleanup."""
-        with patch('agents.base_agent.ChatOpenAI', return_value=mock_llm):
+        with patch('core.agents.base_agent.ChatOpenAI', return_value=mock_llm):
             config = AgentConfig(name="QuizAgent", system_prompt="Quiz generator")
             agent = QuizAgent(config)
             agent.llm = mock_llm
@@ -214,7 +236,7 @@ class TestQuizAgent:
                 "title": "Math Quiz",
                 "questions": [{"question": "What is 2+2?", "answer": "4"}]
             }
-        })))
+        }, default=make_json_serializable)))
         
         task = "Generate a quiz on fractions"
         context = {
@@ -238,7 +260,7 @@ class TestQuizAgent:
                 "questions": [],
                 "difficulty": "adaptive"
             }
-        })))
+        }, default=make_json_serializable)))
         
         task = "Generate adaptive quiz"
         context = {
@@ -278,7 +300,7 @@ class TestTerrainAgent:
     @pytest.fixture
     def terrain_agent(self, mock_llm):
         """Create a terrain agent instance."""
-        with patch('agents.base_agent.ChatOpenAI', return_value=mock_llm):
+        with patch('core.agents.base_agent.ChatOpenAI', return_value=mock_llm):
             agent = TerrainAgent()
             agent.llm = mock_llm
             return agent
@@ -346,7 +368,7 @@ class TestScriptAgent:
     @pytest.fixture
     def script_agent(self, mock_llm):
         """Create a script agent instance."""
-        with patch('agents.base_agent.ChatOpenAI', return_value=mock_llm):
+        with patch('core.agents.base_agent.ChatOpenAI', return_value=mock_llm):
             agent = ScriptAgent()
             agent.llm = mock_llm
             return agent
@@ -410,14 +432,14 @@ class TestReviewAgent:
                 ],
                 "approved": True
             }
-        })))
+        }, default=make_json_serializable)))
         llm.ainvoke = llm.invoke  # Agents use ainvoke, not invoke
         return llm
     
     @pytest.fixture
     def review_agent(self, mock_llm):
         """Create a review agent instance."""
-        with patch('agents.base_agent.ChatOpenAI', return_value=mock_llm):
+        with patch('core.agents.base_agent.ChatOpenAI', return_value=mock_llm):
             agent = ReviewAgent()
             agent.llm = mock_llm
             return agent
@@ -492,7 +514,7 @@ class TestSupervisorAgent:
                 "script": MagicMock,
                 "review": MagicMock
             }
-            with patch('agents.base_agent.ChatOpenAI'):
+            with patch('core.agents.base_agent.ChatOpenAI'):
                 agent = SupervisorAgent()
                 # Set managed_agents instead of agents
                 agent.managed_agents = mock_agents
@@ -501,7 +523,7 @@ class TestSupervisorAgent:
     @pytest.mark.asyncio(loop_scope="function")
     async def test_route_task(self, supervisor_agent):
         """Test task routing to appropriate agent."""
-        with patch('agents.base_agent.ChatOpenAI'):
+        with patch('core.agents.base_agent.ChatOpenAI'):
             # Test _routing_decision method which determines routing
             state = AgentState(
                 task="Generate quiz for Math",
@@ -606,13 +628,13 @@ class TestOrchestrator:
     @pytest.fixture
     def orchestrator(self, mock_supervisor):
         """Create an orchestrator instance."""
-        with patch('agents.orchestrator.SupervisorAgent', return_value=mock_supervisor):
-            with patch('agents.orchestrator.ContentAgent'):
-                with patch('agents.orchestrator.QuizAgent'):
-                    with patch('agents.orchestrator.TerrainAgent'):
-                        with patch('agents.orchestrator.ScriptAgent'):
-                            with patch('agents.orchestrator.ReviewAgent'):
-                                with patch('agents.base_agent.ChatOpenAI'):
+        with patch('core.agents.orchestrator.SupervisorAgent', return_value=mock_supervisor):
+            with patch('core.agents.orchestrator.ContentAgent'):
+                with patch('core.agents.orchestrator.QuizAgent'):
+                    with patch('core.agents.orchestrator.TerrainAgent'):
+                        with patch('core.agents.orchestrator.ScriptAgent'):
+                            with patch('core.agents.orchestrator.ReviewAgent'):
+                                with patch('core.agents.base_agent.ChatOpenAI'):
                                     orch = Orchestrator()
                                     orch.supervisor = mock_supervisor
                                     return orch
@@ -698,7 +720,7 @@ class TestAgentIntegration:
     async def test_full_content_generation_pipeline(self):
         """Test complete content generation pipeline."""
         # This would test real agent interactions if not mocked
-        with patch('agents.orchestrator.Orchestrator') as MockOrchestrator:
+        with patch('core.agents.orchestrator.Orchestrator') as MockOrchestrator:
             orchestrator = MockOrchestrator()
             orchestrator.generate_experience = AsyncMock(return_value={
                 "lesson": {"title": "Integrated Lesson"},
@@ -725,7 +747,7 @@ class TestAgentIntegration:
     @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_error_handling(self):
         """Test error handling in agent pipeline."""
-        with patch('agents.content_agent.ContentAgent') as MockContentAgent:
+        with patch('core.agents.content_agent.ContentAgent') as MockContentAgent:
             agent = MockContentAgent()
             agent.generate_lesson = AsyncMock(side_effect=Exception("API Error"))
             
@@ -739,7 +761,7 @@ class TestAgentIntegration:
     @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_retry_mechanism(self):
         """Test retry mechanism for failed agent tasks."""
-        with patch('agents.quiz_agent.QuizAgent') as MockQuizAgent:
+        with patch('core.agents.quiz_agent.QuizAgent') as MockQuizAgent:
             agent = MockQuizAgent()
             
             # Fail twice, then succeed
@@ -775,7 +797,7 @@ class TestAgentPerformance:
         """Test agent response time is within acceptable limits."""
         import time
         
-        with patch('agents.content_agent.ContentAgent') as MockAgent:
+        with patch('core.agents.content_agent.ContentAgent') as MockAgent:
             agent = MockAgent()
             agent.generate_lesson = AsyncMock(return_value={"lesson": "content"})
             
@@ -818,7 +840,7 @@ class TestTestingAgent:
     @pytest.fixture
     def testing_agent(self, mock_llm):
         """Create a testing agent instance"""
-        with patch('agents.base_agent.ChatOpenAI', return_value=mock_llm):
+        with patch('core.agents.base_agent.ChatOpenAI', return_value=mock_llm):
             agent = TestingAgent()
             agent.llm = mock_llm
             return agent
@@ -913,7 +935,7 @@ class TestTestingAgent:
         stderr = ""
         
         result = testing_agent._parse_pytest_output(
-            stdout, stderr, 0, TestType.UNIT, ["pytest"], 2.5
+            stdout, stderr, 0, TestType.UNIT, [[sys.executable, "-m", "pytest"]], 2.5
         )
         
         assert result.test_type == TestType.UNIT

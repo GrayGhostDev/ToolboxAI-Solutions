@@ -14,6 +14,18 @@ from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor
 import statistics
 from datetime import datetime, timezone
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 
 # Add project path
@@ -135,7 +147,7 @@ class TestAPILoadPerformance:
         assert stats["requests_per_second"] > 10, f"Throughput too low: {stats['requests_per_second']} RPS"
         
         print(f"\nContent Generation Load Test Results:")
-        print(json.dumps(stats, indent=2))
+        print(json.dumps(stats, indent=2, default=make_json_serializable))
     
     @pytest.mark.asyncio(loop_scope="function")
     async def test_authentication_load(self):
@@ -178,7 +190,7 @@ class TestAPILoadPerformance:
         assert stats["response_times"]["p99"] < 1.0, f"P99 auth too slow: {stats['response_times']['p99']}s"
         
         print(f"\nAuthentication Load Test Results:")
-        print(json.dumps(stats, indent=2))
+        print(json.dumps(stats, indent=2, default=make_json_serializable))
     
     @pytest.mark.asyncio(loop_scope="function")
     async def test_database_query_load(self):
@@ -225,7 +237,7 @@ class TestAPILoadPerformance:
         assert stats["error_rate"] < 1, f"DB error rate too high: {stats['error_rate']}%"
         
         print(f"\nDatabase Query Load Test Results:")
-        print(json.dumps(stats, indent=2))
+        print(json.dumps(stats, indent=2, default=make_json_serializable))
 
 
 class TestAgentPoolPerformance:
@@ -285,7 +297,7 @@ class TestAgentPoolPerformance:
         assert time_100 < time_10 * 5, f"Poor scaling: {time_100}s for 100 tasks vs {time_10}s for 10 tasks"
         
         print(f"\nAgent Pool Scaling Test Results:")
-        print(json.dumps(results, indent=2))
+        print(json.dumps(results, indent=2, default=make_json_serializable))
     
     @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_memory_usage(self):
@@ -361,7 +373,7 @@ class TestWebSocketPerformance:
                 await ws.send(json.dumps({
                     "type": "subscribe",
                     "channel": f"test_{index}"
-                }))
+                }, default=make_json_serializable))
                 
                 # Keep connection alive
                 await asyncio.sleep(5)
@@ -575,7 +587,7 @@ class TestSystemPerformance:
         assert stats["error_rate"] < 10, f"E2E error rate too high: {stats['error_rate']}%"
         
         print(f"\nEnd-to-End Latency Test:")
-        print(json.dumps(stats, indent=2))
+        print(json.dumps(stats, indent=2, default=make_json_serializable))
     
     @pytest.mark.asyncio(loop_scope="function")
     async def test_resource_usage(self):

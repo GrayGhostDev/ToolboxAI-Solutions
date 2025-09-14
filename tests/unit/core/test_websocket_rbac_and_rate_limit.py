@@ -1,3 +1,24 @@
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import pytest
 from datetime import datetime, timezone, timedelta
@@ -24,7 +45,7 @@ async def test_rbac_blocks_broadcast_for_student(monkeypatch):
     client_id = await manager.connect(ws, client_id="test-client", user_id="user-1", user_role="student")
 
     # Attempt a teacher-only action
-    message = json.dumps({"type": "broadcast", "channel": "room1", "data": {"x": 1}})
+    message = json.dumps({"type": "broadcast", "channel": "room1", "data": {"x": 1}}, default=make_json_serializable)
     await manager.handle_message(client_id, message)
 
     # Expect an error sent due to RBAC denial
@@ -59,9 +80,9 @@ async def test_rate_limit_enforced(monkeypatch):
         client_id = await manager.connect(ws, client_id="rl-client", user_id="user-rl", user_role="student")
 
         # First message should pass
-        await manager.handle_message(client_id, json.dumps({"type": "ping"}))
+        await manager.handle_message(client_id, json.dumps({"type": "ping"}, default=make_json_serializable))
         # Second message within the same window should be rate limited
-        await manager.handle_message(client_id, json.dumps({"type": "ping"}))
+        await manager.handle_message(client_id, json.dumps({"type": "ping"}, default=make_json_serializable))
 
         # Verify rate limited error was sent
         assert ws.send_text.called

@@ -2,8 +2,18 @@
 Comprehensive tests for Roblox plugin pipeline integration
 Tests the complete flow from plugin request to agent execution and response
 """
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+
 
 import pytest
+from tests.fixtures.agents import mock_llm
 import asyncio
 import json
 from datetime import datetime

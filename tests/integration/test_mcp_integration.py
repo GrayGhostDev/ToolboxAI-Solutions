@@ -6,6 +6,18 @@ Tests WebSocket server on port 9876 for context management and agent communicati
 
 import asyncio
 import os
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import time
 from datetime import datetime
@@ -41,7 +53,7 @@ class MCPIntegrationTest:
                 # Test initial connection
                 await websocket.send(json.dumps({
                     "type": "get_context"
-                }))
+                }, default=make_json_serializable))
                 
                 response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
                 data = json.loads(response)
@@ -103,7 +115,7 @@ class MCPIntegrationTest:
                     "priority": 2
                 }
                 
-                await websocket.send(json.dumps(test_context))
+                await websocket.send(json.dumps(test_context, default=make_json_serializable))
                 
                 # Wait for broadcast update
                 response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
@@ -120,7 +132,7 @@ class MCPIntegrationTest:
                             "source": "test_suite",
                             "min_priority": 1
                         }
-                    }))
+                    }, default=make_json_serializable))
                     
                     query_response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
                     query_data = json.loads(query_response)
@@ -164,7 +176,7 @@ class MCPIntegrationTest:
                 # Clear existing context first
                 await websocket.send(json.dumps({
                     "type": "clear_context"
-                }))
+                }, default=make_json_serializable))
                 
                 # Wait for clear confirmation
                 await asyncio.wait_for(websocket.recv(), timeout=5.0)
@@ -182,7 +194,7 @@ class MCPIntegrationTest:
                         "context": {"content": ctx["content"]},
                         "source": "priority_test",
                         "priority": ctx["priority"]
-                    }))
+                    }, default=make_json_serializable))
                     # Receive update broadcast
                     await asyncio.wait_for(websocket.recv(), timeout=5.0)
                 
@@ -193,7 +205,7 @@ class MCPIntegrationTest:
                         "source": "priority_test",
                         "min_priority": 3
                     }
-                }))
+                }, default=make_json_serializable))
                 
                 response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
                 data = json.loads(response)
@@ -289,7 +301,7 @@ class MCPIntegrationTest:
                 # Clear context first
                 await websocket.send(json.dumps({
                     "type": "clear_context"
-                }))
+                }, default=make_json_serializable))
                 await asyncio.wait_for(websocket.recv(), timeout=5.0)
                 
                 # Add large context
@@ -300,7 +312,7 @@ class MCPIntegrationTest:
                     "context": {"content": large_content},
                     "source": "token_test",
                     "priority": 1
-                }))
+                }, default=make_json_serializable))
                 
                 response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
                 data = json.loads(response)
@@ -359,7 +371,7 @@ class MCPIntegrationTest:
                         "priority": 4
                     }
                     
-                    await websocket.send(json.dumps(agent_context))
+                    await websocket.send(json.dumps(agent_context, default=make_json_serializable))
                     response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
                     data = json.loads(response)
                     
@@ -370,7 +382,7 @@ class MCPIntegrationTest:
                         await websocket.send(json.dumps({
                             "type": "query_context",
                             "query": {"source": "supervisor_agent"}
-                        }))
+                        }, default=make_json_serializable))
                         
                         query_response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
                         query_data = json.loads(query_response)
@@ -424,7 +436,7 @@ class MCPIntegrationTest:
                 await websocket.send(json.dumps({
                     "type": "unknown_type",
                     "data": "test"
-                }))
+                }, default=make_json_serializable))
                 response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
                 data = json.loads(response)
                 

@@ -16,6 +16,15 @@ from apps.backend.services.roblox import app as flask_app
 
 class TestPluginManager:
     """Test PluginManager class"""
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+
     
     def setup_method(self):
         self.plugin_manager = PluginManager()

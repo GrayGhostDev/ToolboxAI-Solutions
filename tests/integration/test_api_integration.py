@@ -30,6 +30,14 @@ content_bridge = Mock()
 @pytest.fixture
 def client():
     """FastAPI test client"""
+    import sys
+    from pathlib import Path
+    
+    # Add project root to path
+    project_root = Path(__file__).parent.parent.parent
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+    
     clear_all_rate_limits()
     set_testing_mode(True)
     return TestClient(app)

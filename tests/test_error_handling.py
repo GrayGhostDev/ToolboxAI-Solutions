@@ -4,6 +4,15 @@ Test Comprehensive Error Handling
 Verifies that the error handling system works correctly across different
 error types and scenarios.
 """
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+
 
 import json
 import pytest
@@ -68,6 +77,7 @@ def create_test_app():
         return {"message": "Valid data", "data": data.model_dump()}
     
     @app.get("/test/auth")
+    @pytest.mark.asyncio
     async def test_auth():
         raise AuthenticationError("Invalid token")
     

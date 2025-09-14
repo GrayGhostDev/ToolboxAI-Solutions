@@ -6,6 +6,18 @@ Tests all components working together in a realistic scenario
 
 import asyncio
 import os
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import time
 from typing import Dict, Any, List
@@ -192,7 +204,7 @@ class IntegrationTester:
         try:
             async with websockets.connect(f"ws://127.0.0.1:8008/ws") as ws:
                 # Send ping
-                await ws.send(json.dumps({"type": "ping"}))
+                await ws.send(json.dumps({"type": "ping"}, default=make_json_serializable))
                 # Wait for pong
                 response = await asyncio.wait_for(ws.recv(), timeout=5)
                 data = json.loads(response)

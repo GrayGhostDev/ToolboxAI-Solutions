@@ -6,6 +6,18 @@ Tests real-time communication across all services
 
 import asyncio
 import os
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import time
 import logging
@@ -88,7 +100,7 @@ class WebSocketTester:
                 logger.info(f"✅ Connected to {service_name} WebSocket")
                 
                 # Test ping-pong
-                await websocket.send(json.dumps({"type": "ping"}))
+                await websocket.send(json.dumps({"type": "ping"}, default=make_json_serializable))
                 
                 try:
                     response = await asyncio.wait_for(websocket.recv(), timeout=3)
@@ -127,11 +139,11 @@ class WebSocketTester:
             await ws1.send(json.dumps({
                 "type": "join_room",
                 "room": room_id
-            }))
+            }, default=make_json_serializable))
             await ws2.send(json.dumps({
                 "type": "join_room",
                 "room": room_id
-            }))
+            }, default=make_json_serializable))
             
             # Allow time for room joining
             await asyncio.sleep(0.5)
@@ -143,7 +155,7 @@ class WebSocketTester:
                 "message": "Test broadcast",
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }
-            await ws1.send(json.dumps(test_message))
+            await ws1.send(json.dumps(test_message, default=make_json_serializable))
             
             # Check if both receive the message
             received = []
@@ -191,10 +203,10 @@ class WebSocketTester:
                     "data": {"test": "value"}
                 }
             }
-            await mcp_ws.send(json.dumps(context_update))
+            await mcp_ws.send(json.dumps(context_update, default=make_json_serializable))
             
             # Request context
-            await mcp_ws.send(json.dumps({"type": "get_context"}))
+            await mcp_ws.send(json.dumps({"type": "get_context"}, default=make_json_serializable))
             
             response = await asyncio.wait_for(mcp_ws.recv(), timeout=3)
             data = json.loads(response)
@@ -236,7 +248,7 @@ class WebSocketTester:
             await ws.send(json.dumps({
                 "type": "authenticated_action",
                 "action": "get_user_data"
-            }))
+            }, default=make_json_serializable))
             
             try:
                 response = await asyncio.wait_for(ws.recv(), timeout=3)
@@ -270,7 +282,7 @@ class WebSocketTester:
             await ws.send(json.dumps({
                 "type": "subscribe",
                 "channel": "dashboard_updates"
-            }))
+            }, default=make_json_serializable))
             
             # Simulate an update (would normally come from API)
             update_message = {
@@ -284,7 +296,7 @@ class WebSocketTester:
             }
             
             # In real scenario, this would be triggered by API
-            await ws.send(json.dumps(update_message))
+            await ws.send(json.dumps(update_message, default=make_json_serializable))
             
             # Check if update is received
             response = await asyncio.wait_for(ws.recv(), timeout=3)
@@ -317,7 +329,7 @@ class WebSocketTester:
             ws = await websockets.connect(SERVICES["dashboard"]["ws_url"])
             
             # Send keepalive
-            await ws.send(json.dumps({"type": "keepalive"}))
+            await ws.send(json.dumps({"type": "keepalive"}, default=make_json_serializable))
             
             # Close and reconnect
             await ws.close()
@@ -325,7 +337,7 @@ class WebSocketTester:
             
             # Reconnect
             ws = await websockets.connect(SERVICES["dashboard"]["ws_url"])
-            await ws.send(json.dumps({"type": "ping"}))
+            await ws.send(json.dumps({"type": "ping"}, default=make_json_serializable))
             
             try:
                 response = await asyncio.wait_for(ws.recv(), timeout=3)
@@ -370,7 +382,7 @@ class WebSocketTester:
                     "id": i,
                     "timestamp": datetime.now(timezone.utc).isoformat()
                 }
-                await ws.send(json.dumps(message))
+                await ws.send(json.dumps(message, default=make_json_serializable))
                 
                 try:
                     response = await asyncio.wait_for(ws.recv(), timeout=1)

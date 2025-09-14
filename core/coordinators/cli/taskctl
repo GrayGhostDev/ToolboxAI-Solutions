@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+# core/coordinators/cli/taskctl
+import click, json
+from core.coordinators.task_registry import TaskRegistry
+
+@click.group()
+def cli():
+    """Task queue control for non-overlapping Claude terminals.
+    """
+
+@cli.command("qstat")
+def qstat():
+    print(json.dumps(TaskRegistry().qstat(), indent=2))
+
+@cli.command("ps")
+def ps():
+    print(json.dumps(TaskRegistry().list_workers(), indent=2))
+
+@cli.command("enqueue")
+@click.option("--priority", type=float, default=1.0)
+@click.option("--capability", type=str, default="*")
+@click.argument("objective")
+def enqueue(priority, capability, objective):
+    tid = TaskRegistry().enqueue({"objective": objective, "capability": capability}, priority=priority)
+    print(tid)
+
+if __name__ == "__main__":
+    cli()

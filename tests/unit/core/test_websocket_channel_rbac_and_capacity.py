@@ -1,3 +1,24 @@
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import pytest
 from unittest.mock import AsyncMock
@@ -22,7 +43,7 @@ async def test_websocket_channel_rbac_by_prefix():
         # Student
         c1 = await manager.connect(ws, client_id="c1", user_id="u1", user_role="student")
         # Try to subscribe to admin channel
-        await manager.handle_message(c1, json.dumps({"type": "subscribe", "channels": ["admin_updates"]}))
+        await manager.handle_message(c1, json.dumps({"type": "subscribe", "channels": ["admin_updates"]}, default=make_json_serializable))
         # Expect an error about role requirement
         assert ws.send_text.called
         last = json.loads(ws.send_text.call_args[0][0])

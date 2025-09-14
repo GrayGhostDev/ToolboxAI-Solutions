@@ -4,6 +4,18 @@ Unit tests for MCP (Model Context Protocol) components.
 
 import pytest
 import asyncio
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import tempfile
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
@@ -75,7 +87,7 @@ class MockWebSocket:
 
     async def recv(self):
         # For testing, return a mock message
-        return json.dumps({"type": "test", "data": "mock"})
+        return json.dumps({"type": "test", "data": "mock"}, default=make_json_serializable)
 
 
 class TestMCPServer:
@@ -171,7 +183,7 @@ class TestMCPServer:
         message = {"type": "context_update", "data": {"test": "data"}}
         
         # Call handle_message directly for testing
-        await mcp_server.handle_message(websocket, json.dumps(message))
+        await mcp_server.handle_message(websocket, json.dumps(message, default=make_json_serializable))
         
         # Verify handle_message was called
         mcp_server.handle_message.assert_called_once()
@@ -222,7 +234,7 @@ class TestContextManager:
         context = {"test": "data", "timestamp": datetime.now(timezone.utc).isoformat()}
         # Use the private method directly as it's the actual implementation
         context_manager._add_segment(
-            content=json.dumps(context),
+            content=json.dumps(context, default=make_json_serializable),
             category="test",
             source="test_source",
             importance=0.8
@@ -236,7 +248,7 @@ class TestContextManager:
         context = {"test": "data"}
         # Use the private method directly as it's the actual implementation
         context_manager._add_segment(
-            content=json.dumps(context),
+            content=json.dumps(context, default=make_json_serializable),
             category="test",
             source="test_source",
             importance=0.8
@@ -251,13 +263,13 @@ class TestContextManager:
     def test_clear_context(self, context_manager):
         """Test clearing all context"""
         context_manager._add_segment(
-            content=json.dumps({"test": "data1"}),
+            content=json.dumps({"test": "data1"}, default=make_json_serializable),
             category="test",
             source="test_source",
             importance=0.8
         )
         context_manager._add_segment(
-            content=json.dumps({"test": "data2"}),
+            content=json.dumps({"test": "data2"}, default=make_json_serializable),
             category="test",
             source="test_source",
             importance=0.8
@@ -269,13 +281,13 @@ class TestContextManager:
     def test_get_all_contexts(self, context_manager):
         """Test getting all contexts"""
         context_manager._add_segment(
-            content=json.dumps({"test": "data1"}),
+            content=json.dumps({"test": "data1"}, default=make_json_serializable),
             category="test",
             source="test_source",
             importance=0.8
         )
         context_manager._add_segment(
-            content=json.dumps({"test": "data2"}),
+            content=json.dumps({"test": "data2"}, default=make_json_serializable),
             category="test",
             source="test_source",
             importance=0.8
@@ -292,7 +304,7 @@ class TestContextManager:
         # Add context that exceeds limit using the public method
         large_context = {"test": "large_data" * 1000}
         context_manager.add_context(
-            content=json.dumps(large_context),
+            content=json.dumps(large_context, default=make_json_serializable),
             category="test",
             source="test_source",
             importance=0.8
@@ -308,13 +320,13 @@ class TestContextManager:
         context2 = {"key2": "value2"}
         
         context_manager._add_segment(
-            content=json.dumps(context1),
+            content=json.dumps(context1, default=make_json_serializable),
             category="test",
             source="source1",
             importance=0.8
         )
         context_manager._add_segment(
-            content=json.dumps(context2),
+            content=json.dumps(context2, default=make_json_serializable),
             category="test",
             source="source2",
             importance=0.8

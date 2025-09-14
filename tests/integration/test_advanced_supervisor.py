@@ -11,8 +11,18 @@ This test suite demonstrates and validates all advanced features:
 - Performance monitoring
 - Error handling and recovery
 """
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+
 
 import pytest
+from tests.fixtures.agents import mock_llm
 import asyncio
 import os
 
@@ -23,6 +33,18 @@ pytestmark = pytest.mark.skipif(
     os.environ.get('SKIP_INTEGRATION_TESTS'),
     reason="Tests manually disabled. Remove SKIP_INTEGRATION_TESTS to enable"
 )
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, AsyncMock
@@ -226,7 +248,7 @@ class TestAdvancedSupervisorAgent:
         assert "agents" in health_report
         assert health_report["total_agents"] > 0
         
-        print(f"Health Report: {json.dumps(health_report, indent=2, default=str)}")
+        print(f"Health Report: {json.dumps(health_report, indent=2, default=make_json_serializable)}")
     
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.skip(reason="Requires external services - hangs in test environment")
@@ -259,7 +281,7 @@ class TestAdvancedSupervisorAgent:
         assert "agent_health_summary" in performance_report
         assert "system_status" in performance_report
         
-        print(f"Performance Report: {json.dumps(performance_report, indent=2, default=str)}")
+        print(f"Performance Report: {json.dumps(performance_report, indent=2, default=make_json_serializable)}")
     
     @pytest.mark.asyncio(loop_scope="function")
     async def test_workflow_cancellation(self, supervisor):
@@ -447,7 +469,7 @@ class TestAdvancedSupervisorAgent:
             mock_response.content = json.dumps({
                 "quality_score": 0.9,
                 "feedback": "Excellent educational content with clear objectives"
-            })
+            }, default=make_json_serializable)
             mock_llm.ainvoke = AsyncMock(return_value=mock_response)
             
             execution = await supervisor.execute_workflow(

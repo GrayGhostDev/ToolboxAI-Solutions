@@ -7,6 +7,18 @@ import os
 import shutil
 from pathlib import Path
 from datetime import datetime, timedelta
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import logging
 from typing import Optional, List, Dict

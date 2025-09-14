@@ -4,11 +4,33 @@ Integration Tests for Roblox Platform Integration
 Tests plugin communication, script generation validation,
 and real-time synchronization with Roblox Studio.
 """
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+
 
 import asyncio
 import os
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import pytest
+from tests.fixtures.agents import mock_llm
 import aiohttp
 from typing import Dict, Any, List
 from unittest.mock import Mock, AsyncMock, patch
@@ -335,7 +357,7 @@ class TestRealTimeSync:
         await websocket.send(json.dumps({
             "type": "subscribe",
             "channel": "roblox_updates"
-        }))
+        }, default=make_json_serializable))
         
         # Receive confirmation
         response = await websocket.recv()
@@ -353,7 +375,7 @@ class TestRealTimeSync:
         await websocket.send(json.dumps({
             "type": "subscribe",
             "channel": "content_updates"
-        }))
+        }, default=make_json_serializable))
         
         # Verify subscription
         response = await websocket.recv()
@@ -372,7 +394,7 @@ class TestRealTimeSync:
         }
         
         # Send content update
-        await websocket.send(json.dumps(update_message))
+        await websocket.send(json.dumps(update_message, default=make_json_serializable))
         
         # In a real scenario, this would be broadcast to subscribers
         # For testing, we validate the message structure
@@ -440,7 +462,7 @@ class TestRealTimeSync:
             "type": "join_lesson",
             "lesson_id": "multiplayer_123",
             "user_id": "user_1"
-        }))
+        }, default=make_json_serializable))
         
         # Verify lesson join
         response = await ws1.recv()
@@ -453,7 +475,7 @@ class TestRealTimeSync:
             "type": "activity_complete",
             "activity_id": "activity_1",
             "score": 100
-        }))
+        }, default=make_json_serializable))
         
         # Should receive peer progress update
         response = await ws1.recv()
@@ -736,11 +758,11 @@ class TestPerformanceOptimization:
             "textures": ["texture_data" * 100 for _ in range(10)]
         }
         
-        original_size = len(json.dumps(large_asset))
+        original_size = len(json.dumps(large_asset, default=make_json_serializable))
         
         # Compress asset
         import gzip
-        compressed = gzip.compress(json.dumps(large_asset).encode())
+        compressed = gzip.compress(json.dumps(large_asset, default=make_json_serializable).encode())
         compressed_size = len(compressed)
         
         # Verify compression ratio

@@ -1,5 +1,14 @@
 # Development Setup Guide
 
+## Modern Development Setup Guide
+
+For the most comprehensive and up-to-date development setup instructions, see:
+- [Comprehensive Development Setup Guide](../development/setup.md) - Complete 2025 development setup guide
+
+## Quick Reference
+
+This document provides a quick reference for development setup. For detailed instructions, see the comprehensive guide above.
+
 ## Prerequisites
 
 ### System Requirements

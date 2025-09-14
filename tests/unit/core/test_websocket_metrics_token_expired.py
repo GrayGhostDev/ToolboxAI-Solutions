@@ -1,3 +1,24 @@
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import pytest
 from unittest.mock import AsyncMock, patch, Mock
@@ -5,7 +26,7 @@ from datetime import datetime, timezone, timedelta
 
 from apps.backend.services.websocket_handler import websocket_endpoint, websocket_manager
 from apps.backend.services.websocket_auth import WebSocketAuthSession
-from apps.backend.models import User
+from core.database.models import User
 
 
 @pytest.mark.asyncio(loop_scope="function")
@@ -15,7 +36,7 @@ async def test_websocket_token_expiry_increments_metric():
     ws.send_text = AsyncMock()
     ws.close = AsyncMock()
     # First call to receive_text returns a ping message; second raises to exit loop
-    ws.receive_text = AsyncMock(side_effect=[json.dumps({"type": "ping"}), Exception("WebSocketDisconnect")])
+    ws.receive_text = AsyncMock(side_effect=[json.dumps({"type": "ping"}, default=make_json_serializable), Exception("WebSocketDisconnect")])
 
     # Build an auth session with expired token
     user = User(id="u1", username="user1", email="u1@example.com", role="student")
@@ -45,7 +66,7 @@ async def test_websocket_auth_error_increments_metric():
     ws = AsyncMock()
     ws.send_text = AsyncMock()
     ws.close = AsyncMock()
-    ws.receive_text = AsyncMock(side_effect=[json.dumps({"type": "ping"}), Exception("WebSocketDisconnect")])
+    ws.receive_text = AsyncMock(side_effect=[json.dumps({"type": "ping"}, default=make_json_serializable), Exception("WebSocketDisconnect")])
 
     # Build a valid (non-expired) session
     user = User(id="u2", username="user2", email="u2@example.com", role="student")

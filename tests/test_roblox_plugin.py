@@ -5,6 +5,18 @@ Simulates the Roblox Studio plugin's communication with the Flask bridge server
 """
 
 import asyncio
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import time
 import uuid
@@ -183,7 +195,7 @@ class RobloxPluginSimulator:
         }
         
         try:
-            await self.ws_connection.send(json.dumps(message))
+            await self.ws_connection.send(json.dumps(message, default=make_json_serializable))
             logger.info(f"📤 Sent plugin update: {update_type}")
         except Exception as e:
             logger.error(f"❌ Failed to send update: {e}")
@@ -261,7 +273,7 @@ class RobloxPluginSimulator:
         
         # Step 6: Test ping-pong
         if ws_connected:
-            await self.ws_connection.send(json.dumps({"type": "ping"}))
+            await self.ws_connection.send(json.dumps({"type": "ping"}, default=make_json_serializable))
             response = await self.ws_connection.recv()
             data = json.loads(response)
             if data.get("type") == "pong":

@@ -1,0 +1,45 @@
+name: Claude Swarm Orchestration
+workflows:
+  - name: start:orchestrator
+    command: |
+      export PYTHONUNBUFFERED=1; export LOG_LEVEL=${LOG_LEVEL:-INFO}
+      mkdir -p logs
+      nohup bash -lc 'nice -n 5 cpulimit -l 25 -- uvicorn core.coordinators.task_orchestrator:app --host 127.0.0.1 --port 8765 --log-level info' \
+        > logs/orchestrator.log 2>&1 & echo $! > logs/orchestrator.pid; echo "orchestrator pid $(cat logs/orchestrator.pid)"
+
+  - name: start:workers
+    command: |
+      export PYTHONUNBUFFERED=1
+      mkdir -p logs
+      # Example: 4 workers with different capabilities
+      for i in 1 2 3 4; do
+        CAPABILITY=$( [ $i -eq 1 ] && echo "planning" || [ $i -eq 2 ] && echo "implementation" || [ $i -eq 3 ] && echo "research" || echo "fix" )
+        nohup bash -lc 'nice -n 10 cpulimit -l 25 -- scripts/agents/run_supervisor.sh worker '"$CAPABILITY $i"'' \
+          > logs/worker_${i}.log 2>&1 & echo $! > logs/worker_${i}.pid; echo "worker $i pid $(cat logs/worker_${i}.pid) cap $CAPABILITY"
+      done
+
+  - name: start:monitor
+    command: |
+      export PYTHONUNBUFFERED=1
+      mkdir -p logs
+      nohup bash -lc 'nice -n 15 cpulimit -l 10 -- python3 -m core.coordinators.monitor' \
+        > logs/monitor.log 2>&1 & echo $! > logs/monitor.pid; echo "monitor pid $(cat logs/monitor.pid)"
+
+  - name: check:health
+    command: |
+      bash scripts/warp/health-check.sh
+
+  - name: ps:agents
+    command: |
+      python3 core/coordinators/cli/taskctl ps; echo ""; python3 core/coordinators/cli/taskctl qstat
+
+  - name: logs:tail
+    command: |
+      echo "Choose: orchestrator | monitor | worker_1..worker_4"
+      read target
+      tail -n 200 -f logs/${target}.log
+
+  - name: stop:all
+    command: |
+      for f in logs/*.pid; do [ -f "$f" ] || continue; PID=$(cat "$f"); kill -TERM "$PID" || true; rm -f "$f"; done
+      echo "Sent TERM to all pids"

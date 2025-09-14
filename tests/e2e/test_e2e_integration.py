@@ -5,6 +5,18 @@ Verifies the complete content generation pipeline from Dashboard to Roblox
 """
 
 import asyncio
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import time
 import logging
@@ -179,7 +191,7 @@ class E2EIntegrationTester:
             # Step 2: Verify MCP context update
             try:
                 async with websockets.connect(SERVICES["mcp_server"]["ws_url"]) as ws:
-                    await ws.send(json.dumps({"type": "get_context"}))
+                    await ws.send(json.dumps({"type": "get_context"}, default=make_json_serializable))
                     response = await asyncio.wait_for(ws.recv(), timeout=2)
                     context_data = json.loads(response)
                     

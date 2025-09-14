@@ -13,6 +13,8 @@ import sys
 from pathlib import Path
 import logging
 import pytest
+from tests.fixtures.agents import mock_llm
+from unittest.mock import Mock, patch, AsyncMock
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skipif(
@@ -80,7 +82,7 @@ class AgentIntegrationTest:
         self.start_time = datetime.now()
         
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_agent_initialization(self):
+    async def test_agent_initialization(self, mock_llm):
         """Test 1: Initialize all agents"""
         print("\n" + "="*60)
         print("🔍 Test 1: Agent Initialization")
@@ -123,7 +125,7 @@ class AgentIntegrationTest:
             return False
             
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_database_integration(self):
+    async def test_database_integration(self, mock_llm):
         """Test 2: Database Integration"""
         print("\n" + "="*60)
         print("🔍 Test 2: Database Integration")
@@ -184,7 +186,7 @@ class AgentIntegrationTest:
             return False
             
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_sparc_integration(self):
+    async def test_sparc_integration(self, mock_llm):
         """Test 3: SPARC Framework Integration"""
         print("\n" + "="*60)
         print("🔍 Test 3: SPARC Framework Integration")
@@ -242,7 +244,7 @@ class AgentIntegrationTest:
             return False
             
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_swarm_integration(self):
+    async def test_swarm_integration(self, mock_llm):
         """Test 4: Swarm Intelligence Integration"""
         print("\n" + "="*60)
         print("🔍 Test 4: Swarm Intelligence Integration")
@@ -298,7 +300,7 @@ class AgentIntegrationTest:
             return False
             
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_mcp_integration(self):
+    async def test_mcp_integration(self, mock_llm):
         """Test 5: MCP Context Management Integration"""
         print("\n" + "="*60)
         print("🔍 Test 5: MCP Context Management")
@@ -353,7 +355,7 @@ class AgentIntegrationTest:
             return False
             
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_orchestrator_workflow(self):
+    async def test_orchestrator_workflow(self, mock_llm):
         """Test 6: Orchestrator Workflow Execution"""
         print("\n" + "="*60)
         print("🔍 Test 6: Orchestrator Workflow")
@@ -403,7 +405,7 @@ class AgentIntegrationTest:
             return False
             
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_testing_agent_integration(self):
+    async def test_testing_agent_integration(self, mock_llm):
         """Test 7: Testing Agent Comprehensive Integration"""
         print("\n" + "="*60)
         print("🔍 Test 7: Testing Agent Integration")

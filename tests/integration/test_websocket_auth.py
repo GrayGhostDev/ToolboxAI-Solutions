@@ -8,9 +8,30 @@ Comprehensive test suite for WebSocket authentication flow covering:
 - Error handling
 - Session management
 """
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+
 
 import asyncio
 import os
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import pytest
 import jwt
@@ -414,7 +435,7 @@ class TestWebSocketEndpointIntegration:
                 
                 # Simulate WebSocket disconnect to end the loop
                 mock_websocket.receive_text.side_effect = [
-                    json.dumps({"type": "ping"}),
+                    json.dumps({"type": "ping"}, default=make_json_serializable),
                     Exception("WebSocketDisconnect")  # Simulate disconnect
                 ]
                 

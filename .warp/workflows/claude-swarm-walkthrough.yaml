@@ -1,0 +1,43 @@
+name: Claude Swarm Walkthrough
+workflows:
+  - name: 1/6 bootstrap
+    command: |
+      echo "Creating venv and installing minimal deps (python, redis lib, fastapi, uvicorn, click, ruff, mypy, pytest)..."
+      python3 - <<'PY'
+import os, sys, subprocess
+pkgs=["redis","fastapi","uvicorn[standard]","click","ruff","mypy","pytest","pytest-cov","pytest-json-report"]
+subprocess.check_call([sys.executable,"-m","pip","install","--user",*pkgs])
+print("✅ Python deps (user) installed or present")
+PY
+      echo "Note: Ensure Redis is running (brew services start redis)"
+
+  - name: 2/6 start services
+    command: |
+      echo "Starting orchestrator, workers, and monitor..."
+      warp run "Claude Swarm Orchestration:start:orchestrator"
+      warp run "Claude Swarm Orchestration:start:workers"
+      warp run "Claude Swarm Orchestration:start:monitor"
+
+  - name: 3/6 health check
+    command: |
+      bash scripts/warp/health-check.sh
+
+  - name: 4/6 seed demo tasks
+    command: |
+      echo "Seeding sample tasks with capabilities..."
+      python3 core/coordinators/cli/taskctl enqueue --capability planning "Plan API improvements"
+      python3 core/coordinators/cli/taskctl enqueue --capability implementation "Implement endpoint X"
+      python3 core/coordinators/cli/taskctl enqueue --capability research "Investigate library Y"
+      python3 core/coordinators/cli/taskctl qstat
+
+  - name: 5/6 observe
+    command: |
+      echo "Workers and queue status:"
+      python3 core/coordinators/cli/taskctl ps
+      python3 core/coordinators/cli/taskctl qstat
+      echo "Tail orchestrator log (Ctrl+C to stop):"
+      tail -n 100 -f logs/orchestrator.log
+
+  - name: 6/6 stop services
+    command: |
+      warp run "Claude Swarm Orchestration:stop:all"

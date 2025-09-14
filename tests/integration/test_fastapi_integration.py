@@ -6,6 +6,18 @@ Tests all major endpoints and functionality with real data
 
 import asyncio
 import os
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import time
 from typing import Dict, Any
@@ -156,7 +168,7 @@ class FastAPIIntegrationTest:
                 test_message = json.dumps({
                     "type": "subscribe",
                     "channel": "content_updates"
-                })
+                }, default=make_json_serializable)
                 await websocket.send(test_message)
                 
                 # Wait for response

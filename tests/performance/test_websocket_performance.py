@@ -7,6 +7,18 @@ import asyncio
 import time
 import pytest
 import websockets
+
+def make_json_serializable(obj):
+    """Convert non-serializable objects to serializable format."""
+    if hasattr(obj, '__dict__'):
+        return obj.__dict__
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    elif hasattr(obj, '_asdict'):
+        return obj._asdict()
+    else:
+        return str(obj)
+
 import json
 import statistics
 from typing import List, Dict, Any
@@ -64,7 +76,7 @@ class TestWebSocketPerformance:
         
         async with websockets.connect(url) as ws:
             # Warmup
-            await ws.send(json.dumps({"type": "ping"}))
+            await ws.send(json.dumps({"type": "ping"}, default=make_json_serializable))
             await ws.recv()
             
             # Actual test
@@ -77,7 +89,7 @@ class TestWebSocketPerformance:
                     "timestamp": start
                 }
                 
-                await ws.send(json.dumps(message))
+                await ws.send(json.dumps(message, default=make_json_serializable))
                 
                 try:
                     response = await asyncio.wait_for(ws.recv(), timeout=1.0)
@@ -124,7 +136,7 @@ class TestWebSocketPerformance:
                             "connection_id": connection_id,
                             "sequence": i
                         }
-                        await ws.send(json.dumps(message))
+                        await ws.send(json.dumps(message, default=make_json_serializable))
                         await asyncio.sleep(1)
                     
                     return True
@@ -180,7 +192,7 @@ class TestWebSocketPerformance:
                             "timestamp": time.time()
                         }
                         
-                        await ws.send(json.dumps(message))
+                        await ws.send(json.dumps(message, default=make_json_serializable))
                         messages_sent += 1
                         
                         # Try to receive response (non-blocking)
@@ -244,7 +256,7 @@ class TestWebSocketPerformance:
                 await ws.send(json.dumps({
                     "type": "memory_test",
                     "connection_id": i
-                }))
+                }, default=make_json_serializable))
             
             # Measure memory after connections
             peak_memory = process.memory_info().rss / 1024 / 1024
@@ -257,7 +269,7 @@ class TestWebSocketPerformance:
                             "type": "sustained_test",
                             "round": i,
                             "connection": j
-                        }))
+                        }, default=make_json_serializable))
                     except Exception:
                         pass
                 

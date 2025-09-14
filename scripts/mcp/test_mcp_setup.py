@@ -47,7 +47,7 @@ def test_imports():
     return True
 
 
-async def test_mcp_server():
+    async def test_mcp_server():
     """Test MCP server functionality"""
     print("🔍 Testing MCP server...")
 

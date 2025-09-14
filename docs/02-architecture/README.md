@@ -30,8 +30,17 @@ Comprehensive data model documentation:
 Detailed component specifications:
 
 - [AI Agents](components/agents.md) - Multi-agent system design
+- [Agent System Architecture](agent-system.md) - Complete multi-agent system documentation
 - [LMS Integration](components/lms-integration.md) - Learning Management System connectors
 - [Roblox Plugin](components/roblox-plugin.md) - Roblox Studio plugin architecture
+
+### [Database Schema](database-schema.md)
+
+Comprehensive database schema documentation including:
+- Entity Relationship Diagrams (ERD)
+- Table specifications and relationships
+- Indexing strategies
+- Data migration procedures
 
 ### [Infrastructure](infrastructure.md)
 

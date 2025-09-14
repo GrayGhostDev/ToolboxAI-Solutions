@@ -2,6 +2,15 @@
 
 Release notes and version history for ToolboxAI-Solutions.
 
+## Comprehensive Changelog
+
+For the most detailed and up-to-date changelog, see:
+- [Comprehensive Changelog](../changelog/CHANGELOG.md) - Complete version history and release notes
+
+## Quick Reference
+
+This document provides a quick reference for recent changes. For detailed information, see the comprehensive changelog above.
+
 ## Versions
 
 ### v1.2.0 (2025-08-15)

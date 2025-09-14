@@ -16,6 +16,7 @@ from typing import Dict, List, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from tests.fixtures.agents import mock_llm
 import pytest_asyncio
 
 # Integration tests are now enabled by default since we've fixed the issues

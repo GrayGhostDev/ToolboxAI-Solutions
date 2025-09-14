@@ -11,6 +11,7 @@ Centralized configuration for integration tests including:
 
 import os
 import pytest
+from tests.fixtures.agents import mock_llm
 import sys
 from pathlib import Path
 from typing import Dict, Any, Optional
