@@ -6,6 +6,7 @@ This test validates the basic agent communication without complex dependencies.
 """
 
 import asyncio
+import os
 import json
 import logging
 import sys
@@ -16,7 +17,10 @@ import uuid
 import pytest
 
 # Skip all tests in this module as they require external services
-pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
+pytestmark = pytest.mark.skipif(
+    not os.environ.get('RUN_INTEGRATION_TESTS'),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+)
 
 # Add the project root to the path
 sys.path.append('/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment')

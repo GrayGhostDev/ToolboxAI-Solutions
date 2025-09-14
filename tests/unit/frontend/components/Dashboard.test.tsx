@@ -1,15 +1,15 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
-import DashboardHome from '../../components/pages/DashboardHome';
-import { dashboardSlice } from '../../store/slices/dashboardSlice';
-import { userSlice } from '../../store/slices/userSlice';
-import { uiSlice } from '../../store/slices/uiSlice';
-import gamificationReducer from '../../store/slices/gamificationSlice';
-import * as apiService from '../../services/api';
+import DashboardHome from '../../../../apps/dashboard/src/components/pages/DashboardHome';
+import { dashboardSlice } from '../../../../apps/dashboard/src/store/slices/dashboardSlice';
+import { userSlice } from '../../../../apps/dashboard/src/store/slices/userSlice';
+import { uiSlice } from '../../../../apps/dashboard/src/store/slices/uiSlice';
+import gamificationReducer from '../../../../apps/dashboard/src/store/slices/gamificationSlice';
+import * as apiService from '../../../../apps/dashboard/src/services/api';
 
 // Mock the app store used by services/api to avoid importing the real store
 vi.mock('@/store', () => ({
@@ -37,7 +37,7 @@ vi.mock('@/store', () => ({
 }));
 
 // Mock WebSocket context to avoid requiring real provider
-vi.mock('../../contexts/WebSocketContext', () => {
+vi.mock('../../../../apps/dashboard/src/contexts/WebSocketContext', () => {
   const React = require('react');
   return {
     WebSocketProvider: ({ children }: any) => React.createElement(React.Fragment, null, children),

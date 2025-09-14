@@ -11,6 +11,7 @@ Tests all API endpoints including:
 
 import asyncio
 import json
+import os
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Dict
@@ -177,7 +178,7 @@ class TestFastAPIEndpoints:
             
             # Method 2: Try to create new RateLimiter instances for middleware
             # This is more drastic but ensures clean state
-            from apps.backend.security_middleware import RateLimiter, RateLimitConfig
+            from apps.backend.core.errors.middleware import RateLimiter, RateLimitConfig
             
             # Create a new RateLimiter instance with same config but fresh state
             # This won't directly replace the one in middleware, but at least ensures
@@ -275,7 +276,7 @@ class TestFastAPIEndpoints:
         
         with patch('server.main.generate_educational_content', new_callable=AsyncMock) as mock_generate:
             # Mock the response from generate_educational_content
-            from apps.backend.models import GeneratedScript
+            from apps.backend.models.schemas import GeneratedScript
             mock_generate.return_value = ContentResponse(
                 success=True,
                 message="Content generated successfully",
@@ -398,7 +399,7 @@ class TestFastAPIEndpoints:
         """Test accessing protected endpoint with authentication."""
         # Create admin user token for this test
         from apps.backend.api.auth.auth import create_user_token
-        from apps.backend.models import User
+        from apps.backend.models.schemas import User
         
         admin_user = User(
             id="admin-test-id",
@@ -480,7 +481,7 @@ class TestFastAPIEndpoints:
             timeout=httpx.Timeout(30.0)  # Increased timeout
         ) as client:
             # Create auth headers for this specific test
-            from apps.backend.models import User
+            from apps.backend.models.schemas import User
             from apps.backend.api.auth.auth import create_user_token
             
             test_user = User(
@@ -638,7 +639,10 @@ class TestFlaskEndpoints:
 class TestWebSocketConnections:
     """Test cases for WebSocket connections."""
     
-    @pytest.mark.skip(reason="WebSocket endpoint hangs in test environment")
+    @pytest.mark.skipif(
+        not os.environ.get('RUN_WEBSOCKET_TESTS'),
+        reason="WebSocket tests disabled. Set RUN_WEBSOCKET_TESTS=1 to enable"
+    )
     def test_websocket_connection(self):
         """Test WebSocket connection establishment."""
         from fastapi.testclient import TestClient
@@ -657,7 +661,10 @@ class TestWebSocketConnections:
             # WebSocket may not be fully configured in test environment
             pytest.skip("WebSocket not available in test environment")
     
-    @pytest.mark.skip(reason="WebSocket endpoint hangs in test environment")
+    @pytest.mark.skipif(
+        not os.environ.get('RUN_WEBSOCKET_TESTS'),
+        reason="WebSocket tests disabled. Set RUN_WEBSOCKET_TESTS=1 to enable"
+    )
     def test_websocket_authentication(self):
         """Test WebSocket with authentication."""
         from fastapi.testclient import TestClient
@@ -682,7 +689,10 @@ class TestWebSocketConnections:
         except Exception:
             pytest.skip("WebSocket authentication not available in test environment")
     
-    @pytest.mark.skip(reason="WebSocket endpoint hangs in test environment")
+    @pytest.mark.skipif(
+        not os.environ.get('RUN_WEBSOCKET_TESTS'),
+        reason="WebSocket tests disabled. Set RUN_WEBSOCKET_TESTS=1 to enable"
+    )
     def test_websocket_real_time_updates(self):
         """Test real-time updates via WebSocket."""
         from fastapi.testclient import TestClient
@@ -1042,7 +1052,7 @@ class TestPerformance:
     @pytest.mark.performance
     async def test_large_payload_handling(self):
         """Test handling large payloads."""
-        from apps.backend.models import User
+        from apps.backend.models.schemas import User
         from apps.backend.api.auth.auth import create_user_token
         
         # Use test app without rate limiting for this test

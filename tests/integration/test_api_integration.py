@@ -1,6 +1,7 @@
 """Integration tests for API endpoints"""
 
 import pytest
+import os
 import json
 import time
 from unittest.mock import patch, Mock
@@ -14,7 +15,10 @@ from apps.backend.core.security.rate_limit_manager import (
 )
 
 # Skip all tests in this module as they require external services
-pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
+pytestmark = pytest.mark.skipif(
+    not os.environ.get('RUN_INTEGRATION_TESTS'),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+)
 
 # Mock plugin_manager and content_bridge for tests
 plugin_manager = Mock()

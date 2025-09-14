@@ -5,6 +5,7 @@ Terminal 3 - Roblox Integration Testing
 """
 
 import json
+import os
 import pytest
 import time
 import requests
@@ -12,7 +13,10 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Skip all tests in this module as they require external services
-pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
+pytestmark = pytest.mark.skipif(
+    not os.environ.get('RUN_INTEGRATION_TESTS'),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+)
 
 # Configuration
 FLASK_URL = "http://127.0.0.1:5001"

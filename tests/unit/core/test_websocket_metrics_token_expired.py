@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 
 from apps.backend.services.websocket_handler import websocket_endpoint, websocket_manager
 from apps.backend.services.websocket_auth import WebSocketAuthSession
-from apps.backend.api.auth.auth import User
+from apps.backend.models import User
 
 
 @pytest.mark.asyncio
@@ -26,10 +26,10 @@ async def test_websocket_token_expiry_increments_metric():
     session = WebSocketAuthSession(ws, user, expired_payload)
 
     # Patch authenticate_connection to return our session
-    with patch('server.websocket.websocket_authenticator.authenticate_connection', return_value=session):
+    with patch('apps.backend.services.websocket_handler.websocket_authenticator.authenticate_connection', return_value=session):
         # Patch connect/disconnect to avoid side effects
-        with patch('server.websocket.websocket_manager.connect', return_value="cid-1"):
-            with patch('server.websocket.websocket_manager.disconnect', new=AsyncMock()) as _:
+        with patch('apps.backend.services.websocket_handler.websocket_manager.connect', return_value="cid-1"):
+            with patch('apps.backend.services.websocket_handler.websocket_manager.disconnect', new=AsyncMock()) as _:
                 before = websocket_manager._stats.get("token_expired", 0)
                 # Run endpoint
                 await websocket_endpoint(ws)
@@ -55,11 +55,11 @@ async def test_websocket_auth_error_increments_metric():
     }
     session = WebSocketAuthSession(ws, user, future_payload)
 
-    with patch('server.websocket.websocket_authenticator.authenticate_connection', return_value=session):
+    with patch('apps.backend.services.websocket_handler.websocket_authenticator.authenticate_connection', return_value=session):
         # Force message authentication to fail (not due to expiry)
-        with patch('server.websocket.authenticate_websocket_message', return_value=False):
-            with patch('server.websocket.websocket_manager.connect', return_value="cid-2"):
-                with patch('server.websocket.websocket_manager.disconnect', new=AsyncMock()) as _:
+        with patch('apps.backend.services.websocket_handler.authenticate_websocket_message', return_value=False):
+            with patch('apps.backend.services.websocket_handler.websocket_manager.connect', return_value="cid-2"):
+                with patch('apps.backend.services.websocket_handler.websocket_manager.disconnect', new=AsyncMock()) as _:
                     before = websocket_manager._stats.get("auth_errors", 0)
                     await websocket_endpoint(ws)
                     after = websocket_manager._stats.get("auth_errors", 0)

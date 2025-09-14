@@ -1,10 +1,14 @@
 import asyncio
+import os
 import websockets
 import json
 import pytest
 
 # Skip all tests in this module as they require external services
-pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
+pytestmark = pytest.mark.skipif(
+    not os.environ.get('RUN_INTEGRATION_TESTS'),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+)
 
 async def test_websocket():
     uri = "ws://127.0.0.1:8008/ws/test_client"

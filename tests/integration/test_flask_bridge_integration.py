@@ -5,6 +5,7 @@ Tests Flask bridge server (port 5001) communication with FastAPI (port 8008)
 """
 
 import asyncio
+import os
 import json
 import time
 from datetime import datetime
@@ -13,7 +14,10 @@ import httpx
 import pytest
 
 # Skip all tests in this module as they require external services
-pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
+pytestmark = pytest.mark.skipif(
+    not os.environ.get('RUN_INTEGRATION_TESTS'),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+)
 
 
 class FlaskBridgeIntegrationTest:

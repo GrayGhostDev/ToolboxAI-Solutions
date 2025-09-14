@@ -3,10 +3,16 @@ ToolboxAI Settings Module
 
 Configuration settings for the ToolboxAI Educational Platform.
 These settings can be overridden via environment variables.
+
+SECURITY NOTE: This module now includes secure JWT secret management
+with automatic validation and generation of cryptographically secure secrets.
 """
 
 import os
+import logging
+import warnings
 from typing import Optional, List, Dict, Any
+from pathlib import Path
 
 # Application Settings
 APP_NAME = os.getenv("APP_NAME", "ToolboxAI-Roblox-Environment")
@@ -30,8 +36,160 @@ SCHOOLOGY_KEY = os.getenv("SCHOOLOGY_KEY", "")
 SCHOOLOGY_SECRET = os.getenv("SCHOOLOGY_SECRET", "")
 CANVAS_TOKEN = os.getenv("CANVAS_TOKEN", "")
 
-# Security Settings
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-key-change-in-production")
+# JWT Security Configuration with Enhanced Security
+def _initialize_jwt_security():
+    """
+    Initialize secure JWT secret management with validation and auto-generation
+    
+    This function provides multiple layers of security:
+    1. Validates environment variables for security
+    2. Generates secure secrets for development
+    3. Prevents weak secrets in production
+    
+    Returns:
+        str: Validated, secure JWT secret
+        
+    Raises:
+        ValueError: If no secure secret can be established
+    """
+    logger = logging.getLogger(__name__)
+    
+    # Always use environment validation to avoid circular imports
+    # The JWT security modules can validate independently when they're imported
+    return _validate_environment_jwt_secret()
+
+def _validate_environment_jwt_secret():
+    """
+    Validate and secure JWT secret from environment variables
+    
+    Returns:
+        str: Validated JWT secret
+        
+    Raises:
+        ValueError: If secret is invalid or insecure
+    """
+    logger = logging.getLogger(__name__)
+    
+    # Get environment secret
+    env_secret = os.getenv("JWT_SECRET_KEY", "")
+    
+    # Check for missing or default secret
+    if not env_secret or env_secret in [
+        "dev-secret-key-change-in-production",
+        "your-secret-key-change-in-production", 
+        "change-me",
+        "default",
+        "secret",
+        "key"
+    ]:
+        logger.error("CRITICAL SECURITY ISSUE: No secure JWT secret configured!")
+        
+        if ENV_NAME.lower() in ('development', 'dev', 'local'):
+            # Generate secure development secret
+            logger.warning("Generating secure development JWT secret...")
+            dev_secret = _generate_development_secret()
+            logger.warning("DEVELOPMENT MODE: Auto-generated secure JWT secret")
+            logger.warning(f"Add to your .env file: JWT_SECRET_KEY={dev_secret}")
+            logger.warning("DO NOT use this auto-generated secret in production!")
+            return dev_secret
+        else:
+            raise ValueError(
+                "PRODUCTION SECURITY ERROR: No secure JWT secret configured! "
+                "Set JWT_SECRET_KEY environment variable with a cryptographically secure secret "
+                "(minimum 32 characters, high entropy, no predictable patterns)"
+            )
+    
+    # Validate secret strength
+    validation_errors = []
+    
+    # Length check
+    if len(env_secret) < 32:
+        validation_errors.append(f"Secret too short: {len(env_secret)} characters (minimum: 32)")
+    
+    # Weak pattern check
+    weak_patterns = [
+        'password', 'secret', 'key', 'token', '12345', 'admin', 
+        'test', 'demo', 'dev', 'prod', 'staging', 'change',
+        'your-secret', 'default', 'example', 'sample'
+    ]
+    found_patterns = [pattern for pattern in weak_patterns if pattern in env_secret.lower()]
+    if found_patterns:
+        validation_errors.append(f"Contains weak patterns: {', '.join(found_patterns)}")
+    
+    # Character diversity check
+    unique_chars = len(set(env_secret))
+    if unique_chars < 10:
+        validation_errors.append(f"Low character diversity: {unique_chars} unique characters (minimum: 10)")
+    
+    # Entropy check (basic)
+    if len(env_secret) == len(set(env_secret)) and len(env_secret) < 40:
+        # All unique characters but short - might be weak
+        logger.warning("JWT secret has unusual pattern - verify it's cryptographically secure")
+    
+    if validation_errors:
+        error_msg = "JWT secret validation failed: " + "; ".join(validation_errors)
+        
+        if ENV_NAME.lower() in ('development', 'dev', 'local'):
+            logger.error(error_msg)
+            logger.warning("Development mode: Generating secure replacement...")
+            dev_secret = _generate_development_secret()
+            logger.warning(f"Replace your JWT_SECRET_KEY with: {dev_secret}")
+            return dev_secret
+        else:
+            logger.error(error_msg)
+            raise ValueError(f"PRODUCTION SECURITY ERROR: {error_msg}")
+    
+    logger.info("JWT secret validation passed")
+    return env_secret
+
+def _generate_development_secret():
+    """Generate a cryptographically secure development JWT secret"""
+    import secrets
+    import string
+    
+    # Use a mix of characters for high entropy
+    alphabet = string.ascii_letters + string.digits + "!@#$%^&*()-_=+[]{}|;:,.<>?"
+    
+    # Generate 64-character secret with high entropy
+    return ''.join(secrets.choice(alphabet) for _ in range(64))
+
+def _log_jwt_security_status():
+    """Log JWT security status for monitoring"""
+    logger = logging.getLogger(__name__)
+    
+    secret_length = len(JWT_SECRET_KEY) if JWT_SECRET_KEY else 0
+    unique_chars = len(set(JWT_SECRET_KEY)) if JWT_SECRET_KEY else 0
+    
+    logger.info(f"JWT Security Status:")
+    logger.info(f"  Secret Length: {secret_length} characters")
+    logger.info(f"  Character Diversity: {unique_chars} unique characters")
+    logger.info(f"  Environment: {ENV_NAME}")
+    
+    if ENV_NAME.lower() not in ('development', 'dev', 'local'):
+        # Production environment - log security reminder
+        logger.info("  Production JWT security active")
+        logger.info("  Secret source: Environment variable")
+        logger.info("  Next rotation recommended: Within 90 days")
+
+# Initialize JWT secret with enhanced security
+try:
+    JWT_SECRET_KEY = _initialize_jwt_security()
+    _log_jwt_security_status()
+    
+except Exception as e:
+    # Final emergency fallback
+    logger = logging.getLogger(__name__)
+    logger.critical(f"CRITICAL: JWT security initialization completely failed: {e}")
+    
+    if ENV_NAME.lower() in ('development', 'dev', 'local'):
+        logger.warning("Emergency fallback: Using minimal development secret")
+        JWT_SECRET_KEY = _generate_development_secret()
+        logger.warning("This is an emergency fallback - fix JWT security configuration!")
+    else:
+        logger.critical("PRODUCTION FAILURE: Cannot establish secure JWT secret")
+        raise ValueError(f"PRODUCTION SECURITY FAILURE: {e}")
+
+# JWT Algorithm and Expiration
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 
@@ -73,8 +231,54 @@ ENABLE_REAL_DATA = os.getenv("ENABLE_REAL_DATA", "True").lower() in ("true", "1"
 ENABLE_AI_GENERATION = os.getenv("ENABLE_AI_GENERATION", "True").lower() in ("true", "1", "yes", "on")
 ENABLE_ROBLOX_INTEGRATION = os.getenv("ENABLE_ROBLOX_INTEGRATION", "True").lower() in ("true", "1", "yes", "on")
 
-# CORS Settings
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+# CORS Settings - Secure configuration based on environment
+def _get_cors_origins():
+    """Get CORS allowed origins based on environment"""
+    cors_env = os.getenv("ALLOWED_ORIGINS", "")
+    
+    if cors_env:
+        # Use environment variable if set
+        origins = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
+    elif ENV_NAME.lower() in ('development', 'dev', 'local', 'testing'):
+        # Development: Allow common local development ports
+        origins = [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173", 
+            "http://localhost:5174",
+            "http://127.0.0.1:5174",
+            "http://localhost:5175",
+            "http://127.0.0.1:5175",
+            "http://localhost:5176",
+            "http://127.0.0.1:5176",
+            "http://localhost:5177",
+            "http://127.0.0.1:5177",
+            "http://localhost:5178",
+            "http://127.0.0.1:5178",
+            "http://localhost:5179",
+            "http://127.0.0.1:5179",
+        ]
+    else:
+        # Production: Must be explicitly configured
+        origins = []
+        logger = logging.getLogger(__name__)
+        logger.error("CORS: No allowed origins configured for production!")
+        logger.error("Set ALLOWED_ORIGINS environment variable with comma-separated list of allowed origins")
+    
+    # Validate origins - no wildcards in production
+    validated_origins = []
+    for origin in origins:
+        if origin == "*":
+            if ENV_NAME.lower() not in ('development', 'dev', 'local'):
+                logger = logging.getLogger(__name__)
+                logger.error("CORS: Wildcard (*) not allowed in production!")
+                continue
+        validated_origins.append(origin)
+    
+    return validated_origins
+
+ALLOWED_ORIGINS = _get_cors_origins()
 
 # Rate Limiting
 RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "100"))
@@ -111,6 +315,38 @@ def get_api_config() -> Dict[str, Any]:
         "rate_limit": RATE_LIMIT_PER_MINUTE
     }
 
+def validate_jwt_security() -> Dict[str, Any]:
+    """Validate JWT security configuration."""
+    validation_result = {
+        'secret_configured': bool(JWT_SECRET_KEY),
+        'secret_length': len(JWT_SECRET_KEY) if JWT_SECRET_KEY else 0,
+        'meets_minimum_length': len(JWT_SECRET_KEY) >= 32 if JWT_SECRET_KEY else False,
+        'environment': ENV_NAME,
+        'is_secure': False,
+        'using_fallback': True  # Since we're using environment validation
+    }
+    
+    if JWT_SECRET_KEY:
+        # Check for weak patterns
+        weak_patterns = ['dev-secret', 'change-in-production', 'your-secret', 'default']
+        has_weak_pattern = any(pattern in JWT_SECRET_KEY.lower() for pattern in weak_patterns)
+        validation_result['has_weak_pattern'] = has_weak_pattern
+        validation_result['is_secure'] = (
+            validation_result['meets_minimum_length'] and 
+            not has_weak_pattern
+        )
+    
+    return validation_result
+
+def rotate_jwt_secret() -> bool:
+    """Rotate JWT secret (placeholder for actual implementation)."""
+    logger = logging.getLogger(__name__)
+    logger.warning("JWT secret rotation requested - manual update required")
+    logger.warning("1. Generate new secret using: python apps/backend/core/security/jwt_cli.py generate")
+    logger.warning("2. Update environment variable: JWT_SECRET_KEY")
+    logger.warning("3. Restart application")
+    return False
+
 # Service URLs Configuration
 SERVICE_URLS = {
     "backend": f"http://{API_HOST}:{API_PORT}",
@@ -122,6 +358,51 @@ SERVICE_URLS = {
 def should_use_real_data() -> bool:
     """Check if real data should be used (vs mock data)."""
     return ENABLE_REAL_DATA
+
+# Security validation functions
+def validate_jwt_security() -> Dict[str, Any]:
+    """
+    Validate current JWT security configuration
+    
+    Returns:
+        Dict containing validation results
+    """
+    try:
+        from apps.backend.core.security.jwt import get_jwt_security_manager
+        
+        manager = get_jwt_security_manager()
+        if manager:
+            return manager.get_security_status()
+    except ImportError:
+        pass
+    
+    # Fallback validation
+    return {
+        'secret_configured': bool(JWT_SECRET_KEY),
+        'secret_length': len(JWT_SECRET_KEY) if JWT_SECRET_KEY else 0,
+        'environment': ENV_NAME,
+        'using_fallback': True
+    }
+
+def rotate_jwt_secret() -> bool:
+    """
+    Rotate JWT secret (if advanced security system is available)
+    
+    Returns:
+        bool: True if rotation succeeded
+    """
+    try:
+        from apps.backend.core.security.jwt import get_jwt_security_manager
+        
+        manager = get_jwt_security_manager()
+        if manager:
+            success, report = manager.rotate_secret(force=True)
+            return success
+    except ImportError:
+        logger = logging.getLogger(__name__)
+        logger.warning("Advanced JWT security not available for rotation")
+    
+    return False
 
 # Additional attributes for compatibility
 class LLMConfig:
@@ -204,6 +485,9 @@ class Settings:
         self.CORS_ORIGINS = ALLOWED_ORIGINS
         self.JWT_SECRET_KEY = JWT_SECRET_KEY
         self.JWT_ALGORITHM = JWT_ALGORITHM
+        self.JWT_EXPIRATION_HOURS = JWT_EXPIRATION_HOURS
+        self.JWT_ACCESS_TOKEN_EXPIRE_MINUTES = JWT_EXPIRATION_HOURS * 60  # Convert hours to minutes
+        self.JWT_REFRESH_TOKEN_EXPIRE_DAYS = 30  # Default refresh token expiry
         
         # Additional compatibility attributes
         self.use_mock_database = os.getenv("USE_MOCK_DATABASE", "false").lower() in ("true", "1", "yes", "on")
@@ -247,6 +531,28 @@ class Settings:
     
     def get_api_config(self) -> Dict[str, Any]:
         return get_api_config()
+    
+    def validate_jwt_security(self) -> Dict[str, Any]:
+        """Validate JWT security configuration"""
+        return validate_jwt_security()
+    
+    def rotate_jwt_secret(self) -> bool:
+        """Rotate JWT secret"""
+        return rotate_jwt_secret()
 
 # Create a singleton settings instance
 settings = Settings()
+
+# Export module-level attributes for backward compatibility
+env_name = ENV_NAME
+service_urls = SERVICE_URLS
+
+# Log security status on module import
+_logger = logging.getLogger(__name__)
+_logger.info("ToolboxAI settings loaded with enhanced JWT security")
+
+# Validate security on import in production
+if ENV_NAME.lower() not in ('development', 'dev', 'local', 'testing', 'test'):
+    security_status = validate_jwt_security()
+    if not security_status.get('secret_configured', False):
+        _logger.critical("PRODUCTION ALERT: JWT security validation failed!")

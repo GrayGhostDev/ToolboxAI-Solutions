@@ -110,23 +110,25 @@ class TestPluginSecurity:
     """Test PluginSecurity class"""
     
     def setup_method(self):
-        self.security = PluginSecurity('test-secret-key')
+        self.security = PluginSecurity()
     
     def test_token_generation_and_validation(self):
-        """Test token generation and validation"""
+        """Test plugin signature verification"""
         plugin_id = 'test-plugin'
         
-        # Generate token
-        token = self.security.generate_token(plugin_id)
-        assert isinstance(token, str)
-        assert len(token) > 0
+        # Initially plugin is not trusted
+        is_valid = self.security.verify_plugin_signature(plugin_id, 'signature')
+        assert is_valid is False
         
-        # Validate token
-        is_valid = self.security.validate_token(plugin_id, token)
+        # Add to trusted plugins
+        self.security.add_trusted_plugin(plugin_id)
+        
+        # Now it should be trusted
+        is_valid = self.security.verify_plugin_signature(plugin_id, 'signature')
         assert is_valid is True
         
-        # Invalid token
-        is_valid = self.security.validate_token(plugin_id, 'invalid-token')
+        # Different plugin should not be trusted
+        is_valid = self.security.verify_plugin_signature('other-plugin', 'signature')
         assert is_valid is False
     
     def test_rate_limiting(self):
@@ -159,35 +161,32 @@ class TestPluginSecurity:
             manager.clear_all_limits()
     
     def test_plugin_validation(self):
-        """Test plugin data validation"""
-        # Valid data
-        valid_data = {
-            'studio_id': 'test-studio',
-            'port': 8080,
-            'version': '1.0.0'
+        """Test request validation"""
+        # Valid request
+        valid_request = {
+            'type': 'content',
+            'payload': {'data': 'test'},
+            'plugin_id': 'test-plugin'
         }
-        errors = self.security.validate_plugin_data(valid_data)
-        assert len(errors) == 0
+        is_valid = self.security.validate_request(valid_request, '127.0.0.1')
+        assert is_valid is True
         
-        # Invalid data
-        invalid_data = {
-            'port': 'not-a-number',
-            'version': 'x' * 25  # Too long
-        }
-        errors = self.security.validate_plugin_data(invalid_data)
-        assert len(errors) > 0
-        # Check that error messages contain the field names
-        errors_str = str(errors)
-        assert 'studio_id' in errors_str
-        assert 'port' in errors_str
-        assert 'version' in errors_str
+        # Invalid request (missing fields)
+        invalid_request = {'type': 'content'}
+        is_valid = self.security.validate_request(invalid_request, '127.0.0.1')
+        assert is_valid is False
+        
+        # Blocked source
+        self.security.block_source('192.168.1.1', 'test block')
+        is_valid = self.security.validate_request(valid_request, '192.168.1.1')
+        assert is_valid is False
 
 
 class TestLRUCache:
     """Test LRUCache class"""
     
     def setup_method(self):
-        self.cache = LRUCache(max_size=3, ttl=60)
+        self.cache = LRUCache(capacity=3)
     
     def test_basic_operations(self):
         """Test basic cache operations"""

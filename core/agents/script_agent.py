@@ -12,7 +12,7 @@ import re
 import json
 
 from langchain_core.messages import HumanMessage, AIMessage
-from langchain.tools import Tool
+from langchain_core.tools import Tool
 
 from .base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
 

@@ -20,9 +20,8 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 import redis
-from langchain.agents import AgentExecutor
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.chat_history import InMemoryChatMessageHistory
-from langchain.schema import AIMessage, BaseMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 

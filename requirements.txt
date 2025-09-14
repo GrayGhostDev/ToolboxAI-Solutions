@@ -10,9 +10,8 @@ asgiref>=3.8.1  # For Flask async support
 greenlet>=3.2.4  # For Flask async/await compatibility
 
 # LangChain & AI
-langchain==0.3.27
-langchain-openai==0.3.32
-langchain-community==0.3.29
+langchain-core==0.3.76
+langchain-openai==0.3.33
 langgraph==0.6.6
 openai==1.106.0
 tiktoken==0.11.0
@@ -57,12 +56,12 @@ sentry-sdk[fastapi,sqlalchemy,pure_eval]==2.37.1
 
 # Testing
 pytest==8.4.2
-pytest-asyncio==1.1.0
+pytest-asyncio==0.24.0  # Updated for better loop_scope support and async cleanup
 pytest-cov==6.2.1
 pytest-mock==3.12.0
-pytest-debug==1.0.0
+# pytest-debug==1.0.0  # Removed, not available on PyPI
 pytest-timeout==2.3.1
-pytest-xdist==3.5.0
+pytest-xdist==3.6.1  # Updated for better async support
 pytest-html==4.1.1
 pytest-json-report==1.5.0
 
@@ -85,7 +84,7 @@ psutil>=5.9,<6
 py-cpuinfo==9.0.0
 
 # Vector Embeddings (for MCP)
-numpy==2.3.2
+numpy==1.26.4
 sentence-transformers==5.1.0
 faiss-cpu==1.8.0
 

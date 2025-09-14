@@ -5,6 +5,7 @@ This script creates a minimal FastAPI server to identify startup problems.
 """
 
 import asyncio
+import os
 import sys
 import time
 import logging
@@ -13,7 +14,10 @@ from typing import Optional
 import pytest
 
 # Skip all tests in this module as they require external services
-pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
+pytestmark = pytest.mark.skipif(
+    not os.environ.get('RUN_INTEGRATION_TESTS'),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+)
 
 # Configure logging to see all debug information
 logging.basicConfig(

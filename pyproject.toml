@@ -33,60 +33,126 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 ignore_missing_imports = true
-exclude = [
-    "venv/",
-    "venv_clean/",
-    "node_modules/",
-    "dist/",
-    "build/"
-]
+exclude = ["venv/", "venv_clean/", "node_modules/", "dist/", "build/"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q --strict-markers"
-testpaths = [
-    "tests/unit",
-    "tests/integration"
-]
+testpaths = ["tests/unit", "tests/integration"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 
-[tool.pyright]
-include = ["**/*.py"]
+# Pyright/Basedpyright Configuration - 2025 Production Ready
+[tool.basedpyright]
+# File inclusion and exclusion
+include = [
+    "**/*.py",
+    "ToolboxAI-Roblox-Environment/**/*.py",
+    "apps/**/*.py",
+    "core/**/*.py",
+    "src/**/*.py"
+]
 exclude = [
     "**/node_modules",
     "**/__pycache__",
     "**/venv",
-    "**/venv_clean/lib",
-    "**/venv_clean/include",
+    "**/venv_clean",
     "**/.git",
     "**/.vscode",
     "**/.cursor",
+    "**/site-packages",
     "Archive/**",
-    "**/deprecated/**"
+    "Documentation/**",
+    "**/deprecated/**",
+    "**/test_*/**",
+    "**/tests/**",
+    "**/backups/**"
 ]
-venvPath = "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment"
+
+# Python environment configuration
+venvPath = "ToolboxAI-Roblox-Environment"
 venv = "venv_clean"
 pythonVersion = "3.11"
 pythonPlatform = "Darwin"
 typeCheckingMode = "standard"
+
+# Import and type checking settings
 reportMissingImports = false
 reportMissingTypeStubs = false
 reportUnusedVariable = "warning"
 reportUnusedImport = "warning"
 useLibraryCodeForTypes = true
 autoImportCompletions = true
+
+# Stub path for type definitions
 stubPath = "src/shared/types"
+
+# Additional Python paths
 extraPaths = [
-    "./ToolboxAI-Roblox-Environment",
-    "./ToolboxAI-Roblox-Environment/server",
-    "./ToolboxAI-Roblox-Environment/agents",
-    "./ToolboxAI-Roblox-Environment/mcp",
-    "./ToolboxAI-Roblox-Environment/coordinators",
-    "./ToolboxAI-Roblox-Environment/swarm",
-    "./ToolboxAI-Roblox-Environment/sparc",
-    "./ToolboxAI-Roblox-Environment/toolboxai_utils",
-    "./src/shared/utils",
-    "./src/api/ghost-backend/src"
+    "ToolboxAI-Roblox-Environment",
+    "ToolboxAI-Roblox-Environment/server",
+    "ToolboxAI-Roblox-Environment/agents",
+    "ToolboxAI-Roblox-Environment/mcp",
+    "ToolboxAI-Roblox-Environment/coordinators",
+    "ToolboxAI-Roblox-Environment/swarm",
+    "ToolboxAI-Roblox-Environment/sparc",
+    "ToolboxAI-Roblox-Environment/toolboxai_utils",
+    "apps/backend",
+    "apps/backend/core",
+    "apps/backend/api",
+    "apps/backend/services",
+    "apps/backend/models",
+    "core",
+    "core/agents",
+    "core/database",
+    "core/mcp",
+    "core/sparc",
+    "core/swarm",
+    "src",
+    "src/shared",
+    "src/shared/utils",
+    "src/shared/types",
 ]
+
+# Diagnostic severity overrides for production code quality
+reportOptionalMemberAccess = "warning"
+reportOptionalSubscript = "warning"
+reportPrivateImportUsage = "warning"
+reportUnknownArgumentType = "warning"
+reportUnknownMemberType = "warning"
+reportUnknownVariableType = "warning"
+reportUntypedFunctionDecorator = "warning"
+reportUntypedClassDecorator = "warning"
+reportUntypedBaseClass = "warning"
+reportUntypedNamedTuple = "warning"
+reportCallInDefaultInitializer = "warning"
+reportUnnecessaryIsInstance = "warning"
+reportUnnecessaryCast = "warning"
+reportUnnecessaryComparison = "warning"
+reportUnnecessaryContains = "warning"
+reportAssertAlwaysTrue = "warning"
+reportSelfClsParameterName = "warning"
+reportImplicitStringConcatenation = "warning"
+reportInvalidStringEscapeSequence = "warning"
+reportUnknownLambdaType = "warning"
+reportUnknownParameterType = "warning"
+reportUnusedCoroutine = "warning"
+reportUnusedCallResult = "warning"
+reportUnusedExpression = "warning"
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportImplicitOverride = "warning"
+reportShadowedImports = "warning"
+reportUninitializedInstanceVariable = "warning"
+reportInvalidTypeVarUse = "warning"
+
+# Additional production-ready settings
+reportIncompatibleMethodOverride = "warning"
+reportIncompatibleVariableOverride = "warning"
+reportInconsistentConstructor = "warning"
+reportOverlappingOverload = "warning"
+reportPossiblyUnboundVariable = "warning"
+reportUnusedCallResult = "warning"
+reportUnusedCoroutine = "warning"
+reportUnusedExpression = "warning"
+reportUnusedVariable = "warning"

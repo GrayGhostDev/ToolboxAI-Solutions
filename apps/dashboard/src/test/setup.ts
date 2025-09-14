@@ -8,6 +8,25 @@
 import '@testing-library/jest-dom'
 import { beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
+import * as matchers from '@testing-library/jest-dom/matchers'
+import { expect } from 'vitest'
+
+// Extend Vitest's expect with jest-dom matchers
+expect.extend(matchers)
+
+// Mock localStorage
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+  length: 0,
+  key: vi.fn()
+}
+global.localStorage = localStorageMock as Storage
+
+// Mock sessionStorage
+global.sessionStorage = localStorageMock as Storage
 
 // Debug logging configuration
 const originalConsoleError = console.error
@@ -127,7 +146,7 @@ export const debugTestUtils = {
   // Debug API calls
   debugApiCall: (method: string, url: string, data?: any) => {
     if (global.testUtils?.debug) {
-      console.log(`[DEBUG] API ${method.toUpperCase()}:`, url, data ? `with data:`, data : '')
+      console.log(`[DEBUG] API ${method.toUpperCase()}:`, url, data ? 'with data:' : '', data || '')
     }
   },
 

@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import pytest
+import pytest_asyncio
 import signal
 import sys
 import tempfile
@@ -17,6 +18,10 @@ import threading
 from pathlib import Path
 from typing import Generator, Dict, Any
 from unittest.mock import Mock, patch, AsyncMock
+
+# Import test logging and cleanup utilities
+from tests.test_logger import TestLogger, configure_test_logging, TEST_LOG_DIR
+from tests.test_cleanup import TestCleanupManager
 
 # Import rate limiting components
 from apps.backend.core.security.rate_limit_manager import (
@@ -29,6 +34,8 @@ from apps.backend.core.security.rate_limit_manager import (
 )
 from apps.backend.core.config import settings
 
+# Configure test logging
+configure_test_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -39,6 +46,7 @@ def test_environment():
     os.environ["TESTING_MODE"] = "true"
     os.environ["BYPASS_RATE_LIMIT_IN_TESTS"] = "true"
     os.environ["DEBUG"] = "true"
+    os.environ["USE_MOCK_LLM"] = "true"  # Force mock LLM for all tests to avoid OpenAI API calls
     
     # Setup debugpy for test debugging if not already connected
     try:
@@ -230,6 +238,20 @@ def pytest_sessionstart(session):
     # Ensure clean start
     RateLimitManager.reset_instance()
     clear_all_rate_limits()
+    
+    # Initialize test cleanup manager
+    cleanup_manager = TestCleanupManager(
+        test_log_dir=TEST_LOG_DIR,
+        retention_days=7,
+        max_files_per_type=10,
+        auto_cleanup=True
+    )
+    session.cleanup_manager = cleanup_manager
+    
+    # Initialize test logger
+    test_logger = TestLogger("test_session", "session")
+    test_logger.start_test("Test Session", f"session_{session.nodeid}")
+    session.test_logger = test_logger
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -242,6 +264,18 @@ def pytest_sessionfinish(session, exitstatus):
         RateLimitManager.reset_instance()
     except Exception as e:
         logger.warning(f"Final cleanup error: {e}")
+    
+    # Complete test logging
+    if hasattr(session, 'test_logger'):
+        status = "passed" if exitstatus == 0 else "failed"
+        session.test_logger.end_test("Test Session", status)
+        session.test_logger.generate_report()
+    
+    # Perform test file cleanup
+    if hasattr(session, 'cleanup_manager'):
+        stats = session.cleanup_manager.cleanup()
+        logger.info(f"Test cleanup completed: {stats['files_removed']} files removed, "
+                   f"{stats['bytes_freed'] / 1024 / 1024:.2f} MB freed")
 
 
 # Missing fixtures for Roblox integration tests
@@ -534,29 +568,129 @@ def pytest_addoption(parser):
     )
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an event loop for the test session"""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+# Note: Custom event_loop fixture removed - pytest-asyncio 0.24+ handles this automatically
+# with asyncio_default_fixture_loop_scope = function in pytest.ini
+
+@pytest.fixture(scope="function", autouse=True)
+async def cleanup_database_pools():
+    """Clean up database connection pools after each test"""
+    yield
     
-    # Set a default timeout for all async operations
-    loop.set_debug(False)  # Disable debug mode to improve performance
+    # Close all database pools
+    from core.database.connection_manager import OptimizedConnectionManager
     
-    yield loop
-    
-    # Cleanup
     try:
-        # Cancel all pending tasks
-        pending = asyncio.all_tasks(loop)
-        for task in pending:
-            task.cancel()
-        # Wait for tasks to complete cancellation
-        loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
-    except Exception:
+        # Get the singleton instance if it exists
+        if hasattr(OptimizedConnectionManager, '_instance'):
+            db_manager = OptimizedConnectionManager._instance
+            if db_manager and hasattr(db_manager, 'pools'):
+                # Close all pools
+                for pool_name, pool in db_manager.pools.items():
+                    try:
+                        await pool.close()
+                        logger.debug(f"Closed database pool: {pool_name}")
+                    except Exception as e:
+                        logger.warning(f"Error closing pool {pool_name}: {e}")
+                
+                # Clear the pools dictionary
+                db_manager.pools.clear()
+            
+            # Reset the singleton instance
+            OptimizedConnectionManager._instance = None
+    except Exception as e:
+        logger.warning(f"Database cleanup error: {e}")
+
+
+@pytest.fixture(scope="function", autouse=True)
+def enhanced_async_cleanup():
+    """Enhanced async cleanup without async generator issues"""
+    # Setup phase
+    yield
+    
+    # Cleanup phase - handle synchronously to avoid generator issues
+    try:
+        loop = asyncio.get_event_loop()
+        if loop and not loop.is_closed():
+            # Schedule cleanup for after the test completes
+            pending = asyncio.all_tasks(loop)
+            for task in pending:
+                if not task.done():
+                    task.cancel()
+            
+            # Don't wait for tasks here - let pytest-asyncio handle it
+    except RuntimeError:
+        # No event loop or it's already closed
         pass
+    except Exception as e:
+        logger.debug(f"Cleanup exception (safely ignored): {e}")
+
+
+@pytest_asyncio.fixture(loop_scope="session")
+async def shared_redis_pool():
+    """Session-scoped Redis pool for all tests"""
+    import redis.asyncio as redis
+    
+    pool = None
+    try:
+        pool = await redis.create_pool(
+            'redis://localhost:6379',
+            minsize=5,
+            maxsize=10,
+            encoding='utf-8'
+        )
+        yield pool
+    except Exception as e:
+        logger.warning(f"Could not create Redis pool: {e}")
+        # Return a mock pool if Redis is not available
+        mock_pool = Mock()
+        mock_pool.get = AsyncMock(return_value=None)
+        mock_pool.set = AsyncMock(return_value=True)
+        mock_pool.delete = AsyncMock(return_value=1)
+        mock_pool.close = AsyncMock()
+        mock_pool.wait_closed = AsyncMock()
+        yield mock_pool
     finally:
-        loop.close()
+        if pool and hasattr(pool, 'close'):
+            pool.close()
+            await pool.wait_closed()
+
+
+@pytest.fixture(scope="session")
+def worker_id(request):
+    """Get xdist worker ID for parallel execution"""
+    if hasattr(request.config, 'workerinput'):
+        return request.config.workerinput['workerid']
+    return 'master'
+
+
+@pytest_asyncio.fixture(loop_scope="module")
+async def module_db_pool(worker_id):
+    """Module-scoped database pool per worker"""
+    from core.database.connection_manager import OptimizedConnectionManager, ConnectionConfig
+    
+    # Create isolated database per worker
+    db_name = f"test_db_{worker_id}" if worker_id != 'master' else "test_db"
+    
+    config = ConnectionConfig(
+        host=os.getenv("DB_HOST", "localhost"),
+        port=int(os.getenv("DB_PORT", "5432")),
+        user=os.getenv("DB_USER", "eduplatform"),
+        password=os.getenv("DB_PASSWORD", "eduplatform2024"),
+        database=db_name,
+        min_size=2,
+        max_size=5,
+        command_timeout=10
+    )
+    
+    manager = OptimizedConnectionManager()
+    try:
+        await manager.initialize_pool("test", config)
+        yield manager
+    finally:
+        try:
+            await manager.close_all_pools()
+        except Exception as e:
+            logger.warning(f"Error closing module DB pool: {e}")
 
 
 

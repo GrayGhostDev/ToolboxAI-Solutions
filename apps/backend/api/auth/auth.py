@@ -24,6 +24,13 @@ from requests_oauthlib import OAuth1Session
 from ...core.config import settings
 from ...models.schemas import Session, User
 from ...core.security.rate_limiter import get_rate_limit_manager
+# Secure JWT secret management
+try:
+    from ...core.security.jwt import get_secure_jwt_secret
+except ImportError:
+    # Fallback for development
+    def get_secure_jwt_secret():
+        return settings.JWT_SECRET_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +130,7 @@ class JWTManager:
         )
 
         encoded_jwt = jwt.encode(
-            to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+            to_encode, get_secure_jwt_secret(), algorithm=settings.JWT_ALGORITHM
         )
 
         return encoded_jwt
@@ -141,7 +148,7 @@ class JWTManager:
         """
         try:
             payload = jwt.decode(
-                token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+                token, get_secure_jwt_secret(), algorithms=[settings.JWT_ALGORITHM]
             )
             return payload
         except jwt.ExpiredSignatureError:
@@ -688,7 +695,7 @@ def initialize_auth():
             logger.warning(f"Redis connection failed: {e}")
 
     # Validate JWT configuration
-    if settings.JWT_SECRET_KEY == "your-secret-key-change-in-production":
+    if get_secure_jwt_secret() == "your-secret-key-change-in-production":
         logger.warning("Using default JWT secret key - change in production!")
 
     # Validate LMS credentials

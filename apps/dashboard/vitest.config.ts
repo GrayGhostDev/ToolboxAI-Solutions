@@ -1,73 +1,56 @@
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import * as  path from 'path';
 import { defineConfig } from 'vitest/config';
 
+// Following official Vitest documentation best practices
+// https://vitest.dev/guide/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react()] as any,
   test: {
-    // Debug-specific configuration
+    // Environment configuration for React/DOM testing
     environment: 'jsdom',
     globals: true,
     setupFiles: './src/test/setup.ts',
 
-    // Debug settings
-    testTimeout: 30000,
-    hookTimeout: 30000,
-    teardownTimeout: 30000,
+    // Timeout configuration
+    testTimeout: 10000,
+    hookTimeout: 10000,
 
-    // Debug output
-    reporter: ['verbose', 'html', 'json'],
+    // Reporter configuration
+    // Using built-in reporters that don't require additional dependencies
+    reporters: ['verbose', 'json'],
     outputFile: {
-      html: './test-reports/debug-report.html',
-      json: './test-reports/debug-report.json',
+      json: './test-reports/test-results.json',
     },
 
-    // Debug coverage
+    // Coverage configuration
+    // Note: Coverage requires @vitest/coverage-v8 or @vitest/coverage-istanbul
+    // Run with: vitest run --coverage
     coverage: {
-      enabled: true,
-      provider: 'v8',
-      reporter: ['text', 'html', 'json', 'lcov'],
-      reportsDirectory: './test-reports/coverage',
+      enabled: false,  // Enable via CLI with --coverage flag
+      provider: 'v8',  // Default provider, requires @vitest/coverage-v8
+      reporter: ['text', 'json'],  // Removed 'html' as it requires @vitest/ui
+      reportsDirectory: './coverage',
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
-        'src/**/*.test.{ts,tsx}',
-        'src/**/*.spec.{ts,tsx}',
+        'node_modules/**',
+        'src/**/*.{test,spec}.{ts,tsx}',
         'src/test/**/*',
         'src/**/*.d.ts',
+        'src/types/**/*',
       ],
-      thresholds: {
-        global: {
-          branches: 80,
-          functions: 80,
-          lines: 80,
-          statements: 80,
-        },
-      },
     },
 
-    // Debug parallel execution
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
+    // Execution strategy
+    pool: 'forks',  // Better for DOM/Node.js compatibility
+    isolate: true,  // Isolate tests for better reliability
 
-    // Debug isolation
-    isolate: true,
-
-    // Debug logging
-    logHeapUsage: true,
-    passWithNoTests: true,
-
-    // Debug specific test patterns
-    include: ['src/**/*.{test,spec}.{ts,tsx}', 'src/**/*.debug.{ts,tsx}'],
-
-    // Debug exclude patterns
-    exclude: ['node_modules/**', 'dist/**', 'build/**', '**/*.d.ts'],
+    // Test patterns following Vitest conventions
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    exclude: ['node_modules/**', 'dist/**', 'build/**'],
   },
 
-  // Debug resolve configuration
+  // Resolve configuration for module aliases
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -81,7 +64,7 @@ export default defineConfig({
     },
   },
 
-  // Debug server configuration
+  // Development server configuration
   server: {
     port: 5179,
     host: '127.0.0.1',

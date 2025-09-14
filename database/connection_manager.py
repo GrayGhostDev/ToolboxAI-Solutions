@@ -7,13 +7,15 @@ Supports multiple databases, connection pooling, and health monitoring.
 
 import asyncio
 import os
+import logging
 from contextlib import asynccontextmanager, contextmanager
 from typing import Dict, Optional, Any, List, Union, Generator, AsyncGenerator
 from urllib.parse import quote_plus
+from datetime import datetime
 
 import redis
 import pymongo
-from sqlalchemy import create_engine, MetaData, text, Engine
+from sqlalchemy import create_engine, MetaData, text, Engine, event, pool
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncSession,
@@ -21,8 +23,13 @@ from sqlalchemy.ext.asyncio import (
     AsyncEngine,
 )
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import QueuePool
+from sqlalchemy.pool import QueuePool, NullPool, StaticPool, AsyncAdaptedQueuePool
 from dotenv import load_dotenv
+
+# Import optimized pool configuration
+from .pool_config import get_database_pool_config, PoolMonitor, PoolStrategy
+
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -41,7 +48,9 @@ class DatabaseConnectionManager:
         self.async_session_factories: Dict[str, async_sessionmaker] = {}
         self.redis_client: Optional[redis.Redis] = None
         self.mongo_client: Optional[pymongo.MongoClient] = None
+        self.pool_monitors: Dict[str, PoolMonitor] = {}
         self._initialized = False
+        self.environment = os.getenv("ENVIRONMENT", "production")
 
     def initialize(self) -> None:
         """Initialize all database connections."""
@@ -101,29 +110,40 @@ class DatabaseConnectionManager:
 
         for db_name, config in databases.items():
             try:
-                # Create sync engine
+                # Get optimized pool configuration following 2025 best practices
+                pool_config = get_database_pool_config(
+                    environment=self.environment,
+                    database_type="postgresql"
+                )
+                
+                # Create pool monitor
+                self.pool_monitors[db_name] = PoolMonitor(pool_config)
+                
+                # Create sync engine with SQLAlchemy 2.0 optimizations
                 sync_url = self._build_postgresql_url(config)
-                sync_engine = create_engine(
-                    sync_url,
-                    poolclass=QueuePool,
-                    pool_size=int(os.getenv("DB_POOL_SIZE", 20)),
-                    max_overflow=int(os.getenv("DB_MAX_OVERFLOW", 40)),
-                    pool_pre_ping=True,
-                    pool_timeout=30,
-                    pool_recycle=3600,
-                    echo=config["echo"],
-                )
+                engine_kwargs = pool_config.to_engine_kwargs()
+                engine_kwargs["echo"] = config["echo"]
+                engine_kwargs["poolclass"] = QueuePool
+                engine_kwargs["future"] = True  # SQLAlchemy 2.0 mode
+                
+                sync_engine = create_engine(sync_url, **engine_kwargs)
+                
+                # Register pool event listeners for monitoring (SQLAlchemy 2.0 best practice)
+                if pool_config.enable_pool_events:
+                    self._register_pool_events(sync_engine, db_name)
 
-                # Create async engine
-                async_url = sync_url.replace("postgresql://", "postgresql+asyncpg://")
-                async_engine = create_async_engine(
-                    async_url,
-                    pool_size=int(os.getenv("DB_POOL_SIZE", 20)),
-                    max_overflow=int(os.getenv("DB_MAX_OVERFLOW", 40)),
-                    pool_timeout=30,
-                    pool_recycle=3600,
-                    echo=config["echo"],
-                )
+                # Create async engine with asyncpg optimizations
+                # Build async URL with asyncpg driver specifically
+                async_url = self._build_async_postgresql_url(config)
+                async_kwargs = pool_config.to_async_engine_kwargs()
+                async_kwargs["echo"] = config["echo"]
+                async_kwargs["poolclass"] = AsyncAdaptedQueuePool
+                
+                async_engine = create_async_engine(async_url, **async_kwargs)
+                
+                # Register async pool events
+                if pool_config.enable_pool_events:
+                    self._register_async_pool_events(async_engine, db_name)
 
                 # Create session factories
                 session_factory = sessionmaker(
@@ -211,11 +231,102 @@ class DatabaseConnectionManager:
             self.mongo_client = None
 
     def _build_postgresql_url(self, config: Dict[str, Any]) -> str:
-        """Build PostgreSQL connection URL."""
+        """
+        Build PostgreSQL connection URL.
+        Supports both psycopg3 and psycopg2 drivers.
+        """
         password = quote_plus(config["password"]) if config["password"] else ""
         password_part = f":{password}" if password else ""
+        
+        # Try to use psycopg3 first, fall back to psycopg2
+        try:
+            import psycopg
+            driver = "postgresql+psycopg"  # psycopg3 driver
+            logger.debug(f"Using psycopg3 driver for {config.get('database', 'unknown')}")
+        except ImportError:
+            driver = "postgresql"  # Default to psycopg2
+            logger.debug(f"Using psycopg2 driver for {config.get('database', 'unknown')}")
 
-        return f"postgresql://{config['username']}{password_part}@{config['host']}:{config['port']}/{config['database']}"
+        return f"{driver}://{config['username']}{password_part}@{config['host']}:{config['port']}/{config['database']}"
+    
+    def _build_async_postgresql_url(self, config: Dict[str, Any]) -> str:
+        """
+        Build async PostgreSQL connection URL for asyncpg.
+        Always uses asyncpg driver for async connections.
+        """
+        password = quote_plus(config["password"]) if config["password"] else ""
+        password_part = f":{password}" if password else ""
+        
+        # Always use asyncpg for async connections
+        return f"postgresql+asyncpg://{config['username']}{password_part}@{config['host']}:{config['port']}/{config['database']}"
+    
+    def _register_pool_events(self, engine: Engine, db_name: str) -> None:
+        """
+        Register SQLAlchemy 2.0 pool event listeners for monitoring
+        Following best practices from: https://docs.sqlalchemy.org/en/20/core/events.html#pool-events
+        """
+        @event.listens_for(engine, "connect")
+        def receive_connect(dbapi_conn, connection_record):
+            """Called once for each new DB-API connection."""
+            connection_record.info['connect_time'] = datetime.now()
+            if db_name in self.pool_monitors:
+                self.pool_monitors[db_name].metrics["connections_created"] += 1
+            logger.debug(f"[{db_name}] New connection created")
+        
+        @event.listens_for(engine, "checkout")
+        def receive_checkout(dbapi_conn, connection_record, connection_proxy):
+            """Called when a connection is checked out from the pool."""
+            checkout_time = datetime.now()
+            connection_record.info['checkout_time'] = checkout_time
+            if db_name in self.pool_monitors:
+                self.pool_monitors[db_name].metrics["checkout_count"] += 1
+            
+        @event.listens_for(engine, "checkin")
+        def receive_checkin(dbapi_conn, connection_record):
+            """Called when a connection is checked back into the pool."""
+            if 'checkout_time' in connection_record.info:
+                duration = (datetime.now() - connection_record.info['checkout_time']).total_seconds()
+                if db_name in self.pool_monitors:
+                    self.pool_monitors[db_name].metrics["total_checkout_time"] += duration
+                if duration > 1.0:  # Log slow checkouts
+                    logger.warning(f"[{db_name}] Slow connection checkout: {duration:.2f}s")
+        
+        @event.listens_for(engine, "reset")
+        def receive_reset(dbapi_conn, connection_record):
+            """Called when a connection is reset (rollback)."""
+            logger.debug(f"[{db_name}] Connection reset")
+        
+        @event.listens_for(engine, "invalidate")
+        def receive_invalidate(dbapi_conn, connection_record, exception):
+            """Called when a connection is invalidated."""
+            if db_name in self.pool_monitors:
+                self.pool_monitors[db_name].metrics["connection_errors"] += 1
+            logger.error(f"[{db_name}] Connection invalidated: {exception}")
+    
+    def _register_async_pool_events(self, engine: AsyncEngine, db_name: str) -> None:
+        """
+        Register async pool event listeners for monitoring
+        Async version of pool events for AsyncEngine
+        """
+        @event.listens_for(engine.sync_engine, "connect")
+        def receive_connect(dbapi_conn, connection_record):
+            connection_record.info['connect_time'] = datetime.now()
+            if db_name in self.pool_monitors:
+                self.pool_monitors[db_name].metrics["connections_created"] += 1
+            logger.debug(f"[{db_name}] Async connection created")
+        
+        @event.listens_for(engine.sync_engine, "checkout")
+        def receive_checkout(dbapi_conn, connection_record, connection_proxy):
+            connection_record.info['checkout_time'] = datetime.now()
+            if db_name in self.pool_monitors:
+                self.pool_monitors[db_name].metrics["checkout_count"] += 1
+        
+        @event.listens_for(engine.sync_engine, "checkin")
+        def receive_checkin(dbapi_conn, connection_record):
+            if 'checkout_time' in connection_record.info:
+                duration = (datetime.now() - connection_record.info['checkout_time']).total_seconds()
+                if db_name in self.pool_monitors:
+                    self.pool_monitors[db_name].metrics["total_checkout_time"] += duration
 
     @contextmanager
     def get_session(self, database: str = "education") -> Generator[Session, None, None]:
@@ -287,19 +398,41 @@ class DatabaseConnectionManager:
 
         return self.async_engines[database]
 
-    def health_check(self) -> Dict[str, bool]:
+    def health_check(self) -> Dict[str, Any]:
         """Check health of all database connections."""
         results = {}
 
-        # Check PostgreSQL databases
+        # Check PostgreSQL databases with pool status
         for db_name, engine in self.engines.items():
             try:
                 with engine.connect() as conn:
                     conn.execute(text("SELECT 1"))
-                results[f"postgresql_{db_name}"] = True
+                
+                # Add pool status if available
+                pool_status = {}
+                if hasattr(engine.pool, 'size'):
+                    pool_status = {
+                        "size": engine.pool.size(),
+                        "checked_in": engine.pool.checkedin(),
+                        "overflow": engine.pool.overflow(),
+                        "total": engine.pool.size() + engine.pool.overflow()
+                    }
+                
+                results[f"postgresql_{db_name}"] = {
+                    "healthy": True,
+                    "pool": pool_status
+                }
+                
+                # Log pool status if monitor exists
+                if db_name in self.pool_monitors:
+                    self.pool_monitors[db_name].log_pool_status(engine.pool)
+                    
             except Exception as e:
                 print(f"❌ PostgreSQL {db_name} health check failed: {e}")
-                results[f"postgresql_{db_name}"] = False
+                results[f"postgresql_{db_name}"] = {
+                    "healthy": False,
+                    "error": str(e)
+                }
 
         # Check Redis
         if self.redis_client:
@@ -340,7 +473,14 @@ class DatabaseConnectionManager:
         # Close async engines
         for db_name, engine in self.async_engines.items():
             try:
-                asyncio.create_task(engine.dispose())
+                # Check if there's a running event loop
+                try:
+                    loop = asyncio.get_running_loop()
+                    # If we're in an async context, create a task
+                    asyncio.create_task(engine.dispose())
+                except RuntimeError:
+                    # No running loop, run in a new one
+                    asyncio.run(engine.dispose())
                 print(f"✅ Closed {db_name} async database connection")
             except Exception as e:
                 print(f"❌ Error closing {db_name} async database: {e}")

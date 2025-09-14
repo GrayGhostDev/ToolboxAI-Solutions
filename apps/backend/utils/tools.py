@@ -13,7 +13,7 @@ import os
 import json
 import requests
 from typing import Optional, List, Dict, Any, Union
-from langchain.tools import BaseTool, tool
+from langchain_core.tools import BaseTool, tool
 from langchain_community.tools import WikipediaQueryRun, DuckDuckGoSearchRun
 from langchain_community.utilities import WikipediaAPIWrapper, DuckDuckGoSearchAPIWrapper
 from pydantic import BaseModel, Field
@@ -22,9 +22,9 @@ from datetime import datetime
 import hashlib
 import uuid
 
-from .config import settings
-from .auth import LMSAuthenticator
-from .models import (
+from ..core.config import settings
+from ..api.auth.auth import LMSAuthenticator
+from ..models.schemas import (
     SubjectType, DifficultyLevel, QuizType, QuizQuestion, QuizOption,
     TerrainSize, EnvironmentType, LMSCourse, LMSAssignment
 )

@@ -10,6 +10,7 @@ Comprehensive test suite for WebSocket authentication flow covering:
 """
 
 import asyncio
+import os
 import json
 import pytest
 import jwt
@@ -17,7 +18,10 @@ from datetime import datetime, timezone, timedelta
 from unittest.mock import Mock, AsyncMock, patch
 
 # Skip all tests in this module as they require external services
-pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
+pytestmark = pytest.mark.skipif(
+    not os.environ.get('RUN_INTEGRATION_TESTS'),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+)
 
 # Test imports
 from core.mcp.auth_middleware import WebSocketAuthMiddleware, WebSocketAuthError

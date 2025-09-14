@@ -9,17 +9,9 @@ const muiIconsPath = fs.existsSync(path.resolve(__dirname, 'node_modules/@mui/ic
   : path.resolve(__dirname, '../../node_modules/@mui/icons-material')
 
 // https://vitejs.dev/config/
+// Note: Test configuration is in vitest.config.ts
 export default defineConfig({
   plugins: [react()],
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: './src/test/setup.ts',
-    testTimeout: 10000,
-    hookTimeout: 10000,
-    pool: 'forks', // Use forks instead of threads to avoid serialization issues
-    isolate: true,
-  },
   optimizeDeps: {
     include: [
       '@mui/material',

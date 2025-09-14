@@ -12,7 +12,7 @@ from enum import Enum
 
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.graph import StateGraph, END
-from langchain.tools import Tool
+from langchain_core.tools import Tool
 
 from .base_agent import BaseAgent, AgentConfig, AgentState, TaskResult, AgentPriority
 

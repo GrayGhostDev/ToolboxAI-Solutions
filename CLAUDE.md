@@ -6,6 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a monorepo that underwent significant restructuring in September 2025. Multiple agents (warp001-warp007) have worked on various improvements. The repository is on branch `chore/repo-structure-cleanup` with main work tracked in `main` branch.
 
+### Recent Updates (2025-09-13)
+- **BasedPyright Configuration**: Migrated from `[tool.pyright]` to `[tool.basedpyright]` in pyproject.toml
+- **Pydantic v2 Migration**: Updated all deprecated Pydantic v1 patterns to v2 (field_validator, model_config)
+- **Complete Type Implementations**: Replaced stub files (.pyi) with complete implementations
+- **Type Safety**: Enhanced type checking with proper SQLAlchemy and Pydantic type definitions
+- **Configuration Fixes**: Resolved path issues, removed stubPath, fixed diagnosticSeverityOverrides
+- **All BasedPyright Errors Resolved**: Configuration now works correctly with BasedPyright 1.31.3
+- **TOML Validation**: Fixed TOML parsing errors and removed invalid configuration options
+- **Comprehensive Testing**: All implementations tested and verified working correctly
+
 ### Critical Context
 - **Nested Dashboard Structure**: The active dashboard is at `apps/dashboard/dashboard` (not `apps/dashboard`)
 - **Realtime Migration**: Dashboard migrated from Socket.IO to Pusher Channels (warp007)
@@ -44,6 +54,31 @@ cd apps/backend && uvicorn main:app --host 127.0.0.1 --port 8008 --reload
 cd apps/dashboard/dashboard && npm run dev
 ```
 
+### Type System & Configuration
+
+The project uses **BasedPyright** for type checking with complete implementations (no stubs):
+
+```bash
+# Type checking with BasedPyright
+basedpyright .
+
+# Configuration in pyproject.toml
+[tool.basedpyright]
+typeCheckingMode = "standard"
+pythonVersion = "3.12"
+# ... see pyproject.toml for full configuration
+```
+
+**Key Type Files:**
+- `src/shared/types/pydantic/` - Complete Pydantic v2 implementations
+- `src/shared/types/pydantic_settings/` - Pydantic Settings implementations
+- `src/shared/types/sqlalchemy/` - Complete SQLAlchemy type definitions
+
+**Pydantic v2 Patterns Used:**
+- `@field_validator` instead of `@validator`
+- `model_config = ConfigDict()` instead of `class Config`
+- `model_validator` for cross-field validation
+
 ### Testing
 ```bash
 # Run all tests
@@ -70,7 +105,7 @@ pytest tests/test_specific.py::test_function_name -v
 Some integration tests are gated behind environment variables to prevent heavy operations:
 ```bash
 RUN_ENDPOINT_TESTS=1     # Enable endpoint script tests
-RUN_ROJO_TESTS=1         # Enable Rojo integration tests  
+RUN_ROJO_TESTS=1         # Enable Rojo integration tests
 RUN_SOCKETIO_E2E=1       # Enable Socket.IO E2E tests
 RUN_WS_INTEGRATION=1     # Enable WebSocket integration tests
 ```

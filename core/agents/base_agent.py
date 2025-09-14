@@ -28,7 +28,7 @@ else:
     # Use real OpenAI
     from langchain_openai import ChatOpenAI
 
-from langchain.schema import AgentAction, AgentFinish
+from langchain_core.agents import AgentAction, AgentFinish
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)

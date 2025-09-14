@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from langchain_core.messages import HumanMessage, AIMessage
-from langchain.tools import Tool
+from langchain_core.tools import Tool
 
 from .base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
 
@@ -255,7 +255,7 @@ Review criteria:
             "var_usage": r"\bvar\s+",
             "console_log": r"console\.(log|debug|info)",
             "eval_usage": r"\beval\s*\(",
-            "callback_hell": r"}\s*\)\s*}\s*\)\s*}\s*\)",
+            "callback_hell": r"}\s*\)\s*}\s*\)\s*}\s*}",
             "undefined_check": r"==\s*undefined",
             "async_await": r"\.then\(.*\.then\(",
             "arrow_function": r"function\s*\(",

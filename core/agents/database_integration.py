@@ -85,18 +85,26 @@ class AgentDatabaseIntegration:
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                # Test synchronous connection
-                if get_session:
-                    with get_session("education") as session:
-                        result = session.execute(text("SELECT 1"))
-                        logger.info("Database connection established for agents")
+                # Skip sync database test - we only support async now
+                logger.info("Database integration using async mode only")
                 
                 # Initialize Redis if available
                 if get_redis_client:
-                    self._redis_client = get_redis_client()
-                    if self._redis_client:
-                        self._redis_client.ping()
-                        logger.info("Redis connection established for agents")
+                    # Note: get_redis_client might be async too
+                    try:
+                        if asyncio.iscoroutinefunction(get_redis_client):
+                            # Handle async redis client
+                            loop = asyncio.new_event_loop()
+                            self._redis_client = loop.run_until_complete(get_redis_client())
+                            loop.close()
+                        else:
+                            self._redis_client = get_redis_client()
+                        
+                        if self._redis_client:
+                            self._redis_client.ping()
+                            logger.info("Redis connection established for agents")
+                    except Exception as e:
+                        logger.warning(f"Redis initialization failed: {e}")
                 
                 self._initialized = True
                 return
@@ -118,7 +126,7 @@ class AgentDatabaseIntegration:
             return self._get_mock_learning_objectives(subject, grade_level)
         
         try:
-            async with get_async_session("education") as session:
+            async for session in get_async_session("educational_platform"):
                 query = """
                     SELECT id, title, description, subject, grade_level, 
                            bloom_level, curriculum_standard, measurable, created_at, updated_at
@@ -203,7 +211,7 @@ class AgentDatabaseIntegration:
             return self._get_mock_educational_content(objective_id, subject, grade_level)
         
         try:
-            async with get_async_session("education") as session:
+            async for session in get_async_session("educational_platform"):
                 query = """
                     SELECT c.id, c.title, c.description, c.subject, c.grade_level,
                            c.environment_type, c.content_data, c.generated_scripts, c.terrain_config,
@@ -284,7 +292,7 @@ class AgentDatabaseIntegration:
             return self._get_mock_quiz_questions(subject, difficulty, grade_level)
         
         try:
-            async with get_async_session("education") as session:
+            async for session in get_async_session("educational_platform"):
                 # Get quizzes with questions
                 query = """
                     SELECT q.id, q.title, q.subject, q.grade_level, q.difficulty_progression,
@@ -402,7 +410,7 @@ class AgentDatabaseIntegration:
             else:
                 student_uuid = student_id
             
-            async with get_async_session("education") as session:
+            async for session in get_async_session("educational_platform"):
                 # Get student info
                 student_query = """
                     SELECT u.id, u.username, u.email, u.role, u.display_name, u.grade_level
@@ -460,7 +468,7 @@ class AgentDatabaseIntegration:
     async def _find_student_by_identifier(self, identifier: Union[str, int]) -> Optional[uuid.UUID]:
         """Find student UUID by username or email"""
         try:
-            async with get_async_session("education") as session:
+            async for session in get_async_session("educational_platform"):
                 query = """
                     SELECT id FROM users 
                     WHERE (username = :identifier OR email = :identifier) 
@@ -516,7 +524,7 @@ class AgentDatabaseIntegration:
                 except ValueError:
                     logger.warning(f"Invalid created_by UUID: {created_by}")
             
-            async with get_async_session("education") as session:
+            async for session in get_async_session("educational_platform"):
                 insert_query = """
                     INSERT INTO educational_content (title, description, subject, grade_level,
                                                    environment_type, content_data, difficulty_level,

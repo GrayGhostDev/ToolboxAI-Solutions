@@ -8,7 +8,7 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 from langchain_core.chat_history import InMemoryChatMessageHistory
-from langchain.schema import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage
 from langchain_openai import ChatOpenAI
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -1253,3 +1253,4 @@ class MainCoordinator:
             "task_count": len(results.get("results", {})),
             "success": True
         }
+

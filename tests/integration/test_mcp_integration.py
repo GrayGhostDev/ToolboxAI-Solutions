@@ -5,6 +5,7 @@ Tests WebSocket server on port 9876 for context management and agent communicati
 """
 
 import asyncio
+import os
 import json
 import time
 from datetime import datetime
@@ -15,7 +16,10 @@ from typing import Dict, List, Optional
 import pytest
 
 # Skip all tests in this module as they require external services
-pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
+pytestmark = pytest.mark.skipif(
+    not os.environ.get('RUN_INTEGRATION_TESTS'),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+)
 
 
 class MCPIntegrationTest:

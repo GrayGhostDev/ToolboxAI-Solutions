@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import ApiClient, { getMyProfile } from '../../services/api';
+import ApiClient, { getMyProfile } from '../../../../apps/dashboard/src/services/api';
 
 // Use the correct API base URL from config
 const API_BASE_URL = 'http://localhost:8008';

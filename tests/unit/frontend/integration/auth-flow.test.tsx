@@ -6,11 +6,11 @@ import { BrowserRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
 import MockAdapter from 'axios-mock-adapter';
 import axios from 'axios';
-import { userSlice } from '../../store/slices/userSlice';
-import { uiSlice } from '../../store/slices/uiSlice';
-import Login from '../../components/pages/Login';
-import DashboardHome from '../../components/pages/DashboardHome';
-import { API_BASE_URL } from '../../config';
+import { userSlice } from '../../../../apps/dashboard/src/store/slices/userSlice';
+import { uiSlice } from '../../../../apps/dashboard/src/store/slices/uiSlice';
+import Login from '../../../../apps/dashboard/src/components/pages/Login';
+import DashboardHome from '../../../../apps/dashboard/src/components/pages/DashboardHome';
+import { API_BASE_URL } from '../../../../apps/dashboard/src/config';
 
 describe('Authentication Flow Integration', () => {
   let mock: MockAdapter;

@@ -406,7 +406,7 @@ class PolicyEngine:
         score = 0.0
 
         # Age appropriateness
-        student_grade = student_analysis.get("current_grade", 8)
+        student_grade = int(student_analysis.get("current_grade", 8))
         student_age = student_grade + 5  # Rough age estimation
 
         if policy.target_age_range[0] <= student_age <= policy.target_age_range[1]:

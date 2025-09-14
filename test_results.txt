@@ -1,135 +1,533 @@
+
+---------------------------- live log sessionstart -----------------------------
+2025-09-14 14:54:05 [    INFO] [tests.conftest] Starting test session with rate limit isolation
+2025-09-14 14:54:05 [    INFO] [tests.test_cleanup] Cleanup report saved to: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/logs/reports/cleanup_report_20250914_145405.json
+2025-09-14 14:54:05 [    INFO] [tests.test_cleanup] Cleanup completed: 0 files removed, 0.00 MB freed
+2025-09-14 14:54:05 [    INFO] [test_session] ================================================================================
+2025-09-14 14:54:05 [    INFO] [test_session] ================================================================================
+2025-09-14 14:54:05 [    INFO] [test_session] Starting test: Test Session
+2025-09-14 14:54:05 [    INFO] [test_session] Starting test: Test Session
+2025-09-14 14:54:05 [    INFO] [test_session] Correlation ID: session_
+2025-09-14 14:54:05 [    INFO] [test_session] Correlation ID: session_
+2025-09-14 14:54:05 [    INFO] [test_session] ================================================================================
+2025-09-14 14:54:05 [    INFO] [test_session] ================================================================================
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-8.4.2, pluggy-1.6.0
+rootdir: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions
+configfile: pytest.ini
+testpaths: tests
+plugins: asyncio-0.24.0, timeout-2.4.0, anyio-4.10.0, cov-6.2.1, mock-3.12.0, xdist-3.6.1, langsmith-0.4.27
+asyncio: mode=Mode.AUTO, default_loop_scope=function
+timeout: 5.0s
+timeout method: thread
+timeout func_only: False
+----------------------------- live log collection ------------------------------
+2025-09-14 14:54:05 [ WARNING] [tests.integration.conftest] Environment configuration module not available
+2025-09-14 14:54:05 [    INFO] [core.agents.base_agent] Initialized SupervisorAgent agent
+2025-09-14 14:54:05 [    INFO] [core.sparc.state_manager] StateManager initialized with history_size=100
+2025-09-14 14:54:05 [    INFO] [core.sparc.policy_engine] PolicyEngine initialized with learning_rate=0.01
+2025-09-14 14:54:05 [    INFO] [core.sparc.action_executor] ActionExecutor initialized with max_parallel=3
+2025-09-14 14:54:05 [    INFO] [core.sparc.reward_calculator] RewardCalculator initialized with 4 dimensions
+2025-09-14 14:54:05 [    INFO] [core.sparc.context_tracker] ContextTracker initialized with window_size=20
+2025-09-14 14:54:05 [    INFO] [core.agents.content_agent] SPARC framework components initialized successfully
+2025-09-14 14:54:05 [    INFO] [core.agents.base_agent] Initialized ContentAgent agent
+2025-09-14 14:54:05 [    INFO] [core.agents.content_agent] ContentAgent initialized - Database: True, SPARC: True, Real Data: True
+2025-09-14 14:54:05 [    INFO] [core.agents.base_agent] Initialized QuizAgent agent
+2025-09-14 14:54:05 [    INFO] [core.sparc.state_manager] StateManager initialized with history_size=1000
+2025-09-14 14:54:05 [    INFO] [core.sparc.policy_engine] PolicyEngine initialized with learning_rate=0.01
+2025-09-14 14:54:05 [    INFO] [core.sparc.action_executor] ActionExecutor initialized with max_parallel=5
+2025-09-14 14:54:05 [    INFO] [core.sparc.reward_calculator] RewardCalculator initialized with 10 dimensions
+2025-09-14 14:54:05 [    INFO] [core.sparc.context_tracker] ContextTracker initialized with window_size=50
+2025-09-14 14:54:05 [    INFO] [core.agents.base_agent] Initialized TerrainAgent agent
+2025-09-14 14:54:05 [    INFO] [core.agents.base_agent] Initialized ScriptAgent agent
+2025-09-14 14:54:05 [    INFO] [core.agents.base_agent] Initialized ReviewAgent agent
+2025-09-14 14:54:05 [    INFO] [core.agents.base_agent] Initialized TestingAgent agent
+2025-09-14 14:54:05 [    INFO] [core.agents.testing_agent] Database integration initialized
+2025-09-14 14:54:05 [    INFO] [core.sparc.state_manager] StateManager initialized with history_size=1000
+2025-09-14 14:54:05 [    INFO] [core.sparc.policy_engine] PolicyEngine initialized with learning_rate=0.01
+2025-09-14 14:54:05 [    INFO] [core.sparc.action_executor] ActionExecutor initialized with max_parallel=5
+2025-09-14 14:54:05 [    INFO] [core.sparc.reward_calculator] RewardCalculator initialized with 10 dimensions
+2025-09-14 14:54:05 [    INFO] [core.sparc.context_tracker] ContextTracker initialized with window_size=50
+2025-09-14 14:54:05 [    INFO] [core.agents.testing_agent] SPARC framework initialized
+2025-09-14 14:54:05 [ WARNING] [core.agents.testing_agent] Failed to initialize swarm intelligence: SwarmController.__init__() missing 5 required positional arguments: 'config', 'worker_pool', 'task_distributor', 'consensus_engine', and 'load_balancer'
+2025-09-14 14:54:05 [    INFO] [core.agents.testing_agent] MCP context manager initialized
+2025-09-14 14:54:05 [    INFO] [core.agents.testing_agent] TestingAgent initialized with project root: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions
+2025-09-14 14:54:05 [    INFO] [core.agents.testing_agent] Integrations: DB=True, SPARC=True, Swarm=True, MCP=True
+2025-09-14 14:54:05 [    INFO] [core.agents.orchestrator] Orchestrator initialized with all agents
+2025-09-14 14:54:05 [    INFO] [core.agents.base_agent] Initialized SupervisorAgent agent
+2025-09-14 14:54:05 [    INFO] [core.sparc.state_manager] StateManager initialized with history_size=1000
+2025-09-14 14:54:05 [    INFO] [core.swarm.worker_pool] WorkerPool initialized with 2-10 workers
+2025-09-14 14:54:05 [ WARNING] [core.agents.plugin_communication] Failed to initialize SwarmController: TaskDistributor.__init__() got an unexpected keyword argument 'max_workers'
+2025-09-14 14:54:05 [    INFO] [core.sparc.state_manager] StateManager initialized with history_size=100
+2025-09-14 14:54:05 [    INFO] [core.sparc.policy_engine] PolicyEngine initialized with learning_rate=0.01
+2025-09-14 14:54:05 [    INFO] [core.sparc.action_executor] ActionExecutor initialized with max_parallel=3
+2025-09-14 14:54:05 [    INFO] [core.sparc.reward_calculator] RewardCalculator initialized with 4 dimensions
+2025-09-14 14:54:05 [    INFO] [core.sparc.context_tracker] ContextTracker initialized with window_size=20
+2025-09-14 14:54:05 [    INFO] [core.agents.content_agent] SPARC framework components initialized successfully
+2025-09-14 14:54:05 [    INFO] [core.agents.base_agent] Initialized ContentAgent agent
+2025-09-14 14:54:05 [    INFO] [core.agents.content_agent] ContentAgent initialized - Database: True, SPARC: True, Real Data: True
+2025-09-14 14:54:05 [    INFO] [core.agents.base_agent] Initialized QuizAgent agent
+2025-09-14 14:54:05 [    INFO] [core.sparc.state_manager] StateManager initialized with history_size=1000
+2025-09-14 14:54:05 [    INFO] [core.sparc.policy_engine] PolicyEngine initialized with learning_rate=0.01
+2025-09-14 14:54:05 [    INFO] [core.sparc.action_executor] ActionExecutor initialized with max_parallel=5
+2025-09-14 14:54:05 [    INFO] [core.sparc.reward_calculator] RewardCalculator initialized with 10 dimensions
+2025-09-14 14:54:05 [    INFO] [core.sparc.context_tracker] ContextTracker initialized with window_size=50
+2025-09-14 14:54:05 [    INFO] [core.agents.base_agent] Initialized TerrainAgent agent
+2025-09-14 14:54:05 [    INFO] [core.agents.base_agent] Initialized ScriptAgent agent
+2025-09-14 14:54:05 [    INFO] [core.agents.base_agent] Initialized ReviewAgent agent
+2025-09-14 14:54:05 [    INFO] [core.agents.base_agent] Initialized TestingAgent agent
+2025-09-14 14:54:05 [    INFO] [core.agents.testing_agent] Database integration initialized
+2025-09-14 14:54:05 [    INFO] [core.sparc.state_manager] StateManager initialized with history_size=1000
+2025-09-14 14:54:05 [    INFO] [core.sparc.policy_engine] PolicyEngine initialized with learning_rate=0.01
+2025-09-14 14:54:05 [    INFO] [core.sparc.action_executor] ActionExecutor initialized with max_parallel=5
+2025-09-14 14:54:05 [    INFO] [core.sparc.reward_calculator] RewardCalculator initialized with 10 dimensions
+2025-09-14 14:54:05 [    INFO] [core.sparc.context_tracker] ContextTracker initialized with window_size=50
+2025-09-14 14:54:05 [    INFO] [core.agents.testing_agent] SPARC framework initialized
+2025-09-14 14:54:05 [ WARNING] [core.agents.testing_agent] Failed to initialize swarm intelligence: SwarmController.__init__() missing 5 required positional arguments: 'config', 'worker_pool', 'task_distributor', 'consensus_engine', and 'load_balancer'
+2025-09-14 14:54:05 [    INFO] [core.agents.testing_agent] MCP context manager initialized
+2025-09-14 14:54:05 [    INFO] [core.agents.testing_agent] TestingAgent initialized with project root: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions
+2025-09-14 14:54:05 [    INFO] [core.agents.testing_agent] Integrations: DB=True, SPARC=True, Swarm=True, MCP=True
+2025-09-14 14:54:05 [    INFO] [core.agents.plugin_communication] Plugin Communication Hub initialized
+2025-09-14 14:54:05 [    INFO] [tests.integration.test_fastapi_minimal] ✅ uvicorn imported successfully
+2025-09-14 14:54:05 [    INFO] [tests.integration.test_fastapi_minimal] ✅ FastAPI imported successfully
+2025-09-14 14:54:05 [    INFO] [tests.integration.test_fastapi_minimal] ✅ redis imported successfully
+2025-09-14 14:54:05 [    INFO] [tests.integration.test_fastapi_minimal] ✅ psycopg2 imported successfully
+2025-09-14 14:54:29 [    INFO] [apps.backend.services.roblox] Redis connection established for Flask bridge server
+2025-09-14 14:54:29 [    INFO] [core.agents.base_agent] Initialized SupervisorAgent agent
+2025-09-14 14:54:29 [    INFO] [core.sparc.state_manager] StateManager initialized with history_size=1000
+2025-09-14 14:54:29 [    INFO] [core.swarm.worker_pool] WorkerPool initialized with 2-10 workers
+2025-09-14 14:54:29 [    INFO] [core.swarm.task_distributor] TaskDistributor initialized with policy: priority_fair
+2025-09-14 14:54:29 [    INFO] [core.swarm.consensus_engine] ConsensusEngine initialized with strategy: VotingStrategy.WEIGHTED_MAJORITY
+2025-09-14 14:54:29 [    INFO] [core.swarm.load_balancer] LoadBalancer initialized with strategy: LoadBalancingStrategy.ROUND_ROBIN
+2025-09-14 14:54:29 [    INFO] [core.swarm.swarm_controller] SwarmController initialized with config: SwarmConfig(max_workers=10, min_workers=2, task_timeout=300, consensus_threshold=0.7, load_balancing_strategy='round_robin', worker_specializations=[], educational_optimizations={}, auto_scaling=True, health_check_interval=30, metrics_retention_hours=24, primary_subject=None, target_grade_level=None, curriculum_standards=[])
+2025-09-14 14:54:29 [    INFO] [apps.backend.services.roblox] Agent systems integrated with Flask bridge
+2025-09-14 14:54:29 [    INFO] [apps.backend.services.websocket_handler] WebSocketManager initialized
+2025-09-14 14:54:29 [    INFO] [apps.backend.agents.agent] Initialized agent pools with 5 types
+2025-09-14 14:54:29 [    INFO] [core.agents.base_agent] Initialized SupervisorAgent agent
+2025-09-14 14:54:29 [    INFO] [core.agents.base_agent] Initialized SupervisorAgent agent
+2025-09-14 14:54:29 [    INFO] [core.sparc.state_manager] StateManager initialized with history_size=100
+2025-09-14 14:54:29 [    INFO] [core.sparc.policy_engine] PolicyEngine initialized with learning_rate=0.01
+2025-09-14 14:54:29 [    INFO] [core.sparc.action_executor] ActionExecutor initialized with max_parallel=3
+2025-09-14 14:54:29 [    INFO] [core.sparc.reward_calculator] RewardCalculator initialized with 4 dimensions
+2025-09-14 14:54:29 [    INFO] [core.sparc.context_tracker] ContextTracker initialized with window_size=20
+2025-09-14 14:54:29 [    INFO] [core.agents.content_agent] SPARC framework components initialized successfully
+2025-09-14 14:54:29 [    INFO] [core.agents.base_agent] Initialized ContentAgent agent
+2025-09-14 14:54:29 [    INFO] [core.agents.content_agent] ContentAgent initialized - Database: True, SPARC: True, Real Data: True
+2025-09-14 14:54:29 [    INFO] [core.agents.base_agent] Initialized QuizAgent agent
+2025-09-14 14:54:29 [    INFO] [core.sparc.state_manager] StateManager initialized with history_size=1000
+2025-09-14 14:54:29 [    INFO] [core.sparc.policy_engine] PolicyEngine initialized with learning_rate=0.01
+2025-09-14 14:54:29 [    INFO] [core.sparc.action_executor] ActionExecutor initialized with max_parallel=5
+2025-09-14 14:54:29 [    INFO] [core.sparc.reward_calculator] RewardCalculator initialized with 10 dimensions
+2025-09-14 14:54:29 [    INFO] [core.sparc.context_tracker] ContextTracker initialized with window_size=50
+2025-09-14 14:54:29 [    INFO] [core.agents.base_agent] Initialized TerrainAgent agent
+2025-09-14 14:54:29 [    INFO] [core.agents.base_agent] Initialized ScriptAgent agent
+2025-09-14 14:54:29 [    INFO] [core.agents.base_agent] Initialized ReviewAgent agent
+2025-09-14 14:54:29 [    INFO] [core.agents.base_agent] Initialized TestingAgent agent
+2025-09-14 14:54:29 [    INFO] [core.agents.testing_agent] Database integration initialized
+2025-09-14 14:54:29 [    INFO] [core.sparc.state_manager] StateManager initialized with history_size=1000
+2025-09-14 14:54:29 [    INFO] [core.sparc.policy_engine] PolicyEngine initialized with learning_rate=0.01
+2025-09-14 14:54:29 [    INFO] [core.sparc.action_executor] ActionExecutor initialized with max_parallel=5
+2025-09-14 14:54:29 [    INFO] [core.sparc.reward_calculator] RewardCalculator initialized with 10 dimensions
+2025-09-14 14:54:29 [    INFO] [core.sparc.context_tracker] ContextTracker initialized with window_size=50
+2025-09-14 14:54:29 [    INFO] [core.agents.testing_agent] SPARC framework initialized
+2025-09-14 14:54:29 [ WARNING] [core.agents.testing_agent] Failed to initialize swarm intelligence: SwarmController.__init__() missing 5 required positional arguments: 'config', 'worker_pool', 'task_distributor', 'consensus_engine', and 'load_balancer'
+2025-09-14 14:54:29 [    INFO] [core.agents.testing_agent] MCP context manager initialized
+2025-09-14 14:54:29 [    INFO] [core.agents.testing_agent] TestingAgent initialized with project root: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions
+2025-09-14 14:54:29 [    INFO] [core.agents.testing_agent] Integrations: DB=True, SPARC=True, Swarm=True, MCP=True
+2025-09-14 14:54:29 [    INFO] [core.agents.orchestrator] Orchestrator initialized with all agents
+2025-09-14 14:54:29 [    INFO] [core.sparc.state_manager] StateManager initialized with history_size=1000
+2025-09-14 14:54:29 [    INFO] [core.mcp.server] Loaded JWT configuration from server settings
+2025-09-14 14:54:29 [    INFO] [apps.backend.agents.agent] AgentManager initialized with all components
 --- Logging error ---
 Traceback (most recent call last):
   File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/logging/__init__.py", line 1163, in emit
     stream.write(msg + self.terminator)
 ValueError: I/O operation on closed file.
 Call stack:
-  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/./ToolboxAI-Roblox-Environment/venv_clean/bin/pytest", line 9, in <module>
-    sys.exit(console_main())
-  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201, in console_main
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201, in console_main
     code = main()
-  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175, in main
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175, in main
     ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
-  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
-  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
-  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
     res = hook_impl.function(*args)
-  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 336, in pytest_cmdline_main
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 336, in pytest_cmdline_main
     return wrap_session(config, _main)
-  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 324, in wrap_session
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 324, in wrap_session
     config.hook.pytest_sessionfinish(
-  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
-  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
-  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
     res = hook_impl.function(*args)
-  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/conftest.py", line 220, in pytest_sessionfinish
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/conftest.py", line 259, in pytest_sessionfinish
     logger.info("Test session finished, cleaning up rate limit state")
 Message: 'Test session finished, cleaning up rate limit state'
 Arguments: ()
-============================= test session starts ==============================
-platform darwin -- Python 3.12.11, pytest-8.4.2, pluggy-1.6.0
-rootdir: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions
-configfile: pyproject.toml
-plugins: asyncio-1.1.0, anyio-4.10.0, cov-6.2.1, mock-3.12.0, langsmith-0.4.27
-asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collected 391 items / 3 errors
+collected 532 items / 1 error
+---------------------------- live log sessionfinish ----------------------------
+2025-09-14 14:54:29 [    INFO] [tests.conftest] Test session finished, cleaning up rate limit state
+2025-09-14 14:54:29 [    INFO] [test_session] ================================================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201, in console_main
+    code = main()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 336, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 324, in wrap_session
+    config.hook.pytest_sessionfinish(
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/conftest.py", line 271, in pytest_sessionfinish
+    session.test_logger.end_test("Test Session", status)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/test_logger.py", line 115, in end_test
+    self.logger.info(f"{'='*80}")
+Message: '================================================================================'
+Arguments: ()
+2025-09-14 14:54:29 [    INFO] [test_session] ================================================================================
+2025-09-14 14:54:29 [    INFO] [test_session] Test completed: Test Session
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201, in console_main
+    code = main()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 336, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 324, in wrap_session
+    config.hook.pytest_sessionfinish(
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/conftest.py", line 271, in pytest_sessionfinish
+    session.test_logger.end_test("Test Session", status)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/test_logger.py", line 116, in end_test
+    self.logger.info(f"Test completed: {test_name}")
+Message: 'Test completed: Test Session'
+Arguments: ()
+2025-09-14 14:54:29 [    INFO] [test_session] Test completed: Test Session
+2025-09-14 14:54:30 [    INFO] [test_session] Status: failed
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201, in console_main
+    code = main()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 336, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 324, in wrap_session
+    config.hook.pytest_sessionfinish(
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/conftest.py", line 271, in pytest_sessionfinish
+    session.test_logger.end_test("Test Session", status)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/test_logger.py", line 117, in end_test
+    self.logger.info(f"Status: {status}")
+Message: 'Status: failed'
+Arguments: ()
+2025-09-14 14:54:30 [    INFO] [test_session] Status: failed
+2025-09-14 14:54:30 [    INFO] [test_session] Duration: 0.000s
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201, in console_main
+    code = main()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 336, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 324, in wrap_session
+    config.hook.pytest_sessionfinish(
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/conftest.py", line 271, in pytest_sessionfinish
+    session.test_logger.end_test("Test Session", status)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/test_logger.py", line 118, in end_test
+    self.logger.info(f"Duration: {duration:.3f}s")
+Message: 'Duration: 0.000s'
+Arguments: ()
+2025-09-14 14:54:30 [    INFO] [test_session] Duration: 0.000s
+2025-09-14 14:54:30 [    INFO] [test_session] ================================================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201, in console_main
+    code = main()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 336, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 324, in wrap_session
+    config.hook.pytest_sessionfinish(
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/conftest.py", line 271, in pytest_sessionfinish
+    session.test_logger.end_test("Test Session", status)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/test_logger.py", line 121, in end_test
+    self.logger.info(f"{'='*80}")
+Message: '================================================================================'
+Arguments: ()
+2025-09-14 14:54:30 [    INFO] [test_session] ================================================================================
+2025-09-14 14:54:30 [    INFO] [test_session] Test report generated: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/logs/reports/test_report_test_session_20250914_145430.json
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201, in console_main
+    code = main()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 336, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 324, in wrap_session
+    config.hook.pytest_sessionfinish(
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/conftest.py", line 272, in pytest_sessionfinish
+    session.test_logger.generate_report()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/test_logger.py", line 170, in generate_report
+    self.logger.info(f"Test report generated: {report_file}")
+Message: 'Test report generated: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/logs/reports/test_report_test_session_20250914_145430.json'
+Arguments: ()
+2025-09-14 14:54:30 [    INFO] [test_session] Test report generated: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/logs/reports/test_report_test_session_20250914_145430.json
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201, in console_main
+    code = main()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 336, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 324, in wrap_session
+    config.hook.pytest_sessionfinish(
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/conftest.py", line 276, in pytest_sessionfinish
+    stats = session.cleanup_manager.cleanup()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/test_cleanup.py", line 73, in cleanup
+    self._generate_cleanup_report(stats)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/test_cleanup.py", line 206, in _generate_cleanup_report
+    logger.info(f"Cleanup report saved to: {report_file}")
+Message: 'Cleanup report saved to: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/logs/reports/cleanup_report_20250914_145430.json'
+Arguments: ()
+2025-09-14 14:54:30 [    INFO] [tests.test_cleanup] Cleanup report saved to: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/logs/reports/cleanup_report_20250914_145430.json
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201, in console_main
+    code = main()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 336, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 324, in wrap_session
+    config.hook.pytest_sessionfinish(
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/conftest.py", line 276, in pytest_sessionfinish
+    stats = session.cleanup_manager.cleanup()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/test_cleanup.py", line 75, in cleanup
+    logger.info(f"Cleanup completed: {stats['files_removed']} files removed, "
+Message: 'Cleanup completed: 5 files removed, 0.01 MB freed'
+Arguments: ()
+2025-09-14 14:54:30 [    INFO] [tests.test_cleanup] Cleanup completed: 5 files removed, 0.01 MB freed
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201, in console_main
+    code = main()
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 336, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/_pytest/main.py", line 324, in wrap_session
+    config.hook.pytest_sessionfinish(
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/conftest.py", line 277, in pytest_sessionfinish
+    logger.info(f"Test cleanup completed: {stats['files_removed']} files removed, "
+Message: 'Test cleanup completed: 5 files removed, 0.01 MB freed'
+Arguments: ()
+2025-09-14 14:54:30 [    INFO] [tests.conftest] Test cleanup completed: 5 files removed, 0.01 MB freed
 
 ==================================== ERRORS ====================================
-______________ ERROR collecting tests/unit/core/test_security.py _______________
-ImportError while importing test module '/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/unit/core/test_security.py'.
+_______________ ERROR collecting tests/unit/core/test_models.py ________________
+ImportError while importing test module '/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/unit/core/test_models.py'.
 Hint: make sure your test modules/packages have valid Python names.
 Traceback:
 /Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/importlib/__init__.py:90: in import_module
     return _bootstrap._gcd_import(name[level:], package, level)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-tests/unit/core/test_security.py:22: in <module>
-    from apps.backend.services.websocket_handler import WebSocketConnectionManager, MessageHandler
-E   ImportError: cannot import name 'WebSocketConnectionManager' from 'apps.backend.services.websocket_handler' (/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/services/websocket_handler.py)
-_____ ERROR collecting tests/unit/core/test_websocket_config_overrides.py ______
-ImportError while importing test module '/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/unit/core/test_websocket_config_overrides.py'.
-Hint: make sure your test modules/packages have valid Python names.
-Traceback:
-/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/importlib/__init__.py:90: in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-tests/unit/core/test_websocket_config_overrides.py:8: in <module>
-    from apps.backend.rate_limit_manager import get_rate_limit_manager, RateLimitMode
-E   ModuleNotFoundError: No module named 'apps.backend.rate_limit_manager'
-___ ERROR collecting tests/unit/core/test_websocket_metrics_token_expired.py ___
-ImportError while importing test module '/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/unit/core/test_websocket_metrics_token_expired.py'.
-Hint: make sure your test modules/packages have valid Python names.
-Traceback:
-/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/importlib/__init__.py:90: in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-tests/unit/core/test_websocket_metrics_token_expired.py:7: in <module>
-    from apps.backend.websocket_auth import WebSocketAuthSession
-E   ModuleNotFoundError: No module named 'apps.backend.websocket_auth'
-=============================== warnings summary ===============================
-ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/passlib/utils/__init__.py:854
-  /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
-    from crypt import crypt as _crypt
-
-ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:298
-ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:298
-ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:298
-ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:298
-ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:298
-ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:298
-ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:298
-  /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pydantic/_internal/_generate_schema.py:298: PydanticDeprecatedSince20: `json_encoders` is deprecated. See https://docs.pydantic.dev/2.11/concepts/serialization/#custom-serializers for alternatives. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
-    warnings.warn(
-
-ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pydantic/fields.py:1058
-ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pydantic/fields.py:1058
-  /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pydantic/fields.py:1058: PydanticDeprecatedSince20: `min_items` is deprecated and will be removed, use `min_length` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
-    warn('`min_items` is deprecated and will be removed, use `min_length` instead', DeprecationWarning)
-
-ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pydantic/fields.py:1064
-ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pydantic/fields.py:1064
-  /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/pydantic/fields.py:1064: PydanticDeprecatedSince20: `max_items` is deprecated and will be removed, use `max_length` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
-    warn('`max_items` is deprecated and will be removed, use `max_length` instead', DeprecationWarning)
-
-ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/reportlab/lib/rl_safe_eval.py:12
-  /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolBoxAI-Roblox-Environment/venv_clean/lib/python3.12/site-packages/reportlab/lib/rl_safe_eval.py:12: DeprecationWarning: ast.NameConstant is deprecated and will be removed in Python 3.14; use ast.Constant instead
-    haveNameConstant = hasattr(ast,'NameConstant')
-
-core/agents/testing_agent.py:182
-  /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/testing_agent.py:182: PytestCollectionWarning: cannot collect test class 'TestingAgent' because it has a __init__ constructor (from: tests/integration/test_agent_integration_new.py)
-    class TestingAgent(BaseAgent):
-
-core/agents/testing_agent.py:182
-  /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/testing_agent.py:182: PytestCollectionWarning: cannot collect test class 'TestingAgent' because it has a __init__ constructor (from: tests/integration/test_content_generation_pipeline.py)
-    class TestingAgent(BaseAgent):
-
-tests/integration/test_fastapi_comprehensive.py:39
-  /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/integration/test_fastapi_comprehensive.py:39: PytestCollectionWarning: cannot collect test class 'TestResult' because it has a __init__ constructor (from: tests/integration/test_fastapi_comprehensive.py)
-    class TestResult:
-
-core/agents/testing_agent.py:182
-  /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/testing_agent.py:182: PytestCollectionWarning: cannot collect test class 'TestingAgent' because it has a __init__ constructor (from: tests/unit/core/test_agents.py)
-    class TestingAgent(BaseAgent):
-
-core/agents/testing_agent.py:85
-  /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/testing_agent.py:85: PytestCollectionWarning: cannot collect test class 'TestType' because it has a __init__ constructor (from: tests/unit/core/test_agents.py)
-    class TestType(Enum):
-
-core/agents/testing_agent.py:95
-  /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/testing_agent.py:95: PytestCollectionWarning: cannot collect test class 'TestStatus' because it has a __init__ constructor (from: tests/unit/core/test_agents.py)
-    class TestStatus(Enum):
-
-core/agents/testing_agent.py:115
-  /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/testing_agent.py:115: PytestCollectionWarning: cannot collect test class 'TestSuiteResult' because it has a __init__ constructor (from: tests/unit/core/test_agents.py)
-    @dataclass
-
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+tests/unit/core/test_models.py:12: in <module>
+    from core.database.models import (
+E   ImportError: cannot import name 'Progress' from 'core.database.models' (/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/database/models.py)
+- generated xml file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/logs/reports/junit_report.xml -
 =========================== short test summary info ============================
-ERROR tests/unit/core/test_security.py
-ERROR tests/unit/core/test_websocket_config_overrides.py
-ERROR tests/unit/core/test_websocket_metrics_token_expired.py
-!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!!
-======================= 20 warnings, 3 errors in 24.00s ========================
+ERROR tests/unit/core/test_models.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+======================== 34 warnings, 1 error in 25.03s ========================

@@ -30,7 +30,7 @@ from contextlib import asynccontextmanager
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from langgraph.graph import StateGraph, END, START
 from langgraph.checkpoint.memory import MemorySaver
-from langchain.tools import Tool
+from langchain_core.tools import Tool
 from langchain_openai import ChatOpenAI
 import redis
 

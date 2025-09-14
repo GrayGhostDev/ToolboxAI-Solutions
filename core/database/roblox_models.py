@@ -10,7 +10,14 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 import uuid
 
-Base = declarative_base()
+# Import the main database models to get access to Lesson, User, etc.
+try:
+    from database.models import Base, Lesson, User
+except ImportError:
+    # Fallback for tests or when main models aren't available
+    Base = declarative_base()
+    Lesson = None
+    User = None
 
 class RobloxContent(Base):
     """Store generated Roblox content"""
@@ -44,7 +51,7 @@ class RobloxContent(Base):
     validated_at = Column(DateTime(timezone=True))
     
     # Relationships
-    lesson = relationship("Lesson", back_populates="roblox_contents")
+    lesson = relationship("Lesson", back_populates="roblox_contents", foreign_keys=[lesson_id])
     plugin_requests = relationship("PluginRequest", back_populates="content")
     deployments = relationship("RobloxDeployment", back_populates="content")
     
@@ -131,7 +138,8 @@ class RobloxSession(Base):
     
     # Session details
     lesson_id = Column(String(36), ForeignKey('lessons.id'))
-    classroom_id = Column(String(36), ForeignKey('classrooms.id'))
+    # classroom_id = Column(String(36), ForeignKey('classrooms.id'))  # Disabled - classrooms table doesn't exist
+    classroom_id = Column(String(36), nullable=True)  # Made nullable as classrooms table doesn't exist
     teacher_id = Column(String(36), ForeignKey('users.id'))
     
     # Roblox specific
@@ -167,8 +175,8 @@ class RobloxSession(Base):
     last_activity = Column(DateTime(timezone=True))
     
     # Relationships
-    lesson = relationship("Lesson", back_populates="sessions")
-    classroom = relationship("Classroom", back_populates="sessions")
+    lesson = relationship("Lesson", back_populates="sessions", foreign_keys=[lesson_id])
+    # classroom = relationship("Classroom", back_populates="sessions")  # Disabled - Classroom model doesn't exist
     teacher = relationship("User", back_populates="teaching_sessions")
     progress_updates = relationship("StudentProgress", back_populates="session")
     
@@ -221,9 +229,9 @@ class StudentProgress(Base):
     completed_at = Column(DateTime(timezone=True))
     
     # Relationships
-    student = relationship("User", back_populates="progress_records")
+    student = relationship("User", back_populates="student_progress")
     session = relationship("RobloxSession", back_populates="progress_updates")
-    lesson = relationship("Lesson", back_populates="student_progress")
+    lesson = relationship("Lesson", back_populates="student_progress", foreign_keys=[lesson_id])
     
     # Indexes
     __table_args__ = (

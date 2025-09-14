@@ -5,6 +5,7 @@ Tests all agent systems, frameworks, and integrations
 """
 
 import asyncio
+import os
 import json
 import time
 from datetime import datetime
@@ -14,7 +15,10 @@ import logging
 import pytest
 
 # Skip all tests in this module as they require external services
-pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
+pytestmark = pytest.mark.skipif(
+    not os.environ.get('RUN_INTEGRATION_TESTS'),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+)
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent))

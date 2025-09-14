@@ -1,9 +1,12 @@
+/**
+ * @vitest-environment jsdom
+ */
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom/vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import '@testing-library/jest-dom';
 
 // Mock the store slices
 const mockStore = configureStore({

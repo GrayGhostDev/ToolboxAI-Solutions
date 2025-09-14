@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { API_BASE_URL, AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, API_TIMEOUT } from "../config/index";
-import { store } from '@/store';
+import { store } from '../store';
 import { addNotification } from "../store/slices/uiSlice";
 import type {
   ApiResponse,
@@ -22,7 +22,7 @@ import type {
   LeaderboardEntry,
   XPTransaction,
   ProgressPoint,
-} from '@/types';
+} from '../types';
 
 class ApiClient {
   private client: AxiosInstance;

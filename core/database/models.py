@@ -209,6 +209,12 @@ class Content(Base):
     content_type = Column(String(50), nullable=False)  # video, document, activity, etc.
     content_data = Column(JSONB, nullable=False)
     
+    # Direct educational fields (for EducationalContent compatibility)
+    subject = Column(String(100))
+    grade_level = Column(Integer)
+    difficulty = Column(String(20))
+    content_metadata = Column(JSONB, default={})
+    
     # AI-generated content metadata
     ai_generated = Column(Boolean, default=False)
     ai_model = Column(String(100))
@@ -233,6 +239,8 @@ class Content(Base):
     __table_args__ = (
         Index('idx_content_lesson_type', 'lesson_id', 'content_type'),
         Index('idx_content_status', 'status'),
+        Index('idx_content_subject_grade', 'subject', 'grade_level'),
+        Index('idx_content_difficulty', 'difficulty'),
     )
 
 
@@ -753,5 +761,7 @@ class Submission(Base):
 # Backward compatibility aliases
 # Some older code expects EducationalContent instead of Content
 EducationalContent = Content
+# Alias for backward compatibility with tests
+Progress = UserProgress
 # Some code expects UserSession instead of Session
 UserSession = Session

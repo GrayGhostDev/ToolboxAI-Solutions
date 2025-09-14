@@ -106,6 +106,12 @@ class User(Base):
     achievements = relationship("UserAchievement", back_populates="user", cascade="all, delete-orphan")
     created_content = relationship("Content", back_populates="creator", foreign_keys="Content.creator_id")
     analytics = relationship("Analytics", back_populates="user", cascade="all, delete-orphan")
+    plugin_requests = relationship("PluginRequest", back_populates="user", cascade="all, delete-orphan")
+    teaching_sessions = relationship("RobloxSession", back_populates="teacher", foreign_keys="RobloxSession.teacher_id")
+    student_progress = relationship("StudentProgress", back_populates="student", foreign_keys="StudentProgress.student_id")
+    deployments = relationship("RobloxDeployment", back_populates="deployer", cascade="all, delete-orphan")
+    terrain_templates = relationship("TerrainTemplate", back_populates="creator", cascade="all, delete-orphan")
+    quiz_templates = relationship("QuizTemplate", back_populates="creator", cascade="all, delete-orphan")
     
     __table_args__ = (
         Index('idx_user_email_active', 'email', 'is_active'),
@@ -190,6 +196,9 @@ class Lesson(Base):
     content_items = relationship("Content", back_populates="lesson", cascade="all, delete-orphan")
     quizzes = relationship("Quiz", back_populates="lesson", cascade="all, delete-orphan")
     progress_records = relationship("UserProgress", back_populates="lesson", cascade="all, delete-orphan")
+    roblox_contents = relationship("RobloxContent", back_populates="lesson", cascade="all, delete-orphan")
+    sessions = relationship("RobloxSession", back_populates="lesson", cascade="all, delete-orphan")
+    student_progress = relationship("StudentProgress", back_populates="lesson", cascade="all, delete-orphan")
     
     __table_args__ = (
         UniqueConstraint('course_id', 'order_index'),

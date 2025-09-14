@@ -5,6 +5,7 @@ Terminal 3 - Supporting Terminal 2 with E2E Testing
 """
 
 import json
+import os
 import time
 import requests
 import asyncio
@@ -14,7 +15,10 @@ from typing import Dict, Any, Optional
 import pytest
 
 # Skip all tests in this module as they require external services
-pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
+pytestmark = pytest.mark.skipif(
+    not os.environ.get('RUN_INTEGRATION_TESTS'),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+)
 
 # Configuration
 DASHBOARD_URL = "http://127.0.0.1:5179"

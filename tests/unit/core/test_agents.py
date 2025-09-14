@@ -17,6 +17,7 @@ from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, Mock, patch, mock_open
 
 import pytest
+import pytest_asyncio
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import Runnable
 
@@ -52,14 +53,17 @@ class TestBaseAgent:
         llm.invoke = AsyncMock(return_value=AIMessage(content="Test response"))
         return llm
     
-    @pytest.fixture
-    def base_agent(self, mock_llm):
-        """Create a base agent instance."""
+    @pytest_asyncio.fixture(loop_scope="function")
+    async def base_agent(self, mock_llm):
+        """Create a base agent instance with proper cleanup."""
         with patch('agents.base_agent.ChatOpenAI', return_value=mock_llm):
             config = AgentConfig(name="TestAgent")
             agent = ConcreteTestAgent(config)
             agent.llm = mock_llm
-            return agent
+            yield agent
+            # Cleanup agent resources if available
+            if hasattr(agent, 'cleanup'):
+                await agent.cleanup()
     
     def test_base_agent_initialization(self, base_agent):
         """Test base agent initializes correctly."""
@@ -107,14 +111,17 @@ class TestContentAgent:
         })))
         return llm
     
-    @pytest.fixture
-    def content_agent(self, mock_llm):
-        """Create a content agent instance."""
+    @pytest_asyncio.fixture(loop_scope="function")
+    async def content_agent(self, mock_llm):
+        """Create a content agent instance with proper cleanup."""
         with patch('agents.base_agent.ChatOpenAI', return_value=mock_llm):
             config = AgentConfig(name="ContentAgent", system_prompt="Educational content generator")
             agent = ContentAgent(config)
             agent.llm = mock_llm
-            return agent
+            yield agent
+            # Cleanup agent resources if available
+            if hasattr(agent, 'cleanup'):
+                await agent.cleanup()
     
     @pytest.mark.asyncio
     async def test_generate_educational_content(self, content_agent):
@@ -186,14 +193,17 @@ class TestQuizAgent:
         })))
         return llm
     
-    @pytest.fixture
-    def quiz_agent(self, mock_llm):
-        """Create a quiz agent instance."""
+    @pytest_asyncio.fixture(loop_scope="function")
+    async def quiz_agent(self, mock_llm):
+        """Create a quiz agent instance with proper cleanup."""
         with patch('agents.base_agent.ChatOpenAI', return_value=mock_llm):
             config = AgentConfig(name="QuizAgent", system_prompt="Quiz generator")
             agent = QuizAgent(config)
             agent.llm = mock_llm
-            return agent
+            yield agent
+            # Cleanup agent resources if available
+            if hasattr(agent, 'cleanup'):
+                await agent.cleanup()
     
     @pytest.mark.asyncio
     async def test_generate_quiz(self, quiz_agent):
@@ -684,6 +694,7 @@ class TestAgentIntegration:
     
     @pytest.mark.asyncio
     @pytest.mark.integration
+    @pytest.mark.asyncio
     async def test_full_content_generation_pipeline(self):
         """Test complete content generation pipeline."""
         # This would test real agent interactions if not mocked
@@ -711,6 +722,7 @@ class TestAgentIntegration:
     
     @pytest.mark.asyncio
     @pytest.mark.integration
+    @pytest.mark.asyncio
     async def test_agent_error_handling(self):
         """Test error handling in agent pipeline."""
         with patch('agents.content_agent.ContentAgent') as MockContentAgent:
@@ -724,6 +736,7 @@ class TestAgentIntegration:
     
     @pytest.mark.asyncio
     @pytest.mark.integration
+    @pytest.mark.asyncio
     async def test_agent_retry_mechanism(self):
         """Test retry mechanism for failed agent tasks."""
         with patch('agents.quiz_agent.QuizAgent') as MockQuizAgent:
@@ -757,6 +770,7 @@ class TestAgentPerformance:
     
     @pytest.mark.asyncio
     @pytest.mark.performance
+    @pytest.mark.asyncio
     async def test_agent_response_time(self):
         """Test agent response time is within acceptable limits."""
         import time
@@ -774,6 +788,7 @@ class TestAgentPerformance:
     
     @pytest.mark.asyncio
     @pytest.mark.performance
+    @pytest.mark.asyncio
     async def test_parallel_agent_execution(self):
         """Test parallel execution of multiple agents."""
         agents = []

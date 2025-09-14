@@ -578,6 +578,27 @@ class LRUCache:
             del self.cache[oldest]
         self.cache[key] = value
         self.order.append(key)
+    
+    def delete(self, key: str) -> bool:
+        """Delete a key from the cache"""
+        if key in self.cache:
+            del self.cache[key]
+            self.order.remove(key)
+            return True
+        return False
+    
+    def clear(self):
+        """Clear all cache entries"""
+        self.cache.clear()
+        self.order.clear()
+    
+    def stats(self) -> dict:
+        """Get cache statistics"""
+        return {
+            'size': len(self.cache),
+            'capacity': self.capacity,
+            'hit_rate': 0  # Placeholder - would need to track hits/misses
+        }
 
 class ContentBridge:
     """Bridge for content generation between backend and Roblox"""

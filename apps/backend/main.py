@@ -14,6 +14,24 @@ Main FastAPI server (port 8008) with comprehensive features:
 # Initialize Sentry BEFORE importing other modules
 from .core.config import settings
 from .core.monitoring import initialize_sentry, configure_sentry_logging, sentry_manager
+from .core.logging import (
+    initialize_logging,
+    logging_manager,
+    CorrelationIDMiddleware,
+    log_execution_time,
+    log_database_operation,
+    log_external_api_call,
+    log_audit,
+)
+
+# Initialize comprehensive logging system
+initialize_logging(
+    log_level=settings.LOG_LEVEL if hasattr(settings, "LOG_LEVEL") else "INFO",
+    log_dir=settings.LOG_DIR if hasattr(settings, "LOG_DIR") else "logs",
+    enable_file_logging=settings.ENVIRONMENT != "testing",
+    enable_console_logging=True
+)
+print(f"✅ Logging system initialized for environment: {settings.ENVIRONMENT}")
 
 # Initialize Sentry with production-ready configuration
 sentry_initialized = initialize_sentry()
@@ -51,6 +69,7 @@ from fastapi.middleware.cors import CORSMiddleware  # pylint: disable=import-err
 from fastapi.middleware.trustedhost import (  # pylint: disable=import-error
     TrustedHostMiddleware,
 )
+from .core.security.cors import SecureCORSConfig, CORSMiddlewareWithLogging
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse  # pylint: disable=import-error
 from fastapi.security import HTTPBearer  # pylint: disable=import-error
 from pydantic import ValidationError, Field, BaseModel
@@ -97,7 +116,8 @@ from .services.pusher import (
 from .services.database import db_service
 from .services.socketio import create_socketio_app  # Socket.IO ASGI mounted at path '/socket.io'
 
-logger = logging.getLogger(__name__)
+# Use the logging manager for structured logging with correlation IDs
+logger = logging_manager.get_logger(__name__)
 
 
 # Import security modules
@@ -143,13 +163,23 @@ async def lifespan(app: FastAPI):
         return
     
     # Startup
-    logger.info("Starting %s v%s", settings.APP_NAME, settings.APP_VERSION)
+    logger.info(
+        f"Starting {settings.APP_NAME} v{settings.APP_VERSION}",
+        extra_fields={
+            "app_name": settings.APP_NAME,
+            "version": settings.APP_VERSION,
+            "environment": settings.ENVIRONMENT
+        }
+    )
 
     # Initialize secrets manager with timeout
     try:
         async with asyncio.timeout(5):  # 5 second timeout
             init_secrets_manager(auto_rotate=True)
-            logger.info("Secrets manager initialized")
+            logger.info(
+                "Secrets manager initialized",
+                extra_fields={"auto_rotate": True}
+            )
     except asyncio.TimeoutError:
         logger.warning("Secrets manager initialization timed out")
     except Exception as e:
@@ -190,7 +220,10 @@ async def lifespan(app: FastAPI):
         try:
             async with asyncio.timeout(10):  # 10 second timeout
                 await initialize_agents()
-                logger.info("Agent system initialized successfully")
+                logger.info(
+                "Agent system initialized successfully",
+                extra_fields={"agent_count": len(agent_manager.agents) if hasattr(agent_manager, "agents") else 0}
+            )
         except asyncio.TimeoutError:
             logger.warning("Agent initialization timed out - running in fallback mode")
         except (ImportError, AttributeError, RuntimeError, ValueError) as e:
@@ -221,7 +254,12 @@ async def lifespan(app: FastAPI):
         logger.warning(f"Failed to create background tasks: {e}")
 
     logger.info(
-        f"FastAPI server ready on {settings.FASTAPI_HOST}:{settings.FASTAPI_PORT}"
+        f"FastAPI server ready on {settings.FASTAPI_HOST}:{settings.FASTAPI_PORT}",
+        extra_fields={
+            "host": settings.FASTAPI_HOST,
+            "port": settings.FASTAPI_PORT,
+            "startup_time": time.time() - app.state.start_time
+        }
     )
     
     # Notify Sentry that startup is complete
@@ -402,50 +440,45 @@ app.add_middleware(
     TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver", "*.roblox.com"]
 )
 
+# Correlation ID middleware for request tracking
+app.add_middleware(CorrelationIDMiddleware)
+
+# Configure secure CORS based on environment
+cors_config = SecureCORSConfig(
+    environment="development" if settings.DEBUG else settings.ENVIRONMENT,
+    allowed_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allowed_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowed_headers=[
+        "Accept",
+        "Accept-Language",
+        "Content-Language", 
+        "Content-Type",
+        "Authorization",
+        "X-Requested-With",
+        "X-Request-ID",
+        "X-Session-ID",
+        "Origin",
+        "User-Agent",
+    ] if settings.DEBUG else [
+        "Accept",
+        "Content-Type",
+        "Authorization",
+        "X-Request-ID",
+    ],
+    exposed_headers=[
+        "X-Request-ID",
+        "X-Process-Time",
+        "Content-Type",
+        "Content-Length",
+    ],
+    max_age=600
+)
+
 # CORS runs second - needs to handle OPTIONS before other middleware
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:3001", 
-        "http://127.0.0.1:3001",
-        "http://localhost:5175",
-        "http://127.0.0.1:5175",
-        "http://localhost:5176",
-        "http://127.0.0.1:5176",
-        "http://localhost:5177",
-        "http://127.0.0.1:5177",
-        "http://localhost:5178",
-        "http://127.0.0.1:5178",
-        "http://localhost:5179",
-        "http://127.0.0.1:5179",
-        "http://localhost:8001",
-        "http://127.0.0.1:8001",
-        "http://localhost:5001",
-        "http://127.0.0.1:5001",
-        "*"  # Allow all origins for development
-    ] if settings.DEBUG else settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
-    allow_headers=[
-        "*",
-        "Authorization",
-        "Content-Type",
-        "X-Requested-With",
-        "X-Session-ID",
-        "X-Request-ID",
-        "Origin",
-        "Accept",
-        "User-Agent"
-    ],
-    expose_headers=[
-        "*",
-        "X-Request-ID", 
-        "X-Process-Time",
-        "Authorization",
-        "Content-Type"
-    ],
+    CORSMiddlewareWithLogging,
+    cors_config=cors_config,
 )
 
 # Security middleware with rate limiting and circuit breaker

@@ -6,6 +6,7 @@ correctly with the database and authentication system.
 """
 
 import asyncio
+import os
 import json
 import sys
 from datetime import datetime, timedelta, timezone
@@ -20,7 +21,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 # Skip all tests in this module as they require external services
-pytestmark = pytest.mark.skip(reason="Integration tests require external services - run with --run-integration")
+pytestmark = pytest.mark.skipif(
+    not os.environ.get('RUN_INTEGRATION_TESTS'),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Import the FastAPI app

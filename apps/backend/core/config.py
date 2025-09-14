@@ -43,20 +43,8 @@ class Settings:
     # CORS Configuration
     @property
     def CORS_ORIGINS(self):
-        # Parse from environment variable if set, otherwise use defaults
-        cors_env = os.getenv("CORS_ORIGINS", "")
-        if cors_env:
-            return [origin.strip() for origin in cors_env.split(",") if origin.strip()]
-        return [
-            "http://localhost:3000",
-            "http://localhost:5001", 
-            "http://localhost:5173",
-            "http://localhost:5175",
-            "http://localhost:5179",
-            "http://127.0.0.1:5175",
-            "https://create.roblox.com",
-            "https://www.roblox.com",
-        ]
+        # Use secure CORS origins from settings which handles environment logic
+        return self._config.CORS_ORIGINS
     
     # AI/ML Configuration
     @property
@@ -92,6 +80,14 @@ class Settings:
     @property
     def JWT_ALGORITHM(self):
         return self._config.JWT_ALGORITHM
+    
+    @property
+    def JWT_ACCESS_TOKEN_EXPIRE_MINUTES(self):
+        return self._config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+    
+    @property
+    def JWT_REFRESH_TOKEN_EXPIRE_DAYS(self):
+        return self._config.JWT_REFRESH_TOKEN_EXPIRE_DAYS
     
     # Educational Settings
     @property

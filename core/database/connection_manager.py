@@ -4,6 +4,7 @@ Provides high-performance connection pooling for the educational platform
 """
 
 import asyncpg
+import asyncio
 import os
 import logging
 import time
@@ -440,9 +441,132 @@ def get_session(database: str = "educational_platform"):
     # In async context, use get_async_session instead
     raise NotImplementedError("Sync sessions not supported. Use get_async_session() instead.")
 
+class RedisManager:
+    """Redis connection manager with singleton pattern and retry logic"""
+    _instance = None
+    _redis_pool = None
+    _async_redis_pool = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(RedisManager, cls).__new__(cls)
+        return cls._instance
+    
+    def __init__(self):
+        if not hasattr(self, '_initialized'):
+            self._initialized = True
+            self._retry_count = 3
+            self._retry_delay = 1.0
+    
+    async def get_async_client(self) -> Optional[redis.Redis]:
+        """Get async Redis client with retry logic"""
+        if self._async_redis_pool is None:
+            await self._initialize_async_pool()
+        
+        if self._async_redis_pool:
+            return redis.Redis(connection_pool=self._async_redis_pool)
+        return None
+    
+    async def _initialize_async_pool(self):
+        """Initialize async Redis connection pool with retry"""
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+        
+        for attempt in range(self._retry_count):
+            try:
+                self._async_redis_pool = redis.ConnectionPool.from_url(
+                    redis_url,
+                    max_connections=int(os.getenv("REDIS_MAX_CONNECTIONS", 50)),
+                    socket_connect_timeout=5,
+                    socket_timeout=5,
+                    retry_on_timeout=True,
+                    health_check_interval=30
+                )
+                
+                # Test connection
+                client = redis.Redis(connection_pool=self._async_redis_pool)
+                await client.ping()
+                logger.info("✅ Redis async connection pool initialized")
+                return
+                
+            except Exception as e:
+                logger.warning(f"Redis connection attempt {attempt + 1} failed: {e}")
+                if attempt < self._retry_count - 1:
+                    await asyncio.sleep(self._retry_delay * (2 ** attempt))
+                else:
+                    logger.error(f"❌ Failed to initialize Redis after {self._retry_count} attempts")
+                    self._async_redis_pool = None
+    
+    def get_sync_client(self) -> Optional[redis.Redis]:
+        """Get synchronous Redis client"""
+        if self._redis_pool is None:
+            self._initialize_sync_pool()
+        
+        if self._redis_pool:
+            import redis as sync_redis
+            return sync_redis.Redis(connection_pool=self._redis_pool)
+        return None
+    
+    def _initialize_sync_pool(self):
+        """Initialize synchronous Redis connection pool"""
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+        
+        try:
+            import redis as sync_redis
+            self._redis_pool = sync_redis.ConnectionPool.from_url(
+                redis_url,
+                max_connections=int(os.getenv("REDIS_MAX_CONNECTIONS", 50)),
+                socket_connect_timeout=5,
+                socket_timeout=5
+            )
+            
+            # Test connection
+            client = sync_redis.Redis(connection_pool=self._redis_pool)
+            client.ping()
+            logger.info("✅ Redis sync connection pool initialized")
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize sync Redis: {e}")
+            self._redis_pool = None
+    
+    async def health_check(self) -> bool:
+        """Check Redis connection health"""
+        try:
+            client = await self.get_async_client()
+            if client:
+                await client.ping()
+                return True
+        except Exception as e:
+            logger.error(f"Redis health check failed: {e}")
+        return False
+    
+    async def close(self):
+        """Close all Redis connections"""
+        if self._async_redis_pool:
+            await self._async_redis_pool.disconnect()
+            self._async_redis_pool = None
+        
+        if self._redis_pool:
+            self._redis_pool.disconnect()
+            self._redis_pool = None
+        
+        logger.info("Redis connections closed")
+
+# Global Redis manager instance
+redis_manager = RedisManager()
+
 # Redis client function for compatibility
 async def get_redis_client():
     """Get Redis client (compatibility function)"""
+    # First try the new Redis manager
+    client = await redis_manager.get_async_client()
+    if client:
+        return client
+    
+    # Fallback to db_manager's Redis pool
     if db_manager._redis_pool:
         return redis.Redis(connection_pool=db_manager._redis_pool)
     return None
+
+def get_redis_client_sync():
+    """Get synchronous Redis client"""
+    return redis_manager.get_sync_client()

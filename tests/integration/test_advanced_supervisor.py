@@ -14,9 +14,13 @@ This test suite demonstrates and validates all advanced features:
 
 import pytest
 import asyncio
+import os
 
-# Skip all tests in this module as they require external services
-pytestmark = pytest.mark.skip(reason="Integration tests require external services")
+# Skip integration tests by default, enable with RUN_INTEGRATION_TESTS=1
+pytestmark = pytest.mark.skipif(
+    not os.environ.get('RUN_INTEGRATION_TESTS'),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+)
 import json
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, AsyncMock

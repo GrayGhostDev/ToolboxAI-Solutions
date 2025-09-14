@@ -1270,9 +1270,10 @@ class RewardCalculator:
 
         # Grade level indicator
         if state.grade_level:
-            if state.grade_level <= 5:
+            grade_level = int(state.grade_level)
+            if grade_level <= 5:
                 indicators.append("novice")
-            elif state.grade_level <= 8:
+            elif grade_level <= 8:
                 indicators.append("developing")
             else:
                 indicators.append("proficient")
