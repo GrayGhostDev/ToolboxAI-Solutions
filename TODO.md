@@ -55,7 +55,11 @@
    - Implemented handlers for key events (subscription, payment, checkout)
    - Added environment flag ENABLE_STRIPE_WEBHOOKS for feature gating
    - Integrated webhook router into main application
-6. Update core docs and developer onboarding; add runbook links
+6. ✅ DONE: Update core docs and developer onboarding
+   - Created comprehensive DEVELOPER_ONBOARDING.md guide
+   - Documented setup, authentication, testing, and debugging
+   - Added runbook references and contribution guidelines
+   - Included troubleshooting section for common issues
 
 ### Release readiness criteria
 - All unit/integration/e2e tests green in CI

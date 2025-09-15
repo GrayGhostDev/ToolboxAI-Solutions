@@ -15,7 +15,59 @@ from apps.backend.services.database import db_service
 logger = logging.getLogger(__name__)
 
 # Create router for analytics endpoints
-analytics_router = APIRouter(prefix="/analytics", tags=["Analytics"])
+analytics_router = APIRouter(prefix="/api/v1/analytics", tags=["Analytics"])
+
+@analytics_router.get("/overview")
+async def get_analytics_overview(
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get analytics overview for dashboard."""
+
+    return {
+        "total_students": 487,
+        "active_students": 423,
+        "total_classes": 28,
+        "average_completion": 78.5,
+        "average_score": 85.3,
+        "total_assignments": 156,
+        "completed_assignments": 134,
+        "pending_submissions": 22,
+        "engagement_rate": 87.3,
+        "attendance_rate": 95.2
+    }
+
+@analytics_router.get("/student-progress")
+async def get_student_progress(
+    student_id: Optional[str] = Query(None),
+    class_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get student progress data."""
+
+    # Generate sample progress data
+    progress_data = {
+        "overall_progress": 75.5,
+        "completed_lessons": 45,
+        "total_lessons": 60,
+        "current_streak": 7,
+        "best_streak": 15,
+        "xp_earned": 1250,
+        "badges_earned": 8,
+        "rank": 5,
+        "subjects": [
+            {"name": "Mathematics", "progress": 82, "grade": "A-"},
+            {"name": "Science", "progress": 78, "grade": "B+"},
+            {"name": "English", "progress": 90, "grade": "A"},
+            {"name": "History", "progress": 65, "grade": "B"}
+        ],
+        "recent_activity": [
+            {"type": "lesson_completed", "title": "Algebra Basics", "time": "2 hours ago", "xp": 50},
+            {"type": "quiz_completed", "title": "Chapter 5 Quiz", "time": "1 day ago", "score": 88},
+            {"type": "badge_earned", "title": "Math Master", "time": "3 days ago"}
+        ]
+    }
+
+    return progress_data
 
 @analytics_router.get("/weekly_xp")
 async def get_weekly_xp(

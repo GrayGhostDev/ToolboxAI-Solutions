@@ -1,8 +1,8 @@
-const rawApi = (import.meta.env.VITE_API_BASE_URL as string) || `http://${window.location.hostname}:8008`;
+const rawApi = (import.meta.env.VITE_API_BASE_URL as string) || `http://127.0.0.1:8008`;
 // Normalize: remove trailing slashes and a single '/api/v1' if present to avoid double prefixing
 export const API_BASE_URL = rawApi.replace(/\/+$/, '').replace(/\/api\/v1$/, '');
 
-const rawWs = (import.meta.env.VITE_WS_URL as string) || `http://${window.location.hostname}:8008`;
+const rawWs = (import.meta.env.VITE_WS_URL as string) || `http://127.0.0.1:8008`;
 export const WS_URL = rawWs.replace(/\/+$/, '');
 
 // Pusher configuration (Channels)

@@ -146,6 +146,7 @@ blob-report/
 # Include generic and app-specific test report directories
 # Root-level
 test-results/
+test-reports/
 # Dashboard app
 apps/dashboard/test-reports/
 apps/dashboard/test-report.md
