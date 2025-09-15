@@ -439,10 +439,24 @@ Provide a quality score (1-10) and any necessary corrections."""
 
     async def _process_task(self, state: AgentState) -> Any:
         """Process task through the workflow"""
-        # Execute workflow
-        final_state = await self.workflow.ainvoke(state)
-
-        return final_state.get("result", "Task processing completed")
+        try:
+            # Execute workflow
+            final_state = await self.workflow.ainvoke(state)
+            
+            # Handle different return types
+            if isinstance(final_state, dict):
+                return final_state.get("result", "Task processing completed")
+            elif asyncio.iscoroutine(final_state):
+                # If it's still a coroutine, await it
+                result = await final_state
+                if isinstance(result, dict):
+                    return result.get("result", "Task processing completed")
+                return result
+            else:
+                return final_state
+        except Exception as e:
+            logger.error(f"Supervisor workflow error: {e}")
+            return {"error": str(e), "status": "failed"}
 
     async def delegate_complex_task(self, task: str, requirements: Dict[str, Any]) -> TaskResult:
         """

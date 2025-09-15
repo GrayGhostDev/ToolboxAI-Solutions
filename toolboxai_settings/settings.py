@@ -18,6 +18,7 @@ from pathlib import Path
 APP_NAME = os.getenv("APP_NAME", "ToolboxAI-Roblox-Environment")
 VERSION = "1.0.0"
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes", "on")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 ENV_NAME = os.getenv("ENV_NAME", "development")
 
 # Server Configuration
@@ -27,7 +28,7 @@ FLASK_PORT = int(os.getenv("FLASK_PORT", "5001"))
 MCP_PORT = int(os.getenv("MCP_PORT", "9876"))
 
 # Database Configuration  
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost/toolboxai_education")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 # External API Keys
@@ -437,6 +438,7 @@ class Settings:
         self.version = VERSION
         self.debug = DEBUG
         self.env_name = ENV_NAME
+        self.environment = ENVIRONMENT
         self.api_host = API_HOST
         self.api_port = API_PORT
         self.flask_port = FLASK_PORT
@@ -458,6 +460,7 @@ class Settings:
         self.default_grade_levels = DEFAULT_GRADE_LEVELS
         self.default_subjects = DEFAULT_SUBJECTS
         self.testing = TESTING
+        self.TESTING = TESTING  # Uppercase for compatibility
         self.test_database_url = TEST_DATABASE_URL
         self.enable_real_data = ENABLE_REAL_DATA
         self.enable_ai_generation = ENABLE_AI_GENERATION
@@ -474,6 +477,7 @@ class Settings:
         
         # Additional compatibility attributes
         self.ENV_NAME = ENV_NAME
+        self.ENVIRONMENT = ENVIRONMENT
         self.DEBUG = DEBUG
         self.API_HOST = API_HOST
         self.API_PORT = API_PORT

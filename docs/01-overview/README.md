@@ -1,108 +1,32 @@
-# ToolBoxAI-Solutions Documentation
+# 📚 Overview Documentation
 
-Welcome to the comprehensive documentation for ToolBoxAI-Solutions, an enterprise-ready educational platform that transforms lesson plans into interactive 3D Roblox environments.
+Welcome to the ToolboxAI Solutions overview documentation. This section provides high-level information about the project, getting started guides, and system overview.
 
-## 📚 Documentation Structure
+## 📁 Subfolders
 
-### [01 - Overview](README.md)
+### 🚀 [getting-started/](./getting-started/)
+- **main-readme.md** - Main getting started guide with quick setup
+- Quick start instructions and prerequisites
+- Development environment setup
 
-Start here to understand the platform, its goals, and how to get started.
+### 📋 [project-overview/](./project-overview/)
+- **documentation-index.md** - Complete documentation index
+- Project description and goals
+- Target audience and use cases
 
-- [Project Overview](project-overview.md) - Platform vision and goals
-- [System Architecture](system-architecture.md) - High-level technical overview
-- [Getting Started](getting-started.md) - Quick start guide
+### 🏗️ [system-overview/](./system-overview/)
+- **README.md** - System architecture overview
+- High-level component relationships
+- Technology stack overview
 
-### [02 - Architecture](../02-architecture/)
+## 🎯 Quick Navigation
 
-Technical architecture, data models, and component design.
+- **New to the project?** → Start with [getting-started/main-readme.md](./getting-started/main-readme.md)
+- **Want to understand the system?** → Check [system-overview/README.md](./system-overview/README.md)
+- **Looking for specific documentation?** → Use [project-overview/documentation-index.md](./project-overview/documentation-index.md)
 
-- System design and infrastructure
-- Data models and schemas
-- Component specifications
+## 📖 Related Documentation
 
-### [03 - API](../03-api/)
-
-Complete API reference and integration guides.
-
-- Authentication and security
-- Endpoint documentation
-- Error handling
-
-### [04 - Implementation](../04-implementation/)
-
-Development guidelines and deployment procedures.
-
-- Development setup
-- Coding standards
-- Testing and deployment
-
-### [05 - Features](../05-features/)
-
-Detailed feature documentation.
-
-- Learning systems
-- Gamification
-- Progress tracking
-
-### [06 - User Guides](../06-user-guides/)
-
-Role-specific guides for all users.
-
-- Administrator guide
-- Educator guide
-- Student guide
-
-### [07 - Operations](../07-operations/)
-
-Operational procedures and maintenance.
-
-- Installation and configuration
-- Monitoring and performance
-- Security and troubleshooting
-
-### [08 - Reference](../08-reference/)
-
-Technical specifications and requirements.
-
-- System requirements
-- Compliance standards
-- Accessibility guidelines
-
-### [09 - Meta](../09-meta/)
-
-Project metadata and contribution guidelines.
-
-- Change logs
-- Contributing guidelines
-- FAQ
-
-## 🚀 Quick Links
-
-- **For Developers**: Start with [System Architecture](system-architecture.md) and [API Documentation](../03-api/)
-- **For Educators**: See the [Educator Guide](../06-user-guides/educator-guide.md)
-- **For Administrators**: Check the [Installation Guide](../07-operations/installation.md) and [Admin Guide](../06-user-guides/admin-guide.md)
-- **For Students**: Visit the [Student Guide](../06-user-guides/student-guide.md)
-
-## 🎯 Platform Highlights
-
-- **AI-Powered**: Multi-agent system for intelligent lesson transformation
-- **LMS Integration**: Seamless integration with Canvas, Schoology, and Google Classroom
-- **Gamified Learning**: XP, badges, leaderboards, and achievements
-- **Comprehensive Analytics**: Real-time progress tracking and performance insights
-- **Enterprise-Ready**: COPPA, FERPA, and GDPR compliant
-- **Scalable**: Supports district-level deployments with 1000+ concurrent users
-
-## 📖 Getting Help
-
-- Check the [FAQ](../09-meta/faq.md) for common questions
-- Review [Troubleshooting](../07-operations/troubleshooting.md) for technical issues
-- See [Contributing](../09-meta/contributing.md) to help improve the platform
-
-## 🔄 Version
-
-Current Version: 1.0.0
-Last Updated: September 2025
-
----
-
-_ToolBoxAI-Solutions - Transforming Education Through Interactive 3D Learning_
+- **Architecture Details** → [02-architecture/](../02-architecture/)
+- **Implementation Guides** → [04-implementation/](../04-implementation/)
+- **User Guides** → [06-user-guides/](../06-user-guides/)

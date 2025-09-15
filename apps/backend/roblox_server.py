@@ -629,6 +629,30 @@ class ContentBridge:
     def set_in_cache(self, key: str, value: Any):
         """Set value in cache"""
         self.cache.set(key, value)
+    
+    def _generate_cache_key(self, request_data: Dict[str, Any]) -> str:
+        """Generate cache key from request data (for test compatibility)"""
+        if isinstance(request_data, dict):
+            # Handle dict format from tests
+            key_parts = [
+                request_data.get("subject", ""),
+                str(request_data.get("grade_level", 0)),
+                str(len(request_data.get("learning_objectives", [])))
+            ]
+            return "_".join(key_parts).lower().replace(" ", "_")
+        return self.generate_cache_key("content", request_data)
+    
+    def _is_cached(self, cache_key: str) -> bool:
+        """Check if a key is in cache"""
+        return self.cache.get(cache_key) is not None
+    
+    def _cache_response(self, cache_key: str, data: Dict[str, Any]) -> None:
+        """Cache a response with a given key"""
+        self.cache.set(cache_key, data)
+    
+    def _get_cached(self, cache_key: str) -> Optional[Dict[str, Any]]:
+        """Get cached data by key"""
+        return self.cache.get(cache_key)
 
 # Create a FastAPI app instance for test compatibility
 from fastapi import FastAPI

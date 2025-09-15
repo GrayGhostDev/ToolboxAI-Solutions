@@ -177,6 +177,11 @@ class SecureCORSConfig:
                     logger.warning(f"Invalid origin format: {origin}")
                     continue
                 
+                # Only allow http and https protocols
+                if parsed.scheme not in ['http', 'https']:
+                    logger.warning(f"Invalid protocol in origin: {origin}")
+                    continue
+                
                 # Reconstruct origin without path
                 clean_origin = f"{parsed.scheme}://{parsed.netloc}"
                 validated.append(clean_origin)

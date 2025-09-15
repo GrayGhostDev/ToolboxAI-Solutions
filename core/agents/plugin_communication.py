@@ -320,7 +320,9 @@ class PluginCommunicationHub:
             PluginEventType.CI_CD_TRIGGER: self._handle_ci_cd_trigger,
             PluginEventType.DASHBOARD_SYNC: self._handle_dashboard_sync,
             PluginEventType.PLUGIN_REGISTRATION: self._handle_plugin_registration,
-            PluginEventType.VALIDATION_REQUEST: self._handle_validation_request
+            PluginEventType.VALIDATION_REQUEST: self._handle_validation_request,
+            PluginEventType.PROGRESS_UPDATE: self._handle_progress_update,
+            PluginEventType.ERROR_REPORT: self._handle_error_report
         }
         
         handler = handlers.get(request.event_type)
@@ -449,24 +451,68 @@ class PluginCommunicationHub:
     async def _handle_ci_cd_trigger(self, request: PluginRequest) -> PluginResponse:
         """Handle CI/CD pipeline trigger"""
         
-        # Extract CI/CD parameters
-        action = request.parameters.get("action", "deploy")
-        branch = request.parameters.get("branch", "main")
-        environment = request.parameters.get("environment", "development")
+        # Extract CI/CD parameters from both config and parameters
+        config = request.config or {}
+        params = request.parameters or {}
+        
+        # Check config first, then parameters for CI/CD data
+        stage = config.get("stage") or params.get("stage", "generate")
+        build_id = config.get("build_id") or params.get("build_id", "")
+        action = params.get("action", "deploy")
+        branch = params.get("branch", "main")
+        environment = params.get("environment", "development")
         
         try:
-            # Trigger testing agent for validation
+            # Call supervisor's handle_cicd_request if supervisor exists
+            if self.supervisor and hasattr(self.supervisor, 'handle_cicd_request'):
+                cicd_result = await self.supervisor.handle_cicd_request({
+                    "stage": stage,
+                    "build_id": build_id,
+                    "action": action,
+                    "branch": branch,
+                    "environment": environment,
+                    "context": request.context or {},
+                    "config": config,
+                    "parameters": params
+                })
+                
+                # Extract status and data from result
+                if isinstance(cicd_result, dict):
+                    status = cicd_result.get("status", "error")
+                    artifacts = cicd_result.get("artifacts", [])
+                    
+                    if status == "success":
+                        return PluginResponse(
+                            request_id=request.request_id,
+                            success=True,
+                            event_type=request.event_type,
+                            content={
+                                "status": "success",
+                                "artifacts": artifacts,
+                                "stage": stage,
+                                "build_id": build_id
+                            }
+                        )
+                    else:
+                        return PluginResponse(
+                            request_id=request.request_id,
+                            success=False,
+                            event_type=request.event_type,
+                            errors=[cicd_result.get("error", "CI/CD pipeline failed")]
+                        )
+            
+            # Fallback to testing agent if supervisor not available
             testing_agent = TestingAgent()
             test_result = await testing_agent.execute("Run CI/CD tests", {
                 "action": action,
                 "branch": branch,
-                "environment": environment
+                "environment": environment,
+                "stage": stage,
+                "build_id": build_id
             })
             
             # If tests pass, proceed with deployment
             if test_result.success:
-                # Here you would trigger actual CI/CD pipeline
-                # For now, we'll simulate it
                 logger.info(f"CI/CD pipeline triggered: {action} to {environment} from {branch}")
                 
                 return PluginResponse(
@@ -474,6 +520,7 @@ class PluginCommunicationHub:
                     success=True,
                     event_type=request.event_type,
                     content={
+                        "status": "success",
                         "action": action,
                         "branch": branch,
                         "environment": environment,
@@ -596,6 +643,66 @@ class PluginCommunicationHub:
             errors=[result.error] if result.error else [],
             agents_used=["review"]
         )
+    
+    async def _handle_progress_update(self, request: PluginRequest) -> PluginResponse:
+        """Handle progress update from plugin"""
+        try:
+            # Extract progress data from request
+            progress_data = {
+                "student_id": request.config.get("student_id"),
+                "lesson_id": request.config.get("lesson_id"),
+                "progress": request.config.get("progress", 0),
+                "milestones": request.config.get("milestones", [])
+            }
+            
+            # Call the actual handle_progress_update method
+            update_result = await self.handle_progress_update(request)
+            
+            return PluginResponse(
+                request_id=request.request_id,
+                success=True,
+                event_type=request.event_type,
+                content={"updated": True, "progress_data": progress_data}
+            )
+        except Exception as e:
+            return PluginResponse(
+                request_id=request.request_id,
+                success=False,
+                event_type=request.event_type,
+                errors=[str(e)]
+            )
+    
+    async def _handle_error_report(self, request: PluginRequest) -> PluginResponse:
+        """Handle error report from plugin"""
+        try:
+            error_data = {
+                "error_type": request.config.get("error_type"),
+                "error_message": request.config.get("error_message"),
+                "stack_trace": request.config.get("stack_trace"),
+                "context": request.context
+            }
+            
+            # Log the error
+            logger.error(f"Plugin error report: {error_data}")
+            
+            # Store error in database if needed
+            if self.db_integration:
+                # Add error logging to database here if needed
+                pass
+            
+            return PluginResponse(
+                request_id=request.request_id,
+                success=True,
+                event_type=request.event_type,
+                content={"error_logged": True}
+            )
+        except Exception as e:
+            return PluginResponse(
+                request_id=request.request_id,
+                success=False,
+                event_type=request.event_type,
+                errors=[str(e)]
+            )
     
     async def _update_mcp_context(self, request: PluginRequest):
         """Update MCP context with request information"""

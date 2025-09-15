@@ -245,9 +245,9 @@ class TestFastAPIEndpoints:
     
     def test_health_check(self, client):
         """Test health check endpoint."""
-        with patch('server.main.get_agent_health', new_callable=AsyncMock) as mock_agent_health, \
-             patch('server.main.websocket_manager.get_connection_stats', new_callable=AsyncMock) as mock_ws_stats, \
-             patch('server.main.check_flask_server', new_callable=AsyncMock) as mock_flask_check:
+        with patch('apps.backend.main.get_agent_health', new_callable=AsyncMock) as mock_agent_health, \
+             patch('apps.backend.main.websocket_manager.get_connection_stats', new_callable=AsyncMock) as mock_ws_stats, \
+             patch('apps.backend.main.check_flask_server', new_callable=AsyncMock) as mock_flask_check:
             
             # Mock healthy responses
             mock_agent_health.return_value = {"system_health": "healthy"}
@@ -296,7 +296,7 @@ class TestFastAPIEndpoints:
             "include_quiz": True
         }
         
-        with patch('server.main.generate_educational_content', new_callable=AsyncMock) as mock_generate:
+        with patch('apps.backend.main.generate_educational_content', new_callable=AsyncMock) as mock_generate:
             # Mock the response from generate_educational_content
             from apps.backend.models.schemas import GeneratedScript
             mock_generate.return_value = ContentResponse(
@@ -342,7 +342,7 @@ class TestFastAPIEndpoints:
             memory_store.pop(key, None)
         
         # The endpoint expects query parameters, not JSON body
-        with patch('server.tools.RobloxQuizGenerator') as MockQuizGen:
+        with patch('apps.backend.utils.tools.RobloxQuizGenerator') as MockQuizGen:
             mock_instance = MockQuizGen.return_value
             mock_instance._run.return_value = json.dumps({
                 "time_limit": 600,
@@ -392,7 +392,7 @@ class TestFastAPIEndpoints:
             "password": "testpass123"
         }
         
-        with patch('server.auth.authenticate_user', new_callable=AsyncMock) as mock_auth:
+        with patch('apps.backend.api.auth.auth.authenticate_user', new_callable=AsyncMock) as mock_auth:
             mock_auth.return_value = User(
                 id="test-auth-001",
                 username="testuser",
@@ -445,7 +445,7 @@ class TestFastAPIEndpoints:
     @pytest.mark.asyncio(loop_scope="function")
     async def test_rate_limiting(self, async_client):
         """Test rate limiting on endpoints."""
-        from apps.backend.rate_limit_manager import RateLimitManager, RateLimitMode
+        from apps.backend.core.security.rate_limit_manager import RateLimitManager, set_testing_mode, clear_all_rate_limits
         
         # Get the manager and temporarily set to production mode for this test
         manager = RateLimitManager.get_instance()
@@ -453,7 +453,7 @@ class TestFastAPIEndpoints:
         
         try:
             # Set to production mode to enable rate limiting
-            manager.set_mode(RateLimitMode.PRODUCTION)
+            set_testing_mode(False)  # Enable production mode for this test
             manager.clear_all_limits()  # Clear any existing state
             
             # The /test/rate-limit endpoint has max_requests=100, window_seconds=60
@@ -730,7 +730,7 @@ class TestWebSocketConnections:
                 })
                 
                 # Simulate content update
-                with patch('server.websocket.broadcast_update') as mock_broadcast:
+                with patch('apps.backend.services.websocket_handler.broadcast_update') as mock_broadcast:
                     mock_broadcast.return_value = None
                     
                     # Trigger an update
@@ -764,12 +764,10 @@ class TestAuthentication:
         assert token is not None
         assert isinstance(token, str)
         
-        # Decode and verify
-        decoded = jwt.decode(
-            token,
-            settings.JWT_SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM]
-        )
+        # Verify token using the same JWTManager that created it
+        from apps.backend.api.auth.auth import JWTManager
+        decoded = JWTManager.verify_token(token)
+        
         assert decoded["sub"] == test_user.id  # Use user.id not username
         assert decoded["role"] == "student"
     
@@ -808,7 +806,7 @@ class TestAuthentication:
         
         # Create an expired token by mocking datetime.now
         past_time = datetime.now(timezone.utc) - timedelta(days=2)  # 2 days ago
-        with patch('server.auth.datetime') as mock_datetime:
+        with patch('apps.backend.api.auth.auth.datetime') as mock_datetime:
             mock_datetime.now.return_value = past_time
             mock_datetime.side_effect = lambda *args, **kw: datetime(*args, **kw)
             token = create_user_token(test_user)

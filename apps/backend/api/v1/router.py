@@ -18,7 +18,7 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, File, UploadFile
 from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel, Field, EmailStr, field_validator
-from sqlalchemy import select, func, and_, or_, desc, text
+from sqlalchemy import select, func, and_, or_, desc, text, cast, String
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -33,7 +33,7 @@ from core.database.connection import get_db
 from core.database.models import (
     User, EducationalContent, Quiz, QuizAttempt,
     UserProgress, UserSession, UserRole, 
-    Class, Assignment, Submission
+    Class, Assignment, Submission, Lesson
 )
 from apps.backend.api.auth.auth import get_current_user, require_role, require_any_role, hash_password
 from apps.backend.services.websocket_handler import WebSocketManager
@@ -207,7 +207,7 @@ async def get_active_users_count(db: AsyncSession) -> int:
     fifteen_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=15)
     result = await db.execute(
         select(func.count(User.id))
-        .where(User.last_active > fifteen_minutes_ago)
+        .where(User.last_login > fifteen_minutes_ago)  # Changed from last_active to last_login
     )
     return result.scalar() or 0
 
@@ -256,25 +256,25 @@ async def get_recent_activities(db: AsyncSession, limit: int = 20) -> List[Dict]
             }
         })
     
-    # Get recent content views
+    # Get recent content views (UserProgress tracks lessons, not content directly)
     content_views = await db.execute(
-        select(UserProgress, User, EducationalContent)
+        select(UserProgress, User, Lesson)
         .join(User, UserProgress.user_id == User.id)
-        .join(EducationalContent, UserProgress.content_id == EducationalContent.id)
-        .order_by(desc(UserProgress.last_accessed))
+        .join(Lesson, UserProgress.lesson_id == Lesson.id)
+        .order_by(desc(UserProgress.last_accessed_at))  # Changed from last_accessed to last_accessed_at
         .limit(limit // 3)
     )
     
-    for progress, user, content in content_views:
+    for progress, user, lesson in content_views:
         activities.append({
             "id": str(progress.id),
             "user_id": str(user.id),
             "user_name": f"{user.first_name} {user.last_name}",
-            "action": "viewed_content",
-            "target_type": "content",
-            "target_id": str(content.id),
-            "target_name": content.title,
-            "timestamp": progress.last_accessed,
+            "action": "viewed_lesson",
+            "target_type": "lesson",
+            "target_id": str(lesson.id),
+            "target_name": lesson.title,
+            "timestamp": progress.last_accessed_at,  # Changed from last_accessed to last_accessed_at
             "metadata": {
                 "progress_percentage": progress.progress_percentage,
                 "time_spent": progress.time_spent
@@ -1040,8 +1040,10 @@ async def list_users(
             count_query = count_query.where(search_filter)
         
         if role:
-            query = query.where(User.role == role.value)
-            count_query = count_query.where(User.role == role.value)
+            # Cast the enum column to text for comparison to avoid enum type mismatch
+            # This handles cases where the database enum type has different values
+            query = query.where(cast(User.role, String) == role.value)
+            count_query = count_query.where(cast(User.role, String) == role.value)
         
         if grade_level is not None:
             query = query.where(User.grade_level == grade_level)

@@ -4,9 +4,12 @@ Context Manager for MCP - Handles context optimization and token management
 
 import json
 import logging
+import os
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from urllib.parse import urlparse, ParseResult
+from pathlib import Path
 import tiktoken
 import numpy as np
 from collections import defaultdict
@@ -295,6 +298,163 @@ class MCPContextManager:
             self.segments = [s for s in self.segments if s.category != category]
         else:
             self.segments = []
+    
+    def validate_context_uri(self, uri: str) -> Tuple[bool, Optional[str]]:
+        """
+        Validate URI format and accessibility.
+        
+        Args:
+            uri: URI string to validate
+            
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        if not uri:
+            return False, "URI cannot be empty"
+        
+        try:
+            parsed: ParseResult = urlparse(uri)
+            
+            # Check for valid scheme
+            valid_schemes = ['file', 'http', 'https', 'mcp', 'resource']
+            if not parsed.scheme:
+                return False, "URI must have a scheme (e.g., file://, http://, https://)"
+            
+            if parsed.scheme not in valid_schemes:
+                return False, f"Invalid URI scheme: {parsed.scheme}. Must be one of {valid_schemes}"
+            
+            # Validate file URIs
+            if parsed.scheme == 'file':
+                # Convert file URI to path
+                if parsed.netloc:
+                    # Windows UNC path
+                    file_path = f"//{parsed.netloc}{parsed.path}"
+                else:
+                    # Regular file path
+                    file_path = parsed.path
+                
+                # Check if file exists (for local validation)
+                if not Path(file_path).exists():
+                    logger.warning(f"File URI points to non-existent file: {file_path}")
+                    # Don't fail validation, just warn
+                    
+            # Validate HTTP/HTTPS URIs
+            elif parsed.scheme in ['http', 'https']:
+                if not parsed.netloc:
+                    return False, f"{parsed.scheme.upper()} URI must have a host"
+                    
+            # MCP-specific URI validation
+            elif parsed.scheme == 'mcp':
+                # MCP URIs should have a resource identifier
+                if not parsed.path or parsed.path == '/':
+                    return False, "MCP URI must specify a resource path"
+                    
+            # Resource URI validation
+            elif parsed.scheme == 'resource':
+                # Resource URIs should have a valid resource identifier
+                if not parsed.path:
+                    return False, "Resource URI must specify a resource identifier"
+            
+            return True, None
+            
+        except Exception as e:
+            return False, f"URI validation error: {str(e)}"
+    
+    def add_context_from_uri(self, uri: str, category: str = "resource", importance: float = 0.7) -> bool:
+        """
+        Add context from a URI.
+        
+        Args:
+            uri: URI to load context from
+            category: Category for the context
+            importance: Importance score
+            
+        Returns:
+            bool: Success status
+        """
+        is_valid, error_msg = self.validate_context_uri(uri)
+        if not is_valid:
+            logger.error(f"Invalid URI: {error_msg}")
+            return False
+        
+        try:
+            parsed = urlparse(uri)
+            
+            if parsed.scheme == 'file':
+                # Load content from file
+                file_path = parsed.path
+                if Path(file_path).exists():
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    self._add_segment(content, category, f"file://{file_path}", importance)
+                    return True
+                    
+            elif parsed.scheme in ['http', 'https']:
+                # For HTTP resources, just store the URI reference
+                self._add_segment(f"Resource: {uri}", category, uri, importance)
+                return True
+                
+            elif parsed.scheme == 'mcp':
+                # Handle MCP-specific resources
+                resource_id = parsed.path.lstrip('/')
+                self._add_segment(f"MCP Resource: {resource_id}", category, uri, importance)
+                return True
+                
+            elif parsed.scheme == 'resource':
+                # Handle generic resources
+                resource_id = parsed.path.lstrip('/')
+                self._add_segment(f"Resource: {resource_id}", category, uri, importance)
+                return True
+                
+        except Exception as e:
+            logger.error(f"Failed to add context from URI {uri}: {e}")
+            return False
+        
+        return False
+    
+    async def __aenter__(self):
+        """Async context manager entry - initialize resources."""
+        logger.info("Entering MCP context manager")
+        
+        # Initialize any async resources
+        self._cleanup_handlers = []
+        
+        # Validate all existing segments with URI sources
+        for segment in self.segments:
+            if segment.source.startswith(('file://', 'http://', 'https://', 'mcp://', 'resource://')):
+                is_valid, error_msg = self.validate_context_uri(segment.source)
+                if not is_valid:
+                    logger.warning(f"Invalid URI in existing segment: {segment.source} - {error_msg}")
+        
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit - cleanup resources."""
+        logger.info("Exiting MCP context manager")
+        
+        # Run cleanup handlers
+        for handler in self._cleanup_handlers:
+            try:
+                await handler()
+            except Exception as e:
+                logger.error(f"Cleanup handler failed: {e}")
+        
+        # Clear temporary data if needed
+        if hasattr(self, '_temp_segments'):
+            self._temp_segments.clear()
+        
+        # Log any errors that occurred
+        if exc_type is not None:
+            logger.error(f"Context manager exiting with error: {exc_type.__name__}: {exc_val}")
+        
+        # Don't suppress exceptions
+        return False
+    
+    def register_cleanup_handler(self, handler):
+        """Register a cleanup handler to be called on context exit."""
+        if not hasattr(self, '_cleanup_handlers'):
+            self._cleanup_handlers = []
+        self._cleanup_handlers.append(handler)
 
 
 # Backward compatibility alias

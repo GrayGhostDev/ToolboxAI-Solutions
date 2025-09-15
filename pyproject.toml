@@ -42,13 +42,16 @@ testpaths = ["tests/unit", "tests/integration"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
+# Fix asyncio event loop issues - 2025 best practice
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
 
-# Pyright/Basedpyright Configuration - 2025 Production Ready
+# Basedpyright Configuration - 2025 Production Ready
 [tool.basedpyright]
 # File inclusion and exclusion
 include = [
     "**/*.py",
-    "ToolboxAI-Roblox-Environment/**/*.py",
+    "roblox/**/*.py",
     "apps/**/*.py",
     "core/**/*.py",
     "src/**/*.py",
@@ -71,7 +74,7 @@ exclude = [
 ]
 
 # Python environment configuration
-venvPath = "ToolboxAI-Roblox-Environment"
+venvPath = "."
 venv = "venv_clean"
 pythonVersion = "3.11"
 pythonPlatform = "Darwin"
@@ -90,14 +93,14 @@ stubPath = "src/shared/types"
 
 # Additional Python paths
 extraPaths = [
-    "ToolboxAI-Roblox-Environment",
-    "ToolboxAI-Roblox-Environment/server",
-    "ToolboxAI-Roblox-Environment/agents",
-    "ToolboxAI-Roblox-Environment/mcp",
-    "ToolboxAI-Roblox-Environment/coordinators",
-    "ToolboxAI-Roblox-Environment/swarm",
-    "ToolboxAI-Roblox-Environment/sparc",
-    "ToolboxAI-Roblox-Environment/toolboxai_utils",
+    "roblox",
+    "roblox/API",
+    "roblox/Config",
+    "roblox/modules",
+    "roblox/plugins",
+    "roblox/scripts",
+    "roblox/src",
+    "roblox/tests",
     "apps/backend",
     "apps/backend/core",
     "apps/backend/api",
@@ -115,7 +118,11 @@ extraPaths = [
     "src/shared/types",
 ]
 
-# Diagnostic severity overrides for production code quality
+# Basedpyright-specific enhanced features
+# Enable baseline support for gradual adoption
+baselineFile = ".basedpyright/baseline.json"
+
+# Enhanced type checking rules (basedpyright defaults)
 reportOptionalMemberAccess = "warning"
 reportOptionalSubscript = "warning"
 reportPrivateImportUsage = "warning"
@@ -145,3 +152,19 @@ reportImplicitOverride = "warning"
 reportShadowedImports = "warning"
 reportUninitializedInstanceVariable = "warning"
 reportInvalidTypeVarUse = "warning"
+
+# Basedpyright-specific enhanced rules
+reportIncompatibleMethodOverride = "warning"
+reportIncompatibleVariableOverride = "warning"
+reportInconsistentConstructor = "warning"
+reportOverlappingOverload = "warning"
+reportPossiblyUnboundVariable = "warning"
+
+# Pylance features available in basedpyright
+reportMissingSuperCall = "warning"
+reportUnusedClass = "warning"
+reportUnusedFunction = "warning"
+reportDuplicateImport = "warning"
+reportWildcardImportFromLibrary = "warning"
+reportAbstractUsage = "warning"
+reportUnsupportedDunderAll = "warning"

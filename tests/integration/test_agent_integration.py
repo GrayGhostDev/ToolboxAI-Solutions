@@ -77,7 +77,7 @@ class TestAgentSystemIntegration:
         components: Dict[str, Any] = {}
 
         # Mock LLM responses
-        with patch('agents.base_agent.ChatOpenAI') as MockLLM:
+        with patch('core.agents.base_agent.ChatOpenAI') as MockLLM:
             mock_llm = MockLLM.return_value
             mock_llm.invoke = AsyncMock(return_value=MagicMock(content="Test response"))
 
@@ -427,7 +427,7 @@ class TestAgentSystemIntegration:
         }
 
         # Mock complete workflow
-        with patch('server.main.get_content') as mock_generate:
+        with patch('apps.backend.main.get_content') as mock_generate:
             mock_generate.return_value = {
                 "experience_id": "exp_123",
                 "status": "generated",

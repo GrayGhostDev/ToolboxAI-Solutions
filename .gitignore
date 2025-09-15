@@ -48,6 +48,12 @@ yarn-error.log*
 
 # OS
 .DS_Store
+
+# Claude AI specific files
+CLAUDE.md
+claude.md
+WARP.md
+warp.md
 Thumbs.db
 
 # Environment variables

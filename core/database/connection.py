@@ -9,7 +9,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
@@ -18,7 +18,8 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker
 )
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import text, pool, event
+from sqlalchemy import text, pool, event, bindparam
+from .query_helpers import SafeQueryBuilder
 from sqlalchemy.exc import DBAPIError, OperationalError, IntegrityError
 from sqlalchemy.pool import NullPool, QueuePool
 
@@ -39,7 +40,11 @@ class DatabaseManager:
         Args:
             database_url: Database connection string (uses settings if not provided)
         """
-        self.database_url = database_url or settings.DATABASE_URL
+        # Ensure we use asyncpg driver for async operations
+        db_url = database_url or settings.DATABASE_URL
+        if db_url and db_url.startswith("postgresql://"):
+            db_url = db_url.replace("postgresql://", "postgresql+asyncpg://")
+        self.database_url = db_url
         self._engine: Optional[AsyncEngine] = None
         self._sessionmaker: Optional[async_sessionmaker] = None
         self._initialized = False

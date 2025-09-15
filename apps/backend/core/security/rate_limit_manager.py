@@ -115,6 +115,21 @@ class RateLimitManager:
             self.request_counts.clear()
             self.window_starts.clear()
     
+    def set_mode(self, mode: RateLimitMode) -> None:
+        """Set the rate limit mode."""
+        global _testing_mode
+        if mode == RateLimitMode.TESTING:
+            _testing_mode = True
+        else:
+            _testing_mode = False
+        logger.info(f"Rate limit mode set to: {mode.value}")
+    
+    def clear_all_limits(self) -> None:
+        """Clear all rate limits."""
+        self.request_counts.clear()
+        self.window_starts.clear()
+        logger.debug("All rate limits cleared")
+    
     async def start_cleanup(self):
         """Start background cleanup task for expired rate limit entries."""
         while True:

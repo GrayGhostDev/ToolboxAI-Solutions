@@ -2,9 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Current Repository State
+## Current Repository State (After 2025-09-14 Cleanup)
 
 This is a monorepo that underwent significant restructuring in September 2025. Multiple agents (warp001-warp007) have worked on various improvements. The repository is on branch `chore/repo-structure-cleanup` with main work tracked in `main` branch.
+
+### Major Reorganization (2025-09-14)
+- **Directory Cleanup**: Complete reorganization of root directory - see ROOT_DIRECTORY_ORGANIZATION.md
+- **Core Components Consolidated**: All AI agents, MCP, coordinators moved to `core/` directory
+- **Documentation Centralized**: All docs moved to `docs/` with organized subfolders
+- **Virtual Environment**: Cleaned up duplicate environments, use standard `venv/`
 
 ### Recent Updates (2025-09-13)
 - **BasedPyright Configuration**: Migrated from `[tool.pyright]` to `[tool.basedpyright]` in pyproject.toml
@@ -16,24 +22,33 @@ This is a monorepo that underwent significant restructuring in September 2025. M
 - **TOML Validation**: Fixed TOML parsing errors and removed invalid configuration options
 - **Comprehensive Testing**: All implementations tested and verified working correctly
 
-### Critical Context
+### Critical Context (Updated 2025-09-14)
 - **Nested Dashboard Structure**: The active dashboard is at `apps/dashboard/dashboard` (not `apps/dashboard`)
 - **Realtime Migration**: Dashboard migrated from Socket.IO to Pusher Channels (warp007)
-- **Path Normalization**: References to `src/roblox-environment` replaced with canonical `ToolboxAI-Roblox-Environment`
+- **Path Normalization**: All components now use canonical paths under `core/` directory
 - **Archived Content**: Old embedded dashboard backends archived to `Archive/2025-09-11/deprecated/`
+- **Documentation Location**: This file now resides in `docs/09-meta/CLAUDE.md`
 
 ## Development Environment
 
-### Key Paths
-- **Python Environment**: `/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/bin/python`
+### Key Paths (Updated 2025-09-14)
+- **Python Environment**: `venv/` - Standard virtual environment (create with `python3 -m venv venv`)
 - **Backend API**: `apps/backend/` - FastAPI server on port 8008
 - **Dashboard**: `apps/dashboard/dashboard/` - React + TypeScript frontend on port 5179 (nested structure!)
-- **Roblox Environment**: `ToolboxAI-Roblox-Environment/` - AI agents and content generation
+- **Core Components**: `core/` - Contains agents, MCP, coordinators, sparc, database
+- **Database**: `database/` - Models and migrations
+- **Scripts**: `scripts/` - Automation and utility scripts
+- **Configuration**: `config/` - All configuration files
 
 ### IDE Setup
 ```bash
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
 # Point VS Code/Cursor Python interpreter to:
-/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment/venv_clean/bin/python
+/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/venv/bin/python
 
 # Reload window after changing interpreter for pyright to pick up packages
 ```
@@ -70,9 +85,10 @@ pythonVersion = "3.12"
 ```
 
 **Key Type Files:**
-- `src/shared/types/pydantic/` - Complete Pydantic v2 implementations
-- `src/shared/types/pydantic_settings/` - Pydantic Settings implementations
-- `src/shared/types/sqlalchemy/` - Complete SQLAlchemy type definitions
+- `core/types/pydantic/` - Complete Pydantic v2 implementations
+- `core/types/pydantic_settings/` - Pydantic Settings implementations
+- `core/types/sqlalchemy/` - Complete SQLAlchemy type definitions
+- `toolboxai_settings/` - Shared settings module
 
 **Pydantic v2 Patterns Used:**
 - `@field_validator` instead of `@validator`
@@ -87,7 +103,7 @@ make test
 # Python tests (from root)
 pytest -q
 # Or specific test file
-pytest ToolboxAI-Roblox-Environment/tests/test_settings.py
+pytest tests/unit/core/test_settings.py
 # Run with specific markers
 pytest -m unit        # Unit tests only
 pytest -m integration # Integration tests only
@@ -162,19 +178,19 @@ npm run typecheck
 - Multi-role authentication (admin, teacher, student)
 - Vite for bundling with proxy configuration
 
-#### 3. **AI Agent System** (`ToolboxAI-Roblox-Environment/agents/`)
+#### 3. **AI Agent System** (`core/agents/`)
 - Base agent architecture for content generation
 - Specialized agents: ContentAgent, CleanupAgent, OrchestrationAgent
 - Orchestrator for coordinating multiple agents
 - SPARC framework integration for structured reasoning
 - Mock LLM for testing
 
-#### 4. **MCP (Model Context Protocol)** (`ToolboxAI-Roblox-Environment/mcp/`)
+#### 4. **MCP (Model Context Protocol)** (`core/mcp/`)
 - Context management for AI interactions
 - Server-side tools and resource handling
 - Integration with LangChain
 
-#### 5. **Database Layer** (`ToolboxAI-Roblox-Environment/database/`)
+#### 5. **Database Layer** (`database/`)
 - PostgreSQL for persistent storage
 - Redis for caching and sessions
 - SQLAlchemy ORM with async support

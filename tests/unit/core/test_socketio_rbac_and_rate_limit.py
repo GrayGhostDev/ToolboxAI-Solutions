@@ -17,8 +17,11 @@ os.environ['SKIP_AGENTS'] = 'true'
 
 from apps.backend.services.socketio import sio as sio_srv, connected_clients, content_request, ping
 from apps.backend.core.config import settings
-from apps.backend.services.rate_limit_manager import get_rate_limit_manager
-from apps.backend.core.security.rate_limit_manager import RateLimitMode
+from apps.backend.core.security.rate_limit_manager import (
+    get_rate_limit_manager,
+    set_testing_mode,
+    clear_all_rate_limits
+)
 
 
 @pytest.mark.asyncio(loop_scope="function")
@@ -66,8 +69,8 @@ async def test_socketio_rate_limit_enforced_for_ping(monkeypatch):
     original_limit = getattr(settings, "SIO_RATE_LIMIT_PER_MINUTE", 100)
     settings.SIO_RATE_LIMIT_PER_MINUTE = 1
     rlm = get_rate_limit_manager()
-    rlm.set_mode(RateLimitMode.PRODUCTION)
-    rlm.clear_all_limits()
+    set_testing_mode(False)  # Disable testing mode to enforce limits
+    clear_all_rate_limits()
     
     try:
         sid = "sid-rate-1"
@@ -96,6 +99,7 @@ async def test_socketio_rate_limit_enforced_for_ping(monkeypatch):
         assert found_rate_error, "Expected a rate limit error emission on second ping"
     finally:
         settings.SIO_RATE_LIMIT_PER_MINUTE = original_limit
-        rlm.clear_all_limits()
+        # Clear rate limits using the already imported function
+        clear_all_rate_limits()
         connected_clients.pop("sid-rate-1", None)
 

@@ -189,18 +189,23 @@ class TestPluginCommunicationHub:
             }
         )
         
-        with patch.object(hub, 'handle_database_query', new_callable=AsyncMock) as mock_db:
-            mock_db.return_value = {
-                "content": [
-                    {"type": "terrain", "data": {}},
-                    {"type": "quiz", "data": {}}
-                ]
-            }
+        # Mock the review agent since VALIDATION_REQUEST uses it
+        with patch.object(hub.agent_pool["review"], 'execute', new_callable=AsyncMock) as mock_execute:
+            from core.agents.base_agent import TaskResult
+            mock_execute.return_value = TaskResult.create(
+                success=True,
+                output={
+                    "validation_result": {
+                        "valid": True,
+                        "issues": []
+                    }
+                }
+            )
             
             response = await hub.handle_plugin_request(request)
             
             assert response.status == "success"
-            assert "content" in response.data
+            assert response.content is not None
     
     @pytest.mark.asyncio(loop_scope="function")
     async def test_handle_progress_update(self, hub):
@@ -218,12 +223,20 @@ class TestPluginCommunicationHub:
             }
         )
         
+        # The _handle_progress_update will call handle_progress_update
+        # We need to mock that instead
         with patch.object(hub, 'handle_progress_update', new_callable=AsyncMock) as mock_progress:
-            mock_progress.return_value = {"updated": True}
+            mock_progress.return_value = PluginResponse(
+                request_id=request.request_id,
+                success=True,
+                event_type=request.event_type,
+                content={"updated": True}
+            )
             
             response = await hub.handle_plugin_request(request)
             
             assert response.status == "success"
+            assert response.data["updated"] is True
             mock_progress.assert_called_once()
     
     @pytest.mark.asyncio(loop_scope="function")

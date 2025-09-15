@@ -54,6 +54,7 @@ from apps.backend.services.websocket_auth import (
     UserInfo
 )
 from apps.backend.api.auth.auth import JWTManager, User
+from apps.backend.api.auth.websocket_auth import FastAPIWebSocketAuthenticator
 
 
 class TestWebSocketAuthMiddleware:
@@ -290,7 +291,7 @@ class TestFastAPIWebSocketAuthenticator:
         # Set token in query params
         mock_websocket.query_params = {"token": valid_token}
         
-        with patch('server.websocket_auth.JWTManager.verify_token') as mock_verify:
+        with patch('apps.backend.api.auth.auth.JWTManager.verify_token') as mock_verify:
             mock_verify.return_value = {
                 "sub": "test-user-123",
                 "username": "testuser",
@@ -330,7 +331,7 @@ class TestFastAPIWebSocketAuthenticator:
         """Test authentication failure with invalid token"""
         mock_websocket.query_params = {"token": "invalid-token"}
         
-        with patch('server.websocket_auth.JWTManager.verify_token') as mock_verify:
+        with patch('apps.backend.api.auth.auth.JWTManager.verify_token') as mock_verify:
             mock_verify.return_value = None
             
             session = await authenticator.authenticate_connection(mock_websocket, "invalid-token")
@@ -345,7 +346,7 @@ class TestFastAPIWebSocketAuthenticator:
         # First authenticate
         mock_websocket.query_params = {"token": valid_token}
         
-        with patch('server.websocket_auth.JWTManager.verify_token') as mock_verify:
+        with patch('apps.backend.api.auth.auth.JWTManager.verify_token') as mock_verify:
             mock_verify.return_value = {
                 "sub": "test-user-123",
                 "username": "testuser",
@@ -422,7 +423,7 @@ class TestWebSocketEndpointIntegration:
         mock_websocket.receive_text = AsyncMock()
         
         # Mock successful authentication
-        with patch('server.websocket.websocket_authenticator.authenticate_connection') as mock_auth:
+        with patch('apps.backend.api.auth.websocket_auth.FastAPIWebSocketAuthenticator.authenticate_connection') as mock_auth:
             mock_user = User(id="test-user", username="testuser", email="test@example.com", role="student")
             mock_session = Mock()
             mock_session.user = mock_user
@@ -430,7 +431,7 @@ class TestWebSocketEndpointIntegration:
             mock_session.is_active = True
             mock_auth.return_value = mock_session
             
-            with patch('server.websocket.websocket_manager.connect') as mock_connect:
+            with patch('apps.backend.services.websocket_handler.WebSocketManager.connect') as mock_connect:
                 mock_connect.return_value = "connection-123"
                 
                 # Simulate WebSocket disconnect to end the loop
@@ -439,12 +440,12 @@ class TestWebSocketEndpointIntegration:
                     Exception("WebSocketDisconnect")  # Simulate disconnect
                 ]
                 
-                with patch('server.websocket.authenticate_websocket_message') as mock_auth_msg:
+                with patch('apps.backend.api.auth.websocket_auth.FastAPIWebSocketAuthenticator.authenticate_message') as mock_auth_msg:
                     mock_auth_msg.return_value = True
                     
-                    with patch('server.websocket.websocket_manager.handle_message') as mock_handle:
-                        with patch('server.websocket.websocket_manager.disconnect') as mock_disconnect:
-                            with patch('server.websocket.websocket_authenticator.close_session') as mock_close:
+                    with patch('apps.backend.services.websocket_handler.WebSocketManager.handle_message') as mock_handle:
+                        with patch('apps.backend.services.websocket_handler.WebSocketManager.disconnect') as mock_disconnect:
+                            with patch('apps.backend.api.auth.websocket_auth.FastAPIWebSocketAuthenticator.close_session') as mock_close:
                                 # Run the endpoint
                                 await websocket_endpoint(mock_websocket)
                                 

@@ -282,7 +282,7 @@ class PostMergeHook:
         # Try to generate OpenAPI spec
         exit_code, stdout, stderr = self.github_helper.run_command([
             'python', '-c', 
-            'from server.main import app; import json; print(json.dumps(app.openapi()))'
+            'from apps.backend.main import app; import json; print(json.dumps(app.openapi()))'
         ])
         
         if exit_code == 0:

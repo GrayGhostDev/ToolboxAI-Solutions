@@ -177,6 +177,42 @@ class JWTSecurityManager:
         
         return report
     
+    def _validate_environment_jwt_secret(self) -> None:
+        """
+        Validate JWT secret for production environment
+        
+        Raises:
+            ValueError: If JWT secret is weak in production environment
+        """
+        environment = os.getenv('ENV_NAME', os.getenv('ENVIRONMENT', 'development'))
+        
+        # Only validate in production
+        if environment.lower() == 'production':
+            secret = self._get_existing_secret()
+            
+            if not secret:
+                raise ValueError("PRODUCTION SECURITY ERROR: No JWT secret configured")
+            
+            # Check minimum length
+            if len(secret) < 32:
+                raise ValueError("PRODUCTION SECURITY ERROR: JWT secret too short (min 32 chars)")
+            
+            # Check for common weak patterns
+            weak_patterns = ['weak', 'test', 'demo', 'example', 'password', '123', 'abc']
+            if any(pattern in secret.lower() for pattern in weak_patterns):
+                raise ValueError("PRODUCTION SECURITY ERROR: JWT secret contains weak patterns")
+            
+            # Check entropy (character diversity)
+            unique_chars = len(set(secret))
+            if unique_chars < 16:
+                raise ValueError("PRODUCTION SECURITY ERROR: JWT secret has low entropy")
+            
+            # Use the generator's validation for comprehensive check
+            is_valid, report = self.generator.validate_secret(secret)
+            if not is_valid:
+                issues = report.get('issues', ['Unknown validation failure'])
+                raise ValueError(f"PRODUCTION SECURITY ERROR: {'; '.join(issues)}")
+    
     def rotate_secret(self, force: bool = False) -> Tuple[bool, Dict[str, Any]]:
         """
         Rotate JWT secret

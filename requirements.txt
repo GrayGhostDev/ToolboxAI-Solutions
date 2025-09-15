@@ -1,22 +1,21 @@
-# ToolboxAI Roblox Environment - Complete Requirements
-# Python 3.11+ required
-
-# Core Dependencies
+# Core Web Frameworks
 fastapi==0.116.1
 uvicorn[standard]==0.35.0
 flask==3.0.0
 Flask-Cors==4.0.0
-asgiref>=3.8.1  # For Flask async support
-greenlet>=3.2.4  # For Flask async/await compatibility
+asgiref>=3.8.1
+greenlet>=3.2.4
 
-# LangChain & AI
-langchain-core==0.3.76
-langchain-openai==0.3.33
-langgraph==0.6.6
-openai==1.106.0
+# LangChain Ecosystem (Compatible Versions)
+langchain==0.3.26
+langchain-core==0.3.66
+langchain-community==0.3.27
+langchain-openai==0.2.14
+langgraph==0.2.67
+openai>=1.0,<2.0
 tiktoken==0.11.0
 
-# Database & Storage
+# Database
 sqlalchemy==2.0.23
 alembic==1.13.0
 asyncpg==0.30.0
@@ -31,19 +30,19 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.20
 requests-oauthlib==2.0.0
 
-# Data Validation & Serialization
+# Data Validation
 pydantic==2.11.6
 pydantic-settings==2.10.1
 python-dotenv==1.0.0
 pyyaml==6.0.1
 
-# WebSocket & Real-time
+# WebSockets & Realtime
 websockets==15.0.1
 websocket-client==1.8.0
 python-socketio>=5.10,<6
 pusher==3.3.2
 
-# HTTP & API Clients
+# HTTP Clients
 httpx==0.28.1
 aiohttp==3.9.2
 requests==2.32.5
@@ -52,20 +51,19 @@ requests==2.32.5
 prometheus-client==0.22.1
 structlog==25.4.0
 colorama==0.4.6
-sentry-sdk[fastapi,sqlalchemy,pure_eval]==2.37.1
+sentry-sdk[fastapi,pure_eval,sqlalchemy]==2.37.1
 
 # Testing
 pytest==8.4.2
-pytest-asyncio==0.24.0  # Updated for better loop_scope support and async cleanup
+pytest-asyncio==0.24.0
 pytest-cov==6.2.1
 pytest-mock==3.12.0
-# pytest-debug==1.0.0  # Removed, not available on PyPI
 pytest-timeout==2.3.1
-pytest-xdist==3.6.1  # Updated for better async support
+pytest-xdist==3.6.1
 pytest-html==4.1.1
 pytest-json-report==1.5.0
 
-# Debugging
+# Development Tools
 debugpy==1.8.0
 pdbpp==0.10.3
 ipdb==0.13.13
@@ -73,7 +71,7 @@ memory-profiler==0.61.0
 line-profiler==4.1.2
 py-spy==0.3.14
 
-# Development Tools
+# Code Quality
 black==25.1.0
 flake8==7.3.0
 mypy==1.7.1
@@ -83,16 +81,15 @@ ipython~=8.26
 psutil>=5.9,<6
 py-cpuinfo==9.0.0
 
-# Vector Embeddings (for MCP)
+# AI/ML Libraries
 numpy==1.26.4
 sentence-transformers==5.1.0
 faiss-cpu==1.8.0
 
-# Educational Content Tools
+# External Data Sources
 wikipedia-api==0.8.1
 wikipedia==1.4.0
 duckduckgo-search==8.1.1
-# Provide ddgs runtime for LangChain DuckDuckGo wrapper used in tools
 ddgs>=1.0.0
 
 # Utilities
@@ -103,13 +100,13 @@ pytz>=2024.1,<2026.0
 aiofiles==24.1.0
 tenacity==9.1.2
 
-# Optional: Production Server
+# Deployment
 gunicorn==23.0.0
 supervisor==4.2.5
 
-# Optional: Documentation
+# Documentation
 mkdocs==1.5.3
 mkdocs-material==9.5.2
 
-# ToolboxAI Utils Dependencies
+# Security
 urllib3==2.2.3

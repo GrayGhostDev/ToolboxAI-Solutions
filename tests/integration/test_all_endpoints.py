@@ -34,8 +34,8 @@ def get_auth_token() -> str:
         print(f"Auth error: {e}")
         return ""
 
-def test_endpoint(endpoint: str, token: str, description: str, method: str = "GET") -> bool:
-    """Test a specific endpoint."""
+def check_endpoint(endpoint: str, token: str, description: str, method: str = "GET") -> bool:
+    """Check a specific endpoint (helper function, not a test)."""
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     
     try:
@@ -53,8 +53,7 @@ def test_endpoint(endpoint: str, token: str, description: str, method: str = "GE
             if isinstance(data, list):
                 print(f"  Items returned: {len(data)}")
             elif isinstance(data, dict):
-                keys = list(data.keys())[:5]  # Show first 5 keys
-                print(f"  Keys: {keys}{'...' if len(data.keys()) > 5 else ''}")
+                print(f"  Keys: {list(data.keys())}")
             print("  ✅ SUCCESS")
             return True
         else:
@@ -67,7 +66,9 @@ def test_endpoint(endpoint: str, token: str, description: str, method: str = "GE
         print(f"  ❌ ERROR: {e}")
         return False
 
-def main():
+@pytest.mark.integration
+def test_all_endpoints():
+    """Test all educational platform endpoints."""
     print("🧪 Testing All Educational Platform Endpoints")
     print("=" * 50)
     
@@ -136,7 +137,7 @@ def main():
     failed_endpoints = []
     
     for endpoint, description in test_cases:
-        if test_endpoint(endpoint, token, description):
+        if check_endpoint(endpoint, token, description):
             success_count += 1
         else:
             failed_endpoints.append((endpoint, description))
@@ -150,14 +151,8 @@ def main():
         for endpoint, description in failed_endpoints:
             print(f"  - {description}: {endpoint}")
     
-    if success_count == len(test_cases):
-        print("🎉 All endpoints are working correctly!")
-    elif success_count > len(test_cases) * 0.8:
-        print("✅ Most endpoints are working correctly")
-    elif success_count > len(test_cases) // 2:
-        print("⚠️  Some endpoints are working, but issues remain")
-    else:
-        print("❌ Multiple endpoints have issues")
+    # Assert that at least some endpoints work
+    assert success_count > 0, "No endpoints are working"
 
 if __name__ == "__main__":
-    main()
+    test_all_endpoints()

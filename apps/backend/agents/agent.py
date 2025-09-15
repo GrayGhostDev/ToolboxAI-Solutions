@@ -22,7 +22,11 @@ from typing import Any, Callable, Dict, List, Optional
 import redis
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.chat_history import InMemoryChatMessageHistory
-from langchain_openai import ChatOpenAI
+try:
+    from langchain_openai import ChatOpenAI
+except ImportError:
+    # Fallback for compatibility
+    from langchain_community.chat_models import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
 from ..api.auth.auth import get_current_user

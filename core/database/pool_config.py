@@ -156,6 +156,8 @@ class PoolConfig:
     pg_statement_timeout: int = 30000  # Statement timeout in ms
     pg_lock_timeout: int = 10000  # Lock timeout in ms
     pg_idle_in_transaction_timeout: int = 60000  # Idle transaction timeout
+    prepared_statement_cache_size: int = 512  # PostgreSQL 16+ prepared statement cache
+    jit: str = "off"  # JIT compilation setting for consistent performance
     
     # Performance tuning
     echo_pool: bool = False  # Log pool checkouts/checkins
@@ -193,6 +195,7 @@ class PoolConfig:
     enable_metrics: bool = True
     metrics_interval: int = 60  # Seconds between metric collections
     slow_query_threshold: float = 1.0  # Log queries slower than this
+    enable_pool_events: bool = True  # Enable pool event monitoring
     
     # Strategy
     strategy: PoolStrategy = PoolStrategy.OPTIMIZED
@@ -282,6 +285,69 @@ class PoolConfig:
                 "enabled": self.circuit_breaker_enabled,
                 "threshold": self.circuit_breaker_threshold
             }
+        }
+    
+    def to_engine_kwargs(self) -> Dict[str, Any]:
+        """Generate SQLAlchemy 2.0 engine kwargs for sync connections."""
+        # Build PostgreSQL options string
+        pg_options = [
+            f"statement_timeout={self.pg_statement_timeout}",
+            f"lock_timeout={self.pg_lock_timeout}",
+            f"idle_in_transaction_session_timeout={self.pg_idle_in_transaction_timeout}",
+            "application_name=toolboxai"
+        ]
+        
+        # Update connect_args with options
+        connect_args = self.connect_args.copy()
+        connect_args["options"] = " ".join(f"-c {opt}" for opt in pg_options)
+        
+        return {
+            "pool_size": self.pool_size,
+            "max_overflow": self.max_overflow,
+            "pool_timeout": self.pool_timeout,
+            "pool_recycle": self.pool_recycle,
+            "pool_pre_ping": self.pool_pre_ping,
+            "echo_pool": self.echo_pool,
+            "use_lifo": self.use_lifo,
+            "connect_args": connect_args,
+            "execution_options": {
+                "isolation_level": "READ COMMITTED",
+                "max_row_buffer": 10000
+            }
+        }
+    
+    def to_async_engine_kwargs(self) -> Dict[str, Any]:
+        """Generate SQLAlchemy 2.0 engine kwargs for async connections with asyncpg."""
+        # Build server settings for asyncpg
+        server_settings = {
+            "application_name": "toolboxai",
+            "jit": self.jit,
+            "statement_timeout": str(self.pg_statement_timeout),
+            "lock_timeout": str(self.pg_lock_timeout),
+            "idle_in_transaction_session_timeout": str(self.pg_idle_in_transaction_timeout)
+        }
+        
+        # Asyncpg-specific connect args
+        async_connect_args = {
+            "server_settings": server_settings,
+            "command_timeout": self.pool_timeout,
+            "statement_cache_size": self.prepared_statement_cache_size,
+            "max_cached_statement_lifetime": 3600,
+            "max_cacheable_statement_size": 1024,
+            "min_size": self.min_pool_size,
+            "max_size": self.pool_size + self.max_overflow
+        }
+        
+        return {
+            "pool_size": self.pool_size,
+            "max_overflow": self.max_overflow,
+            "pool_timeout": self.pool_timeout,
+            "pool_recycle": self.pool_recycle,
+            "pool_pre_ping": self.pool_pre_ping,
+            "echo_pool": self.echo_pool,
+            "use_lifo": self.use_lifo,
+            "connect_args": async_connect_args,
+            "pool_use_lifo": self.use_lifo  # Async-specific parameter
         }
 
 

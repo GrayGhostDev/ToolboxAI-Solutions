@@ -113,6 +113,15 @@ class TestAPIv1Endpoints:
     
     async def _create_test_user(self, username, email, role, grade_level):
         """Helper to create test user"""
+        from sqlalchemy import select
+        
+        # Check if user already exists
+        result = await self.db.execute(select(User).where(User.email == email))
+        existing_user = result.scalar_one_or_none()
+        
+        if existing_user:
+            return existing_user
+            
         user = User(
             id=uuid4(),
             username=username,

@@ -145,7 +145,11 @@ class AgentDatabaseIntegration:
                     
                 query += " ORDER BY created_at DESC LIMIT 10"
                 
-                result = await session.execute(text(query), params)
+                # Use text() with bound parameters properly
+                if params:
+                    result = await session.execute(text(query).bindparams(**params))
+                else:
+                    result = await session.execute(text(query))
                 objectives = []
                 for row in result:
                     objectives.append({
@@ -232,7 +236,11 @@ class AgentDatabaseIntegration:
                     
                 query += " ORDER BY c.created_at DESC LIMIT 10"
                 
-                result = await session.execute(text(query), params)
+                # Use text() with bound parameters properly
+                if params:
+                    result = await session.execute(text(query).bindparams(**params))
+                else:
+                    result = await session.execute(text(query))
                 content_items = []
                 for row in result:
                     content_items.append({

@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "baseline": {
+    "./core/agents/base_agent.py": []
+  }
+}

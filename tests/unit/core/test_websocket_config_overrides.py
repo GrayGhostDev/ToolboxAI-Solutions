@@ -59,9 +59,11 @@ async def test_rbac_override_via_settings():
 async def test_ws_rate_limit_override(monkeypatch):
     # Set WS rate limit to 1 for quick test
     original_ws = getattr(settings, "WS_RATE_LIMIT_PER_MINUTE", 100)
-    original_api = settings.RATE_LIMIT_PER_MINUTE
-    settings.WS_RATE_LIMIT_PER_MINUTE = 1
-    settings.RATE_LIMIT_PER_MINUTE = 100  # ensure difference is honored
+    original_api = getattr(settings, "RATE_LIMIT_PER_MINUTE", 60)
+    # Mock the property since it can't be set directly
+    monkeypatch.setattr(settings.__class__, "WS_RATE_LIMIT_PER_MINUTE", property(lambda self: 1))
+    if not hasattr(settings, "RATE_LIMIT_PER_MINUTE"):
+        monkeypatch.setattr(settings, "RATE_LIMIT_PER_MINUTE", 100)  # ensure difference is honored
     try:
         # Ensure production mode so limits apply and state is clean
         rlm = get_rate_limit_manager()
@@ -86,6 +88,6 @@ async def test_ws_rate_limit_override(monkeypatch):
         assert last["type"] == "error"
         assert "Rate limit" in last["error"]
     finally:
-        settings.WS_RATE_LIMIT_PER_MINUTE = original_ws
-        settings.RATE_LIMIT_PER_MINUTE = original_api
+        # monkeypatch handles cleanup
+        pass
 

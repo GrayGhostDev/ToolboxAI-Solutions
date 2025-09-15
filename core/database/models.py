@@ -107,6 +107,11 @@ class User(Base):
     created_content = relationship("Content", back_populates="creator", foreign_keys="Content.creator_id")
     analytics = relationship("Analytics", back_populates="user", cascade="all, delete-orphan")
     
+    # Additional relationship aliases for compatibility
+    courses_enrolled = relationship("Course", secondary="enrollments", viewonly=True, overlaps="enrollments")
+    courses_teaching = relationship("Course", secondary="enrollments", viewonly=True, overlaps="enrollments,courses_enrolled")
+    progress = relationship("UserProgress", viewonly=True, overlaps="progress_records")
+    
     __table_args__ = (
         Index('idx_user_email_active', 'email', 'is_active'),
         Index('idx_user_roblox_id', 'roblox_user_id'),
@@ -144,6 +149,9 @@ class Course(Base):
     # Relationships
     lessons = relationship("Lesson", back_populates="course", cascade="all, delete-orphan")
     enrollments = relationship("Enrollment", back_populates="course", cascade="all, delete-orphan")
+    
+    # Additional relationship aliases for compatibility
+    enrolled_students = relationship("User", secondary="enrollments", viewonly=True, overlaps="enrollments")
     
     __table_args__ = (
         CheckConstraint('grade_level >= 1 AND grade_level <= 12'),

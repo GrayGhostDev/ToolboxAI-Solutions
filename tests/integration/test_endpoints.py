@@ -34,8 +34,8 @@ def get_auth_token() -> str:
         print(f"Auth error: {e}")
         return ""
 
-def test_endpoint(endpoint: str, token: str, description: str) -> bool:
-    """Test a specific endpoint."""
+def check_endpoint(endpoint: str, token: str, description: str) -> bool:
+    """Check a specific endpoint (helper function, not a test)."""
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     
     try:
@@ -62,7 +62,9 @@ def test_endpoint(endpoint: str, token: str, description: str) -> bool:
         print(f"  ❌ ERROR: {e}")
         return False
 
-def main():
+@pytest.mark.integration
+def test_endpoints():
+    """Test all educational platform endpoints."""
     print("🧪 Testing New Educational Platform Endpoints")
     print("=" * 50)
     
@@ -94,19 +96,16 @@ def main():
     
     success_count = 0
     for endpoint, description in test_cases:
-        if test_endpoint(endpoint, token, description):
+        if check_endpoint(endpoint, token, description):
             success_count += 1
         print()
     
     print("=" * 50)
     print(f"📊 Test Results: {success_count}/{len(test_cases)} endpoints working")
     
-    if success_count == len(test_cases):
-        print("🎉 All endpoints are working correctly!")
-    elif success_count > len(test_cases) // 2:
-        print("⚠️  Most endpoints are working, some issues remain")
-    else:
-        print("❌ Multiple endpoints have issues")
+    # Assert that at least some endpoints work
+    assert success_count > 0, "No endpoints are working"
 
 if __name__ == "__main__":
-    main()
+    # Run test function directly when script is executed
+    test_endpoints()

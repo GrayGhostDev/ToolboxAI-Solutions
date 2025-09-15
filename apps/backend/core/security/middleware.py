@@ -102,7 +102,6 @@ class RateLimiter:
         
         return await self.manager.check_rate_limit(
             identifier=identifier,
-            endpoint=endpoint,
             max_requests=limit,
             window_seconds=self.config.window_seconds,
             source="middleware"

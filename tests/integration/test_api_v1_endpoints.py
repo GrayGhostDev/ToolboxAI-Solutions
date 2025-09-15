@@ -45,16 +45,27 @@ def client():
 @pytest.fixture
 async def db_session():
     """Create database session for testing"""
-    async with get_db() as session:
+    async for session in get_db():
         yield session
+        break
 
 
 @pytest.fixture
 async def admin_user(db_session: AsyncSession):
     """Create admin user for testing"""
     from passlib.context import CryptContext
+    from sqlalchemy import select
     
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    
+    # First check if user already exists
+    result = await db_session.execute(
+        select(User).where(User.email == "admin@test.com")
+    )
+    existing_user = result.scalar_one_or_none()
+    
+    if existing_user:
+        return existing_user
     
     admin = User(
         email="admin@test.com",
@@ -95,11 +106,12 @@ class TestAnalyticsEndpoints:
         assert response.status_code == 200
         
         data = response.json()
-        assert data["success"] is True
-        assert "stats" in data
+        # The endpoint returns RealtimeMetrics directly, not wrapped in success
+        assert "timestamp" in data
+        assert "active_users" in data
+        assert "active_sessions" in data
         assert "recent_activities" in data
-        assert "active_users_by_hour" in data
-        assert "quiz_completion_rate" in data
+        assert "system_health" in data
     
     def test_summary_analytics_authorized(self, client, admin_headers):
         """Test summary analytics with admin authentication"""
@@ -208,7 +220,7 @@ class TestAdminUserEndpoints:
         """Test user listing with pagination parameters"""
         params = {
             "page": 1,
-            "per_page": 10,
+            "page_size": 10,  # Changed from per_page to page_size
             "search": "admin",
             "role": "admin",
             "sort_by": "created_at",
@@ -218,8 +230,11 @@ class TestAdminUserEndpoints:
         assert response.status_code == 200
         
         data = response.json()
-        assert data["pagination"]["page"] == 1
-        assert data["pagination"]["per_page"] == 10
+        # UserListResponse has pagination fields directly, not nested
+        assert data["page"] == 1
+        assert data["page_size"] == 10
+        assert "users" in data
+        assert "total" in data
     
     def test_create_user_authorized(self, client, admin_headers):
         """Test user creation with admin authentication"""

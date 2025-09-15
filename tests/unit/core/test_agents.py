@@ -934,8 +934,11 @@ class TestTestingAgent:
         stdout = "test_file.py::test_func PASSED\\n5 passed, 2 failed, 1 skipped"
         stderr = ""
         
+        # Convert command list to string for the test
+        command = f"{sys.executable} -m pytest"
+        
         result = testing_agent._parse_pytest_output(
-            stdout, stderr, 0, TestType.UNIT, [[sys.executable, "-m", "pytest"]], 2.5
+            stdout, stderr, 0, TestType.UNIT, command, 2.5
         )
         
         assert result.test_type == TestType.UNIT

@@ -607,10 +607,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_user_token(user: User) -> str:
     """Create JWT token for user"""
     token_data = {
-        "sub": user.id,
+        "sub": str(user.id),  # Convert UUID to string for JSON serialization
         "username": user.username,
         "email": user.email,
-        "role": user.role,
+        "role": user.role.value if hasattr(user.role, 'value') else user.role,  # Handle enum
     }
     return JWTManager.create_access_token(token_data)
 

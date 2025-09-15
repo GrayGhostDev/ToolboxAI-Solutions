@@ -70,7 +70,7 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     username = Column(String(50), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole), default=UserRole.STUDENT, nullable=False)
+    role = Column(Enum(UserRole, values_callable=lambda x: [e.value for e in x]), default=UserRole.STUDENT, nullable=False)
     
     # Profile information
     first_name = Column(String(100))
@@ -169,7 +169,7 @@ class Lesson(Base):
     
     # Content configuration
     content_type = Column(String(50), default="interactive")
-    difficulty = Column(Enum(DifficultyLevel), default=DifficultyLevel.INTERMEDIATE)
+    difficulty = Column(Enum(DifficultyLevel, name='difficultylevel', create_type=False), default=DifficultyLevel.INTERMEDIATE)
     estimated_duration = Column(Integer)  # in minutes
     
     # Educational content
@@ -224,7 +224,7 @@ class Content(Base):
     ai_parameters = Column(JSONB)
     
     # Review and approval
-    status = Column(Enum(ContentStatus), default=ContentStatus.DRAFT)
+    status = Column(Enum(ContentStatus, name='contentstatus', create_type=False), default=ContentStatus.DRAFT)
     reviewed_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     review_notes = Column(Text)
     quality_score = Column(Float)
@@ -257,7 +257,7 @@ class Quiz(Base):
     
     # Quiz configuration
     quiz_type = Column(String(50), default="multiple_choice")
-    difficulty = Column(Enum(DifficultyLevel), default=DifficultyLevel.INTERMEDIATE)
+    difficulty = Column(Enum(DifficultyLevel, name='difficultylevel', create_type=False), default=DifficultyLevel.INTERMEDIATE)
     time_limit = Column(Integer)  # in seconds
     passing_score = Column(Float, default=70.0)
     max_attempts = Column(Integer, default=3)
@@ -459,7 +459,7 @@ class Achievement(Base):
     description = Column(Text)
     
     # Achievement configuration
-    achievement_type = Column(Enum(AchievementType), nullable=False)
+    achievement_type = Column(Enum(AchievementType, name='achievementtype', create_type=False), nullable=False)
     points = Column(Integer, default=10)
     icon_url = Column(String(500))
     badge_color = Column(String(7))  # Hex color

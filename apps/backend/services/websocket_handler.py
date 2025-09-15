@@ -749,7 +749,7 @@ class WebSocketManager:
         if not connection:
             safe_client_id = str(client_id)[:20].replace('\n', '').replace('\r', '')
             logger.warning(f"Message received from unknown client: {safe_client_id}")
-            return
+            return False
 
         try:
             message = json.loads(message_data)
@@ -760,20 +760,19 @@ class WebSocketManager:
                 await self.message_handler._send_error(
                     connection, "Invalid message format"
                 )
-                return
+                return False
 
             # Rate limiting per connection/user and message type
             try:
                 rlm = get_rate_limit_manager()
-                identifier = f"ws:{connection.user_id or connection.client_id}"
-                endpoint = f"type:{message.get('type')}"
+                # Include message type in identifier for granular rate limiting
+                identifier = f"ws:{connection.user_id or connection.client_id}:type:{message.get('type')}"
                 ws_limit = getattr(settings, "WS_RATE_LIMIT_PER_MINUTE", None) or settings.RATE_LIMIT_PER_MINUTE
                 allowed, retry_after = await rlm.check_rate_limit(
                     identifier=identifier,
-                    endpoint=endpoint,
                     max_requests=ws_limit,
                     window_seconds=60,
-                    source="websocket",
+                    source="websocket"
                 )
                 if not allowed:
                     self._stats["rate_limited"] = self._stats.get("rate_limited", 0) + 1
@@ -781,18 +780,21 @@ class WebSocketManager:
                         connection,
                         f"Rate limit exceeded. Retry after {retry_after} seconds",
                     )
-                    return
+                    return False
             except Exception as e:
                 logger.error(f"Rate limit check error: {e}")
 
             # Handle the message
             await self.message_handler.handle_message(connection, message)
+            return True
 
         except json.JSONDecodeError:
             await self.message_handler._send_error(connection, "Invalid JSON format")
+            return False
         except Exception as e:
             logger.error(f"Error handling message from {client_id}: {e}")
             await self.message_handler._send_error(connection, "Internal server error")
+            return False
 
     async def send_to_client(self, client_id: str, message: Dict[str, Any]) -> bool:
         """Send message to specific client"""
@@ -954,6 +956,10 @@ class WebSocketManager:
             await asyncio.gather(*disconnect_tasks, return_exceptions=True)
 
         logger.info("WebSocketManager shutdown completed")
+    
+    async def handle_client_message(self, client_id: str, message_data: str):
+        """Alias for handle_message for test compatibility"""
+        return await self.handle_message(client_id, message_data)
 
 
 # Global WebSocket manager instance

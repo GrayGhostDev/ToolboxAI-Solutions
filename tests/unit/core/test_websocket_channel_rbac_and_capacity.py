@@ -54,10 +54,9 @@ async def test_websocket_channel_rbac_by_prefix():
 
 
 @pytest.mark.asyncio(loop_scope="function")
-async def test_ws_capacity_enforcement():
-    # Enforce small capacity
-    original_max = settings.WS_MAX_CONNECTIONS
-    settings.WS_MAX_CONNECTIONS = 1
+async def test_ws_capacity_enforcement(monkeypatch):
+    # Enforce small capacity using monkeypatch
+    monkeypatch.setattr(settings.__class__, "WS_MAX_CONNECTIONS", property(lambda self: 1))
     try:
         ws1 = AsyncMock(); ws1.accept = AsyncMock(); ws1.send_text = AsyncMock(); ws1.close = AsyncMock(); ws1.client_state = WebSocketState.CONNECTED
         ws2 = AsyncMock(); ws2.accept = AsyncMock(); ws2.send_text = AsyncMock(); ws2.close = AsyncMock(); ws2.client_state = WebSocketState.CONNECTED
@@ -78,5 +77,5 @@ async def test_ws_capacity_enforcement():
         assert sent["type"] == "error"
         assert "capacity" in sent["error"].lower()
     finally:
-        settings.WS_MAX_CONNECTIONS = original_max
+        pass  # monkeypatch will restore automatically
 

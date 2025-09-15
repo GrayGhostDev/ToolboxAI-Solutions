@@ -154,6 +154,10 @@ class Settings:
     def WS_RATE_LIMIT_PER_MINUTE(self):
         return int(os.getenv("WS_RATE_LIMIT_PER_MINUTE", "100"))
     
+    @property
+    def RATE_LIMIT_PER_MINUTE(self):
+        return int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
+    
     # Testing Configuration
     @property
     def SKIP_AUTH(self):

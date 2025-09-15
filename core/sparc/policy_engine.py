@@ -55,6 +55,79 @@ class LearningObjective(Enum):
     COMMUNICATION = "communication"
 
 
+class PolicyDefaults:
+    """Provide sensible defaults for all policy attributes"""
+    
+    DEFAULT_LEARNING_RATE = 0.01
+    DEFAULT_EXPLORATION_RATE = 0.1
+    DEFAULT_EPSILON = 0.2
+    DEFAULT_GAMMA = 0.95
+    DEFAULT_POLICY_TYPE = PolicyType.EXPLORATION
+    DEFAULT_LEARNING_OBJECTIVE = LearningObjective.KNOWLEDGE_ACQUISITION
+    DEFAULT_CONFIDENCE = 0.7
+    DEFAULT_IMPACT_SCORE = 0.5
+    DEFAULT_PRIORITY = 1
+    DEFAULT_AGE_RANGE = (8, 18)
+    DEFAULT_DIFFICULTY = 0.5
+    DEFAULT_ENGAGEMENT = 0.6
+    
+    @classmethod
+    def get_default_policy(cls) -> 'EducationalPolicy':
+        """Return fully initialized default policy"""
+        return EducationalPolicy(
+            policy_id="default_policy",
+            name="Default Educational Policy",
+            description="Safe default policy for general educational use",
+            learning_objectives=[cls.DEFAULT_LEARNING_OBJECTIVE],
+            target_age_range=cls.DEFAULT_AGE_RANGE,
+            subject_areas=["general"],
+            exploration_weight=0.4,
+            exploitation_weight=0.3,
+            scaffolding_weight=0.2,
+            challenge_weight=0.1
+        )
+    
+    @classmethod
+    def get_default_state(cls) -> EnvironmentState:
+        """Return a safe default environment state"""
+        return EnvironmentState(
+            state_type=StateType.LEARNING,
+            quality=StateQuality.MEDIUM,
+            timestamp=datetime.now(),
+            data={
+                "difficulty": cls.DEFAULT_DIFFICULTY,
+                "engagement": cls.DEFAULT_ENGAGEMENT,
+                "progress": 0.0,
+                "session_time": 0,
+                "attempts": 0
+            },
+            metadata={
+                "initialized": True,
+                "is_default": True
+            }
+        )
+    
+    @classmethod
+    def get_default_decision(cls) -> 'PolicyDecision':
+        """Return a safe default policy decision"""
+        return PolicyDecision(
+            decision_id=f"default_{datetime.now().timestamp()}",
+            policy_type=cls.DEFAULT_POLICY_TYPE,
+            action="continue_learning",
+            parameters={
+                "difficulty": cls.DEFAULT_DIFFICULTY,
+                "support_level": "medium",
+                "feedback_type": "encouraging"
+            },
+            confidence=cls.DEFAULT_CONFIDENCE,
+            reasoning="Using default policy due to missing input",
+            expected_outcome="Standard learning progression",
+            learning_objectives=[cls.DEFAULT_LEARNING_OBJECTIVE],
+            timestamp=datetime.now(),
+            metadata={"is_default": True}
+        )
+
+
 @dataclass
 class PolicyDecision:
     """Represents a policy decision with action and rationale"""
@@ -259,8 +332,12 @@ class PolicyEngine:
         }
 
         logger.debug(f"Initialized {len(self.policies)} default policies")
+    
+    def _get_default_state(self) -> EnvironmentState:
+        """Get default state when none is provided"""
+        return PolicyDefaults.get_default_state()
 
-    async def decide(self, policy_input: Dict[str, Any]) -> PolicyDecision:
+    async def decide(self, policy_input: Optional[Dict[str, Any]] = None) -> PolicyDecision:
         """
         Make a policy decision based on current state and context.
 
@@ -274,13 +351,19 @@ class PolicyEngine:
         self.decision_count += 1
 
         try:
-            # Extract input components
+            # Handle null input
+            if policy_input is None:
+                policy_input = {}
+            
+            # Extract input components with defaults
             current_state = policy_input.get("state")
             user_context = policy_input.get("context", {})
             state_history = policy_input.get("history", [])
 
+            # Use default state if none provided
             if not current_state:
-                raise ValueError("No current state provided for policy decision")
+                current_state = self._get_default_state()
+                logger.warning("No state provided, using default state")
 
             # Analyze student needs and context
             student_analysis = await self._analyze_student_needs(current_state, user_context)
@@ -309,11 +392,16 @@ class PolicyEngine:
 
     async def _analyze_student_needs(self, state: EnvironmentState, context: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze student needs based on state and context"""
+        
+        # Ensure context is not None
+        if context is None:
+            context = {}
 
+        # Safe attribute access with defaults
         analysis = {
-            "student_id": state.student_id,
-            "current_subject": state.subject_area,
-            "current_grade": state.grade_level,
+            "student_id": getattr(state, 'student_id', None) or "unknown_student",
+            "current_subject": getattr(state, 'subject_area', None) or "general",
+            "current_grade": getattr(state, 'grade_level', None) or 7,
             "engagement_level": 0.5,
             "difficulty_preference": 0.5,
             "learning_style": "unknown",
@@ -377,6 +465,11 @@ class PolicyEngine:
 
     async def _select_policy(self, student_analysis: Dict[str, Any], state: EnvironmentState) -> EducationalPolicy:
         """Select the most appropriate policy for the current situation"""
+        
+        # Null safety check
+        if not self.policies:
+            logger.warning("No policies available, using default")
+            return self._create_default_policy()
 
         best_policy = None
         best_score = -1
@@ -393,10 +486,11 @@ class PolicyEngine:
         secure_random = secrets.SystemRandom()
         if secure_random.random() < self.exploration_rate and len(self.policies) > 1:
             alternative_policies = [p for p in self.policies.values() if p != best_policy]
-            best_policy = secure_random.choice(alternative_policies)
-            logger.debug(f"Exploration: selected alternative policy {best_policy.policy_id}")
+            if alternative_policies:  # Null safety check
+                best_policy = secure_random.choice(alternative_policies)
+                logger.debug(f"Exploration: selected alternative policy {best_policy.policy_id}")
 
-        return best_policy or list(self.policies.values())[0]  # Fallback
+        return best_policy or self._create_default_policy()  # Safe fallback
 
     async def _score_policy(
         self, policy: EducationalPolicy, student_analysis: Dict[str, Any], state: EnvironmentState
@@ -440,7 +534,7 @@ class PolicyEngine:
             score += 0.2
 
         # Historical performance of policy
-        policy_success = policy.success_rate
+        policy_success = getattr(policy, 'success_rate', 0.7)  # Default to 0.7 if not set
         score += policy_success * 0.3
 
         # Learning objectives alignment
@@ -452,23 +546,27 @@ class PolicyEngine:
 
     def _infer_learning_objectives(self, state: EnvironmentState) -> List[LearningObjective]:
         """Infer likely learning objectives from current state"""
+        
+        # Null safety check
+        if not state:
+            return [LearningObjective.KNOWLEDGE_ACQUISITION]  # Default objective
 
         objectives = []
 
-        if state.state_type == StateType.QUIZ_SESSION:
+        if hasattr(state, 'state_type') and state.state_type == StateType.QUIZ_SESSION:
             objectives.extend([LearningObjective.KNOWLEDGE_ACQUISITION, LearningObjective.PROBLEM_SOLVING])
-        elif state.state_type == StateType.ROBLOX_GAME:
+        elif hasattr(state, 'state_type') and state.state_type == StateType.ROBLOX_GAME:
             objectives.extend([LearningObjective.CREATIVE_EXPRESSION, LearningObjective.SKILL_DEVELOPMENT])
 
-            # Check for collaborative elements
-            if state.player_positions and len(state.player_positions) > 1:
+            # Check for collaborative elements with null safety
+            if hasattr(state, 'player_positions') and state.player_positions and len(state.player_positions) > 1:
                 objectives.append(LearningObjective.COLLABORATION)
 
-        elif state.state_type == StateType.EDUCATIONAL_CONTENT:
+        elif hasattr(state, 'state_type') and state.state_type == StateType.EDUCATIONAL_CONTENT:
             objectives.append(LearningObjective.KNOWLEDGE_ACQUISITION)
 
-        # Subject-specific objectives
-        if state.subject_area:
+        # Subject-specific objectives with null safety
+        if hasattr(state, 'subject_area') and state.subject_area:
             subject = state.subject_area.lower()
             if subject in ["math", "mathematics"]:
                 objectives.append(LearningObjective.PROBLEM_SOLVING)
@@ -477,7 +575,32 @@ class PolicyEngine:
             elif subject in ["art", "creative", "design"]:
                 objectives.append(LearningObjective.CREATIVE_EXPRESSION)
 
-        return objectives
+        return objectives if objectives else [LearningObjective.KNOWLEDGE_ACQUISITION]  # Ensure non-empty
+
+    def _create_default_policy(self) -> EducationalPolicy:
+        """Create a default educational policy for fallback scenarios"""
+        return EducationalPolicy(
+            policy_id="default_policy",
+            name="Balanced Learning Policy",
+            description="Default balanced policy for general education",
+            learning_objectives=[
+                LearningObjective.KNOWLEDGE_ACQUISITION,
+                LearningObjective.SKILL_DEVELOPMENT,
+                LearningObjective.PROBLEM_SOLVING
+            ],
+            target_age_range=(7, 18),  # Wide age range
+            subject_areas=["general", "math", "science", "language"],
+            exploration_weight=0.3,
+            exploitation_weight=0.4,
+            scaffolding_weight=0.2,
+            challenge_weight=0.1,
+            adaptation_rate=0.1,
+            success_threshold=0.7,
+            difficulty_adjustment_rate=0.05,
+            max_difficulty_increase=0.2,
+            min_engagement_threshold=0.6,
+            success_rate=0.7  # Default success rate
+        )
 
     async def _generate_decision(
         self,
@@ -558,9 +681,9 @@ class PolicyEngine:
             "adapt_difficulty": (policy.challenge_weight + policy.scaffolding_weight) * 0.5,
         }
 
-        # Adjust weights based on current situation
-        engagement = analysis.get("engagement_level", 0.5)
-        performance = analysis.get("recent_performance", [])
+        # Adjust weights based on current situation with null safety
+        engagement = analysis.get("engagement_level", 0.5) if analysis else 0.5
+        performance = analysis.get("recent_performance", []) if analysis else []
 
         if engagement < 0.4:
             action_weights["encourage_exploration"] *= 1.5
@@ -569,19 +692,26 @@ class PolicyEngine:
             action_weights["increase_difficulty"] *= 1.4
             action_weights["create_quiz"] *= 1.2
 
-        if performance and np.mean(performance) > 0.8:
-            action_weights["increase_difficulty"] *= 1.3
-        elif performance and np.mean(performance) < 0.6:
-            action_weights["provide_hint"] *= 1.4
-            action_weights["adapt_difficulty"] *= 1.2
+        if performance:
+            try:
+                perf_mean = np.mean(performance)
+                if perf_mean > 0.8:
+                    action_weights["increase_difficulty"] *= 1.3
+                elif perf_mean < 0.6:
+                    action_weights["provide_hint"] *= 1.4
+                    action_weights["adapt_difficulty"] *= 1.2
+            except (ValueError, TypeError):
+                # Handle invalid performance data
+                pass
 
-        # State-specific adjustments
-        if state.state_type == StateType.QUIZ_SESSION:
-            action_weights["provide_feedback"] *= 1.5
-            action_weights["adapt_difficulty"] *= 1.3
-        elif state.state_type == StateType.ROBLOX_GAME:
-            action_weights["encourage_exploration"] *= 1.3
-            action_weights["generate_content"] *= 1.2
+        # State-specific adjustments with null safety
+        if state and hasattr(state, 'state_type'):
+            if state.state_type == StateType.QUIZ_SESSION:
+                action_weights["provide_feedback"] *= 1.5
+                action_weights["adapt_difficulty"] *= 1.3
+            elif state.state_type == StateType.ROBLOX_GAME:
+                action_weights["encourage_exploration"] *= 1.3
+                action_weights["generate_content"] *= 1.2
 
         # Select action with weighted random choice
         actions, weights = zip(*action_weights.items())
