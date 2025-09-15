@@ -27,7 +27,7 @@ const glowAnimation = keyframes`
   100% { box-shadow: 0 0 5px currentColor; }
 `;
 
-const StyledIconContainer = styled(Box)(({ theme, size, animated }: any) => {
+const StyledIconContainer = styled(Box)(({ theme, size }: any) => {
   const sizeStyles = {
     small: { width: 60, height: 60 },
     medium: { width: 80, height: 80 },
@@ -55,9 +55,7 @@ const StyledIconContainer = styled(Box)(({ theme, size, animated }: any) => {
       borderColor: theme.palette.secondary.main,
     },
     
-    ...(animated && {
-      animation: `${floatAnimation} 3s ease-in-out infinite`,
-    }),
+    animation: `${floatAnimation} 3s ease-in-out infinite`,
     
     '&::before': {
       content: '""',
@@ -335,7 +333,6 @@ export const Real3DIcon: React.FC<Real3DIconProps> = ({
   return (
     <StyledIconContainer
       size={size}
-      animated={animated}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
