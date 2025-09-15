@@ -13,6 +13,17 @@ import { store } from '../store';
 import { signInSuccess as loginSuccess, signOut as logout, updateToken } from '../store/slices/userSlice';
 import { addNotification } from '../store/slices/uiSlice';
 import { pusherService } from '../services/pusher';
+import {
+  AUTH_MODE,
+  AUTH_FEATURES,
+  AUTH_TIMING,
+  AUTH_ENDPOINTS,
+  FetchWrapper,
+  StorageWrapper,
+  BroadcastWrapper,
+  TimerWrapper,
+  getAuthConfig,
+} from './auth-sync-config';
 
 // Timer type definitions for cross-platform compatibility
 type TimerId = ReturnType<typeof setTimeout>;
@@ -76,13 +87,10 @@ export class AuthSyncService {
   private authEvents: AuthEvent[] = [];
 
   constructor(config: Partial<AuthSyncConfig> = {}) {
+    // Use configuration from auth-sync-config.ts
+    const defaultConfig = getAuthConfig();
     this.config = {
-      tokenRefreshThreshold: 5, // 5 minutes before expiry
-      sessionTimeout: 30, // 30 minutes timeout
-      inactivityWarning: 25, // Warning at 25 minutes
-      enableAutoRefresh: true,
-      enableSessionMonitoring: true,
-      syncWithBackend: true,
+      ...defaultConfig,
       ...config
     };
   }
@@ -152,8 +160,8 @@ export class AuthSyncService {
 
   private getStoredToken(): AuthToken | null {
     try {
-      const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      const refreshToken = localStorage.getItem(AUTH_REFRESH_TOKEN_KEY);
+      const token = StorageWrapper.getItem(AUTH_TOKEN_KEY);
+      const refreshToken = StorageWrapper.getItem(AUTH_REFRESH_TOKEN_KEY);
 
       if (!token) return null;
 
@@ -245,7 +253,7 @@ export class AuthSyncService {
         10000 // But no more frequently than every 10 seconds
       );
 
-      this.tokenRefreshTimer = setTimeout(checkTokenExpiry, nextCheckIn);
+      this.tokenRefreshTimer = TimerWrapper.setTimeout(checkTokenExpiry, nextCheckIn);
     };
 
     checkTokenExpiry();
@@ -264,7 +272,7 @@ export class AuthSyncService {
     }
 
     this.clearTokenRefreshTimer();
-    this.tokenRefreshTimer = setTimeout(() => {
+    this.tokenRefreshTimer = TimerWrapper.setTimeout(() => {
       if (authToken.refreshToken) {
         void this.refreshToken(authToken.refreshToken);
       }
@@ -273,37 +281,41 @@ export class AuthSyncService {
 
   private clearTokenRefreshTimer(): void {
     if (this.tokenRefreshTimer) {
-      clearTimeout(this.tokenRefreshTimer);
+      TimerWrapper.clearTimeout(this.tokenRefreshTimer);
       this.tokenRefreshTimer = null;
     }
   }
 
-  public async refreshToken(refreshToken?: string): Promise<void> {
+  public async refreshToken(refreshToken?: string, retryCount = 0): Promise<void> {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAYS = [1000, 3000, 5000]; // Exponential backoff
+
     try {
-      const token = refreshToken || localStorage.getItem(AUTH_REFRESH_TOKEN_KEY);
+      const token = refreshToken || StorageWrapper.getItem(AUTH_REFRESH_TOKEN_KEY);
       if (!token) {
         throw new Error('No refresh token available');
       }
 
       if (import.meta.env.DEV) {
-        console.log('🔄 Refreshing authentication token...');
+        console.log(`🔄 Refreshing authentication token... (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
       }
 
-      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      const response = await FetchWrapper.fetch(`${API_BASE_URL}${AUTH_ENDPOINTS.REFRESH}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ refresh_token: token })
+        body: JSON.stringify({ refresh_token: token }),
+        credentials: 'include' // Include cookies for HttpOnly tokens
       });
 
       if (response.ok) {
         const data = await response.json();
 
         // Store new tokens
-        localStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
+        StorageWrapper.setItem(AUTH_TOKEN_KEY, data.access_token);
         if (data.refresh_token) {
-          localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, data.refresh_token);
+          StorageWrapper.setItem(AUTH_REFRESH_TOKEN_KEY, data.refresh_token);
         }
 
         // Broadcast token refresh to other tabs (2025 cross-tab sync)
@@ -357,8 +369,32 @@ export class AuthSyncService {
         throw new Error(errorData.message || 'Token refresh failed');
       }
 
-    } catch (error) {
-      console.error('❌ Token refresh failed:', error);
+    } catch (error: any) {
+      console.error(`❌ Token refresh failed (attempt ${retryCount + 1}):`, error);
+
+      // Retry logic with exponential backoff
+      if (retryCount < MAX_RETRIES) {
+        const delay = RETRY_DELAYS[retryCount] || 5000;
+
+        if (import.meta.env.DEV) {
+          console.log(`⏳ Retrying token refresh in ${delay}ms...`);
+        }
+
+        // Check if error is recoverable
+        const isRecoverable =
+          error.message?.includes('Network') ||
+          error.message?.includes('fetch') ||
+          error.code === 'ECONNABORTED' ||
+          error.code === 'ETIMEDOUT' ||
+          (error.response && error.response.status >= 500);
+
+        if (isRecoverable) {
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return this.refreshToken(refreshToken, retryCount + 1);
+        }
+      }
+
+      // After all retries failed or error is not recoverable
       this.handleAuthFailure('refresh_failed');
     }
   }
@@ -379,7 +415,7 @@ export class AuthSyncService {
     };
 
     // Start monitoring
-    this.sessionMonitor = setInterval(() => {
+    this.sessionMonitor = TimerWrapper.setInterval(() => {
       this.checkSessionStatus();
     }, 60000); // Check every minute
 
@@ -417,11 +453,11 @@ export class AuthSyncService {
     const timeoutTime = this.config.sessionTimeout * 60 * 1000;
 
     // Set warning timer
-    this.inactivityTimer = setTimeout(() => {
+    this.inactivityTimer = TimerWrapper.setTimeout(() => {
       this.showInactivityWarning();
 
       // Set final timeout
-      this.inactivityTimer = setTimeout(() => {
+      this.inactivityTimer = TimerWrapper.setTimeout(() => {
         this.handleSessionTimeout();
       }, (timeoutTime - warningTime));
 
@@ -526,6 +562,29 @@ store.dispatch(addNotification({
       reason
     });
 
+    // Try to recover for certain failure types
+    if (reason === 'refresh_failed' && this.config.enableAutoRefresh) {
+      // Check if we have a valid refresh token to try one more time
+      const refreshToken = StorageWrapper.getItem(AUTH_REFRESH_TOKEN_KEY);
+      if (refreshToken) {
+        const payload = this.decodeJWT(refreshToken);
+        if (payload?.exp && payload.exp * 1000 > Date.now()) {
+          // Refresh token is still valid, try once more after a delay
+          if (import.meta.env.DEV) {
+            console.log('🔄 Attempting final recovery with valid refresh token...');
+          }
+
+          setTimeout(() => {
+            this.refreshToken(refreshToken, 0).catch(() => {
+              // Final attempt failed, perform logout
+              this.performLogout(reason);
+            });
+          }, 5000);
+          return;
+        }
+      }
+    }
+
     this.performLogout(reason);
   }
 
@@ -535,17 +594,17 @@ store.dispatch(addNotification({
 
   private performLogout(reason: string): void {
     // Clear tokens
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
+    StorageWrapper.removeItem(AUTH_TOKEN_KEY);
+    StorageWrapper.removeItem(AUTH_REFRESH_TOKEN_KEY);
 
     // Clear timers
     this.clearTokenRefreshTimer();
     if (this.sessionMonitor) {
-      clearInterval(this.sessionMonitor);
+      TimerWrapper.clearInterval(this.sessionMonitor);
       this.sessionMonitor = null;
     }
     if (this.inactivityTimer) {
-      clearTimeout(this.inactivityTimer);
+      TimerWrapper.clearTimeout(this.inactivityTimer);
       this.inactivityTimer = null;
     }
 
@@ -592,14 +651,29 @@ store.dispatch(addNotification({
     }
 
     try {
-      // Notify backend
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem(AUTH_TOKEN_KEY)}`,
-          'Content-Type': 'application/json'
+      // Notify backend with retry logic
+      const token = StorageWrapper.getItem(AUTH_TOKEN_KEY);
+      if (token) {
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            const response = await FetchWrapper.fetch(`${API_BASE_URL}${AUTH_ENDPOINTS.LOGOUT}`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              credentials: 'include' // Include cookies for cleanup
+            });
+
+            if (response.ok) break;
+          } catch (error) {
+            if (attempt === 2) {
+              console.warn('⚠️ Backend logout notification failed after 3 attempts:', error);
+            }
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
         }
-      });
+      }
     } catch (error) {
       console.warn('⚠️ Backend logout notification failed:', error);
     }
@@ -619,15 +693,19 @@ store.dispatch(addNotification({
   // UTILITY METHODS
   // ================================
 
-  private async refreshUserData(): Promise<void> {
+  private async refreshUserData(retryCount = 0): Promise<void> {
+    const MAX_RETRIES = 2;
+    const RETRY_DELAY = 2000;
+
     try {
-      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      const token = StorageWrapper.getItem(AUTH_TOKEN_KEY);
       if (!token) return;
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/users/me`, {
+      const response = await FetchWrapper.fetch(`${API_BASE_URL}${AUTH_ENDPOINTS.USER_INFO}`, {
         headers: {
           'Authorization': `Bearer ${token}`
-        }
+        },
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -640,13 +718,20 @@ store.dispatch(addNotification({
           avatarUrl: userData?.avatar_url,
           role: (userData?.role || 'teacher') as 'admin' | 'teacher' | 'student',
           token: token,
-          refreshToken: localStorage.getItem(AUTH_REFRESH_TOKEN_KEY) || '',
+          refreshToken: StorageWrapper.getItem(AUTH_REFRESH_TOKEN_KEY) || '',
           schoolId: userData?.school_id,
           classIds: userData?.class_ids || [],
         }));
       }
-    } catch (error) {
-      console.error('❌ Failed to refresh user data:', error);
+    } catch (error: any) {
+      console.error(`❌ Failed to refresh user data (attempt ${retryCount + 1}):`, error);
+
+      // Retry for network errors
+      if (retryCount < MAX_RETRIES &&
+          (error.message?.includes('Network') || error.message?.includes('fetch'))) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        return this.refreshUserData(retryCount + 1);
+      }
     }
   }
 
@@ -703,12 +788,12 @@ store.dispatch(addNotification({
     this.clearTokenRefreshTimer();
 
     if (this.sessionMonitor) {
-      clearInterval(this.sessionMonitor);
+      TimerWrapper.clearInterval(this.sessionMonitor);
       this.sessionMonitor = null;
     }
 
     if (this.inactivityTimer) {
-      clearTimeout(this.inactivityTimer);
+      TimerWrapper.clearTimeout(this.inactivityTimer);
       this.inactivityTimer = null;
     }
   }
@@ -771,9 +856,9 @@ store.dispatch(addNotification({
     if (typeof window === 'undefined') return;
 
     // Try to use BroadcastChannel API (modern browsers)
-    if ('BroadcastChannel' in window) {
+    if ('BroadcastChannel' in window && !AUTH_MODE.IS_TEST) {
       try {
-        const broadcastChannel = new BroadcastChannel('toolboxai_auth_sync');
+        const broadcastChannel = BroadcastWrapper.getChannel('toolboxai_auth_sync') as any;
 
         // Listen for messages from other tabs
         broadcastChannel.onmessage = (event) => {
@@ -838,7 +923,7 @@ store.dispatch(addNotification({
 
   private setStoredToken(token: string): void {
     try {
-      localStorage.setItem(AUTH_TOKEN_KEY, token);
+      StorageWrapper.setItem(AUTH_TOKEN_KEY, token);
     } catch (e) {
       console.error('Failed to store auth token:', e);
     }
@@ -846,7 +931,7 @@ store.dispatch(addNotification({
 
   private setStoredRefreshToken(refreshToken: string): void {
     try {
-      localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
+      StorageWrapper.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
     } catch (e) {
       console.error('Failed to store refresh token:', e);
     }
@@ -854,8 +939,8 @@ store.dispatch(addNotification({
 
   private clearStoredTokens(): void {
     try {
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
+      StorageWrapper.removeItem(AUTH_TOKEN_KEY);
+      StorageWrapper.removeItem(AUTH_REFRESH_TOKEN_KEY);
     } catch (e) {
       console.error('Failed to clear stored tokens:', e);
     }
@@ -951,10 +1036,10 @@ store.dispatch(addNotification({
 
     // Also use localStorage for fallback (will trigger storage event in other tabs)
     try {
-      localStorage.setItem('toolboxai_auth_sync_message', JSON.stringify(message));
+      StorageWrapper.setItem('toolboxai_auth_sync_message', JSON.stringify(message));
       // Clear after a short delay to prevent accumulation
-      setTimeout(() => {
-        localStorage.removeItem('toolboxai_auth_sync_message');
+      TimerWrapper.setTimeout(() => {
+        StorageWrapper.removeItem('toolboxai_auth_sync_message');
       }, 100);
     } catch (error) {
       console.error('Failed to broadcast via localStorage:', error);

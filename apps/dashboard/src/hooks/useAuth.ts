@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "../store";
 import { signInSuccess, signOut, updateToken, setUser } from "../store/slices/userSlice";
 import { refreshToken as refreshTokenAPI, logout as logoutAPI } from "../services/api";
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from "../config";
+import { authSync } from "../services/auth-sync";
 
 export const useAuth = () => {
   const navigate = useNavigate();
@@ -23,6 +24,13 @@ export const useAuth = () => {
   // Initialize authentication from localStorage on app start
   useEffect(() => {
     const initializeAuth = async () => {
+      // Initialize auth sync service
+      try {
+        await authSync.initialize();
+      } catch (error) {
+        console.error("Failed to initialize auth sync:", error);
+      }
+
       const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
       const savedRefreshToken = localStorage.getItem(AUTH_REFRESH_TOKEN_KEY);
 
@@ -96,48 +104,17 @@ export const useAuth = () => {
   }, [dispatch]);
 
   const logout = async () => {
-    try {
-      // Call logout API to invalidate server-side session
-      if (refreshToken) {
-        await logoutAPI();
-      }
-    } catch (error) {
-      // Continue with logout even if API call fails
-      console.warn("Logout API call failed:", error);
-    } finally {
-      // Clear local storage and Redux state
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
-      dispatch(signOut());
-      navigate("/login");
-    }
+    // Use auth sync service for coordinated logout
+    await authSync.logout();
   };
 
   const refreshUserToken = async (): Promise<boolean> => {
-    const savedRefreshToken = localStorage.getItem(AUTH_REFRESH_TOKEN_KEY);
-    
-    if (!savedRefreshToken) {
-      logout();
-      return false;
-    }
-
+    // Use auth sync service for coordinated token refresh with retry logic
     try {
-      const response = await refreshTokenAPI(savedRefreshToken);
-      
-      // Update tokens
-      localStorage.setItem(AUTH_TOKEN_KEY, response.accessToken);
-      localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, response.refreshToken);
-      
-      // Update Redux state
-      dispatch(updateToken({
-        token: response.accessToken,
-        refreshToken: response.refreshToken,
-      }));
-      
+      await authSync.refreshToken();
       return true;
     } catch (error) {
-      // Refresh failed, logout user
-      logout();
+      console.error("Token refresh failed:", error);
       return false;
     }
   };

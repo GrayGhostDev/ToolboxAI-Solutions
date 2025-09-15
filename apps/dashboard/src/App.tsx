@@ -15,6 +15,7 @@ import { useAuth } from "./hooks/useAuth";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { NetworkError } from "./components/ErrorComponents";
+import { SessionMonitor, NetworkStatus } from "./components/auth/AuthRecovery";
 
 // Terminal services removed - not part of application
 // Performance monitor disabled due to performance issues
@@ -115,6 +116,8 @@ export default function App() {
         {/* Global Components */}
         <NotificationToast />
         <RealtimeToast />
+        <SessionMonitor />
+        <NetworkStatus />
         {loading && <LoadingOverlay />}
         
         {/* COPPA Consent Modal */}
