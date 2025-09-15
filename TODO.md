@@ -19,8 +19,17 @@
     - Updated API mocks to match actual exports
     - Tests now run but encounter React 18 concurrent rendering warnings with MUI
     - Next: Configure React 18 test compatibility for MUI components
-  - [ ] Wire performance-monitor reporting behind feature flag; capture slow API timings
-  - [ ] Improve a11y and responsiveness; review RobloxAIAssistantEnhanced UX for long-running tasks
+  - [✅] Wire performance-monitor reporting behind feature flag; capture slow API timings
+    - Implemented comprehensive feature flag system
+    - Created performance monitoring hooks and UI controls
+    - Added environment variable support for configuration
+  - [✅] Improve a11y and responsiveness; review RobloxAIAssistantEnhanced UX for long-running tasks
+    - Added full keyboard navigation support
+    - Implemented voice input/output for accessibility
+    - Added screen reader support with ARIA labels
+    - Responsive design for mobile/tablet/desktop
+    - Added abort capability for long-running tasks
+    - Reduced motion support for users with vestibular disorders
   - [ ] Add error boundaries and user-facing retry flows where API calls fail
 - Roblox Integration
   - [ ] Validate endpoints from ROBLOX_ENDPOINTS_SUMMARY.md; secure key management and env configs
