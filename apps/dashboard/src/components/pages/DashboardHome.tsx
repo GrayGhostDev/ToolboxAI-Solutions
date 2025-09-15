@@ -262,18 +262,21 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                 
                 {/* Character Avatar */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                  <Avatar
-                    sx={{
-                      width: 60,
-                      height: 60,
-                      background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                      fontSize: '2rem',
-                      border: `3px solid ${theme.palette.primary.main}`,
-                      boxShadow: `0 0 20px ${alpha(theme.palette.primary.main, 0.5)}`,
+                  <RobloxCharacterAvatar
+                    character={{
+                      name: "Space Explorer",
+                      type: "astronaut",
+                      level: level,
+                      xp: userXP,
+                      achievements: ["First Mission", "Quiz Master", "Level Up"],
+                      isActive: true,
+                      imagePath: "" // Will be loaded dynamically
                     }}
-                  >
-                    🚀
-                  </Avatar>
+                    size="medium"
+                    showLevel={false}
+                    showXP={false}
+                    animated={true}
+                  />
                   <Box>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       Level {level} Explorer

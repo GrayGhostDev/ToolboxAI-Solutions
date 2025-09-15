@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Box, Typography, useTheme, alpha, keyframes, styled } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, useTheme, alpha, keyframes, styled, CircularProgress } from '@mui/material';
+import { imageLoader } from '../../services/imageLoader';
 
 interface Real3DIconProps {
   iconName: string;
@@ -293,42 +294,37 @@ export const Real3DIcon: React.FC<Real3DIconProps> = ({
 }) => {
   const theme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
+  const [imagePath, setImagePath] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   
   const iconData = iconMap[iconName] || iconMap['TROPHY'];
   const displayDescription = description || iconData.description;
 
-  // For now, we'll use emoji fallback since the JSON files don't exist in the expected location
-  // In the future, when actual 3D images are available, this can be uncommented
-  /*
+  // Load the actual 3D icon image
   useEffect(() => {
-    const loadImageData = async () => {
+    const loadImage = async () => {
       try {
         setLoading(true);
-        const response = await fetch(iconData.imagePath);
-        if (response.ok) {
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            setImageData(data);
-          } else {
-            setError(true);
-          }
+        setError(false);
+        const path = await imageLoader.get3DIconPath(iconName, 1);
+        if (path) {
+          setImagePath(path);
         } else {
           setError(true);
         }
       } catch (err) {
+        console.warn(`Failed to load 3D icon ${iconName}:`, err);
         setError(true);
       } finally {
         setLoading(false);
       }
     };
 
-    loadImageData();
-  }, [iconName, iconData.imagePath]);
-  */
+    loadImage();
+  }, [iconName]);
 
-  // For now, we'll use emoji fallback since the actual 3D images aren't available
-  // In the future, when 3D images are available, this can be updated to load them
+  // Load the actual 3D icon image from design_files
 
   return (
     <StyledIconContainer
@@ -346,16 +342,37 @@ export const Real3DIcon: React.FC<Real3DIconProps> = ({
         }
       }}
     >
-      <Typography
-        sx={{
-          fontSize: size === 'small' ? '1.5rem' : size === 'medium' ? '2rem' : '2.5rem',
-          filter: isHovered ? 'brightness(1.2) contrast(1.1)' : 'none',
-          transition: 'all 0.3s ease',
-          textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-        }}
-      >
-        {iconData.emoji}
-      </Typography>
+      {loading ? (
+        <CircularProgress 
+          size={size === 'small' ? 20 : size === 'medium' ? 30 : 40} 
+          sx={{ color: iconData.fallbackColor }}
+        />
+      ) : error || !imagePath ? (
+        <Typography
+          sx={{
+            fontSize: size === 'small' ? '1.5rem' : size === 'medium' ? '2rem' : '2.5rem',
+            filter: isHovered ? 'brightness(1.2) contrast(1.1)' : 'none',
+            transition: 'all 0.3s ease',
+            textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+          }}
+        >
+          {iconData.emoji}
+        </Typography>
+      ) : (
+        <Box
+          component="img"
+          src={imagePath}
+          alt={displayDescription}
+          sx={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            filter: isHovered ? 'brightness(1.2) contrast(1.1)' : 'none',
+            transition: 'all 0.3s ease',
+            borderRadius: '50%',
+          }}
+        />
+      )}
       
       {displayDescription && (
         <Typography

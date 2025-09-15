@@ -18,7 +18,8 @@ import {
   Chip,
   Stack,
   useTheme,
-  alpha
+  alpha,
+  CircularProgress
 } from '@mui/material';
 import {
   RocketLaunch,
@@ -26,6 +27,7 @@ import {
   EmojiEvents,
   AutoAwesome
 } from '@mui/icons-material';
+import { imageLoader } from '../../services/imageLoader';
 
 interface CharacterData {
   name: string;
@@ -46,11 +48,7 @@ interface RobloxCharacterAvatarProps {
   onClick?: () => void;
 }
 
-const CHARACTER_IMAGES = {
-  astronaut: '/images/characters/PNG/Astronauto (variation)/01.png',
-  alien: '/images/characters/PNG/Aliens/back.png',
-  robot: '/images/characters/PNG/Astronauto (variation)/02.png'
-};
+// Character images will be loaded dynamically from design_files
 
 export const RobloxCharacterAvatar: React.FC<RobloxCharacterAvatarProps> = ({
   character,
@@ -63,6 +61,9 @@ export const RobloxCharacterAvatar: React.FC<RobloxCharacterAvatarProps> = ({
   const theme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [imagePath, setImagePath] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const sizeMap = {
     small: 40,
@@ -71,6 +72,40 @@ export const RobloxCharacterAvatar: React.FC<RobloxCharacterAvatarProps> = ({
   };
 
   const avatarSize = sizeMap[size];
+
+  // Load the actual character image
+  useEffect(() => {
+    const loadCharacterImage = async () => {
+      try {
+        setLoading(true);
+        setError(false);
+        
+        let path: string | null = null;
+        
+        if (character.type === 'astronaut') {
+          path = await imageLoader.getCharacterVariationPath('astronaut', 1);
+        } else if (character.type === 'alien') {
+          path = await imageLoader.getCharacterVariationPath('alien', 1);
+        } else if (character.type === 'robot') {
+          // Use astronaut variation for robot for now
+          path = await imageLoader.getCharacterVariationPath('astronaut', 2);
+        }
+        
+        if (path) {
+          setImagePath(path);
+        } else {
+          setError(true);
+        }
+      } catch (err) {
+        console.warn(`Failed to load character image for ${character.type}:`, err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCharacterImage();
+  }, [character.type]);
 
   useEffect(() => {
     if (animated && character.isActive) {
@@ -163,7 +198,7 @@ export const RobloxCharacterAvatar: React.FC<RobloxCharacterAvatarProps> = ({
           }
         >
           <Avatar
-            src={CHARACTER_IMAGES[character.type]}
+            src={imagePath || undefined}
             sx={{
               width: avatarSize,
               height: avatarSize,
@@ -175,7 +210,15 @@ export const RobloxCharacterAvatar: React.FC<RobloxCharacterAvatarProps> = ({
                 boxShadow: `0 8px 30px ${alpha(theme.palette.primary.main, 0.5)}`,
               }
             }}
-          />
+          >
+            {loading ? (
+              <CircularProgress size={avatarSize * 0.5} />
+            ) : error ? (
+              <Typography variant="h4">
+                {character.type === 'astronaut' ? '👨‍🚀' : character.type === 'alien' ? '👽' : '🤖'}
+              </Typography>
+            ) : null}
+          </Avatar>
         </Badge>
       </Tooltip>
 
