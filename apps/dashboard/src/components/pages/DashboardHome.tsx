@@ -33,6 +33,11 @@ import ConnectionStatus from "../widgets/ConnectionStatus";
 // Roblox-themed components
 import RobloxCharacterAvatar from "../roblox/RobloxCharacterAvatar";
 import Roblox3DIcon from "../roblox/Roblox3DIcon";
+import { Roblox3DButton } from "../roblox/Roblox3DButton";
+import { Roblox3DTabs } from "../roblox/Roblox3DTabs";
+import { Roblox3DNavigation } from "../roblox/Roblox3DNavigation";
+import { RobloxProgressBar } from "../roblox/RobloxProgressBar";
+import { RobloxAchievementBadge } from "../roblox/RobloxAchievementBadge";
 import { useTheme, alpha, Fade, Zoom, Slide } from "@mui/material";
 
 export function DashboardHome({ role }: { role?: UserRole }) {
@@ -279,90 +284,113 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                   </Box>
                 </Box>
               </Stack>
-              <Stack direction="row" gap={1}>
+              <Stack direction="row" gap={2} flexWrap="wrap">
                 {role === "teacher" && (
                   <>
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      startIcon={<SchoolIcon />}
+                    <Roblox3DButton
+                      iconName="OPEN_BOOK"
+                      label="Create Lesson"
                       onClick={() => setCreateLessonOpen(true)}
-                    >
-                      Create Lesson
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      sx={{ color: "white", borderColor: "white" }}
+                      variant="primary"
+                      size="medium"
+                      animated={true}
+                      glowEffect={true}
+                      tooltip="Create a new lesson for your students"
+                    />
+                    <Roblox3DButton
+                      iconName="ASSESSMENT"
+                      label="View Assessments"
                       onClick={() => navigate(ROUTES.ASSESSMENTS)}
-                    >
-                      View Assessments
-                    </Button>
+                      variant="secondary"
+                      size="medium"
+                      animated={true}
+                      glowEffect={true}
+                      tooltip="Review student assessments and progress"
+                    />
                   </>
                 )}
                 {role === "admin" && (
                   <>
-                    <Button
-                      variant="contained"
-                      color="secondary"
+                    <Roblox3DButton
+                      iconName="LIGHT_BULB"
+                      label="Analytics"
                       onClick={() => navigate(ROUTES.ANALYTICS)}
-                    >
-                      Analytics
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      sx={{ color: "white", borderColor: "white" }}
+                      variant="primary"
+                      size="medium"
+                      animated={true}
+                      glowEffect={true}
+                      tooltip="View system analytics and reports"
+                    />
+                    <Roblox3DButton
+                      iconName="SETTINGS"
+                      label="Manage LMS"
                       onClick={() => navigate(ROUTES.INTEGRATIONS)}
-                    >
-                      Manage LMS
-                    </Button>
+                      variant="secondary"
+                      size="medium"
+                      animated={true}
+                      glowEffect={true}
+                      tooltip="Manage learning management system"
+                    />
                   </>
                 )}
                 {role === "student" && (
                   <>
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      startIcon={<RocketLaunchIcon />}
+                    <Roblox3DButton
+                      iconName="ROCKET"
+                      label="Enter Roblox World"
                       onClick={handleCompleteTask}
-                    >
-                      Enter Roblox World
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      sx={{ color: "white", borderColor: "white" }}
+                      variant="primary"
+                      size="medium"
+                      animated={true}
+                      glowEffect={true}
+                      tooltip="Jump into your Roblox learning world"
+                    />
+                    <Roblox3DButton
+                      iconName="TROPHY"
+                      label="View Rewards"
                       onClick={() => navigate(ROUTES.REWARDS)}
-                    >
-                      View Rewards
-                    </Button>
+                      variant="secondary"
+                      size="medium"
+                      animated={true}
+                      glowEffect={true}
+                      tooltip="Check your achievements and rewards"
+                    />
                   </>
                 )}
                 {role === "parent" && (
                   <>
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      startIcon={<SportsEsportsIcon />}
+                    <Roblox3DButton
+                      iconName="SPORTS_ESPORTS"
+                      label="Watch Gameplay"
                       onClick={() => navigate('/gameplay-replay')}
-                    >
-                      Watch Gameplay
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      sx={{ color: "white", borderColor: "white" }}
-                      startIcon={<AssessmentIcon />}
+                      variant="primary"
+                      size="medium"
+                      animated={true}
+                      glowEffect={true}
+                      tooltip="Watch your child's learning gameplay"
+                    />
+                    <Roblox3DButton
+                      iconName="ASSESSMENT"
+                      label="View Reports"
                       onClick={() => navigate(ROUTES.REPORTS)}
-                    >
-                      View Reports
-                    </Button>
+                      variant="secondary"
+                      size="medium"
+                      animated={true}
+                      glowEffect={true}
+                      tooltip="View detailed progress reports"
+                    />
                   </>
                 )}
-                <Button
-                  variant="outlined"
-                  sx={{ color: "white", borderColor: "white" }}
+                <Roblox3DButton
+                  iconName="REFRESH"
+                  label="Refresh"
                   onClick={() => void loadDashboardData()}
-                >
-                  Refresh
-                </Button>
+                  variant="info"
+                  size="medium"
+                  animated={true}
+                  glowEffect={true}
+                  tooltip="Refresh dashboard data"
+                />
               </Stack>
             </Stack>
           </CardContent>
@@ -466,99 +494,207 @@ export function DashboardHome({ role }: { role?: UserRole }) {
         </Fade>
       </Grid2>
 
-      {/* KPI Cards */}
+      {/* 3D Navigation Section */}
+      <Grid2 xs={12}>
+        <Fade in={true} timeout={2500}>
+          <Roblox3DNavigation
+            items={[
+              {
+                id: 'dashboard',
+                label: 'Dashboard',
+                iconName: 'LAMP',
+                path: '/dashboard',
+                tooltip: 'Main dashboard overview'
+              },
+              {
+                id: 'lessons',
+                label: 'Lessons',
+                iconName: 'OPEN_BOOK',
+                path: '/lessons',
+                badge: 3,
+                tooltip: 'View and manage lessons'
+              },
+              {
+                id: 'assessments',
+                label: 'Assessments',
+                iconName: 'ASSESSMENT',
+                path: '/assessments',
+                tooltip: 'Take and review assessments'
+              },
+              {
+                id: 'rewards',
+                label: 'Rewards',
+                iconName: 'TROPHY',
+                path: '/rewards',
+                badge: 5,
+                tooltip: 'View achievements and rewards'
+              },
+              {
+                id: 'profile',
+                label: 'Profile',
+                iconName: 'BADGE',
+                path: '/profile',
+                tooltip: 'Manage your profile'
+              }
+            ]}
+            onItemClick={(item) => {
+              if (item.path) {
+                navigate(item.path);
+              }
+            }}
+            orientation="horizontal"
+            variant="buttons"
+            size="medium"
+            animated={true}
+            glowEffect={true}
+            showLabels={true}
+            compact={false}
+          />
+        </Fade>
+      </Grid2>
+
+      {/* 3D Progress and Achievement Cards */}
       {role === "student" && (
         <>
-          <Grid2 xs={12} md={3}>
-            <Card role="region" aria-label="XP overview">
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48 }}>
-                    <TrendingUpIcon />
-                  </Avatar>
-                  <Stack sx={{ flex: 1 }}>
-                    <Typography variant="caption" color="text.secondary" gutterBottom>
-                      Total XP
-                    </Typography>
-                    <Typography variant="h5" fontWeight={700}>
-                      {xp.toLocaleString()}
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={(xp % 100)}
-                      aria-label={`XP progress ${xp % 100}%`}
-                      sx={{ mt: 1 }}
+          <Grid2 xs={12} md={4}>
+            <Fade in={true} timeout={3000}>
+              <Card 
+                role="region" 
+                aria-label="XP overview"
+                sx={{
+                  background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.05)})`,
+                  border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                  borderRadius: 3,
+                  overflow: 'hidden'
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Roblox3DIcon
+                      icon={{
+                        name: 'TROPHY',
+                        type: 'achievement',
+                        category: 'XP',
+                        level: level,
+                        isUnlocked: true,
+                        description: 'Experience Points'
+                      }}
+                      size="medium"
+                      animated={true}
                     />
-                  </Stack>
-                </Stack>
-              </CardContent>
-            </Card>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
+                        Experience Points
+                      </Typography>
+                      <Typography variant="h4" sx={{ fontWeight: 800, color: theme.palette.text.primary }}>
+                        {xp.toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  <RobloxProgressBar
+                    current={xp % 100}
+                    max={100}
+                    label="Level Progress"
+                    showPercentage={true}
+                    animated={true}
+                    color="primary"
+                    size="medium"
+                  />
+                </CardContent>
+              </Card>
+            </Fade>
           </Grid2>
-          <Grid2 xs={12} md={3}>
-            <Card role="region" aria-label="Level status">
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar sx={{ bgcolor: "warning.main", width: 48, height: 48 }}>
-                    <EmojiEventsIcon />
-                  </Avatar>
-                  <Stack>
-                    <Typography variant="caption" color="text.secondary" gutterBottom>
-                      Current Level
-                    </Typography>
-                    <Typography variant="h5" fontWeight={700}>
-                      Level {level}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {100 - (xp % 100)} XP to next level
-                    </Typography>
-                  </Stack>
-                </Stack>
-              </CardContent>
-            </Card>
+          <Grid2 xs={12} md={4}>
+            <Fade in={true} timeout={3200}>
+              <Card 
+                role="region" 
+                aria-label="Level status"
+                sx={{
+                  background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.warning.main, 0.05)})`,
+                  border: `2px solid ${alpha(theme.palette.warning.main, 0.2)}`,
+                  borderRadius: 3,
+                  overflow: 'hidden'
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Roblox3DIcon
+                      icon={{
+                        name: 'STAR',
+                        type: 'achievement',
+                        category: 'Level',
+                        level: level,
+                        isUnlocked: true,
+                        description: 'Current Level'
+                      }}
+                      size="medium"
+                      animated={true}
+                    />
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.warning.main }}>
+                        Current Level
+                      </Typography>
+                      <Typography variant="h4" sx={{ fontWeight: 800, color: theme.palette.text.primary }}>
+                        Level {level}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
+                    {100 - (xp % 100)} XP to next level
+                  </Typography>
+                  
+                  <RobloxProgressBar
+                    current={100 - (xp % 100)}
+                    max={100}
+                    label="Next Level"
+                    showPercentage={true}
+                    animated={true}
+                    color="warning"
+                    size="small"
+                  />
+                </CardContent>
+              </Card>
+            </Fade>
           </Grid2>
-          <Grid2 xs={12} md={3}>
-            <Card role="region" aria-label="Badges earned">
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar sx={{ bgcolor: "info.main", width: 48, height: 48 }}>
-                    <EmojiEventsIcon />
-                  </Avatar>
-                  <Stack>
-                    <Typography variant="caption" color="text.secondary" gutterBottom>
-                      Badges Earned
-                    </Typography>
-                    <Typography variant="h5" fontWeight={700}>
-                      {badgesCount}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      New this week: 2
-                    </Typography>
-                  </Stack>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid2>
-          <Grid2 xs={12} md={3}>
-            <Card role="region" aria-label="Streak days">
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar sx={{ bgcolor: "secondary.main", width: 48, height: 48 }}>
-                    🔥
-                  </Avatar>
-                  <Stack>
-                    <Typography variant="caption" color="text.secondary" gutterBottom>
-                      Streak Days
-                    </Typography>
-                    <Typography variant="h5" fontWeight={700}>
-                      {streakDays}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Keep it up!
-                    </Typography>
-                  </Stack>
-                </Stack>
-              </CardContent>
-            </Card>
+          
+          <Grid2 xs={12} md={4}>
+            <Fade in={true} timeout={3400}>
+              <Card 
+                role="region" 
+                aria-label="Achievements"
+                sx={{
+                  background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.secondary.main, 0.05)})`,
+                  border: `2px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
+                  borderRadius: 3,
+                  overflow: 'hidden'
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.secondary.main, mb: 2 }}>
+                    Recent Achievements
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    {[
+                      { id: '1', name: 'Space Walker', description: 'Completed first mission', rarity: 'common' as const, unlocked: true },
+                      { id: '2', name: 'Quiz Master', description: 'Scored 100% on quiz', rarity: 'rare' as const, unlocked: true },
+                      { id: '3', name: 'Streak Keeper', description: '7 day learning streak', rarity: 'epic' as const, unlocked: true },
+                      { id: '4', name: 'Level Up', description: 'Reached level 5', rarity: 'legendary' as const, unlocked: false },
+                    ].map((achievement) => (
+                      <RobloxAchievementBadge
+                        key={achievement.id}
+                        achievement={achievement}
+                        size="small"
+                        animated={true}
+                        onClick={(achievement) => console.log('Achievement clicked:', achievement)}
+                      />
+                    ))}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Fade>
           </Grid2>
         </>
       )}
