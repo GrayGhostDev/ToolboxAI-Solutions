@@ -38,6 +38,7 @@ import { Roblox3DTabs } from "../roblox/Roblox3DTabs";
 import { Roblox3DNavigation } from "../roblox/Roblox3DNavigation";
 import { RobloxProgressBar } from "../roblox/RobloxProgressBar";
 import { RobloxAchievementBadge } from "../roblox/RobloxAchievementBadge";
+import { Simple3DIcon } from "../roblox/Simple3DIcon";
 import { useTheme, alpha, Fade, Zoom, Slide } from "@mui/material";
 
 export function DashboardHome({ role }: { role?: UserRole }) {
@@ -293,7 +294,6 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       variant="primary"
                       size="medium"
                       animated={true}
-                      glowEffect={true}
                       tooltip="Create a new lesson for your students"
                     />
                     <Roblox3DButton
@@ -303,7 +303,6 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       variant="secondary"
                       size="medium"
                       animated={true}
-                      glowEffect={true}
                       tooltip="Review student assessments and progress"
                     />
                   </>
@@ -317,7 +316,6 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       variant="primary"
                       size="medium"
                       animated={true}
-                      glowEffect={true}
                       tooltip="View system analytics and reports"
                     />
                     <Roblox3DButton
@@ -327,7 +325,6 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       variant="secondary"
                       size="medium"
                       animated={true}
-                      glowEffect={true}
                       tooltip="Manage learning management system"
                     />
                   </>
@@ -341,7 +338,6 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       variant="primary"
                       size="medium"
                       animated={true}
-                      glowEffect={true}
                       tooltip="Jump into your Roblox learning world"
                     />
                     <Roblox3DButton
@@ -351,7 +347,6 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       variant="secondary"
                       size="medium"
                       animated={true}
-                      glowEffect={true}
                       tooltip="Check your achievements and rewards"
                     />
                   </>
@@ -365,7 +360,6 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       variant="primary"
                       size="medium"
                       animated={true}
-                      glowEffect={true}
                       tooltip="Watch your child's learning gameplay"
                     />
                     <Roblox3DButton
@@ -375,7 +369,6 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       variant="secondary"
                       size="medium"
                       animated={true}
-                      glowEffect={true}
                       tooltip="View detailed progress reports"
                     />
                   </>
@@ -425,12 +418,12 @@ export function DashboardHome({ role }: { role?: UserRole }) {
               
               <Grid2 container spacing={3} justifyContent="center">
                 {[
-                  { name: 'ABC Learning', icon: '🧩', color: theme.palette.primary.main },
-                  { name: 'Math Board', icon: '📐', color: theme.palette.secondary.main },
-                  { name: 'Space Quiz', icon: '🚀', color: theme.palette.success.main },
-                  { name: 'Sports Challenge', icon: '⚽', color: theme.palette.warning.main },
-                  { name: 'Art Studio', icon: '🎨', color: theme.palette.error.main },
-                  { name: 'Achievements', icon: '🏆', color: theme.palette.info.main },
+                  { name: 'ABC_CUBE', description: 'ABC Learning Cube' },
+                  { name: 'BOARD', description: 'Math Learning Board' },
+                  { name: 'ROCKET', description: 'Space Quiz Mission' },
+                  { name: 'SOCCER_BALL', description: 'Sports Challenge' },
+                  { name: 'BRUSH_PAINT', description: 'Art Studio' },
+                  { name: 'TROPHY', description: 'Achievements Hall' },
                 ].map((tool, index) => (
                   <Grid2 xs={6} sm={4} md={2} key={index}>
                     <Zoom in={true} timeout={2000 + index * 200} appear={false}>
@@ -441,23 +434,26 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                           alignItems: 'center',
                           p: 2,
                           borderRadius: 3,
-                          background: `linear-gradient(145deg, ${alpha(tool.color, 0.1)}, ${alpha(tool.color, 0.05)})`,
-                          border: `2px solid ${alpha(tool.color, 0.3)}`,
+                          background: `linear-gradient(145deg, ${alpha(theme.palette.primary.main, 0.1)}, ${alpha(theme.palette.secondary.main, 0.05)})`,
+                          border: `2px solid ${alpha(theme.palette.primary.main, 0.3)}`,
                           cursor: 'pointer',
                           transition: 'all 0.3s ease',
                           '&:hover': {
                             transform: 'translateY(-5px) scale(1.05)',
-                            boxShadow: `0 10px 25px ${alpha(tool.color, 0.3)}`,
-                            borderColor: tool.color,
+                            boxShadow: `0 10px 25px ${alpha(theme.palette.primary.main, 0.3)}`,
+                            borderColor: theme.palette.primary.main,
                           }
                         }}
                         onClick={() => console.log(`Clicked ${tool.name}`)}
                       >
-                        <Typography sx={{ fontSize: '3rem', mb: 1 }}>
-                          {tool.icon}
-                        </Typography>
-                        <Typography variant="body2" sx={{ textAlign: 'center', fontWeight: 600 }}>
-                          {tool.name}
+                        <Simple3DIcon
+                          iconName={tool.name}
+                          size="large"
+                          animated={true}
+                          description={tool.description}
+                        />
+                        <Typography variant="body2" sx={{ textAlign: 'center', fontWeight: 600, mt: 1 }}>
+                          {tool.description}
                         </Typography>
                       </Box>
                     </Zoom>
@@ -671,10 +667,10 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                   
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     {[
-                      { name: 'Space Walker', icon: '🚀', color: theme.palette.success.main },
-                      { name: 'Quiz Master', icon: '🧠', color: theme.palette.primary.main },
-                      { name: 'Streak Keeper', icon: '🔥', color: theme.palette.warning.main },
-                      { name: 'Level Up', icon: '⬆️', color: theme.palette.error.main },
+                      { name: 'ROCKET', description: 'Space Walker' },
+                      { name: 'LIGHT_BULB', description: 'Quiz Master' },
+                      { name: 'TROPHY', description: 'Streak Keeper' },
+                      { name: 'STAR', description: 'Level Up' },
                     ].map((achievement, index) => (
                       <Box
                         key={index}
@@ -684,23 +680,26 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                           alignItems: 'center',
                           p: 1.5,
                           borderRadius: 2,
-                          background: `linear-gradient(145deg, ${alpha(achievement.color, 0.1)}, ${alpha(achievement.color, 0.05)})`,
-                          border: `2px solid ${alpha(achievement.color, 0.3)}`,
+                          background: `linear-gradient(145deg, ${alpha(theme.palette.secondary.main, 0.1)}, ${alpha(theme.palette.secondary.main, 0.05)})`,
+                          border: `2px solid ${alpha(theme.palette.secondary.main, 0.3)}`,
                           cursor: 'pointer',
                           transition: 'all 0.3s ease',
                           minWidth: 80,
                           '&:hover': {
                             transform: 'scale(1.1)',
-                            boxShadow: `0 5px 15px ${alpha(achievement.color, 0.3)}`,
+                            boxShadow: `0 5px 15px ${alpha(theme.palette.secondary.main, 0.3)}`,
                           }
                         }}
-                        onClick={() => console.log('Achievement clicked:', achievement.name)}
+                        onClick={() => console.log('Achievement clicked:', achievement.description)}
                       >
-                        <Typography sx={{ fontSize: '1.5rem', mb: 0.5 }}>
-                          {achievement.icon}
-                        </Typography>
-                        <Typography variant="caption" sx={{ textAlign: 'center', fontWeight: 600, fontSize: '0.7rem' }}>
-                          {achievement.name}
+                        <Simple3DIcon
+                          iconName={achievement.name}
+                          size="small"
+                          animated={true}
+                          description={achievement.description}
+                        />
+                        <Typography variant="caption" sx={{ textAlign: 'center', fontWeight: 600, fontSize: '0.7rem', mt: 0.5 }}>
+                          {achievement.description}
                         </Typography>
                       </Box>
                     ))}

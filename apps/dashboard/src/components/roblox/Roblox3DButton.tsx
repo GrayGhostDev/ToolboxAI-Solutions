@@ -12,7 +12,6 @@ interface Roblox3DButtonProps {
   loading?: boolean;
   tooltip?: string;
   animated?: boolean;
-  glowEffect?: boolean;
   fullWidth?: boolean;
 }
 
@@ -39,7 +38,7 @@ const shimmerAnimation = keyframes`
   100% { transform: translateX(100%); }
 `;
 
-const Styled3DButton = styled(Button)(({ theme, variant, size, animated, glowEffect }: any) => {
+const Styled3DButton = styled(Button)(({ theme, variant, size, animated }: any) => {
   const variantColors = {
     primary: theme.palette.primary.main,
     secondary: theme.palette.secondary.main,
@@ -90,22 +89,20 @@ const Styled3DButton = styled(Button)(({ theme, variant, size, animated, glowEff
       animation: `${floatAnimation} 3s ease-in-out infinite`,
     }),
     
-    ...(glowEffect && {
-      '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: `linear-gradient(45deg, transparent, ${alpha('#fff', 0.2)}, transparent)`,
-        transform: 'translateX(-100%)',
-        transition: 'transform 0.6s ease',
-      },
-      '&:hover::before': {
-        transform: 'translateX(100%)',
-      },
-    }),
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: `linear-gradient(45deg, transparent, ${alpha('#fff', 0.2)}, transparent)`,
+      transform: 'translateX(-100%)',
+      transition: 'transform 0.6s ease',
+    },
+    '&:hover::before': {
+      transform: 'translateX(100%)',
+    },
     
     '&::after': {
       content: '""',
@@ -186,7 +183,6 @@ export const Roblox3DButton: React.FC<Roblox3DButtonProps> = ({
   loading = false,
   tooltip,
   animated = true,
-  glowEffect = true,
   fullWidth = false,
 }) => {
   const theme = useTheme();
@@ -199,7 +195,6 @@ export const Roblox3DButton: React.FC<Roblox3DButtonProps> = ({
       variant={variant}
       size={size}
       animated={animated}
-      glowEffect={glowEffect}
       disabled={disabled || loading}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
