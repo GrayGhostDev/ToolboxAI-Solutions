@@ -7,21 +7,32 @@ import { store } from "./store";
 import { theme } from "./theme";
 import App from "./App";
 import "./i18n/config";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <BrowserRouter
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true
-          }}
-        >
-          <App />
-        </BrowserRouter>
-      </ThemeProvider>
-    </Provider>
+    <ErrorBoundary
+      level="page"
+      enableRecovery={true}
+      enableReporting={true}
+      onError={(error, errorInfo) => {
+        console.error('Application Error:', error, errorInfo);
+        // In production, report to error tracking service
+      }}
+    >
+      <Provider store={store}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <BrowserRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true
+            }}
+          >
+            <App />
+          </BrowserRouter>
+        </ThemeProvider>
+      </Provider>
+    </ErrorBoundary>
   </React.StrictMode>
 );

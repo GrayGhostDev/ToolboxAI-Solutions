@@ -12,8 +12,9 @@ import Login from "./components/pages/Login";
 import Register from "./components/pages/Register";
 import PasswordReset from "./components/pages/PasswordReset";
 import { useAuth } from "./hooks/useAuth";
-import ErrorBoundary from "./components/common/ErrorBoundary";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
+import { NetworkError } from "./components/ErrorComponents";
 
 // Terminal services removed - not part of application
 // Performance monitor disabled due to performance issues
