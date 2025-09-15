@@ -39,9 +39,11 @@ import { Roblox3DNavigation } from "../roblox/Roblox3DNavigation";
 import { RobloxProgressBar } from "../roblox/RobloxProgressBar";
 import { RobloxAchievementBadge } from "../roblox/RobloxAchievementBadge";
 import { Simple3DIcon } from "../roblox/Simple3DIcon";
+import { Real3DIcon } from "../roblox/Real3DIcon";
 import { useTheme, alpha, Fade, Zoom, Slide } from "@mui/material";
 
 export function DashboardHome({ role }: { role?: UserRole }) {
+  const theme = useTheme();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const xp = useAppSelector((s) => s.gamification?.xp ?? 0);
@@ -194,8 +196,6 @@ export function DashboardHome({ role }: { role?: UserRole }) {
       </Box>
     );
   }
-
-  const theme = useTheme();
 
   return (
     <>
@@ -446,12 +446,12 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                         }}
                         onClick={() => console.log(`Clicked ${tool.name}`)}
                       >
-                        <Simple3DIcon
-                          iconName={tool.name}
-                          size="large"
-                          animated={true}
-                          description={tool.description}
-                        />
+                          <Real3DIcon
+                            iconName={tool.name}
+                            size="large"
+                            animated={true}
+                            description={tool.description}
+                          />
                         <Typography variant="body2" sx={{ textAlign: 'center', fontWeight: 600, mt: 1 }}>
                           {tool.description}
                         </Typography>
@@ -692,12 +692,12 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                         }}
                         onClick={() => console.log('Achievement clicked:', achievement.description)}
                       >
-                        <Simple3DIcon
-                          iconName={achievement.name}
-                          size="small"
-                          animated={true}
-                          description={achievement.description}
-                        />
+                          <Real3DIcon
+                            iconName={achievement.name}
+                            size="small"
+                            animated={true}
+                            description={achievement.description}
+                          />
                         <Typography variant="caption" sx={{ textAlign: 'center', fontWeight: 600, fontSize: '0.7rem', mt: 0.5 }}>
                           {achievement.description}
                         </Typography>

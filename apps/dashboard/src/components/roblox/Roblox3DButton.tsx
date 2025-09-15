@@ -38,7 +38,7 @@ const shimmerAnimation = keyframes`
   100% { transform: translateX(100%); }
 `;
 
-const Styled3DButton = styled(Button)(({ theme, variant, size, animated }: any) => {
+const Styled3DButton = styled(Button)(({ theme, variant, size }: any) => {
   const variantColors = {
     primary: theme.palette.primary.main,
     secondary: theme.palette.secondary.main,
@@ -85,9 +85,7 @@ const Styled3DButton = styled(Button)(({ theme, variant, size, animated }: any) 
       transform: 'none',
     },
     
-    ...(animated && {
-      animation: `${floatAnimation} 3s ease-in-out infinite`,
-    }),
+    animation: `${floatAnimation} 3s ease-in-out infinite`,
     
     '&::before': {
       content: '""',
@@ -194,7 +192,6 @@ export const Roblox3DButton: React.FC<Roblox3DButtonProps> = ({
     <Styled3DButton
       variant={variant}
       size={size}
-      animated={animated}
       disabled={disabled || loading}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
@@ -206,10 +203,11 @@ export const Roblox3DButton: React.FC<Roblox3DButtonProps> = ({
           <LoadingSpinner />
         ) : (
           <IconContainer size={size}>
-            <img
+            <Box
+              component="img"
               src={iconPath}
               alt={iconName}
-              style={{
+              sx={{
                 width: '100%',
                 height: '100%',
                 objectFit: 'contain',
