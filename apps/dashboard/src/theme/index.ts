@@ -217,7 +217,6 @@ export const theme = createTheme({
         tooltip: {
           borderRadius: 8,
           backgroundColor: colors.neutral[800],
-          fontSize: "0.875rem",
         },
       },
     },
@@ -273,3 +272,6 @@ export const darkTheme = createTheme({
     },
   },
 });
+
+// Export Roblox theme
+export { robloxTheme } from './robloxTheme';

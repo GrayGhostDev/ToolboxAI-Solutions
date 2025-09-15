@@ -30,6 +30,10 @@ import { ROUTES } from "../../config/routes";
 import CreateLessonDialog from "../dialogs/CreateLessonDialog";
 import RealTimeAnalytics from "../widgets/RealTimeAnalytics";
 import ConnectionStatus from "../widgets/ConnectionStatus";
+// Roblox-themed components
+import RobloxCharacterAvatar from "../roblox/RobloxCharacterAvatar";
+import Roblox3DIcon from "../roblox/Roblox3DIcon";
+import { useTheme, alpha, Fade, Zoom, Slide } from "@mui/material";
 
 export function DashboardHome({ role }: { role?: UserRole }) {
   const dispatch = useAppDispatch();
@@ -185,34 +189,95 @@ export function DashboardHome({ role }: { role?: UserRole }) {
     );
   }
 
+  const theme = useTheme();
+
   return (
     <>
       <Grid2 container spacing={3}>
-      {/* Welcome Banner */}
+      {/* Roblox-themed Welcome Banner */}
       <Grid2 xs={12}>
         <Card
           sx={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
             color: "white",
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: `
+                radial-gradient(circle at 20% 80%, ${alpha('#fff', 0.1)} 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, ${alpha('#fff', 0.05)} 0%, transparent 50%)
+              `,
+              animation: 'float 20s ease-in-out infinite',
+              '@keyframes float': {
+                '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                '50%': { transform: 'translateY(-20px) rotate(180deg)' }
+              }
+            }
           }}
         >
-          <CardContent>
+          <CardContent sx={{ position: 'relative', zIndex: 1 }}>
             <Stack
               direction={{ xs: "column", md: "row" }}
               justifyContent="space-between"
               alignItems={{ xs: "flex-start", md: "center" }}
               gap={2}
             >
-              <Stack>
-                <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                  Welcome back! 👋
-                </Typography>
-                <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                  {role === "teacher" && "Review today's classes, push lessons to Roblox, and track assessments."}
-                  {role === "admin" && "Monitor usage across schools, manage integrations, and review compliance."}
-                  {role === "student" && "Jump into your next mission, level up, and check the leaderboard!"}
-                  {role === "parent" && "See your child's progress, download reports, and message teachers."}
-                </Typography>
+              <Stack sx={{ flex: 1 }}>
+                <Fade in={true} timeout={1000}>
+                  <Typography 
+                    variant="h4" 
+                    sx={{ 
+                      fontWeight: 800, 
+                      mb: 1,
+                      background: 'linear-gradient(135deg, #fff, #e0e0e0)',
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                    }}
+                  >
+                    🚀 Welcome to Space Station! 👋
+                  </Typography>
+                </Fade>
+                <Slide in={true} direction="up" timeout={1500}>
+                  <Typography variant="body1" sx={{ opacity: 0.9, mb: 2 }}>
+                    {role === "teacher" && "Review today's classes, push lessons to Roblox, and track assessments."}
+                    {role === "admin" && "Monitor usage across schools, manage integrations, and review compliance."}
+                    {role === "student" && "Jump into your next mission, level up, and check the leaderboard!"}
+                    {role === "parent" && "See your child's progress, download reports, and message teachers."}
+                  </Typography>
+                </Slide>
+                
+                {/* Character Avatar */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <RobloxCharacterAvatar
+                    character={{
+                      name: 'Astro Explorer',
+                      type: 'astronaut',
+                      level: level,
+                      xp: userXP,
+                      achievements: ['Space Walker', 'Quiz Master'],
+                      isActive: true,
+                      imagePath: '/images/characters/PNG/Astronauto (variation)/01.png'
+                    }}
+                    size="medium"
+                    animated={true}
+                  />
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      Level {level} Explorer
+                    </Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                      {userXP} XP • {streakDays} day streak
+                    </Typography>
+                  </Box>
+                </Box>
               </Stack>
               <Stack direction="row" gap={1}>
                 {role === "teacher" && (
@@ -302,6 +367,103 @@ export function DashboardHome({ role }: { role?: UserRole }) {
             </Stack>
           </CardContent>
         </Card>
+      </Grid2>
+
+      {/* 3D Educational Tools Section */}
+      <Grid2 xs={12}>
+        <Fade in={true} timeout={2000}>
+          <Card
+            sx={{
+              background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.05)})`,
+              border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+              borderRadius: 3,
+              overflow: 'hidden'
+            }}
+          >
+            <CardContent sx={{ p: 4 }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 700,
+                  mb: 3,
+                  textAlign: 'center',
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                🎮 Your Learning Tools
+              </Typography>
+              
+              <Grid2 container spacing={3} justifyContent="center">
+                {[
+                  {
+                    name: 'ABC_CUBE',
+                    type: 'education' as const,
+                    category: 'Language',
+                    level: 3,
+                    isUnlocked: true,
+                    description: 'Learn the alphabet with interactive 3D cubes'
+                  },
+                  {
+                    name: 'MATH_BOARD',
+                    type: 'education' as const,
+                    category: 'Mathematics',
+                    level: 2,
+                    isUnlocked: true,
+                    description: 'Solve math problems on the interactive board'
+                  },
+                  {
+                    name: 'SPACE_QUIZ',
+                    type: 'education' as const,
+                    category: 'Science',
+                    level: 4,
+                    isUnlocked: true,
+                    description: 'Test your knowledge about space and planets'
+                  },
+                  {
+                    name: 'SPORTS_CHALLENGE',
+                    type: 'gaming' as const,
+                    category: 'Physical Education',
+                    level: 1,
+                    isUnlocked: true,
+                    description: 'Complete physical challenges and sports activities'
+                  },
+                  {
+                    name: 'ART_STUDIO',
+                    type: 'tool' as const,
+                    category: 'Creative Arts',
+                    level: 2,
+                    isUnlocked: true,
+                    description: 'Create digital art with brushes and colors'
+                  },
+                  {
+                    name: 'ACHIEVEMENT_HALL',
+                    type: 'achievement' as const,
+                    category: 'Recognition',
+                    level: 5,
+                    isUnlocked: true,
+                    description: 'View all your earned achievements and badges'
+                  }
+                ].map((tool, index) => (
+                  <Grid2 xs={6} sm={4} md={2} key={index}>
+                    <Zoom in={true} timeout={2000 + index * 200}>
+                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Roblox3DIcon
+                          icon={tool}
+                          size="large"
+                          animated={true}
+                          onClick={() => console.log(`Clicked ${tool.name}`)}
+                        />
+                      </Box>
+                    </Zoom>
+                  </Grid2>
+                ))}
+              </Grid2>
+            </CardContent>
+          </Card>
+        </Fade>
       </Grid2>
 
       {/* KPI Cards */}

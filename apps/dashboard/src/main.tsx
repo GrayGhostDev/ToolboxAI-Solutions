@@ -4,7 +4,7 @@ import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import { store } from "./store";
-import { theme } from "./theme";
+import { robloxTheme } from "./theme";
 import App from "./App";
 import "./i18n/config";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -21,7 +21,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       }}
     >
       <Provider store={store}>
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={robloxTheme}>
           <CssBaseline />
           <BrowserRouter
             future={{
