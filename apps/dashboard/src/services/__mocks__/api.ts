@@ -7,6 +7,84 @@
 
 import { vi } from 'vitest';
 
+// Mock login function
+export const login = vi.fn(async (email: string, password: string) => {
+  // Simulate successful login
+  if (email === 'test@example.com' && password === 'password123') {
+    return {
+      accessToken: 'mock-jwt-token',
+      refreshToken: 'mock-refresh-token',
+      user: {
+        id: '1',
+        email: 'test@example.com',
+        username: 'test',
+        displayName: 'Test User',
+        role: 'student',
+        schoolId: 'school-1',
+        classIds: ['class-1'],
+        avatarUrl: null,
+      }
+    };
+  }
+
+  // Simulate admin login
+  if (email === 'admin@toolboxai.com' && password === 'Admin123!') {
+    return {
+      accessToken: 'mock-jwt-token',
+      refreshToken: 'mock-refresh-token',
+      user: {
+        id: '1',
+        email: 'admin@toolboxai.com',
+        username: 'admin',
+        displayName: 'Admin User',
+        role: 'admin',
+        schoolId: 'school-1',
+        classIds: [],
+        avatarUrl: null,
+      }
+    };
+  }
+
+  // Simulate invalid credentials
+  if (email === 'wrong@example.com') {
+    throw new Error('Invalid credentials');
+  }
+
+  // Default success response
+  return {
+    accessToken: 'mock-jwt-token',
+    refreshToken: 'mock-refresh-token',
+    user: {
+      id: '1',
+      email,
+      username: email.split('@')[0],
+      displayName: 'Test User',
+      role: 'student',
+      schoolId: 'school-1',
+      classIds: ['class-1'],
+      avatarUrl: null,
+    }
+  };
+});
+
+// Mock register function
+export const register = vi.fn(async (data: any) => {
+  return {
+    accessToken: 'mock-jwt-token',
+    refreshToken: 'mock-refresh-token',
+    user: {
+      id: '2',
+      email: data.email,
+      username: data.username || data.email.split('@')[0],
+      displayName: `${data.firstName} ${data.lastName}`,
+      role: data.role || 'student',
+      schoolId: 'school-1',
+      classIds: [],
+      avatarUrl: null,
+    }
+  };
+});
+
 // Mock the API class and all its methods
 class MockApiClient {
   async login(email: string, password: string) {
@@ -256,9 +334,7 @@ export { MockApiClient as ApiClient };
 export default apiClient;
 
 // Export individual functions that match the real API
-export const login = vi.fn(apiClient.login.bind(apiClient));
 export const listClasses = vi.fn(apiClient.getClasses.bind(apiClient));
-export const register = vi.fn(apiClient.register.bind(apiClient));
 export const logout = vi.fn(apiClient.logout.bind(apiClient));
 export const refreshToken = vi.fn(apiClient.refreshToken.bind(apiClient));
 export const forgotPassword = vi.fn(apiClient.forgotPassword.bind(apiClient));

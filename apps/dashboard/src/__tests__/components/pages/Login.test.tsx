@@ -8,7 +8,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Login from '@/components/pages/Login';
+import Login from '../../../components/pages/Login';
 import * as apiService from '@/services/api';
 import { TestWrapper } from '@/test/utils/test-wrapper';
 

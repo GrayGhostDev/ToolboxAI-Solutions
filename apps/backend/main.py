@@ -100,7 +100,7 @@ from apps.backend.services.pusher import (
     PusherUnavailable,
 )
 from apps.backend.services.database import db_service
-from apps.backend.services.socketio import create_socketio_app  # Socket.IO ASGI mounted at path '/socket.io'
+from apps.backend.services.pusher_realtime import get_pusher_service, get_pusher_status  # Pusher Channels for realtime
 
 # Use the logging manager for structured logging with correlation IDs
 logger = logging_manager.get_logger(__name__)
@@ -520,14 +520,13 @@ app.add_middleware(
 # Error handling middleware (must be first to be added, last to execute to catch all errors)
 app.add_middleware(ErrorHandlingMiddleware, debug=settings.DEBUG)
 
-# Create Socket.io app wrapper (lazy initialization)
-# Only create if not in testing mode to avoid import issues
-if os.getenv("TESTING", "false").lower() == "true" or os.getenv("SKIP_SOCKETIO", "false").lower() == "true":
-    socketio_app = app  # Use regular app for testing
-    logger.info("Skipping Socket.IO wrapper (testing/import mode)")
-else:
-    socketio_app = create_socketio_app(app)
-    logger.info("Created Socket.IO app wrapper")
+# Initialize Pusher service for realtime communication
+try:
+    pusher_service = get_pusher_service()
+    logger.info("Pusher Realtime Service initialized")
+except Exception as e:
+    logger.warning(f"Pusher service initialization failed: {e}")
+    pusher_service = None
 
 
 # Global exception handlers
@@ -802,28 +801,103 @@ async def websocket_status():
         raise HTTPException(status_code=500, detail="WebSocket status unavailable")
 
 
-@app.get("/socketio/status", tags=["System"])
-async def socketio_status():
-    """Socket.IO server status and connected clients summary"""
+@app.get("/pusher/status", tags=["System"])
+async def pusher_status():
+    """Pusher Channels status and connected clients summary"""
     try:
-        from socketio_server import connected_clients
-        total = len(connected_clients)
-        authenticated = sum(1 for c in connected_clients.values() if c.get("authenticated"))
-        role_counts = {}
-        for info in connected_clients.values():
-            role = info.get("role") or "unknown"
-            role_counts[role] = role_counts.get(role, 0) + 1
+        status_data = get_pusher_status()
         return {
-            "status": "ok",
-            "connected": total,
-            "authenticated": authenticated,
-            "role_distribution": role_counts,
-            "acks_enabled": True,
-            "path": "/socket.io"
+            **status_data,
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:
-        logger.error(f"SocketIO status error: {e}")
-        raise HTTPException(status_code=500, detail="SocketIO status unavailable")
+        logger.error(f"Pusher status error: {e}")
+        return {
+            "status": "unavailable",
+            "message": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
+
+@app.post("/pusher/auth", tags=["Realtime"])
+async def pusher_auth(
+    socket_id: str = Query(..., description="Pusher socket ID"),
+    channel_name: str = Query(..., description="Channel name to authenticate"),
+    current_user: User = Depends(get_current_user)
+):
+    """Authenticate Pusher channel subscription for private/presence channels"""
+    try:
+        # Import here to avoid circular dependency
+        from apps.backend.services.pusher_realtime import get_pusher_service
+
+        service = get_pusher_service()
+        user_data = {
+            "id": current_user.id,
+            "name": current_user.username,
+            "role": current_user.role,
+            "avatar": getattr(current_user, "avatar", None)
+        }
+
+        auth_data = await service.authenticate_user(socket_id, channel_name, user_data)
+        return auth_data
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"Pusher auth error: {e}")
+        raise HTTPException(status_code=500, detail="Authentication failed")
+
+
+@app.post("/pusher/webhook", tags=["Realtime"])
+async def pusher_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks
+):
+    """Handle Pusher webhooks for presence events"""
+    try:
+        body = await request.body()
+        headers = dict(request.headers)
+
+        # Verify webhook signature
+        events = pusher_verify_webhook(headers, body)
+        if not events:
+            raise HTTPException(status_code=401, detail="Invalid webhook signature")
+
+        # Process events in background
+        from apps.backend.services.pusher_realtime import get_pusher_service
+        service = get_pusher_service()
+
+        for event in events.get("events", []):
+            if event["name"] in ["member_added", "member_removed"]:
+                background_tasks.add_task(
+                    service.handle_presence_event,
+                    event["channel"],
+                    event["name"],
+                    event.get("user_info", {})
+                )
+
+        return {"status": "ok"}
+    except Exception as e:
+        logger.error(f"Pusher webhook error: {e}")
+        return {"status": "error", "message": str(e)}
+
+
+@app.post("/pusher/trigger", tags=["Realtime"])
+async def pusher_trigger(
+    channel: str,
+    event: str,
+    data: Dict[str, Any],
+    current_user: User = Depends(require_role("admin"))
+):
+    """Trigger a Pusher event (admin only)"""
+    try:
+        from apps.backend.services.pusher_realtime import get_pusher_service
+        service = get_pusher_service()
+
+        result = await service.broadcast_event(channel, event, data)
+        return {"status": "success", **result}
+    except Exception as e:
+        logger.error(f"Pusher trigger error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/metrics", tags=["System"])
@@ -1187,7 +1261,7 @@ except ImportError as e:
 # Import and include classes router
 try:
     from apps.backend.api.v1.endpoints.classes import classes_router
-    app.include_router(classes_router)
+    app.include_router(classes_router, prefix="/api/v1")
     logger.info("Classes endpoints loaded successfully")
 except ImportError as e:
     logger.warning(f"Could not load classes endpoints: {e}")
@@ -1195,7 +1269,7 @@ except ImportError as e:
 # Import and include lessons router
 try:
     from apps.backend.api.v1.endpoints.lessons import lessons_router
-    app.include_router(lessons_router)
+    app.include_router(lessons_router, prefix="/api/v1")
     logger.info("Lessons endpoints loaded successfully")
 except ImportError as e:
     logger.warning(f"Could not load lessons endpoints: {e}")
@@ -1203,7 +1277,7 @@ except ImportError as e:
 # Import and include assessments router
 try:
     from apps.backend.api.v1.endpoints.assessments import assessments_router
-    app.include_router(assessments_router)
+    app.include_router(assessments_router, prefix="/api/v1")
     logger.info("Assessments endpoints loaded successfully")
 except ImportError as e:
     logger.warning(f"Could not load assessments endpoints: {e}")
@@ -1219,7 +1293,7 @@ except ImportError as e:
 # Import and include reports router
 try:
     from apps.backend.api.v1.endpoints.reports import reports_router
-    app.include_router(reports_router)
+    app.include_router(reports_router, prefix="/api/v1")
     logger.info("Reports endpoints loaded successfully")
 except ImportError as e:
     logger.warning(f"Could not load reports endpoints: {e}")
@@ -1227,15 +1301,23 @@ except ImportError as e:
 # Import and include messages router
 try:
     from apps.backend.api.v1.endpoints.messages import messages_router
-    app.include_router(messages_router)
+    app.include_router(messages_router, prefix="/api/v1")
     logger.info("Messages endpoints loaded successfully")
 except ImportError as e:
     logger.warning(f"Could not load messages endpoints: {e}")
 
+# Import and include auth router
+try:
+    from apps.backend.api.v1.endpoints.auth import auth_router
+    app.include_router(auth_router, prefix="/api/v1")
+    logger.info("Auth endpoints loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not load auth endpoints: {e}")
+
 # Import and include roblox router
 try:
     from apps.backend.api.v1.endpoints.roblox import roblox_router
-    app.include_router(roblox_router)
+    app.include_router(roblox_router, prefix="/api/v1")
     logger.info("Roblox endpoints loaded successfully")
 except ImportError as e:
     logger.warning(f"Could not load roblox endpoints: {e}")
@@ -1247,6 +1329,16 @@ try:
     logger.info("Roblox environment endpoints loaded successfully")
 except ImportError as e:
     logger.warning(f"Could not load roblox environment endpoints: {e}")
+
+# Register comprehensive Roblox integration endpoints (OAuth2, Open Cloud, Rojo, Conversation Flow)
+try:
+    from apps.backend.api.v1.endpoints.roblox_integration import router as roblox_integration_router
+    app.include_router(roblox_integration_router, prefix="/api/v1", tags=["roblox-integration"])
+    logger.info("Roblox integration endpoints (OAuth2, Open Cloud, Rojo, Conversation Flow) loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not import roblox integration router: {e}")
+except Exception as e:
+    logger.error(f"Error loading roblox integration router: {e}")
 
 # Add missing Roblox deployment endpoints
 @app.post("/api/v1/roblox/deploy/{content_id}", tags=["Roblox Integration"])
@@ -1319,6 +1411,14 @@ try:
     logger.info("AI Chat endpoints loaded successfully")
 except ImportError as e:
     logger.warning(f"Could not load AI chat endpoints: {e}")
+
+# Load Prompt Template endpoints
+try:
+    from apps.backend.api.v1.endpoints.prompt_templates import router as prompt_templates_router
+    app.include_router(prompt_templates_router, prefix="/api/v1")
+    logger.info("Prompt Template endpoints loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not load Prompt Template endpoints: {e}")
 
     # Add fallback AI chat endpoints if router fails to load
     @app.post("/api/v1/ai-chat/conversations")
@@ -4060,9 +4160,9 @@ if __name__ == "__main__":
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
-    # Run server with Socket.io support
+    # Run server with Pusher for realtime support
     uvicorn.run(
-        "server.main:socketio_app",
+        "apps.backend.main:app",
         host=settings.FASTAPI_HOST,
         port=settings.FASTAPI_PORT,
         reload=settings.DEBUG,
