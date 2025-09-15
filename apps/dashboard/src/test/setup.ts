@@ -9,6 +9,7 @@
 
 import React from 'react';
 import '@testing-library/jest-dom';
+import './utils/react18-compat'; // Import React 18 compatibility fixes
 import { beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';

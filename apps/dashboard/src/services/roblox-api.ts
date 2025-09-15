@@ -336,7 +336,8 @@ class RobloxAPIService {
     document.body.removeChild(link);
   }
 
-  getRojoConnectUrl(port: number): string {
+  getRojoConnectUrl(port: number = 34872): string {
+    // Default Rojo server for ToolboxAI-Solutions at localhost:34872
     return `http://localhost:${port}`;
   }
 

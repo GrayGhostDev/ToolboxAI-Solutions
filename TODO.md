@@ -14,7 +14,11 @@
   - [ ] Agent services hardening: rate limiting, persistence, idempotency for content/quiz generation
   - [ ] Database migrations audit: ensure models ↔ migrations in sync; add seed data commands
 - Dashboard (apps/dashboard)
-  - [ ] Resolve failing unit/e2e tests for Login, Register, PasswordReset, Reports, ClassDetails, Leaderboard
+  - [✅ PARTIAL] Resolve failing unit/e2e tests for Login, Register, PasswordReset, Reports, ClassDetails, Leaderboard
+    - Fixed test dependencies and import paths
+    - Updated API mocks to match actual exports
+    - Tests now run but encounter React 18 concurrent rendering warnings with MUI
+    - Next: Configure React 18 test compatibility for MUI components
   - [ ] Wire performance-monitor reporting behind feature flag; capture slow API timings
   - [ ] Improve a11y and responsiveness; review RobloxAIAssistantEnhanced UX for long-running tasks
   - [ ] Add error boundaries and user-facing retry flows where API calls fail

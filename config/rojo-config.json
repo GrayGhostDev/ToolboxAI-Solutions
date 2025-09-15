@@ -1,0 +1,122 @@
+{
+  "ToolboxAI-Solutions": {
+    "name": "ToolboxAI Roblox Educational Platform",
+    "description": "Rojo configuration for ToolboxAI-Solutions educational content generation",
+    "server": {
+      "host": "localhost",
+      "port": 34872,
+      "defaultProject": "ToolboxAI-Educational"
+    },
+    "endpoints": {
+      "api": "http://localhost:34872/api/rojo",
+      "connect": "http://localhost:34872",
+      "subscribe": "http://localhost:34872/api/subscribe"
+    },
+    "project": {
+      "name": "ToolboxAI-Educational-Environment",
+      "tree": {
+        "$className": "DataModel",
+        "ReplicatedStorage": {
+          "$className": "ReplicatedStorage",
+          "ToolboxAI": {
+            "$path": "src/shared/ToolboxAI"
+          }
+        },
+        "ServerScriptService": {
+          "$className": "ServerScriptService",
+          "ToolboxAI": {
+            "$path": "src/server/ToolboxAI"
+          }
+        },
+        "StarterPlayer": {
+          "$className": "StarterPlayer",
+          "StarterPlayerScripts": {
+            "$className": "StarterPlayerScripts",
+            "ToolboxAI": {
+              "$path": "src/client/ToolboxAI"
+            }
+          }
+        },
+        "Workspace": {
+          "$className": "Workspace",
+          "EducationalEnvironment": {
+            "$path": "src/workspace/EducationalEnvironment"
+          }
+        }
+      },
+      "servePort": 34872,
+      "serveAddress": "localhost",
+      "globIgnorePaths": [
+        "**/node_modules",
+        "**/.git",
+        "**/*.lock",
+        "**/Thumbs.db",
+        "**/.DS_Store"
+      ]
+    },
+    "studio": {
+      "plugin": {
+        "path": "roblox/plugins/AIContentGenerator2025.lua",
+        "version": "2.0.0",
+        "features": [
+          "OAuth2 Authentication",
+          "8-Stage Conversation Flow",
+          "Real-time Sync with Backend",
+          "Environment Generation",
+          "Asset Management",
+          "DataStore Integration"
+        ]
+      },
+      "connection": {
+        "autoConnect": true,
+        "reconnectInterval": 5000,
+        "maxRetries": 10
+      }
+    },
+    "educational": {
+      "defaultAgeGroups": ["5-7", "8-10", "11-13", "14-16", "17+"],
+      "subjects": [
+        "Mathematics",
+        "Science",
+        "Language Arts",
+        "History",
+        "Computer Science",
+        "Art & Design",
+        "Music",
+        "Physical Education"
+      ],
+      "learningStyles": [
+        "Visual",
+        "Auditory",
+        "Kinesthetic",
+        "Reading/Writing"
+      ],
+      "gameTypes": [
+        "Puzzle",
+        "Adventure",
+        "Simulation",
+        "Quiz",
+        "Sandbox",
+        "Role-Playing"
+      ]
+    },
+    "development": {
+      "liveReload": true,
+      "sourceMaps": true,
+      "minification": false,
+      "logging": {
+        "level": "debug",
+        "file": "logs/rojo-server.log"
+      }
+    },
+    "production": {
+      "liveReload": false,
+      "sourceMaps": false,
+      "minification": true,
+      "logging": {
+        "level": "info",
+        "file": "logs/rojo-server.log"
+      }
+    }
+  }
+}

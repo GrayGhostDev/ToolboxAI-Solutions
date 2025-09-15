@@ -1026,14 +1026,25 @@ export const performanceMonitor = PerformanceMonitor.getInstance();
 // Global exposure for debugging
 if (typeof window !== 'undefined') {
   (window as any).__PERFORMANCE_MONITOR__ = performanceMonitor;
-  
-  // Auto-start monitoring in development mode
-  if (import.meta.env.DEV) {
-    console.log('🚀 Performance monitor created');
-    
-    // Start monitoring after app initialization
-    setTimeout(() => {
-      performanceMonitor.startMonitoring();
-    }, 3000);
-  }
+
+  // Check feature flag before auto-starting
+  import('../config/features').then(({ featureFlags }) => {
+    const config = featureFlags.getPerformanceConfig();
+
+    if (config.enabled) {
+      console.log('🚀 Performance monitor created (feature flag enabled)');
+
+      // Start monitoring after app initialization
+      setTimeout(() => {
+        performanceMonitor.startMonitoring();
+      }, 3000);
+    } else {
+      console.log('📊 Performance monitor created (disabled by feature flag)');
+    }
+  }).catch(() => {
+    // Fallback to dev mode check if feature flags not available
+    if (import.meta.env.DEV) {
+      console.log('🚀 Performance monitor created (dev mode fallback)');
+    }
+  });
 }

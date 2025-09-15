@@ -61,7 +61,9 @@ class EnhancedRojoManager:
     """
 
     def __init__(self):
+        # Rojo server configuration for ToolboxAI-Solutions at localhost:34872
         self.base_port = getattr(settings, 'ROJO_BASE_PORT', 34872)
+        self.rojo_host = "localhost"  # Default host for Rojo server
         self.max_projects = getattr(settings, 'MAX_ROJO_PROJECTS', 10)
         self.projects_dir = Path(getattr(settings, 'ROJO_PROJECTS_DIR', '/tmp/rojo_projects'))
         self.rojo_binary = "rojo"  # Assumes rojo is in PATH via aftman
@@ -71,6 +73,8 @@ class EnhancedRojoManager:
 
         # Create projects directory
         self.projects_dir.mkdir(parents=True, exist_ok=True)
+
+        logger.info(f"Rojo Manager initialized - Server: {self.rojo_host}:{self.base_port} for ToolboxAI-Solutions")
 
     async def __aenter__(self):
         """Async context manager entry"""
@@ -344,9 +348,9 @@ class EnhancedRojoManager:
             self.session = aiohttp.ClientSession()
 
         try:
-            # Check Rojo API endpoint
+            # Check Rojo API endpoint at localhost:34872 for ToolboxAI-Solutions
             async with self.session.get(
-                f"http://127.0.0.1:{project.port}/api/rojo",
+                f"http://{self.rojo_host}:{project.port}/api/rojo",
                 timeout=aiohttp.ClientTimeout(total=2)
             ) as response:
                 if response.status == 200:
