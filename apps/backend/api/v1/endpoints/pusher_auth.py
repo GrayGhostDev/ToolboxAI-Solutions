@@ -32,7 +32,6 @@ class PusherAuthResponse(BaseModel):
 @router.post("/auth", response_model=Dict[str, Any])
 async def pusher_auth(
     request: Request,
-    current_user: Optional[Dict] = None,  # Make it optional for public channels
 ) -> Dict[str, Any]:
     """
     Authenticate Pusher channel subscription.
@@ -41,31 +40,44 @@ async def pusher_auth(
     For presence channels, user info is included.
     """
     try:
-        # Parse the request body
-        body = await request.json()
+        # Parse the request body - handle both JSON and form data
+        content_type = request.headers.get("content-type", "")
+
+        if "application/json" in content_type:
+            body = await request.json()
+        else:
+            # Handle form data from Pusher client
+            form_data = await request.form()
+            body = {
+                "socket_id": form_data.get("socket_id"),
+                "channel_name": form_data.get("channel_name")
+            }
+
         auth_request = PusherAuthRequest(**body)
 
         # Check for development token from Authorization header
         auth_header = request.headers.get("Authorization", "")
         is_dev_token = auth_header.startswith("Bearer dev-token-")
 
+        # Initialize current_user as None
+        current_user = None
+
         # For private/presence channels, require authentication
         if auth_request.channel_name.startswith(("private-", "presence-")):
-            if not current_user:
-                # For development, create a default user
-                if is_dev_token:
-                    current_user = {
-                        "id": "dev-user",
-                        "email": "dev@toolboxai.com",
-                        "name": "Development User"
-                    }
-                else:
-                    # Default user for channels requiring auth
-                    current_user = {
-                        "id": "guest-user",
-                        "email": "guest@toolboxai.com",
-                        "name": "Guest User"
-                    }
+            # For development, create a default user
+            if is_dev_token:
+                current_user = {
+                    "id": "dev-user",
+                    "email": "dev@toolboxai.com",
+                    "name": "Development User"
+                }
+            else:
+                # Default user for channels requiring auth
+                current_user = {
+                    "id": "guest-user",
+                    "email": "guest@toolboxai.com",
+                    "name": "Guest User"
+                }
 
         # Get user info for presence channels
         user_id = None

@@ -110,48 +110,127 @@ class ImageLoaderService {
    * Get 3D icon image path
    */
   async get3DIconPath(iconName: string, variant: number = 1): Promise<string | null> {
-    const jsonPath = `/images/png/3d_icon_${iconName}_${variant}.json`;
-    return this.loadImage(jsonPath);
+    // Direct path to the actual PNG image in design_files
+    const imagePath = `/design_files/stuudy-3d-icons_NjhhMjYzMmIyMzI4MmUwMDM5ZDY0Yzlj/PNG/${iconName}_${variant}.png`;
+    
+    // Preload the image to ensure it's available
+    try {
+      const img = new Image();
+      img.src = imagePath;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      return imagePath;
+    } catch (error) {
+      console.warn(`Error loading 3D icon ${iconName}_${variant}:`, error);
+      return null;
+    }
   }
 
   /**
    * Get character image path
    */
   async getCharacterPath(characterType: 'astronaut' | 'alien', variant: number = 1): Promise<string | null> {
-    const jsonPath = `/images/png/${characterType}_${variant.toString().padStart(2, '0')}.json`;
-    return this.loadImage(jsonPath);
+    // Direct path to the actual PNG image in design_files
+    const imagePath = `/design_files/characters/PNG/${characterType === 'astronaut' ? 'Astronaut' : 'Aliens'}/${variant.toString().padStart(2, '0')}.png`;
+    
+    try {
+      const img = new Image();
+      img.src = imagePath;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      return imagePath;
+    } catch (error) {
+      console.warn(`Error loading character ${characterType}_${variant}:`, error);
+      return null;
+    }
   }
 
   /**
    * Get character variation image path
    */
   async getCharacterVariationPath(characterType: 'astronaut' | 'alien', variant: number = 1): Promise<string | null> {
-    const jsonPath = `/images/png/${characterType}_variation_${variant.toString().padStart(2, '0')}.json`;
-    return this.loadImage(jsonPath);
+    // Direct path to the actual PNG image in design_files
+    const imagePath = `/design_files/characters/PNG/${characterType === 'astronaut' ? 'Astronauto (variation)' : 'Aliens (Variation)'}/${variant.toString().padStart(2, '0')}.png`;
+    
+    try {
+      const img = new Image();
+      img.src = imagePath;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      return imagePath;
+    } catch (error) {
+      console.warn(`Error loading character variation ${characterType}_${variant}:`, error);
+      return null;
+    }
   }
 
   /**
    * Get scene/background image path
    */
   async getScenePath(sceneName: string, variant: number = 1): Promise<string | null> {
-    const jsonPath = `/images/png/${sceneName}_${variant.toString().padStart(2, '0')}.json`;
-    return this.loadImage(jsonPath);
+    // Direct path to the actual PNG image in design_files
+    const imagePath = `/design_files/characters/PNG/Scene/${variant.toString().padStart(2, '0')}.png`;
+    
+    try {
+      const img = new Image();
+      img.src = imagePath;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      return imagePath;
+    } catch (error) {
+      console.warn(`Error loading scene ${sceneName}_${variant}:`, error);
+      return null;
+    }
   }
 
   /**
    * Get planet image path
    */
   async getPlanetPath(variant: number = 1): Promise<string | null> {
-    const jsonPath = `/images/png/planet_${variant}.json`;
-    return this.loadImage(jsonPath);
+    // Direct path to the actual PNG image in design_files
+    const imagePath = `/design_files/characters/PNG/Planet/${variant}.png`;
+    
+    try {
+      const img = new Image();
+      img.src = imagePath;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      return imagePath;
+    } catch (error) {
+      console.warn(`Error loading planet ${variant}:`, error);
+      return null;
+    }
   }
 
   /**
    * Get item image path
    */
   async getItemPath(itemName: string): Promise<string | null> {
-    const jsonPath = `/images/png/item_${itemName}.json`;
-    return this.loadImage(jsonPath);
+    // Direct path to the actual PNG image in design_files
+    const imagePath = `/design_files/characters/PNG/Item/${itemName}.png`;
+    
+    try {
+      const img = new Image();
+      img.src = imagePath;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      return imagePath;
+    } catch (error) {
+      console.warn(`Error loading item ${itemName}:`, error);
+      return null;
+    }
   }
 
   /**

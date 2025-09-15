@@ -4,6 +4,19 @@ Configuration wrapper for backend app using centralized config
 
 import sys
 import os
+from pathlib import Path
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    # Load .env file from project root
+    project_root = Path(__file__).resolve().parent.parent.parent.parent
+    env_file = project_root / '.env'
+    if env_file.exists():
+        load_dotenv(env_file)
+        print(f"Loaded .env file from {env_file}")
+except ImportError:
+    pass
 
 # Add the project root to Python path to find toolboxai_settings
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
