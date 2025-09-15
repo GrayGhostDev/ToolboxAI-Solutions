@@ -24,13 +24,15 @@ export default function AppLayout({ role, children }: Props) {
         sx={{
           flexGrow: 1,
           p: { xs: 2, md: 3 },
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          width: { sm: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : "100%" },
           ml: { sm: sidebarOpen ? `${drawerWidth}px` : 0 },
           transition: (theme) =>
             theme.transitions.create(["margin", "width"], {
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.leavingScreen,
             }),
+          minHeight: "100vh",
+          background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)",
         }}
       >
         <Toolbar />

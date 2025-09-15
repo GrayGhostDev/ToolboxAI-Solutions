@@ -76,8 +76,10 @@ export default function Topbar() {
       position="fixed"
       sx={{
         backdropFilter: "blur(8px)",
-        bgcolor: "rgba(255,255,255,0.8)",
-        color: "text.primary",
+        background: "linear-gradient(90deg, rgba(10, 10, 10, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%)",
+        color: "white",
+        borderBottom: "2px solid #00bcd4",
+        boxShadow: "0 4px 20px rgba(0, 188, 212, 0.3)",
       }}
     >
       <Toolbar sx={{ gap: 2 }}>
@@ -89,8 +91,19 @@ export default function Topbar() {
           <MenuIcon />
         </IconButton>
         
-        <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
-          ToolBoxAI Dashboard
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            flexGrow: 1, 
+            fontWeight: 700,
+            background: "linear-gradient(135deg, #00bcd4, #e91e63)",
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            textShadow: "0 0 10px rgba(0, 188, 212, 0.5)"
+          }}
+        >
+          🚀 Space Station Dashboard
         </Typography>
 
         {/* Role Selector */}
@@ -99,7 +112,22 @@ export default function Topbar() {
             value={role}
             onChange={(e) => dispatch(setRole(e.target.value as UserRole))}
             aria-label="Select role"
-            sx={{ fontSize: "0.875rem" }}
+            sx={{ 
+              fontSize: "0.875rem",
+              background: "linear-gradient(135deg, rgba(0, 188, 212, 0.1), rgba(233, 30, 99, 0.1))",
+              border: "1px solid rgba(0, 188, 212, 0.3)",
+              borderRadius: 2,
+              color: "white",
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: "rgba(0, 188, 212, 0.3)",
+              },
+              "&:hover .MuiOutlinedInput-notchedOutline": {
+                borderColor: "rgba(0, 188, 212, 0.6)",
+              },
+              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                borderColor: "#00bcd4",
+              },
+            }}
           >
             {(["admin", "teacher", "student", "parent"] as UserRole[]).map((r) => (
               <MenuItem key={r} value={r}>

@@ -82,6 +82,7 @@ export default function Sidebar({ role }: Props) {
   const level = useAppSelector((s) => s.gamification.level);
   const nextLevelXP = useAppSelector((s) => s.gamification.nextLevelXP);
   const displayName = useAppSelector((s) => s.user.displayName);
+  const firstName = useAppSelector((s) => s.user.firstName);
 
   const progress = ((xp % 100) / 100) * 100;
   
@@ -96,8 +97,10 @@ export default function Sidebar({ role }: Props) {
         "& .MuiDrawer-paper": {
           width: drawerWidth,
           boxSizing: "border-box",
-          bgcolor: "neutral.900",
+          background: "linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%)",
           color: "white",
+          borderRight: "2px solid #00bcd4",
+          boxShadow: "0 0 20px rgba(0, 188, 212, 0.3)",
         },
       }}
       variant="persistent"
@@ -107,9 +110,28 @@ export default function Sidebar({ role }: Props) {
       <Toolbar />
       
       {/* User Info Section */}
-      <Box sx={{ p: 2, textAlign: "center" }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-          {displayName || role}
+      <Box sx={{ 
+        p: 2, 
+        textAlign: "center",
+        background: "linear-gradient(135deg, rgba(0, 188, 212, 0.1), rgba(233, 30, 99, 0.1))",
+        border: "1px solid rgba(0, 188, 212, 0.3)",
+        borderRadius: 2,
+        m: 2,
+        mb: 1
+      }}>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 700, 
+            mb: 1,
+            background: "linear-gradient(135deg, #00bcd4, #e91e63)",
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            textShadow: "0 0 10px rgba(0, 188, 212, 0.5)"
+          }}
+        >
+          {firstName || displayName || role}
         </Typography>
         
         {/* XP Progress for Students */}
@@ -153,14 +175,20 @@ export default function Sidebar({ role }: Props) {
                 selected={isActive}
                 sx={{
                   borderRadius: 2,
+                  transition: "all 0.3s ease",
                   "&.Mui-selected": {
-                    bgcolor: "primary.main",
+                    background: "linear-gradient(135deg, #00bcd4, #e91e63)",
+                    color: "white",
+                    boxShadow: "0 4px 15px rgba(0, 188, 212, 0.4)",
                     "&:hover": {
-                      bgcolor: "primary.dark",
+                      background: "linear-gradient(135deg, #0097a7, #c2185b)",
+                      boxShadow: "0 6px 20px rgba(0, 188, 212, 0.6)",
                     },
                   },
                   "&:hover": {
-                    bgcolor: "rgba(255,255,255,0.1)",
+                    background: "linear-gradient(135deg, rgba(0, 188, 212, 0.1), rgba(233, 30, 99, 0.1))",
+                    border: "1px solid rgba(0, 188, 212, 0.3)",
+                    transform: "translateX(4px)",
                   },
                 }}
               >

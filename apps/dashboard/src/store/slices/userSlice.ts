@@ -23,6 +23,8 @@ const initialState: UserState = {
   userId: "dev-user-001",
   email: "teacher@example.com",
   displayName: "Development Teacher",
+  firstName: "Development",
+  lastName: "Teacher",
   token: "dev-token",
 };
 
