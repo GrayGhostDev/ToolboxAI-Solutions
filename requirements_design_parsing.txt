@@ -1,0 +1,30 @@
+# Enhanced Design File Parsing Dependencies
+# Install with: pip install -r requirements_design_parsing.txt
+
+# Core image processing
+Pillow>=9.0.0
+
+# Design file conversion tools
+fig2sketch[fast]>=0.0.1
+sketch-tool>=0.0.1
+
+# 3D file processing
+psd-tools>=1.9.0
+
+# Video processing
+ffmpeg-python>=0.2.0
+
+# Additional utilities
+python-magic>=0.4.27
+chardet>=5.0.0
+
+# Optional: For advanced image analysis
+opencv-python>=4.5.0
+numpy>=1.21.0
+
+# Optional: For Blender integration (requires Blender installation)
+# bpy>=3.0.0  # Uncomment if you have Blender installed
+
+# Development and testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0

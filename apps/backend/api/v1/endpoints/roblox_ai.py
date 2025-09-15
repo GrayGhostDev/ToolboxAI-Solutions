@@ -11,7 +11,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel, Field
 
-from .core.config import settings
+from apps.backend.core.config import settings
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.models.schemas import User
 from apps.backend.services.roblox_ai_agent import roblox_ai_agent

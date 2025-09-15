@@ -1,0 +1,51 @@
+# Design files and assets (large binary files)
+design/
+**/design/
+*.fig
+*.sketch
+*.xd
+*.blend
+*.obj
+*.fbx
+*.dae
+*.3ds
+*.max
+*.ma
+*.mb
+
+# Design file parsing outputs (allow images folder)
+parsed_*.json
+**/parsed_*.json
+design_parsing_output/
+**/design_parsing_output/
+!images/
+!**/images/
+!images/**/*
+!**/images/**/*
+
+# Test outputs for design parsing
+test_design_files.py
+test_enhanced_parsing.py
+**/test_design_files.py
+**/test_enhanced_parsing.py
+
+# Design file conversion temporary files
+temp_sketch_*
+temp_fig_*
+temp_xd_*
+temp_blend_*
+
+# Standard ignores
+node_modules/
+dist/
+build/
+coverage/
+.nyc_output/
+__pycache__/
+*.py[cod]
+*.log
+*.tmp
+*.tgz
+*.tar.gz
+.DS_Store
+Thumbs.db

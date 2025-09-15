@@ -451,3 +451,4 @@ async def get_guidance(stage: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get guidance: {str(e)}"
         )
+

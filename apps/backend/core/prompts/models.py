@@ -233,3 +233,4 @@ class AgentTrigger(BaseModel):
     trigger_data: Dict[str, Any]
     priority: int = Field(default=1, ge=1, le=10)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+

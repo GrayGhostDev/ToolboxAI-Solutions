@@ -13,6 +13,8 @@ from typing import Any, Dict, Optional
 from apps.backend.services.pusher import trigger_event as pusher_trigger_event
 from apps.backend.services.roblox_ai_agent import roblox_ai_agent
 from apps.backend.core.config import settings
+from apps.backend.services.design_file_converter import design_file_converter
+from apps.backend.services.design_folder_scanner import design_folder_scanner
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +27,9 @@ class WebSocketHandler:
             'agent_chat_user': self._handle_agent_chat_user,
             'ai_message': self._handle_ai_message,
             'roblox_agent_request': self._handle_roblox_agent_request,
+            'design_file_process': self._handle_design_file_process,
+            'design_folder_scan': self._handle_design_folder_scan,
+            'design_file_search': self._handle_design_file_search,
             'ping': self._handle_ping,
             'subscribe': self._handle_subscribe,
             'unsubscribe': self._handle_unsubscribe
@@ -178,6 +183,100 @@ class WebSocketHandler:
 
         except Exception as e:
             logger.error(f"Error handling unsubscribe: {e}")
+
+    async def _handle_design_file_process(self, payload: Dict[str, Any], connection_id: str = None) -> None:
+        """Handle design file processing request"""
+        try:
+            file_path = payload.get('file_path')
+            include_content = payload.get('include_content', True)
+
+            if not file_path:
+                raise ValueError("Missing file_path")
+
+            logger.info(f"Processing design file: {file_path}")
+
+            # Process the file
+            result = await design_file_converter.process_design_file(file_path)
+
+            # Send result back to client
+            await pusher_trigger_event(
+                f"connection-{connection_id}",
+                "message",
+                {
+                    "type": "design_file_processed",
+                    "payload": {
+                        "file_path": file_path,
+                        "result": result
+                    }
+                }
+            )
+
+        except Exception as e:
+            logger.error(f"Error handling design file process: {e}")
+            await self._send_error_message(connection_id, f"Design file processing error: {str(e)}")
+
+    async def _handle_design_folder_scan(self, payload: Dict[str, Any], connection_id: str = None) -> None:
+        """Handle design folder scan request"""
+        try:
+            folder_path = payload.get('folder_path')
+            include_content = payload.get('include_content', True)
+
+            logger.info(f"Scanning design folder: {folder_path or 'default'}")
+
+            # Scan the folder
+            if folder_path:
+                result = await design_folder_scanner.get_folder_contents(folder_path)
+            else:
+                result = await design_folder_scanner.scan_design_folder(include_content)
+
+            # Send result back to client
+            await pusher_trigger_event(
+                f"connection-{connection_id}",
+                "message",
+                {
+                    "type": "design_folder_scanned",
+                    "payload": {
+                        "folder_path": folder_path,
+                        "result": result
+                    }
+                }
+            )
+
+        except Exception as e:
+            logger.error(f"Error handling design folder scan: {e}")
+            await self._send_error_message(connection_id, f"Design folder scan error: {str(e)}")
+
+    async def _handle_design_file_search(self, payload: Dict[str, Any], connection_id: str = None) -> None:
+        """Handle design file search request"""
+        try:
+            query = payload.get('query')
+            category = payload.get('category')
+
+            if not query:
+                raise ValueError("Missing search query")
+
+            logger.info(f"Searching design files: {query} (category: {category})")
+
+            # Search for files
+            results = await design_folder_scanner.search_design_files(query, category)
+
+            # Send result back to client
+            await pusher_trigger_event(
+                f"connection-{connection_id}",
+                "message",
+                {
+                    "type": "design_file_search_results",
+                    "payload": {
+                        "query": query,
+                        "category": category,
+                        "results": results
+                    }
+                }
+            )
+
+        except Exception as e:
+            logger.error(f"Error handling design file search: {e}")
+            await self._send_error_message(connection_id, f"Design file search error: {str(e)}")
 
     async def _send_error_message(self, connection_id: str, error_message: str) -> None:
         """Send error message to connection"""

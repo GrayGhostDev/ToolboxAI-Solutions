@@ -551,3 +551,4 @@ This personalized approach will make your students feel like the content was cre
             "templates_loaded": len(self.template_engine.get_all_templates()),
             "system_health": "healthy" if self.is_initialized else "initializing"
         }
+

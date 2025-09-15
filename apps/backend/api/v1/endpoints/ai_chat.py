@@ -16,15 +16,39 @@ from enum import Enum
 
 # Import dependencies
 try:
+    from langchain_openai import ChatOpenAI
     from langchain_anthropic import ChatAnthropic
     from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+    from langchain.memory import ConversationBufferMemory
     from langgraph.graph import StateGraph, END
-    from langgraph_checkpoint_sqlite import SqliteSaver
+    from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+    from langgraph_checkpoint_sqlite import SqliteCheckpoint
+    LANGCHAIN_AVAILABLE = True
 except ImportError as e:
-    logging.warning(f"LangChain imports failed: {e}. Running in mock mode.")
+    logging.warning(f"LangChain imports failed: {e}. Will use direct API.")
+    LANGCHAIN_AVAILABLE = False
+    ChatOpenAI = None
     ChatAnthropic = None
     StateGraph = None
-    SqliteSaver = None
+
+# Direct API imports as fallback
+try:
+    import anthropic
+    from anthropic import Anthropic
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    logging.warning("Anthropic library not available")
+    ANTHROPIC_AVAILABLE = False
+    Anthropic = None
+
+try:
+    import openai
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    logging.warning("OpenAI library not available")
+    OPENAI_AVAILABLE = False
+    OpenAI = None
 
 # Authentication imports
 try:
@@ -67,10 +91,38 @@ logger = logging.getLogger(__name__)
 # CONFIGURATION
 # =============================================================================
 
-ANTHROPIC_API_KEY = None  # Will be loaded from environment
-MODEL_NAME = "claude-3-5-sonnet-latest"
+import os
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# Latest models as of 2025
+# Anthropic Claude Models
+ANTHROPIC_MODEL_OPUS = "claude-opus-4-1-20250805"  # Most capable Claude model ($15/$75 per M tokens)
+ANTHROPIC_MODEL_SONNET = "claude-sonnet-4-20250514"  # Balanced performance/cost ($3/$15 per M tokens)
+# Allow environment variable override
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", ANTHROPIC_MODEL_OPUS)  # Default to Opus
+
+# OpenAI GPT Models
+OPENAI_MODEL_4O = "gpt-4o"  # GPT-4 Omni - 2x faster, 50% cheaper than Turbo
+OPENAI_MODEL_TURBO = "gpt-4-turbo-preview"  # Latest GPT-4 Turbo
+OPENAI_MODEL_41 = "gpt-4-1-preview"  # GPT-4.1 if available
+# Allow environment variable override
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", OPENAI_MODEL_4O)  # Default to GPT-4o
+
 MAX_CONVERSATION_LENGTH = 100  # Maximum messages in a conversation
 CHECKPOINT_DIR = "/tmp/langgraph_checkpoints"  # Directory for conversation persistence
+
+# Educational content stages
+class ContentStage(str, Enum):
+    """8-stage educational content creation flow"""
+    INTENT = "intent_understanding"
+    REQUIREMENTS = "requirements_gathering"
+    PLANNING = "content_planning"
+    DESIGN = "interactive_design"
+    ASSESSMENT = "assessment_creation"
+    REVIEW = "review_refinement"
+    DEPLOYMENT = "deployment_preparation"
+    DELIVERY = "final_delivery"
 
 # =============================================================================
 # ENUMS & MODELS
@@ -155,21 +207,47 @@ class ConversationState(BaseModel):
 class RobloxAssistantGraph:
     """LangGraph workflow for Roblox educational assistant"""
 
-    def __init__(self, api_key: str = None):
-        """Initialize the assistant graph"""
-        self.api_key = api_key
+    def __init__(self, anthropic_key: str = None, openai_key: str = None):
+        """Initialize the assistant graph with Anthropic or OpenAI"""
+        self.anthropic_key = anthropic_key
+        self.openai_key = openai_key
         self.llm = None
         self.graph = None
         self.checkpointer = None
+        self.anthropic_client = None
+        self.openai_client = None
+        self.conversation_memory = {}
 
-        if ChatAnthropic and api_key:
-            self.llm = ChatAnthropic(
-                anthropic_api_key=api_key,
-                model=MODEL_NAME,
-                streaming=True,
-                temperature=0.7
-            )
-            self._build_graph()
+        # Prefer Anthropic if available
+        if anthropic_key:
+            if LANGCHAIN_AVAILABLE and ChatAnthropic:
+                self.llm = ChatAnthropic(
+                    api_key=anthropic_key,
+                    model=ANTHROPIC_MODEL,
+                    streaming=True,
+                    temperature=0.7,
+                    max_tokens=4096
+                )
+                self._build_graph()
+                logger.info(f"Initialized with LangChain and Anthropic Claude ({ANTHROPIC_MODEL})")
+            elif ANTHROPIC_AVAILABLE:
+                self.anthropic_client = Anthropic(api_key=anthropic_key)
+                logger.info("Initialized with direct Anthropic API")
+        elif openai_key:
+            if LANGCHAIN_AVAILABLE and ChatOpenAI:
+                self.llm = ChatOpenAI(
+                    api_key=openai_key,
+                    model=OPENAI_MODEL,
+                    streaming=True,
+                    temperature=0.7
+                )
+                self._build_graph()
+                logger.info(f"Initialized with LangChain and OpenAI ({OPENAI_MODEL})")
+            elif OPENAI_AVAILABLE:
+                self.openai_client = OpenAI(api_key=openai_key)
+                logger.info("Initialized with direct OpenAI API")
+        else:
+            logger.warning("No API keys provided, running in mock mode")
 
     def _build_graph(self):
         """Build the LangGraph workflow"""
@@ -347,81 +425,164 @@ class RobloxAssistantGraph:
         return state
 
     async def process_message(self, conversation_id: str, message: str) -> AsyncGenerator[str, None]:
-        """Process a message and stream response"""
+        """Process a message and stream response with full context"""
         try:
-            # If we have a real LLM, use it
+            # Get conversation history
+            if conversation_id not in self.conversation_memory:
+                self.conversation_memory[conversation_id] = {
+                    "messages": [],
+                    "stage": ContentStage.INTENT,
+                    "context": {},
+                    "requirements": {}
+                }
+
+            memory = self.conversation_memory[conversation_id]
+            memory["messages"].append({"role": "user", "content": message})
+
+            # Use LangChain if available (Anthropic or OpenAI)
             if self.llm:
-                # Create state with context
-                state = ConversationState(
-                    messages=[{"role": "user", "content": message}],
-                    context={"conversation_id": conversation_id}
+                # Build conversation context with system prompt
+                system_prompt = """You are an AI assistant helping teachers create educational Roblox environments.
+                You guide them through an 8-stage process:
+                1. Understanding their intent (lesson, environment, quiz)
+                2. Gathering requirements (grade level, subject, learning objectives)
+                3. Planning content structure
+                4. Designing interactive elements
+                5. Creating assessments
+                6. Review and refinement
+                7. Deployment preparation
+                8. Final delivery
+
+                Current stage: {stage}
+                Context: {context}
+
+                Be helpful, ask clarifying questions when needed, and maintain context from the entire conversation.
+                When the user mentions something like "Puzzle" after discussing quizzes, understand they want puzzle-based quiz questions.
+                When generating Lua scripts, ensure they are properly formatted for Roblox Studio."""
+
+                # Format messages for the LLM
+                formatted_messages = [
+                    SystemMessage(content=system_prompt.format(
+                        stage=memory["stage"],
+                        context=json.dumps(memory["context"])
+                    ))
+                ]
+
+                for msg in memory["messages"]:
+                    if msg["role"] == "user":
+                        formatted_messages.append(HumanMessage(content=msg["content"]))
+                    elif msg["role"] == "assistant":
+                        formatted_messages.append(AIMessage(content=msg["content"]))
+
+                # Generate response with LangChain
+                response_text = ""
+                async for chunk in self.llm.astream(formatted_messages):
+                    if hasattr(chunk, 'content'):
+                        response_text += chunk.content
+                        yield chunk.content
+
+                # Save assistant response to memory
+                memory["messages"].append({"role": "assistant", "content": response_text})
+
+            # Use direct Anthropic API if available
+            elif self.anthropic_client:
+                # Build messages for Anthropic
+                anthropic_messages = []
+                system_content = f"""You are an AI assistant helping teachers create educational Roblox environments.
+                Guide them through creating lessons, environments, and quizzes.
+                Maintain context from the entire conversation.
+                When generating Lua scripts, ensure they are properly formatted for Roblox Studio.
+                Current context: {json.dumps(memory['context'])}"""
+
+                for msg in memory["messages"]:
+                    anthropic_messages.append({
+                        "role": msg["role"],
+                        "content": msg["content"]
+                    })
+
+                # Generate response with Anthropic
+                stream = self.anthropic_client.messages.create(
+                    model=ANTHROPIC_MODEL,
+                    messages=anthropic_messages,
+                    system=system_content,
+                    stream=True,
+                    max_tokens=4096,
+                    temperature=0.7
                 )
 
-                # Run workflow
-                if self.graph:
-                    config = {"configurable": {"thread_id": conversation_id}}
-                    result = await self.graph.ainvoke(state, config)
+                response_text = ""
+                for chunk in stream:
+                    if chunk.type == "content_block_delta":
+                        content = chunk.delta.text
+                        response_text += content
+                        yield content
 
-                    # Generate contextual response based on intent and generated content
-                    if result.intent == IntentType.CREATE_LESSON:
-                        if result.generated_content and result.generated_content.get("status") == "generated":
-                            response_text = f"Great! I've started creating your educational lesson. Content ID: {result.generated_content.get('content_id', 'pending')}. "
-                            response_text += "The lesson will include interactive elements, assessments, and age-appropriate content. "
-                            response_text += "You can preview it in the Environment Preview tab once it's ready."
-                        else:
-                            response_text = "Let's create an engaging lesson! What subject and grade level are you targeting?"
+                # Save assistant response to memory
+                memory["messages"].append({"role": "assistant", "content": response_text})
 
-                    elif result.intent == IntentType.DESIGN_ENVIRONMENT:
-                        if result.generated_content and result.generated_content.get("status") == "generated":
-                            response_text = f"Excellent! Your Roblox environment is being generated. Content ID: {result.generated_content.get('content_id', 'pending')}. "
-                            response_text += "I'm creating an immersive 3D space with interactive elements. "
-                            response_text += "The environment will be optimized for educational gameplay."
-                        else:
-                            response_text = "I'll help you design an amazing environment! Would you like a space station, medieval castle, or modern classroom?"
+            # Use direct OpenAI API if available
+            elif self.openai_client:
+                # Build messages for OpenAI
+                openai_messages = [
+                    {"role": "system", "content": f"""You are an AI assistant helping teachers create educational Roblox environments.
+                    Guide them through creating lessons, environments, and quizzes.
+                    Maintain context from the entire conversation.
+                    Current context: {json.dumps(memory['context'])}"""}
+                ]
+                openai_messages.extend(memory["messages"])
 
-                    elif result.intent == IntentType.GENERATE_QUIZ:
-                        if result.generated_content and result.generated_content.get("status") == "generated":
-                            response_text = f"Perfect! Your interactive quiz is being created. Content ID: {result.generated_content.get('content_id', 'pending')}. "
-                            response_text += "It will include multiple choice, true/false, and interactive challenges. "
-                            response_text += "Students will earn points and badges for correct answers."
-                        else:
-                            response_text = "Let's create an engaging quiz! How many questions would you like, and what topics should we cover?"
+                # Generate response with OpenAI
+                stream = self.openai_client.chat.completions.create(
+                    model=OPENAI_MODEL,
+                    messages=openai_messages,
+                    stream=True,
+                    temperature=0.7
+                )
 
-                    else:
-                        response_text = "I'm your Roblox Educational Assistant! I can help you:\n"
-                        response_text += "• Create interactive lessons with 3D environments\n"
-                        response_text += "• Design immersive educational spaces\n"
-                        response_text += "• Generate quizzes and assessments\n"
-                        response_text += "• Deploy content to Roblox Studio\n"
-                        response_text += "What would you like to create today?"
+                response_text = ""
+                for chunk in stream:
+                    if chunk.choices[0].delta.content:
+                        content = chunk.choices[0].delta.content
+                        response_text += content
+                        yield content
 
-                    # Stream the response
-                    for word in response_text.split():
-                        yield word + " "
-                        await asyncio.sleep(0.03)  # Faster streaming
-                else:
-                    yield "Setting up AI assistant... Please try again in a moment."
+                # Save assistant response to memory
+                memory["messages"].append({"role": "assistant", "content": response_text})
+
             else:
-                # Mock mode - provide helpful responses
-                if "lesson" in message.lower():
-                    response = "I'll help you create an educational lesson! To get started, I need to know: What subject are you teaching? What grade level? What are your main learning objectives?"
-                elif "environment" in message.lower() or "world" in message.lower():
-                    response = "Let's design an amazing Roblox environment! I can create: Space stations for science, Medieval castles for history, Modern cities for social studies, or Custom themed worlds. Which interests you?"
-                elif "quiz" in message.lower() or "test" in message.lower():
-                    response = "I'll create an interactive quiz for your students! Should we include: Multiple choice questions, True/false challenges, Fill-in-the-blank activities, or Puzzle-based assessments?"
-                elif "help" in message.lower():
-                    response = "I'm here to help! I can: Create lessons, Design 3D environments, Generate quizzes, Preview content, Deploy to Roblox. Just tell me what you need!"
-                else:
-                    response = "I'm ready to help you create engaging Roblox educational content! Try asking me to create a lesson, design an environment, or generate a quiz."
+                # Improved fallback without LLM - context-aware responses
+                response = self._generate_contextual_fallback(message, memory)
 
-                # Stream mock response
+                # Stream response
                 for word in response.split():
                     yield word + " "
                     await asyncio.sleep(0.03)
 
+                # Save response to memory
+                memory["messages"].append({"role": "assistant", "content": response})
+
         except Exception as e:
             logger.error(f"Message processing failed: {e}")
             yield f"I encountered an issue: {str(e)}. Please try rephrasing your request."
+
+    def _generate_contextual_fallback(self, message: str, memory: dict) -> str:
+        """Generate context-aware fallback responses without LLM"""
+        # Check conversation history for context
+        last_messages = memory["messages"][-3:] if len(memory["messages"]) >= 3 else memory["messages"]
+
+        # Check if this is a follow-up to a quiz discussion
+        discussing_quiz = any("quiz" in msg.get("content", "").lower() for msg in last_messages)
+
+        if discussing_quiz and "puzzle" in message.lower():
+            return "Great choice! I'll create puzzle-based assessments for your solar system quiz. Students will solve interactive puzzles about planets, orbits, and space phenomena. Each puzzle will reinforce key concepts while keeping students engaged."
+        elif "solar system" in message.lower() or "5th grade" in message.lower():
+            memory["context"]["subject"] = "solar system"
+            memory["context"]["grade"] = "5th grade"
+            return "Excellent! A 5th grade solar system simulation will be perfect. I'll create an interactive 3D environment where students can explore planets, learn about orbits, and understand scale. Should we include quizzes and mini-games?"
+        elif "quiz" in message.lower():
+            return "I'll create an interactive quiz! What type would you prefer: Multiple choice, True/false, Fill-in-the-blank, or Puzzle-based assessments?"
+        else:
+            return "I'm ready to help you create engaging Roblox educational content! I can design lessons, create interactive environments, or generate quizzes. What would you like to work on?"
 
 # =============================================================================
 # IN-MEMORY STORAGE (Replace with database in production)
@@ -888,14 +1049,18 @@ def initialize_assistant():
     global assistant_graph
 
     import os
-    api_key = os.getenv("ANTHROPIC_API_KEY")
+    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+    openai_key = os.getenv("OPENAI_API_KEY")
 
-    if api_key and ChatAnthropic:
-        assistant_graph = RobloxAssistantGraph(api_key)
-        logger.info("Roblox Assistant initialized with Anthropic")
+    if anthropic_key or openai_key:
+        assistant_graph = RobloxAssistantGraph(anthropic_key=anthropic_key, openai_key=openai_key)
+        if anthropic_key:
+            logger.info("Roblox Assistant initialized with Anthropic Claude")
+        else:
+            logger.info("Roblox Assistant initialized with OpenAI")
     else:
         assistant_graph = RobloxAssistantGraph()  # Mock mode
-        logger.warning("Roblox Assistant running in mock mode")
+        logger.warning("Roblox Assistant running in mock mode - no API keys found")
 
 # Initialize on module load
 initialize_assistant()

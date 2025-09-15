@@ -644,3 +644,4 @@ class WorkflowOrchestrator:
             del self.active_workflows[plan_id]
 
         logger.info(f"Cleaned up {len(to_remove)} old workflows")
+
