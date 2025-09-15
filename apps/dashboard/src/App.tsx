@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
 import { useAppSelector } from "./store";
 import AppRoutes from "./routes";
@@ -15,10 +15,9 @@ import { useAuth } from "./hooks/useAuth";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 
-// Terminal verification and monitoring services
-import { terminalVerifier } from "./utils/terminal-verify";
-import { terminalSync } from "./services/terminal-sync";
-import { performanceMonitor } from "./utils/performance-monitor";
+// Terminal services removed - not part of application
+// Performance monitor disabled due to performance issues
+// import { performanceMonitor } from "./utils/performance-monitor";
 
 export default function App() {
   const role = useAppSelector((s) => s.user.role);
@@ -26,80 +25,42 @@ export default function App() {
   const loading = useAppSelector((s) => s.ui.loading);
   const [consentGiven, setConsentGiven] = React.useState(false);
   const [showConsent, setShowConsent] = React.useState(false);
+  const navigate = useNavigate();
 
   // Initialize authentication and persistence
   useAuth();
 
-  // Initialize terminal services when authenticated
+  // Performance monitoring disabled to improve app performance
+  // The monitoring itself was causing severe slowdowns (20-30 second renders)
   React.useEffect(() => {
+    // Temporarily disabled performance monitoring
+    // Uncomment below to re-enable when performance issues are resolved
+    /*
     if (isAuthenticated) {
-      console.log('🚀 Initializing Terminal 2 services');
+      console.log('🚀 Initializing performance monitoring');
       
-      // Initialize terminal sync service
-      terminalSync.initialize().then(() => {
-        console.log('✅ Terminal sync service initialized');
-        
-        // Start terminal verification monitoring
-        if (!terminalVerifier.isMonitoring()) {
-          terminalVerifier.startMonitoring();
-          console.log('✅ Terminal verification monitoring started');
-        }
-        
-        // Start performance monitoring
-        if (!performanceMonitor.isRunning()) {
-          performanceMonitor.startMonitoring();
-          console.log('✅ Performance monitoring started');
-        }
-        
-        // Set up cross-terminal communication handlers
-        terminalSync.on('message:verification_request', (payload: any) => {
-          console.log('📨 Received verification request from', payload.from);
-          terminalVerifier.runVerification().catch(error => {
-            console.error('❌ Verification request failed:', error);
-          });
-        });
-        
-        terminalSync.on('performance_alert', (alert: any) => {
-          console.warn('⚠️ Performance alert received:', alert);
-          // Could trigger UI notifications here
-        });
-        
-        terminalSync.on('system_alert', (alert: any) => {
-          console.warn('🚨 System alert received:', alert);
-          // Could trigger UI notifications here
-        });
-        
-      }).catch(error => {
-        console.error('❌ Failed to initialize terminal sync:', error);
-        // Fallback: still try to start individual services
-        if (!terminalVerifier.isMonitoring()) {
-          terminalVerifier.startMonitoring();
-        }
-        if (!performanceMonitor.isRunning()) {
-          performanceMonitor.startMonitoring();
-        }
-      });
+      // Start performance monitoring
+      if (!performanceMonitor.isRunning()) {
+        performanceMonitor.startMonitoring();
+        console.log('✅ Performance monitoring started');
+      }
     } else {
       // Clean up services when not authenticated
-      if (terminalVerifier.isMonitoring()) {
-        terminalVerifier.stopMonitoring();
-        console.log('🛑 Terminal verification monitoring stopped');
-      }
       if (performanceMonitor.isRunning()) {
         performanceMonitor.stopMonitoring();
         console.log('🛑 Performance monitoring stopped');
       }
     }
+    */
     
     // Cleanup on unmount
     return () => {
-      if (terminalVerifier.isMonitoring()) {
-        terminalVerifier.stopMonitoring();
-      }
+      // Disabled for now
+      /*
       if (performanceMonitor.isRunning()) {
         performanceMonitor.stopMonitoring();
       }
-      terminalSync.shutdown();
+      */
     };
   }, [isAuthenticated]);
 
@@ -119,6 +80,8 @@ export default function App() {
     if (accepted) {
       localStorage.setItem("coppa_consent", "true");
       setConsentGiven(true);
+      // Navigate to dashboard after consent is accepted
+      navigate('/dashboard');
     }
     setShowConsent(false);
   };

@@ -259,6 +259,8 @@ def _get_cors_origins():
             "http://127.0.0.1:5178",
             "http://localhost:5179",
             "http://127.0.0.1:5179",
+            "http://localhost:8008",
+            "http://127.0.0.1:8008",
         ]
     else:
         # Production: Must be explicitly configured
@@ -469,6 +471,12 @@ class Settings:
         self.cors_origins = ALLOWED_ORIGINS  # Alias for compatibility
         self.rate_limit_per_minute = RATE_LIMIT_PER_MINUTE
         self.cache_ttl_seconds = CACHE_TTL_SECONDS
+        
+        # Demo Authentication
+        self.DEMO_USERNAME = os.getenv("DEMO_USERNAME", "demo@example.com")
+        self.DEMO_PASSWORD = os.getenv("DEMO_PASSWORD", "demo123")
+        self.demo_username = self.DEMO_USERNAME  # lowercase alias
+        self.demo_password = self.DEMO_PASSWORD  # lowercase alias
         
         # Nested configurations
         self.llm = LLMConfig()

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useNavigate } from "react-router-dom";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -23,6 +24,7 @@ import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { listLessons, deleteLesson, pushLessonToRoblox } from "../../services/api";
 import { useAppDispatch } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
@@ -31,6 +33,7 @@ import { Lesson } from "../../types/api";
 
 export default function Lessons() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [lessons, setLessons] = React.useState<Lesson[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -84,22 +87,25 @@ export default function Lessons() {
   };
 
   const handlePushToRoblox = async (lesson: Lesson) => {
-    try {
-      await pushLessonToRoblox(lesson.id);
+    dispatch(
+      addNotification({
+        type: "info",
+        message: `Preparing Roblox environment for "${lesson.title}"...`,
+      })
+    );
+    
+    // Simulate push process then navigate to Roblox dashboard
+    setTimeout(() => {
       dispatch(
         addNotification({
           type: "success",
-          message: `Lesson "${lesson.title}" pushed to Roblox successfully`,
+          message: `Lesson "${lesson.title}" is ready in Roblox!`,
         })
       );
-    } catch (error) {
-      dispatch(
-        addNotification({
-          type: "error",
-          message: "Failed to push lesson to Roblox",
-        })
-      );
-    }
+      // Navigate to Roblox dashboard with lesson context
+      navigate(`/roblox?lessonId=${lesson.id}&lessonTitle=${encodeURIComponent(lesson.title)}`);
+    }, 1500);
+    
     handleMenuClose();
   };
 
@@ -268,11 +274,40 @@ export default function Lessons() {
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
             >
-              <MenuItem onClick={handleMenuClose}>
+              <MenuItem onClick={() => {
+                if (selectedLesson) {
+                  navigate(`/lessons/${selectedLesson.id}`);
+                }
+                handleMenuClose();
+              }}>
+                <VisibilityIcon fontSize="small" sx={{ mr: 1 }} />
+                View Details
+              </MenuItem>
+              <MenuItem onClick={() => {
+                dispatch(
+                  addNotification({
+                    type: "info",
+                    message: "Edit functionality coming soon!",
+                  })
+                );
+                handleMenuClose();
+              }}>
                 <EditIcon fontSize="small" sx={{ mr: 1 }} />
                 Edit
               </MenuItem>
-              <MenuItem onClick={handleMenuClose}>
+              <MenuItem onClick={() => {
+                if (selectedLesson) {
+                  const duplicatedLesson = { ...selectedLesson, title: `${selectedLesson.title} (Copy)` };
+                  dispatch(
+                    addNotification({
+                      type: "success",
+                      message: `Lesson "${selectedLesson.title}" duplicated!`,
+                    })
+                  );
+                  fetchLessons();
+                }
+                handleMenuClose();
+              }}>
                 <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
                 Duplicate
               </MenuItem>

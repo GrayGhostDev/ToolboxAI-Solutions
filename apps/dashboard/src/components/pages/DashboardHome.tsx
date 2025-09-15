@@ -23,6 +23,8 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import SchoolIcon from "@mui/icons-material/School";
+import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 import { ROUTES } from "../../config/routes";
 import CreateLessonDialog from "../dialogs/CreateLessonDialog";
 import RealTimeAnalytics from "../widgets/RealTimeAnalytics";
@@ -70,9 +72,13 @@ export function DashboardHome({ role }: { role?: UserRole }) {
     void loadDashboardData();
   }, [loadDashboardData]);
 
-  // Simulate XP gain for demo
+  // Navigate to Play page for students
   const handleCompleteTask = () => {
-    dispatch(addXP({ amount: 25, reason: "Completed daily task", source: "achievement" }));
+    if (effectiveRole === 'student') {
+      navigate('/play');
+    } else {
+      dispatch(addXP({ amount: 25, reason: "Completed daily task", source: "achievement" }));
+    }
   };
 
   if (loading) {
@@ -186,16 +192,18 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Button 
                       variant="contained" 
                       color="secondary"
-                      onClick={() => navigate(ROUTES.REPORTS)}
+                      startIcon={<SportsEsportsIcon />}
+                      onClick={() => navigate('/gameplay-replay')}
                     >
-                      View Reports
+                      Watch Gameplay
                     </Button>
                     <Button 
                       variant="outlined" 
                       sx={{ color: "white", borderColor: "white" }}
-                      onClick={() => navigate(ROUTES.MESSAGES)}
+                      startIcon={<AssessmentIcon />}
+                      onClick={() => navigate(ROUTES.REPORTS)}
                     >
-                      Message Teacher
+                      View Reports
                     </Button>
                   </>
                 )}

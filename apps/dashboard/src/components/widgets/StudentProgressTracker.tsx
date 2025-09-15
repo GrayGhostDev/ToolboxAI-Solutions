@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -25,6 +26,11 @@ import {
   CircularProgress,
   TextField,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from '@mui/material';
 import {
   TrendingUp,
@@ -38,9 +44,12 @@ import {
   Visibility,
   Assignment,
   Timeline,
+  Close,
 } from '@mui/icons-material';
 import useRealTimeData from '../../hooks/useRealTimeData';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
+import { useAppDispatch } from '../../store';
+import { addNotification } from '../../store/slices/uiSlice';
 
 interface Student {
   id: string;
@@ -70,9 +79,12 @@ interface ProgressMetrics {
 }
 
 const StudentProgressTracker: React.FC = () => {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { isConnected } = useWebSocketContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [studentDetailsOpen, setStudentDetailsOpen] = useState(false);
   
   // Use real-time data hook for student progress
   const { data: progressData, loading, refetch } = useRealTimeData<any>('student-progress', {
@@ -409,18 +421,41 @@ const anyProgress: any = progressData as any;
                         <Tooltip title="View Details">
                           <IconButton
                             size="small"
-                            onClick={() => setSelectedStudent(student)}
+                            onClick={() => {
+                              setSelectedStudent(student);
+                              setStudentDetailsOpen(true);
+                            }}
                           >
                             <Visibility />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="View Assignments">
-                          <IconButton size="small">
+                          <IconButton 
+                            size="small"
+                            onClick={() => {
+                              dispatch(addNotification({
+                                type: 'info',
+                                message: `Loading assignments for ${student.name}...`
+                              }));
+                              // Navigate to assessments page with student filter
+                              navigate(`/assessments?studentId=${student.id}&studentName=${encodeURIComponent(student.name)}`);
+                            }}
+                          >
                             <Assignment />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="View Timeline">
-                          <IconButton size="small">
+                          <IconButton 
+                            size="small"
+                            onClick={() => {
+                              dispatch(addNotification({
+                                type: 'info',
+                                message: `Loading progress timeline for ${student.name}...`
+                              }));
+                              // Navigate to progress page with student filter
+                              navigate(`/progress?studentId=${student.id}&view=timeline`);
+                            }}
+                          >
                             <Timeline />
                           </IconButton>
                         </Tooltip>
@@ -444,6 +479,152 @@ const anyProgress: any = progressData as any;
           />
         </Box>
       )}
+
+      {/* Student Details Dialog */}
+      <Dialog 
+        open={studentDetailsOpen} 
+        onClose={() => setStudentDetailsOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6">
+              {selectedStudent?.name} - Progress Details
+            </Typography>
+            <IconButton onClick={() => setStudentDetailsOpen(false)}>
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedStudent && (
+            <Grid container spacing={3}>
+              {/* Student Overview */}
+              <Grid item xs={12}>
+                <Box display="flex" alignItems="center" gap={2} mb={2}>
+                  <Avatar sx={{ width: 64, height: 64 }}>
+                    {selectedStudent.name[0]}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h5">{selectedStudent.name}</Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Grade {selectedStudent.grade} • Level {selectedStudent.level}
+                    </Typography>
+                    <Chip 
+                      label={selectedStudent.status} 
+                      size="small"
+                      sx={{ 
+                        mt: 1,
+                        bgcolor: getStatusColor(selectedStudent.status),
+                        color: 'white'
+                      }}
+                    />
+                  </Box>
+                </Box>
+              </Grid>
+
+              {/* Progress Metrics */}
+              <Grid item xs={12} md={4}>
+                <Paper sx={{ p: 2, textAlign: 'center' }}>
+                  <Typography variant="caption" color="textSecondary">
+                    Overall Progress
+                  </Typography>
+                  <Typography variant="h4" color="primary">
+                    {selectedStudent.overallProgress}%
+                  </Typography>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={selectedStudent.overallProgress}
+                    sx={{ mt: 1 }}
+                  />
+                </Paper>
+              </Grid>
+              
+              <Grid item xs={12} md={4}>
+                <Paper sx={{ p: 2, textAlign: 'center' }}>
+                  <Typography variant="caption" color="textSecondary">
+                    XP Points
+                  </Typography>
+                  <Typography variant="h4">
+                    {selectedStudent.xp}
+                  </Typography>
+                </Paper>
+              </Grid>
+              
+              <Grid item xs={12} md={4}>
+                <Paper sx={{ p: 2, textAlign: 'center' }}>
+                  <Typography variant="caption" color="textSecondary">
+                    Current Streak
+                  </Typography>
+                  <Typography variant="h4">
+                    {selectedStudent.streak} 🔥
+                  </Typography>
+                </Paper>
+              </Grid>
+
+              {/* Subject Progress */}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom>
+                  Subject Progress
+                </Typography>
+                <List>
+                  {selectedStudent.subjects.map((subject, index) => (
+                    <ListItem key={index}>
+                      <ListItemText 
+                        primary={subject.name}
+                        secondary={`Last Score: ${subject.lastScore}%`}
+                      />
+                      <Box sx={{ width: '50%', display: 'flex', alignItems: 'center' }}>
+                        <Box sx={{ width: '100%', mr: 1 }}>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={subject.progress}
+                            color={subject.progress >= 70 ? 'success' : 'warning'}
+                          />
+                        </Box>
+                        <Typography variant="body2" color="textSecondary">
+                          {subject.progress}%
+                        </Typography>
+                      </Box>
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid>
+
+              {/* Badges */}
+              {selectedStudent.badges.length > 0 && (
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom>
+                    Badges Earned
+                  </Typography>
+                  <Box display="flex" gap={1} flexWrap="wrap">
+                    {selectedStudent.badges.map((badge, index) => (
+                      <Chip key={index} label={badge} />
+                    ))}
+                  </Box>
+                </Grid>
+              )}
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => {
+              setStudentDetailsOpen(false);
+              navigate(`/progress?studentId=${selectedStudent?.id}`);
+            }}
+          >
+            View Full Progress Report
+          </Button>
+          <Button 
+            variant="contained"
+            onClick={() => setStudentDetailsOpen(false)}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

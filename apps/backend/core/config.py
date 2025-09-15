@@ -89,6 +89,15 @@ class Settings:
     def JWT_REFRESH_TOKEN_EXPIRE_DAYS(self):
         return self._config.JWT_REFRESH_TOKEN_EXPIRE_DAYS
     
+    # Demo Authentication
+    @property
+    def DEMO_USERNAME(self):
+        return getattr(self._config, 'DEMO_USERNAME', 'demo@example.com')
+    
+    @property
+    def DEMO_PASSWORD(self):
+        return getattr(self._config, 'DEMO_PASSWORD', 'demo123')
+    
     # Educational Settings
     @property
     def SUPPORTED_SUBJECTS(self):

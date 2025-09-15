@@ -1,8 +1,15 @@
 --[[
     ToolboxAI Terrain Generator Module
-    Version: 1.0.0
+    Version: 2.0.0 - Updated for Roblox 2025
     Description: Generates educational terrain based on AI-generated specifications
                  Supports various terrain types, materials, and generation methods
+
+    Features:
+    - Dynamic terrain generation with AI integration
+    - Advanced noise algorithms and biome support
+    - Memory-efficient chunked loading
+    - Backend API integration for terrain data
+    - Educational terrain templates
 --]]
 
 local TerrainGenerator = {}
@@ -11,6 +18,9 @@ TerrainGenerator.__index = TerrainGenerator
 -- Services
 local workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Configuration
 local CONFIG = {
@@ -18,6 +28,10 @@ local CONFIG = {
     DEFAULT_RESOLUTION = 4,
     MAX_REGION_SIZE = 2048,
     CHUNK_SIZE = 64,
+
+    -- Backend integration (2025)
+    API_BASE_URL = "http://127.0.0.1:8008",
+    TERRAIN_ENDPOINT = "/api/v1/content/terrain",
     MATERIALS_MAP = {
         ["grass"] = Enum.Material.Grass,
         ["rock"] = Enum.Material.Rock,
@@ -684,6 +698,72 @@ function TerrainGenerator:exportData()
         timestamp = os.time(),
         statistics = self:getStatistics()
     }
+end
+
+-- Save terrain to backend API (2025)
+function TerrainGenerator:saveToBackend(terrainName, description, tags)
+    local terrainData = self:exportData()
+    local payload = {
+        name = terrainName or "Generated Terrain",
+        description = description or "AI-generated educational terrain",
+        tags = tags or {"educational", "terrain", "auto-generated"},
+        data = terrainData,
+        metadata = {
+            placeId = game.PlaceId,
+            universeId = game.GameId,
+            generator = "TerrainGenerator 2.0",
+            timestamp = os.time()
+        }
+    }
+
+    spawn(function()
+        local success, response = pcall(function()
+            return HttpService:RequestAsync({
+                Url = CONFIG.API_BASE_URL .. CONFIG.TERRAIN_ENDPOINT,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["X-Terrain-Generator"] = "true"
+                },
+                Body = HttpService:JSONEncode(payload)
+            })
+        end)
+
+        if success and response.StatusCode == 200 then
+            print("[TerrainGenerator] Terrain saved to backend successfully")
+            local result = HttpService:JSONDecode(response.Body)
+            -- Could fire an event or callback here
+        else
+            warn("[TerrainGenerator] Failed to save terrain to backend:",
+                 response and response.StatusMessage or "Unknown error")
+        end
+    end)
+end
+
+-- Load terrain template from backend
+function TerrainGenerator:loadFromBackend(terrainId, callback)
+    spawn(function()
+        local success, response = pcall(function()
+            return HttpService:RequestAsync({
+                Url = CONFIG.API_BASE_URL .. CONFIG.TERRAIN_ENDPOINT .. "/" .. terrainId,
+                Method = "GET",
+                Headers = {
+                    ["X-Terrain-Generator"] = "true"
+                }
+            })
+        end)
+
+        if success and response.StatusCode == 200 then
+            local terrainData = HttpService:JSONDecode(response.Body)
+            if callback then
+                callback(true, terrainData)
+            end
+        else
+            if callback then
+                callback(false, "Failed to load terrain from backend")
+            end
+        end
+    end)
 end
 
 return TerrainGenerator

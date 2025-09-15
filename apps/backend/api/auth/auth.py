@@ -546,39 +546,89 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
             )
     
     # Fallback to mock database lookup for testing
-    mock_users = {
-        "teacher1": {
-            "password_hash": hash_password("teacher123"),
-            "id": "teacher-001",
-            "email": "teacher@toolboxai.com",
-            "role": "teacher"
-        },
-        "student1": {
-            "password_hash": hash_password("student123"),
-            "id": "student-001",
-            "email": "student@toolboxai.com",
-            "role": "student"
-        },
-        "admin": {
-            "password_hash": hash_password("admin123"),
+    # Store users by both username and email for flexible lookup
+    mock_users_data = [
+        {
+            "username": "admin@toolboxai.com",
+            "password_hash": hash_password("Admin123!"),
             "id": "admin-001",
             "email": "admin@toolboxai.com",
             "role": "admin"
         },
-        "john_teacher": {
+        {
+            "username": "jane.smith@school.edu",
             "password_hash": hash_password("Teacher123!"),
-            "id": "teacher-002",
-            "email": "john@teacher.com",
+            "id": "teacher-001",
+            "email": "jane.smith@school.edu",
             "role": "teacher"
         },
-        "alice_student": {
+        {
+            "username": "alex.johnson@student.edu",
             "password_hash": hash_password("Student123!"),
+            "id": "student-001",
+            "email": "alex.johnson@student.edu",
+            "role": "student"
+        },
+        # Keep some legacy users for backward compatibility
+        {
+            "username": "teacher1",
+            "password_hash": hash_password("teacher123"),
+            "id": "teacher-002",
+            "email": "teacher@toolboxai.com",
+            "role": "teacher"
+        },
+        {
+            "username": "student1",
+            "password_hash": hash_password("student123"),
             "id": "student-002",
-            "email": "alice@student.com",
+            "email": "student@toolboxai.com",
             "role": "student"
         }
+    ]
+    
+    # Create lookup dictionaries for username, email, and short username
+    mock_users = {}
+    for user in mock_users_data:
+        # Add by full username
+        mock_users[user["username"]] = user
+        # Also add by email if different from username
+        if user["email"] != user["username"]:
+            mock_users[user["email"]] = user
+        
+        # Add short username versions (everything before @)
+        if "@" in user["username"]:
+            short_username = user["username"].split("@")[0]
+            # Only add if it doesn't conflict with existing entries
+            if short_username not in mock_users:
+                mock_users[short_username] = user
+    
+    # Special case: map "admin" to admin@toolboxai.com (overrides any conflicts)
+    mock_users["admin"] = {
+        "username": "admin@toolboxai.com",
+        "password_hash": hash_password("Admin123!"),
+        "id": "admin-001",
+        "email": "admin@toolboxai.com",
+        "role": "admin"
     }
     
+    # Special case: map short names to full emails for dashboard users
+    mock_users["jane.smith"] = {
+        "username": "jane.smith@school.edu",
+        "password_hash": hash_password("Teacher123!"),
+        "id": "teacher-001",
+        "email": "jane.smith@school.edu",
+        "role": "teacher"
+    }
+    
+    mock_users["alex.johnson"] = {
+        "username": "alex.johnson@student.edu",
+        "password_hash": hash_password("Student123!"),
+        "id": "student-001",
+        "email": "alex.johnson@student.edu",
+        "role": "student"
+    }
+    
+    # Try to find user by username or email
     user_data = mock_users.get(username)
     if not user_data:
         return None
@@ -588,7 +638,7 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
     
     return User(
         id=user_data["id"],
-        username=username,
+        username=user_data["username"],
         email=user_data["email"],
         role=user_data["role"]
     )

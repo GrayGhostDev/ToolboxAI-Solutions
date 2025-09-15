@@ -359,7 +359,7 @@ class ApiClient {
   async getWeeklyXP(studentId?: string): Promise<ProgressPoint[]> {
     return this.request<ProgressPoint[]>({
       method: "GET",
-      url: "/analytics/weekly_xp",
+      url: "/api/v1/analytics/weekly_xp",
       params: { studentId },
     });
   }
@@ -367,7 +367,7 @@ class ApiClient {
   async getSubjectMastery(studentId?: string): Promise<{ subject: string; mastery: number }[]> {
     return this.request<{ subject: string; mastery: number }[]>({
       method: "GET",
-      url: "/analytics/subject_mastery",
+      url: "/api/v1/analytics/subject_mastery",
       params: { studentId },
     });
   }
@@ -582,7 +582,7 @@ class ApiClient {
   async getLeaderboard(classId?: string, timeframe?: "daily" | "weekly" | "monthly" | "all"): Promise<LeaderboardEntry[]> {
     return this.request<LeaderboardEntry[]>({
       method: "GET",
-      url: "/gamification/leaderboard",
+      url: "/api/v1/gamification/leaderboard",
       params: { classId, timeframe },
     });
   }
@@ -607,6 +607,65 @@ class ApiClient {
     return this.request<{ joinUrl: string }>({
       method: "GET",
       url: `/roblox/join/${classId}`,
+    });
+  }
+
+  // New Roblox OAuth and template methods
+  async initRobloxOAuth(): Promise<{ oauth_url: string; state: string }> {
+    return this.request<{ oauth_url: string; state: string }>({
+      method: "GET",
+      url: "/roblox/auth/login",
+    });
+  }
+
+  async getRobloxTemplates(category?: string, subject?: string): Promise<any[]> {
+    return this.request<any[]>({
+      method: "GET",
+      url: "/roblox/templates",
+      params: { category, subject },
+    });
+  }
+
+  async createFromRobloxTemplate(templateId: number, data: any): Promise<any> {
+    return this.request<any>({
+      method: "POST",
+      url: `/roblox/templates/${templateId}/create`,
+      data,
+    });
+  }
+
+  async getRobloxSessions(): Promise<any[]> {
+    return this.request<any[]>({
+      method: "GET",
+      url: "/roblox/sessions",
+    });
+  }
+
+  async getRobloxWorldAnalytics(worldId: string): Promise<any> {
+    return this.request<any>({
+      method: "GET",
+      url: `/roblox/analytics/${worldId}`,
+    });
+  }
+
+  async syncRobloxWorld(worldId: string): Promise<any> {
+    return this.request<any>({
+      method: "POST",
+      url: `/roblox/sync/${worldId}`,
+    });
+  }
+
+  async checkRobloxPluginStatus(): Promise<{ connected: boolean; version?: string }> {
+    return this.request<{ connected: boolean; version?: string }>({
+      method: "GET",
+      url: "/roblox/plugin/status",
+    });
+  }
+
+  async getRobloxPluginInstallInfo(): Promise<any> {
+    return this.request<any>({
+      method: "POST",
+      url: "/roblox/plugin/install",
     });
   }
 
@@ -704,14 +763,14 @@ class ApiClient {
   async getComplianceStatus(): Promise<ComplianceStatus> {
     return this.request<ComplianceStatus>({
       method: "GET",
-      url: "/compliance/status",
+      url: "/api/v1/analytics/compliance/status",
     });
   }
 
   async recordConsent(type: "coppa" | "ferpa" | "gdpr", userId: string): Promise<void> {
     return this.request<void>({
       method: "POST",
-      url: "/compliance/consent",
+      url: "/api/v1/compliance/consent",
       data: { 
         consent_type: type,  // Backend expects 'consent_type' not 'type'
         granted: true,       // Backend requires this field
@@ -782,6 +841,14 @@ export const getLeaderboard = apiClient.getLeaderboard.bind(apiClient);
 export const listRobloxWorlds = apiClient.listRobloxWorlds.bind(apiClient);
 export const pushLessonToRoblox = apiClient.pushLessonToRoblox.bind(apiClient);
 export const getRobloxJoinUrl = apiClient.getRobloxJoinUrl.bind(apiClient);
+export const initRobloxOAuth = apiClient.initRobloxOAuth.bind(apiClient);
+export const getRobloxTemplates = apiClient.getRobloxTemplates.bind(apiClient);
+export const createFromRobloxTemplate = apiClient.createFromRobloxTemplate.bind(apiClient);
+export const getRobloxSessions = apiClient.getRobloxSessions.bind(apiClient);
+export const getRobloxWorldAnalytics = apiClient.getRobloxWorldAnalytics.bind(apiClient);
+export const syncRobloxWorld = apiClient.syncRobloxWorld.bind(apiClient);
+export const checkRobloxPluginStatus = apiClient.checkRobloxPluginStatus.bind(apiClient);
+export const getRobloxPluginInstallInfo = apiClient.getRobloxPluginInstallInfo.bind(apiClient);
 export const getComplianceStatus = apiClient.getComplianceStatus.bind(apiClient);
 export const recordConsent = apiClient.recordConsent.bind(apiClient);
 export const listMessages = apiClient.listMessages.bind(apiClient);
@@ -904,7 +971,7 @@ export const listSchools = async (params?: {
 }) => {
   const schools = await apiClient['request']<School[]>({
     method: 'GET',
-    url: `/schools/`,
+    url: `/api/v1/schools/`,
     params,
   });
   
@@ -922,14 +989,14 @@ export const listSchools = async (params?: {
 export const getSchool = async (schoolId: string) => {
   return apiClient['request']<School>({
     method: 'GET',
-    url: `/schools/${schoolId}`,
+    url: `/api/v1/schools/${schoolId}`,
   });
 };
 
 export const createSchool = async (data: SchoolCreate) => {
   const school = await apiClient['request']<School>({
     method: 'POST',
-    url: `/schools/`,
+    url: `/api/v1/schools/`,
     data,
   });
   
@@ -947,7 +1014,7 @@ export const createSchool = async (data: SchoolCreate) => {
 export const updateSchool = async (schoolId: string, data: Partial<SchoolCreate>) => {
   const school = await apiClient['request']<School>({
     method: 'PUT',
-    url: `/schools/${schoolId}`,
+    url: `/api/v1/schools/${schoolId}`,
     data,
   });
   
@@ -965,21 +1032,21 @@ export const updateSchool = async (schoolId: string, data: Partial<SchoolCreate>
 export const deleteSchool = async (schoolId: string) => {
   return apiClient['request']<void>({
     method: 'DELETE',
-    url: `/schools/${schoolId}`,
+    url: `/api/v1/schools/${schoolId}`,
   });
 };
 
 export const activateSchool = async (schoolId: string) => {
   return apiClient['request']<School>({
     method: 'POST',
-    url: `/schools/${schoolId}/activate`,
+    url: `/api/v1/schools/${schoolId}/activate`,
   });
 };
 
 export const getSchoolStats = async (schoolId: string) => {
   return apiClient['request']<any>({
     method: 'GET',
-    url: `/schools/${schoolId}/stats`,
+    url: `/api/v1/schools/${schoolId}/stats`,
   });
 };
 
@@ -1220,7 +1287,7 @@ export const listUsers = async (params?: {
 }) => {
   return apiClient['request']<User[]>({
     method: 'GET',
-    url: `/users/`,
+    url: `/api/v1/users/`,
     params,
   });
 };
@@ -1228,7 +1295,7 @@ export const listUsers = async (params?: {
 export const getUser = async (userId: string) => {
   return apiClient['request']<User>({
     method: 'GET',
-    url: `/users/${userId}`,
+    url: `/api/v1/users/${userId}`,
   });
 };
 
@@ -1249,7 +1316,7 @@ export const createUser = async (data: UserCreate) => {
   
   return apiClient['request']<User>({
     method: 'POST',
-    url: `/users/`,
+    url: `/api/v1/users/`,
     data: transformedData,
   });
 };
@@ -1269,7 +1336,7 @@ export const updateUser = async (userId: string, data: UserUpdate) => {
   
   return apiClient['request']<User>({
     method: 'PUT',
-    url: `/users/${userId}`,
+    url: `/api/v1/users/${userId}`,
     data: transformedData,
   });
 };
@@ -1277,20 +1344,20 @@ export const updateUser = async (userId: string, data: UserUpdate) => {
 export const deleteUser = async (userId: string) => {
   return apiClient['request']<void>({
     method: 'DELETE',
-    url: `/users/${userId}`,
+    url: `/api/v1/users/${userId}`,
   });
 };
 
 export const suspendUser = async (userId: string) => {
   return apiClient['request']<User>({
     method: 'PUT',
-    url: `/users/${userId}/suspend`,
+    url: `/api/v1/users/${userId}/suspend`,
   });
 };
 
 export const getMyProfile = async () => {
   return apiClient['request']<User>({
     method: 'GET',
-    url: `/users/me/profile`,
+    url: `/api/v1/users/me/profile`,
   });
 };

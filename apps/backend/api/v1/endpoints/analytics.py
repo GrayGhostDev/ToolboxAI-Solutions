@@ -411,3 +411,257 @@ async def create_school(
         "message": "School created successfully",
         "school": new_school
     }
+
+
+# Missing analytics endpoints for Reports page
+@analytics_router.get("/trends/engagement")
+async def get_engagement_trends(
+    start_date: datetime = Query(..., description="Start date for trends"),
+    end_date: datetime = Query(..., description="End date for trends"),
+    interval: str = Query("day", description="Interval for data points"),
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get engagement trend data"""
+    
+    # Generate trend data points
+    trends = []
+    current = start_date
+    
+    while current <= end_date:
+        trends.append({
+            "date": current.isoformat(),
+            "value": random.uniform(70, 95),
+            "label": current.strftime("%b %d")
+        })
+        
+        if interval == "day":
+            current += timedelta(days=1)
+        elif interval == "week":
+            current += timedelta(weeks=1)
+        elif interval == "month":
+            current += timedelta(days=30)
+        else:
+            current += timedelta(days=1)
+    
+    # Add additional engagement metrics
+    summary = {
+        "average_engagement": 82.5,
+        "peak_engagement": 95.2,
+        "low_engagement": 68.3,
+        "trend_direction": "up",
+        "change_percentage": 5.4
+    }
+    
+    # Breakdown by activity type
+    activity_breakdown = {
+        "video_lessons": 35.2,
+        "interactive_exercises": 28.4,
+        "quizzes": 22.3,
+        "discussions": 14.1
+    }
+    
+    return {
+        "trends": trends,
+        "summary": summary,
+        "activity_breakdown": activity_breakdown,
+        "period": {
+            "start": start_date.isoformat(),
+            "end": end_date.isoformat(),
+            "interval": interval
+        }
+    }
+
+@analytics_router.get("/trends/content")
+async def get_content_trends(
+    start_date: datetime = Query(..., description="Start date for trends"),
+    end_date: datetime = Query(..., description="End date for trends"),
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get content consumption trends"""
+    
+    # Generate content trends
+    content_trends = []
+    current = start_date
+    
+    while current <= end_date:
+        content_trends.append({
+            "date": current.isoformat(),
+            "views": random.randint(100, 500),
+            "completions": random.randint(50, 300),
+            "interactions": random.randint(200, 800),
+            "label": current.strftime("%b %d")
+        })
+        current += timedelta(days=1)
+    
+    # Popular content
+    popular_content = [
+        {
+            "id": "content1",
+            "title": "Introduction to Algebra",
+            "type": "video",
+            "views": 1523,
+            "completion_rate": 85.2,
+            "rating": 4.8
+        },
+        {
+            "id": "content2",
+            "title": "Physics Lab: Forces and Motion",
+            "type": "interactive",
+            "views": 1245,
+            "completion_rate": 78.9,
+            "rating": 4.6
+        },
+        {
+            "id": "content3",
+            "title": "World History Timeline",
+            "type": "article",
+            "views": 987,
+            "completion_rate": 92.1,
+            "rating": 4.7
+        }
+    ]
+    
+    # Content performance metrics
+    performance = {
+        "total_views": sum(d["views"] for d in content_trends),
+        "total_completions": sum(d["completions"] for d in content_trends),
+        "average_completion_rate": 82.4,
+        "average_rating": 4.5,
+        "total_content_items": 256,
+        "active_content_items": 189
+    }
+    
+    return {
+        "trends": content_trends,
+        "popular_content": popular_content,
+        "performance": performance,
+        "period": {
+            "start": start_date.isoformat(),
+            "end": end_date.isoformat()
+        }
+    }
+
+@analytics_router.get("/dashboard")
+async def get_dashboard_analytics(
+    start_date: datetime = Query(..., description="Start date for analytics"),
+    end_date: datetime = Query(..., description="End date for analytics"),
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get dashboard analytics for the specified date range"""
+    
+    # Generate mock analytics data
+    overview = {
+        "total_students": 487,
+        "active_students": 423,
+        "total_classes": 28,
+        "average_completion": 78.5,
+        "average_score": 85.3,
+        "total_assignments": 156,
+        "completed_assignments": 134,
+        "pending_submissions": 22
+    }
+    
+    metrics = [
+        {
+            "name": "Student Engagement",
+            "value": 87.3,
+            "change": 5.2,
+            "trend": "up"
+        },
+        {
+            "name": "Assignment Completion",
+            "value": 78.5,
+            "change": -2.1,
+            "trend": "down"
+        },
+        {
+            "name": "Average Score",
+            "value": 85.3,
+            "change": 1.8,
+            "trend": "up"
+        },
+        {
+            "name": "Active Time",
+            "value": 4.5,
+            "change": 0.3,
+            "trend": "up"
+        }
+    ]
+    
+    # Generate engagement trends
+    engagement_trends = []
+    current = start_date
+    while current <= end_date:
+        engagement_trends.append({
+            "date": current.isoformat(),
+            "value": random.uniform(70, 95),
+            "label": current.strftime("%b %d")
+        })
+        current += timedelta(days=1)
+    
+    # Top performers
+    top_performers = [
+        {
+            "id": "student1",
+            "name": "Emma Wilson",
+            "class": "Mathematics 101",
+            "score": 98.5,
+            "completion": 100,
+            "trend": "up"
+        },
+        {
+            "id": "student2",
+            "name": "Michael Chen",
+            "class": "Science 201",
+            "score": 96.2,
+            "completion": 98,
+            "trend": "up"
+        },
+        {
+            "id": "student3",
+            "name": "Sarah Johnson",
+            "class": "History 301",
+            "score": 94.8,
+            "completion": 95,
+            "trend": "stable"
+        }
+    ]
+    
+    # Recent activity
+    recent_activity = [
+        {
+            "type": "submission",
+            "student": "Alex Brown",
+            "assignment": "Chapter 5 Quiz",
+            "class": "Physics 202",
+            "time": (datetime.now() - timedelta(minutes=15)).isoformat(),
+            "score": 88
+        },
+        {
+            "type": "completion",
+            "student": "Lisa Martinez",
+            "assignment": "Essay on Climate Change",
+            "class": "Environmental Science",
+            "time": (datetime.now() - timedelta(minutes=30)).isoformat(),
+            "score": 92
+        },
+        {
+            "type": "started",
+            "student": "James Wilson",
+            "assignment": "Math Problem Set 4",
+            "class": "Algebra II",
+            "time": (datetime.now() - timedelta(hours=1)).isoformat()
+        }
+    ]
+    
+    return {
+        "overview": overview,
+        "metrics": metrics,
+        "trends": {
+            "engagement": engagement_trends,
+            "completion": [],
+            "scores": []
+        },
+        "top_performers": top_performers,
+        "recent_activity": recent_activity
+    }

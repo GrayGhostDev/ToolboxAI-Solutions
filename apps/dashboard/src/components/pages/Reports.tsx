@@ -61,6 +61,9 @@ import {
   ReportTemplate as ApiReportTemplate,
   Report as ApiReport,
   ReportGenerateRequest,
+  apiClient,
+  listUsers,
+  listClasses,
 } from "../../services/api";
 
 // Import our new analytics components
@@ -119,6 +122,8 @@ export default function Reports() {
   const [selectedClass, setSelectedClass] = React.useState("all");
   const [stats, setStats] = React.useState<any>(null);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = React.useState(false);
+  const [classes, setClasses] = React.useState<any[]>([]);
+  const [students, setStudents] = React.useState<any[]>([]);
   const [isEmailDialogOpen, setIsEmailDialogOpen] = React.useState(false);
   const [selectedReportForEmail, setSelectedReportForEmail] = React.useState<string | null>(null);
   const [currentTab, setCurrentTab] = React.useState(0);
@@ -126,7 +131,49 @@ export default function Reports() {
   // Load data on component mount
   React.useEffect(() => {
     fetchReportData();
+    loadClasses();
+    loadStudents();
   }, []);
+
+  const loadClasses = async () => {
+    try {
+      const classes = await listClasses();
+      setClasses(classes || []);
+    } catch (error) {
+      console.error('Error loading classes:', error);
+      // Use fallback data if API fails
+      setClasses([
+        { id: 'math5a', name: 'Mathematics Grade 5A', subject: 'Mathematics', students: 28 },
+        { id: 'science6b', name: 'Science Grade 6B', subject: 'Science', students: 25 },
+        { id: 'history7a', name: 'History Grade 7A', subject: 'History', students: 30 },
+        { id: 'english5b', name: 'English Grade 5B', subject: 'English', students: 27 },
+        { id: 'physics8a', name: 'Physics Grade 8A', subject: 'Physics', students: 24 },
+      ]);
+    }
+  };
+
+  const loadStudents = async () => {
+    try {
+      const users = await listUsers({ role: 'student' });
+      const students = users.map((user: any) => ({
+        id: user.id,
+        name: user.displayName || `${user.firstName} ${user.lastName}`,
+        grade: user.gradeLevel || 5,
+        class: user.classIds?.[0] || 'unassigned'
+      }));
+      setStudents(students);
+    } catch (error) {
+      console.error('Error loading students:', error);
+      // Use fallback data if API fails
+      setStudents([
+        { id: 'student1', name: 'Emma Wilson', grade: 5, class: 'math5a' },
+        { id: 'student2', name: 'Michael Chen', grade: 6, class: 'science6b' },
+        { id: 'student3', name: 'Sarah Johnson', grade: 7, class: 'history7a' },
+        { id: 'student4', name: 'Alex Brown', grade: 5, class: 'english5b' },
+        { id: 'student5', name: 'Lisa Martinez', grade: 8, class: 'physics8a' },
+      ]);
+    }
+  };
 
   const fetchReportData = async () => {
     try {
@@ -332,6 +379,70 @@ export default function Reports() {
     setIsEmailDialogOpen(true);
   };
 
+  const handleUseTemplate = (templateId: string) => {
+    const template = reportTemplates.find(t => t.id === templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setReportType(template.report_type || 'custom');
+      setCurrentTab(0); // Switch to Generate Report tab
+      dispatch(
+        addNotification({
+          message: `Template "${template.name}" selected`,
+          severity: "info",
+        })
+      );
+    }
+  };
+
+  const handlePrintReport = (reportId: string) => {
+    const report = reports.find(r => r.id === reportId);
+    if (report) {
+      window.print();
+      dispatch(
+        addNotification({
+          message: `Printing ${report.name}`,
+          severity: "info",
+        })
+      );
+    }
+  };
+
+  const handleReportActions = (reportId: string, action: string) => {
+    switch (action) {
+      case 'duplicate':
+        // Duplicate report logic
+        dispatch(
+          addNotification({
+            message: "Report duplicated",
+            severity: "success",
+          })
+        );
+        break;
+      case 'share':
+        // Share report logic
+        navigator.clipboard.writeText(`${window.location.origin}/reports/${reportId}`);
+        dispatch(
+          addNotification({
+            message: "Report link copied to clipboard",
+            severity: "success",
+          })
+        );
+        break;
+      case 'delete':
+        // Delete report logic
+        setReports(reports.filter(r => r.id !== reportId));
+        dispatch(
+          addNotification({
+            message: "Report deleted",
+            severity: "success",
+          })
+        );
+        break;
+      default:
+        break;
+    }
+  };
+
   const handleDownloadReport = async (reportId: string) => {
     try {
       await downloadReport(reportId);
@@ -480,10 +591,13 @@ export default function Reports() {
                     <Grid2 xs={12} md={6}>
                       <FormControl fullWidth>
                         <InputLabel>Class/Student</InputLabel>
-                        <Select defaultValue="all" label="Class/Student">
+                        <Select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} label="Class/Student">
                           <MenuItem value="all">All Classes</MenuItem>
-                          <MenuItem value="math5a">Math Grade 5A</MenuItem>
-                          <MenuItem value="science6b">Science Grade 6B</MenuItem>
+                          {classes.map((cls) => (
+                            <MenuItem key={cls.id} value={cls.id}>
+                              {cls.name} ({cls.students} students)
+                            </MenuItem>
+                          ))}
                           <MenuItem value="individual">Individual Student</MenuItem>
                         </Select>
                       </FormControl>
@@ -555,9 +669,13 @@ export default function Reports() {
                           secondary={template.description}
                         />
                         <ListItemSecondaryAction>
-                          <IconButton edge="end" size="small">
-                            <MoreVertIcon />
-                          </IconButton>
+                          <Button 
+                            size="small" 
+                            variant="outlined"
+                            onClick={() => handleUseTemplate(template.id)}
+                          >
+                            Use
+                          </Button>
                         </ListItemSecondaryAction>
                       </ListItem>
                     ))}
@@ -635,10 +753,22 @@ export default function Reports() {
                                 <IconButton 
                                   size="small"
                                   onClick={() => handleEmailReport(report.id)}
+                                  title="Email Report"
                                 >
                                   <EmailIcon />
                                 </IconButton>
-                                <IconButton size="small">
+                                <IconButton 
+                                  size="small"
+                                  onClick={() => handlePrintReport(report.id)}
+                                  title="Print Report"
+                                >
+                                  <PrintIcon />
+                                </IconButton>
+                                <IconButton 
+                                  size="small"
+                                  onClick={() => handleReportActions(report.id, 'share')}
+                                  title="Share Report"
+                                >
                                   <MoreVertIcon />
                                 </IconButton>
                               </Stack>

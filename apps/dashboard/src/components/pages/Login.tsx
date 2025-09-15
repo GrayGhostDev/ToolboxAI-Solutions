@@ -56,8 +56,15 @@ export default function Login() {
       localStorage.setItem(AUTH_TOKEN_KEY, accessToken);
       localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
       
-      // Connect WebSocket after successful login via Pusher
-      await connectWebSocket(accessToken);
+      // Try to connect WebSocket after successful login via Pusher
+      // Don't let WebSocket errors prevent login
+      try {
+        if (import.meta.env.VITE_ENABLE_WEBSOCKET === 'true') {
+          await connectWebSocket(accessToken);
+        }
+      } catch (wsError) {
+        console.warn('WebSocket connection failed, continuing without realtime features:', wsError);
+      }
       
       // Update Redux state
       dispatch(signInSuccess({

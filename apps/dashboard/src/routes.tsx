@@ -7,12 +7,14 @@ import Compliance from "./components/pages/Compliance";
 import Integrations from "./components/pages/Integrations";
 import Messages from "./components/pages/Messages";
 import Classes from "./components/pages/Classes";
+import ClassDetails from "./components/pages/ClassDetails";
 import Reports from "./components/pages/Reports";
 import Settings from "./components/pages/Settings";
 import Missions from "./components/pages/Missions";
 import Progress from "./components/pages/Progress";
 import Rewards from "./components/pages/Rewards";
 import Avatar from "./components/pages/Avatar";
+import GameplayReplay from "./components/pages/GameplayReplay";
 import Schools from "./components/pages/admin/Schools";
 import Users from "./components/pages/admin/Users";
 import Analytics from "./components/pages/admin/Analytics";
@@ -51,6 +53,14 @@ export default function AppRoutes() {
         element={
           <RoleGuard allow={["teacher", "admin"]}>
             <Classes />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/classes/:id"
+        element={
+          <RoleGuard allow={["teacher", "admin", "student", "parent"]}>
+            <ClassDetails />
           </RoleGuard>
         }
       />
@@ -173,6 +183,14 @@ export default function AppRoutes() {
         element={
           <RoleGuard allow={["parent", "teacher", "admin"]}>
             <Messages />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/gameplay-replay"
+        element={
+          <RoleGuard allow={["parent", "teacher", "admin"]}>
+            <GameplayReplay />
           </RoleGuard>
         }
       />

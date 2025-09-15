@@ -130,7 +130,7 @@ export function ContentMetrics({
         }),
         apiClient['request']<any>({
           method: 'GET',
-          url: '/analytics/subject_mastery',
+          url: '/api/v1/analytics/subject_mastery',
           params: { 
             time_range: timeRange 
           }

@@ -324,10 +324,10 @@ export default function Users() {
                 onChange={(e) => setRoleFilter(e.target.value)}
               >
                 <MenuItem value="all">All Roles</MenuItem>
-                <MenuItem value="Admin">Admin</MenuItem>
-                <MenuItem value="Teacher">Teacher</MenuItem>
-                <MenuItem value="Student">Student</MenuItem>
-                <MenuItem value="Parent">Parent</MenuItem>
+                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="teacher">Teacher</MenuItem>
+                <MenuItem value="student">Student</MenuItem>
+                <MenuItem value="parent">Parent</MenuItem>
               </Select>
             </FormControl>
           </Stack>
@@ -520,10 +520,10 @@ export default function Users() {
                 label="Role *"
                 onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
               >
-                <MenuItem value="Admin">Admin</MenuItem>
-                <MenuItem value="Teacher">Teacher</MenuItem>
-                <MenuItem value="Student">Student</MenuItem>
-                <MenuItem value="Parent">Parent</MenuItem>
+                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="teacher">Teacher</MenuItem>
+                <MenuItem value="student">Student</MenuItem>
+                <MenuItem value="parent">Parent</MenuItem>
               </Select>
             </FormControl>
           </Stack>

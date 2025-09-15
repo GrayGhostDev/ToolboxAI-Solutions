@@ -1399,8 +1399,8 @@ local function authenticate()
                 ["Content-Type"] = "application/json"
             },
             Body = HttpService:JSONEncode({
-                username = "plugin_user",
-                password = "plugin_pass123"  -- Should be configured securely
+                username = plugin:GetSetting("APIUsername") or "plugin_user",
+                password = plugin:GetSetting("APIPassword") or ""  -- Must be configured in plugin settings
             })
         })
     end)

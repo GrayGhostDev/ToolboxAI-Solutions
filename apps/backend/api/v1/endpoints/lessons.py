@@ -13,6 +13,9 @@ from ....services.database import db_service
 
 logger = logging.getLogger(__name__)
 
+# In-memory storage for development (will be replaced with database)
+in_memory_lessons: List[Dict[str, Any]] = []
+
 # Create router for lessons endpoints
 lessons_router = APIRouter(prefix="/lessons", tags=["Lessons"])
 
@@ -107,9 +110,13 @@ async def get_lessons(
     except Exception as e:
         logger.warning(f"Failed to fetch lessons from database: {e}. Using fallback data.")
     
-    # Fallback sample data
+    # Fallback sample data combined with in-memory lessons
     if role == "teacher":
-        return [
+        # Get user's in-memory lessons first
+        user_lessons = [l for l in in_memory_lessons if l.get("teacher_id") == current_user.id]
+        
+        # Add fallback sample data
+        fallback_lessons = [
             {
                 "id": 1,
                 "title": "Introduction to Algebra",
@@ -147,6 +154,8 @@ async def get_lessons(
                 "created_at": "2025-01-05T09:00:00"
             }
         ]
+        # Return user's created lessons first, then fallback lessons
+        return user_lessons + fallback_lessons
     elif role == "student":
         return [
             {
@@ -321,32 +330,34 @@ async def create_lesson(
     if role not in ["teacher", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized to create lessons")
     
-    try:
-        query = """
-            INSERT INTO lessons (title, description, class_id, content, duration, 
-                               difficulty, objectives, resources, xp_reward, status)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            RETURNING *
-        """
-        async with db_service.pool.acquire() as conn:
-            row = await conn.fetchrow(
-                query,
-                lesson_data["title"],
-                lesson_data.get("description"),
-                lesson_data["class_id"],
-                lesson_data.get("content"),
-                lesson_data.get("duration", 45),
-                lesson_data.get("difficulty", "intermediate"),
-                lesson_data.get("objectives", []),
-                lesson_data.get("resources", []),
-                lesson_data.get("xp_reward", 50),
-                lesson_data.get("status", "draft")
-            )
-            return dict(row)
-            
-    except Exception as e:
-        logger.error(f"Failed to create lesson: {e}")
-        raise HTTPException(status_code=500, detail="Failed to create lesson")
+    # Return the submitted data with added metadata for development since database isn't set up
+    import random
+    from datetime import datetime
+    
+    # Use all the submitted data and just add the necessary metadata
+    new_lesson = {
+        **lesson_data,  # Include all submitted data
+        "id": random.randint(1000, 9999),
+        "teacher_id": current_user.id if role == "teacher" else lesson_data.get("teacher_id", current_user.id),
+        "teacher_name": f"{current_user.first_name} {current_user.last_name}" if hasattr(current_user, 'first_name') else current_user.email,
+        "completion_count": 0,
+        "total_students": 0,
+        "status": lesson_data.get("status", "draft"),
+        "created_at": datetime.now().isoformat(),
+        "updated_at": datetime.now().isoformat()
+    }
+    
+    # Add class_name if class_id is provided
+    if "class_id" in lesson_data or "classId" in lesson_data:
+        # Handle both snake_case and camelCase
+        class_id = lesson_data.get("class_id") or lesson_data.get("classId")
+        new_lesson["class_name"] = f"Class {class_id}"  # You could fetch the real class name here
+    
+    # Add to in-memory storage
+    in_memory_lessons.append(new_lesson)
+    
+    logger.info(f"Created mock lesson: {new_lesson.get('title', 'Unnamed')} for user {current_user.email}")
+    return new_lesson
 
 @lessons_router.put("/{lesson_id}/progress")
 async def update_lesson_progress(

@@ -13,6 +13,9 @@ from ....services.database import db_service
 
 logger = logging.getLogger(__name__)
 
+# In-memory storage for development (will be replaced with database)
+in_memory_assessments: List[Dict[str, Any]] = []
+
 # Create router for assessments endpoints
 assessments_router = APIRouter(prefix="/assessments", tags=["Assessments"])
 
@@ -116,9 +119,13 @@ async def get_assessments(
     except Exception as e:
         logger.warning(f"Failed to fetch assessments from database: {e}. Using fallback data.")
     
-    # Fallback sample data
+    # Fallback sample data combined with in-memory assessments
     if role == "teacher":
-        return [
+        # Get user's in-memory assessments first
+        user_assessments = [a for a in in_memory_assessments if a.get("teacher_id") == current_user.id]
+        
+        # Add fallback sample data
+        fallback_assessments = [
             {
                 "id": 1,
                 "title": "Algebra Mid-term Exam",
@@ -158,6 +165,8 @@ async def get_assessments(
                 "created_at": "2025-01-01T08:00:00"
             }
         ]
+        # Return user's created assessments first, then fallback assessments
+        return user_assessments + fallback_assessments
     elif role == "student":
         return [
             {
@@ -372,35 +381,34 @@ async def create_assessment(
     if role not in ["teacher", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized to create assessments")
     
-    try:
-        query = """
-            INSERT INTO assessments (title, description, class_id, assessment_type, 
-                                   total_points, duration, max_attempts, due_date, 
-                                   instructions, questions, resources, status)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-            RETURNING *
-        """
-        async with db_service.pool.acquire() as conn:
-            row = await conn.fetchrow(
-                query,
-                assessment_data["title"],
-                assessment_data.get("description"),
-                assessment_data["class_id"],
-                assessment_data.get("assessment_type", "quiz"),
-                assessment_data.get("total_points", 100),
-                assessment_data.get("duration", 60),
-                assessment_data.get("max_attempts", 1),
-                assessment_data.get("due_date"),
-                assessment_data.get("instructions"),
-                assessment_data.get("questions", []),
-                assessment_data.get("resources", []),
-                assessment_data.get("status", "draft")
-            )
-            return dict(row)
-            
-    except Exception as e:
-        logger.error(f"Failed to create assessment: {e}")
-        raise HTTPException(status_code=500, detail="Failed to create assessment")
+    # Return the submitted data with added metadata for development since database isn't set up
+    import random
+    from datetime import datetime
+    
+    # Use all the submitted data and just add the necessary metadata
+    new_assessment = {
+        **assessment_data,  # Include all submitted data
+        "id": random.randint(1000, 9999),
+        "teacher_id": current_user.id if role == "teacher" else assessment_data.get("teacher_id", current_user.id),
+        "teacher_name": f"{current_user.first_name} {current_user.last_name}" if hasattr(current_user, 'first_name') else current_user.email,
+        "submissions_count": 0,
+        "average_score": 0,
+        "status": assessment_data.get("status", "draft"),
+        "created_at": datetime.now().isoformat(),
+        "updated_at": datetime.now().isoformat()
+    }
+    
+    # Add class_name if class_id is provided
+    if "class_id" in assessment_data or "classId" in assessment_data:
+        # Handle both snake_case and camelCase
+        class_id = assessment_data.get("class_id") or assessment_data.get("classId")
+        new_assessment["class_name"] = f"Class {class_id}"  # You could fetch the real class name here
+    
+    # Add to in-memory storage
+    in_memory_assessments.append(new_assessment)
+    
+    logger.info(f"Created mock assessment: {new_assessment.get('title', 'Unnamed')} for user {current_user.email}")
+    return new_assessment
 
 @assessments_router.post("/{assessment_id}/submit")
 async def submit_assessment(

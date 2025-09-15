@@ -24,6 +24,12 @@ local CONFIG = {
     VALIDATE_TOKEN_URL = "http://127.0.0.1:8008/auth/validate",
     REFRESH_TOKEN_URL = "http://127.0.0.1:8008/auth/refresh",
     PERMISSIONS_URL = "http://127.0.0.1:8008/auth/permissions",
+
+    -- OAuth2 Endpoints
+    OAUTH2_AUTHORIZE_URL = "http://127.0.0.1:8008/oauth2/authorize",
+    OAUTH2_TOKEN_URL = "http://127.0.0.1:8008/oauth2/token",
+    OAUTH2_USERINFO_URL = "http://127.0.0.1:8008/oauth2/userinfo",
+    OAUTH2_REVOKE_URL = "http://127.0.0.1:8008/oauth2/revoke",
     
     -- Session Configuration
     SESSION_TIMEOUT = 3600, -- 1 hour in seconds
@@ -41,7 +47,7 @@ local CONFIG = {
     ALLOWED_ORIGINS = {"127.0.0.1", "localhost"},
     
     -- Encryption (simplified for Roblox environment)
-    SECRET_KEY = "ToolboxAI_Secret_2024", -- Should be in secure storage
+    SECRET_KEY = nil, -- Will be loaded from secure storage on init
 }
 
 -- Authentication Module
@@ -57,21 +63,56 @@ local PermissionsCache = {}
 -- Initialize authentication system
 function AuthenticationHandler:Initialize()
     print("[Auth] Initializing authentication system...")
-    
+
+    -- Load secret key from secure storage
+    self:LoadSecureConfiguration()
+
     -- Create RemoteEvents for client authentication
     self:SetupRemoteEvents()
-    
+
     -- Start session cleanup routine
     self:StartSessionCleanup()
-    
+
     -- Setup rate limit reset
     self:SetupRateLimitReset()
-    
+
     -- Subscribe to cross-server auth sync
     self:SetupCrossServerSync()
-    
+
     print("[Auth] Authentication system initialized")
     return true
+end
+
+-- Load secure configuration from ServerStorage
+function AuthenticationHandler:LoadSecureConfiguration()
+    local ServerStorage = game:GetService("ServerStorage")
+
+    -- Try to load from ServerStorage attributes first
+    local secretKey = ServerStorage:GetAttribute("ROBLOX_SECRET_KEY")
+    if not secretKey then
+        -- Try to load from DataStore as fallback
+        local success, dataStore = pcall(function()
+            return DataStoreService:GetDataStore("SecureConfig")
+        end)
+
+        if success then
+            local keySuccess, key = pcall(function()
+                return dataStore:GetAsync("SECRET_KEY")
+            end)
+
+            if keySuccess and key then
+                secretKey = key
+            end
+        end
+    end
+
+    -- If still no key, generate a secure one (only in production)
+    if not secretKey and not CONFIG.DEVELOPMENT_MODE then
+        warn("[Auth] No secret key found! Authentication will be disabled.")
+        CONFIG.REQUIRE_AUTHENTICATION = false
+    elseif secretKey then
+        CONFIG.SECRET_KEY = secretKey
+    end
 end
 
 -- Setup RemoteEvents for authentication
@@ -165,6 +206,12 @@ function AuthenticationHandler:HandleAuthenticationEvent(player, action, data)
         
     elseif action == "request_permissions" then
         self:SendPlayerPermissions(player)
+
+    elseif action == "oauth2_authorize" then
+        self:InitiateOAuth2Flow(player, data)
+
+    elseif action == "oauth2_callback" then
+        self:HandleOAuth2Callback(player, data)
     end
 end
 
@@ -327,8 +374,13 @@ end
 -- Logout player
 function AuthenticationHandler:LogoutPlayer(player)
     local session = Sessions[player.UserId]
-    
+
     if session then
+        -- Revoke OAuth2 token if applicable
+        if session.authMethod == "oauth2" then
+            self:RevokeOAuth2Token(player)
+        end
+
         -- Notify backend
         pcall(function()
             HttpService:RequestAsync({
@@ -340,7 +392,8 @@ function AuthenticationHandler:LogoutPlayer(player)
                 },
                 Body = HttpService:JSONEncode({
                     userId = player.UserId,
-                    sessionId = session.sessionId
+                    sessionId = session.sessionId,
+                    authMethod = session.authMethod or "jwt"
                 })
             })
         end)
@@ -669,6 +722,240 @@ function AuthenticationHandler:GetSessionStats()
     end
     
     return stats
+end
+
+-- OAuth2 Authorization Flow
+function AuthenticationHandler:InitiateOAuth2Flow(player, data)
+    if not self:CheckRateLimit(player, "oauth2_init") then
+        self:SendAuthResponse(player, false, "Rate limit exceeded")
+        return
+    end
+
+    local clientId = data.clientId or "ToolboxAI_Client"
+    local redirectUri = data.redirectUri or "http://127.0.0.1:8008/oauth2/callback"
+    local scope = data.scope or "read write"
+    local state = HttpService:GenerateGUID(false)
+
+    -- Store state for verification
+    local userId = player.UserId
+    if not Sessions[userId] then
+        Sessions[userId] = {}
+    end
+    Sessions[userId].oauth2_state = state
+    Sessions[userId].oauth2_initiated = tick()
+
+    -- Generate authorization URL
+    local authUrl = CONFIG.OAUTH2_AUTHORIZE_URL .. "?" ..
+        "response_type=code" ..
+        "&client_id=" .. HttpService:UrlEncode(clientId) ..
+        "&redirect_uri=" .. HttpService:UrlEncode(redirectUri) ..
+        "&scope=" .. HttpService:UrlEncode(scope) ..
+        "&state=" .. HttpService:UrlEncode(state) ..
+        "&user_id=" .. tostring(player.UserId)
+
+    self:SendAuthResponse(player, true, "OAuth2 authorization initiated", {
+        authorizationUrl = authUrl,
+        state = state,
+        expiresIn = 300 -- 5 minutes
+    })
+
+    self:LogAuthEvent(player, "oauth2_initiated", {state = state})
+end
+
+-- Handle OAuth2 Callback
+function AuthenticationHandler:HandleOAuth2Callback(player, data)
+    local userId = player.UserId
+    local session = Sessions[userId]
+
+    if not session or not session.oauth2_state then
+        self:SendAuthResponse(player, false, "No active OAuth2 flow")
+        return
+    end
+
+    -- Verify state parameter
+    if data.state ~= session.oauth2_state then
+        self:SendAuthResponse(player, false, "Invalid OAuth2 state")
+        self:LogAuthEvent(player, "oauth2_state_mismatch")
+        return
+    end
+
+    -- Check if flow hasn't expired
+    local flowAge = tick() - (session.oauth2_initiated or 0)
+    if flowAge > 300 then -- 5 minutes
+        self:SendAuthResponse(player, false, "OAuth2 flow expired")
+        return
+    end
+
+    -- Exchange authorization code for access token
+    if data.code then
+        self:ExchangeOAuth2Code(player, data.code)
+    elseif data.error then
+        self:SendAuthResponse(player, false, "OAuth2 authorization failed: " .. data.error)
+        self:LogAuthEvent(player, "oauth2_error", {error = data.error})
+    else
+        self:SendAuthResponse(player, false, "Invalid OAuth2 callback data")
+    end
+end
+
+-- Exchange OAuth2 authorization code for tokens
+function AuthenticationHandler:ExchangeOAuth2Code(player, authCode)
+    local tokenRequestData = {
+        grant_type = "authorization_code",
+        code = authCode,
+        client_id = "ToolboxAI_Client",
+        client_secret = CONFIG.SECRET_KEY, -- In production, use proper OAuth2 client secret
+        redirect_uri = "http://127.0.0.1:8008/oauth2/callback"
+    }
+
+    local success, result = pcall(function()
+        return HttpService:RequestAsync({
+            Url = CONFIG.OAUTH2_TOKEN_URL,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = HttpService:JSONEncode(tokenRequestData)
+        })
+    end)
+
+    if success and result.StatusCode == 200 then
+        local tokenData = HttpService:JSONDecode(result.Body)
+
+        if tokenData.access_token then
+            -- Get user info with access token
+            self:GetOAuth2UserInfo(player, tokenData.access_token, tokenData.refresh_token)
+        else
+            self:SendAuthResponse(player, false, "Invalid token response")
+        end
+    else
+        self:HandleFailedAuth(player, "OAuth2 token exchange failed")
+    end
+end
+
+-- Get user information using OAuth2 access token
+function AuthenticationHandler:GetOAuth2UserInfo(player, accessToken, refreshToken)
+    local success, result = pcall(function()
+        return HttpService:RequestAsync({
+            Url = CONFIG.OAUTH2_USERINFO_URL,
+            Method = "GET",
+            Headers = {
+                ["Authorization"] = "Bearer " .. accessToken
+            }
+        })
+    end)
+
+    if success and result.StatusCode == 200 then
+        local userInfo = HttpService:JSONDecode(result.Body)
+
+        -- Create authenticated session
+        local session = {
+            sessionId = HttpService:GenerateGUID(false),
+            userId = player.UserId,
+            username = player.Name,
+            token = accessToken,
+            refreshToken = refreshToken,
+            oauth2UserInfo = userInfo,
+            permissions = self:MapOAuth2Permissions(userInfo),
+            createdAt = tick(),
+            lastActivity = tick(),
+            authMethod = "oauth2"
+        }
+
+        Sessions[player.UserId] = session
+        PermissionsCache[player.UserId] = session.permissions
+
+        -- Clear OAuth2 temporary data
+        session.oauth2_state = nil
+        session.oauth2_initiated = nil
+
+        self:SendAuthResponse(player, true, "OAuth2 authentication successful", {
+            sessionId = session.sessionId,
+            permissions = session.permissions,
+            userInfo = userInfo
+        })
+
+        self:LogAuthEvent(player, "oauth2_success")
+        self:BroadcastAuthUpdate(player.UserId, "oauth2_login")
+
+        print("[Auth] Player authenticated via OAuth2:", player.Name)
+    else
+        self:HandleFailedAuth(player, "Failed to get OAuth2 user info")
+    end
+end
+
+-- Map OAuth2 user info to internal permissions
+function AuthenticationHandler:MapOAuth2Permissions(userInfo)
+    local permissions = self:GetDefaultPermissions()
+
+    -- Map OAuth2 scopes/roles to permissions
+    if userInfo.roles then
+        for _, role in ipairs(userInfo.roles) do
+            if role == "admin" then
+                permissions.admin = true
+                permissions.moderate = true
+                permissions.create_content = true
+                permissions.use_tools = true
+            elseif role == "teacher" then
+                permissions.moderate = true
+                permissions.create_content = true
+                permissions.use_tools = true
+            elseif role == "content_creator" then
+                permissions.create_content = true
+                permissions.use_tools = true
+            end
+        end
+    end
+
+    -- Check OAuth2 scopes
+    if userInfo.scope then
+        local scopes = {}
+        for scope in string.gmatch(userInfo.scope, "%S+") do
+            scopes[scope] = true
+        end
+
+        if scopes["admin"] then
+            permissions.admin = true
+        end
+        if scopes["moderate"] then
+            permissions.moderate = true
+        end
+        if scopes["create"] then
+            permissions.create_content = true
+        end
+    end
+
+    return permissions
+end
+
+-- Revoke OAuth2 token
+function AuthenticationHandler:RevokeOAuth2Token(player)
+    local session = Sessions[player.UserId]
+    if not session or session.authMethod ~= "oauth2" then
+        return false
+    end
+
+    local success, result = pcall(function()
+        return HttpService:RequestAsync({
+            Url = CONFIG.OAUTH2_REVOKE_URL,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json",
+                ["Authorization"] = "Bearer " .. session.token
+            },
+            Body = HttpService:JSONEncode({
+                token = session.token,
+                token_type_hint = "access_token"
+            })
+        })
+    end)
+
+    if success and result.StatusCode == 200 then
+        self:LogAuthEvent(player, "oauth2_revoked")
+        return true
+    else
+        warn("[Auth] Failed to revoke OAuth2 token for", player.Name)
+        return false
+    end
 end
 
 -- Handle player removal

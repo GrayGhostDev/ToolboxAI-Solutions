@@ -131,7 +131,9 @@ export default function Leaderboard() {
     }
   };
 
-  const filteredLeaderboard = (leaderboard || []).filter((entry: any) =>
+  // Ensure leaderboard is always an array
+  const leaderboardArray = Array.isArray(leaderboard) ? leaderboard : [];
+  const filteredLeaderboard = leaderboardArray.filter((entry: any) =>
     entry.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     entry.className?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -302,7 +304,7 @@ export default function Leaderboard() {
                   ) : (
                     filteredLeaderboard.map((entry: any) => (
                       <TableRow
-                        key={entry.studentId}
+                        key={entry.userId || entry.studentId || entry.id}
                         hover
                         sx={{
                           bgcolor: entry.studentId === currentUserId ? "action.selected" : undefined,
@@ -319,9 +321,11 @@ export default function Leaderboard() {
                         <TableCell>
                           <Stack direction="row" alignItems="center" spacing={2}>
                             <Avatar src={entry.avatarUrl} />
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                              {entry.displayName}
-                              {entry.studentId === currentUserId && (
+                            <Box>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {entry.displayName}
+                              </Typography>
+                              {(entry.userId === currentUserId || entry.studentId === currentUserId) && (
                                 <Chip
                                   label="You"
                                   size="small"
@@ -329,7 +333,7 @@ export default function Leaderboard() {
                                   sx={{ ml: 1, height: 20 }}
                                 />
                               )}
-                            </Typography>
+                            </Box>
                           </Stack>
                         </TableCell>
                         <TableCell>
@@ -353,7 +357,7 @@ export default function Leaderboard() {
                         <TableCell align="center">
                           <Stack direction="row" justifyContent="center" alignItems="center" spacing={0.5}>
                             <StarIcon sx={{ fontSize: 16, color: "warning.main" }} />
-                            <Typography variant="body2">{entry.badgeCount}</Typography>
+                            <Typography variant="body2">{entry.badgesCount || entry.badgeCount || 0}</Typography>
                           </Stack>
                         </TableCell>
                         <TableCell align="center">

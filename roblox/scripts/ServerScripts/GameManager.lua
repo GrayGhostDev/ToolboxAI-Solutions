@@ -356,9 +356,10 @@ function GameManager:ApplyEnvironment(environmentData)
     -- Terrain modifications
     if environmentData.terrain and environmentData.terrain ~= "" then
         local success, err = pcall(function()
-            local terrainFunc = loadstring(environmentData.terrain)
-            if terrainFunc then
-                terrainFunc()
+            -- Use safe terrain application instead of loadstring
+            local TerrainManager = require(script.Parent.Parent.ModuleScripts.TerrainManager)
+            if TerrainManager then
+                TerrainManager:ApplyTerrainData(environmentData.terrain)
             end
         end)
         if not success then

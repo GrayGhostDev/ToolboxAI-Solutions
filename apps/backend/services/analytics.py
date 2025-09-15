@@ -4,11 +4,12 @@ Analytics API Endpoints
 Provides REST API endpoints for advanced analytics and reporting features.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, Path
 from fastapi.responses import StreamingResponse, FileResponse
 from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel, Field
+import random
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.database.connection import get_db
 from apps.backend.api.auth.auth import get_current_user
@@ -406,6 +407,153 @@ async def detect_anomalies(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Anomaly detection failed: {str(e)}")
 
+
+@router.get("/trends/engagement")
+async def get_engagement_trends(
+    start_date: datetime = Query(..., description="Start date for trends"),
+    end_date: datetime = Query(..., description="End date for trends"),
+    interval: str = Query("day", description="Interval for data points"),
+    current_user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get engagement trend data"""
+    
+    # Generate trend data points
+    trends = []
+    current = start_date
+    
+    while current <= end_date:
+        trends.append({
+            "date": current.isoformat(),
+            "value": random.uniform(70, 95),
+            "label": current.strftime("%b %d")
+        })
+        
+        if interval == "day":
+            current += timedelta(days=1)
+        elif interval == "week":
+            current += timedelta(weeks=1)
+        elif interval == "month":
+            current += timedelta(days=30)
+        else:
+            current += timedelta(days=1)
+    
+    # Add additional engagement metrics
+    summary = {
+        "average_engagement": 82.5,
+        "peak_engagement": 95.2,
+        "low_engagement": 68.3,
+        "trend_direction": "up",
+        "change_percentage": 5.4
+    }
+    
+    # Breakdown by activity type
+    activity_breakdown = {
+        "video_lessons": 35.2,
+        "interactive_exercises": 28.4,
+        "quizzes": 22.3,
+        "discussions": 14.1
+    }
+    
+    return {
+        "trends": trends,
+        "summary": summary,
+        "activity_breakdown": activity_breakdown,
+        "period": {
+            "start": start_date.isoformat(),
+            "end": end_date.isoformat(),
+            "interval": interval
+        }
+    }
+
+@router.get("/trends/content")
+async def get_content_trends(
+    start_date: datetime = Query(..., description="Start date for trends"),
+    end_date: datetime = Query(..., description="End date for trends"),
+    current_user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get content consumption trends"""
+    
+    # Generate content trends
+    content_trends = []
+    current = start_date
+    
+    while current <= end_date:
+        content_trends.append({
+            "date": current.isoformat(),
+            "views": random.randint(100, 500),
+            "completions": random.randint(50, 300),
+            "interactions": random.randint(200, 800),
+            "label": current.strftime("%b %d")
+        })
+        current += timedelta(days=1)
+    
+    # Popular content
+    popular_content = [
+        {
+            "id": "content1",
+            "title": "Introduction to Algebra",
+            "type": "video",
+            "views": 1523,
+            "completion_rate": 85.2,
+            "rating": 4.8
+        },
+        {
+            "id": "content2",
+            "title": "Physics Lab: Forces and Motion",
+            "type": "interactive",
+            "views": 1245,
+            "completion_rate": 78.9,
+            "rating": 4.6
+        },
+        {
+            "id": "content3",
+            "title": "World History Timeline",
+            "type": "article",
+            "views": 987,
+            "completion_rate": 92.1,
+            "rating": 4.7
+        }
+    ]
+    
+    # Content performance metrics
+    performance = {
+        "total_views": sum(d["views"] for d in content_trends),
+        "total_completions": sum(d["completions"] for d in content_trends),
+        "average_completion_rate": 82.4,
+        "average_rating": 4.5,
+        "total_content_items": 256,
+        "active_content_items": 189
+    }
+    
+    return {
+        "trends": content_trends,
+        "popular_content": popular_content,
+        "performance": performance,
+        "period": {
+            "start": start_date.isoformat(),
+            "end": end_date.isoformat()
+        }
+    }
+
+@router.get("/subject_mastery")
+async def get_subject_mastery(
+    time_range: str = Query("30d"),
+    student_id: Optional[str] = Query(None),
+    current_user: dict = Depends(get_current_user)
+) -> List[Dict[str, Any]]:
+    """Get subject mastery levels"""
+    subjects = ["Mathematics", "Science", "English", "History", "Geography", "Physics", "Chemistry", "Biology"]
+    
+    return [
+        {
+            "subject": subject,
+            "mastery": random.randint(60, 100),
+            "improvement": random.randint(-10, 20),
+            "topics_completed": random.randint(5, 20),
+            "avg_score": random.randint(70, 95)
+        }
+        for subject in subjects
+    ]
 
 @router.get("/trends/{metric}")
 @cache_result(expire=600)  # Cache for 10 minutes

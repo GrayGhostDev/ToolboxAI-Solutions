@@ -15,7 +15,7 @@ import React, {
   useState,
 } from 'react';
 import { AUTH_TOKEN_KEY, DEBUG_MODE, ENABLE_WEBSOCKET, WS_URL } from '../config';
-import { websocketService } from '../services/websocket';
+import { pusherService as websocketService } from '../services/pusher';
 import { useAppDispatch, useAppSelector } from '../store';
 import { addNotification } from '../store/slices/uiSlice';
 import {

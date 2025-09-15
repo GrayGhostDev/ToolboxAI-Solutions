@@ -1,8 +1,16 @@
 --[[
     ToolboxAI Quiz System Module
     Version: 1.0.0
+    Version: 2.0.0 - Updated for Roblox 2025
     Description: Comprehensive quiz management system for educational content
                  with AI-generated questions, real-time scoring, and backend integration
+
+    Features:
+    - Multi-format question support (7 question types)
+    - Real-time multiplayer quizzes
+    - Advanced scoring with time bonuses and streaks
+    - Backend API integration for analytics
+    - FilteringEnabled compliant architecture
 --]]
 
 local QuizSystem = {}
@@ -25,7 +33,12 @@ local QUIZ_CONFIG = {
     STREAK_BONUS = 10,
     MIN_PASS_PERCENTAGE = 70,
     MAX_HINTS_PER_QUESTION = 2,
-    BACKEND_URL = "http://127.0.0.1:8008"
+
+    -- Backend Integration (2025)
+    BACKEND_URL = "http://127.0.0.1:8008",
+    QUIZ_ENDPOINT = "/api/v1/quiz",
+    ANALYTICS_ENDPOINT = "/api/v1/analytics/quiz",
+    RESULTS_ENDPOINT = "/api/v1/quiz/results"
 }
 
 -- Question Types Enum
@@ -780,19 +793,140 @@ function QuizSystem:RemoveParticipant(player)
     return false
 end
 
+-- Report quiz analytics to backend (2025)
+function QuizSystem:ReportAnalytics(eventType, data)
+    spawn(function()
+        local success, response = pcall(function()
+            return HttpService:RequestAsync({
+                Url = QUIZ_CONFIG.BACKEND_URL .. QUIZ_CONFIG.ANALYTICS_ENDPOINT,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["X-Quiz-System"] = "2.0"
+                },
+                Body = HttpService:JSONEncode({
+                    quizId = self.id,
+                    eventType = eventType,
+                    data = data,
+                    metadata = {
+                        placeId = game.PlaceId,
+                        universeId = game.GameId,
+                        timestamp = os.time(),
+                        participantCount = #self.participants
+                    }
+                })
+            })
+        end)
+
+        if success and response.StatusCode == 200 then
+            -- Analytics reported successfully
+        else
+            warn("[QuizSystem] Failed to report analytics:",
+                 response and response.StatusMessage or "Unknown error")
+        end
+    end)
+end
+
+-- Submit quiz results to backend
+function QuizSystem:SubmitResults()
+    local results = {
+        quizId = self.id,
+        title = self.title,
+        subject = self.subject,
+        difficulty = self.difficulty,
+        completedAt = os.time(),
+        participants = {}
+    }
+
+    for _, player in ipairs(self.participants) do
+        local userId = player.UserId
+        table.insert(results.participants, {
+            userId = userId,
+            username = player.Name,
+            score = self.playerScores[userId] or 0,
+            answers = self.playerAnswers[userId] or {},
+            streak = self.playerStreaks[userId] or 0,
+            hintsUsed = self.playerHints[userId] or 0,
+            completed = true
+        })
+    end
+
+    spawn(function()
+        local success, response = pcall(function()
+            return HttpService:RequestAsync({
+                Url = QUIZ_CONFIG.BACKEND_URL .. QUIZ_CONFIG.RESULTS_ENDPOINT,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["X-Quiz-Results"] = "true"
+                },
+                Body = HttpService:JSONEncode(results)
+            })
+        end)
+
+        if success and response.StatusCode == 200 then
+            print("[QuizSystem] Quiz results submitted to backend successfully")
+        else
+            warn("[QuizSystem] Failed to submit results to backend:",
+                 response and response.StatusMessage or "Unknown error")
+        end
+    end)
+end
+
+-- Get comprehensive quiz statistics
+function QuizSystem:GetStatistics()
+    local stats = {
+        quizId = self.id,
+        title = self.title,
+        state = self.state,
+        participantCount = #self.participants,
+        currentQuestionIndex = self.currentQuestionIndex,
+        totalQuestions = #self.questions,
+        averageScore = 0,
+        completionRate = 0
+    }
+
+    -- Calculate average score
+    local totalScore = 0
+    local completedParticipants = 0
+
+    for _, player in ipairs(self.participants) do
+        local score = self.playerScores[player.UserId] or 0
+        if score > 0 then
+            totalScore = totalScore + score
+            completedParticipants = completedParticipants + 1
+        end
+    end
+
+    if completedParticipants > 0 then
+        stats.averageScore = totalScore / completedParticipants
+        stats.completionRate = (completedParticipants / #self.participants) * 100
+    end
+
+    return stats
+end
+
 -- Cleanup
 function QuizSystem:Cleanup()
+    -- Submit final results before cleanup
+    if self.state == QuizSystem.States.COMPLETED and #self.participants > 0 then
+        self:SubmitResults()
+    end
+
+    -- Report cleanup analytics
+    self:ReportAnalytics("quiz_cleanup", self:GetStatistics())
+
     if self.countdownConnection then
         self.countdownConnection:Disconnect()
     end
-    
+
     self.state = QuizSystem.States.IDLE
     self.participants = {}
     self.playerAnswers = {}
     self.playerScores = {}
     self.playerStreaks = {}
     self.playerHints = {}
-    
+
     print(string.format("[QuizSystem] Cleaned up quiz '%s'", self.title))
 end
 

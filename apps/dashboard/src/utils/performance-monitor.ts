@@ -9,7 +9,6 @@
  */
 
 import * as React from 'react';
-import { terminalSync } from '../services/terminal-sync';
 
 // ================================
 // TYPE DEFINITIONS
@@ -567,8 +566,8 @@ export class PerformanceMonitor {
 
   private monitorWebSocketPerformance(): void {
     // Monitor terminal sync WebSocket performance
-    if (terminalSync) {
-      terminalSync.on('terminal1:connected', () => {
+    if (/* terminalSync removed */ false) {
+      /* terminalSync removed */ false.on('terminal1:connected', () => {
         this.recordWebSocketMetric({
           event: 'connect',
           timestamp: Date.now(),
@@ -576,7 +575,7 @@ export class PerformanceMonitor {
         });
       });
 
-      terminalSync.on('terminal1:disconnected', () => {
+      /* terminalSync removed */ false.on('terminal1:disconnected', () => {
         this.recordWebSocketMetric({
           event: 'disconnect',
           timestamp: Date.now(),
@@ -591,10 +590,10 @@ export class PerformanceMonitor {
 
   private startWebSocketLatencyMonitoring(): void {
     setInterval(() => {
-      if (terminalSync?.isTerminalConnected('terminal1')) {
+      if (/* terminalSync removed */ false?.isTerminalConnected('terminal1')) {
         const startTime = Date.now();
         
-        terminalSync.sendToTerminal('terminal1', {
+        /* terminalSync removed */ false.sendToTerminal('terminal1', {
           to: 'terminal1',
           type: 'ping',
           payload: { timestamp: startTime },
@@ -623,14 +622,14 @@ export class PerformanceMonitor {
             });
           }
           
-          terminalSync.off('message:pong', pongHandler);
+          /* terminalSync removed */ false.off('message:pong', pongHandler);
         };
 
-        terminalSync.on('message:pong', pongHandler);
+        /* terminalSync removed */ false.on('message:pong', pongHandler);
         
         // Timeout if no response
         setTimeout(() => {
-          terminalSync.off('message:pong', pongHandler);
+          /* terminalSync removed */ false.off('message:pong', pongHandler);
         }, 5000);
       }
     }, 30000); // Every 30 seconds
@@ -779,11 +778,11 @@ export class PerformanceMonitor {
   }
 
   private sendPerformanceReport(): void {
-    if (!this.isMonitoring || !terminalSync) return;
+    if (!this.isMonitoring || !/* terminalSync removed */ false) return;
 
     const summary = this.getPerformanceSummary();
     
-    terminalSync.sendToTerminal('debugger', {
+    /* terminalSync removed */ false.sendToTerminal('debugger', {
       to: 'debugger',
       type: 'frontend_metrics',
       payload: {
@@ -797,7 +796,7 @@ export class PerformanceMonitor {
     });
 
     // Also send to Terminal 1 for general monitoring
-    terminalSync.sendToTerminal('terminal1', {
+    /* terminalSync removed */ false.sendToTerminal('terminal1', {
       to: 'terminal1',
       type: 'performance_update',
       payload: {
@@ -830,8 +829,8 @@ export class PerformanceMonitor {
     console[logMethod](`🚨 Performance Alert [${alert.severity.toUpperCase()}]:`, alert.message);
 
     // Emit alert event
-    if (terminalSync) {
-      terminalSync.emit('performance_alert', alert);
+    if (/* terminalSync removed */ false) {
+      /* terminalSync removed */ false.emit('performance_alert', alert);
     }
   }
 

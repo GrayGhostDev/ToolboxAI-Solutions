@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -152,6 +153,7 @@ const ASSET_ICONS: Record<string, React.ReactNode> = {
 
 export const RobloxEnvironmentPreview: React.FC = () => {
   const theme = useTheme();
+  const location = useLocation();
   const { on, sendMessage, isConnected } = useWebSocketContext();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -173,6 +175,61 @@ export const RobloxEnvironmentPreview: React.FC = () => {
     ui: true
   });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [sessionData, setSessionData] = useState<any>(null);
+
+  // Load session data from navigation state
+  useEffect(() => {
+    if (location.state) {
+      const { sessionId, sessionData: data, mode } = location.state as any;
+      if (data) {
+        setSessionData(data);
+        // Initialize environment based on session data
+        const mockEnvironment: EnvironmentData = {
+          id: sessionId || data.id,
+          name: data.name,
+          type: data.environment || 'classroom',
+          status: 'ready',
+          terrain: {
+            type: 'default',
+            texture: 'grass',
+            props: {
+              trees: 10,
+              rocks: 5,
+              water: false,
+              buildings: 1
+            }
+          },
+          assets: [],
+          lighting: {
+            timeOfDay: 'noon',
+            ambient: '#ffffff',
+            directional: '#ffffcc',
+            skybox: 'default'
+          },
+          metadata: {
+            subject: data.subject || 'General',
+            gradeLevel: data.gradeLevel || 5,
+            objectives: data.objectives || [],
+            createdAt: new Date(data.createdAt || Date.now()),
+            size: { x: 512, y: 128, z: 512 },
+            polyCount: 45000,
+            textureMemory: 32768
+          },
+          performance: {
+            fps: 60,
+            renderTime: 16,
+            memoryUsage: 128
+          }
+        };
+        setEnvironment(mockEnvironment);
+        
+        // Auto-start if in live mode
+        if (mode === 'live') {
+          setIsPlaying(true);
+        }
+      }
+    }
+  }, [location.state]);
 
   // WebSocket subscriptions
   useEffect(() => {
@@ -324,9 +381,13 @@ export const RobloxEnvironmentPreview: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Terrain color="primary" fontSize="large" />
                 <Box>
-                  <Typography variant="h5">Environment Preview</Typography>
+                  <Typography variant="h5">
+                    {sessionData ? sessionData.name : 'Environment Preview'}
+                  </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    3D visualization of generated Roblox environment
+                    {sessionData 
+                      ? `${sessionData.subject} - Grade ${sessionData.gradeLevel} - ${sessionData.duration} min`
+                      : '3D visualization of generated Roblox environment'}
                   </Typography>
                 </Box>
               </Box>
@@ -489,14 +550,47 @@ export const RobloxEnvironmentPreview: React.FC = () => {
               >
                 <Terrain sx={{ fontSize: 64, color: 'text.disabled' }} />
                 <Typography variant="h6" color="text.secondary" sx={{ mt: 2 }}>
-                  No environment loaded
+                  {sessionData ? 'Loading session environment...' : 'No environment loaded'}
                 </Typography>
+                {sessionData && (
+                  <Paper sx={{ mt: 3, p: 2, bgcolor: alpha(theme.palette.background.paper, 0.9) }}>
+                    <Typography variant="subtitle1" gutterBottom>
+                      {sessionData.name}
+                    </Typography>
+                    <Stack spacing={1} sx={{ mt: 2, textAlign: 'left' }}>
+                      <Typography variant="body2">
+                        <strong>Subject:</strong> {sessionData.subject}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Grade Level:</strong> {sessionData.gradeLevel}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Duration:</strong> {sessionData.duration} minutes
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Environment:</strong> {sessionData.environment}
+                      </Typography>
+                      {sessionData.objectives && sessionData.objectives.length > 0 && (
+                        <Box>
+                          <Typography variant="body2"><strong>Objectives:</strong></Typography>
+                          <Box sx={{ pl: 2, mt: 0.5 }}>
+                            {sessionData.objectives.map((obj: string, idx: number) => (
+                              <Typography key={idx} variant="caption" display="block">
+                                • {obj}
+                              </Typography>
+                            ))}
+                          </Box>
+                        </Box>
+                      )}
+                    </Stack>
+                  </Paper>
+                )}
                 <Button
                   variant="contained"
                   sx={{ mt: 2 }}
-                  onClick={() => loadEnvironment('demo')}
+                  onClick={() => loadEnvironment(sessionData?.id || 'demo')}
                 >
-                  Load Demo Environment
+                  {sessionData ? 'Initialize Environment' : 'Load Demo Environment'}
                 </Button>
               </Box>
             )}

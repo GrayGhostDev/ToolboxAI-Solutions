@@ -334,19 +334,25 @@ const RealTimeAnalytics: React.FC = () => {
                       <ListItemText
                         primary={activity.user}
                         secondary={
-                          <Box display="flex" alignItems="center" gap={1}>
-                            <Typography variant="body2" component="span">
+                          <React.Fragment>
+                            <span style={{ fontSize: '0.875rem', marginRight: '8px' }}>
                               {activity.action}
-                            </Typography>
+                            </span>
                             {activity.score && (
                               <Chip
                                 label={`${activity.score}%`}
                                 size="small"
                                 color={activity.score >= 80 ? 'success' : 'warning'}
+                                component="span"
+                                sx={{ display: 'inline-flex', verticalAlign: 'middle' }}
                               />
                             )}
-                          </Box>
+                          </React.Fragment>
                         }
+                        secondaryTypographyProps={{
+                          component: 'div',
+                          sx: { display: 'flex', alignItems: 'center', gap: 1 }
+                        }}
                       />
                       <Typography variant="caption" color="textSecondary">
                         <Schedule fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} />

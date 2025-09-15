@@ -122,12 +122,26 @@ export default function Classes() {
   };
 
   const handlePushToRoblox = (classData: ClassCardData) => {
+    console.log('Pushing to Roblox:', classData);
     dispatch(
       addNotification({
-        type: "success",
-        message: `Class "${classData.name}" pushed to Roblox successfully`,
+        type: "info",
+        message: `Preparing Roblox environment for "${classData.name}"...`,
       })
     );
+    
+    // Simulate push process then navigate to Roblox dashboard
+    setTimeout(() => {
+      dispatch(
+        addNotification({
+          type: "success",
+          message: `Class "${classData.name}" is ready in Roblox!`,
+        })
+      );
+      // Navigate to Roblox dashboard with class context
+      navigate(`/roblox?classId=${classData.id}&className=${encodeURIComponent(classData.name)}`);
+    }, 1500);
+    
     handleMenuClose();
   };
 
@@ -374,7 +388,12 @@ export default function Classes() {
                       variant="outlined"
                       startIcon={<VisibilityIcon />}
                       sx={{ flex: 1 }}
-                      onClick={() => navigate(getClassDetailsRoute(classData.id))}
+                      onClick={() => {
+                        console.log('View button clicked for class:', classData.id);
+                        const route = `/classes/${classData.id}`;
+                        console.log('Navigating to:', route);
+                        navigate(route);
+                      }}
                     >
                       View
                     </Button>

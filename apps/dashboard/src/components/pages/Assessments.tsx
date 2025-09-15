@@ -40,6 +40,8 @@ export default function Assessments() {
   const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedAssessment, setSelectedAssessment] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuAssessment, setMenuAssessment] = useState<any>(null);
 
   useEffect(() => {
     // Fetch assessments when component mounts
@@ -64,6 +66,50 @@ export default function Assessments() {
 
   const handleFilterMenuClose = () => {
     setFilterAnchorEl(null);
+  };
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, assessment: any) => {
+    event.stopPropagation();
+    setMenuAnchorEl(event.currentTarget);
+    setMenuAssessment(assessment);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setMenuAssessment(null);
+  };
+
+  const handleViewAssessment = (assessmentId: string) => {
+    navigate(`/assessments/${assessmentId}`);
+    handleMenuClose();
+  };
+
+  const handleGradeAssessment = (assessmentId: string) => {
+    navigate(`/assessments/${assessmentId}/grade`);
+    handleMenuClose();
+  };
+
+  const handleEditAssessment = (assessmentId: string) => {
+    dispatch(
+      addNotification({
+        type: 'info',
+        message: 'Edit functionality coming soon!',
+      })
+    );
+    handleMenuClose();
+  };
+
+  const handleDeleteAssessment = (assessment: any) => {
+    if (window.confirm(`Are you sure you want to delete "${assessment.title}"?`)) {
+      dispatch(
+        addNotification({
+          type: 'success',
+          message: `Assessment "${assessment.title}" deleted successfully!`,
+        })
+      );
+      dispatch(fetchAssessments());
+    }
+    handleMenuClose();
   };
 
   // Calculate statistics from real data
@@ -288,7 +334,7 @@ export default function Assessments() {
                           bgcolor: 'action.hover',
                         },
                       }}
-                      onClick={() => setSelectedAssessment(assessment.id)}
+                      onClick={() => navigate(`/assessments/${assessment.id}`)}
                     >
                       <Stack direction="row" spacing={2} alignItems="center">
                         <AssessmentIcon color="primary" />
@@ -332,9 +378,7 @@ export default function Assessments() {
                           </Typography>
                           <IconButton
                             size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                            }}
+                            onClick={(e) => handleMenuOpen(e, assessment)}
                           >
                             <MoreVertIcon fontSize="small" />
                           </IconButton>
@@ -353,6 +397,26 @@ export default function Assessments() {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Action Menu */}
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={() => menuAssessment && handleViewAssessment(menuAssessment.id)}>
+          View Details
+        </MenuItem>
+        <MenuItem onClick={() => menuAssessment && handleGradeAssessment(menuAssessment.id)}>
+          Grade Submissions
+        </MenuItem>
+        <MenuItem onClick={() => menuAssessment && handleEditAssessment(menuAssessment.id)}>
+          Edit Assessment
+        </MenuItem>
+        <MenuItem onClick={() => menuAssessment && handleDeleteAssessment(menuAssessment)}>
+          Delete Assessment
+        </MenuItem>
+      </Menu>
 
       {/* Create Assessment Dialog */}
       <CreateAssessmentDialog

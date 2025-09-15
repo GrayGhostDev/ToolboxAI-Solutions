@@ -1118,14 +1118,17 @@ function InputValidator.ValidateMathInput(input)
         end
     end
     
-    -- Parse and evaluate (safely)
+    -- Parse and evaluate (safely without loadstring)
     local success, result = pcall(function()
         -- Replace variables with placeholder values for validation
         local testExpr = input:gsub("[xyz]", "1")
-        -- Use loadstring safely
-        local func = loadstring("return " .. testExpr)
-        if func then
-            return func()
+        -- Use a safe math expression evaluator instead of loadstring
+        local MathParser = require(game.ReplicatedStorage.ModuleScripts.MathParser)
+        if MathParser then
+            return MathParser:EvaluateExpression(testExpr)
+        else
+            -- Fallback: just validate the expression format
+            return testExpr:match("^[%d%+%-%*/%^%.%(%)\t ]+$") ~= nil
         end
     end)
     

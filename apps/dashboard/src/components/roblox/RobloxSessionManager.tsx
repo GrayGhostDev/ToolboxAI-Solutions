@@ -90,6 +90,7 @@ import {
   Save,
   Cancel
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import { WebSocketMessageType } from '../../types/websocket';
 import { useAppSelector } from '../../store';
@@ -160,6 +161,7 @@ interface SessionTemplate {
 }
 
 const SESSION_TEMPLATES: SessionTemplate[] = [
+  // Mathematics Templates
   {
     id: 'quick-math',
     name: 'Quick Math Challenge',
@@ -190,8 +192,62 @@ const SESSION_TEMPLATES: SessionTemplate[] = [
     }
   },
   {
+    id: 'algebra-adventure',
+    name: 'Algebra Adventure',
+    description: 'Interactive algebra problem-solving quest',
+    settings: {
+      maxPlayers: 20,
+      minPlayers: 2,
+      timeLimit: 45,
+      accessType: 'private',
+      allowLateJoin: true,
+      allowRejoin: true,
+      recordSession: true,
+      enableChat: true,
+      enableVoice: false
+    },
+    content: {
+      subject: 'Mathematics',
+      gradeLevel: 8,
+      environmentType: 'adventure',
+      objectives: ['Linear equations', 'Variables', 'Graphing'],
+      hasQuiz: true,
+      quizSettings: {
+        numQuestions: 20,
+        timePerQuestion: 90,
+        passingScore: 75,
+        allowRetake: true
+      }
+    }
+  },
+  {
+    id: 'geometry-builder',
+    name: 'Geometry Builder',
+    description: 'Build and explore 3D geometric shapes',
+    settings: {
+      maxPlayers: 15,
+      minPlayers: 1,
+      timeLimit: 30,
+      accessType: 'public',
+      allowLateJoin: true,
+      allowRejoin: true,
+      recordSession: true,
+      enableChat: true,
+      enableVoice: true
+    },
+    content: {
+      subject: 'Mathematics',
+      gradeLevel: 6,
+      environmentType: 'sandbox',
+      objectives: ['3D shapes', 'Volume', 'Surface area', 'Spatial reasoning'],
+      hasQuiz: false
+    }
+  },
+  
+  // Science Templates
+  {
     id: 'science-exploration',
-    name: 'Science Exploration',
+    name: 'Science Lab',
     description: 'Interactive science discovery session',
     settings: {
       maxPlayers: 25,
@@ -216,11 +272,344 @@ const SESSION_TEMPLATES: SessionTemplate[] = [
         allowRetake: false
       }
     }
+  },
+  {
+    id: 'chemistry-reactions',
+    name: 'Chemistry Reactions',
+    description: 'Safe virtual chemistry experiments',
+    settings: {
+      maxPlayers: 20,
+      minPlayers: 2,
+      timeLimit: 40,
+      accessType: 'private',
+      allowLateJoin: false,
+      allowRejoin: false,
+      recordSession: true,
+      enableChat: true,
+      enableVoice: true
+    },
+    content: {
+      subject: 'Chemistry',
+      gradeLevel: 9,
+      environmentType: 'laboratory',
+      objectives: ['Chemical reactions', 'Periodic table', 'Lab safety'],
+      hasQuiz: true,
+      quizSettings: {
+        numQuestions: 25,
+        timePerQuestion: 60,
+        passingScore: 80,
+        allowRetake: false
+      }
+    }
+  },
+  {
+    id: 'physics-playground',
+    name: 'Physics Playground',
+    description: 'Explore physics concepts through interactive simulations',
+    settings: {
+      maxPlayers: 30,
+      minPlayers: 1,
+      timeLimit: 35,
+      accessType: 'public',
+      allowLateJoin: true,
+      allowRejoin: true,
+      recordSession: true,
+      enableChat: true,
+      enableVoice: false
+    },
+    content: {
+      subject: 'Physics',
+      gradeLevel: 10,
+      environmentType: 'sandbox',
+      objectives: ['Newton\'s laws', 'Energy', 'Motion', 'Forces'],
+      hasQuiz: true,
+      quizSettings: {
+        numQuestions: 15,
+        timePerQuestion: 90,
+        passingScore: 70,
+        allowRetake: true
+      }
+    }
+  },
+  {
+    id: 'biology-ecosystem',
+    name: 'Biology Ecosystem',
+    description: 'Explore living organisms and ecosystems',
+    settings: {
+      maxPlayers: 25,
+      minPlayers: 3,
+      timeLimit: 45,
+      accessType: 'private',
+      allowLateJoin: true,
+      allowRejoin: true,
+      recordSession: true,
+      enableChat: true,
+      enableVoice: false
+    },
+    content: {
+      subject: 'Biology',
+      gradeLevel: 8,
+      environmentType: 'outdoor',
+      objectives: ['Ecosystems', 'Food chains', 'Biodiversity', 'Conservation'],
+      hasQuiz: true,
+      quizSettings: {
+        numQuestions: 20,
+        passingScore: 75,
+        allowRetake: true
+      }
+    }
+  },
+  
+  // History & Social Studies Templates
+  {
+    id: 'history-quest',
+    name: 'History Time Travel',
+    description: 'Journey through historical periods',
+    settings: {
+      maxPlayers: 35,
+      minPlayers: 5,
+      timeLimit: 50,
+      accessType: 'private',
+      allowLateJoin: true,
+      allowRejoin: true,
+      recordSession: true,
+      enableChat: true,
+      enableVoice: true
+    },
+    content: {
+      subject: 'History',
+      gradeLevel: 7,
+      environmentType: 'adventure',
+      objectives: ['Historical events', 'Chronology', 'Cause and effect'],
+      hasQuiz: true,
+      quizSettings: {
+        numQuestions: 30,
+        passingScore: 70,
+        allowRetake: true
+      }
+    }
+  },
+  {
+    id: 'geography-explorer',
+    name: 'World Geography Explorer',
+    description: 'Explore countries, cultures, and landmarks',
+    settings: {
+      maxPlayers: 40,
+      minPlayers: 1,
+      timeLimit: 30,
+      accessType: 'public',
+      allowLateJoin: true,
+      allowRejoin: true,
+      recordSession: true,
+      enableChat: true,
+      enableVoice: false
+    },
+    content: {
+      subject: 'Geography',
+      gradeLevel: 6,
+      environmentType: 'outdoor',
+      objectives: ['Countries', 'Capitals', 'Landmarks', 'Cultures'],
+      hasQuiz: true,
+      quizSettings: {
+        numQuestions: 25,
+        timePerQuestion: 45,
+        passingScore: 65,
+        allowRetake: true
+      }
+    }
+  },
+  
+  // Language Arts Templates
+  {
+    id: 'vocabulary-race',
+    name: 'Vocabulary Race',
+    description: 'Fast-paced vocabulary building game',
+    settings: {
+      maxPlayers: 30,
+      minPlayers: 2,
+      timeLimit: 20,
+      accessType: 'public',
+      allowLateJoin: false,
+      allowRejoin: false,
+      recordSession: true,
+      enableChat: false,
+      enableVoice: false
+    },
+    content: {
+      subject: 'English',
+      gradeLevel: 5,
+      environmentType: 'classroom',
+      objectives: ['Vocabulary', 'Spelling', 'Word meanings'],
+      hasQuiz: true,
+      quizSettings: {
+        numQuestions: 50,
+        timePerQuestion: 15,
+        passingScore: 70,
+        allowRetake: false
+      }
+    }
+  },
+  {
+    id: 'story-builder',
+    name: 'Collaborative Story Builder',
+    description: 'Create stories together with classmates',
+    settings: {
+      maxPlayers: 15,
+      minPlayers: 3,
+      timeLimit: 40,
+      accessType: 'invite-only',
+      allowLateJoin: false,
+      allowRejoin: true,
+      recordSession: true,
+      enableChat: true,
+      enableVoice: true
+    },
+    content: {
+      subject: 'Creative Writing',
+      gradeLevel: 6,
+      environmentType: 'classroom',
+      objectives: ['Story structure', 'Character development', 'Collaboration'],
+      hasQuiz: false
+    }
+  },
+  
+  // Computer Science Templates
+  {
+    id: 'coding-basics',
+    name: 'Coding Basics',
+    description: 'Learn programming fundamentals',
+    settings: {
+      maxPlayers: 20,
+      minPlayers: 1,
+      timeLimit: 45,
+      accessType: 'private',
+      allowLateJoin: true,
+      allowRejoin: true,
+      recordSession: true,
+      enableChat: true,
+      enableVoice: false
+    },
+    content: {
+      subject: 'Computer Science',
+      gradeLevel: 7,
+      environmentType: 'laboratory',
+      objectives: ['Algorithms', 'Logic', 'Problem-solving', 'Debugging'],
+      hasQuiz: true,
+      quizSettings: {
+        numQuestions: 15,
+        timePerQuestion: 120,
+        passingScore: 75,
+        allowRetake: true
+      }
+    }
+  },
+  
+  // Art & Music Templates
+  {
+    id: 'art-studio',
+    name: 'Digital Art Studio',
+    description: 'Create and share digital artwork',
+    settings: {
+      maxPlayers: 25,
+      minPlayers: 1,
+      timeLimit: 60,
+      accessType: 'public',
+      allowLateJoin: true,
+      allowRejoin: true,
+      recordSession: false,
+      enableChat: true,
+      enableVoice: false
+    },
+    content: {
+      subject: 'Art',
+      gradeLevel: 5,
+      environmentType: 'sandbox',
+      objectives: ['Color theory', 'Composition', 'Digital tools'],
+      hasQuiz: false
+    }
+  },
+  {
+    id: 'music-composer',
+    name: 'Music Composer',
+    description: 'Compose and perform music together',
+    settings: {
+      maxPlayers: 20,
+      minPlayers: 2,
+      timeLimit: 45,
+      accessType: 'private',
+      allowLateJoin: true,
+      allowRejoin: true,
+      recordSession: true,
+      enableChat: true,
+      enableVoice: true
+    },
+    content: {
+      subject: 'Music',
+      gradeLevel: 6,
+      environmentType: 'classroom',
+      objectives: ['Rhythm', 'Melody', 'Harmony', 'Collaboration'],
+      hasQuiz: false
+    }
+  },
+  
+  // Special Sessions
+  {
+    id: 'quick-review',
+    name: 'Quick Review Session',
+    description: '10-minute review before tests',
+    settings: {
+      maxPlayers: 50,
+      minPlayers: 1,
+      timeLimit: 10,
+      accessType: 'public',
+      allowLateJoin: true,
+      allowRejoin: false,
+      recordSession: false,
+      enableChat: true,
+      enableVoice: false
+    },
+    content: {
+      subject: 'General',
+      gradeLevel: 5,
+      environmentType: 'classroom',
+      objectives: ['Review', 'Test preparation'],
+      hasQuiz: true,
+      quizSettings: {
+        numQuestions: 10,
+        timePerQuestion: 45,
+        passingScore: 60,
+        allowRetake: false
+      }
+    }
+  },
+  {
+    id: 'group-project',
+    name: 'Group Project Space',
+    description: 'Collaborative project work environment',
+    settings: {
+      maxPlayers: 10,
+      minPlayers: 2,
+      timeLimit: 90,
+      accessType: 'invite-only',
+      allowLateJoin: true,
+      allowRejoin: true,
+      recordSession: true,
+      enableChat: true,
+      enableVoice: true
+    },
+    content: {
+      subject: 'General',
+      gradeLevel: 7,
+      environmentType: 'sandbox',
+      objectives: ['Collaboration', 'Project management', 'Presentation'],
+      hasQuiz: false
+    }
   }
 ];
 
 export const RobloxSessionManager: React.FC = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const { sendMessage, on, isConnected } = useWebSocketContext();
   const currentUser = useAppSelector(state => state.user);
   
@@ -253,6 +642,7 @@ export const RobloxSessionManager: React.FC = () => {
   });
   const [studentSearch, setStudentSearch] = useState('');
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
   // WebSocket event handlers
   useEffect(() => {
@@ -324,6 +714,15 @@ export const RobloxSessionManager: React.FC = () => {
     setSessions(prev => [...prev, session]);
     setCreateDialogOpen(false);
     resetNewSession();
+    
+    // Navigate to environment preview after creation
+    navigate('/roblox/environment-preview', {
+      state: {
+        sessionId: session.id,
+        sessionData: session,
+        mode: 'setup'
+      }
+    });
   };
 
   const handleStartSession = (sessionId: string) => {
@@ -332,12 +731,25 @@ export const RobloxSessionManager: React.FC = () => {
       action: 'start'
     });
     
+    const session = sessions.find(s => s.id === sessionId);
+    
     setSessions(prev => prev.map(s => {
       if (s.id === sessionId) {
         return { ...s, status: 'active', startedAt: new Date() };
       }
       return s;
     }));
+    
+    // Navigate to Roblox Environment Preview with session data
+    if (session) {
+      navigate('/roblox/environment-preview', {
+        state: {
+          sessionId,
+          sessionData: session,
+          mode: 'live'
+        }
+      });
+    }
   };
 
   const handlePauseSession = (sessionId: string) => {
@@ -389,6 +801,7 @@ export const RobloxSessionManager: React.FC = () => {
   };
 
   const handleApplyTemplate = (template: SessionTemplate) => {
+    setSelectedTemplateId(template.id);
     setNewSession({
       ...newSession,
       settings: { ...template.settings },
@@ -420,6 +833,7 @@ export const RobloxSessionManager: React.FC = () => {
     });
     setActiveStep(0);
     setSelectedStudents([]);
+    setSelectedTemplateId(null);
   };
 
   const getSessionStatusColor = (status: RobloxSession['status']) => {
@@ -700,6 +1114,8 @@ export const RobloxSessionManager: React.FC = () => {
                         label={template.name}
                         onClick={() => handleApplyTemplate(template)}
                         clickable
+                        color={selectedTemplateId === template.id ? 'primary' : 'default'}
+                        variant={selectedTemplateId === template.id ? 'filled' : 'outlined'}
                       />
                     ))}
                   </Stack>

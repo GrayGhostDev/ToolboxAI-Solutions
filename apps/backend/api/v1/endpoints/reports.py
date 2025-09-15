@@ -540,11 +540,11 @@ async def get_report_details(
     }
 
 @reports_router.post("/")
-async def generate_report(
+async def create_report(
     report_data: Dict[str, Any],
     current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
-    """Generate a new report (teachers and admins only)."""
+    """Create a new report (teachers and admins only)."""
     
     role = current_user.role.lower()
     
@@ -619,3 +619,11 @@ async def get_engagement_analytics(
             {"student_name": "David Lee", "engagement_score": 87.3}
         ]
     }
+
+@reports_router.post("/generate")
+async def generate_report(
+    report_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Generate a new report - alias for create_report for frontend compatibility."""
+    return await create_report(report_data, current_user)

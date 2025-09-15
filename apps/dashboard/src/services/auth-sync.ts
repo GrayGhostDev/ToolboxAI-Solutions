@@ -8,7 +8,7 @@
  * @version 1.0.0
  */
 
-import { terminalSync } from './terminal-sync';
+// Terminal sync removed - not part of application
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, API_BASE_URL } from '../config';
 import { store } from '../store';
 import { signInSuccess as loginSuccess, signOut as logout } from '../store/slices/userSlice';
@@ -379,8 +379,8 @@ store.dispatch(loginSuccess({
     });
 
     // Also track API calls as activity
-    if (terminalSync) {
-      terminalSync.on('message', updateActivity);
+    if (/* terminalSync removed */ false) {
+      /* terminalSync removed */ false.on('message', updateActivity);
     }
   }
 
@@ -412,7 +412,7 @@ store.dispatch(loginSuccess({
     this.currentSession.isActive = inactiveMinutes < this.config.sessionTimeout;
 
     // Send session status to backend
-    if (this.config.syncWithBackend && terminalSync) {
+    if (this.config.syncWithBackend && /* terminalSync removed */ false) {
       this.sendSessionUpdate(inactiveMinutes);
     }
 
@@ -423,7 +423,7 @@ store.dispatch(loginSuccess({
   }
 
   private sendSessionUpdate(inactiveMinutes: number): void {
-    terminalSync.sendToTerminal('terminal1', {
+    /* terminalSync removed */ false.sendToTerminal('terminal1', {
       to: 'terminal1',
       type: 'session_update',
       payload: {
@@ -445,29 +445,29 @@ store.dispatch(loginSuccess({
   // ================================
 
   private syncWithBackend(): void {
-    if (!terminalSync) {
+    if (!/* terminalSync removed */ false) {
       console.warn('⚠️ Terminal sync not available for auth sync');
       return;
     }
 
     // Handle force logout from backend
-    terminalSync.on('terminal1:force_logout', (data: any) => {
+    /* terminalSync removed */ false.on('terminal1:force_logout', (data: any) => {
       console.warn('⚠️ Force logout received from backend:', data.reason);
       this.handleForceLogout(data.reason);
     });
 
     // Handle session updates from backend
-    terminalSync.on('terminal1:session_update', (data: any) => {
+    /* terminalSync removed */ false.on('terminal1:session_update', (data: any) => {
       this.handleSessionUpdate(data);
     });
 
     // Handle permission changes
-    terminalSync.on('terminal1:permission_change', (data: any) => {
+    /* terminalSync removed */ false.on('terminal1:permission_change', (data: any) => {
       this.handlePermissionChange(data);
     });
 
     // Handle token invalidation
-terminalSync.on('terminal1:token_invalidated', (_data: any) => {
+/* terminalSync removed */ false.on('terminal1:token_invalidated', (_data: any) => {
       console.warn('⚠️ Token invalidated by backend');
       this.handleAuthFailure('token_invalidated');
     });
@@ -476,13 +476,13 @@ terminalSync.on('terminal1:token_invalidated', (_data: any) => {
   }
 
 private notifyTokenRefresh(_token: string): void {
-    if (!terminalSync) return;
+    if (!/* terminalSync removed */ false) return;
 
     // Update WebSocket connections with new token
     const connections = ['terminal1', 'terminal3', 'debugger'];
     connections.forEach(terminal => {
-      if (terminalSync.isTerminalConnected(terminal)) {
-        terminalSync.sendToTerminal(terminal, {
+      if (/* terminalSync removed */ false.isTerminalConnected(terminal)) {
+        /* terminalSync removed */ false.sendToTerminal(terminal, {
           to: terminal as any,
           type: 'token_refreshed',
           payload: {
@@ -604,8 +604,8 @@ store.dispatch(addNotification({
     store.dispatch(logout());
 
     // Notify terminals
-    if (terminalSync) {
-      terminalSync.sendToTerminal('all', {
+    if (/* terminalSync removed */ false) {
+      /* terminalSync removed */ false.sendToTerminal('all', {
         to: 'all',
         type: 'user_logout',
         payload: {
@@ -761,8 +761,8 @@ store.dispatch(loginSuccess({
     }
 
     // Send final session update
-    if (this.currentSession && terminalSync) {
-      terminalSync.sendToTerminal('terminal1', {
+    if (this.currentSession && /* terminalSync removed */ false) {
+      /* terminalSync removed */ false.sendToTerminal('terminal1', {
         to: 'terminal1',
         type: 'session_end',
         payload: {

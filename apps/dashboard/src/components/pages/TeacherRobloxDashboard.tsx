@@ -36,7 +36,8 @@ import {
   Notifications,
   Help,
   Refresh,
-  Circle
+  Circle,
+  AutoAwesome
 } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../store';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
@@ -55,6 +56,7 @@ import { StudentProgressDashboard } from '../roblox/StudentProgressDashboard';
 import { RobloxSessionManager } from '../roblox/RobloxSessionManager';
 import { QuizResultsAnalytics } from '../roblox/QuizResultsAnalytics';
 import { RobloxEnvironmentPreview } from '../roblox/RobloxEnvironmentPreview';
+import { RobloxAIAssistant } from '../roblox/RobloxAIAssistant';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -258,6 +260,7 @@ export default function TeacherRobloxDashboard() {
         >
           <AlertTitle>Roblox Studio Integration Help</AlertTitle>
           <Typography variant="body2">
+            • <strong>AI Assistant:</strong> Chat with AI to create educational content effortlessly<br />
             • <strong>Control Panel:</strong> Connect to Roblox Studio plugin and generate content<br />
             • <strong>Content Monitor:</strong> Track AI agent progress during content generation<br />
             • <strong>Student Progress:</strong> Monitor real-time student activity and performance<br />
@@ -278,40 +281,46 @@ export default function TeacherRobloxDashboard() {
           aria-label="Roblox dashboard tabs"
         >
           <Tab
-            icon={<Dashboard />}
-            label="Control Panel"
+            icon={<AutoAwesome />}
+            label="AI Assistant"
             id="roblox-tab-0"
             aria-controls="roblox-tabpanel-0"
           />
           <Tab
-            icon={<Psychology />}
-            label="Content Monitor"
+            icon={<Dashboard />}
+            label="Control Panel"
             id="roblox-tab-1"
             aria-controls="roblox-tabpanel-1"
           />
           <Tab
-            icon={<Groups />}
-            label="Student Progress"
+            icon={<Psychology />}
+            label="Content Monitor"
             id="roblox-tab-2"
             aria-controls="roblox-tabpanel-2"
           />
           <Tab
-            icon={<Games />}
-            label="Sessions"
+            icon={<Groups />}
+            label="Student Progress"
             id="roblox-tab-3"
             aria-controls="roblox-tabpanel-3"
           />
           <Tab
-            icon={<Quiz />}
-            label="Quiz Analytics"
+            icon={<Games />}
+            label="Sessions"
             id="roblox-tab-4"
             aria-controls="roblox-tabpanel-4"
           />
           <Tab
-            icon={<Terrain />}
-            label="Environment Preview"
+            icon={<Quiz />}
+            label="Quiz Analytics"
             id="roblox-tab-5"
             aria-controls="roblox-tabpanel-5"
+          />
+          <Tab
+            icon={<Terrain />}
+            label="Environment Preview"
+            id="roblox-tab-6"
+            aria-controls="roblox-tabpanel-6"
           />
         </Tabs>
       </Paper>
@@ -319,26 +328,30 @@ export default function TeacherRobloxDashboard() {
       {/* Tab Panels */}
       <Box sx={{ flex: 1, overflow: 'hidden' }}>
         <TabPanel value={activeTab} index={0}>
+          <RobloxAIAssistant />
+        </TabPanel>
+
+        <TabPanel value={activeTab} index={1}>
           <RobloxControlPanel />
         </TabPanel>
-        
-        <TabPanel value={activeTab} index={1}>
+
+        <TabPanel value={activeTab} index={2}>
           <ContentGenerationMonitor />
         </TabPanel>
-        
-        <TabPanel value={activeTab} index={2}>
+
+        <TabPanel value={activeTab} index={3}>
           <StudentProgressDashboard />
         </TabPanel>
-        
-        <TabPanel value={activeTab} index={3}>
+
+        <TabPanel value={activeTab} index={4}>
           <RobloxSessionManager />
         </TabPanel>
-        
-        <TabPanel value={activeTab} index={4}>
+
+        <TabPanel value={activeTab} index={5}>
           <QuizResultsAnalytics />
         </TabPanel>
-        
-        <TabPanel value={activeTab} index={5}>
+
+        <TabPanel value={activeTab} index={6}>
           <RobloxEnvironmentPreview />
         </TabPanel>
       </Box>

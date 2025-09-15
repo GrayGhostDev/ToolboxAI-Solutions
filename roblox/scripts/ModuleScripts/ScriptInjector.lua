@@ -194,17 +194,35 @@ function ScriptInjector:validateScriptData(scriptData)
     return true
 end
 
--- Check Lua syntax
+-- Check Lua syntax (without using loadstring)
 function ScriptInjector:checkSyntax(source)
-    -- Try to compile the source to check for syntax errors
+    -- Basic syntax validation without executing code
     local success, result = pcall(function()
-        local func, err = loadstring(source)
-        if not func then
-            return false, err
+        -- Check for basic Lua syntax patterns
+        -- This is a safer but less comprehensive check
+
+        -- Check for balanced parentheses and brackets
+        local openParens = select(2, source:gsub("%(", ""))
+        local closeParens = select(2, source:gsub("%)", ""))
+        if openParens ~= closeParens then
+            return false, "Unbalanced parentheses"
         end
+
+        -- Check for balanced braces
+        local openBraces = select(2, source:gsub("{", ""))
+        local closeBraces = select(2, source:gsub("}", ""))
+        if openBraces ~= closeBraces then
+            return false, "Unbalanced braces"
+        end
+
+        -- Check for basic Lua keywords are properly used
+        if source:match("^end[^%w]") or source:match("[^%w]then$") then
+            return false, "Misplaced keyword"
+        end
+
         return true
     end)
-    
+
     if success and result == true then
         return true
     elseif success and result == false then

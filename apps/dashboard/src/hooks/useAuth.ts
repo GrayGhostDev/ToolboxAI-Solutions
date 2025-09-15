@@ -26,6 +26,13 @@ export const useAuth = () => {
       const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
       const savedRefreshToken = localStorage.getItem(AUTH_REFRESH_TOKEN_KEY);
 
+      // Clear invalid or test tokens
+      if (savedToken === 'undefined' || savedToken === 'null' || savedToken === '') {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
+        return;
+      }
+
       if (savedToken && savedRefreshToken) {
         // For now, just restore the saved tokens without refreshing
         // The API interceptor will handle refresh when needed

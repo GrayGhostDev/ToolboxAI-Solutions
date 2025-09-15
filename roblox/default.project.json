@@ -1,49 +1,97 @@
 {
   "name": "ToolboxAI-Roblox-Environment",
+  "globIgnorePaths": [
+    "**/package-lock.json",
+    "**/node_modules",
+    "**/*.test.lua",
+    "**/*.spec.lua"
+  ],
   "tree": {
     "$className": "DataModel",
-    
+
     "ServerScriptService": {
       "$className": "ServerScriptService",
+      "$properties": {
+        "LoadStringEnabled": false
+      },
       "Scripts": {
-        "$path": "Scripts/ServerScripts"
+        "$path": "scripts/ServerScripts",
+        "$properties": {
+          "Name": "ServerScripts"
+        }
       },
       "Modules": {
-        "$path": "Scripts/ModuleScripts"
+        "$path": "scripts/ModuleScripts",
+        "$properties": {
+          "Name": "Modules"
+        }
+      },
+      "Main": {
+        "$path": "src/Main.server.lua"
       }
     },
-    
+
     "StarterPlayer": {
       "$className": "StarterPlayer",
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
-        "$path": "Scripts/ClientScripts"
-      }
-    },
-    
-    "ReplicatedStorage": {
-      "$className": "ReplicatedStorage",
-      "RemoteEvents": {
-        "$path": "RemoteEvents"
+        "$path": "scripts/ClientScripts"
       },
-      "RemoteFunctions": {
-        "$path": "RemoteFunctions"
-      },
-      "Modules": {
-        "$className": "Folder",
-        "NetworkManager": {
-          "$path": "Scripts/ModuleScripts/NetworkManager.lua"
-        },
-        "ValidationModule": {
-          "$path": "Scripts/ModuleScripts/ValidationModule.lua"
+      "StarterCharacterScripts": {
+        "$className": "StarterCharacterScripts",
+        "$properties": {
+          "Name": "StarterCharacterScripts"
         }
       }
     },
-    
+
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "RemoteEvents": {
+        "$className": "Folder",
+        "$properties": {
+          "Name": "RemoteEvents"
+        }
+      },
+      "RemoteFunctions": {
+        "$className": "Folder",
+        "$properties": {
+          "Name": "RemoteFunctions"
+        }
+      },
+      "Modules": {
+        "$className": "Folder",
+        "$properties": {
+          "Name": "Modules"
+        },
+        "NetworkManager": {
+          "$path": "scripts/ModuleScripts/NetworkManager.lua"
+        },
+        "ValidationModule": {
+          "$path": "scripts/ModuleScripts/ValidationModule.lua"
+        }
+      },
+      "SDK": {
+        "$className": "Folder",
+        "$properties": {
+          "Name": "SDK"
+        },
+        "ToolBoxAI": {
+          "$path": "src/Modules",
+          "$properties": {
+            "Name": "ToolBoxAI"
+          }
+        }
+      }
+    },
+
     "ServerStorage": {
       "$className": "ServerStorage",
       "API": {
         "$className": "Folder",
+        "$properties": {
+          "Name": "API"
+        },
         "Dashboard": {
           "$path": "API/Dashboard"
         },
@@ -55,18 +103,148 @@
         "$path": "Config"
       },
       "Templates": {
-        "$path": "Templates"
+        "$className": "Folder",
+        "$properties": {
+          "Name": "Templates"
+        }
+      },
+      "Assets": {
+        "$className": "Folder",
+        "$properties": {
+          "Name": "Assets"
+        },
+        "NPCTemplate": {
+          "$className": "Model"
+        },
+        "NameTag": {
+          "$className": "BillboardGui"
+        }
+      },
+      "Modules": {
+        "$path": "scripts/ModuleScripts",
+        "$properties": {
+          "Name": "Modules"
+        }
+      },
+      "UI": {
+        "$className": "Folder",
+        "$properties": {
+          "Name": "UI"
+        },
+        "HUD": {
+          "$className": "ScreenGui"
+        },
+        "QuizUI": {
+          "$className": "ScreenGui"
+        },
+        "ProgressTracker": {
+          "$className": "ScreenGui"
+        },
+        "Notifications": {
+          "$className": "ScreenGui"
+        }
       }
     },
-    
+
     "Workspace": {
       "$className": "Workspace",
       "$properties": {
-        "FilteringEnabled": true
+        "FilteringEnabled": true,
+        "StreamingEnabled": true,
+        "StreamingMinRadius": 64,
+        "StreamingTargetRadius": 256,
+        "SignalBehavior": "Deferred"
       },
       "GeneratedContent": {
-        "$className": "Folder"
+        "$className": "Folder",
+        "$properties": {
+          "Name": "GeneratedContent"
+        }
+      },
+      "Checkpoints": {
+        "$className": "Folder",
+        "$properties": {
+          "Name": "Checkpoints"
+        }
+      },
+      "InteractiveElements": {
+        "$className": "Folder",
+        "$properties": {
+          "Name": "InteractiveElements"
+        }
+      },
+      "TerrainFeatures": {
+        "$className": "Folder",
+        "$properties": {
+          "Name": "TerrainFeatures"
+        }
+      },
+      "EducationalAssets": {
+        "$className": "Folder",
+        "$properties": {
+          "Name": "EducationalAssets"
+        }
+      },
+      "NPCs": {
+        "$className": "Folder",
+        "$properties": {
+          "Name": "NPCs"
+        }
+      },
+      "QuizZones": {
+        "$className": "Folder",
+        "$properties": {
+          "Name": "QuizZones"
+        }
+      }
+    },
+
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "Future",
+        "GlobalShadows": true,
+        "ShadowSoftness": 0.1,
+        "Brightness": 1.5,
+        "OutdoorAmbient": [140, 140, 140],
+        "Ambient": [100, 100, 100],
+        "ClockTime": 14
+      }
+    },
+
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$properties": {
+        "ShowDevelopmentGui": true,
+        "ScreenOrientation": "LandscapeLeft"
+      }
+    },
+
+    "SoundService": {
+      "$className": "SoundService",
+      "$properties": {
+        "RespectFilteringEnabled": true,
+        "VolumetricAudio": "Enabled"
+      }
+    },
+
+    "Chat": {
+      "$className": "Chat",
+      "$properties": {
+        "LoadDefaultChat": true
+      }
+    },
+
+    "HttpService": {
+      "$className": "HttpService",
+      "$properties": {
+        "HttpEnabled": true
       }
     }
+  },
+  "servePlaceIds": {
+    "production": 8505376973,
+    "staging": null,
+    "development": null
   }
 }

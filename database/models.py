@@ -61,6 +61,27 @@ class AchievementType(PyEnum):
     SPECIAL = "special"
 
 
+class RobloxSessionStatus(PyEnum):
+    """Roblox session status"""
+    ACTIVE = "active"
+    PAUSED = "paused"
+    COMPLETED = "completed"
+    DISCONNECTED = "disconnected"
+    ERROR = "error"
+
+
+class RobloxContentType(PyEnum):
+    """Roblox content types"""
+    SCRIPT = "script"
+    MODEL = "model"
+    TERRAIN = "terrain"
+    GUI = "gui"
+    ANIMATION = "animation"
+    SOUND = "sound"
+    TEXTURE = "texture"
+    MESH = "mesh"
+
+
 # User Models
 class User(Base):
     """Main user model for authentication and profile management"""
@@ -620,6 +641,432 @@ class Session(Base):
         Index('idx_session_user', 'user_id'),
         Index('idx_session_expires', 'expires_at'),
     )
+
+
+# Roblox Integration Models
+class RobloxSession(Base):
+    """Active Roblox game sessions tracking"""
+    __tablename__ = "roblox_sessions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    lesson_id = Column(UUID(as_uuid=True), ForeignKey("lessons.id"), nullable=False)
+    teacher_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+
+    # Roblox connection details
+    universe_id = Column(String(100), nullable=False, default="8505376973")
+    place_id = Column(String(100), nullable=False)
+    server_id = Column(String(200))
+    job_id = Column(String(200))
+
+    # OAuth2 and authentication
+    client_id = Column(String(100), nullable=False, default="2214511122270781418")
+    access_token_hash = Column(String(255))  # Hashed for security
+    refresh_token_hash = Column(String(255))  # Hashed for security
+    token_expires_at = Column(DateTime(timezone=True))
+
+    # WebSocket session data
+    websocket_session_id = Column(String(200), unique=True)
+    websocket_connection_active = Column(Boolean, default=False)
+    last_heartbeat = Column(DateTime(timezone=True))
+
+    # Session management
+    status = Column(Enum(RobloxSessionStatus, name='robloxsessionstatus', create_type=False), default=RobloxSessionStatus.ACTIVE)
+    max_players = Column(Integer, default=30)
+    current_players = Column(Integer, default=0)
+
+    # Real-time sync data
+    sync_frequency_seconds = Column(Integer, default=5)
+    last_sync_at = Column(DateTime(timezone=True))
+    sync_errors = Column(Integer, default=0)
+    sync_data = Column(JSONB, default={})
+
+    # COPPA compliance and audit trail
+    coppa_consent_verified = Column(Boolean, default=False)
+    audit_log = Column(JSONB, default=[])  # Track all session events
+    parental_consent_ids = Column(ARRAY(String), default=[])  # For under-13 users
+
+    # Timestamps
+    started_at = Column(DateTime(timezone=True), server_default=func.now())
+    ended_at = Column(DateTime(timezone=True))
+    last_activity_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    lesson = relationship("Lesson", back_populates="sessions")
+    teacher = relationship("User", back_populates="teaching_sessions", foreign_keys=[teacher_id])
+    player_progress = relationship("RobloxPlayerProgress", back_populates="session", cascade="all, delete-orphan")
+    quiz_results = relationship("RobloxQuizResult", back_populates="session", cascade="all, delete-orphan")
+    achievements_earned = relationship("RobloxAchievement", back_populates="session", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index('idx_roblox_session_lesson', 'lesson_id'),
+        Index('idx_roblox_session_teacher', 'teacher_id'),
+        Index('idx_roblox_session_universe', 'universe_id', 'place_id'),
+        Index('idx_roblox_session_status', 'status'),
+        Index('idx_roblox_session_active', 'websocket_connection_active'),
+        Index('idx_roblox_session_last_activity', 'last_activity_at'),
+    )
+
+
+class RobloxContent(Base):
+    """Generated educational content for Roblox"""
+    __tablename__ = "roblox_content"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    lesson_id = Column(UUID(as_uuid=True), ForeignKey("lessons.id"), nullable=False)
+    template_id = Column(UUID(as_uuid=True), ForeignKey("roblox_templates.id"))
+
+    # Content identification
+    title = Column(String(200), nullable=False)
+    content_type = Column(Enum(RobloxContentType, name='robloxcontenttype', create_type=False), nullable=False)
+    version = Column(String(20), default="1.0.0")
+
+    # Roblox-specific data
+    place_id = Column(String(100))
+    asset_id = Column(String(100))
+    model_id = Column(String(100))
+    script_content = Column(Text)  # Lua script content
+
+    # Content data and metadata
+    content_data = Column(JSONB, nullable=False)  # Main content structure
+    roblox_properties = Column(JSONB, default={})  # Roblox-specific properties
+    educational_metadata = Column(JSONB, default={})  # Learning objectives, etc.
+
+    # AI generation tracking
+    ai_generated = Column(Boolean, default=True)
+    ai_model = Column(String(100), default="gpt-4")
+    generation_parameters = Column(JSONB, default={})
+    generation_prompt = Column(Text)
+
+    # Version control and deployment
+    is_deployed = Column(Boolean, default=False)
+    deployed_at = Column(DateTime(timezone=True))
+    deployment_hash = Column(String(64))  # SHA256 hash of content
+
+    # Performance and usage tracking
+    usage_count = Column(Integer, default=0)
+    performance_metrics = Column(JSONB, default={})
+    user_feedback = Column(JSONB, default={})
+
+    # COPPA compliance
+    coppa_compliant = Column(Boolean, default=True)
+    content_rating = Column(String(10), default="E")  # Everyone, T for Teen, etc.
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    lesson = relationship("Lesson", back_populates="roblox_contents")
+    template = relationship("RobloxTemplate", back_populates="content_instances")
+
+    __table_args__ = (
+        Index('idx_roblox_content_lesson', 'lesson_id'),
+        Index('idx_roblox_content_type', 'content_type'),
+        Index('idx_roblox_content_deployed', 'is_deployed'),
+        Index('idx_roblox_content_place', 'place_id'),
+        Index('idx_roblox_content_version', 'version'),
+    )
+
+
+class RobloxPlayerProgress(Base):
+    """Student progress tracking within Roblox sessions"""
+    __tablename__ = "roblox_player_progress"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id = Column(UUID(as_uuid=True), ForeignKey("roblox_sessions.id"), nullable=False)
+    student_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    lesson_id = Column(UUID(as_uuid=True), ForeignKey("lessons.id"), nullable=False)
+
+    # Roblox player identification
+    roblox_user_id = Column(String(100), nullable=False)
+    roblox_username = Column(String(100), nullable=False)
+
+    # Progress metrics
+    progress_percentage = Column(Float, default=0.0)
+    checkpoints_completed = Column(JSONB, default=[])  # Array of checkpoint IDs
+    objectives_met = Column(JSONB, default=[])  # Learning objectives achieved
+
+    # In-game performance
+    score = Column(Integer, default=0)
+    time_spent_seconds = Column(Integer, default=0)
+    actions_completed = Column(Integer, default=0)
+    mistakes_made = Column(Integer, default=0)
+    hints_used = Column(Integer, default=0)
+
+    # Real-time tracking data
+    current_position = Column(JSONB)  # X, Y, Z coordinates in game
+    current_activity = Column(String(200))  # Current learning activity
+    last_interaction = Column(DateTime(timezone=True))
+
+    # Collaboration and social features
+    team_id = Column(String(100))  # If working in teams
+    collaborative_actions = Column(Integer, default=0)
+    peer_interactions = Column(Integer, default=0)
+
+    # Adaptive learning data
+    difficulty_adjustments = Column(JSONB, default=[])  # Track difficulty changes
+    learning_path = Column(JSONB, default=[])  # Sequence of activities completed
+    performance_trends = Column(JSONB, default={})  # Performance over time
+
+    # COPPA compliance
+    age_verified = Column(Boolean, default=False)
+    parental_consent_given = Column(Boolean, default=False)
+    data_collection_consent = Column(Boolean, default=False)
+
+    # Session tracking
+    joined_at = Column(DateTime(timezone=True), server_default=func.now())
+    left_at = Column(DateTime(timezone=True))
+    session_duration_seconds = Column(Integer, default=0)
+    disconnections = Column(Integer, default=0)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    session = relationship("RobloxSession", back_populates="player_progress")
+    student = relationship("User", back_populates="student_progress", foreign_keys=[student_id])
+    lesson = relationship("Lesson", back_populates="student_progress")
+    quiz_results = relationship("RobloxQuizResult", back_populates="player_progress", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        UniqueConstraint('session_id', 'student_id', 'roblox_user_id'),
+        Index('idx_roblox_progress_session', 'session_id'),
+        Index('idx_roblox_progress_student', 'student_id'),
+        Index('idx_roblox_progress_lesson', 'lesson_id'),
+        Index('idx_roblox_progress_roblox_user', 'roblox_user_id'),
+        CheckConstraint('progress_percentage >= 0 AND progress_percentage <= 100'),
+        CheckConstraint('score >= 0'),
+        CheckConstraint('time_spent_seconds >= 0'),
+    )
+
+
+class RobloxQuizResult(Base):
+    """Quiz performance data from Roblox sessions"""
+    __tablename__ = "roblox_quiz_results"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id = Column(UUID(as_uuid=True), ForeignKey("roblox_sessions.id"), nullable=False)
+    player_progress_id = Column(UUID(as_uuid=True), ForeignKey("roblox_player_progress.id"), nullable=False)
+    quiz_id = Column(UUID(as_uuid=True), ForeignKey("quizzes.id"))
+
+    # Quiz identification
+    quiz_name = Column(String(200), nullable=False)
+    quiz_type = Column(String(100), default="interactive")
+    difficulty_level = Column(Enum(DifficultyLevel, name='difficultylevel', create_type=False), default=DifficultyLevel.INTERMEDIATE)
+
+    # Performance metrics
+    total_questions = Column(Integer, nullable=False)
+    correct_answers = Column(Integer, default=0)
+    incorrect_answers = Column(Integer, default=0)
+    skipped_questions = Column(Integer, default=0)
+
+    # Scoring
+    raw_score = Column(Float, default=0.0)
+    percentage_score = Column(Float, default=0.0)
+    weighted_score = Column(Float, default=0.0)  # Adjusted for difficulty
+    bonus_points = Column(Integer, default=0)
+
+    # Timing data
+    time_allocated_seconds = Column(Integer)
+    time_taken_seconds = Column(Integer)
+    average_time_per_question = Column(Float)
+
+    # Detailed response data
+    question_responses = Column(JSONB, default=[])  # Array of question-response pairs
+    response_patterns = Column(JSONB, default={})  # Analysis of response patterns
+    learning_gaps = Column(JSONB, default=[])  # Identified knowledge gaps
+
+    # Real-time game integration
+    in_game_location = Column(JSONB)  # Where in the game the quiz was taken
+    game_context = Column(JSONB, default={})  # Context of the quiz within the game
+    interactive_elements = Column(JSONB, default=[])  # Interactive game elements used
+
+    # Adaptive learning
+    difficulty_adjustments = Column(JSONB, default=[])  # Real-time difficulty changes
+    hints_provided = Column(Integer, default=0)
+    help_requests = Column(Integer, default=0)
+
+    # Performance analytics
+    improvement_from_previous = Column(Float)  # Percentage improvement
+    consistency_score = Column(Float)  # How consistent the performance was
+    confidence_indicators = Column(JSONB, default={})  # Confidence level per topic
+
+    # Status and completion
+    completed = Column(Boolean, default=False)
+    passed = Column(Boolean, default=False)
+    retry_count = Column(Integer, default=0)
+
+    # Timestamps
+    started_at = Column(DateTime(timezone=True), nullable=False)
+    completed_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    session = relationship("RobloxSession", back_populates="quiz_results")
+    player_progress = relationship("RobloxPlayerProgress", back_populates="quiz_results")
+    quiz = relationship("Quiz")
+
+    __table_args__ = (
+        Index('idx_roblox_quiz_session', 'session_id'),
+        Index('idx_roblox_quiz_player', 'player_progress_id'),
+        Index('idx_roblox_quiz_performance', 'percentage_score'),
+        Index('idx_roblox_quiz_completion', 'completed', 'passed'),
+        CheckConstraint('percentage_score >= 0 AND percentage_score <= 100'),
+        CheckConstraint('correct_answers >= 0'),
+        CheckConstraint('total_questions > 0'),
+    )
+
+
+class RobloxAchievement(Base):
+    """Gamification achievements earned in Roblox"""
+    __tablename__ = "roblox_achievements"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id = Column(UUID(as_uuid=True), ForeignKey("roblox_sessions.id"), nullable=False)
+    student_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    base_achievement_id = Column(UUID(as_uuid=True), ForeignKey("achievements.id"))
+
+    # Achievement details
+    achievement_name = Column(String(200), nullable=False)
+    achievement_type = Column(Enum(AchievementType, name='achievementtype', create_type=False), nullable=False)
+    description = Column(Text)
+
+    # Roblox-specific data
+    in_game_badge_id = Column(String(100))  # Roblox badge ID if applicable
+    roblox_asset_id = Column(String(100))  # Associated Roblox asset
+    game_location_earned = Column(JSONB)  # Where in game it was earned
+
+    # Achievement metrics
+    points_awarded = Column(Integer, default=10)
+    difficulty_multiplier = Column(Float, default=1.0)
+    rarity_bonus = Column(Integer, default=0)
+
+    # Context and conditions
+    trigger_conditions = Column(JSONB, nullable=False)  # What triggered the achievement
+    performance_context = Column(JSONB, default={})  # Performance when earned
+    peer_comparison = Column(JSONB, default={})  # How it compares to peers
+
+    # Visual and presentation
+    icon_url = Column(String(500))
+    badge_color = Column(String(7))  # Hex color code
+    animation_data = Column(JSONB)  # Animation for earning the achievement
+
+    # Social features
+    is_shareable = Column(Boolean, default=True)
+    shared_count = Column(Integer, default=0)
+    likes_received = Column(Integer, default=0)
+
+    # Progress tracking
+    current_progress = Column(Float, default=100.0)  # Percentage progress when earned
+    milestone_data = Column(JSONB, default={})  # Milestone progression
+
+    # Timestamps
+    earned_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    session = relationship("RobloxSession", back_populates="achievements_earned")
+    student = relationship("User")
+    base_achievement = relationship("Achievement")
+
+    __table_args__ = (
+        Index('idx_roblox_achievement_session', 'session_id'),
+        Index('idx_roblox_achievement_student', 'student_id'),
+        Index('idx_roblox_achievement_type', 'achievement_type'),
+        Index('idx_roblox_achievement_earned', 'earned_at'),
+    )
+
+
+class RobloxTemplate(Base):
+    """Content templates for Roblox educational content"""
+    __tablename__ = "roblox_templates"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    creator_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+
+    # Template identification
+    name = Column(String(200), nullable=False)
+    description = Column(Text)
+    category = Column(String(100), nullable=False)  # e.g., "math", "science", "coding"
+    subject_area = Column(String(100), nullable=False)
+    grade_level_min = Column(Integer, nullable=False)
+    grade_level_max = Column(Integer, nullable=False)
+
+    # Template structure
+    template_type = Column(Enum(RobloxContentType, name='robloxcontenttype', create_type=False), nullable=False)
+    base_structure = Column(JSONB, nullable=False)  # Core template structure
+    customization_points = Column(JSONB, default=[])  # Points where content can be customized
+    variable_definitions = Column(JSONB, default={})  # Template variables
+
+    # Educational framework
+    learning_objectives_template = Column(JSONB, default=[])
+    assessment_criteria = Column(JSONB, default={})
+    difficulty_scales = Column(JSONB, default={})
+    adaptation_rules = Column(JSONB, default={})
+
+    # Roblox-specific template data
+    required_assets = Column(JSONB, default=[])  # Required Roblox assets
+    script_templates = Column(JSONB, default={})  # Lua script templates
+    ui_templates = Column(JSONB, default={})  # GUI templates
+    model_specifications = Column(JSONB, default={})
+
+    # Generation parameters
+    ai_generation_prompts = Column(JSONB, default={})  # Prompts for AI generation
+    parameter_constraints = Column(JSONB, default={})  # Constraints for generated content
+    quality_thresholds = Column(JSONB, default={})  # Quality requirements
+
+    # Usage and performance
+    usage_count = Column(Integer, default=0)
+    success_rate = Column(Float, default=0.0)  # Success rate of generated content
+    average_rating = Column(Float, default=0.0)
+    performance_metrics = Column(JSONB, default={})
+
+    # Versioning
+    version = Column(String(20), default="1.0.0")
+    is_active = Column(Boolean, default=True)
+    is_public = Column(Boolean, default=False)
+
+    # COPPA compliance
+    coppa_compliant = Column(Boolean, default=True)
+    age_appropriate_content = Column(Boolean, default=True)
+    content_warnings = Column(JSONB, default=[])
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    creator = relationship("User", back_populates="roblox_templates")
+    content_instances = relationship("RobloxContent", back_populates="template", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index('idx_roblox_template_category', 'category'),
+        Index('idx_roblox_template_subject', 'subject_area'),
+        Index('idx_roblox_template_grade', 'grade_level_min', 'grade_level_max'),
+        Index('idx_roblox_template_type', 'template_type'),
+        Index('idx_roblox_template_active', 'is_active', 'is_public'),
+        CheckConstraint('grade_level_min >= 1 AND grade_level_min <= 12'),
+        CheckConstraint('grade_level_max >= 1 AND grade_level_max <= 12'),
+        CheckConstraint('grade_level_min <= grade_level_max'),
+        CheckConstraint('success_rate >= 0 AND success_rate <= 100'),
+        CheckConstraint('average_rating >= 0 AND average_rating <= 5'),
+    )
+
+
+# Additional relationship updates needed
+
+# Add to User model relationships (these would be added in a migration)
+# roblox_templates = relationship("RobloxTemplate", back_populates="creator", cascade="all, delete-orphan")
+# student_progress = relationship("RobloxPlayerProgress", back_populates="student", foreign_keys="RobloxPlayerProgress.student_id")
+# teaching_sessions = relationship("RobloxSession", back_populates="teacher", foreign_keys="RobloxSession.teacher_id")
+
+# Add to Lesson model relationships (these would be added in a migration)
+# roblox_contents = relationship("RobloxContent", back_populates="lesson", cascade="all, delete-orphan")
+# sessions = relationship("RobloxSession", back_populates="lesson", cascade="all, delete-orphan")
+# student_progress = relationship("RobloxPlayerProgress", back_populates="lesson", cascade="all, delete-orphan")
 
 
 # Backward compatibility alias

@@ -14,10 +14,10 @@ import complianceReducer from "./slices/complianceSlice";
 import realtimeReducer from "./slices/realtimeSlice";
 import robloxReducer from "./slices/robloxSlice";
 import { createWebSocketMiddleware, setupWebSocketListeners } from "./middleware/websocketMiddleware";
-import { WebSocketService } from "../services/websocket";
+import { PusherService } from "../services/pusher";
 
-// Create WebSocket service instance
-const webSocketService = WebSocketService.getInstance();
+// Create Pusher service instance (using WebSocket name for backward compatibility)
+const webSocketService = PusherService.getInstance();
 
 export const store = configureStore({
   reducer: {

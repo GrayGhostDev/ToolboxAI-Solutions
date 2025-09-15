@@ -1,22 +1,99 @@
 --[[
     ToolboxAI Content Deployer Module
+    Version: 2.0.0 - Updated for Roblox 2025
     Terminal 3 - Educational Content Deployment System
-    Deploys and manages educational content in the game world
+
+    Features:
+    - Dynamic educational content deployment
+    - Multi-modal content support (text, 3D, interactive)
+    - Real-time backend synchronization
+    - FilteringEnabled compliant deployment
+    - Memory-efficient content management
 ]]
 
 local ContentDeployer = {}
 ContentDeployer.__index = ContentDeployer
 
+-- Services
 local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local Debris = game:GetService("Debris")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Configuration
+local CONFIG = {
+    API_BASE_URL = "http://127.0.0.1:8008",
+    DEPLOYMENT_ENDPOINT = "/api/v1/content/deploy",
+    ANALYTICS_ENDPOINT = "/api/v1/analytics/deployment",
+    MAX_CONCURRENT_DEPLOYMENTS = 5,
+    CLEANUP_INTERVAL = 300 -- 5 minutes
+}
 
 function ContentDeployer.new()
     local self = setmetatable({}, ContentDeployer)
     self.deployedContent = {}
     self.activeQuizzes = {}
+
+    -- Enhanced tracking (2025)
+    self.deploymentStats = {
+        totalDeployments = 0,
+        successfulDeployments = 0,
+        failedDeployments = 0,
+        activeDeployments = 0
+    }
+
+    -- Setup cleanup routine
+    self:setupCleanupRoutine()
+
     return self
+end
+
+-- Setup automatic cleanup routine
+function ContentDeployer:setupCleanupRoutine()
+    spawn(function()
+        while true do
+            wait(CONFIG.CLEANUP_INTERVAL)
+            self:performCleanup()
+        end
+    end)
+end
+
+-- Perform routine cleanup of old content
+function ContentDeployer:performCleanup()
+    local currentTime = tick()
+    local cleanupCount = 0
+
+    for lessonId, deployment in pairs(self.deployedContent) do
+        -- Clean up content older than 1 hour if no players are nearby
+        local age = currentTime - (deployment.startTime or 0)
+        if age > 3600 then -- 1 hour
+            local hasNearbyPlayers = false
+            if deployment.folder then
+                -- Check if any players are within 100 studs
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player.Character and player.Character.PrimaryPart then
+                        local distance = (player.Character.PrimaryPart.Position - deployment.folder.WorldPivot.Position).Magnitude
+                        if distance < 100 then
+                            hasNearbyPlayers = true
+                            break
+                        end
+                    end
+                end
+            end
+
+            if not hasNearbyPlayers then
+                self:cleanup(lessonId)
+                cleanupCount = cleanupCount + 1
+            end
+        end
+    end
+
+    if cleanupCount > 0 then
+        print(string.format("[ContentDeployer] Cleaned up %d old deployments", cleanupCount))
+    end
 end
 
 function ContentDeployer:deployLesson(lessonData)
@@ -673,14 +750,67 @@ function ContentDeployer:sendMetrics(metrics)
     end)
 end
 
+-- Report deployment analytics to backend (2025)
+function ContentDeployer:reportAnalytics(eventType, data)
+    spawn(function()
+        local success, response = pcall(function()
+            return HttpService:RequestAsync({
+                Url = CONFIG.API_BASE_URL .. CONFIG.ANALYTICS_ENDPOINT,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["X-Content-Deployer"] = "2.0"
+                },
+                Body = HttpService:JSONEncode({
+                    eventType = eventType,
+                    data = data,
+                    stats = self.deploymentStats,
+                    metadata = {
+                        placeId = game.PlaceId,
+                        universeId = game.GameId,
+                        timestamp = os.time(),
+                        playerCount = #Players:GetPlayers()
+                    }
+                })
+            })
+        end)
+
+        if success and response.StatusCode == 200 then
+            -- Analytics reported successfully
+        else
+            warn("[ContentDeployer] Failed to report analytics:",
+                 response and response.StatusMessage or "Unknown error")
+        end
+    end)
+end
+
+-- Get deployment statistics
+function ContentDeployer:getStatistics()
+    return {
+        stats = self.deploymentStats,
+        activeDeployments = self.deploymentStats.activeDeployments,
+        deployedContentCount = 0,
+        activeQuizzesCount = 0
+    }
+end
+
 function ContentDeployer:cleanup(lessonId)
     -- Clean up deployed content
     local deployment = self.deployedContent[lessonId]
     if deployment and deployment.folder then
         deployment.folder:Destroy()
         self.deployedContent[lessonId] = nil
+
+        -- Update statistics
+        self.deploymentStats.activeDeployments = math.max(0, self.deploymentStats.activeDeployments - 1)
+
+        -- Report cleanup to backend
+        self:reportAnalytics("content_cleanup", {
+            lessonId = lessonId,
+            deploymentDuration = tick() - (deployment.startTime or 0)
+        })
     end
-    
+
     -- Remove quiz if active
     if self.activeQuizzes[lessonId] then
         self.activeQuizzes[lessonId] = nil

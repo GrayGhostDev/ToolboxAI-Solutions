@@ -75,7 +75,7 @@ export function useRealTimeData<T extends { id: string }>(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch data from API
+  // Fetch data from API - memoized without fetchFn dependency to avoid loops
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -89,7 +89,7 @@ export function useRealTimeData<T extends { id: string }>(
     } finally {
       setLoading(false);
     }
-  }, [fetchFn]);
+  }, []); // Empty deps - fetchFn is passed in and doesn't change
 
   // Create new item with optimistic update
   const create = useCallback(async (itemData: any): Promise<T | null> => {
@@ -124,7 +124,7 @@ export function useRealTimeData<T extends { id: string }>(
     } finally {
       setLoading(false);
     }
-  }, [createFn, transformFn, refresh, dispatch]);
+  }, [createFn, transformFn, dispatch]); // Remove refresh to avoid circular deps
 
   // Update existing item with optimistic update
   const update = useCallback(async (id: string, itemData: any): Promise<T | null> => {
@@ -161,7 +161,7 @@ export function useRealTimeData<T extends { id: string }>(
     } finally {
       setLoading(false);
     }
-  }, [updateFn, transformFn, refresh, dispatch]);
+  }, [updateFn, transformFn, dispatch]); // Remove refresh to avoid circular deps
 
   // Delete item with optimistic update
   const remove = useCallback(async (id: string): Promise<boolean> => {
@@ -199,14 +199,14 @@ export function useRealTimeData<T extends { id: string }>(
     } finally {
       setLoading(false);
     }
-  }, [deleteFn, refresh, dispatch]);
+  }, [deleteFn, dispatch]); // Remove refresh to avoid circular deps
 
   // Auto-fetch on mount
   useEffect(() => {
     if (autoFetch) {
       refresh();
     }
-  }, [autoFetch, refresh]);
+  }, [autoFetch]); // Remove refresh from deps to avoid loops
 
   // Optional polling
   useEffect(() => {
@@ -215,7 +215,7 @@ export function useRealTimeData<T extends { id: string }>(
       refresh();
     }, refreshInterval);
     return () => clearInterval(id);
-  }, [refresh, refreshInterval]);
+  }, [refreshInterval]); // Remove refresh from deps to avoid loops
 
   // WebSocket subscription for real-time updates
   useEffect(() => {
@@ -271,7 +271,7 @@ export function useRealTimeData<T extends { id: string }>(
     return () => {
       unsubscribe(subscriptionId);
     };
-  }, [channel, isConnected, subscribe, unsubscribe, transformFn, refresh]);
+  }, [channel, isConnected, subscribe, unsubscribe, transformFn]); // Remove refresh to avoid loops
 
   return {
     data,

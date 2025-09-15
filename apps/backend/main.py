@@ -1185,6 +1185,14 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load assessments endpoints: {e}")
 
+# Import and include gamification router
+try:
+    from .api.v1.endpoints.gamification import router as gamification_router
+    app.include_router(gamification_router, prefix="/api/v1/gamification", tags=["gamification"])
+    logger.info("Gamification endpoints loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not load gamification endpoints: {e}")
+
 # Import and include reports router
 try:
     from .api.v1.endpoints.reports import reports_router
@@ -1200,6 +1208,22 @@ try:
     logger.info("Messages endpoints loaded successfully")
 except ImportError as e:
     logger.warning(f"Could not load messages endpoints: {e}")
+
+# Import and include roblox router
+try:
+    from .api.v1.endpoints.roblox import roblox_router
+    app.include_router(roblox_router)
+    logger.info("Roblox endpoints loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not load roblox endpoints: {e}")
+
+# Import and include AI chat router
+try:
+    from .api.v1.endpoints.ai_chat import router as ai_chat_router
+    app.include_router(ai_chat_router, prefix="/api/v1")
+    logger.info("AI Chat endpoints loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not load AI chat endpoints: {e}")
 
 # Import and include analytics, gamification, compliance, users, and schools routers
 try:

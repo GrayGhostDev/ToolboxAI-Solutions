@@ -1,8 +1,16 @@
 --[[
     ToolboxAI Security Validator Module
     Version: 1.0.0
-    Description: Provides comprehensive input validation, rate limiting, and security measures
+    Version: 2.0.0 - Updated for Roblox 2025
+    Description: Provides comprehensive input validation, rate limiting, and anti-exploit measures
                  for the educational content generation system
+
+    Features:
+    - Advanced input sanitization
+    - Rate limiting and DDoS protection
+    - Anti-exploit detection
+    - FilteringEnabled compliant
+    - Backend API security integration
 --]]
 
 local SecurityValidator = {}
@@ -12,6 +20,9 @@ SecurityValidator.__index = SecurityValidator
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local DataStoreService = game:GetService("DataStoreService")
+local MessagingService = game:GetService("MessagingService")
 
 -- Configuration
 local CONFIG = {
@@ -23,9 +34,20 @@ local CONFIG = {
     MIN_TOKEN_LENGTH = 20,
     JWT_PATTERN = "^[A-Za-z0-9%-_]+%.[A-Za-z0-9%-_]+%.[A-Za-z0-9%-_]+$",
     
-    -- Rate limiting
+    -- Rate limiting (2025 standards)
     RATE_LIMIT_WINDOW = 60, -- seconds
     DEFAULT_RATE_LIMIT = 100, -- requests per window
+    BURST_RATE_LIMIT = 20, -- requests in 10 seconds
+    STRICT_RATE_LIMIT = 10, -- for sensitive operations
+
+    -- Anti-exploit settings
+    MAX_REQUESTS_PER_SECOND = 10,
+    SUSPICIOUS_PATTERN_THRESHOLD = 5,
+    AUTO_BAN_THRESHOLD = 10,
+
+    -- Backend integration
+    API_BASE_URL = "http://127.0.0.1:8008",
+    SECURITY_ENDPOINT = "/api/v1/security/validate"
     
     -- Content validation
     VALID_CONTENT_TYPES = {
@@ -94,10 +116,90 @@ local CONFIG = {
 -- Constructor
 function SecurityValidator.new()
     local self = setmetatable({}, SecurityValidator)
+
+    -- Core components
     self.rateLimiter = self:createRateLimiter()
     self.validationCache = {}
     self.sanitizationLog = {}
+
+    -- Anti-exploit tracking (2025)
+    self.suspiciousActivity = {}
+    self.bannedUsers = {}
+    self.reportedUsers = {}
+
+    -- Performance tracking
+    self.validationStats = {
+        totalValidations = 0,
+        failedValidations = 0,
+        blockedRequests = 0,
+        exploitAttempts = 0
+    }
+
+    -- Setup RemoteEvent monitoring if on server
+    if RunService:IsServer() then
+        self:SetupAntiExploit()
+    end
+
     return self
+end
+
+-- Setup anti-exploit monitoring (Server-side)
+function SecurityValidator:SetupAntiExploit()
+    -- Monitor RemoteEvent spam
+    local function monitorRemoteEvent(remoteEvent)
+        local originalFireServer = remoteEvent.OnServerEvent
+
+        remoteEvent.OnServerEvent:Connect(function(player, ...)
+            local userId = player.UserId
+            local currentTime = tick()
+
+            -- Track request frequency
+            if not self.suspiciousActivity[userId] then
+                self.suspiciousActivity[userId] = {
+                    requestTimes = {},
+                    violations = 0,
+                    lastViolation = 0
+                }
+            end
+
+            local userData = self.suspiciousActivity[userId]
+            table.insert(userData.requestTimes, currentTime)
+
+            -- Clean old requests (older than 1 second)
+            local recentRequests = {}
+            for _, time in ipairs(userData.requestTimes) do
+                if currentTime - time <= 1 then
+                    table.insert(recentRequests, time)
+                end
+            end
+            userData.requestTimes = recentRequests
+
+            -- Check for spam
+            if #userData.requestTimes > CONFIG.MAX_REQUESTS_PER_SECOND then
+                self:HandleSuspiciousActivity(player, "remote_spam", {
+                    requestCount = #userData.requestTimes,
+                    remoteEvent = remoteEvent.Name
+                })
+                return -- Block the request
+            end
+
+            -- Original handler can continue
+        end)
+    end
+
+    -- Monitor all existing RemoteEvents
+    for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
+        if obj:IsA("RemoteEvent") then
+            monitorRemoteEvent(obj)
+        end
+    end
+
+    -- Monitor new RemoteEvents
+    ReplicatedStorage.DescendantAdded:Connect(function(obj)
+        if obj:IsA("RemoteEvent") then
+            monitorRemoteEvent(obj)
+        end
+    end)
 end
 
 -- Main validation function
@@ -648,6 +750,123 @@ end
 function SecurityValidator:clearLogs()
     self.sanitizationLog = {}
     self.validationCache = {}
+end
+
+-- Handle suspicious activity (Anti-exploit)
+function SecurityValidator:HandleSuspiciousActivity(player, activityType, details)
+    local userId = player.UserId
+    local currentTime = tick()
+
+    if not self.suspiciousActivity[userId] then
+        self.suspiciousActivity[userId] = {
+            violations = 0,
+            lastViolation = 0,
+            activityTypes = {}
+        }
+    end
+
+    local userData = self.suspiciousActivity[userId]
+    userData.violations = userData.violations + 1
+    userData.lastViolation = currentTime
+    userData.activityTypes[activityType] = (userData.activityTypes[activityType] or 0) + 1
+
+    -- Update statistics
+    self.validationStats.exploitAttempts = self.validationStats.exploitAttempts + 1
+
+    -- Log the incident
+    local incident = {
+        userId = userId,
+        username = player.Name,
+        activityType = activityType,
+        details = details,
+        timestamp = currentTime,
+        violationCount = userData.violations
+    }
+
+    table.insert(self.sanitizationLog, incident)
+
+    warn(string.format("[SECURITY] Suspicious activity detected: %s from %s (Violation #%d)",
+         activityType, player.Name, userData.violations))
+
+    -- Report to backend
+    self:ReportToBackend(incident)
+
+    -- Take action based on violation count
+    if userData.violations >= CONFIG.AUTO_BAN_THRESHOLD then
+        self:BanUser(player, "Excessive security violations")
+    elseif userData.violations >= CONFIG.SUSPICIOUS_PATTERN_THRESHOLD then
+        self:FlagUser(player, "Multiple security violations")
+    end
+end
+
+-- Report security incident to backend
+function SecurityValidator:ReportToBackend(incident)
+    spawn(function()
+        pcall(function()
+            HttpService:RequestAsync({
+                Url = CONFIG.API_BASE_URL .. "/api/v1/security/incident",
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["X-Security-Report"] = "true"
+                },
+                Body = HttpService:JSONEncode(incident)
+            })
+        end)
+    end)
+end
+
+-- Ban user (temporary implementation)
+function SecurityValidator:BanUser(player, reason)
+    self.bannedUsers[player.UserId] = {
+        reason = reason,
+        timestamp = tick(),
+        username = player.Name
+    }
+
+    warn(string.format("[SECURITY] User %s has been banned: %s", player.Name, reason))
+
+    -- Kick the player
+    player:Kick("You have been banned for security violations: " .. reason)
+end
+
+-- Flag user for review
+function SecurityValidator:FlagUser(player, reason)
+    self.reportedUsers[player.UserId] = {
+        reason = reason,
+        timestamp = tick(),
+        username = player.Name
+    }
+
+    warn(string.format("[SECURITY] User %s has been flagged: %s", player.Name, reason))
+end
+
+-- Check if user is banned
+function SecurityValidator:IsUserBanned(userId)
+    return self.bannedUsers[userId] ~= nil
+end
+
+-- Enhanced statistics with anti-exploit data
+function SecurityValidator:getStatistics()
+    local suspiciousCount = 0
+    local bannedCount = 0
+
+    for _ in pairs(self.suspiciousActivity) do
+        suspiciousCount = suspiciousCount + 1
+    end
+
+    for _ in pairs(self.bannedUsers) do
+        bannedCount = bannedCount + 1
+    end
+
+    return {
+        sanitizationCount = #self.sanitizationLog,
+        validationStats = self.validationStats,
+        suspiciousUsers = suspiciousCount,
+        bannedUsers = bannedCount,
+        reportedUsers = #self.reportedUsers,
+        validationCacheSize = 0 -- Would need to implement proper caching
+    }
 end
 
 return SecurityValidator

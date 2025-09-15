@@ -4,7 +4,7 @@
  */
 
 import { Middleware } from '@reduxjs/toolkit';
-import { WebSocketService } from '../../services/websocket';
+import { PusherService as WebSocketService } from '../../services/pusher';
 import { 
   WebSocketMessageType, 
   WebSocketChannel,

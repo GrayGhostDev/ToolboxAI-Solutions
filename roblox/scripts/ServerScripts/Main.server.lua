@@ -295,10 +295,12 @@ function SessionManager:ApplyEnvironment(environmentData)
     -- This would apply terrain, lighting, and other environmental changes
     -- Based on the AI-generated content
     if environmentData.terrain then
-        -- Apply terrain changes
-        local terrainFunc = loadstring(environmentData.terrain)
-        if terrainFunc then
-            pcall(terrainFunc)
+        -- Apply terrain changes using safe predefined functions
+        local TerrainManager = require(script.Parent.Parent.ModuleScripts.TerrainManager)
+        if TerrainManager then
+            pcall(function()
+                TerrainManager:ApplyTerrainData(environmentData.terrain)
+            end)
         end
     end
     
