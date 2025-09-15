@@ -234,7 +234,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
               gap={2}
             >
               <Stack sx={{ flex: 1 }}>
-                <Fade in={true} timeout={1000}>
+                <Fade in={true} timeout={1000} appear={false}>
                   <Typography 
                     variant="h4" 
                     sx={{ 
@@ -250,7 +250,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     🚀 Welcome to Space Station! 👋
                   </Typography>
                 </Fade>
-                <Slide in={true} direction="up" timeout={1500}>
+                <Slide in={true} direction="up" timeout={1500} appear={false}>
                   <Typography variant="body1" sx={{ opacity: 0.9, mb: 2 }}>
                     {role === "teacher" && "Review today's classes, push lessons to Roblox, and track assessments."}
                     {role === "admin" && "Monitor usage across schools, manage integrations, and review compliance."}
@@ -261,19 +261,18 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                 
                 {/* Character Avatar */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                  <RobloxCharacterAvatar
-                    character={{
-                      name: 'Astro Explorer',
-                      type: 'astronaut',
-                      level: level,
-                      xp: userXP,
-                      achievements: ['Space Walker', 'Quiz Master'],
-                      isActive: true,
-                      imagePath: '/images/characters/PNG/Astronauto (variation)/01.png'
+                  <Avatar
+                    sx={{
+                      width: 60,
+                      height: 60,
+                      background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                      fontSize: '2rem',
+                      border: `3px solid ${theme.palette.primary.main}`,
+                      boxShadow: `0 0 20px ${alpha(theme.palette.primary.main, 0.5)}`,
                     }}
-                    size="medium"
-                    animated={true}
-                  />
+                  >
+                    🚀
+                  </Avatar>
                   <Box>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       Level {level} Explorer
@@ -399,7 +398,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
 
       {/* 3D Educational Tools Section */}
       <Grid2 xs={12}>
-        <Fade in={true} timeout={2000}>
+        <Fade in={true} timeout={2000} appear={false}>
           <Card
             sx={{
               background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.05)})`,
@@ -426,64 +425,40 @@ export function DashboardHome({ role }: { role?: UserRole }) {
               
               <Grid2 container spacing={3} justifyContent="center">
                 {[
-                  {
-                    name: 'ABC_CUBE',
-                    type: 'education' as const,
-                    category: 'Language',
-                    level: 3,
-                    isUnlocked: true,
-                    description: 'Learn the alphabet with interactive 3D cubes'
-                  },
-                  {
-                    name: 'MATH_BOARD',
-                    type: 'education' as const,
-                    category: 'Mathematics',
-                    level: 2,
-                    isUnlocked: true,
-                    description: 'Solve math problems on the interactive board'
-                  },
-                  {
-                    name: 'SPACE_QUIZ',
-                    type: 'education' as const,
-                    category: 'Science',
-                    level: 4,
-                    isUnlocked: true,
-                    description: 'Test your knowledge about space and planets'
-                  },
-                  {
-                    name: 'SPORTS_CHALLENGE',
-                    type: 'gaming' as const,
-                    category: 'Physical Education',
-                    level: 1,
-                    isUnlocked: true,
-                    description: 'Complete physical challenges and sports activities'
-                  },
-                  {
-                    name: 'ART_STUDIO',
-                    type: 'tool' as const,
-                    category: 'Creative Arts',
-                    level: 2,
-                    isUnlocked: true,
-                    description: 'Create digital art with brushes and colors'
-                  },
-                  {
-                    name: 'ACHIEVEMENT_HALL',
-                    type: 'achievement' as const,
-                    category: 'Recognition',
-                    level: 5,
-                    isUnlocked: true,
-                    description: 'View all your earned achievements and badges'
-                  }
+                  { name: 'ABC Learning', icon: '🧩', color: theme.palette.primary.main },
+                  { name: 'Math Board', icon: '📐', color: theme.palette.secondary.main },
+                  { name: 'Space Quiz', icon: '🚀', color: theme.palette.success.main },
+                  { name: 'Sports Challenge', icon: '⚽', color: theme.palette.warning.main },
+                  { name: 'Art Studio', icon: '🎨', color: theme.palette.error.main },
+                  { name: 'Achievements', icon: '🏆', color: theme.palette.info.main },
                 ].map((tool, index) => (
                   <Grid2 xs={6} sm={4} md={2} key={index}>
-                    <Zoom in={true} timeout={2000 + index * 200}>
-                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                        <Roblox3DIcon
-                          icon={tool}
-                          size="large"
-                          animated={true}
-                          onClick={() => console.log(`Clicked ${tool.name}`)}
-                        />
+                    <Zoom in={true} timeout={2000 + index * 200} appear={false}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          p: 2,
+                          borderRadius: 3,
+                          background: `linear-gradient(145deg, ${alpha(tool.color, 0.1)}, ${alpha(tool.color, 0.05)})`,
+                          border: `2px solid ${alpha(tool.color, 0.3)}`,
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-5px) scale(1.05)',
+                            boxShadow: `0 10px 25px ${alpha(tool.color, 0.3)}`,
+                            borderColor: tool.color,
+                          }
+                        }}
+                        onClick={() => console.log(`Clicked ${tool.name}`)}
+                      >
+                        <Typography sx={{ fontSize: '3rem', mb: 1 }}>
+                          {tool.icon}
+                        </Typography>
+                        <Typography variant="body2" sx={{ textAlign: 'center', fontWeight: 600 }}>
+                          {tool.name}
+                        </Typography>
                       </Box>
                     </Zoom>
                   </Grid2>
@@ -494,62 +469,65 @@ export function DashboardHome({ role }: { role?: UserRole }) {
         </Fade>
       </Grid2>
 
-      {/* 3D Navigation Section */}
+      {/* Navigation Section */}
       <Grid2 xs={12}>
-        <Fade in={true} timeout={2500}>
-          <Roblox3DNavigation
-            items={[
-              {
-                id: 'dashboard',
-                label: 'Dashboard',
-                iconName: 'LAMP',
-                path: '/dashboard',
-                tooltip: 'Main dashboard overview'
-              },
-              {
-                id: 'lessons',
-                label: 'Lessons',
-                iconName: 'OPEN_BOOK',
-                path: '/lessons',
-                badge: 3,
-                tooltip: 'View and manage lessons'
-              },
-              {
-                id: 'assessments',
-                label: 'Assessments',
-                iconName: 'ASSESSMENT',
-                path: '/assessments',
-                tooltip: 'Take and review assessments'
-              },
-              {
-                id: 'rewards',
-                label: 'Rewards',
-                iconName: 'TROPHY',
-                path: '/rewards',
-                badge: 5,
-                tooltip: 'View achievements and rewards'
-              },
-              {
-                id: 'profile',
-                label: 'Profile',
-                iconName: 'BADGE',
-                path: '/profile',
-                tooltip: 'Manage your profile'
-              }
-            ]}
-            onItemClick={(item) => {
-              if (item.path) {
-                navigate(item.path);
-              }
+        <Fade in={true} timeout={2500} appear={false}>
+          <Card
+            sx={{
+              background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.05)})`,
+              border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+              borderRadius: 3,
+              p: 2,
             }}
-            orientation="horizontal"
-            variant="buttons"
-            size="medium"
-            animated={true}
-            glowEffect={true}
-            showLabels={true}
-            compact={false}
-          />
+          >
+            <Typography variant="h6" sx={{ textAlign: 'center', mb: 2, fontWeight: 700 }}>
+              🧭 Navigation Hub
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+              {[
+                { name: 'Dashboard', icon: '🏠', path: '/dashboard' },
+                { name: 'Lessons', icon: '📚', path: '/lessons', badge: 3 },
+                { name: 'Assessments', icon: '📝', path: '/assessments' },
+                { name: 'Rewards', icon: '🏆', path: '/rewards', badge: 5 },
+                { name: 'Profile', icon: '👤', path: '/profile' },
+              ].map((item, index) => (
+                <Button
+                  key={index}
+                  variant="contained"
+                  startIcon={<Typography sx={{ fontSize: '1.2rem' }}>{item.icon}</Typography>}
+                  onClick={() => navigate(item.path)}
+                  sx={{
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                    borderRadius: 2,
+                    px: 3,
+                    py: 1,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    boxShadow: `0 4px 15px ${alpha(theme.palette.primary.main, 0.3)}`,
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
+                    }
+                  }}
+                >
+                  {item.name}
+                  {item.badge && (
+                    <Chip
+                      label={item.badge}
+                      size="small"
+                      sx={{
+                        ml: 1,
+                        backgroundColor: theme.palette.error.main,
+                        color: 'white',
+                        fontSize: '0.7rem',
+                        height: 20,
+                      }}
+                    />
+                  )}
+                </Button>
+              ))}
+            </Box>
+          </Card>
         </Fade>
       </Grid2>
 
@@ -557,7 +535,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
       {role === "student" && (
         <>
           <Grid2 xs={12} md={4}>
-            <Fade in={true} timeout={3000}>
+            <Fade in={true} timeout={3000} appear={false}>
               <Card 
                 role="region" 
                 aria-label="XP overview"
@@ -570,18 +548,18 @@ export function DashboardHome({ role }: { role?: UserRole }) {
               >
                 <CardContent sx={{ p: 3 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Roblox3DIcon
-                      icon={{
-                        name: 'TROPHY',
-                        type: 'achievement',
-                        category: 'XP',
-                        level: level,
-                        isUnlocked: true,
-                        description: 'Experience Points'
+                    <Avatar
+                      sx={{
+                        width: 50,
+                        height: 50,
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                        fontSize: '1.5rem',
+                        border: `2px solid ${theme.palette.primary.main}`,
+                        boxShadow: `0 0 15px ${alpha(theme.palette.primary.main, 0.4)}`,
                       }}
-                      size="medium"
-                      animated={true}
-                    />
+                    >
+                      🏆
+                    </Avatar>
                     <Box>
                       <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
                         Experience Points
@@ -592,21 +570,30 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     </Box>
                   </Box>
                   
-                  <RobloxProgressBar
-                    current={xp % 100}
-                    max={100}
-                    label="Level Progress"
-                    showPercentage={true}
-                    animated={true}
-                    color="primary"
-                    size="medium"
-                  />
+                  <Box sx={{ mb: 1 }}>
+                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
+                      Level Progress: {xp % 100}%
+                    </Typography>
+                    <LinearProgress
+                      variant="determinate"
+                      value={xp % 100}
+                      sx={{
+                        height: 8,
+                        borderRadius: 4,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                        '& .MuiLinearProgress-bar': {
+                          background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                          borderRadius: 4,
+                        }
+                      }}
+                    />
+                  </Box>
                 </CardContent>
               </Card>
             </Fade>
           </Grid2>
           <Grid2 xs={12} md={4}>
-            <Fade in={true} timeout={3200}>
+            <Fade in={true} timeout={3200} appear={false}>
               <Card 
                 role="region" 
                 aria-label="Level status"
@@ -619,18 +606,18 @@ export function DashboardHome({ role }: { role?: UserRole }) {
               >
                 <CardContent sx={{ p: 3 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Roblox3DIcon
-                      icon={{
-                        name: 'STAR',
-                        type: 'achievement',
-                        category: 'Level',
-                        level: level,
-                        isUnlocked: true,
-                        description: 'Current Level'
+                    <Avatar
+                      sx={{
+                        width: 50,
+                        height: 50,
+                        background: `linear-gradient(135deg, ${theme.palette.warning.main}, ${theme.palette.error.main})`,
+                        fontSize: '1.5rem',
+                        border: `2px solid ${theme.palette.warning.main}`,
+                        boxShadow: `0 0 15px ${alpha(theme.palette.warning.main, 0.4)}`,
                       }}
-                      size="medium"
-                      animated={true}
-                    />
+                    >
+                      ⭐
+                    </Avatar>
                     <Box>
                       <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.warning.main }}>
                         Current Level
@@ -645,22 +632,28 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     {100 - (xp % 100)} XP to next level
                   </Typography>
                   
-                  <RobloxProgressBar
-                    current={100 - (xp % 100)}
-                    max={100}
-                    label="Next Level"
-                    showPercentage={true}
-                    animated={true}
-                    color="warning"
-                    size="small"
-                  />
+                  <Box sx={{ mb: 1 }}>
+                    <LinearProgress
+                      variant="determinate"
+                      value={100 - (xp % 100)}
+                      sx={{
+                        height: 8,
+                        borderRadius: 4,
+                        backgroundColor: alpha(theme.palette.warning.main, 0.2),
+                        '& .MuiLinearProgress-bar': {
+                          background: `linear-gradient(90deg, ${theme.palette.warning.main}, ${theme.palette.error.main})`,
+                          borderRadius: 4,
+                        }
+                      }}
+                    />
+                  </Box>
                 </CardContent>
               </Card>
             </Fade>
           </Grid2>
           
           <Grid2 xs={12} md={4}>
-            <Fade in={true} timeout={3400}>
+            <Fade in={true} timeout={3400} appear={false}>
               <Card 
                 role="region" 
                 aria-label="Achievements"
@@ -678,18 +671,38 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                   
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     {[
-                      { id: '1', name: 'Space Walker', description: 'Completed first mission', rarity: 'common' as const, unlocked: true },
-                      { id: '2', name: 'Quiz Master', description: 'Scored 100% on quiz', rarity: 'rare' as const, unlocked: true },
-                      { id: '3', name: 'Streak Keeper', description: '7 day learning streak', rarity: 'epic' as const, unlocked: true },
-                      { id: '4', name: 'Level Up', description: 'Reached level 5', rarity: 'legendary' as const, unlocked: false },
-                    ].map((achievement) => (
-                      <RobloxAchievementBadge
-                        key={achievement.id}
-                        achievement={achievement}
-                        size="small"
-                        animated={true}
-                        onClick={(achievement) => console.log('Achievement clicked:', achievement)}
-                      />
+                      { name: 'Space Walker', icon: '🚀', color: theme.palette.success.main },
+                      { name: 'Quiz Master', icon: '🧠', color: theme.palette.primary.main },
+                      { name: 'Streak Keeper', icon: '🔥', color: theme.palette.warning.main },
+                      { name: 'Level Up', icon: '⬆️', color: theme.palette.error.main },
+                    ].map((achievement, index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          p: 1.5,
+                          borderRadius: 2,
+                          background: `linear-gradient(145deg, ${alpha(achievement.color, 0.1)}, ${alpha(achievement.color, 0.05)})`,
+                          border: `2px solid ${alpha(achievement.color, 0.3)}`,
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          minWidth: 80,
+                          '&:hover': {
+                            transform: 'scale(1.1)',
+                            boxShadow: `0 5px 15px ${alpha(achievement.color, 0.3)}`,
+                          }
+                        }}
+                        onClick={() => console.log('Achievement clicked:', achievement.name)}
+                      >
+                        <Typography sx={{ fontSize: '1.5rem', mb: 0.5 }}>
+                          {achievement.icon}
+                        </Typography>
+                        <Typography variant="caption" sx={{ textAlign: 'center', fontWeight: 600, fontSize: '0.7rem' }}>
+                          {achievement.name}
+                        </Typography>
+                      </Box>
                     ))}
                   </Box>
                 </CardContent>
