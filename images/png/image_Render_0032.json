@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/PNG Poses/Render_0032.png",
+  "file_name": "Render_0032.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2160,
+      "height": 2160,
+      "total_pixels": 4665600
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 82865,
+      "most_common": [
+        [
+          1,
+          [
+            112,
+            124,
+            137,
+            205
+          ]
+        ],
+        [
+          1,
+          [
+            152,
+            134,
+            118,
+            128
+          ]
+        ],
+        [
+          1,
+          [
+            146,
+            131,
+            118,
+            32
+          ]
+        ],
+        [
+          1,
+          [
+            164,
+            141,
+            119,
+            128
+          ]
+        ],
+        [
+          1,
+          [
+            164,
+            142,
+            119,
+            48
+          ]
+        ],
+        [
+          1,
+          [
+            218,
+            144,
+            137,
+            221
+          ]
+        ],
+        [
+          1,
+          [
+            172,
+            181,
+            190,
+            249
+          ]
+        ],
+        [
+          1,
+          [
+            181,
+            178,
+            174,
+            228
+          ]
+        ],
+        [
+          1,
+          [
+            155,
+            128,
+            101,
+            96
+          ]
+        ],
+        [
+          1,
+          [
+            156,
+            128,
+            101,
+            192
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 19521
+      },
+      {
+        "color": [
+          193,
+          67,
+          61,
+          255
+        ],
+        "frequency": 25
+      },
+      {
+        "color": [
+          192,
+          66,
+          60,
+          255
+        ],
+        "frequency": 23
+      },
+      {
+        "color": [
+          188,
+          63,
+          57,
+          255
+        ],
+        "frequency": 22
+      },
+      {
+        "color": [
+          191,
+          65,
+          59,
+          255
+        ],
+        "frequency": 21
+      }
+    ]
+  }
+}

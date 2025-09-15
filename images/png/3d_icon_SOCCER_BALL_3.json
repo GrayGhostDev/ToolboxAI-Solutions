@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/stuudy-3d-icons_NjhhMjYzMmIyMzI4MmUwMDM5ZDY0Yzlj/PNG/SOCCER_BALL_3.png",
+  "file_name": "SOCCER_BALL_3.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 3000,
+      "height": 3000,
+      "total_pixels": 9000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 31937,
+      "most_common": [
+        [
+          12,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            255,
+            254,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            251,
+            254,
+            255,
+            1
+          ]
+        ],
+        [
+          3,
+          [
+            3,
+            3,
+            3,
+            150
+          ]
+        ],
+        [
+          2,
+          [
+            3,
+            3,
+            3,
+            112
+          ]
+        ],
+        [
+          1,
+          [
+            4,
+            4,
+            3,
+            96
+          ]
+        ],
+        [
+          1,
+          [
+            3,
+            3,
+            4,
+            32
+          ]
+        ],
+        [
+          1,
+          [
+            4,
+            4,
+            4,
+            112
+          ]
+        ],
+        [
+          1,
+          [
+            4,
+            4,
+            5,
+            16
+          ]
+        ],
+        [
+          1,
+          [
+            5,
+            5,
+            5,
+            32
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 5305
+      },
+      {
+        "color": [
+          231,
+          228,
+          222,
+          255
+        ],
+        "frequency": 270
+      },
+      {
+        "color": [
+          241,
+          238,
+          234,
+          255
+        ],
+        "frequency": 226
+      },
+      {
+        "color": [
+          244,
+          242,
+          238,
+          255
+        ],
+        "frequency": 198
+      },
+      {
+        "color": [
+          229,
+          225,
+          219,
+          255
+        ],
+        "frequency": 194
+      }
+    ]
+  }
+}

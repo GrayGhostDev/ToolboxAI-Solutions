@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Item/shotgun.png",
+  "file_name": "shotgun.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 16451,
+      "most_common": [
+        [
+          1040,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          32,
+          [
+            170,
+            255,
+            255,
+            3
+          ]
+        ],
+        [
+          16,
+          [
+            252,
+            252,
+            255,
+            83
+          ]
+        ],
+        [
+          16,
+          [
+            255,
+            249,
+            255,
+            45
+          ]
+        ],
+        [
+          16,
+          [
+            255,
+            246,
+            255,
+            29
+          ]
+        ],
+        [
+          16,
+          [
+            224,
+            245,
+            255,
+            25
+          ]
+        ],
+        [
+          16,
+          [
+            255,
+            240,
+            255,
+            17
+          ]
+        ],
+        [
+          16,
+          [
+            204,
+            204,
+            255,
+            5
+          ]
+        ],
+        [
+          16,
+          [
+            255,
+            170,
+            255,
+            3
+          ]
+        ],
+        [
+          48,
+          [
+            170,
+            170,
+            255,
+            3
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 17595
+      },
+      {
+        "color": [
+          17,
+          20,
+          95,
+          255
+        ],
+        "frequency": 65
+      },
+      {
+        "color": [
+          17,
+          20,
+          96,
+          255
+        ],
+        "frequency": 64
+      },
+      {
+        "color": [
+          18,
+          21,
+          98,
+          255
+        ],
+        "frequency": 60
+      },
+      {
+        "color": [
+          18,
+          21,
+          99,
+          255
+        ],
+        "frequency": 53
+      }
+    ]
+  }
+}

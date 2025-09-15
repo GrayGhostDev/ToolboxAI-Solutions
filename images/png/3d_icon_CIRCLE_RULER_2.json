@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/stuudy-3d-icons_NjhhMjYzMmIyMzI4MmUwMDM5ZDY0Yzlj/PNG/CIRCLE_RULER_2.png",
+  "file_name": "CIRCLE_RULER_2.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 3000,
+      "height": 3000,
+      "total_pixels": 9000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 45620,
+      "most_common": [
+        [
+          1,
+          [
+            228,
+            165,
+            0,
+            0
+          ]
+        ],
+        [
+          1,
+          [
+            230,
+            164,
+            0,
+            0
+          ]
+        ],
+        [
+          1,
+          [
+            224,
+            164,
+            0,
+            0
+          ]
+        ],
+        [
+          1,
+          [
+            237,
+            174,
+            0,
+            0
+          ]
+        ],
+        [
+          1,
+          [
+            213,
+            147,
+            1,
+            16
+          ]
+        ],
+        [
+          1,
+          [
+            220,
+            142,
+            0,
+            0
+          ]
+        ],
+        [
+          1,
+          [
+            219,
+            140,
+            0,
+            0
+          ]
+        ],
+        [
+          2,
+          [
+            221,
+            140,
+            0,
+            0
+          ]
+        ],
+        [
+          1,
+          [
+            209,
+            138,
+            0,
+            32
+          ]
+        ],
+        [
+          1,
+          [
+            225,
+            160,
+            0,
+            0
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 13531
+      },
+      {
+        "color": [
+          240,
+          204,
+          122,
+          255
+        ],
+        "frequency": 126
+      },
+      {
+        "color": [
+          240,
+          238,
+          235,
+          255
+        ],
+        "frequency": 70
+      },
+      {
+        "color": [
+          240,
+          204,
+          121,
+          255
+        ],
+        "frequency": 70
+      },
+      {
+        "color": [
+          240,
+          204,
+          120,
+          255
+        ],
+        "frequency": 48
+      }
+    ]
+  }
+}

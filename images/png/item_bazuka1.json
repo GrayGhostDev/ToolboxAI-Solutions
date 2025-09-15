@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Item/bazuka1.png",
+  "file_name": "bazuka1.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 31728,
+      "most_common": [
+        [
+          240,
+          [
+            255,
+            255,
+            255,
+            3
+          ]
+        ],
+        [
+          96,
+          [
+            254,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          16,
+          [
+            248,
+            255,
+            255,
+            35
+          ]
+        ],
+        [
+          32,
+          [
+            244,
+            255,
+            255,
+            23
+          ]
+        ],
+        [
+          16,
+          [
+            243,
+            255,
+            255,
+            21
+          ]
+        ],
+        [
+          16,
+          [
+            240,
+            255,
+            255,
+            17
+          ]
+        ],
+        [
+          16,
+          [
+            239,
+            255,
+            255,
+            79
+          ]
+        ],
+        [
+          16,
+          [
+            238,
+            255,
+            255,
+            15
+          ]
+        ],
+        [
+          16,
+          [
+            235,
+            255,
+            255,
+            25
+          ]
+        ],
+        [
+          48,
+          [
+            233,
+            255,
+            255,
+            23
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 15729
+      },
+      {
+        "color": [
+          58,
+          89,
+          227,
+          255
+        ],
+        "frequency": 36
+      },
+      {
+        "color": [
+          59,
+          90,
+          228,
+          255
+        ],
+        "frequency": 29
+      },
+      {
+        "color": [
+          58,
+          88,
+          226,
+          255
+        ],
+        "frequency": 23
+      },
+      {
+        "color": [
+          60,
+          91,
+          229,
+          255
+        ],
+        "frequency": 20
+      }
+    ]
+  }
+}

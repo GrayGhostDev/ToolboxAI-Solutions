@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "file_path": "design_files/Figma File/Mike.fig",
+  "file_name": "Mike.fig",
+  "file_type": ".fig",
+  "parsed_data": {
+    "format": "figma",
+    "file_size": 174373828,
+    "modified_time": 1757964992.3449655,
+    "note": "Full parsing requires fig2sketch tool"
+  }
+}

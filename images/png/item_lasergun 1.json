@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Item/lasergun 1.png",
+  "file_name": "lasergun 1.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 36291,
+      "most_common": [
+        [
+          30012,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          16,
+          [
+            204,
+            255,
+            255,
+            5
+          ]
+        ],
+        [
+          64,
+          [
+            170,
+            255,
+            255,
+            3
+          ]
+        ],
+        [
+          124,
+          [
+            0,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          16,
+          [
+            253,
+            253,
+            255,
+            123
+          ]
+        ],
+        [
+          16,
+          [
+            237,
+            246,
+            255,
+            29
+          ]
+        ],
+        [
+          16,
+          [
+            255,
+            255,
+            254,
+            195
+          ]
+        ],
+        [
+          16,
+          [
+            255,
+            254,
+            254,
+            219
+          ]
+        ],
+        [
+          32,
+          [
+            252,
+            253,
+            254,
+            255
+          ]
+        ],
+        [
+          16,
+          [
+            255,
+            255,
+            253,
+            113
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 15549
+      },
+      {
+        "color": [
+          255,
+          255,
+          255,
+          1
+        ],
+        "frequency": 154
+      },
+      {
+        "color": [
+          5,
+          70,
+          58,
+          255
+        ],
+        "frequency": 47
+      },
+      {
+        "color": [
+          255,
+          255,
+          170,
+          3
+        ],
+        "frequency": 46
+      },
+      {
+        "color": [
+          255,
+          249,
+          99,
+          255
+        ],
+        "frequency": 42
+      }
+    ]
+  }
+}

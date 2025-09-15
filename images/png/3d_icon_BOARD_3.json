@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/stuudy-3d-icons_NjhhMjYzMmIyMzI4MmUwMDM5ZDY0Yzlj/PNG/BOARD_3.png",
+  "file_name": "BOARD_3.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 3000,
+      "height": 3000,
+      "total_pixels": 9000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 110355,
+      "most_common": [
+        [
+          2,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            248,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            241,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            232,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            243,
+            253,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            244,
+            250,
+            255,
+            7
+          ]
+        ],
+        [
+          1,
+          [
+            243,
+            250,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            239,
+            250,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            228,
+            250,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            241,
+            249,
+            255,
+            3
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 9895
+      },
+      {
+        "color": [
+          248,
+          243,
+          237,
+          255
+        ],
+        "frequency": 156
+      },
+      {
+        "color": [
+          243,
+          239,
+          232,
+          255
+        ],
+        "frequency": 130
+      },
+      {
+        "color": [
+          247,
+          243,
+          236,
+          255
+        ],
+        "frequency": 112
+      },
+      {
+        "color": [
+          246,
+          241,
+          236,
+          255
+        ],
+        "frequency": 106
+      }
+    ]
+  }
+}

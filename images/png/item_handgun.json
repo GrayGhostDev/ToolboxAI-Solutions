@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Item/handgun.png",
+  "file_name": "handgun.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 25688,
+      "most_common": [
+        [
+          880,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          208,
+          [
+            254,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          80,
+          [
+            253,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          16,
+          [
+            252,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          16,
+          [
+            238,
+            255,
+            255,
+            15
+          ]
+        ],
+        [
+          32,
+          [
+            232,
+            255,
+            255,
+            11
+          ]
+        ],
+        [
+          16,
+          [
+            227,
+            255,
+            255,
+            9
+          ]
+        ],
+        [
+          64,
+          [
+            219,
+            255,
+            255,
+            7
+          ]
+        ],
+        [
+          48,
+          [
+            204,
+            255,
+            255,
+            5
+          ]
+        ],
+        [
+          16,
+          [
+            170,
+            255,
+            255,
+            3
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 15977
+      },
+      {
+        "color": [
+          19,
+          22,
+          102,
+          255
+        ],
+        "frequency": 37
+      },
+      {
+        "color": [
+          18,
+          22,
+          101,
+          255
+        ],
+        "frequency": 31
+      },
+      {
+        "color": [
+          18,
+          21,
+          99,
+          255
+        ],
+        "frequency": 28
+      },
+      {
+        "color": [
+          19,
+          23,
+          103,
+          255
+        ],
+        "frequency": 27
+      }
+    ]
+  }
+}

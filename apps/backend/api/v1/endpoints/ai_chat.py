@@ -31,24 +31,26 @@ except ImportError as e:
     ChatAnthropic = None
     StateGraph = None
 
-# Direct API imports as fallback
+# Direct API imports for scalable async operations
 try:
     import anthropic
-    from anthropic import Anthropic
+    from anthropic import Anthropic, AsyncAnthropic
     ANTHROPIC_AVAILABLE = True
 except ImportError:
     logging.warning("Anthropic library not available")
     ANTHROPIC_AVAILABLE = False
     Anthropic = None
+    AsyncAnthropic = None
 
 try:
     import openai
-    from openai import OpenAI
+    from openai import OpenAI, AsyncOpenAI
     OPENAI_AVAILABLE = True
 except ImportError:
     logging.warning("OpenAI library not available")
     OPENAI_AVAILABLE = False
     OpenAI = None
+    AsyncOpenAI = None
 
 # Authentication imports
 try:
@@ -208,17 +210,20 @@ class RobloxAssistantGraph:
     """LangGraph workflow for Roblox educational assistant"""
 
     def __init__(self, anthropic_key: str = None, openai_key: str = None):
-        """Initialize the assistant graph with Anthropic or OpenAI"""
+        """Initialize the assistant graph with Anthropic or OpenAI for scalable async operations"""
         self.anthropic_key = anthropic_key
         self.openai_key = openai_key
         self.llm = None
         self.graph = None
         self.checkpointer = None
+        # Use async clients for scalability
         self.anthropic_client = None
+        self.async_anthropic_client = None
         self.openai_client = None
+        self.async_openai_client = None
         self.conversation_memory = {}
 
-        # Prefer Anthropic if available
+        # Prefer Anthropic if available - setup async client for scalability
         if anthropic_key:
             if LANGCHAIN_AVAILABLE and ChatAnthropic:
                 self.llm = ChatAnthropic(
@@ -231,8 +236,10 @@ class RobloxAssistantGraph:
                 self._build_graph()
                 logger.info(f"Initialized with LangChain and Anthropic Claude ({ANTHROPIC_MODEL})")
             elif ANTHROPIC_AVAILABLE:
+                # Setup both sync and async clients for flexibility
                 self.anthropic_client = Anthropic(api_key=anthropic_key)
-                logger.info("Initialized with direct Anthropic API")
+                self.async_anthropic_client = AsyncAnthropic(api_key=anthropic_key)
+                logger.info("Initialized with direct Anthropic API (async-ready)")
         elif openai_key:
             if LANGCHAIN_AVAILABLE and ChatOpenAI:
                 self.llm = ChatOpenAI(
@@ -244,8 +251,10 @@ class RobloxAssistantGraph:
                 self._build_graph()
                 logger.info(f"Initialized with LangChain and OpenAI ({OPENAI_MODEL})")
             elif OPENAI_AVAILABLE:
+                # Setup both sync and async clients for flexibility
                 self.openai_client = OpenAI(api_key=openai_key)
-                logger.info("Initialized with direct OpenAI API")
+                self.async_openai_client = AsyncOpenAI(api_key=openai_key)
+                logger.info("Initialized with direct OpenAI API (async-ready)")
         else:
             logger.warning("No API keys provided, running in mock mode")
 
@@ -484,8 +493,8 @@ class RobloxAssistantGraph:
                 # Save assistant response to memory
                 memory["messages"].append({"role": "assistant", "content": response_text})
 
-            # Use direct Anthropic API if available
-            elif self.anthropic_client:
+            # Use async Anthropic API for scalability
+            elif self.async_anthropic_client:
                 # Build messages for Anthropic
                 anthropic_messages = []
                 system_content = f"""You are an AI assistant helping teachers create educational Roblox environments.
@@ -500,8 +509,8 @@ class RobloxAssistantGraph:
                         "content": msg["content"]
                     })
 
-                # Generate response with Anthropic
-                stream = self.anthropic_client.messages.create(
+                # Generate response with async Anthropic for better scalability
+                stream = await self.async_anthropic_client.messages.create(
                     model=ANTHROPIC_MODEL,
                     messages=anthropic_messages,
                     system=system_content,
@@ -511,7 +520,7 @@ class RobloxAssistantGraph:
                 )
 
                 response_text = ""
-                for chunk in stream:
+                async for chunk in stream:
                     if chunk.type == "content_block_delta":
                         content = chunk.delta.text
                         response_text += content
@@ -520,8 +529,8 @@ class RobloxAssistantGraph:
                 # Save assistant response to memory
                 memory["messages"].append({"role": "assistant", "content": response_text})
 
-            # Use direct OpenAI API if available
-            elif self.openai_client:
+            # Use async OpenAI API for scalability
+            elif self.async_openai_client:
                 # Build messages for OpenAI
                 openai_messages = [
                     {"role": "system", "content": f"""You are an AI assistant helping teachers create educational Roblox environments.
@@ -531,8 +540,8 @@ class RobloxAssistantGraph:
                 ]
                 openai_messages.extend(memory["messages"])
 
-                # Generate response with OpenAI
-                stream = self.openai_client.chat.completions.create(
+                # Generate response with async OpenAI for better scalability
+                stream = await self.async_openai_client.chat.completions.create(
                     model=OPENAI_MODEL,
                     messages=openai_messages,
                     stream=True,
@@ -540,7 +549,7 @@ class RobloxAssistantGraph:
                 )
 
                 response_text = ""
-                for chunk in stream:
+                async for chunk in stream:
                     if chunk.choices[0].delta.content:
                         content = chunk.choices[0].delta.content
                         response_text += content

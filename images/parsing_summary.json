@@ -1,0 +1,29 @@
+{
+  "total_files": 248,
+  "successful_parses": 248,
+  "failed_parses": 0,
+  "file_types": {
+    ".jpg": 1,
+    ".txt": 1,
+    ".fig": 3,
+    ".png": 200,
+    ".mp4": 1,
+    ".sketch": 1,
+    ".xd": 1,
+    ".blend": 20,
+    ".obj": 20
+  },
+  "organized_folders": {
+    "figma": 0,
+    "sketch": 0,
+    "xd": 0,
+    "blend": 0,
+    "obj": 0,
+    "png": 0,
+    "jpg": 0,
+    "jpeg": 0,
+    "mp4": 0,
+    "txt": 0
+  },
+  "errors": []
+}

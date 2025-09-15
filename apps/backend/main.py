@@ -1420,6 +1420,14 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load Prompt Template endpoints: {e}")
 
+# Load Pusher Authentication endpoints
+try:
+    from apps.backend.api.v1.endpoints.pusher_auth import router as pusher_auth_router
+    app.include_router(pusher_auth_router, prefix="/api/v1")
+    logger.info("Pusher authentication endpoints loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not load Pusher auth endpoints: {e}")
+
     # Add fallback AI chat endpoints if router fails to load
     @app.post("/api/v1/ai-chat/conversations")
     async def create_conversation_fallback(request: Dict[str, Any]):

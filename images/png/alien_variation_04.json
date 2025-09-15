@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Aliens (Variation)/04.png",
+  "file_name": "04.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 94600,
+      "most_common": [
+        [
+          664,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          2806,
+          [
+            254,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          2608,
+          [
+            253,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          2,
+          [
+            252,
+            255,
+            255,
+            79
+          ]
+        ],
+        [
+          1414,
+          [
+            251,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          2173,
+          [
+            250,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          2,
+          [
+            249,
+            255,
+            255,
+            87
+          ]
+        ],
+        [
+          2317,
+          [
+            248,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          6,
+          [
+            247,
+            255,
+            255,
+            33
+          ]
+        ],
+        [
+          5,
+          [
+            246,
+            255,
+            255,
+            237
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 14550
+      },
+      {
+        "color": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "frequency": 142
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "frequency": 64
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          2
+        ],
+        "frequency": 36
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          3
+        ],
+        "frequency": 35
+      }
+    ]
+  }
+}

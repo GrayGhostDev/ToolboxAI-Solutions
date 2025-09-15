@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/stuudy-3d-icons_NjhhMjYzMmIyMzI4MmUwMDM5ZDY0Yzlj/PNG/TROPHY_1.png",
+  "file_name": "TROPHY_1.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 3000,
+      "height": 3000,
+      "total_pixels": 9000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 86979,
+      "most_common": [
+        [
+          2,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            251,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            249,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            243,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            249,
+            253,
+            255,
+            3
+          ]
+        ],
+        [
+          1,
+          [
+            244,
+            253,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            240,
+            253,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            243,
+            252,
+            255,
+            3
+          ]
+        ],
+        [
+          1,
+          [
+            242,
+            252,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            241,
+            252,
+            255,
+            1
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 12282
+      },
+      {
+        "color": [
+          134,
+          134,
+          134,
+          255
+        ],
+        "frequency": 128
+      },
+      {
+        "color": [
+          133,
+          133,
+          133,
+          255
+        ],
+        "frequency": 56
+      },
+      {
+        "color": [
+          131,
+          131,
+          131,
+          255
+        ],
+        "frequency": 24
+      },
+      {
+        "color": [
+          132,
+          132,
+          132,
+          255
+        ],
+        "frequency": 24
+      }
+    ]
+  }
+}

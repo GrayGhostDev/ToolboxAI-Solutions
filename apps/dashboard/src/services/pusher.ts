@@ -100,15 +100,22 @@ url: options.url || WS_URL,
 
         // Get authentication token and validate
         const authToken = token || this.getAuthToken();
-        if (!authToken) {
+
+        // In development mode, use a default token if none exists
+        const isDevelopment = import.meta.env.MODE === 'development';
+        const effectiveToken = authToken || (isDevelopment ? 'dev-token-' + Date.now() : null);
+
+        if (!effectiveToken) {
           this.log('No authentication token available');
           this.setState(WebSocketState.DISCONNECTED);
           reject(new Error('Authentication token required'));
           return;
         }
 
-        this.currentToken = authToken;
-        this.scheduleTokenRefresh(authToken);
+        this.currentToken = effectiveToken;
+        if (authToken) {
+          this.scheduleTokenRefresh(authToken);
+        }
 
         // Initialize Pusher (with fallback for missing config)
         if (!PUSHER_KEY || PUSHER_KEY === 'dummy-key-for-development') {
@@ -123,7 +130,7 @@ url: options.url || WS_URL,
           authEndpoint: PUSHER_AUTH_ENDPOINT,
           auth: {
             headers: {
-              Authorization: `Bearer ${authToken}`,
+              Authorization: `Bearer ${effectiveToken}`,
             },
           },
           enabledTransports: ['ws', 'wss'],

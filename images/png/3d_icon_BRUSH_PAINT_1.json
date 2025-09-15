@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/stuudy-3d-icons_NjhhMjYzMmIyMzI4MmUwMDM5ZDY0Yzlj/PNG/BRUSH_PAINT_1.png",
+  "file_name": "BRUSH_PAINT_1.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 3000,
+      "height": 3000,
+      "total_pixels": 9000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 84948,
+      "most_common": [
+        [
+          1,
+          [
+            122,
+            121,
+            123,
+            133
+          ]
+        ],
+        [
+          1,
+          [
+            204,
+            104,
+            25,
+            240
+          ]
+        ],
+        [
+          1,
+          [
+            200,
+            100,
+            25,
+            32
+          ]
+        ],
+        [
+          1,
+          [
+            235,
+            165,
+            59,
+            160
+          ]
+        ],
+        [
+          1,
+          [
+            137,
+            46,
+            10,
+            176
+          ]
+        ],
+        [
+          1,
+          [
+            130,
+            42,
+            10,
+            128
+          ]
+        ],
+        [
+          1,
+          [
+            246,
+            203,
+            118,
+            224
+          ]
+        ],
+        [
+          1,
+          [
+            172,
+            70,
+            14,
+            240
+          ]
+        ],
+        [
+          1,
+          [
+            165,
+            66,
+            14,
+            208
+          ]
+        ],
+        [
+          1,
+          [
+            204,
+            111,
+            29,
+            64
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 12735
+      },
+      {
+        "color": [
+          244,
+          192,
+          94,
+          255
+        ],
+        "frequency": 259
+      },
+      {
+        "color": [
+          244,
+          193,
+          95,
+          255
+        ],
+        "frequency": 229
+      },
+      {
+        "color": [
+          244,
+          192,
+          93,
+          255
+        ],
+        "frequency": 134
+      },
+      {
+        "color": [
+          244,
+          193,
+          96,
+          255
+        ],
+        "frequency": 116
+      }
+    ]
+  }
+}

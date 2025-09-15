@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Aliens/Pose 01.png",
+  "file_name": "Pose 01.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 89351,
+      "most_common": [
+        [
+          542,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            254,
+            255,
+            255,
+            189
+          ]
+        ],
+        [
+          2,
+          [
+            253,
+            255,
+            255,
+            133
+          ]
+        ],
+        [
+          3,
+          [
+            252,
+            255,
+            255,
+            99
+          ]
+        ],
+        [
+          4,
+          [
+            251,
+            255,
+            255,
+            61
+          ]
+        ],
+        [
+          5,
+          [
+            250,
+            255,
+            255,
+            51
+          ]
+        ],
+        [
+          2,
+          [
+            249,
+            255,
+            255,
+            79
+          ]
+        ],
+        [
+          1,
+          [
+            248,
+            255,
+            255,
+            173
+          ]
+        ],
+        [
+          2,
+          [
+            247,
+            255,
+            255,
+            97
+          ]
+        ],
+        [
+          2,
+          [
+            246,
+            255,
+            255,
+            233
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 14621
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "frequency": 96
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          2
+        ],
+        "frequency": 45
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          3
+        ],
+        "frequency": 33
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          4
+        ],
+        "frequency": 32
+      }
+    ]
+  }
+}

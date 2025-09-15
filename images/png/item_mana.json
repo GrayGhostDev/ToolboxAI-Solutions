@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Item/mana.png",
+  "file_name": "mana.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 22582,
+      "most_common": [
+        [
+          464,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          16,
+          [
+            243,
+            255,
+            255,
+            21
+          ]
+        ],
+        [
+          16,
+          [
+            242,
+            255,
+            255,
+            19
+          ]
+        ],
+        [
+          16,
+          [
+            232,
+            255,
+            255,
+            11
+          ]
+        ],
+        [
+          16,
+          [
+            227,
+            255,
+            255,
+            9
+          ]
+        ],
+        [
+          32,
+          [
+            219,
+            255,
+            255,
+            7
+          ]
+        ],
+        [
+          16,
+          [
+            204,
+            255,
+            255,
+            5
+          ]
+        ],
+        [
+          48,
+          [
+            170,
+            255,
+            255,
+            3
+          ]
+        ],
+        [
+          16,
+          [
+            0,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          16,
+          [
+            247,
+            247,
+            255,
+            33
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 17669
+      },
+      {
+        "color": [
+          232,
+          236,
+          235,
+          255
+        ],
+        "frequency": 39
+      },
+      {
+        "color": [
+          233,
+          237,
+          236,
+          255
+        ],
+        "frequency": 26
+      },
+      {
+        "color": [
+          121,
+          237,
+          254,
+          255
+        ],
+        "frequency": 19
+      },
+      {
+        "color": [
+          119,
+          235,
+          253,
+          255
+        ],
+        "frequency": 19
+      }
+    ]
+  }
+}

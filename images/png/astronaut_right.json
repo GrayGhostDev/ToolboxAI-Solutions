@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Astronaut/right.png",
+  "file_name": "right.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 98269,
+      "most_common": [
+        [
+          900,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          18,
+          [
+            254,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          2,
+          [
+            253,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          1,
+          [
+            252,
+            255,
+            255,
+            177
+          ]
+        ],
+        [
+          3,
+          [
+            250,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          1,
+          [
+            252,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          4,
+          [
+            247,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          2,
+          [
+            246,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          1,
+          [
+            245,
+            255,
+            255,
+            79
+          ]
+        ],
+        [
+          1,
+          [
+            244,
+            255,
+            255,
+            235
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 17669
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "frequency": 88
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          2
+        ],
+        "frequency": 52
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          4
+        ],
+        "frequency": 40
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          3
+        ],
+        "frequency": 37
+      }
+    ]
+  }
+}
