@@ -1,6 +1,6 @@
 /**
  * TeacherRobloxDashboard Page
- * 
+ *
  * Main dashboard for teachers to manage Roblox educational content and sessions
  * Combines all Roblox components into a unified interface
  */
@@ -57,6 +57,7 @@ import { RobloxSessionManager } from '../roblox/RobloxSessionManager';
 import { QuizResultsAnalytics } from '../roblox/QuizResultsAnalytics';
 import { RobloxEnvironmentPreview } from '../roblox/RobloxEnvironmentPreview';
 import { RobloxAIAssistant } from '../roblox/RobloxAIAssistant';
+import { AIAssistantTest } from '../test/AIAssistantTest';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -68,20 +69,20 @@ function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
 
   return (
-    <div
+    <Box
       role="tabpanel"
       hidden={value !== index}
       id={`roblox-tabpanel-${index}`}
       aria-labelledby={`roblox-tab-${index}`}
       {...other}
-      style={{ height: '100%' }}
+      sx={{ height: '100%' }}
     >
       {value === index && (
         <Box sx={{ height: '100%', pt: 2 }}>
           {children}
         </Box>
       )}
-    </div>
+    </Box>
   );
 }
 
@@ -89,16 +90,16 @@ export default function TeacherRobloxDashboard() {
   const theme = useTheme();
   const dispatch = useAppDispatch();
   const { isConnected } = useWebSocketContext();
-  
+
   const [activeTab, setActiveTab] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
-  
+
   // Redux state
   const pluginStatus = useAppSelector(selectPluginStatus);
   const contentGeneration = useAppSelector(selectContentGeneration);
   const sessions = useAppSelector(selectSessions);
   const studentProgress = useAppSelector(selectStudentProgress);
-  
+
   // Calculate statistics
   const stats = {
     pluginConnected: pluginStatus.connected,
@@ -153,7 +154,7 @@ export default function TeacherRobloxDashboard() {
               </Box>
             </Box>
           </Grid>
-          
+
           <Grid item xs={12} md={6}>
             <Stack direction="row" spacing={2} justifyContent="flex-end">
               {/* Status Indicators */}
@@ -169,7 +170,7 @@ export default function TeacherRobloxDashboard() {
                 color={stats.pluginConnected ? 'success' : 'error'}
                 size="small"
               />
-              
+
               {/* Actions */}
               <IconButton onClick={handleRefresh} size="small">
                 <Refresh />
@@ -198,7 +199,7 @@ export default function TeacherRobloxDashboard() {
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={6} sm={3}>
             <Card sx={{ bgcolor: alpha(theme.palette.success.main, 0.1) }}>
               <CardContent sx={{ py: 1 }}>
@@ -214,7 +215,7 @@ export default function TeacherRobloxDashboard() {
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={6} sm={3}>
             <Card sx={{ bgcolor: alpha(theme.palette.info.main, 0.1) }}>
               <CardContent sx={{ py: 1 }}>
@@ -230,7 +231,7 @@ export default function TeacherRobloxDashboard() {
               </CardContent>
             </Card>
           </Grid>
-          
+
           <Grid item xs={6} sm={3}>
             <Card sx={{ bgcolor: alpha(theme.palette.warning.main, 0.1) }}>
               <CardContent sx={{ py: 1 }}>
@@ -253,8 +254,8 @@ export default function TeacherRobloxDashboard() {
 
       {/* Help Alert */}
       {showHelp && (
-        <Alert 
-          severity="info" 
+        <Alert
+          severity="info"
           onClose={() => setShowHelp(false)}
           sx={{ mb: 2 }}
         >
@@ -322,6 +323,12 @@ export default function TeacherRobloxDashboard() {
             id="roblox-tab-6"
             aria-controls="roblox-tabpanel-6"
           />
+          <Tab
+            icon={<AutoAwesome />}
+            label="AI Test"
+            id="roblox-tab-7"
+            aria-controls="roblox-tabpanel-7"
+          />
         </Tabs>
       </Paper>
 
@@ -353,6 +360,10 @@ export default function TeacherRobloxDashboard() {
 
         <TabPanel value={activeTab} index={6}>
           <RobloxEnvironmentPreview />
+        </TabPanel>
+
+        <TabPanel value={activeTab} index={7}>
+          <AIAssistantTest />
         </TabPanel>
       </Box>
     </Box>

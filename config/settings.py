@@ -127,6 +127,7 @@ class Settings(BaseSettings):
     OPENAI_MAX_TOKENS: int = Field(default=1000, env="OPENAI_MAX_TOKENS")
     
     # === Pusher Configuration ===
+    PUSHER_ENABLED: bool = Field(default=False, env="PUSHER_ENABLED")
     PUSHER_APP_ID: Optional[str] = Field(default=None, env="PUSHER_APP_ID")
     PUSHER_KEY: Optional[str] = Field(default=None, env="PUSHER_KEY")
     PUSHER_SECRET: Optional[str] = Field(default=None, env="PUSHER_SECRET")

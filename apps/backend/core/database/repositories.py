@@ -13,12 +13,22 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
 
-from database.models import (
-    User, Course, Lesson, Content, Quiz, QuizAttempt,
-    UserProgress, Enrollment, Analytics, UserAchievement
-)
+try:
+    from database.models import (
+        User, Course, Lesson, Content, Quiz, QuizAttempt,
+        UserProgress, Enrollment, Analytics, UserAchievement
+    )
+except ImportError:
+    # Try the root import path
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent.parent))
+    from database.models import (
+        User, Course, Lesson, Content, Quiz, QuizAttempt,
+        UserProgress, Enrollment, Analytics, UserAchievement
+    )
 from .query_optimizer import QueryOptimizer, DataLoader, optimize_query
-from ..logging import logging_manager, log_database_operation
+from apps.backend.core.logging import logging_manager, log_database_operation
 
 logger = logging_manager.get_logger(__name__)
 

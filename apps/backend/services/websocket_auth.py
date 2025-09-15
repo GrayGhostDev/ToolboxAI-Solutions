@@ -11,8 +11,8 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException, status
 
-from ..core.config import settings
-from ..api.auth.auth import get_current_user, verify_token
+from apps.backend.core.config import settings
+from apps.backend.api.auth.auth import get_current_user, verify_token
 
 logger = logging.getLogger(__name__)
 

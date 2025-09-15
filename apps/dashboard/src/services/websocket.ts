@@ -1,19 +1,22 @@
 /**
  * WebSocket Service (Compatibility Layer)
  *
- * This is a compatibility layer that wraps the Pusher service
- * to maintain backward compatibility with components expecting WebSocket
+ * Wraps the Pusher service to maintain a simple WebSocket-like API
+ * while leveraging the centralized message types and robust realtime layer.
  */
 
 import { pusherService } from './pusher';
+import {
+  WebSocketMessageType,
+  WebSocketMessage,
+  WebSocketState,
+} from '../types/websocket';
 
 /**
  * Connect to WebSocket (delegates to Pusher)
  */
 export function connectWebSocket(token?: string) {
-  if (token) {
-    pusherService.connect(token);
-  }
+  return pusherService.connect(token);
 }
 
 /**
@@ -24,47 +27,36 @@ export function disconnectWebSocket() {
 }
 
 /**
- * Send a WebSocket message (compatibility function)
+ * Send a WebSocket message (delegates to Pusher REST trigger)
  */
-export function sendWebSocketMessage(type: string, payload: any) {
-  // In Pusher, we would trigger an event on a channel
-  // This is a compatibility shim
-  console.log('WebSocket message (via Pusher):', type, payload);
+export function sendWebSocketMessage<T = any>(
+  type: WebSocketMessageType,
+  payload?: T,
+  options?: {
+    channel?: string;
+    awaitAcknowledgment?: boolean;
+    timeout?: number;
+  }
+) {
+  return pusherService.send(type, payload, options);
 }
 
 /**
- * Subscribe to a channel
+ * Subscribe to a channel with optional message filter
  */
-export function subscribeToChannel(channel: string, callback: (data: any) => void): string {
-  // Return a subscription ID for compatibility
-  return `sub-${channel}-${Date.now()}`;
+export function subscribeToChannel(
+  channel: string,
+  callback: (message: WebSocketMessage) => void,
+  filter?: (message: WebSocketMessage) => boolean
+): string {
+  return pusherService.subscribe(channel, callback, filter);
 }
 
 /**
- * Unsubscribe from a channel
+ * Unsubscribe from a channel using subscription id
  */
 export function unsubscribeFromChannel(subscriptionId: string) {
-  // Compatibility function
-  console.log('Unsubscribing:', subscriptionId);
-}
-
-/**
- * WebSocket Message Types (for compatibility)
- */
-export enum WebSocketMessageType {
-  CONNECT = 'connect',
-  DISCONNECT = 'disconnect',
-  CONTENT_UPDATE = 'content_update',
-  QUIZ_UPDATE = 'quiz_update',
-  PROGRESS_UPDATE = 'progress_update',
-  CLASS_ONLINE = 'class_online',
-  ACHIEVEMENT_UNLOCKED = 'achievement_unlocked',
-  ASSIGNMENT_REMINDER = 'assignment_reminder',
-  REQUEST_LEADERBOARD = 'request_leaderboard',
-  LEADERBOARD_UPDATE = 'leaderboard_update',
-  XP_GAINED = 'xp_gained',
-  BADGE_EARNED = 'badge_earned',
-  ERROR = 'error',
+  pusherService.unsubscribe(subscriptionId);
 }
 
 /**
@@ -81,19 +73,27 @@ export class WebSocketService {
   }
 
   connect(token?: string) {
-    connectWebSocket(token);
+    return connectWebSocket(token);
   }
 
   disconnect() {
     disconnectWebSocket();
   }
 
-  send(type: string, payload: any) {
-    sendWebSocketMessage(type, payload);
+  send<T = any>(
+    type: WebSocketMessageType,
+    payload?: T,
+    options?: { channel?: string; awaitAcknowledgment?: boolean; timeout?: number }
+  ) {
+    return sendWebSocketMessage(type, payload, options);
   }
 
-  subscribe(channel: string, callback: (data: any) => void): () => void {
-    const id = subscribeToChannel(channel, callback);
+  subscribe(
+    channel: string,
+    callback: (message: WebSocketMessage) => void,
+    filter?: (message: WebSocketMessage) => boolean
+  ): () => void {
+    const id = subscribeToChannel(channel, callback, filter);
     return () => unsubscribeFromChannel(id);
   }
 
@@ -104,8 +104,53 @@ export class WebSocketService {
   isConnected(): boolean {
     return pusherService.isConnected();
   }
+
+  // Proxies to underlying Pusher service for full feature parity
+
+  getState(): WebSocketState {
+    return pusherService.getState();
+  }
+
+  getStats() {
+    return pusherService.getStats();
+  }
+
+  onConnectionStatusChange(handler: (state: WebSocketState) => void): () => void {
+    return pusherService.onStateChange(handler);
+  }
+
+  on(type: WebSocketMessageType | string, handler: (data: any) => void): void {
+    pusherService.on(type, handler);
+  }
+
+  off(type: WebSocketMessageType | string, handler: (data: any) => void): void {
+    pusherService.off(type, handler);
+  }
+
+  onError(handler: (error: any) => void): () => void {
+    return pusherService.onError(handler);
+  }
+
+  async refreshToken(newToken: string): Promise<void> {
+    // Reconnect with new token (pusher service handles auth headers)
+    await pusherService.connect(newToken);
+  }
+
+  async refreshTokenAndReconnect(): Promise<void> {
+    await pusherService.refreshTokenAndReconnect();
+  }
+
+  onTokenRefresh(callback: () => void): () => void {
+    // Reuse generic event system; backend should emit 'token_expired'
+    // or client may simulate this event
+    this.on('token_expired', () => callback());
+    return () => this.off('token_expired', () => callback());
+  }
+
+
 }
 
 // Export default instance
 export const wsService = WebSocketService.getInstance();
+export const websocketService = wsService; // Alias for backward compatibility
 export default wsService;

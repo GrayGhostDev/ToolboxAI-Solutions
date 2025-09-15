@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 # Import from the main roblox_server module
 if TYPE_CHECKING:
-    from ..roblox_server import (
+    from roblox_server import (
         RobloxServer,
         RobloxMessage,
         RobloxContentRequest,
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 # For runtime imports
 def get_roblox_server():
     """Get the global Roblox server instance"""
-    from ..roblox_server import roblox_server
+    from roblox_server import roblox_server
     return roblox_server
 
 

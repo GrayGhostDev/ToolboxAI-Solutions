@@ -1,30 +1,190 @@
 /**
  * Test Setup for ToolBoxAI Dashboard
- * 
+ *
  * This file configures the test environment with all necessary polyfills,
  * mocks, and utilities for comprehensive testing with Vitest.
- * 
+ *
  * @vitest-environment jsdom
  */
 
-import '@testing-library/jest-dom'
-import { beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest'
-import { cleanup } from '@testing-library/react'
-import * as matchers from '@testing-library/jest-dom/matchers'
-import { expect } from 'vitest'
-import { TextEncoder, TextDecoder } from 'util'
-import { server } from './utils/msw-handlers'
+import React from 'react';
+import '@testing-library/jest-dom';
+import { beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
+import { cleanup } from '@testing-library/react';
+import * as matchers from '@testing-library/jest-dom/matchers';
+import { expect } from 'vitest';
+import { TextEncoder, TextDecoder } from 'util';
+import { server } from './utils/msw-handlers';
+// 2025 Best Practice: Use proper Emotion cache configuration instead of mocking
+// See emotion-test-setup.tsx for the proper configuration
+
+// Mock specific MUI transitions that cause DOM issues
+vi.mock('@mui/material/Fade', () => ({
+  default: vi.fn(({ children, in: inProp }) => inProp ? children : null)
+}));
+
+vi.mock('@mui/material/Grow', () => ({
+  default: vi.fn(({ children, in: inProp }) => inProp ? children : null)
+}));
+
+vi.mock('@mui/material/Collapse', () => ({
+  default: vi.fn(({ children, in: inProp }) => inProp ? children : null)
+}));
+
+// Mock the API service to prevent real network calls
+vi.mock('@/services/api');
+
+// Mock dialog and widget components
+vi.mock('@/components/dialogs/CreateClassDialog', () => ({
+  default: vi.fn(({ open, onClose, onSave }) => {
+    return open ? React.createElement('div', {
+      'data-testid': 'create-class-dialog',
+      onClick: () => onSave({ name: 'Test Class', grade: 10 })
+    }, 'Create Class Dialog') : null;
+  })
+}));
+
+vi.mock('@/components/widgets/StudentProgressTracker', () => ({
+  default: vi.fn(() => React.createElement('div', {
+    'data-testid': 'student-progress-tracker'
+  }, 'Student Progress Tracker'))
+}));
+
+// Mock the useRealTimeData hook
+vi.mock('@/hooks/useRealTimeData', () => ({
+  default: vi.fn(() => ({
+    data: null,
+    loading: false,
+    error: null,
+    refresh: vi.fn(),
+  }))
+}));
+
+// Mock the useApiData hook
+vi.mock('@/hooks/useApiData', () => ({
+  useApiData: vi.fn(() => ({
+    data: null,
+    loading: false,
+    error: null,
+    refetch: vi.fn(),
+  }))
+}));
+
+// Mock config/routes
+vi.mock('@/config/routes', () => ({
+  ROUTES: {
+    HOME: '/',
+    CLASSES: '/classes',
+    LESSONS: '/lessons',
+    ASSESSMENTS: '/assessments',
+    REPORTS: '/reports',
+    SETTINGS: '/settings',
+  },
+  getClassDetailsRoute: vi.fn((id) => `/classes/${id}`),
+}));
+
+// Mock WebSocketContext
+vi.mock('@/contexts/WebSocketContext', () => ({
+  WebSocketProvider: vi.fn(({ children }) => children),
+  useWebSocket: vi.fn(() => ({
+    isConnected: true,
+    connectionState: 'connected',
+    subscribe: vi.fn(() => ({ unsubscribe: vi.fn() })),
+    unsubscribe: vi.fn(),
+    emit: vi.fn(),
+    on: vi.fn(() => ({ off: vi.fn() })),
+    off: vi.fn(),
+    connect: vi.fn().mockResolvedValue(undefined),
+    disconnect: vi.fn(),
+    sendMessage: vi.fn(),
+    lastMessage: null,
+    error: null,
+  })),
+  WebSocketContext: {
+    Provider: vi.fn(({ children }) => children),
+    Consumer: vi.fn(),
+  }
+}));
+
+// Mock the pusher service module
+vi.mock('@/services/pusher', () => {
+  return {
+    PusherService: {
+      getInstance: vi.fn(() => ({
+        connect: vi.fn().mockResolvedValue(undefined),
+        disconnect: vi.fn(),
+        subscribe: vi.fn(() => ({
+          bind: vi.fn(),
+          unbind: vi.fn(),
+          trigger: vi.fn(),
+        })),
+        unsubscribe: vi.fn(),
+        trigger: vi.fn(),
+        isConnected: vi.fn(() => true),
+        getConnectionState: vi.fn(() => 'connected'),
+        on: vi.fn(),
+        off: vi.fn(),
+        setAuthToken: vi.fn(),
+        clearAuthToken: vi.fn(),
+        reconnect: vi.fn().mockResolvedValue(undefined),
+      })),
+      resetInstance: vi.fn(),
+    }
+  };
+});
+
+// Mock the websocket compatibility service
+vi.mock('@/services/websocket', () => {
+  const mockInstance = {
+    connect: vi.fn().mockResolvedValue(undefined),
+    disconnect: vi.fn(),
+    emit: vi.fn(),
+    on: vi.fn(),
+    off: vi.fn(),
+    isConnected: vi.fn(() => true),
+    onStateChange: vi.fn(),
+    onMessage: vi.fn(),
+    onError: vi.fn(),
+    send: vi.fn(),
+    getState: vi.fn(() => 'connected'),
+  };
+
+  return {
+    default: {
+      getInstance: vi.fn(() => mockInstance),
+    },
+    WebSocketService: {
+      getInstance: vi.fn(() => mockInstance),
+    },
+    connectWebSocket: vi.fn().mockResolvedValue(undefined),
+    sendWebSocketMessage: vi.fn(),
+    subscribeToWebSocket: vi.fn(() => ({ unsubscribe: vi.fn() })),
+    unsubscribeFromWebSocket: vi.fn(),
+    subscribeToChannel: vi.fn(() => ({ unsubscribe: vi.fn() })),
+    unsubscribeFromChannel: vi.fn(),
+    publishToChannel: vi.fn(),
+    broadcastMessage: vi.fn(),
+  };
+});
+
+// Mock the WebSocket middleware to prevent real connections
+vi.mock('@/store/middleware/websocketMiddleware', () => {
+  return {
+    createWebSocketMiddleware: vi.fn(() => () => (next: any) => (action: any) => next(action)),
+    setupWebSocketListeners: vi.fn(),
+  };
+});
 
 // Extend Vitest's expect with jest-dom matchers
-expect.extend(matchers)
+expect.extend(matchers);
 
 // ============================================================================
 // POLYFILLS
 // ============================================================================
 
 // TextEncoder/TextDecoder polyfills for Node.js environment
-global.TextEncoder = TextEncoder
-global.TextDecoder = TextDecoder as any
+global.TextEncoder = TextEncoder as any;
+global.TextDecoder = TextDecoder as any;
 
 // ============================================================================
 // BROWSER API MOCKS
@@ -38,18 +198,18 @@ const localStorageMock = {
   clear: vi.fn(() => undefined),
   length: 0,
   key: vi.fn((index: number) => null)
-}
-global.localStorage = localStorageMock as Storage
+};
+global.localStorage = localStorageMock as Storage;
 
 // Mock sessionStorage
-global.sessionStorage = localStorageMock as Storage
+global.sessionStorage = localStorageMock as Storage;
 
 // Mock ResizeObserver for responsive components and charts
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn()
-}))
+}));
 
 // Mock IntersectionObserver for lazy loading
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({
@@ -59,14 +219,22 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   root: null,
   rootMargin: '',
   thresholds: []
-}))
+}));
 
 // Mock MutationObserver for DOM mutations
 global.MutationObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   disconnect: vi.fn(),
   takeRecords: vi.fn(() => [])
-}))
+}));
+
+// Fix MutationObserver for testing-library
+const mockMutationObserver = {
+  observe: vi.fn(),
+  disconnect: vi.fn(),
+  takeRecords: vi.fn(() => [])
+};
+global.MutationObserver = vi.fn(() => mockMutationObserver);
 
 // Mock matchMedia for responsive design
 Object.defineProperty(window, 'matchMedia', {
@@ -81,7 +249,7 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn()
   }))
-})
+});
 
 // ============================================================================
 // CANVAS API MOCK (Comprehensive for Chart.js, Recharts, etc.)
@@ -201,12 +369,12 @@ const createCanvasRenderingContext2D = () => ({
     height: 150,
     getContext: vi.fn()
   }
-})
+});
 
 // Mock Canvas getContext
 HTMLCanvasElement.prototype.getContext = vi.fn().mockImplementation((contextType: string) => {
   if (contextType === '2d') {
-    return createCanvasRenderingContext2D()
+    return createCanvasRenderingContext2D();
   }
   if (contextType === 'webgl' || contextType === 'webgl2') {
     // Basic WebGL context mock for 3D charts
@@ -234,23 +402,23 @@ HTMLCanvasElement.prototype.getContext = vi.fn().mockImplementation((contextType
       texParameteri: vi.fn(),
       drawArrays: vi.fn(),
       drawElements: vi.fn()
-    }
+    };
   }
-  return null
-})
+  return null;
+});
 
 // Mock toDataURL and toBlob for canvas
-HTMLCanvasElement.prototype.toDataURL = vi.fn(() => 'data:image/png;base64,')
+HTMLCanvasElement.prototype.toDataURL = vi.fn(() => 'data:image/png;base64,');
 HTMLCanvasElement.prototype.toBlob = vi.fn((callback: BlobCallback) => {
-  callback(new Blob([''], { type: 'image/png' }))
-})
+  callback(new Blob([''], { type: 'image/png' }));
+});
 
 // ============================================================================
 // DOM API MOCKS
 // ============================================================================
 
 // Mock scrollIntoView for navigation tests
-Element.prototype.scrollIntoView = vi.fn()
+Element.prototype.scrollIntoView = vi.fn();
 
 // Mock getBoundingClientRect for positioning calculations
 Element.prototype.getBoundingClientRect = vi.fn(() => ({
@@ -263,11 +431,11 @@ Element.prototype.getBoundingClientRect = vi.fn(() => ({
   bottom: 100,
   left: 0,
   toJSON: () => ({})
-}))
+}));
 
 // Mock scroll methods
-window.scrollTo = vi.fn()
-window.scroll = vi.fn()
+window.scrollTo = vi.fn() as any;
+window.scroll = vi.fn() as any;
 
 // ============================================================================
 // WEB APIS MOCKS
@@ -293,7 +461,7 @@ global.AudioContext = vi.fn().mockImplementation(() => ({
   destination: {},
   currentTime: 0,
   close: vi.fn()
-}))
+}));
 
 // Mock Audio element
 global.Audio = vi.fn().mockImplementation(() => ({
@@ -307,30 +475,30 @@ global.Audio = vi.fn().mockImplementation(() => ({
   duration: 0,
   paused: true,
   ended: false
-}))
+}));
 
 // Mock requestAnimationFrame
 global.requestAnimationFrame = vi.fn((callback) => {
-  setTimeout(callback, 0)
-  return 0
-})
+  setTimeout(callback, 0);
+  return 0;
+});
 
 // Mock cancelAnimationFrame
-global.cancelAnimationFrame = vi.fn()
+global.cancelAnimationFrame = vi.fn();
 
 // Mock performance API
-global.performance.mark = vi.fn()
-global.performance.measure = vi.fn()
-global.performance.clearMarks = vi.fn()
-global.performance.clearMeasures = vi.fn()
+global.performance.mark = vi.fn();
+global.performance.measure = vi.fn();
+global.performance.clearMarks = vi.fn();
+global.performance.clearMeasures = vi.fn();
 
 // Mock Notification API
 global.Notification = vi.fn().mockImplementation(() => ({
   close: vi.fn(),
   addEventListener: vi.fn()
-})) as any
-global.Notification.permission = 'granted'
-global.Notification.requestPermission = vi.fn(() => Promise.resolve('granted'))
+})) as any;
+(global.Notification as any).permission = 'granted';
+global.Notification.requestPermission = vi.fn(() => Promise.resolve('granted'));
 
 // ============================================================================
 // FETCH AND NETWORK MOCKS
@@ -348,41 +516,41 @@ if (!global.fetch) {
       arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
       headers: new Headers()
     } as Response)
-  )
+  );
 }
 
 // ============================================================================
 // CONSOLE CONFIGURATION
 // ============================================================================
 
-const originalConsoleError = console.error
-const originalConsoleWarn = console.warn
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
 
 // Filter out React warnings in tests
 console.error = (...args: any[]) => {
   // Filter out known React warnings that don't affect tests
-  const message = args[0]?.toString() || ''
+  const message = args[0]?.toString() || '';
   if (
     message.includes('Warning: ReactDOM.render') ||
     message.includes('Warning: unmountComponentAtNode') ||
     message.includes('Not implemented: navigation') ||
     message.includes('Not implemented: HTMLFormElement.submit')
   ) {
-    return
+    return;
   }
-  originalConsoleError.apply(console, args)
-}
+  originalConsoleError.apply(console, args);
+};
 
 console.warn = (...args: any[]) => {
-  const message = args[0]?.toString() || ''
+  const message = args[0]?.toString() || '';
   if (
     message.includes('Warning: ReactDOM.render') ||
     message.includes('experimental API')
   ) {
-    return
+    return;
   }
-  originalConsoleWarn.apply(console, args)
-}
+  originalConsoleWarn.apply(console, args);
+};
 
 // ============================================================================
 // TEST LIFECYCLE HOOKS
@@ -390,52 +558,65 @@ console.warn = (...args: any[]) => {
 
 beforeAll(() => {
   // Set test environment
-  process.env.NODE_ENV = 'test'
+  process.env.NODE_ENV = 'test';
 
   // Mock environment variables
-  process.env.VITE_API_BASE_URL = 'http://localhost:8008'
-  process.env.VITE_WS_URL = 'ws://localhost:8008'
-  process.env.VITE_PUSHER_KEY = 'test-pusher-key'
-  process.env.VITE_PUSHER_CLUSTER = 'us2'
+  process.env.VITE_API_BASE_URL = 'http://localhost:8008';
+  process.env.VITE_WS_URL = 'ws://localhost:8008';
+  process.env.VITE_PUSHER_KEY = 'test-pusher-key';
+  process.env.VITE_PUSHER_CLUSTER = 'us2';
+
+  // Use fake timers to prevent hanging
+  vi.useFakeTimers({
+    shouldAdvanceTime: true,
+    toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date']
+  });
 
   // Start MSW server
   server.listen({
     onUnhandledRequest: 'bypass', // Don't warn about unhandled requests
-  })
-})
+  });
+});
 
 afterAll(() => {
   // Restore console methods
-  console.error = originalConsoleError
-  console.warn = originalConsoleWarn
+  console.error = originalConsoleError;
+  console.warn = originalConsoleWarn;
+
+  // Restore real timers
+  vi.useRealTimers();
 
   // Stop MSW server
-  server.close()
-})
+  server.close();
+});
 
 beforeEach(() => {
   // Clear all mocks
-  vi.clearAllMocks()
+  vi.clearAllMocks();
 
   // Reset DOM
-  document.body.innerHTML = ''
-  document.head.innerHTML = ''
+  document.body.innerHTML = '';
+  document.head.innerHTML = '';
 
   // Reset MSW handlers to defaults
-  server.resetHandlers()
-})
+  server.resetHandlers();
+});
 
 afterEach(() => {
   // Cleanup React components
-  cleanup()
+  cleanup();
 
-  // Clear all timers
-  vi.clearAllTimers()
+  // Clear all timers and run any pending
+  vi.runOnlyPendingTimers();
+  vi.clearAllTimers();
 
   // Clear localStorage/sessionStorage
-  localStorage.clear()
-  sessionStorage.clear()
-})
+  localStorage.clear();
+  sessionStorage.clear();
+
+  // Clean up any pending promises
+  vi.runAllTimers();
+});
 
 // ============================================================================
 // ERROR HANDLING
@@ -443,13 +624,13 @@ afterEach(() => {
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection in test:', promise, 'reason:', reason)
-})
+  console.error('Unhandled Rejection in test:', promise, 'reason:', reason);
+});
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception in test:', error)
-})
+  console.error('Uncaught Exception in test:', error);
+});
 
 // ============================================================================
 // GLOBAL TYPE DECLARATIONS
@@ -460,12 +641,12 @@ declare global {
     __REDUX_DEVTOOLS_EXTENSION_COMPOSE__?: any
   }
   
-  var __DEV__: boolean
-  var __TEST__: boolean
+  var __DEV__: boolean;
+  var __TEST__: boolean;
 }
 
 // Set global test flags
-global.__DEV__ = false
-global.__TEST__ = true
+global.__DEV__ = false;
+global.__TEST__ = true;
 
-export {}
+export {};

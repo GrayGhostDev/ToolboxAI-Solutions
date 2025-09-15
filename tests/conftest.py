@@ -319,6 +319,16 @@ def pytest_runtest_teardown(item):
         RateLimitManager.reset_instance()
     except Exception as e:
         logger.warning(f"Error cleaning up rate limits: {e}")
+    
+    # Clean up logging handlers to prevent file access errors
+    try:
+        root_logger = logging.getLogger()
+        for handler in root_logger.handlers[:]:
+            if hasattr(handler, 'close'):
+                handler.close()
+            root_logger.removeHandler(handler)
+    except Exception as e:
+        logger.warning(f"Error cleaning up logging handlers: {e}")
 
 
 def pytest_sessionstart(session):

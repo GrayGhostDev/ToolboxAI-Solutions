@@ -151,7 +151,7 @@ export default function Analytics() {
           <Skeleton variant="rectangular" height={60} />
           <Grid container spacing={3}>
             {[1, 2, 3, 4].map((i) => (
-              <Grid item xs={12} sm={6} md={3} key={i}>
+              <Grid item xs={12} sm={6} md={3} key={`skeleton-grid-${i}`}>
                 <Skeleton variant="rectangular" height={140} />
               </Grid>
             ))}
@@ -255,13 +255,13 @@ export default function Analytics() {
               {loading ? (
                 <Stack spacing={2}>
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} variant="rectangular" height={60} />
+                    <Skeleton key={`skeleton-performer-${i}`} variant="rectangular" height={60} />
                   ))}
                 </Stack>
               ) : (
                 <Stack spacing={2}>
                   {(performance?.topPerformers || []).slice(0, 5).map((performer, index) => (
-                    <Paper key={performer.id} sx={{ p: 2 }}>
+                    <Paper key={performer.id || `performer-${index}`} sx={{ p: 2 }}>
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
                         <Stack direction="row" alignItems="center" spacing={2}>
                           <Chip 
@@ -296,13 +296,13 @@ export default function Analytics() {
               {loading ? (
                 <Stack spacing={2}>
                   {[1, 2, 3, 4].map((i) => (
-                    <Skeleton key={i} variant="rectangular" height={60} />
+                    <Skeleton key={`skeleton-subject-${i}`} variant="rectangular" height={60} />
                   ))}
                 </Stack>
               ) : (
                 <Stack spacing={2}>
                   {(subjects?.subjects || subjectMastery || []).map((subject: any, index: number) => (
-                    <Box key={(subject as any).name || (subject as any).subject}>
+                    <Box key={(subject as any).name || (subject as any).subject || `subject-${index}`}>
                       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
                         <Typography variant="body2" fontWeight={500}>
                           {(subject as any).name || (subject as any).subject}
@@ -372,7 +372,7 @@ export default function Analytics() {
                     <Stack spacing={1}>
                       {['Math Adventure', 'Science Lab', 'History Quest'].map((world, index) => (
                         <Chip
-                          key={index}
+                          key={`world-${index}`}
                           label={world}
                           size="small"
                           variant="outlined"

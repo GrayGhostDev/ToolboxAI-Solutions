@@ -27,6 +27,7 @@ import {
 } from "recharts";
 import { UserRole } from "../../types";
 import { useTheme } from "@mui/material/styles";
+import { Box } from "@mui/material";
 
 const weeklyData = [
   { day: "Mon", xp: 120, hours: 2.5 },
@@ -84,7 +85,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
               Weekly {role === "student" ? "XP Progress" : "Class Activity"}
             </Typography>
-            <div style={{ width: "100%", height: 300 }}>
+            <Box sx={{ width: "100%", height: 300 }}>
               <ResponsiveContainer>
                 <LineChart data={weeklyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
@@ -117,7 +118,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
                   )}
                 </LineChart>
               </ResponsiveContainer>
-            </div>
+            </Box>
           </CardContent>
         </Card>
       </Grid2>
@@ -129,7 +130,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
               Subject {role === "student" ? "Mastery" : "Performance"}
             </Typography>
-            <div style={{ width: "100%", height: 300 }}>
+            <Box sx={{ width: "100%", height: 300 }}>
               <ResponsiveContainer>
                 <BarChart data={subjectData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
@@ -148,7 +149,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
                   )}
                 </BarChart>
               </ResponsiveContainer>
-            </div>
+            </Box>
           </CardContent>
         </Card>
       </Grid2>
@@ -161,7 +162,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                 Skill Development
               </Typography>
-              <div style={{ width: "100%", height: 300 }}>
+              <Box sx={{ width: "100%", height: 300 }}>
                 <ResponsiveContainer>
                   <RadarChart data={skillsData}>
                     <PolarGrid stroke={theme.palette.divider} />
@@ -187,7 +188,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
                     />
                   </RadarChart>
                 </ResponsiveContainer>
-              </div>
+              </Box>
             </CardContent>
           </Card>
         </Grid2>
@@ -200,7 +201,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
               Activity Distribution
             </Typography>
-            <div style={{ width: "100%", height: 300 }}>
+            <Box sx={{ width: "100%", height: 300 }}>
               <ResponsiveContainer>
                 <PieChart>
                   <Pie
@@ -226,7 +227,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
                   />
                 </PieChart>
               </ResponsiveContainer>
-            </div>
+            </Box>
           </CardContent>
         </Card>
       </Grid2>
@@ -239,7 +240,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                 {role === "student" ? "Level Progress" : "Completion Rate"}
               </Typography>
-              <div style={{ width: "100%", height: 300 }}>
+              <Box sx={{ width: "100%", height: 300 }}>
                 <ResponsiveContainer>
                   <RadialBarChart
                     cx="50%"
@@ -272,7 +273,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
                     />
                   </RadialBarChart>
                 </ResponsiveContainer>
-              </div>
+              </Box>
             </CardContent>
           </Card>
         </Grid2>
@@ -286,7 +287,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                 Monthly Trend
               </Typography>
-              <div style={{ width: "100%", height: 300 }}>
+              <Box sx={{ width: "100%", height: 300 }}>
                 <ResponsiveContainer>
                   <LineChart
                     data={[
@@ -316,7 +317,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
                     />
                   </LineChart>
                 </ResponsiveContainer>
-              </div>
+              </Box>
             </CardContent>
           </Card>
         </Grid2>

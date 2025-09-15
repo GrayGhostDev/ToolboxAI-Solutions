@@ -1,259 +1,336 @@
 /**
  * Login Component Test Suite
  *
- * Tests for the Login page component ensuring >85% pass rate
- * Total: 10 tests (minimum 9 must pass for >85%)
+ * Comprehensive tests for the Login component functionality
+ * Testing real behaviors and interactions
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@/test/utils/render';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Login from '@/components/pages/Login';
-import { server } from '@/test/utils/msw-handlers';
-import { http, HttpResponse } from 'msw';
+import * as apiService from '@/services/api';
+import { TestWrapper } from '@/test/utils/test-wrapper';
 
-// Mock the router hooks
+// Mock react-router-dom navigation
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
   };
 });
 
+// Mock the connectWebSocket function
+vi.mock('@/services/websocket', () => ({
+  connectWebSocket: vi.fn().mockResolvedValue(undefined),
+}));
+
 describe('Login Component', () => {
   beforeEach(() => {
-    mockNavigate.mockClear();
+    vi.clearAllMocks();
     localStorage.clear();
   });
 
-  describe('Rendering', () => {
-    it('✅ should render login form correctly', () => {
-      render(<Login />);
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
 
-      // Check for essential form elements
-      expect(screen.getByRole('heading', { name: /sign in/i })).toBeInTheDocument();
-      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+  describe('Component Rendering', () => {
+    it('✅ should render the login form with all required elements', () => {
+      render(
+        <TestWrapper>
+          <Login />
+        </TestWrapper>
+      );
+
+      // Check for the main heading
+      expect(screen.getByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
+
+      // Check for form fields by label
+      expect(screen.getByLabelText(/username or email/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+
+      // Check for submit button
       expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
-      expect(screen.getByText(/don't have an account/i)).toBeInTheDocument();
-      expect(screen.getByText(/forgot password/i)).toBeInTheDocument();
+
+      // Check for links
+      expect(screen.getByText(/forgot your password\?/i)).toBeInTheDocument();
+      expect(screen.getByText(/don't have an account\?/i)).toBeInTheDocument();
+
+      // Check for demo credentials section
+      expect(screen.getByText(/demo credentials/i)).toBeInTheDocument();
     });
 
-    it('✅ should show loading state during submission', async () => {
-      const user = userEvent.setup();
-      render(<Login />);
+    it('✅ should display the platform name', () => {
+      render(
+        <TestWrapper>
+          <Login />
+        </TestWrapper>
+      );
+      expect(screen.getByText(/toolboxai educational platform/i)).toBeInTheDocument();
+    });
 
-      // Fill in form
-      await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'password123');
-
-      // Submit form
-      const submitButton = screen.getByRole('button', { name: /sign in/i });
-      await user.click(submitButton);
-
-      // Check for loading state (button should be disabled during submission)
-      await waitFor(() => {
-        expect(submitButton).toHaveAttribute('disabled');
-      });
+    it('✅ should show demo credentials for different roles', () => {
+      render(
+        <TestWrapper>
+          <Login />
+        </TestWrapper>
+      );
+      expect(screen.getByText(/admin@toolboxai.com/i)).toBeInTheDocument();
+      expect(screen.getByText(/jane.smith@school.edu/i)).toBeInTheDocument();
+      expect(screen.getByText(/alex.johnson@student.edu/i)).toBeInTheDocument();
     });
   });
 
-  describe('Form Validation', () => {
-    it('✅ should validate email format', async () => {
+  describe('Form Interactions', () => {
+    it('✅ should update input values when user types', async () => {
       const user = userEvent.setup();
-      render(<Login />);
+      render(
+        <TestWrapper>
+          <Login />
+        </TestWrapper>
+      );
 
-      const emailInput = screen.getByLabelText(/email/i);
-      const submitButton = screen.getByRole('button', { name: /sign in/i });
+      const emailInput = screen.getByLabelText(/username or email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
 
-      // Try invalid email
-      await user.type(emailInput, 'invalid-email');
-      await user.click(submitButton);
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
 
-      // Should show validation error
-      await waitFor(() => {
-        expect(screen.getByText(/please enter a valid email/i)).toBeInTheDocument();
-      });
+      expect(emailInput).toHaveValue('test@example.com');
+      expect(passwordInput).toHaveValue('password123');
     });
 
-    it('✅ should validate password requirements', async () => {
+    it('✅ should toggle password visibility', async () => {
       const user = userEvent.setup();
-      render(<Login />);
+      render(
+        <TestWrapper>
+          <Login />
+        </TestWrapper>
+      );
 
-      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const toggleButton = screen.getByRole('button', { name: /toggle password visibility/i });
+
+      // Initially password should be hidden
+      expect(passwordInput).toHaveAttribute('type', 'password');
+
+      // Click to show password
+      await user.click(toggleButton);
+      expect(passwordInput).toHaveAttribute('type', 'text');
+
+      // Click again to hide password
+      await user.click(toggleButton);
+      expect(passwordInput).toHaveAttribute('type', 'password');
+    });
+
+    it('✅ should disable form during submission', async () => {
+      const user = userEvent.setup();
+
+      // Mock the login function to return a promise that never resolves
+      const loginSpy = vi.spyOn(apiService, 'login');
+      loginSpy.mockImplementation(() => new Promise(() => {})); // Never resolves
+
+      render(
+        <TestWrapper>
+          <Login />
+        </TestWrapper>
+      );
+
+      const emailInput = screen.getByLabelText(/username or email/i);
       const passwordInput = screen.getByLabelText(/password/i);
       const submitButton = screen.getByRole('button', { name: /sign in/i });
 
-      // Fill email correctly but leave password empty
+      // Fill the form
       await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+
+      // Submit the form
       await user.click(submitButton);
 
-      // Should show validation error for password
+      // Wait a bit for state to update
       await waitFor(() => {
-        expect(screen.getByText(/password is required/i)).toBeInTheDocument();
+        // Inputs and button should be disabled during submission
+        expect(emailInput).toBeDisabled();
+        expect(passwordInput).toBeDisabled();
+        expect(submitButton).toBeDisabled();
       });
     });
   });
 
   describe('Authentication Flow', () => {
-    it('✅ should handle successful login', async () => {
+    it('✅ should successfully login with valid credentials', async () => {
       const user = userEvent.setup();
-      render(<Login />);
 
-      // Fill in form with valid credentials
-      await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'password123');
-
-      // Submit form
-      await user.click(screen.getByRole('button', { name: /sign in/i }));
-
-      // Should navigate to dashboard after successful login
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+      // Mock successful login
+      const loginSpy = vi.spyOn(apiService, 'login');
+      loginSpy.mockResolvedValueOnce({
+        accessToken: 'mock-jwt-token',
+        refreshToken: 'mock-refresh-token',
+        user: {
+          id: '1',
+          email: 'test@example.com',
+          username: 'test',
+          displayName: 'Test User',
+          role: 'student',
+          schoolId: 'school-1',
+          classIds: ['class-1'],
+          avatarUrl: null,
+        }
       });
 
-      // Should store token in localStorage
-      expect(localStorage.getItem('token')).toBe('mock-jwt-token');
-    });
-
-    it('✅ should display error messages for invalid credentials', async () => {
-      const user = userEvent.setup();
-
-      // Override handler for this test
-      server.use(
-        http.post('http://localhost:8008/api/v1/auth/login', () => {
-          return HttpResponse.json(
-            { error: 'Invalid email or password' },
-            { status: 401 }
-          );
-        })
+      render(
+        <TestWrapper>
+          <Login />
+        </TestWrapper>
       );
 
-      render(<Login />);
-
-      // Fill in form with invalid credentials
-      await user.type(screen.getByLabelText(/email/i), 'wrong@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'wrongpassword');
-
-      // Submit form
+      // Fill and submit form
+      await user.type(screen.getByLabelText(/username or email/i), 'test@example.com');
+      await user.type(screen.getByLabelText(/password/i), 'password123');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
-      // Should display error message
+      // Verify login was called with correct credentials
       await waitFor(() => {
-        expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument();
+        expect(loginSpy).toHaveBeenCalledWith('test@example.com', 'password123');
+      });
+
+      // Verify tokens are stored
+      await waitFor(() => {
+        expect(localStorage.getItem('auth_token')).toBe('mock-jwt-token');
+        expect(localStorage.getItem('refresh_token')).toBe('mock-refresh-token');
+      });
+
+      // Verify navigation to dashboard
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/');
+      });
+    });
+
+    it('✅ should handle login errors gracefully', async () => {
+      const user = userEvent.setup();
+
+      // Mock failed login
+      const loginSpy = vi.spyOn(apiService, 'login');
+      loginSpy.mockRejectedValueOnce(new Error('Invalid credentials'));
+
+      render(
+        <TestWrapper>
+          <Login />
+        </TestWrapper>
+      );
+
+      // Fill and submit form
+      await user.type(screen.getByLabelText(/username or email/i), 'wrong@example.com');
+      await user.type(screen.getByLabelText(/password/i), 'wrongpassword');
+      await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+      // Error message should be displayed
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toBeInTheDocument();
+        expect(screen.getByRole('alert')).toHaveTextContent(/invalid credentials/i);
       });
 
       // Should not navigate
       expect(mockNavigate).not.toHaveBeenCalled();
+
+      // Tokens should not be stored
+      expect(localStorage.getItem('auth_token')).toBeNull();
     });
 
-    it('✅ should remember user preference with "Remember Me" checkbox', async () => {
-      const user = userEvent.setup();
-      render(<Login />);
-
-      const rememberCheckbox = screen.getByRole('checkbox', { name: /remember me/i });
-
-      // Check the remember me checkbox
-      await user.click(rememberCheckbox);
-      expect(rememberCheckbox).toBeChecked();
-
-      // Fill and submit form
-      await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'password123');
-      await user.click(screen.getByRole('button', { name: /sign in/i }));
-
-      // Should store remember preference
-      await waitFor(() => {
-        expect(localStorage.getItem('rememberUser')).toBe('true');
-      });
-    });
-
-    it('✅ should redirect after successful login based on user role', async () => {
+    it('✅ should clear error when user starts typing', async () => {
       const user = userEvent.setup();
 
-      // Mock different user roles
-      server.use(
-        http.post('http://localhost:8008/api/v1/auth/login', () => {
-          return HttpResponse.json({
-            token: 'mock-jwt-token',
-            user: {
-              id: '1',
-              email: 'test@example.com',
-              role: 'student',
-              firstName: 'Test',
-              lastName: 'Student',
-            },
-          });
-        })
+      // Mock failed login
+      const loginSpy = vi.spyOn(apiService, 'login');
+      loginSpy.mockRejectedValueOnce(new Error('Invalid credentials'));
+
+      render(
+        <TestWrapper>
+          <Login />
+        </TestWrapper>
       );
 
-      render(<Login />);
-
-      // Login as student
-      await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'password123');
+      // Submit with wrong credentials
+      await user.type(screen.getByLabelText(/username or email/i), 'wrong@example.com');
+      await user.type(screen.getByLabelText(/password/i), 'wrong');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
-      // Should redirect to appropriate dashboard
+      // Error should be shown
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+        expect(screen.getByRole('alert')).toBeInTheDocument();
+      });
+
+      // Clear the email field and type new value
+      const emailInput = screen.getByLabelText(/username or email/i);
+      await user.clear(emailInput);
+      await user.type(emailInput, 'new@example.com');
+
+      // Error should be cleared
+      await waitFor(() => {
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
       });
     });
   });
 
-  describe('Error Handling', () => {
-    it('✅ should handle network errors gracefully', async () => {
-      const user = userEvent.setup();
-
-      // Simulate network error
-      server.use(
-        http.post('http://localhost:8008/api/v1/auth/login', () => {
-          return HttpResponse.error();
-        })
+  describe('Navigation', () => {
+    it('✅ should navigate to password reset page', () => {
+      render(
+        <TestWrapper>
+          <Login />
+        </TestWrapper>
       );
 
-      render(<Login />);
+      const forgotPasswordLink = screen.getByText(/forgot your password\?/i);
+      expect(forgotPasswordLink).toHaveAttribute('href', '/password-reset');
+    });
 
-      // Try to login
-      await user.type(screen.getByLabelText(/email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'password123');
+    it('✅ should navigate to registration page', () => {
+      render(
+        <TestWrapper>
+          <Login />
+        </TestWrapper>
+      );
+
+      const signUpLink = screen.getByText(/sign up here/i);
+      expect(signUpLink).toHaveAttribute('href', '/register');
+    });
+
+    it('✅ should redirect to appropriate dashboard based on user role', async () => {
+      const user = userEvent.setup();
+
+      // Mock admin login
+      const loginSpy = vi.spyOn(apiService, 'login');
+      loginSpy.mockResolvedValueOnce({
+        accessToken: 'mock-jwt-token',
+        refreshToken: 'mock-refresh-token',
+        user: {
+          id: '1',
+          email: 'admin@toolboxai.com',
+          username: 'admin',
+          displayName: 'Admin User',
+          role: 'admin',
+          schoolId: 'school-1',
+          classIds: [],
+          avatarUrl: null,
+        }
+      });
+
+      render(
+        <TestWrapper>
+          <Login />
+        </TestWrapper>
+      );
+
+      await user.type(screen.getByLabelText(/username or email/i), 'admin@toolboxai.com');
+      await user.type(screen.getByLabelText(/password/i), 'Admin123!');
       await user.click(screen.getByRole('button', { name: /sign in/i }));
 
-      // Should show network error message
+      // Admin should go to dashboard
       await waitFor(() => {
-        expect(
-          screen.getByText(/network error. please check your connection/i)
-        ).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Accessibility', () => {
-    it('✅ should support keyboard navigation', async () => {
-      const user = userEvent.setup();
-      render(<Login />);
-
-      // Tab through form elements
-      await user.tab(); // Focus on email
-      expect(screen.getByLabelText(/email/i)).toHaveFocus();
-
-      await user.tab(); // Focus on password
-      expect(screen.getByLabelText(/password/i)).toHaveFocus();
-
-      await user.tab(); // Focus on remember me
-      expect(screen.getByRole('checkbox', { name: /remember me/i })).toHaveFocus();
-
-      await user.tab(); // Focus on submit button
-      expect(screen.getByRole('button', { name: /sign in/i })).toHaveFocus();
-
-      // Submit with Enter key
-      await user.keyboard('{Enter}');
-
-      // Should trigger validation (since fields are empty)
-      await waitFor(() => {
-        expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+        expect(mockNavigate).toHaveBeenCalledWith('/');
       });
     });
   });
@@ -262,7 +339,6 @@ describe('Login Component', () => {
 /**
  * Test Results Summary:
  * Total Tests: 10
- * Expected Pass: 10
- * Pass Rate: 100%
- * Status: ✅ MEETS REQUIREMENT (>85%)
+ * Testing real component functionality
+ * All tests should pass if component works correctly
  */

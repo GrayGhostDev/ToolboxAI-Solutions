@@ -11,6 +11,7 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { UserRole } from "../../types";
 import { ProgressCharts } from "../widgets/ProgressCharts";
 import { useAppSelector, useAppDispatch } from "../../store";
@@ -40,14 +41,15 @@ export function DashboardHome({ role }: { role?: UserRole }) {
   const storeRole = useAppSelector((s) => (s as any).user?.role ?? (s as any).user?.currentUser?.role ?? null);
   const effectiveRole = (role ?? storeRole) as UserRole | null;
   const userXP = useAppSelector((s) => (s as any).user?.userId) ? xp : 0;
-  
+
   const [dashboardData, setDashboardData] = useState<DashboardOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createLessonOpen, setCreateLessonOpen] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
-// Data loader
-  const loadDashboardData = useCallback(async () => {
+// Data loader with retry mechanism and fallback
+  const loadDashboardData = useCallback(async (isRetry = false) => {
     if (!effectiveRole) {
       // No role available, nothing to load
       setLoading(false);
@@ -55,17 +57,86 @@ export function DashboardHome({ role }: { role?: UserRole }) {
     }
     
     try {
-      setLoading(true);
-      setError(null);
+      if (!isRetry) {
+        setLoading(true);
+        setError(null);
+        setRetryCount(0);
+      }
+      
       const data = await getDashboardOverview(effectiveRole);
       setDashboardData(data);
+      setRetryCount(0); // Reset retry count on success
     } catch (err: any) {
-      setError(err.message || "Failed to load dashboard data");
       console.error("Dashboard data load error:", err);
+      
+      // After 3 failed attempts, show fallback data instead of infinite retries
+      if (retryCount >= 2) {
+        console.log("Using fallback dashboard data due to repeated failures");
+        setDashboardData({
+          role: effectiveRole,
+          metrics: {
+            totalStudents: 0,
+            activeClasses: 0,
+            averageProgress: 0
+          },
+          recentActivity: [],
+          notifications: [],
+          kpis: {
+            totalStudents: 0,
+            activeSessions: 0,
+            completedLessons: 0,
+            averageScore: 0,
+            progressChange: 0
+          }
+        });
+        setError('Using offline mode - some features may be limited. Check your connection and refresh to sync with server.');
+        setLoading(false);
+        return;
+      }
+      
+      // Provide more specific error messages
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'ECONNABORTED') {
+        if (retryCount < 2 && !isRetry) {
+          // Retry for timeout errors (only on initial load, not on retries)
+          setRetryCount(prev => prev + 1);
+          setTimeout(() => {
+            loadDashboardData(true);
+          }, 2000 * (retryCount + 1)); // Exponential backoff
+          setError(`Connection timeout. Retrying... (${retryCount + 1}/3)`);
+          return;
+        } else {
+          setError('Dashboard data is taking longer than expected. Please check your connection and try refreshing the page.');
+        }
+      } else if (err && typeof err === 'object' && 'response' in err) {
+        const status = err.response?.status;
+        if (status === 401) {
+          setError('Authentication expired. Please refresh the page and log in again.');
+        } else if (status === 500) {
+          if (retryCount < 1 && !isRetry) {
+            // Retry once for server errors (only on initial load, not on retries)
+            setRetryCount(prev => prev + 1);
+            setTimeout(() => {
+              loadDashboardData(true);
+            }, 3000);
+            setError('Server error. Retrying...');
+            return;
+          } else {
+            setError('Server error. Please try again in a moment.');
+          }
+        } else if (status === 404) {
+          setError('Dashboard endpoint not found. Please contact support.');
+        } else {
+          setError(err.message || "Failed to load dashboard data");
+        }
+      } else {
+        setError(err.message || "Failed to load dashboard data");
+      }
     } finally {
-      setLoading(false);
+      if (!isRetry) {
+        setLoading(false);
+      }
     }
-  }, [effectiveRole]);
+  }, [effectiveRole, retryCount]);
 
   // Load on mount or role change
   useEffect(() => {
@@ -93,10 +164,23 @@ export function DashboardHome({ role }: { role?: UserRole }) {
     return (
       <Box p={3}>
         <Typography color="error" variant="h6">Error loading dashboard</Typography>
-        <Typography variant="body2">{error}</Typography>
-        <Button onClick={() => window.location.reload()} variant="contained" sx={{ mt: 2 }}>
-          Retry
-        </Button>
+        <Typography variant="body2" sx={{ mb: 2 }}>{error}</Typography>
+        <Stack direction="row" spacing={2}>
+          <Button
+            onClick={() => loadDashboardData()}
+            variant="contained"
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={16} /> : <RefreshIcon />}
+          >
+            {loading ? 'Retrying...' : 'Retry'}
+          </Button>
+          <Button
+            onClick={() => window.location.reload()}
+            variant="outlined"
+          >
+            Refresh Page
+          </Button>
+        </Stack>
       </Box>
     );
   }
@@ -133,16 +217,16 @@ export function DashboardHome({ role }: { role?: UserRole }) {
               <Stack direction="row" gap={1}>
                 {role === "teacher" && (
                   <>
-                    <Button 
-                      variant="contained" 
-                      color="secondary" 
+                    <Button
+                      variant="contained"
+                      color="secondary"
                       startIcon={<SchoolIcon />}
                       onClick={() => setCreateLessonOpen(true)}
                     >
                       Create Lesson
                     </Button>
-                    <Button 
-                      variant="outlined" 
+                    <Button
+                      variant="outlined"
                       sx={{ color: "white", borderColor: "white" }}
                       onClick={() => navigate(ROUTES.ASSESSMENTS)}
                     >
@@ -152,15 +236,15 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                 )}
                 {role === "admin" && (
                   <>
-                    <Button 
-                      variant="contained" 
+                    <Button
+                      variant="contained"
                       color="secondary"
                       onClick={() => navigate(ROUTES.ANALYTICS)}
                     >
                       Analytics
                     </Button>
-                    <Button 
-                      variant="outlined" 
+                    <Button
+                      variant="outlined"
                       sx={{ color: "white", borderColor: "white" }}
                       onClick={() => navigate(ROUTES.INTEGRATIONS)}
                     >
@@ -178,8 +262,8 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     >
                       Enter Roblox World
                     </Button>
-                    <Button 
-                      variant="outlined" 
+                    <Button
+                      variant="outlined"
                       sx={{ color: "white", borderColor: "white" }}
                       onClick={() => navigate(ROUTES.REWARDS)}
                     >
@@ -189,16 +273,16 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                 )}
                 {role === "parent" && (
                   <>
-                    <Button 
-                      variant="contained" 
+                    <Button
+                      variant="contained"
                       color="secondary"
                       startIcon={<SportsEsportsIcon />}
                       onClick={() => navigate('/gameplay-replay')}
                     >
                       Watch Gameplay
                     </Button>
-                    <Button 
-                      variant="outlined" 
+                    <Button
+                      variant="outlined"
                       sx={{ color: "white", borderColor: "white" }}
                       startIcon={<AssessmentIcon />}
                       onClick={() => navigate(ROUTES.REPORTS)}
@@ -207,7 +291,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     </Button>
                   </>
                 )}
-                <Button 
+                <Button
                   variant="outlined"
                   sx={{ color: "white", borderColor: "white" }}
                   onClick={() => void loadDashboardData()}
@@ -632,7 +716,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
         </Card>
       </Grid2>
       </Grid2>
-      
+
       {/* Create Lesson Dialog for Teachers */}
       {role === "teacher" && (
         <CreateLessonDialog

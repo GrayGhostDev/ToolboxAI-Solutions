@@ -43,13 +43,6 @@ interface UseRealTimeDataReturn<T> {
 
 // Overload to support (channel, options) signature
 export function useRealTimeData<T extends { id: string }>(
-  options: UseRealTimeDataOptions<T>
-): UseRealTimeDataReturn<T>;
-export function useRealTimeData<T extends { id: string }>(
-  channel: string,
-  options?: Partial<UseRealTimeDataOptions<T>>
-): UseRealTimeDataReturn<T>;
-export function useRealTimeData<T extends { id: string }>(
   arg1: any,
   arg2?: any
 ): UseRealTimeDataReturn<T> {
@@ -100,17 +93,17 @@ export function useRealTimeData<T extends { id: string }>(
 
     setLoading(true);
     setError(null);
-    
+
     try {
       const newItem = await createFn(itemData);
       const transformedItem = transformFn ? transformFn(newItem) : newItem;
-      
+
       // Optimistic update
       setData(prev => [transformedItem, ...prev]);
-      
+
       // Refresh to ensure consistency
       setTimeout(() => refresh(), 100);
-      
+
       return transformedItem;
     } catch (err: any) {
       const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to create item';
@@ -135,19 +128,19 @@ export function useRealTimeData<T extends { id: string }>(
 
     setLoading(true);
     setError(null);
-    
+
     try {
       const updatedItem = await updateFn(id, itemData);
       const transformedItem = transformFn ? transformFn(updatedItem) : updatedItem;
-      
+
       // Optimistic update
-      setData(prev => prev.map(item => 
+      setData(prev => prev.map(item =>
         item.id === id ? transformedItem : item
       ));
-      
+
       // Refresh to ensure consistency
       setTimeout(() => refresh(), 100);
-      
+
       return transformedItem;
     } catch (err: any) {
       const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to update item';
@@ -176,16 +169,16 @@ export function useRealTimeData<T extends { id: string }>(
 
     setLoading(true);
     setError(null);
-    
+
     try {
       await deleteFn(id);
-      
+
       // Optimistic update
       setData(prev => prev.filter(item => item.id !== id));
-      
+
       // Refresh to ensure consistency
       setTimeout(() => refresh(), 100);
-      
+
       return true;
     } catch (err: any) {
       const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to delete item';
@@ -223,7 +216,7 @@ export function useRealTimeData<T extends { id: string }>(
 
     const subscriptionId = subscribe(channel, (message: any) => {
       console.log(`[Real-time] Received update on ${channel}:`, message);
-      
+
       // Handle different types of real-time updates
       switch (message.type) {
         case 'ITEM_CREATED':
@@ -241,18 +234,18 @@ export function useRealTimeData<T extends { id: string }>(
             refresh();
           }
           break;
-          
+
         case 'ITEM_UPDATED':
           if (message.payload && transformFn) {
             const updatedItem = transformFn(message.payload);
-            setData(prev => prev.map(item => 
+            setData(prev => prev.map(item =>
               item.id === updatedItem.id ? updatedItem : item
             ));
           } else {
             refresh();
           }
           break;
-          
+
         case 'ITEM_DELETED':
           if (message.payload?.id) {
             setData(prev => prev.filter(item => item.id !== message.payload.id));
@@ -260,7 +253,7 @@ export function useRealTimeData<T extends { id: string }>(
             refresh();
           }
           break;
-          
+
         default:
           // For any other updates, just refresh
           refresh();

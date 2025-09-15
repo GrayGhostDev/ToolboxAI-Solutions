@@ -10,7 +10,7 @@ async function globalSetup(config: FullConfig) {
   try {
     // Wait for the dashboard to be ready
     console.log('⏳ Waiting for dashboard to be ready...');
-    await page.goto(config.projects[0].use.baseURL || 'http://localhost:3000');
+    await page.goto(config.projects[0].use.baseURL || 'http://localhost:5179');
     
     // Wait for the page to load completely
     await page.waitForLoadState('networkidle');

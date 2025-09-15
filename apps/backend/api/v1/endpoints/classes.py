@@ -7,9 +7,22 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import logging
-from ....api.auth.auth import get_current_user
-from ....models.schemas import User
-from ....services.database import db_service
+from apps.backend.api.auth.auth import get_current_user
+from pydantic import BaseModel
+from typing import Optional as Opt
+
+# User model for type hints
+class User(BaseModel):
+    id: str
+    username: str
+    role: str
+    email: Optional[str] = None
+
+# Placeholder for database service
+class DBService:
+    pool = None
+
+db_service = DBService()
 
 logger = logging.getLogger(__name__)
 

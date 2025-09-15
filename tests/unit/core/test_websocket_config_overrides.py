@@ -65,9 +65,9 @@ async def test_ws_rate_limit_override(monkeypatch):
     if not hasattr(settings, "RATE_LIMIT_PER_MINUTE"):
         monkeypatch.setattr(settings, "RATE_LIMIT_PER_MINUTE", 100)  # ensure difference is honored
     try:
-        # Ensure production mode so limits apply and state is clean
+        # Ensure sliding window mode so limits apply and state is clean
         rlm = get_rate_limit_manager()
-        rlm.set_mode(RateLimitMode.PRODUCTION)
+        rlm.set_mode(RateLimitMode.SLIDING_WINDOW)
         rlm.clear_all_limits()
 
         ws = AsyncMock()
@@ -90,4 +90,3 @@ async def test_ws_rate_limit_override(monkeypatch):
     finally:
         # monkeypatch handles cleanup
         pass
-

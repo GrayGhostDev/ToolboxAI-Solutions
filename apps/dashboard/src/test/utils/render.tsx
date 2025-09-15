@@ -1,29 +1,34 @@
 /**
  * Test Render Utilities
- * 
+ *
  * Custom render function that wraps components with all necessary providers
  * for testing in the ToolBoxAI Dashboard application.
  */
 
-import React from 'react'
-import { render as rtlRender, RenderOptions, RenderResult } from '@testing-library/react'
-import { Provider } from 'react-redux'
-import { BrowserRouter } from 'react-router-dom'
-import { ThemeProvider, createTheme } from '@mui/material/styles'
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-import { configureStore, Store } from '@reduxjs/toolkit'
-import { vi } from 'vitest'
+import React from 'react';
+import { render as rtlRender, RenderOptions, RenderResult } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { configureStore, Store, combineReducers } from '@reduxjs/toolkit';
+import { vi } from 'vitest';
 
-// Import your actual store slices - adjust imports as needed
-import uiReducer from '../../store/slices/uiSlice'
-import userReducer from '../../store/slices/userSlice'
-import dashboardReducer from '../../store/slices/dashboardSlice'
-import gamificationReducer from '../../store/slices/gamificationSlice'
-import messagesReducer from '../../store/slices/messagesSlice'
-import progressReducer from '../../store/slices/progressSlice'
-import assessmentsReducer from '../../store/slices/assessmentsSlice'
-import complianceReducer from '../../store/slices/complianceSlice'
+// Import all store slices - using actual reducers from the slices
+import uiReducer from '../../store/slices/uiSlice';
+import userReducer from '../../store/slices/userSlice';
+import dashboardReducer from '../../store/slices/dashboardSlice';
+import gamificationReducer from '../../store/slices/gamificationSlice';
+import messagesReducer from '../../store/slices/messagesSlice';
+import progressReducer from '../../store/slices/progressSlice';
+import assessmentsReducer from '../../store/slices/assessmentsSlice';
+import complianceReducer from '../../store/slices/complianceSlice';
+import analyticsReducer from '../../store/slices/analyticsSlice';
+import classesReducer from '../../store/slices/classesSlice';
+import lessonsReducer from '../../store/slices/lessonsSlice';
+import realtimeReducer from '../../store/slices/realtimeSlice';
+import robloxReducer from '../../store/slices/robloxSlice';
 
 // Default theme for testing
 const defaultTheme = createTheme({
@@ -36,7 +41,7 @@ const defaultTheme = createTheme({
       main: '#dc004e',
     },
   },
-})
+});
 
 // Mock Pusher for all tests using the render utility
 vi.mock('pusher-js', () => ({
@@ -54,7 +59,7 @@ vi.mock('pusher-js', () => ({
       state: 'connected',
     },
   })),
-}))
+}));
 
 // Mock Socket.io for all tests
 vi.mock('socket.io-client', () => ({
@@ -66,7 +71,7 @@ vi.mock('socket.io-client', () => ({
     disconnect: vi.fn(),
     connected: true,
   })),
-}))
+}));
 
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   preloadedState?: any
@@ -82,19 +87,26 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
  * Creates a test store with optional preloaded state
  */
 export function createTestStore(preloadedState?: any) {
+  const reducer = {
+    ui: uiReducer,
+    user: userReducer,
+    dashboard: dashboardReducer,
+    gamification: gamificationReducer,
+    messages: messagesReducer,
+    progress: progressReducer,
+    assessments: assessmentsReducer,
+    compliance: complianceReducer,
+    analytics: analyticsReducer,
+    classes: classesReducer,
+    lessons: lessonsReducer,
+    realtime: realtimeReducer,
+    roblox: robloxReducer,
+  };
+
   return configureStore({
-    reducer: {
-      ui: uiReducer,
-      user: userReducer,
-      dashboard: dashboardReducer,
-      gamification: gamificationReducer,
-      messages: messagesReducer,
-      progress: progressReducer,
-      assessments: assessmentsReducer,
-      compliance: complianceReducer,
-    },
+    reducer: reducer as any,
     preloadedState,
-  })
+  });
 }
 
 /**
@@ -110,9 +122,9 @@ interface AllTheProvidersProps {
   }
 }
 
-function AllTheProviders({ 
-  children, 
-  store = createTestStore(), 
+function AllTheProviders({
+  children,
+  store = createTestStore(),
   theme = defaultTheme,
   routerProps = {}
 }: AllTheProvidersProps) {
@@ -131,16 +143,16 @@ function AllTheProviders({
         </ThemeProvider>
       </BrowserRouter>
     </Provider>
-  )
+  );
 }
 
 /**
  * Custom render function that includes all providers
- * 
+ *
  * @example
  * ```tsx
  * import { render, screen } from '@test/utils/render'
- * 
+ *
  * test('renders component', () => {
  *   render(<MyComponent />, {
  *     preloadedState: {
@@ -161,50 +173,59 @@ export function render(
     theme = defaultTheme,
     routerProps = {},
     ...renderOptions
-  } = options
+  } = options;
 
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <AllTheProviders store={store} theme={theme} routerProps={routerProps}>
         {children}
       </AllTheProviders>
-    )
+    );
   }
 
-  return rtlRender(ui, { wrapper: Wrapper, ...renderOptions })
+  return rtlRender(ui, { wrapper: Wrapper, ...renderOptions });
 }
 
 /**
- * Custom render function for hooks
+ * Re-export from React Testing Library
  */
-export { renderHook } from '@testing-library/react'
+export {
+  renderHook,
+  cleanup,
+  act
+} from '@testing-library/react';
 
-// Re-export everything from React Testing Library
-export * from '@testing-library/react'
+// Re-export testing utilities
+export * from '@testing-library/react';
 
 // Export user event for convenience
-export { default as userEvent } from '@testing-library/user-event'
+export { default as userEvent } from '@testing-library/user-event';
 
 // Export waitFor options
 export const waitForOptions = {
   timeout: 5000,
   interval: 100,
-}
+};
 
 /**
  * Helper to wait for async operations
  */
 export async function waitForLoadingToFinish() {
-  const { waitFor } = await import('@testing-library/react')
-  await waitFor(
-    () => {
-      const loadingElements = document.querySelectorAll('[aria-busy="true"]')
-      if (loadingElements.length > 0) {
-        throw new Error('Still loading')
-      }
-    },
-    waitForOptions
-  )
+  // Simple timeout-based waiting for loading to finish
+  const maxWaitTime = 5000;
+  const checkInterval = 100;
+  let elapsed = 0;
+
+  while (elapsed < maxWaitTime) {
+    const loadingElements = document.querySelectorAll('[aria-busy="true"]');
+    if (loadingElements.length === 0) {
+      return;
+    }
+    await new Promise(resolve => setTimeout(resolve, checkInterval));
+    elapsed += checkInterval;
+  }
+
+  throw new Error('Loading did not finish within timeout');
 }
 
 /**
@@ -219,7 +240,7 @@ export function mockApiResponse(data: any, status = 200) {
     headers: new Headers({
       'content-type': 'application/json',
     }),
-  } as Response)
+  } as Response);
 }
 
 /**
@@ -235,7 +256,7 @@ export function createMockUser(overrides = {}) {
     lastName: 'User',
     isAuthenticated: true,
     ...overrides,
-  }
+  };
 }
 
 /**
@@ -250,19 +271,5 @@ export function createMockClass(overrides = {}) {
     teacherId: '1',
     studentCount: 25,
     ...overrides,
-  }
-}
-
-/**
- * Helper to get elements by data-testid
- */
-export function getByTestId(testId: string): HTMLElement | null {
-  return document.querySelector(`[data-testid="${testId}"]`)
-}
-
-/**
- * Helper to get all elements by data-testid
- */
-export function getAllByTestId(testId: string): HTMLElement[] {
-  return Array.from(document.querySelectorAll(`[data-testid="${testId}"]`))
+  };
 }

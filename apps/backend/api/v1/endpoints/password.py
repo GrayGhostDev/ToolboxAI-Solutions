@@ -11,16 +11,16 @@ from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from ....api.auth.password_management import (
+from apps.backend.api.auth.password_management import (
     PasswordChangeRequest,
     PasswordResetRequest,
     get_password_service,
     PasswordChangeService
 )
-from ....api.auth.auth import get_current_user, redis_client
-from ....core.security.session_manager import get_session_manager, initialize_session_manager
-from ....models.schemas import User
-from ....services.database import get_db_session, update_user_password
+from apps.backend.api.auth.auth import get_current_user, redis_client
+from .core.security.session_manager import get_session_manager, initialize_session_manager
+from apps.backend.models.schemas import User
+from apps.backend.services.database import get_db_session, update_user_password
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ async def change_password(
         user_agent = request.headers.get("User-Agent")
         
         # Verify current password
-        from ....api.auth.auth import verify_password, get_user_from_db
+        from apps.backend.api.auth.auth import verify_password, get_user_from_db
         
         # Get user from database with current password hash
         user_data = await get_user_from_db(current_user.username)
@@ -227,7 +227,7 @@ async def get_password_requirements() -> Dict[str, Any]:
     - `require_special`: Whether special characters are required
     - `special_characters`: Allowed special characters
     """
-    from ....api.auth.password_management import PasswordStrengthRequirements
+    from apps.backend.api.auth.password_management import PasswordStrengthRequirements
     
     requirements = PasswordStrengthRequirements()
     
@@ -266,7 +266,7 @@ async def validate_password_strength(
     - `issues`: List of validation issues
     - `suggestions`: List of improvement suggestions
     """
-    from ....api.auth.password_management import PasswordValidator
+    from apps.backend.api.auth.password_management import PasswordValidator
     
     validator = PasswordValidator()
     

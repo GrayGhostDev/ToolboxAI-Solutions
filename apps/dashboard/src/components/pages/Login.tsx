@@ -179,6 +179,7 @@ export default function Login() {
                         onClick={() => setShowPassword(!showPassword)}
                         edge="end"
                         disabled={loading}
+                        aria-label="toggle password visibility"
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>

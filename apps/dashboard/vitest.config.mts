@@ -5,11 +5,11 @@ import * as path from 'path';
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'jsdom',
+    environment: 'happy-dom', // 2025 best practice: 40-60% faster than jsdom
     globals: true,
     setupFiles: './src/test/setup.ts',
-    testTimeout: 10000,
-    hookTimeout: 10000,
+    testTimeout: 5000, // Reduced timeout since happy-dom is faster
+    hookTimeout: 5000,
     reporters: ['default'],
     // Disable isolation to avoid serialization issues with axios
     isolate: false,

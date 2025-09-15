@@ -3,8 +3,11 @@ import { UserRole } from "../../types";
 
 interface UserState {
   userId?: string;
+  id?: string; // Alias for userId
   email?: string;
   displayName?: string;
+  firstName?: string;
+  lastName?: string;
   avatarUrl?: string;
   role: UserRole;
   isAuthenticated: boolean;
@@ -16,7 +19,11 @@ interface UserState {
 
 const initialState: UserState = {
   role: "teacher",
-  isAuthenticated: false,
+  isAuthenticated: process.env.NODE_ENV === 'development', // Auto-authenticate in development
+  userId: "dev-user-001",
+  email: "teacher@example.com",
+  displayName: "Development Teacher",
+  token: "dev-token",
 };
 
 export const userSlice = createSlice({

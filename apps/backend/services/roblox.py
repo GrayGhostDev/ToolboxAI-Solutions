@@ -40,10 +40,10 @@ from apps.backend.core.security.rate_limit_manager import get_rate_limit_manager
 
 # Import agent systems for integration
 try:
-    from core.agents.supervisor import SupervisorAgent
-    from core.sparc.state_manager import StateManager  # Fixed: was SPARCStateManager
-    from core.swarm.swarm_controller import SwarmController
-    from core.mcp.context_manager import ContextManager
+    from apps.backend.core.agents.supervisor import SupervisorAgent
+    from apps.backend.core.sparc.state_manager import StateManager  # Fixed: was SPARCStateManager
+    from apps.backend.core.swarm.swarm_controller import SwarmController
+    from apps.backend.core.mcp.context_manager import ContextManager
     AGENT_INTEGRATION = True
     print("Agent systems successfully imported for Flask bridge")
 except ImportError as e:
@@ -656,11 +656,11 @@ class ContentBridge:
                 self.sparc_manager = StateManager()  # Fixed: was SPARCStateManager
                 
                 # Initialize SwarmController with all required dependencies
-                from core.swarm.worker_pool import WorkerPool
-                from core.swarm.task_distributor import TaskDistributor
-                from core.swarm.consensus_engine import ConsensusEngine
-                from core.swarm.load_balancer import LoadBalancer
-                from core.swarm.swarm_controller import SwarmConfig
+                from apps.backend.core.swarm.worker_pool import WorkerPool
+                from apps.backend.core.swarm.task_distributor import TaskDistributor
+                from apps.backend.core.swarm.consensus_engine import ConsensusEngine
+                from apps.backend.core.swarm.load_balancer import LoadBalancer
+                from apps.backend.core.swarm.swarm_controller import SwarmConfig
                 
                 swarm_config = SwarmConfig()
                 worker_pool = WorkerPool(max_workers=swarm_config.max_workers)
@@ -1714,7 +1714,7 @@ def trigger_agent_pipeline():
         
         # Trigger agent pipeline
         if AGENT_INTEGRATION:
-            from core.agents.plugin_communication import PluginCommunicationHub
+            from apps.backend.core.agents.plugin_communication import PluginCommunicationHub
             
             hub = PluginCommunicationHub()
             result = run_async(hub.handle_plugin_request({
@@ -1758,8 +1758,8 @@ def query_database():
             return jsonify({"status": "error", "message": "Authentication required"}), 401
         
         # Import database helper
-        from core.database.roblox_models import RobloxDatabaseHelper
-        from core.database import get_db
+        from apps.backend.core.database.roblox_models import RobloxDatabaseHelper
+        from apps.backend.core.database import get_db
         
         query_type = request_data.get("query_type")
         params = request_data.get("params", {})

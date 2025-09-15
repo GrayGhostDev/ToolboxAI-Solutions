@@ -4,7 +4,7 @@
  * Factory functions for generating test data for the ToolBoxAI Dashboard.
  */
 
-import { vi } from 'vitest'
+import { vi } from 'vitest';
 
 // ============================================================================
 // USER DATA
@@ -29,9 +29,9 @@ export interface MockUser {
 }
 
 export function createMockUser(overrides: Partial<MockUser> = {}): MockUser {
-  const id = overrides.id || `user-${Math.random().toString(36).substr(2, 9)}`
-  const firstName = overrides.firstName || 'John'
-  const lastName = overrides.lastName || 'Doe'
+  const id = overrides.id || `user-${Math.random().toString(36).substr(2, 9)}`;
+  const firstName = overrides.firstName || 'John';
+  const lastName = overrides.lastName || 'Doe';
   
   return {
     id,
@@ -50,7 +50,7 @@ export function createMockUser(overrides: Partial<MockUser> = {}): MockUser {
     createdAt: overrides.createdAt || new Date().toISOString(),
     updatedAt: overrides.updatedAt || new Date().toISOString(),
     ...overrides,
-  }
+  };
 }
 
 // ============================================================================
@@ -89,7 +89,7 @@ export function createMockClass(overrides: Partial<MockClass> = {}): MockClass {
     createdAt: overrides.createdAt || new Date().toISOString(),
     updatedAt: overrides.updatedAt || new Date().toISOString(),
     ...overrides,
-  }
+  };
 }
 
 // ============================================================================
@@ -130,7 +130,7 @@ export function createMockLesson(overrides: Partial<MockLesson> = {}): MockLesso
     createdAt: overrides.createdAt || new Date().toISOString(),
     updatedAt: overrides.updatedAt || new Date().toISOString(),
     ...overrides,
-  }
+  };
 }
 
 // ============================================================================
@@ -172,14 +172,14 @@ export function createMockQuestion(overrides: Partial<MockQuestion> = {}): MockQ
     correctAnswer: overrides.correctAnswer ?? 1,
     points: overrides.points || 10,
     ...overrides,
-  }
+  };
 }
 
 export function createMockAssessment(overrides: Partial<MockAssessment> = {}): MockAssessment {
   const questions = overrides.questions || [
     createMockQuestion(),
     createMockQuestion({ question: 'What is 3 + 3?', correctAnswer: 2 }),
-  ]
+  ];
   
   return {
     id: overrides.id || `assessment-${Math.random().toString(36).substr(2, 9)}`,
@@ -197,7 +197,7 @@ export function createMockAssessment(overrides: Partial<MockAssessment> = {}): M
     createdAt: overrides.createdAt || new Date().toISOString(),
     updatedAt: overrides.updatedAt || new Date().toISOString(),
     ...overrides,
-  }
+  };
 }
 
 // ============================================================================
@@ -224,7 +224,7 @@ export function createMockBadge(overrides: Partial<MockBadge> = {}): MockBadge {
     xpReward: overrides.xpReward || 100,
     unlockedAt: overrides.unlockedAt,
     ...overrides,
-  }
+  };
 }
 
 export interface MockLeaderboardEntry {
@@ -255,7 +255,7 @@ export function createMockLeaderboardEntry(overrides: Partial<MockLeaderboardEnt
     streakDays: overrides.streakDays || 7,
     change: overrides.change || 0,
     ...overrides,
-  }
+  };
 }
 
 // ============================================================================
@@ -290,7 +290,7 @@ export function createMockMessage(overrides: Partial<MockMessage> = {}): MockMes
     type: overrides.type || 'message',
     attachments: overrides.attachments || [],
     ...overrides,
-  }
+  };
 }
 
 // ============================================================================
@@ -319,7 +319,7 @@ export function createMockProgress(overrides: Partial<MockProgress> = {}): MockP
     score: overrides.score,
     attempts: overrides.attempts || 0,
     ...overrides,
-  }
+  };
 }
 
 // ============================================================================
@@ -358,14 +358,14 @@ export function createMockDashboardData(overrides: Partial<MockDashboardData> = 
     ],
     notifications: overrides.notifications || [],
     ...overrides,
-  }
+  };
 }
 
 // ============================================================================
 // API RESPONSE MOCKS
 // ============================================================================
 
-export function createMockApiResponse<T>(data: T, status = 200) {
+export function createMockApiResponse<T>(data: T, status = 200): Response {
   return {
     ok: status >= 200 && status < 300,
     status,
@@ -378,12 +378,12 @@ export function createMockApiResponse<T>(data: T, status = 200) {
     blob: vi.fn(() => Promise.resolve(new Blob([JSON.stringify(data)]))),
     arrayBuffer: vi.fn(() => Promise.resolve(new ArrayBuffer(0))),
     formData: vi.fn(() => Promise.resolve(new FormData())),
-    clone: vi.fn(() => createMockApiResponse(data, status)),
-  } as unknown as Response
+    clone: vi.fn(function(): Response { return createMockApiResponse(data, status); }),
+  } as unknown as Response;
 }
 
 export function createMockError(message = 'An error occurred', status = 500) {
-  return createMockApiResponse({ error: message }, status)
+  return createMockApiResponse({ error: message }, status);
 }
 
 // ============================================================================
@@ -396,7 +396,7 @@ export function createMockWebSocketMessage(type: string, payload: any) {
     payload,
     timestamp: new Date().toISOString(),
     channel: 'public',
-  }
+  };
 }
 
 export function createMockPusherEvent(event: string, data: any, channel = 'public') {
@@ -405,5 +405,5 @@ export function createMockPusherEvent(event: string, data: any, channel = 'publi
     data,
     channel,
     user_id: 'user-1',
-  }
+  };
 }

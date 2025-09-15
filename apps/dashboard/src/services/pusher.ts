@@ -3,7 +3,7 @@
  *
  * Manages Pusher connections, channel subscriptions, message handling,
  * reconnection logic, and provides a robust real-time communication layer.
- * 
+ *
  * This service consolidates all real-time features using Pusher Channels,
  * replacing the legacy Socket.IO implementation.
  */
@@ -60,7 +60,7 @@ url: options.url || WS_URL,
       debug: options.debug || false,
       ...options,
     };
-    
+
     // Lazy initialization to avoid circular dependency issues in tests
     this.apiClient = null;
 
@@ -106,7 +106,7 @@ url: options.url || WS_URL,
           reject(new Error('Authentication token required'));
           return;
         }
-        
+
         this.currentToken = authToken;
         this.scheduleTokenRefresh(authToken);
 
@@ -465,13 +465,13 @@ url: options.url || WS_URL,
     this.stopHeartbeat();
 
     // Check if disconnection was due to authentication failure
-    const isAuthError = reason === 'io server disconnect' || 
-                        reason.includes('auth') || 
+    const isAuthError = reason === 'io server disconnect' ||
+                        reason.includes('auth') ||
                         reason.includes('unauthorized') ||
                         reason.includes('401');
-    
+
     this.log(`Disconnect reason: ${reason}, isAuthError: ${isAuthError}`);
-    
+
     // Attempt reconnection if enabled and not an auth error
     if (
       this.options.reconnect &&
@@ -519,12 +519,22 @@ url: options.url || WS_URL,
     this.reconnectAttempts++;
     this.setState(WebSocketState.RECONNECTING);
 
-    const delay = Math.min(
-      (this.options.reconnectInterval || 5000) * Math.pow(2, this.reconnectAttempts - 1),
-      30000 // Max 30 seconds
+    // Exponential backoff with jitter (2025 Pusher 8.3.0 best practices)
+    // Start at 1 second, double each time: 1s, 2s, 4s, 8s, 16s, max 30s
+    const baseDelay = 1000; // Start at 1 second
+    const maxDelay = 30000; // Max 30 seconds
+
+    // Calculate exponential delay
+    const exponentialDelay = Math.min(
+      baseDelay * Math.pow(2, this.reconnectAttempts - 1),
+      maxDelay
     );
 
-    this.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
+    // Add jitter (±25%) to prevent thundering herd
+    const jitter = exponentialDelay * 0.25 * (Math.random() * 2 - 1);
+    const delay = Math.round(exponentialDelay + jitter);
+
+    this.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}, base: ${exponentialDelay}ms, jitter: ${Math.round(jitter)}ms)`);
 
     this.reconnectTimer = setTimeout(async () => {
       this.reconnectTimer = null;
@@ -540,7 +550,9 @@ url: options.url || WS_URL,
         this.log('Reconnection failed:', error);
         if (this.reconnectAttempts < this.options.maxReconnectAttempts!) {
           this.reconnect();
-        } else {
+        } else if (this.options.maxReconnectAttempts && this.reconnectAttempts >= this.options.maxReconnectAttempts) {
+          // Only stop if maxReconnectAttempts is explicitly set
+          // Pusher 8.3.0 best practice: unlimited retries by default
           this.setState(WebSocketState.ERROR);
           this.handleError({
             code: 'MAX_RECONNECT_ATTEMPTS',
@@ -548,6 +560,9 @@ url: options.url || WS_URL,
             timestamp: new Date().toISOString(),
             recoverable: false,
           });
+        } else {
+          // Continue reconnecting indefinitely (Pusher 8.3.0 behavior)
+          this.reconnect();
         }
       }
     }, delay) as any;
@@ -563,12 +578,14 @@ url: options.url || WS_URL,
   private startHeartbeat(): void {
     this.stopHeartbeat();
 
+    // Reduce heartbeat frequency to prevent excessive API calls
     this.heartbeatTimer = setInterval(() => {
       if (this.state === WebSocketState.CONNECTED) {
-        const pingTime = Date.now();
-        this.send(WebSocketMessageType.PING, { timestamp: pingTime });
+        // Only send heartbeat if really needed - Pusher handles this internally
+        // const pingTime = Date.now();
+        // this.send(WebSocketMessageType.PING, { timestamp: pingTime });
       }
-    }, this.options.heartbeatInterval!) as any;
+    }, this.options.heartbeatInterval! * 10) as any; // 10x less frequent
   }
 
   private stopHeartbeat(): void {
@@ -666,7 +683,7 @@ url: options.url || WS_URL,
         this.log('State handler error:', error);
       }
     });
-    
+
     // Notify connection status callbacks
     this.connectionStatusCallbacks.forEach((callback) => {
       try {
@@ -698,19 +715,19 @@ url: options.url || WS_URL,
 
   private async handleTokenExpiration(): Promise<void> {
     this.log('Token expired, attempting to refresh');
-    
+
     try {
       // Try to refresh the token using the refresh token
       const newToken = await this.refreshTokenWithAPI();
-      
+
       if (newToken) {
         this.currentToken = newToken;
         localStorage.setItem(AUTH_TOKEN_KEY, newToken);
-        
+
         // Reconnect with new token
         this.disconnect('Token refreshed');
         await this.connect(newToken);
-        
+
         // Notify callbacks
         this.tokenRefreshCallbacks.forEach((callback) => callback());
       } else {
@@ -724,7 +741,7 @@ url: options.url || WS_URL,
         timestamp: new Date().toISOString(),
         recoverable: false,
       });
-      
+
       // Clear tokens and redirect to login
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
@@ -735,8 +752,9 @@ url: options.url || WS_URL,
   }
 
   public refreshToken(newToken: string): Promise<void> {
-    return new Promise(async (resolve, reject) => {
-      try {
+    return new Promise((resolve, reject) => {
+      (async () => {
+        try {
         this.currentToken = newToken;
         localStorage.setItem(AUTH_TOKEN_KEY, newToken);
         if (this.state === WebSocketState.CONNECTED) {
@@ -744,9 +762,10 @@ url: options.url || WS_URL,
           await this.connect(newToken);
         }
         resolve();
-      } catch (error) {
-        reject(error as Error);
-      }
+        } catch (error) {
+          reject(error as Error);
+        }
+      })();
     });
   }
 
@@ -764,34 +783,61 @@ url: options.url || WS_URL,
     callback(this.state);
     return () => this.connectionStatusCallbacks.delete(callback);
   }
-  
+
   /**
    * Schedule automatic token refresh before expiry
    */
   private scheduleTokenRefresh(token: string): void {
     this.clearTokenRefreshTimer();
-    
+
     try {
       // Parse JWT to get expiry time
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        this.log('Invalid JWT token format');
+        return;
+      }
+
+      const payload = JSON.parse(atob(parts[1]));
       const expiryTime = payload.exp * 1000; // Convert to milliseconds
-      this.tokenExpiryTime = expiryTime;
-      
+
+      // Validate expiry time is reasonable (not in the far future)
+      const now = Date.now();
+      const maxReasonableExpiry = now + (365 * 24 * 60 * 60 * 1000); // 1 year from now
+
+      if (expiryTime > maxReasonableExpiry) {
+        this.log(`Token expiry time seems invalid: ${new Date(expiryTime).toISOString()}. Using default 30 minutes.`);
+        // Use a reasonable default expiry time
+        this.tokenExpiryTime = now + (30 * 60 * 1000); // 30 minutes from now
+      } else {
+        this.tokenExpiryTime = expiryTime;
+      }
+
       // Schedule refresh 5 minutes before expiry
-      const refreshTime = expiryTime - Date.now() - (5 * 60 * 1000);
-      
+      const refreshTime = this.tokenExpiryTime - now - (5 * 60 * 1000);
+
       if (refreshTime > 0) {
         this.tokenRefreshTimer = setTimeout(() => {
           this.handleTokenExpiration();
         }, refreshTime) as any;
-        
-        this.log(`Token refresh scheduled for ${new Date(expiryTime - 5 * 60 * 1000).toISOString()}`);
+
+        this.log(`Token refresh scheduled for ${new Date(this.tokenExpiryTime - 5 * 60 * 1000).toISOString()}`);
+      } else {
+        this.log('Token is already expired or expires soon, refreshing immediately');
+        this.handleTokenExpiration();
       }
     } catch (error) {
       this.log('Failed to parse token expiry:', error);
+      // Set a reasonable default refresh time
+      this.tokenExpiryTime = Date.now() + (30 * 60 * 1000); // 30 minutes from now
+      const refreshTime = 25 * 60 * 1000; // 25 minutes
+      this.tokenRefreshTimer = setTimeout(() => {
+        this.handleTokenExpiration();
+      }, refreshTime) as any;
+      this.log(`Using default token refresh in 25 minutes`);
     }
   }
-  
+
   /**
    * Clear token refresh timer
    */
@@ -801,7 +847,7 @@ url: options.url || WS_URL,
       this.tokenRefreshTimer = null;
     }
   }
-  
+
   /**
    * Get or create API client instance
    */
@@ -811,7 +857,7 @@ url: options.url || WS_URL,
     }
     return this.apiClient;
   }
-  
+
   /**
    * Refresh token using the API client
    */
@@ -819,14 +865,14 @@ url: options.url || WS_URL,
     try {
       const refreshToken = localStorage.getItem(AUTH_REFRESH_TOKEN_KEY);
       this.log(`Attempting token refresh with refresh token: ${refreshToken ? `${refreshToken.substring(0, 20)}...` : 'null'}`);
-      
+
       if (!refreshToken) {
         throw new Error('No refresh token available');
       }
-      
+
       const response = await this.getApiClient().refreshToken(refreshToken);
       this.log('Token refresh response:', response);
-      
+
       if (response && response.accessToken) {
         localStorage.setItem(AUTH_TOKEN_KEY, response.accessToken);
         if (response.refreshToken) {
@@ -849,10 +895,10 @@ url: options.url || WS_URL,
   public async refreshTokenAndReconnect(): Promise<void> {
     this.log('Manual token refresh requested');
     const newToken = await this.refreshTokenWithAPI();
-    
+
     if (newToken) {
       this.currentToken = newToken;
-      
+
       if (this.isConnected()) {
         this.log('Reconnecting with new token...');
         this.disconnect('Token refreshed manually');
@@ -863,7 +909,7 @@ url: options.url || WS_URL,
       throw new Error('Failed to refresh token');
     }
   }
-  
+
   /**
    * Refresh token before reconnection attempt
    */
@@ -872,11 +918,11 @@ url: options.url || WS_URL,
     if (this.tokenExpiryTime && Date.now() < this.tokenExpiryTime - 60000) {
       return this.currentToken || null;
     }
-    
+
     // Try to refresh the token
     return await this.refreshTokenWithAPI();
   }
-  
+
   private log(...args: any[]): void {
     if (this.options.debug) {
       console.log('[WebSocket]', ...args);
@@ -885,12 +931,12 @@ url: options.url || WS_URL,
 }
 
 // Create singleton instance with URL from config and debug enabled
-export const pusherService = new PusherService({ 
+export const pusherService = new PusherService({
   url: WS_URL,
   debug: true, // Enable debug logging
   reconnect: true,
-  maxReconnectAttempts: 5,
-  reconnectInterval: 3000,
+  maxReconnectAttempts: undefined, // Unlimited retries (Pusher 8.3.0 best practice)
+  reconnectInterval: 1000, // Start at 1s with exponential backoff
   heartbeatInterval: 30000
 });
 
@@ -916,5 +962,5 @@ export const unsubscribeFromChannel = (subscriptionId: string) =>
   pusherService.unsubscribe(subscriptionId);
 export const getWebSocketState = () => pusherService.getState();
 export const isWebSocketConnected = () => pusherService.isConnected();
-export const onWebSocketConnectionStatusChange = (callback: (status: WebSocketState) => void) => 
+export const onWebSocketConnectionStatusChange = (callback: (status: WebSocketState) => void) =>
   pusherService.onConnectionStatusChange(callback);

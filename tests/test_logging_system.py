@@ -66,8 +66,12 @@ def initialized_logging(temp_log_dir):
         enable_console_logging=False
     )
     yield logging_manager
-    # Clear handlers after test
+    # Clear handlers after test and close file handlers
     root_logger = logging.getLogger()
+    for handler in root_logger.handlers[:]:
+        if hasattr(handler, 'close'):
+            handler.close()
+        root_logger.removeHandler(handler)
     root_logger.handlers.clear()
 
 

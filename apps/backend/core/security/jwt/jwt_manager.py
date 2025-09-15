@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from .jwt_secret_generator import JWTSecretGenerator
-from ..secrets import get_secret, get_required_secret, SecretsManager
+from secrets import get_secret, get_required_secret, SecretsManager
 
 logger = logging.getLogger(__name__)
 

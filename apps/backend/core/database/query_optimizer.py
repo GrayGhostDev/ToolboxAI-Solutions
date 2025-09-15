@@ -22,7 +22,7 @@ from sqlalchemy.orm import selectinload, joinedload, subqueryload, contains_eage
 from sqlalchemy.orm import Query
 from sqlalchemy.sql import Select
 
-from ..logging import logging_manager, log_database_operation
+from apps.backend.core.logging import logging_manager, log_database_operation
 
 logger = logging_manager.get_logger(__name__)
 

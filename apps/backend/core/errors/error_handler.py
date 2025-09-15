@@ -22,7 +22,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_serializer, ConfigDict
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from ..logging import logging_manager, log_error, log_audit
+from apps.backend.core.logging import logging_manager, log_error, log_audit
 
 logger = logging_manager.get_logger(__name__)
 

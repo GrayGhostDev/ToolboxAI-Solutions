@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -13,10 +13,6 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemAvatar,
-  Avatar,
-  Divider,
-  Paper,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -28,14 +24,15 @@ import {
   Assignment,
   RocketLaunch,
 } from '@mui/icons-material';
-import { useAppDispatch, useAppSelector } from '../../store';
-import { getClass } from '../../services/api';
-import { addNotification } from '../../store/slices/uiSlice';
+import { useAppDispatch } from '@/store';
+import { getClass } from '@/services/api';
+import { addNotification } from '@/store/slices/uiSlice';
+import type { ClassDetails as ApiClassDetails } from '@/types/api';
 
 interface ClassDetailsData {
-  id: number;
+  id: string | number; // allow both to match API (string) and local expectations
   name: string;
-  subject: string;
+  subject?: string; // make optional since API doesn't provide subject
   grade_level?: number;
   teacher_name?: string;
   room?: string;
@@ -55,17 +52,27 @@ const ClassDetails: React.FC = () => {
   const [classData, setClassData] = useState<ClassDetailsData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (id) {
-      fetchClassDetails(id);
-    }
-  }, [id]);
-
-  const fetchClassDetails = async (classId: string) => {
+  const fetchClassDetails = useCallback(async (classId: string) => {
     try {
       setLoading(true);
-      const data = await getClass(classId);
-      setClassData(data);
+      const data: ApiClassDetails = await getClass(classId);
+      // Normalize API (camelCase) to local component expectations (some snake_case)
+      const mapped: ClassDetailsData = {
+        id: data.id,
+        name: data.name,
+        // subject not in API; leave undefined so UI shows fallback
+        grade_level: data.grade,
+        teacher_name: undefined,
+        room: undefined,
+        schedule: data.schedule,
+        description: undefined,
+        student_count: data.studentCount,
+        status: undefined,
+        created_at: data.createdAt,
+        syllabus_url: undefined,
+        resources: undefined,
+      };
+      setClassData(mapped);
     } catch (error) {
       console.error('Error fetching class details:', error);
       dispatch(
@@ -77,7 +84,13 @@ const ClassDetails: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (id) {
+      fetchClassDetails(id);
+    }
+  }, [id, fetchClassDetails]);
 
   const handlePushToRoblox = () => {
     dispatch(

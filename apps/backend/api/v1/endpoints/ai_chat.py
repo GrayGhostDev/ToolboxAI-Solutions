@@ -19,7 +19,7 @@ try:
     from langchain_anthropic import ChatAnthropic
     from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
     from langgraph.graph import StateGraph, END
-    from langgraph.checkpoint.sqlite import SqliteSaver
+    from langgraph_checkpoint_sqlite import SqliteSaver
 except ImportError as e:
     logging.warning(f"LangChain imports failed: {e}. Running in mock mode.")
     ChatAnthropic = None
@@ -28,10 +28,10 @@ except ImportError as e:
 
 # Authentication imports
 try:
-    from ....api.auth.auth import get_current_user
+    from apps.backend.api.auth.auth import get_current_user
 except ImportError:
     try:
-        from ...auth.auth import get_current_user
+        from auth.auth import get_current_user
     except ImportError:
         # Fallback for development
         def get_current_user():
@@ -44,10 +44,10 @@ except ImportError:
 
 # Model imports
 try:
-    from ....models.schemas import User, BaseResponse
+    from apps.backend.models.schemas import User, BaseResponse
 except ImportError:
     try:
-        from ...models.schemas import User, BaseResponse
+        from apps.backend.models.schemas import User, BaseResponse
     except ImportError:
         # Fallback models
         class User(BaseModel):
@@ -249,10 +249,7 @@ class RobloxAssistantGraph:
 
     async def plan_content(self, state: ConversationState) -> ConversationState:
         """Plan content based on intent"""
-        if not self.llm:
-            return state
-
-        # Generate content plan based on intent
+        # Generate content plan based on intent (works even without LLM)
         if state.intent == IntentType.CREATE_LESSON:
             state.current_task = "Creating educational lesson plan"
         elif state.intent == IntentType.DESIGN_ENVIRONMENT:
@@ -266,16 +263,69 @@ class RobloxAssistantGraph:
         return state
 
     async def generate_resources(self, state: ConversationState) -> ConversationState:
-        """Generate educational resources"""
-        if not self.llm:
-            return state
-
+        """Generate educational resources by calling Roblox content generation"""
         # Generate appropriate resources based on intent
         state.generated_content = {
             "type": state.intent.value if state.intent else "general",
-            "status": "generated",
+            "status": "generating",
             "timestamp": datetime.utcnow().isoformat()
         }
+
+        if not self.llm:
+            # In mock mode, still generate content structure
+            state.generated_content["status"] = "generated"
+            return state
+
+        # Call Roblox content generation API if appropriate intent
+        if state.intent in [IntentType.CREATE_LESSON, IntentType.DESIGN_ENVIRONMENT, IntentType.GENERATE_QUIZ]:
+            try:
+                # Import here to avoid circular imports
+                from httpx import AsyncClient
+                from typing import Literal
+
+                # Map intent to content type
+                content_type_map = {
+                    IntentType.CREATE_LESSON: "lesson",
+                    IntentType.DESIGN_ENVIRONMENT: "environment",
+                    IntentType.GENERATE_QUIZ: "quiz"
+                }
+
+                # Extract parameters from conversation
+                last_message = state.messages[-1]["content"] if state.messages else ""
+
+                # Call Roblox content generation endpoint
+                async with AsyncClient() as client:
+                    response = await client.post(
+                        "http://127.0.0.1:8008/api/v1/roblox/content/generate",
+                        json={
+                            "content_type": content_type_map.get(state.intent, "lesson"),
+                            "subject": state.context.get("subject", "General"),
+                            "grade_level": state.context.get("grade_level", 6),
+                            "difficulty": state.context.get("difficulty", "intermediate"),
+                            "learning_objectives": state.context.get("learning_objectives", []),
+                            "description": last_message,
+                            "ai_assistance": True,
+                            "include_quiz": state.intent == IntentType.GENERATE_QUIZ,
+                            "terrain_type": "educational_playground" if state.intent == IntentType.DESIGN_ENVIRONMENT else None
+                        },
+                        headers={
+                            "Authorization": f"Bearer {state.context.get('auth_token', '')}"
+                        }
+                    )
+
+                    if response.status_code in [200, 201, 202]:
+                        content_data = response.json()
+                        state.generated_content["content_id"] = content_data.get("content_id")
+                        state.generated_content["status"] = "generated"
+                        state.generated_content["roblox_data"] = content_data
+                    else:
+                        logger.warning(f"Roblox content generation failed: {response.status_code}")
+                        state.generated_content["status"] = "failed"
+
+            except Exception as e:
+                logger.error(f"Failed to generate Roblox content: {e}")
+                state.generated_content["status"] = "error"
+                state.generated_content["error"] = str(e)
 
         return state
 
@@ -298,43 +348,80 @@ class RobloxAssistantGraph:
 
     async def process_message(self, conversation_id: str, message: str) -> AsyncGenerator[str, None]:
         """Process a message and stream response"""
-        if not self.llm:
-            yield "I'm currently in mock mode. LangChain integration pending."
-            return
-
         try:
-            # Create state
-            state = ConversationState(
-                messages=[{"role": "user", "content": message}]
-            )
+            # If we have a real LLM, use it
+            if self.llm:
+                # Create state with context
+                state = ConversationState(
+                    messages=[{"role": "user", "content": message}],
+                    context={"conversation_id": conversation_id}
+                )
 
-            # Run workflow
-            if self.graph:
-                config = {"configurable": {"thread_id": conversation_id}}
-                result = await self.graph.ainvoke(state, config)
+                # Run workflow
+                if self.graph:
+                    config = {"configurable": {"thread_id": conversation_id}}
+                    result = await self.graph.ainvoke(state, config)
 
-                # Stream response
-                response_text = "I'll help you create an engaging Roblox educational environment. "
+                    # Generate contextual response based on intent and generated content
+                    if result.intent == IntentType.CREATE_LESSON:
+                        if result.generated_content and result.generated_content.get("status") == "generated":
+                            response_text = f"Great! I've started creating your educational lesson. Content ID: {result.generated_content.get('content_id', 'pending')}. "
+                            response_text += "The lesson will include interactive elements, assessments, and age-appropriate content. "
+                            response_text += "You can preview it in the Environment Preview tab once it's ready."
+                        else:
+                            response_text = "Let's create an engaging lesson! What subject and grade level are you targeting?"
 
-                if result.intent == IntentType.CREATE_LESSON:
-                    response_text += "Let's start by defining your learning objectives."
-                elif result.intent == IntentType.DESIGN_ENVIRONMENT:
-                    response_text += "I'll guide you through designing the perfect environment."
-                elif result.intent == IntentType.GENERATE_QUIZ:
-                    response_text += "Let's create an interactive quiz for your students."
+                    elif result.intent == IntentType.DESIGN_ENVIRONMENT:
+                        if result.generated_content and result.generated_content.get("status") == "generated":
+                            response_text = f"Excellent! Your Roblox environment is being generated. Content ID: {result.generated_content.get('content_id', 'pending')}. "
+                            response_text += "I'm creating an immersive 3D space with interactive elements. "
+                            response_text += "The environment will be optimized for educational gameplay."
+                        else:
+                            response_text = "I'll help you design an amazing environment! Would you like a space station, medieval castle, or modern classroom?"
+
+                    elif result.intent == IntentType.GENERATE_QUIZ:
+                        if result.generated_content and result.generated_content.get("status") == "generated":
+                            response_text = f"Perfect! Your interactive quiz is being created. Content ID: {result.generated_content.get('content_id', 'pending')}. "
+                            response_text += "It will include multiple choice, true/false, and interactive challenges. "
+                            response_text += "Students will earn points and badges for correct answers."
+                        else:
+                            response_text = "Let's create an engaging quiz! How many questions would you like, and what topics should we cover?"
+
+                    else:
+                        response_text = "I'm your Roblox Educational Assistant! I can help you:\n"
+                        response_text += "• Create interactive lessons with 3D environments\n"
+                        response_text += "• Design immersive educational spaces\n"
+                        response_text += "• Generate quizzes and assessments\n"
+                        response_text += "• Deploy content to Roblox Studio\n"
+                        response_text += "What would you like to create today?"
+
+                    # Stream the response
+                    for word in response_text.split():
+                        yield word + " "
+                        await asyncio.sleep(0.03)  # Faster streaming
                 else:
-                    response_text += "How can I assist you today?"
-
-                # Simulate streaming
-                for word in response_text.split():
-                    yield word + " "
-                    await asyncio.sleep(0.05)  # Simulate token delay
+                    yield "Setting up AI assistant... Please try again in a moment."
             else:
-                yield "Graph not initialized. Please check configuration."
+                # Mock mode - provide helpful responses
+                if "lesson" in message.lower():
+                    response = "I'll help you create an educational lesson! To get started, I need to know: What subject are you teaching? What grade level? What are your main learning objectives?"
+                elif "environment" in message.lower() or "world" in message.lower():
+                    response = "Let's design an amazing Roblox environment! I can create: Space stations for science, Medieval castles for history, Modern cities for social studies, or Custom themed worlds. Which interests you?"
+                elif "quiz" in message.lower() or "test" in message.lower():
+                    response = "I'll create an interactive quiz for your students! Should we include: Multiple choice questions, True/false challenges, Fill-in-the-blank activities, or Puzzle-based assessments?"
+                elif "help" in message.lower():
+                    response = "I'm here to help! I can: Create lessons, Design 3D environments, Generate quizzes, Preview content, Deploy to Roblox. Just tell me what you need!"
+                else:
+                    response = "I'm ready to help you create engaging Roblox educational content! Try asking me to create a lesson, design an environment, or generate a quiz."
+
+                # Stream mock response
+                for word in response.split():
+                    yield word + " "
+                    await asyncio.sleep(0.03)
 
         except Exception as e:
             logger.error(f"Message processing failed: {e}")
-            yield f"Error processing message: {str(e)}"
+            yield f"I encountered an issue: {str(e)}. Please try rephrasing your request."
 
 # =============================================================================
 # IN-MEMORY STORAGE (Replace with database in production)
@@ -499,6 +586,89 @@ async def send_message(
     logger.info(f"Message sent to conversation {conversation_id}")
 
     return MessageResponse(**user_msg)
+
+@router.post("/generate", response_model=MessageResponse)
+async def generate_ai_response_endpoint(
+    request: SendMessageRequest,
+    current_user: User = Depends(get_current_user)
+) -> MessageResponse:
+    """Generate AI response for a single message (convenience endpoint)"""
+
+    # Create a temporary conversation for this single interaction
+    conversation_id = f"temp_{uuid.uuid4().hex[:8]}"
+
+    # Create temporary conversation
+    conversations[conversation_id] = {
+        "id": conversation_id,
+        "title": "AI Assistant Chat",
+        "status": ConversationStatus.ACTIVE,
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+        "user_id": current_user.id if hasattr(current_user, 'id') else current_user.email,
+        "metadata": {"temporary": True}
+    }
+
+    # Initialize messages for this conversation
+    if conversation_id not in messages:
+        messages[conversation_id] = []
+
+    # Add user message
+    user_msg = {
+        "id": f"msg_{uuid.uuid4().hex[:8]}",
+        "role": MessageRole.USER,
+        "content": request.message,
+        "timestamp": datetime.utcnow(),
+        "metadata": {"attachments": request.attachments or []}
+    }
+    messages[conversation_id].append(user_msg)
+
+    # Generate AI response
+    try:
+        if assistant_graph:
+            # Use the actual LangGraph workflow
+            response_text = ""
+            async for token in assistant_graph.process_message(conversation_id, request.message):
+                # Token is already a string from the async generator
+                response_text += token
+
+            ai_msg = {
+                "id": f"msg_{uuid.uuid4().hex[:8]}",
+                "role": MessageRole.ASSISTANT,
+                "content": response_text,
+                "timestamp": datetime.utcnow(),
+                "metadata": {"generated": True}
+            }
+        else:
+            # Mock response for development
+            ai_msg = {
+                "id": f"msg_{uuid.uuid4().hex[:8]}",
+                "role": MessageRole.ASSISTANT,
+                "content": f"I understand you want to: {request.message}\n\nI'm here to help you create educational Roblox environments! Could you tell me more about:\n- What grade level is this for?\n- What subject area?\n- What specific learning objectives?\n- How many students will participate?\n\nOnce I have these details, I can help you design the perfect educational environment!",
+                "timestamp": datetime.utcnow(),
+                "metadata": {"generated": True, "mock": True}
+            }
+
+        messages[conversation_id].append(ai_msg)
+
+        # Clean up temporary conversation after a delay
+        asyncio.create_task(cleanup_temp_conversation(conversation_id))
+
+        return MessageResponse(**ai_msg)
+
+    except Exception as e:
+        logger.error(f"Error generating AI response: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate AI response: {str(e)}"
+        )
+
+async def cleanup_temp_conversation(conversation_id: str):
+    """Clean up temporary conversation after 5 minutes"""
+    await asyncio.sleep(300)  # 5 minutes
+    if conversation_id in conversations:
+        del conversations[conversation_id]
+    if conversation_id in messages:
+        del messages[conversation_id]
 
 @router.get("/conversations/{conversation_id}", response_model=ConversationResponse)
 async def get_conversation(

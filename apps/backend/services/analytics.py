@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel, Field
 import random
 from sqlalchemy.ext.asyncio import AsyncSession
-from core.database.connection import get_db
+from apps.backend.core.database.connection import get_db
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.analytics_advanced import (
     AdvancedAnalytics,

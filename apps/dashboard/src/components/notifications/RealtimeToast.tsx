@@ -21,7 +21,7 @@ export default function RealtimeToast() {
 
     const handleClassOnline = (message: any) => {
       setMessage({
-        text: `Class \"${message.payload?.className || 'Unknown'}\" is now online!`,
+        text: `Class "${message.payload?.className || 'Unknown'}" is now online!`,
         type: "info",
         icon: "🏫",
       });

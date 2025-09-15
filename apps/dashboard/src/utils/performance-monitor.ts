@@ -78,6 +78,15 @@ export interface PerformanceSummary {
   recommendations: string[];
 }
 
+// External adapter for terminal sync (optional)
+export interface TerminalSyncAdapter {
+  on(event: string, handler: (data: any) => void): void;
+  off(event: string, handler: (data: any) => void): void;
+  emit(event: string, payload: any): void;
+  isTerminalConnected(id: string): boolean;
+  sendToTerminal(target: string, message: any): Promise<void> | void;
+}
+
 // ================================
 // PERFORMANCE MONITOR
 // ================================
@@ -91,8 +100,11 @@ export class PerformanceMonitor {
   private systemMetrics: SystemMetric[] = [];
   private alerts: PerformanceAlert[] = [];
   private isMonitoring: boolean = false;
-  private monitoringTimer: NodeJS.Timeout | null = null;
+  private monitoringTimer: ReturnType<typeof setInterval> | null = null;
+  private systemResourcesTimer: ReturnType<typeof setInterval> | null = null;
+  private wsLatencyTimer: ReturnType<typeof setInterval> | null = null;
   private observers: Map<string, PerformanceObserver> = new Map();
+  private terminalAdapter?: TerminalSyncAdapter;
 
   // Thresholds for performance alerts
   private readonly thresholds = {
@@ -115,6 +127,11 @@ export class PerformanceMonitor {
       cumulativeLayoutShift: 0,
       totalBlockingTime: 0
     };
+  }
+
+  // Adapter setter
+  public setTerminalAdapter(adapter?: TerminalSyncAdapter): void {
+    this.terminalAdapter = adapter;
   }
 
   // ================================
@@ -165,6 +182,14 @@ export class PerformanceMonitor {
     if (this.monitoringTimer) {
       clearInterval(this.monitoringTimer);
       this.monitoringTimer = null;
+    }
+    if (this.systemResourcesTimer) {
+      clearInterval(this.systemResourcesTimer);
+      this.systemResourcesTimer = null;
+    }
+    if (this.wsLatencyTimer) {
+      clearInterval(this.wsLatencyTimer);
+      this.wsLatencyTimer = null;
     }
 
     // Disconnect observers
@@ -566,8 +591,8 @@ export class PerformanceMonitor {
 
   private monitorWebSocketPerformance(): void {
     // Monitor terminal sync WebSocket performance
-    if (/* terminalSync removed */ false) {
-      /* terminalSync removed */ false.on('terminal1:connected', () => {
+    if (this.terminalAdapter) {
+      this.terminalAdapter.on('terminal1:connected', () => {
         this.recordWebSocketMetric({
           event: 'connect',
           timestamp: Date.now(),
@@ -575,7 +600,7 @@ export class PerformanceMonitor {
         });
       });
 
-      /* terminalSync removed */ false.on('terminal1:disconnected', () => {
+      this.terminalAdapter.on('terminal1:disconnected', () => {
         this.recordWebSocketMetric({
           event: 'disconnect',
           timestamp: Date.now(),
@@ -589,11 +614,19 @@ export class PerformanceMonitor {
   }
 
   private startWebSocketLatencyMonitoring(): void {
-    setInterval(() => {
-      if (/* terminalSync removed */ false?.isTerminalConnected('terminal1')) {
+    if (!this.terminalAdapter) return;
+
+    // Clear any existing timer before starting a new one
+    if (this.wsLatencyTimer) {
+      clearInterval(this.wsLatencyTimer);
+      this.wsLatencyTimer = null;
+    }
+
+    this.wsLatencyTimer = setInterval(() => {
+      if (this.terminalAdapter && this.terminalAdapter.isTerminalConnected('terminal1')) {
         const startTime = Date.now();
-        
-        /* terminalSync removed */ false.sendToTerminal('terminal1', {
+
+        this.terminalAdapter.sendToTerminal('terminal1', {
           to: 'terminal1',
           type: 'ping',
           payload: { timestamp: startTime },
@@ -603,7 +636,7 @@ export class PerformanceMonitor {
         // Listen for pong response
         const pongHandler = (data: any) => {
           const latency = Date.now() - data.timestamp;
-          
+
           this.recordWebSocketMetric({
             event: 'ping',
             latency,
@@ -621,15 +654,15 @@ export class PerformanceMonitor {
               suggestion: 'Check network connectivity or consider connection pooling'
             });
           }
-          
-          /* terminalSync removed */ false.off('message:pong', pongHandler);
+
+          this.terminalAdapter?.off('message:pong', pongHandler);
         };
 
-        /* terminalSync removed */ false.on('message:pong', pongHandler);
-        
+        this.terminalAdapter.on('message:pong', pongHandler);
+
         // Timeout if no response
         setTimeout(() => {
-          /* terminalSync removed */ false.off('message:pong', pongHandler);
+          this.terminalAdapter?.off('message:pong', pongHandler);
         }, 5000);
       }
     }, 30000); // Every 30 seconds
@@ -649,7 +682,13 @@ export class PerformanceMonitor {
   // ================================
 
   private monitorSystemResources(): void {
-    setInterval(() => {
+    // Clear existing timer if any
+    if (this.systemResourcesTimer) {
+      clearInterval(this.systemResourcesTimer);
+      this.systemResourcesTimer = null;
+    }
+
+    this.systemResourcesTimer = setInterval(() => {
       const metric: SystemMetric = {
         memory_usage: this.getMemoryUsage(),
         cpu_usage: this.getCPUUsage(),
@@ -772,41 +811,51 @@ export class PerformanceMonitor {
   // ================================
 
   private startPeriodicReporting(): void {
+    // Clear existing timer if any
+    if (this.monitoringTimer) {
+      clearInterval(this.monitoringTimer);
+      this.monitoringTimer = null;
+    }
+
     this.monitoringTimer = setInterval(() => {
       this.sendPerformanceReport();
     }, 60000); // Every minute
   }
 
   private sendPerformanceReport(): void {
-    if (!this.isMonitoring || !/* terminalSync removed */ false) return;
+    if (!this.isMonitoring || !this.terminalAdapter) return;
 
     const summary = this.getPerformanceSummary();
-    
-    /* terminalSync removed */ false.sendToTerminal('debugger', {
-      to: 'debugger',
-      type: 'frontend_metrics',
-      payload: {
-        terminal: 'terminal2',
-        performance_summary: summary,
-        timestamp: new Date().toISOString()
-      },
-      priority: 'normal'
-    }).catch(error => {
+
+    Promise.resolve(
+      this.terminalAdapter.sendToTerminal('debugger', {
+        to: 'debugger',
+        type: 'frontend_metrics',
+        payload: {
+          terminal: 'terminal2',
+          performance_summary: summary,
+          timestamp: new Date().toISOString()
+        },
+        priority: 'normal'
+      })
+    ).catch(error => {
       console.warn('⚠️ Failed to send performance report:', error);
     });
 
     // Also send to Terminal 1 for general monitoring
-    /* terminalSync removed */ false.sendToTerminal('terminal1', {
-      to: 'terminal1',
-      type: 'performance_update',
-      payload: {
-        score: summary.score,
-        critical_alerts: summary.alerts.filter(a => a.severity === 'critical').length,
-        memory_usage: summary.systemHealth.memory_usage,
-        avg_api_latency: this.calculateAverageApiLatency()
-      },
-      priority: 'low'
-    }).catch(error => {
+    Promise.resolve(
+      this.terminalAdapter.sendToTerminal('terminal1', {
+        to: 'terminal1',
+        type: 'performance_update',
+        payload: {
+          score: summary.score,
+          critical_alerts: summary.alerts.filter(a => a.severity === 'critical').length,
+          memory_usage: summary.systemHealth.memory_usage,
+          avg_api_latency: this.calculateAverageApiLatency()
+        },
+        priority: 'low'
+      })
+    ).catch(error => {
       console.warn('⚠️ Failed to send performance update:', error);
     });
   }
@@ -828,9 +877,13 @@ export class PerformanceMonitor {
                      alert.severity === 'error' ? 'error' : 'warn';
     console[logMethod](`🚨 Performance Alert [${alert.severity.toUpperCase()}]:`, alert.message);
 
-    // Emit alert event
-    if (/* terminalSync removed */ false) {
-      /* terminalSync removed */ false.emit('performance_alert', alert);
+    // Emit alert event via adapter if available
+    if (this.terminalAdapter) {
+      try {
+        this.terminalAdapter.emit('performance_alert', alert);
+      } catch (e) {
+        // ignore
+      }
     }
   }
 

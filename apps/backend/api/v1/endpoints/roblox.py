@@ -32,10 +32,10 @@ from contextlib import asynccontextmanager
 
 # Handle imports safely
 try:
-    from ....api.auth.auth import get_current_user
+    from apps.backend.api.auth.auth import get_current_user
 except ImportError:
     try:
-        from ...auth.auth import get_current_user
+        from auth.auth import get_current_user
     except ImportError:
         # Fallback for development
         def get_current_user():
@@ -47,10 +47,10 @@ except ImportError:
             return MockUser()
 
 try:
-    from ....models.schemas import User, BaseResponse
+    from apps.backend.models.schemas import User, BaseResponse
 except ImportError:
     try:
-        from ...models.schemas import User, BaseResponse
+        from apps.backend.models.schemas import User, BaseResponse
     except ImportError:
         # Fallback models for development
         class User(BaseModel):
@@ -65,7 +65,7 @@ except ImportError:
             request_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
 
 try:
-    from ....services.database import db_service
+    from apps.backend.services.database import db_service
 except ImportError:
     db_service = None  # Fallback for development
 

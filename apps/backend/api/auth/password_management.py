@@ -29,8 +29,8 @@ from passlib.context import CryptContext
 from pydantic import BaseModel, Field, field_validator, model_validator
 import redis
 
-from ...core.security.session_manager import get_session_manager, SessionManager
-from ...core.config import settings
+from apps.backend.core.security.session_manager import get_session_manager, SessionManager
+from apps.backend.core.config import settings
 from .auth import hash_password, verify_password, get_current_user
 
 logger = logging.getLogger(__name__)

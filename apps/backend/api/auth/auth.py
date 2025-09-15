@@ -8,6 +8,7 @@ rate limiting, and user session management.
 import hashlib
 import json
 import logging
+import os
 import secrets
 import time
 from datetime import datetime, timedelta, timezone
@@ -21,12 +22,12 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 from requests_oauthlib import OAuth1Session
 
-from ...core.config import settings
-from ...models.schemas import Session, User
-from ...core.security.rate_limiter import get_rate_limit_manager
+from apps.backend.core.config import settings
+from apps.backend.models.schemas import Session, User
+from apps.backend.core.security.rate_limiter import get_rate_limit_manager
 # Secure JWT secret management
 try:
-    from ...core.security.jwt import get_secure_jwt_secret
+    from apps.backend.core.security.jwt import get_secure_jwt_secret
 except ImportError:
     # Fallback for development
     def get_secure_jwt_secret():
@@ -136,13 +137,66 @@ class JWTManager:
         return encoded_jwt
 
     @staticmethod
+    def create_refresh_token(
+        user_id: str,
+        token_family: Optional[str] = None,
+        expires_delta: Optional[timedelta] = None
+    ) -> tuple[str, str]:
+        """Create JWT refresh token with family tracking for rotation
+
+        Returns:
+            Tuple of (refresh_token, token_family_id)
+        """
+        # Generate token family ID if not provided (for initial login)
+        if not token_family:
+            token_family = secrets.token_urlsafe(32)
+
+        to_encode = {
+            "sub": user_id,
+            "type": "refresh",
+            "family": token_family,
+            "jti": secrets.token_urlsafe(16),  # Unique token ID for tracking
+        }
+
+        if expires_delta:
+            expire = datetime.now(timezone.utc) + expires_delta
+        else:
+            expire = datetime.now(timezone.utc) + timedelta(
+                days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
+            )
+
+        to_encode.update({
+            "exp": int(expire.timestamp()),
+            "iat": int(datetime.now(timezone.utc).timestamp()),
+        })
+
+        encoded_jwt = jwt.encode(
+            to_encode, get_secure_jwt_secret(), algorithm=settings.JWT_ALGORITHM
+        )
+
+        # Store token family in Redis for tracking (detect token reuse)
+        if redis_client:
+            family_key = f"token_family:{token_family}"
+            redis_client.setex(
+                family_key,
+                int(timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS * 2).total_seconds()),
+                json.dumps({
+                    "user_id": user_id,
+                    "latest_jti": to_encode["jti"],
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                })
+            )
+
+        return encoded_jwt, token_family
+
+    @staticmethod
     def verify_token(token: str, raise_on_error: bool = True) -> Optional[Dict[str, Any]]:
         """Verify and decode JWT token
-        
+
         Args:
             token: JWT token to verify
             raise_on_error: If True, raise exceptions on errors. If False, return None.
-            
+
         Returns:
             Decoded payload if valid, None if invalid and raise_on_error is False
         """
@@ -159,6 +213,49 @@ class JWTManager:
             if raise_on_error:
                 raise AuthenticationError("Invalid token")
             return None
+
+    @staticmethod
+    def verify_refresh_token(token: str) -> tuple[Optional[Dict[str, Any]], bool]:
+        """Verify refresh token and check for reuse attacks
+
+        Returns:
+            Tuple of (payload, is_compromised)
+            If is_compromised is True, the entire token family should be invalidated
+        """
+        try:
+            payload = jwt.decode(
+                token, get_secure_jwt_secret(), algorithms=[settings.JWT_ALGORITHM]
+            )
+
+            # Check if this is a refresh token
+            if payload.get("type") != "refresh":
+                return None, False
+
+            # Check token family for reuse detection
+            family_id = payload.get("family")
+            token_jti = payload.get("jti")
+
+            if redis_client and family_id:
+                family_key = f"token_family:{family_id}"
+                family_data = redis_client.get(family_key)
+
+                if family_data:
+                    family_info = json.loads(family_data)
+                    latest_jti = family_info.get("latest_jti")
+
+                    # If this token's JTI is older than the latest, it's a reuse
+                    if latest_jti and token_jti != latest_jti:
+                        # Token reuse detected! Invalidate entire family
+                        redis_client.delete(family_key)
+                        logger.warning(f"Token reuse detected for family {family_id}")
+                        return None, True
+
+            return payload, False
+
+        except jwt.ExpiredSignatureError:
+            return None, False
+        except jwt.PyJWTError:
+            return None, False
 
 
 class SessionManager:
@@ -254,7 +351,7 @@ class RateLimiter:
 
         # Use centralized rate limit manager
         manager = get_rate_limit_manager()
-        
+
         # Convert async call to sync for backward compatibility
         import asyncio
         try:
@@ -262,7 +359,7 @@ class RateLimiter:
         except RuntimeError:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-        
+
         allowed, _ = loop.run_until_complete(
             manager.check_rate_limit(
                 identifier=identifier,
@@ -377,8 +474,11 @@ async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> User:
     """Get current authenticated user"""
-    # Development mode bypass for testing
-    if settings.DEBUG and settings.ENVIRONMENT == "development":
+    # Development mode bypass for testing - but only if explicitly enabled
+    # and not in a testing environment where we want to test auth properly
+    if (settings.DEBUG and
+        settings.ENVIRONMENT == "development" and
+        not os.getenv("TESTING", "false").lower() == "true"):
         # Return a default test user for development (no auth required)
         if not credentials:  # No auth header at all - still allow in dev mode
             return User(
@@ -395,7 +495,7 @@ async def get_current_user(
             role="teacher",
         )
 
-    # Production mode - credentials required
+    # Production mode or testing mode - credentials required
     if not credentials:
         raise AuthenticationError("Authorization header missing")
 
@@ -460,14 +560,14 @@ def require_any_role(allowed_roles: List[str]):
 # Authentication utilities
 async def authenticate_user(username: str, password: str) -> Optional[User]:
     """Authenticate user with username and password using real database"""
-    
+
     # Try real database authentication first
     try:
         from .db_auth import db_auth
-        
+
         # Authenticate using the database
         user_data = db_auth.authenticate_user(username, password)
-        
+
         if user_data:
             # Convert database user to User model
             return User(
@@ -478,7 +578,7 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
                 grade_level=None,  # Can be fetched from DB if needed
                 last_active=datetime.now(timezone.utc)
             )
-            
+
     except ImportError:
         logger.warning("db_auth module not available, falling back to connection_manager")
         # Try using connection_manager as fallback
@@ -487,12 +587,12 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
             from pathlib import Path
             # Add parent directory to path for database import
             sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-            from core.database.connection_manager import db_manager
-            
+            from apps.backend.core.database.connection_manager import db_manager
+
             # Initialize if not already done
             if not db_manager._initialized:
                 db_manager.initialize()
-            
+
             # Query the educational_platform database for the user
             with db_manager.get_session("education") as session:
                 from sqlalchemy import text
@@ -505,9 +605,9 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
                     """),
                     {"username": username}
                 )
-                
+
                 user_row = result.fetchone()
-                
+
                 if user_row:
                     # Verify password
                     stored_hash = user_row.password_hash
@@ -521,11 +621,11 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
                         )
         except Exception as inner_e:
             logger.error(f"Connection manager authentication error: {inner_e}")
-                    
+
     except Exception as e:
         logger.error(f"Database authentication error: {e}")
         # Fall through to test users if database fails
-    
+
     # In development mode, allow test credentials as fallback
     if settings.DEBUG and settings.ENVIRONMENT == "development":
         if username == "dev_user" and password == "dev_password":
@@ -544,7 +644,7 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
                 email="demo@toolboxai.com",
                 role="teacher",
             )
-    
+
     # Fallback to mock database lookup for testing
     # Store users by both username and email for flexible lookup
     mock_users_data = [
@@ -585,7 +685,7 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
             "role": "student"
         }
     ]
-    
+
     # Create lookup dictionaries for username, email, and short username
     mock_users = {}
     for user in mock_users_data:
@@ -594,14 +694,14 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
         # Also add by email if different from username
         if user["email"] != user["username"]:
             mock_users[user["email"]] = user
-        
+
         # Add short username versions (everything before @)
         if "@" in user["username"]:
             short_username = user["username"].split("@")[0]
             # Only add if it doesn't conflict with existing entries
             if short_username not in mock_users:
                 mock_users[short_username] = user
-    
+
     # Special case: map "admin" to admin@toolboxai.com (overrides any conflicts)
     mock_users["admin"] = {
         "username": "admin@toolboxai.com",
@@ -610,7 +710,7 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
         "email": "admin@toolboxai.com",
         "role": "admin"
     }
-    
+
     # Special case: map short names to full emails for dashboard users
     mock_users["jane.smith"] = {
         "username": "jane.smith@school.edu",
@@ -619,7 +719,7 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
         "email": "jane.smith@school.edu",
         "role": "teacher"
     }
-    
+
     mock_users["alex.johnson"] = {
         "username": "alex.johnson@student.edu",
         "password_hash": hash_password("Student123!"),
@@ -627,15 +727,15 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
         "email": "alex.johnson@student.edu",
         "role": "student"
     }
-    
+
     # Try to find user by username or email
     user_data = mock_users.get(username)
     if not user_data:
         return None
-    
+
     if not verify_password(password, user_data["password_hash"]):
         return None
-    
+
     return User(
         id=user_data["id"],
         username=user_data["username"],
@@ -667,11 +767,11 @@ def create_user_token(user: User) -> str:
 
 def check_permission(user: User, required_permission: str) -> bool:
     """Check if user has required permission
-    
+
     Args:
         user: User object
         required_permission: Permission string (e.g., 'admin', 'teacher', 'student')
-    
+
     Returns:
         bool: True if user has permission, False otherwise
     """
@@ -681,10 +781,10 @@ def check_permission(user: User, required_permission: str) -> bool:
         "teacher": ["teacher", "student"],
         "student": ["student"]
     }
-    
+
     # Get user's available permissions
     user_permissions = permission_hierarchy.get(user.role, [])
-    
+
     # Check if required permission is in user's available permissions
     return required_permission in user_permissions
 
@@ -712,7 +812,7 @@ def rate_limit(
                 window_seconds=window_seconds,
                 source="auth"
             )
-            
+
             if not allowed:
                 raise RateLimitError(
                     f"Rate limit exceeded. Maximum {max_requests or settings.RATE_LIMIT_PER_MINUTE} "

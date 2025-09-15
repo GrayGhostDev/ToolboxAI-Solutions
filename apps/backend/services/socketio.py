@@ -10,7 +10,7 @@ from fastapi import FastAPI
 import json
 from datetime import datetime, timezone
 
-from ..core.config import settings
+from apps.backend.core.config import settings
 from .rate_limit_manager import get_rate_limit_manager
 
 logger = logging.getLogger(__name__)
@@ -186,7 +186,7 @@ async def connect(sid: str, environ: dict, auth: Optional[Dict] = None):
         # If token exists, try light validation to set initial role/authenticated
         if token:
             try:
-                from ..api.auth.auth import JWTManager
+                from apps.backend.api.auth.auth import JWTManager
                 payload = JWTManager.verify_token(token, raise_on_error=False)
                 if payload:
                     connected_clients[sid]['authenticated'] = True
@@ -259,7 +259,7 @@ async def authenticate(sid: str, data: Dict[str, Any]):
 
         # Validate token with auth service
         try:
-            from ..api.auth.auth import JWTManager
+            from apps.backend.api.auth.auth import JWTManager
             payload = JWTManager.verify_token(token, raise_on_error=False)
 
             if not payload:
@@ -322,7 +322,7 @@ async def refresh_token(sid: str, data: Dict[str, Any]):
             return {'success': False, 'error': 'No token provided'}
 
         new_token = data['token']
-        from ..api.auth.auth import JWTManager
+        from apps.backend.api.auth.auth import JWTManager
         payload = JWTManager.verify_token(new_token, raise_on_error=False)
         if not payload:
             await sio.emit('token_refreshed', {'success': False, 'error': 'Invalid token'}, room=sid)
@@ -529,7 +529,7 @@ async def subscribe(sid: str, data: Dict[str, Any]):
 
         # Role-based restrictions by channel prefix
         try:
-            from ..core.config import settings
+            from apps.backend.core.config import settings
             prefix_map = getattr(settings, "WS_CHANNEL_ROLE_PREFIXES", {}) or {}
             required_for_channel = None
             for prefix, req_role in prefix_map.items():

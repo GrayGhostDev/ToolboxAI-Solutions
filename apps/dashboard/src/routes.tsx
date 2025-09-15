@@ -20,17 +20,20 @@ import Users from "./components/pages/admin/Users";
 import Analytics from "./components/pages/admin/Analytics";
 import Play from "./components/pages/student/Play";
 import { WebSocketTest } from "./components/test/WebSocketTest";
+import WebSocketDemo from "./components/test/WebSocketDemo";
 import RoleGuard from "./components/common/RoleGuard";
 import { useAppSelector } from "./store";
 import TeacherRobloxDashboard from "./components/pages/TeacherRobloxDashboard";
+import EnvironmentCreator from "./components/roblox/EnvironmentCreator";
+import EnvironmentPreviewPage from "./components/roblox/EnvironmentPreviewPage";
 
 export default function AppRoutes() {
   const role = useAppSelector((s) => s.user.role);
-  
+
   return (
     <Routes>
       <Route path="/" element={<DashboardHome role={role} />} />
-      
+
       {/* Teacher Routes */}
       <Route
         path="/lessons"
@@ -64,7 +67,7 @@ export default function AppRoutes() {
           </RoleGuard>
         }
       />
-      
+
       {/* Student Routes */}
       <Route
         path="/missions"
@@ -98,7 +101,7 @@ export default function AppRoutes() {
           </RoleGuard>
         }
       />
-      
+
       {/* Roblox Routes */}
       <Route
         path="/roblox/*"
@@ -108,7 +111,15 @@ export default function AppRoutes() {
           </RoleGuard>
         }
       />
-      
+      <Route
+        path="/environment-preview/:environmentId"
+        element={
+          <RoleGuard allow={["teacher", "admin", "student"]}>
+            <EnvironmentPreviewPage />
+          </RoleGuard>
+        }
+      />
+
       {/* Shared Routes */}
       <Route
         path="/leaderboard"
@@ -134,7 +145,7 @@ export default function AppRoutes() {
           </RoleGuard>
         }
       />
-      
+
       {/* Admin Routes */}
       <Route
         path="/compliance"
@@ -176,7 +187,7 @@ export default function AppRoutes() {
           </RoleGuard>
         }
       />
-      
+
       {/* Parent Routes */}
       <Route
         path="/messages"
@@ -194,13 +205,24 @@ export default function AppRoutes() {
           </RoleGuard>
         }
       />
-      
+
       {/* Settings - All roles */}
       <Route path="/settings" element={<Settings />} />
-      
-      {/* Development Test Route */}
+
+      {/* Development Test Routes */}
       <Route path="/websocket-test" element={<WebSocketTest />} />
-      
+      <Route path="/websocket-demo" element={<WebSocketDemo />} />
+
+      {/* Roblox Environment Creation */}
+      <Route
+        path="/roblox/create-environment"
+        element={
+          <RoleGuard allow={["teacher", "admin"]}>
+            <EnvironmentCreator />
+          </RoleGuard>
+        }
+      />
+
       {/* Catch all - redirect to home */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -19,7 +19,7 @@ export const ROBLOX_UNIVERSE_ID = import.meta.env.VITE_ROBLOX_UNIVERSE_ID || "";
 export const GOOGLE_CLASSROOM_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLASSROOM_CLIENT_ID || "";
 export const CANVAS_API_TOKEN = import.meta.env.VITE_CANVAS_API_TOKEN || "";
 
-export const ENABLE_WEBSOCKET = import.meta.env.VITE_ENABLE_WEBSOCKET === "true";
+export const ENABLE_WEBSOCKET = false; // Disabled due to missing PUSHER_KEY
 export const ENABLE_GAMIFICATION = import.meta.env.VITE_ENABLE_GAMIFICATION !== "false";
 export const ENABLE_ANALYTICS = import.meta.env.VITE_ENABLE_ANALYTICS !== "false";
 

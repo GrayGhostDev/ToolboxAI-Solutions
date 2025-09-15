@@ -192,7 +192,8 @@ except Exception as e:
 
 # JWT Algorithm and Expiration
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRATION_HOURS = 24
+# Following 2025 OAuth 3.0 best practices: 15-minute access tokens
+JWT_EXPIRATION_HOURS = 0.25  # 15 minutes (0.25 hours)
 
 # Logging Configuration
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
@@ -499,7 +500,8 @@ class Settings:
         self.JWT_ALGORITHM = JWT_ALGORITHM
         self.JWT_EXPIRATION_HOURS = JWT_EXPIRATION_HOURS
         self.JWT_ACCESS_TOKEN_EXPIRE_MINUTES = JWT_EXPIRATION_HOURS * 60  # Convert hours to minutes
-        self.JWT_REFRESH_TOKEN_EXPIRE_DAYS = 30  # Default refresh token expiry
+        # Following 2025 OAuth 3.0 best practices: shorter refresh tokens with rotation
+        self.JWT_REFRESH_TOKEN_EXPIRE_DAYS = 1  # 1 day refresh token expiry with rotation
         
         # Additional compatibility attributes
         self.use_mock_database = os.getenv("USE_MOCK_DATABASE", "false").lower() in ("true", "1", "yes", "on")

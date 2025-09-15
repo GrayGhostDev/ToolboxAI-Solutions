@@ -58,6 +58,7 @@ export enum WebSocketMessageType {
   USER_JOIN = 'user_join',
   USER_LEAVE = 'user_leave',
   USER_MESSAGE = 'user_message',
+  MESSAGE = 'message', // Generic message type
   CURSOR_UPDATE = 'cursor_update',
   CONTENT_EDIT = 'content_edit',
   
@@ -71,6 +72,20 @@ export enum WebSocketMessageType {
   TOGGLE_ASSET = 'toggle_asset',
   EXPORT_ENVIRONMENT = 'export_environment',
   SHARE_ENVIRONMENT = 'share_environment',
+
+  // Roblox Agent & Realtime Chat (new)
+  AGENT_CHAT_USER = 'agent_chat_user',
+  AGENT_CHAT_TOKEN = 'agent_chat_token',
+  AGENT_CHAT_COMPLETE = 'agent_chat_complete',
+  AGENT_FOLLOWUP = 'agent_followup',
+  ROBLOX_AGENT_REQUEST = 'roblox_agent_request',
+  ROBLOX_ENV_PROGRESS = 'roblox_env_progress',
+  ROBLOX_ENV_READY = 'roblox_env_ready',
+  ROBLOX_ENV_ERROR = 'roblox_env_error',
+
+  // AI Assistant Messages
+  AI_MESSAGE = 'ai_message',
+  ENVIRONMENT_CREATE_REQUEST = 'environment_create_request',
   
   // Student/Teacher Events
   STUDENT_STATUS = 'student_status',
@@ -269,6 +284,76 @@ export interface CollaborationMessage {
   position?: { x: number; y: number };
   selection?: { start: number; end: number };
   changes?: any[];
+}
+
+// Roblox Agent & Chat Messages (new)
+export interface AgentChatUserMessage {
+  conversationId: string;
+  messageId?: string;
+  text: string;
+  context?: Record<string, any>;
+}
+
+export interface AgentChatTokenMessage {
+  conversationId: string;
+  messageId: string;
+  token: string;
+}
+
+export interface AgentChatCompleteMessage {
+  conversationId: string;
+  messageId: string;
+  content: string;
+}
+
+export type FollowupFieldType = 'environment_name' | 'theme' | 'map_type' | 'terrain' | 'npc_count' | 'difficulty' | 'learning_objectives' | 'age_range' | 'assets' | 'scripting' | 'lighting' | 'weather';
+
+export interface AgentFollowupMessage {
+  conversationId: string;
+  missingFields: FollowupFieldType[];
+  questions: string[]; // human-readable questions to ask user
+  collected?: Partial<Record<FollowupFieldType, any>>;
+}
+
+export interface RobloxAgentRequest {
+  conversationId: string;
+  requestId: string;
+  // Extracted structured spec for environment generation
+  spec: {
+    environment_name?: string;
+    theme?: string;
+    map_type?: 'obby' | 'open_world' | 'dungeon' | 'lab' | 'classroom' | 'puzzle' | 'arena' | string;
+    terrain?: string;
+    npc_count?: number;
+    difficulty?: 'easy' | 'medium' | 'hard' | string;
+    learning_objectives?: string[];
+    age_range?: string;
+    assets?: string[];
+    scripting?: string[];
+    lighting?: string;
+    weather?: string;
+    notes?: string;
+  };
+}
+
+export interface RobloxEnvProgressMessage {
+  requestId: string;
+  stage: 'parsing' | 'planning' | 'fetching_assets' | 'generating_scripts' | 'assembling_world' | 'baking_lighting' | 'finalizing';
+  percentage: number;
+  message?: string;
+}
+
+export interface RobloxEnvReadyMessage {
+  requestId: string;
+  environmentId: string;
+  previewUrl?: string;
+  downloadUrl?: string;
+}
+
+export interface RobloxEnvErrorMessage {
+  requestId: string;
+  error: string;
+  code?: string;
 }
 
 // Roblox Messages

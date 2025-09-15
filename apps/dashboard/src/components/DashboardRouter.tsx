@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Box, Typography, Button } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types/roles';
 
@@ -149,7 +150,7 @@ const DashboardRouter: React.FC = () => {
           <ProfilePage />
         </ProtectedRoute>
       } />
-      
+
       <Route path="/settings" element={
         <ProtectedRoute>
           <SettingsPage />
@@ -158,19 +159,19 @@ const DashboardRouter: React.FC = () => {
 
       {/* Error pages */}
       <Route path="/unauthorized" element={
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          height: '100vh' 
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh'
         }}>
-          <h1>Unauthorized Access</h1>
-          <p>You don't have permission to access this page.</p>
-          <button onClick={() => window.history.back()}>Go Back</button>
-        </div>
+          <Typography variant="h4" gutterBottom>Unauthorized Access</Typography>
+          <Typography variant="body1" gutterBottom>You don't have permission to access this page.</Typography>
+          <Button variant="contained" onClick={() => window.history.back()}>Go Back</Button>
+        </Box>
       } />
-      
+
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

@@ -22,9 +22,9 @@ from datetime import datetime
 import hashlib
 import uuid
 
-from ..core.config import settings
-from ..api.auth.auth import LMSAuthenticator
-from ..models.schemas import (
+from apps.backend.core.config import settings
+from apps.backend.api.auth.auth import LMSAuthenticator
+from apps.backend.models.schemas import (
     SubjectType, DifficultyLevel, QuizType, QuizQuestion, QuizOption,
     TerrainSize, EnvironmentType, LMSCourse, LMSAssignment
 )

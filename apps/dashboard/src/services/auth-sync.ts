@@ -1,18 +1,22 @@
 /**
- * Authentication Synchronization Service for Terminal 2
- * 
+ * Authentication Synchronization Service
+ *
  * Manages secure token handling, session monitoring, and authentication state
- * synchronization between Terminal 2 (Dashboard) and Terminal 1 (Backend)
- * 
+ * synchronization between Dashboard and Backend services
+ *
  * @fileoverview Production-ready auth sync with JWT management and session control
  * @version 1.0.0
  */
 
-// Terminal sync removed - not part of application
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, API_BASE_URL } from '../config';
 import { store } from '../store';
-import { signInSuccess as loginSuccess, signOut as logout } from '../store/slices/userSlice';
+import { signInSuccess as loginSuccess, signOut as logout, updateToken } from '../store/slices/userSlice';
 import { addNotification } from '../store/slices/uiSlice';
+import { pusherService } from '../services/pusher';
+
+// Timer type definitions for cross-platform compatibility
+type TimerId = ReturnType<typeof setTimeout>;
+type IntervalId = ReturnType<typeof setInterval>;
 
 // ================================
 // TYPE DEFINITIONS
@@ -53,7 +57,7 @@ export interface AuthEvent {
   userId?: string;
   sessionId?: string;
   reason?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 // ================================
@@ -63,14 +67,14 @@ export interface AuthEvent {
 export class AuthSyncService {
   private static instance: AuthSyncService | null = null;
   private config: AuthSyncConfig;
-  private tokenRefreshTimer: NodeJS.Timeout | null = null;
-  private sessionMonitor: NodeJS.Timeout | null = null;
-  private inactivityTimer: NodeJS.Timeout | null = null;
+  private tokenRefreshTimer: TimerId | null = null;
+  private sessionMonitor: IntervalId | null = null;
+  private inactivityTimer: TimerId | null = null;
   private currentSession: SessionInfo | null = null;
   private lastActivity: number = Date.now();
   private isInitialized: boolean = false;
   private authEvents: AuthEvent[] = [];
-  
+
   constructor(config: Partial<AuthSyncConfig> = {}) {
     this.config = {
       tokenRefreshThreshold: 5, // 5 minutes before expiry
@@ -104,7 +108,9 @@ export class AuthSyncService {
       return;
     }
 
-    console.log('🔐 Initializing Authentication Sync Service');
+    if (import.meta.env.DEV) {
+      console.log('🔐 Initializing Authentication Sync Service');
+    }
 
     try {
       // Check for existing token
@@ -123,15 +129,16 @@ export class AuthSyncService {
         this.setupActivityTracking();
       }
 
-      if (this.config.syncWithBackend) {
-        this.syncWithBackend();
-      }
-
       // Setup cleanup handlers
       this.setupCleanupHandlers();
 
+      // Setup cross-tab synchronization (2025 best practice)
+      this.setupCrossTabSync();
+
       this.isInitialized = true;
-      console.log('✅ Auth sync service initialized');
+      if (import.meta.env.DEV) {
+        console.log('✅ Auth sync service initialized with cross-tab sync');
+      }
 
     } catch (error) {
       console.error('❌ Failed to initialize auth sync:', error);
@@ -147,18 +154,20 @@ export class AuthSyncService {
     try {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const refreshToken = localStorage.getItem(AUTH_REFRESH_TOKEN_KEY);
-      
+
       if (!token) return null;
 
       // Decode JWT to get expiry
       const payload = this.decodeJWT(token);
       if (!payload || !payload.exp) return null;
 
+      const refreshPayload = refreshToken ? this.decodeJWT(refreshToken) : null;
+
       return {
         token,
         expiresAt: payload.exp * 1000, // Convert to milliseconds
         refreshToken: refreshToken || undefined,
-        refreshExpiresAt: refreshToken ? this.decodeJWT(refreshToken)?.exp * 1000 : undefined
+        refreshExpiresAt: refreshPayload?.exp ? refreshPayload.exp * 1000 : undefined
       };
     } catch (error) {
       console.error('❌ Failed to get stored token:', error);
@@ -166,11 +175,11 @@ export class AuthSyncService {
     }
   }
 
-  private decodeJWT(token: string): any {
+  private decodeJWT(token: string): { exp?: number; [key: string]: unknown } | null {
     try {
       const parts = token.split('.');
       if (parts.length !== 3) return null;
-      
+
       const payload = parts[1];
       const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
       return JSON.parse(decoded);
@@ -187,14 +196,18 @@ export class AuthSyncService {
 
     // Token is still valid
     if (timeUntilExpiry > thresholdMs) {
-      console.log(`✅ Token valid for ${Math.round(timeUntilExpiry / 60000)} minutes`);
+      if (import.meta.env.DEV) {
+        console.log(`✅ Token valid for ${Math.round(timeUntilExpiry / 60000)} minutes`);
+      }
       this.scheduleTokenRefresh(authToken);
       return;
     }
 
     // Token needs refresh
     if (timeUntilExpiry > 0 && authToken.refreshToken) {
-      console.log('🔄 Token expiring soon, refreshing...');
+      if (import.meta.env.DEV) {
+        console.log('🔄 Token expiring soon, refreshing...');
+      }
       await this.refreshToken(authToken.refreshToken);
     } else if (timeUntilExpiry <= 0) {
       console.warn('⚠️ Token expired, logging out...');
@@ -206,7 +219,9 @@ export class AuthSyncService {
     const checkTokenExpiry = () => {
       const authToken = this.getStoredToken();
       if (!authToken) {
-        console.log('No token found, stopping refresh timer');
+        if (import.meta.env.DEV) {
+          console.log('No token found, stopping refresh timer');
+        }
         this.clearTokenRefreshTimer();
         return;
       }
@@ -217,7 +232,7 @@ export class AuthSyncService {
 
       if (timeUntilExpiry < thresholdMs && timeUntilExpiry > 0) {
         if (authToken.refreshToken) {
-          this.refreshToken(authToken.refreshToken);
+          void this.refreshToken(authToken.refreshToken);
         } else {
           console.warn('⚠️ No refresh token available');
           this.handleAuthFailure('no_refresh_token');
@@ -244,12 +259,14 @@ export class AuthSyncService {
     const thresholdMs = this.config.tokenRefreshThreshold * 60 * 1000;
     const refreshIn = Math.max(timeUntilExpiry - thresholdMs, 0);
 
-    console.log(`⏰ Scheduling token refresh in ${Math.round(refreshIn / 60000)} minutes`);
+    if (import.meta.env.DEV) {
+      console.log(`⏰ Scheduling token refresh in ${Math.round(refreshIn / 60000)} minutes`);
+    }
 
     this.clearTokenRefreshTimer();
     this.tokenRefreshTimer = setTimeout(() => {
       if (authToken.refreshToken) {
-        this.refreshToken(authToken.refreshToken);
+        void this.refreshToken(authToken.refreshToken);
       }
     }, refreshIn);
   }
@@ -268,7 +285,9 @@ export class AuthSyncService {
         throw new Error('No refresh token available');
       }
 
-      console.log('🔄 Refreshing authentication token...');
+      if (import.meta.env.DEV) {
+        console.log('🔄 Refreshing authentication token...');
+      }
 
       const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: 'POST',
@@ -280,30 +299,33 @@ export class AuthSyncService {
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Store new tokens
         localStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
         if (data.refresh_token) {
           localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, data.refresh_token);
         }
 
+        // Broadcast token refresh to other tabs (2025 cross-tab sync)
+        this.broadcastAuthEvent('TOKEN_REFRESHED', {
+          token: data.access_token,
+          refreshToken: data.refresh_token
+        });
+
         // Update Redux store
         if (data.user) {
-store.dispatch(loginSuccess({
+          store.dispatch(loginSuccess({
             userId: data.user?.id,
             email: data.user?.email,
             displayName: data.user?.display_name || data.user?.username || 'User',
             avatarUrl: data.user?.avatar_url,
-            role: (data.user?.role || 'teacher') as any,
+            role: (data.user?.role || 'teacher') as 'admin' | 'teacher' | 'student',
             token: data.access_token,
             refreshToken: data.refresh_token,
             schoolId: data.user?.school_id,
             classIds: data.user?.class_ids || [],
           }));
         }
-
-        // Notify all terminals
-        this.notifyTokenRefresh(data.access_token);
 
         // Record event
         this.recordAuthEvent({
@@ -319,7 +341,16 @@ store.dispatch(loginSuccess({
           this.scheduleTokenRefresh(newAuthToken);
         }
 
-        console.log('✅ Token refreshed successfully');
+        // Ensure realtime layer picks up the new token
+        try {
+          await pusherService.refreshTokenAndReconnect();
+        } catch (e) {
+          console.warn('⚠️ Failed to refresh realtime connection token:', e);
+        }
+
+        if (import.meta.env.DEV) {
+          console.log('✅ Token refreshed successfully');
+        }
 
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -352,13 +383,15 @@ store.dispatch(loginSuccess({
       this.checkSessionStatus();
     }, 60000); // Check every minute
 
-    console.log('📊 Session monitoring started');
+    if (import.meta.env.DEV) {
+      console.log('📊 Session monitoring started');
+    }
   }
 
   private setupActivityTracking(): void {
     const updateActivity = () => {
       this.lastActivity = Date.now();
-      
+
       if (this.currentSession) {
         this.currentSession.lastActivity = this.lastActivity;
       }
@@ -377,11 +410,6 @@ store.dispatch(loginSuccess({
     events.forEach(event => {
       document.addEventListener(event, updateActivity, { passive: true });
     });
-
-    // Also track API calls as activity
-    if (/* terminalSync removed */ false) {
-      /* terminalSync removed */ false.on('message', updateActivity);
-    }
   }
 
   private setupInactivityTimer(): void {
@@ -411,90 +439,10 @@ store.dispatch(loginSuccess({
     this.currentSession.lastActivity = this.lastActivity;
     this.currentSession.isActive = inactiveMinutes < this.config.sessionTimeout;
 
-    // Send session status to backend
-    if (this.config.syncWithBackend && /* terminalSync removed */ false) {
-      this.sendSessionUpdate(inactiveMinutes);
-    }
-
     // Check for timeout
     if (inactiveMinutes >= this.config.sessionTimeout) {
       this.handleSessionTimeout();
     }
-  }
-
-  private sendSessionUpdate(inactiveMinutes: number): void {
-    /* terminalSync removed */ false.sendToTerminal('terminal1', {
-      to: 'terminal1',
-      type: 'session_update',
-      payload: {
-        sessionId: this.currentSession?.sessionId,
-        userId: this.currentSession?.userId,
-        lastActivity: this.lastActivity,
-        inactiveMinutes,
-        isActive: this.currentSession?.isActive,
-        deviceInfo: this.currentSession?.deviceInfo
-      },
-      priority: 'low'
-    }).catch(error => {
-      console.warn('⚠️ Failed to send session update:', error);
-    });
-  }
-
-  // ================================
-  // BACKEND SYNCHRONIZATION
-  // ================================
-
-  private syncWithBackend(): void {
-    if (!/* terminalSync removed */ false) {
-      console.warn('⚠️ Terminal sync not available for auth sync');
-      return;
-    }
-
-    // Handle force logout from backend
-    /* terminalSync removed */ false.on('terminal1:force_logout', (data: any) => {
-      console.warn('⚠️ Force logout received from backend:', data.reason);
-      this.handleForceLogout(data.reason);
-    });
-
-    // Handle session updates from backend
-    /* terminalSync removed */ false.on('terminal1:session_update', (data: any) => {
-      this.handleSessionUpdate(data);
-    });
-
-    // Handle permission changes
-    /* terminalSync removed */ false.on('terminal1:permission_change', (data: any) => {
-      this.handlePermissionChange(data);
-    });
-
-    // Handle token invalidation
-/* terminalSync removed */ false.on('terminal1:token_invalidated', (_data: any) => {
-      console.warn('⚠️ Token invalidated by backend');
-      this.handleAuthFailure('token_invalidated');
-    });
-
-    console.log('🔄 Backend synchronization established');
-  }
-
-private notifyTokenRefresh(_token: string): void {
-    if (!/* terminalSync removed */ false) return;
-
-    // Update WebSocket connections with new token
-    const connections = ['terminal1', 'terminal3', 'debugger'];
-    connections.forEach(terminal => {
-      if (/* terminalSync removed */ false.isTerminalConnected(terminal)) {
-        /* terminalSync removed */ false.sendToTerminal(terminal, {
-          to: terminal as any,
-          type: 'token_refreshed',
-          payload: {
-            terminal: 'terminal2',
-            timestamp: Date.now()
-          },
-          priority: 'high'
-        });
-      }
-    });
-
-    console.log('📡 Token refresh notified to all terminals');
   }
 
   // ================================
@@ -503,7 +451,7 @@ private notifyTokenRefresh(_token: string): void {
 
   private showInactivityWarning(): void {
     const remainingMinutes = this.config.sessionTimeout - this.config.inactivityWarning;
-    
+
 store.dispatch(addNotification({
       type: 'warning',
       message: `Your session will expire in ${remainingMinutes} minutes due to inactivity`,
@@ -515,7 +463,7 @@ store.dispatch(addNotification({
 
   private handleSessionTimeout(): void {
     console.warn('⏰ Session timeout - logging out');
-    
+
     this.recordAuthEvent({
       type: 'timeout',
       timestamp: new Date().toISOString(),
@@ -529,7 +477,7 @@ store.dispatch(addNotification({
 
   private handleForceLogout(reason?: string): void {
     console.warn('🔒 Force logout:', reason);
-    
+
     this.recordAuthEvent({
       type: 'force_logout',
       timestamp: new Date().toISOString(),
@@ -541,18 +489,22 @@ store.dispatch(addNotification({
     this.performLogout('force_logout');
   }
 
-  private handleSessionUpdate(data: any): void {
+  private handleSessionUpdate(data: { terminate?: boolean; extend?: boolean }): void {
     if (data.terminate) {
       this.handleForceLogout('session_terminated_by_admin');
     } else if (data.extend) {
       this.lastActivity = Date.now();
-      console.log('✅ Session extended by backend');
+      if (import.meta.env.DEV) {
+        console.log('✅ Session extended by backend');
+      }
     }
   }
 
-  private handlePermissionChange(data: any): void {
-    console.log('🔐 Permission change detected:', data);
-    
+  private handlePermissionChange(data: { permissions?: string[] }): void {
+    if (import.meta.env.DEV) {
+      console.log('🔐 Permission change detected:', data);
+    }
+
     store.dispatch(addNotification({
       type: 'info',
       message: 'Your permissions have been updated. Some features may have changed.',
@@ -560,12 +512,12 @@ store.dispatch(addNotification({
     }));
 
     // Refresh user data
-    this.refreshUserData();
+    void this.refreshUserData();
   }
 
   private handleAuthFailure(reason: string): void {
     console.error('❌ Authentication failure:', reason);
-    
+
     this.recordAuthEvent({
       type: 'logout',
       timestamp: new Date().toISOString(),
@@ -600,21 +552,17 @@ store.dispatch(addNotification({
     // Clear session
     this.currentSession = null;
 
+    // Broadcast logout to other tabs (2025 cross-tab sync)
+    this.broadcastAuthEvent('AUTH_LOGOUT');
+
     // Update Redux store
     store.dispatch(logout());
 
-    // Notify terminals
-    if (/* terminalSync removed */ false) {
-      /* terminalSync removed */ false.sendToTerminal('all', {
-        to: 'all',
-        type: 'user_logout',
-        payload: {
-          terminal: 'terminal2',
-          reason,
-          timestamp: Date.now()
-        },
-        priority: 'high'
-      });
+    // Disconnect realtime layer
+    try {
+      pusherService.disconnect('auth_logout');
+    } catch (e) {
+      console.warn('⚠️ Realtime disconnect on logout failed:', e);
     }
 
     // Show notification
@@ -639,8 +587,10 @@ store.dispatch(addNotification({
   }
 
   public async logout(): Promise<void> {
-    console.log('👋 User initiated logout');
-    
+    if (import.meta.env.DEV) {
+      console.log('👋 User initiated logout');
+    }
+
     try {
       // Notify backend
       await fetch(`${API_BASE_URL}/auth/logout`, {
@@ -683,12 +633,12 @@ store.dispatch(addNotification({
       if (response.ok) {
         const userData = await response.json();
         // Update Redux store with fresh user data
-store.dispatch(loginSuccess({
+        store.dispatch(loginSuccess({
           userId: userData?.id,
           email: userData?.email,
           displayName: userData?.display_name || userData?.username || 'User',
           avatarUrl: userData?.avatar_url,
-          role: (userData?.role || 'teacher') as any,
+          role: (userData?.role || 'teacher') as 'admin' | 'teacher' | 'student',
           token: token,
           refreshToken: localStorage.getItem(AUTH_REFRESH_TOKEN_KEY) || '',
           schoolId: userData?.school_id,
@@ -714,14 +664,14 @@ store.dispatch(loginSuccess({
   private getDeviceInfo(): SessionInfo['deviceInfo'] {
     return {
       userAgent: navigator.userAgent,
-      platform: navigator.platform,
+      platform: navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop',
       language: navigator.language
     };
   }
 
   private recordAuthEvent(event: AuthEvent): void {
     this.authEvents.push(event);
-    
+
     // Keep only last 100 events
     if (this.authEvents.length > 100) {
       this.authEvents.shift();
@@ -746,40 +696,29 @@ store.dispatch(loginSuccess({
   }
 
   private cleanup(): void {
-    console.log('🧹 Cleaning up auth sync service');
-    
+    if (import.meta.env.DEV) {
+      console.log('🧹 Cleaning up auth sync service');
+    }
+
     this.clearTokenRefreshTimer();
-    
+
     if (this.sessionMonitor) {
       clearInterval(this.sessionMonitor);
       this.sessionMonitor = null;
     }
-    
+
     if (this.inactivityTimer) {
       clearTimeout(this.inactivityTimer);
       this.inactivityTimer = null;
-    }
-
-    // Send final session update
-    if (this.currentSession && /* terminalSync removed */ false) {
-      /* terminalSync removed */ false.sendToTerminal('terminal1', {
-        to: 'terminal1',
-        type: 'session_end',
-        payload: {
-          sessionId: this.currentSession.sessionId,
-          userId: this.currentSession.userId,
-          endTime: Date.now(),
-          duration: Date.now() - this.currentSession.startTime
-        },
-        priority: 'high'
-      });
     }
   }
 
   public shutdown(): void {
     this.cleanup();
     this.isInitialized = false;
-    console.log('✅ Auth sync service shut down');
+    if (import.meta.env.DEV) {
+      console.log('✅ Auth sync service shut down');
+    }
   }
 
   // ================================
@@ -801,23 +740,225 @@ store.dispatch(loginSuccess({
 
   public updateConfig(newConfig: Partial<AuthSyncConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    console.log('⚙️ Auth sync config updated:', this.config);
-    
+    if (import.meta.env.DEV) {
+      console.log('⚙️ Auth sync config updated:', this.config);
+    }
+
     // Restart monitoring with new config
     if (this.isInitialized) {
       this.cleanup();
-      this.initialize();
+      void this.initialize();
     }
   }
 
   public extendSession(): void {
     this.lastActivity = Date.now();
     this.setupInactivityTimer();
-    console.log('✅ Session extended manually');
+    if (import.meta.env.DEV) {
+      console.log('✅ Session extended manually');
+    }
   }
 
   public isInitializedStatus(): boolean {
     return this.isInitialized;
+  }
+
+  // ================================
+  // CROSS-TAB SYNCHRONIZATION (2025 BEST PRACTICE)
+  // ================================
+
+  private setupCrossTabSync(): void {
+    if (typeof window === 'undefined') return;
+
+    // Try to use BroadcastChannel API (modern browsers)
+    if ('BroadcastChannel' in window) {
+      try {
+        const broadcastChannel = new BroadcastChannel('toolboxai_auth_sync');
+
+        // Listen for messages from other tabs
+        broadcastChannel.onmessage = (event) => {
+          this.handleCrossTabMessage(event.data);
+        };
+
+        // Store reference for cleanup
+        (this as any).broadcastChannel = broadcastChannel;
+
+        if (import.meta.env.DEV) {
+          console.log('✅ BroadcastChannel initialized for cross-tab sync');
+        }
+      } catch (error) {
+        console.warn('BroadcastChannel not available, falling back to localStorage events');
+        this.setupStorageEventListener();
+      }
+    } else {
+      // Fallback to localStorage events for older browsers
+      this.setupStorageEventListener();
+    }
+  }
+
+  private setupStorageEventListener(): void {
+    // Listen for localStorage changes from other tabs
+    const storageEventListener = (event: StorageEvent) => {
+      if (event.key === 'toolboxai_auth_sync_message' && event.newValue) {
+        try {
+          const message = JSON.parse(event.newValue);
+          this.handleCrossTabMessage(message);
+        } catch (error) {
+          console.error('Failed to parse cross-tab message:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', storageEventListener);
+
+    // Store reference for cleanup
+    (this as any).storageEventListener = storageEventListener;
+
+    if (import.meta.env.DEV) {
+      console.log('✅ Storage event listener initialized for cross-tab sync');
+    }
+  }
+
+  private updateTokens(token: string, refreshToken: string): void {
+    // Update tokens in storage and state
+    this.setStoredToken(token);
+    this.setStoredRefreshToken(refreshToken);
+
+    // Update Redux store with existing user details and new tokens
+    this.updateReduxTokens(token, refreshToken);
+
+    // Reschedule token refresh
+    if (this.config.enableAutoRefresh) {
+      const authToken = this.getStoredToken();
+      if (authToken) {
+        this.scheduleTokenRefresh(authToken);
+      }
+    }
+  }
+
+  private setStoredToken(token: string): void {
+    try {
+      localStorage.setItem(AUTH_TOKEN_KEY, token);
+    } catch (e) {
+      console.error('Failed to store auth token:', e);
+    }
+  }
+
+  private setStoredRefreshToken(refreshToken: string): void {
+    try {
+      localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
+    } catch (e) {
+      console.error('Failed to store refresh token:', e);
+    }
+  }
+
+  private clearStoredTokens(): void {
+    try {
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
+    } catch (e) {
+      console.error('Failed to clear stored tokens:', e);
+    }
+  }
+
+  private updateReduxTokens(token: string, refreshToken: string): void {
+    try {
+      const state: any = store.getState();
+      const current = state?.user || {};
+      store.dispatch(updateToken({
+        token,
+        refreshToken
+      }));
+    } catch (e) {
+      console.warn('Failed to update Redux tokens:', e);
+    }
+  }
+
+  private forceLogout(reason: string): void {
+    // Clear tokens
+    this.clearStoredTokens();
+
+    // Clear session
+    this.currentSession = null;
+
+    // Cancel timers
+    if (this.tokenRefreshTimer) {
+      clearTimeout(this.tokenRefreshTimer);
+      this.tokenRefreshTimer = null;
+    }
+
+    // Dispatch logout
+    store.dispatch(logout());
+
+    // Show notification
+    store.dispatch(addNotification({
+      message: reason,
+      type: 'warning'
+    }));
+  }
+
+  private handleCrossTabMessage(message: any): void {
+    if (!message || !message.type) return;
+
+    switch (message.type) {
+      case 'AUTH_LOGIN':
+        // Another tab logged in
+        if (message.token && message.refreshToken) {
+          this.updateTokens(message.token, message.refreshToken);
+          store.dispatch(loginSuccess(message.user));
+          store.dispatch(addNotification({
+            message: 'Logged in from another tab',
+            type: 'info'
+          }));
+        }
+        break;
+
+      case 'AUTH_LOGOUT':
+        // Another tab logged out
+        this.forceLogout('Logged out from another tab');
+        break;
+
+      case 'TOKEN_REFRESHED':
+        // Another tab refreshed the token
+        if (message.token && message.refreshToken) {
+          this.updateTokens(message.token, message.refreshToken);
+        }
+        break;
+
+      case 'SESSION_EXPIRED':
+        // Another tab detected session expiry
+        this.forceLogout('Session expired in another tab');
+        break;
+    }
+  }
+
+  private broadcastAuthEvent(type: string, data?: any): void {
+    const message = {
+      type,
+      timestamp: Date.now(),
+      ...data
+    };
+
+    // Try BroadcastChannel first
+    const broadcastChannel = (this as any).broadcastChannel;
+    if (broadcastChannel) {
+      try {
+        broadcastChannel.postMessage(message);
+      } catch (error) {
+        console.error('Failed to broadcast via BroadcastChannel:', error);
+      }
+    }
+
+    // Also use localStorage for fallback (will trigger storage event in other tabs)
+    try {
+      localStorage.setItem('toolboxai_auth_sync_message', JSON.stringify(message));
+      // Clear after a short delay to prevent accumulation
+      setTimeout(() => {
+        localStorage.removeItem('toolboxai_auth_sync_message');
+      }, 100);
+    } catch (error) {
+      console.error('Failed to broadcast via localStorage:', error);
+    }
   }
 }
 
@@ -825,15 +966,13 @@ store.dispatch(loginSuccess({
 // EXPORT SINGLETON
 // ================================
 
-export default AuthSyncService;
-
 // Create and export singleton instance
 export const authSync = AuthSyncService.getInstance();
 
 // Global exposure for debugging
 if (typeof window !== 'undefined') {
-  (window as any).__AUTH_SYNC__ = authSync;
-  
+  (window as unknown as Record<string, unknown>).__AUTH_SYNC__ = authSync;
+
   // Auto-initialize in production mode (in dev, wait for user action)
   if (!import.meta.env.DEV) {
     setTimeout(() => {
@@ -843,3 +982,5 @@ if (typeof window !== 'undefined') {
     }, 1000);
   }
 }
+
+export default AuthSyncService;

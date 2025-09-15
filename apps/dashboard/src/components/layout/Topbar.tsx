@@ -59,7 +59,7 @@ export default function Topbar() {
 
   const handleSignOut = () => {
     // Disconnect WebSocket before signing out
-    disconnectWebSocket('user signout');
+    disconnectWebSocket();
     dispatch(signOut());
     handleProfileMenuClose();
     navigate("/");

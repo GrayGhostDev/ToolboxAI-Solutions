@@ -335,9 +335,9 @@ const RealTimeAnalytics: React.FC = () => {
                         primary={activity.user}
                         secondary={
                           <React.Fragment>
-                            <span style={{ fontSize: '0.875rem', marginRight: '8px' }}>
+                            <Box component="span" sx={{ fontSize: '0.875rem', marginRight: '8px' }}>
                               {activity.action}
-                            </span>
+                            </Box>
                             {activity.score && (
                               <Chip
                                 label={`${activity.score}%`}

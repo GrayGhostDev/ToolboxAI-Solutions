@@ -247,6 +247,9 @@ export interface DashboardOverview {
   kpis?: {
     activeClasses?: number;
     totalStudents?: number;
+    activeSessions?: number;
+    completedLessons?: number;
+    averageScore?: number;
     todaysLessons?: number;
     pendingAssessments?: number;
     averageProgress?: number;
@@ -275,6 +278,7 @@ export interface DashboardMetrics {
   totalTeachers?: number;
   compliance?: "ok" | "warning" | "critical";
   averageProgress?: number;
+  lessonsCompleted?: number;
 }
 
 export interface Activity {
@@ -307,6 +311,13 @@ export interface RobloxWorld {
   maxPlayers: number;
   isActive: boolean;
   joinUrl?: string;
+  status?: 'draft' | 'published' | 'archived';
+  previewUrl?: string;
+  downloadUrl?: string;
+  theme?: string;
+  mapType?: string;
+  learningObjectives?: string[];
+  difficulty?: 'easy' | 'medium' | 'hard';
 }
 
 // Messages
@@ -345,7 +356,7 @@ export interface Mission {
 
 export interface MissionRequirement {
   id: string;
-  type: "lesson_complete" | "assessment_score" | "xp_earned" | "badge_earned" | 
+  type: "lesson_complete" | "assessment_score" | "xp_earned" | "badge_earned" |
         "attendance" | "social_interaction" | "time_spent" | "custom";
   target: number;
   current?: number;

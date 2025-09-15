@@ -7,9 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import logging
-from ....api.auth.auth import get_current_user
-from ....models.schemas import User
-from ....services.database import db_service
+from apps.backend.api.auth.auth import get_current_user
+from apps.backend.models.schemas import User
+from apps.backend.services.database import db_service
 
 logger = logging.getLogger(__name__)
 

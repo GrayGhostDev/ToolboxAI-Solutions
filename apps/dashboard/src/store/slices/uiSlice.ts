@@ -6,6 +6,7 @@ interface NotificationItem {
   message: string;
   timestamp: number;
   autoHide?: boolean;
+  severity?: "info" | "warning" | "success" | "error";
 }
 
 interface UIState {

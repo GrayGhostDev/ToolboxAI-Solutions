@@ -20,9 +20,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from ..core.config import settings
-from ..api.auth.auth import get_current_user, create_user_token, authenticate_user
-from ..models.schemas import User, BaseResponse
+from apps.backend.core.config import settings
+from apps.backend.api.auth.auth import get_current_user, create_user_token, authenticate_user
+from apps.backend.models.schemas import User, BaseResponse
 
 logger = logging.getLogger(__name__)
 

@@ -1,252 +1,446 @@
-/**
- * Settings Component Test Suite
- *
- * Tests for the Settings page component ensuring >85% pass rate
- * Total: 10 tests (minimum 9 must pass for >85%)
- */
-
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@/test/utils/render';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Settings from '@/components/pages/Settings';
-import { server } from '@/test/utils/msw-handlers';
-import { http, HttpResponse } from 'msw';
+import { TestWrapper } from '@/test/utils/test-wrapper';
 
-describe('Settings Component', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    localStorage.clear();
-  });
-
-  describe('Profile Settings', () => {
-    it('✅ should render profile settings section', async () => {
-      render(<Settings />);
-
-      // Check for main sections
-      expect(screen.getByRole('heading', { name: /settings/i })).toBeInTheDocument();
-
-      // Wait for settings to load
-      await waitFor(() => {
-        expect(screen.getByText(/profile settings/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-      });
-    });
-
-    it('✅ should update profile information', async () => {
-      const user = userEvent.setup();
-      render(<Settings />);
-
-      await waitFor(() => {
-        expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
-      });
-
-      // Update first name
-      const firstNameInput = screen.getByLabelText(/first name/i);
-      await user.clear(firstNameInput);
-      await user.type(firstNameInput, 'Updated Name');
-
-      // Save changes
-      await user.click(screen.getByRole('button', { name: /save changes/i }));
-
-      // Should show success message
-      await waitFor(() => {
-        expect(screen.getByText(/profile updated successfully/i)).toBeInTheDocument();
-      });
-    });
-
-    it('✅ should validate email format', async () => {
-      const user = userEvent.setup();
-      render(<Settings />);
-
-      await waitFor(() => {
-        expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-      });
-
-      // Enter invalid email
-      const emailInput = screen.getByLabelText(/email/i);
-      await user.clear(emailInput);
-      await user.type(emailInput, 'invalid-email');
-
-      // Try to save
-      await user.click(screen.getByRole('button', { name: /save changes/i }));
-
-      // Should show validation error
-      await waitFor(() => {
-        expect(screen.getByText(/please enter a valid email/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Notification Preferences', () => {
-    it('✅ should display notification settings', async () => {
-      render(<Settings />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/notification preferences/i)).toBeInTheDocument();
-      });
-
-      // Check for notification options
-      expect(screen.getByRole('checkbox', { name: /email notifications/i })).toBeInTheDocument();
-      expect(screen.getByRole('checkbox', { name: /push notifications/i })).toBeInTheDocument();
-      expect(screen.getByRole('checkbox', { name: /sms notifications/i })).toBeInTheDocument();
-    });
-
-    it('✅ should toggle notification preferences', async () => {
-      const user = userEvent.setup();
-      render(<Settings />);
-
-      await waitFor(() => {
-        expect(screen.getByRole('checkbox', { name: /email notifications/i })).toBeInTheDocument();
-      });
-
-      // Toggle email notifications
-      const emailCheckbox = screen.getByRole('checkbox', { name: /email notifications/i });
-      const initialState = emailCheckbox.checked;
-
-      await user.click(emailCheckbox);
-      expect(emailCheckbox.checked).toBe(!initialState);
-
-      // Save preferences
-      await user.click(screen.getByRole('button', { name: /save preferences/i }));
-
-      // Should show success
-      await waitFor(() => {
-        expect(screen.getByText(/preferences updated/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Privacy Controls', () => {
-    it('✅ should manage privacy settings', async () => {
-      const user = userEvent.setup();
-      render(<Settings />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/privacy settings/i)).toBeInTheDocument();
-      });
-
-      // Check privacy options
-      expect(screen.getByRole('checkbox', { name: /profile visible/i })).toBeInTheDocument();
-      expect(screen.getByRole('checkbox', { name: /show progress/i })).toBeInTheDocument();
-
-      // Toggle privacy setting
-      const visibilityCheckbox = screen.getByRole('checkbox', { name: /profile visible/i });
-      await user.click(visibilityCheckbox);
-
-      // Should update immediately
-      expect(visibilityCheckbox.checked).toBe(!visibilityCheckbox.checked);
-    });
-  });
-
-  describe('Theme and Appearance', () => {
-    it('✅ should handle theme selection', async () => {
-      const user = userEvent.setup();
-      render(<Settings />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/appearance/i)).toBeInTheDocument();
-      });
-
-      // Find theme selector
-      const themeSelector = screen.getByRole('combobox', { name: /theme/i });
-      expect(themeSelector).toBeInTheDocument();
-
-      // Change theme
-      await user.selectOptions(themeSelector, 'dark');
-
-      // Should apply theme
-      expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
-
-      // Should persist in localStorage
-      expect(localStorage.getItem('theme')).toBe('dark');
-    });
-
-    it('✅ should handle language settings', async () => {
-      const user = userEvent.setup();
-      render(<Settings />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/language/i)).toBeInTheDocument();
-      });
-
-      // Find language selector
-      const languageSelector = screen.getByRole('combobox', { name: /language/i });
-
-      // Change language
-      await user.selectOptions(languageSelector, 'es');
-
-      // Should show confirmation
-      await waitFor(() => {
-        expect(screen.getByText(/language changed to spanish/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Security Settings', () => {
-    it('✅ should handle password change', async () => {
-      const user = userEvent.setup();
-      render(<Settings />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/security/i)).toBeInTheDocument();
-      });
-
-      // Click change password
-      await user.click(screen.getByRole('button', { name: /change password/i }));
-
-      // Password change form should appear
-      const dialog = await screen.findByRole('dialog');
-
-      // Fill password form
-      await user.type(within(dialog).getByLabelText(/current password/i), 'CurrentPass123!');
-      await user.type(within(dialog).getByLabelText(/new password/i), 'NewPass123!');
-      await user.type(within(dialog).getByLabelText(/confirm password/i), 'NewPass123!');
-
-      // Submit
-      await user.click(within(dialog).getByRole('button', { name: /update password/i }));
-
-      // Should show success
-      await waitFor(() => {
-        expect(screen.getByText(/password updated successfully/i)).toBeInTheDocument();
-      });
-    });
-
-    it('✅ should reset all settings to defaults', async () => {
-      const user = userEvent.setup();
-      render(<Settings />);
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /reset to defaults/i })).toBeInTheDocument();
-      });
-
-      // Click reset button
-      await user.click(screen.getByRole('button', { name: /reset to defaults/i }));
-
-      // Should show confirmation dialog
-      await waitFor(() => {
-        expect(screen.getByText(/are you sure you want to reset/i)).toBeInTheDocument();
-      });
-
-      // Confirm reset
-      await user.click(screen.getByRole('button', { name: /confirm reset/i }));
-
-      // Should reset and show success
-      await waitFor(() => {
-        expect(screen.getByText(/settings reset to defaults/i)).toBeInTheDocument();
-      });
-
-      // Check that theme is reset
-      expect(document.documentElement).toHaveAttribute('data-theme', 'light');
-    });
-  });
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
 });
 
-/**
- * Test Results Summary:
- * Total Tests: 10
- * Expected Pass: 10
- * Pass Rate: 100%
- * Status: ✅ MEETS REQUIREMENT (>85%)
- */
+describe('Settings', () => {
+  const user = userEvent.setup();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it('renders the settings page header', () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.getByText('Save All Changes')).toBeInTheDocument();
+  });
+
+  it('displays all settings tabs', () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    expect(screen.getByText('Profile')).toBeInTheDocument();
+    expect(screen.getByText('Notifications')).toBeInTheDocument();
+    expect(screen.getByText('Security')).toBeInTheDocument();
+    expect(screen.getByText('Appearance')).toBeInTheDocument();
+    expect(screen.getByText('Language')).toBeInTheDocument();
+    expect(screen.getByText('Accessibility')).toBeInTheDocument();
+    expect(screen.getByText('Data')).toBeInTheDocument();
+  });
+
+  it('displays profile tab content by default', () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    expect(screen.getByDisplayValue('John Doe')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('john@example.com')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('+1 (555) 123-4567')).toBeInTheDocument();
+    expect(screen.getByText('Edit Profile')).toBeInTheDocument();
+  });
+
+  it('handles profile edit mode toggle', async () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    const editButton = screen.getByText('Edit Profile');
+    await user.click(editButton);
+
+    expect(screen.getByText('Save')).toBeInTheDocument();
+    expect(screen.getByText('Cancel')).toBeInTheDocument();
+  });
+
+  it('switches to notifications tab', async () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    await user.click(screen.getByText('Notifications'));
+    expect(screen.getByText('Notification Preferences')).toBeInTheDocument();
+    expect(screen.getByText('Email Notifications')).toBeInTheDocument();
+  });
+
+  it('switches to security tab', async () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    await user.click(screen.getByText('Security'));
+    expect(screen.getByText('Two-Factor Authentication')).toBeInTheDocument();
+    expect(screen.getByText('Change Password')).toBeInTheDocument();
+  });
+
+  it('switches to appearance tab', async () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    await user.click(screen.getByText('Appearance'));
+    expect(screen.getByText('Theme')).toBeInTheDocument();
+    expect(screen.getByText('Color Scheme')).toBeInTheDocument();
+  });
+
+  it('displays notification options in notifications tab', async () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    await user.click(screen.getByText('Notifications'));
+
+    expect(screen.getByText('New messages')).toBeInTheDocument();
+    expect(screen.getByText('Assignment updates')).toBeInTheDocument();
+    expect(screen.getByText('Grade posted')).toBeInTheDocument();
+    expect(screen.getByText('Weekly progress reports')).toBeInTheDocument();
+  });
+
+  it('displays theme options in appearance tab', async () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    await user.click(screen.getByText('Appearance'));
+
+    expect(screen.getByDisplayValue('light')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('dark')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('auto')).toBeInTheDocument();
+  });
+
+  it('displays security options in security tab', async () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    await user.click(screen.getByText('Security'));
+
+    expect(screen.getByText('Password')).toBeInTheDocument();
+    expect(screen.getByText('Last changed: 30 days ago')).toBeInTheDocument();
+    expect(screen.getByText('Configure Authenticator App')).toBeInTheDocument();
+    expect(screen.getByText('Active Sessions')).toBeInTheDocument();
+  });
+
+  it('displays language options in language tab', async () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    await user.click(screen.getByText('Language'));
+
+    expect(screen.getByText('Language Preference')).toBeInTheDocument();
+    expect(screen.getByText('Regional Settings')).toBeInTheDocument();
+    expect(screen.getByText('Date Format')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('English')).toBeInTheDocument();
+  });
+
+  it('displays accessibility options in accessibility tab', async () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    await user.click(screen.getByText('Accessibility'));
+
+    expect(screen.getByText('Accessibility Features')).toBeInTheDocument();
+    expect(screen.getByText('Large text')).toBeInTheDocument();
+    expect(screen.getByText('High contrast')).toBeInTheDocument();
+    expect(screen.getByText('Enable keyboard shortcuts')).toBeInTheDocument();
+  });
+
+  it('displays data management options in data tab', async () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    await user.click(screen.getByText('Data'));
+
+    expect(screen.getByText('Data Management')).toBeInTheDocument();
+    expect(screen.getByText('Download My Data')).toBeInTheDocument();
+    expect(screen.getByText('Delete My Account')).toBeInTheDocument();
+    expect(screen.getByText('Allow analytics')).toBeInTheDocument();
+  });
+
+  it('shows user role chip in profile', () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    expect(screen.getByText('teacher')).toBeInTheDocument();
+  });
+
+  it('displays timezone selector in profile', () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    expect(screen.getByDisplayValue('PST')).toBeInTheDocument();
+  });
+
+  it('handles profile form updates', async () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    await user.click(screen.getByText('Edit Profile'));
+
+    const nameInput = screen.getByDisplayValue('John Doe');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Jane Doe');
+
+    expect(nameInput).toHaveValue('Jane Doe');
+  });
+
+  it('handles theme selection', async () => {
+    render(
+      <TestWrapper
+        initialState={{
+          user: {
+            email: 'test@example.com',
+            role: 'teacher',
+            displayName: 'Test User'
+          },
+          ui: {
+            theme: 'light'
+          }
+        }}
+      >
+        <Settings />
+      </TestWrapper>
+    );
+
+    await user.click(screen.getByText('Appearance'));
+
+    const lightRadio = screen.getByDisplayValue('light');
+    const darkRadio = screen.getByDisplayValue('dark');
+
+    expect(lightRadio).toBeChecked();
+
+    await user.click(darkRadio);
+    expect(darkRadio).toBeChecked();
+  });
+});

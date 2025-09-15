@@ -148,7 +148,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const disconnectFunc = useCallback((reason?: string) => {
     websocketService.disconnect(reason);
   }, []);
-  
+
   // Create stable references
   const connect = connectFunc;
   const disconnect = disconnectFunc;
@@ -164,7 +164,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
       // Handle specific message types
       switch (message.type) {
-        case WebSocketMessageType.SYSTEM_NOTIFICATION:
+        case WebSocketMessageType.SYSTEM_NOTIFICATION: {
           const notification = message.payload as SystemNotification;
           dispatch(
             addNotification({
@@ -181,6 +181,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
             })
           );
           break;
+        }
 
         case WebSocketMessageType.PROGRESS_UPDATE:
           // Update progress state
@@ -333,7 +334,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     if (!ENABLE_WEBSOCKET) return;
 
     const currentToken = localStorage.getItem(AUTH_TOKEN_KEY) || authToken;
-    
+
     if (currentToken && state === WebSocketState.DISCONNECTED && !isConnecting.current) {
       // Reconnect with new token
       console.log('[WebSocket] Token detected, reconnecting...');
@@ -404,7 +405,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   // Set up token refresh monitoring
   useEffect(() => {
     if (!ENABLE_WEBSOCKET) return;
-    
+
     const currentToken = localStorage.getItem(AUTH_TOKEN_KEY) || authToken;
     if (!currentToken) return;
 

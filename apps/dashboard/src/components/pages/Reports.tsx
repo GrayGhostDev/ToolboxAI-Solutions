@@ -91,6 +91,7 @@ interface ReportTemplate {
   category: string;
   fields: string[];
   popular?: boolean;
+  type?: "progress" | "attendance" | "grades" | "behavior" | "custom";
 }
 
 const performanceData = [
@@ -155,7 +156,8 @@ export default function Reports() {
   const loadStudents = async () => {
     try {
       const users = await listUsers({ role: 'student' });
-      const students = users.map((user: any) => ({
+      const usersArray = Array.isArray(users) ? users : [];
+      const students = usersArray.map((user: any) => ({
         id: user.id,
         name: user.displayName || `${user.firstName} ${user.lastName}`,
         grade: user.gradeLevel || 5,
@@ -383,10 +385,11 @@ export default function Reports() {
     const template = reportTemplates.find(t => t.id === templateId);
     if (template) {
       setSelectedTemplate(template);
-      setReportType(template.report_type || 'custom');
+      setReportType(template.type || 'custom');
       setCurrentTab(0); // Switch to Generate Report tab
       dispatch(
         addNotification({
+          type: "info",
           message: `Template "${template.name}" selected`,
           severity: "info",
         })
@@ -400,6 +403,7 @@ export default function Reports() {
       window.print();
       dispatch(
         addNotification({
+          type: "info",
           message: `Printing ${report.name}`,
           severity: "info",
         })
@@ -413,6 +417,7 @@ export default function Reports() {
         // Duplicate report logic
         dispatch(
           addNotification({
+            type: "success",
             message: "Report duplicated",
             severity: "success",
           })
@@ -423,6 +428,7 @@ export default function Reports() {
         navigator.clipboard.writeText(`${window.location.origin}/reports/${reportId}`);
         dispatch(
           addNotification({
+            type: "success",
             message: "Report link copied to clipboard",
             severity: "success",
           })
@@ -433,6 +439,7 @@ export default function Reports() {
         setReports(reports.filter(r => r.id !== reportId));
         dispatch(
           addNotification({
+            type: "success",
             message: "Report deleted",
             severity: "success",
           })

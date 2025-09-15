@@ -111,3 +111,5 @@ public/static/
 # Ignore lock files
 package-lock.json
 yarn.lock
+
+*storybook.log

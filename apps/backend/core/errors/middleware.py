@@ -18,7 +18,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Union
 
 # Import Sentry for error tracking
 try:
-    from ..sentry_config import sentry_manager
+    from sentry_config import sentry_manager
     SENTRY_AVAILABLE = True
 except ImportError:
     SENTRY_AVAILABLE = False

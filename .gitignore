@@ -142,8 +142,15 @@ turbo/
 cypress/screenshots/
 cypress/videos/
 playwright-report/
-test-results/
 blob-report/
+# Include generic and app-specific test report directories
+# Root-level
+test-results/
+# Dashboard app
+apps/dashboard/test-reports/
+apps/dashboard/test-report.md
+apps/dashboard/build-report.json
+apps/dashboard/test-results-final.json
 
 # Misc
 *.tgz
