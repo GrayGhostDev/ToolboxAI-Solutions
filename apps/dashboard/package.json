@@ -18,6 +18,8 @@
     "build:validate": "node scripts/build.js --validate-only",
     "build:production": "node scripts/build.js --production",
     "build:analyze": "vite build --mode analyze && vite-bundle-visualizer",
+    "build:benchmark": "node src/scripts/performance-benchmark.js",
+    "analyze:bundle": "node src/scripts/bundle-analyzer.js",
     "preview": "vite preview",
     "preview:production": "vite preview --mode production",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives",
@@ -37,7 +39,9 @@
     "clean:all": "npm run clean && rm -rf node_modules",
     "validate": "npm run typecheck && npm run lint && npm run test",
     "ci": "npm run validate && npm run build:validate && npm run build",
-    "prepare": "echo 'Skipping validation during install'"
+    "prepare": "npm run validate",
+    "perf:benchmark": "npm run build && npm run build:benchmark",
+    "perf:analyze": "npm run build && npm run analyze:bundle"
   },
   "dependencies": {
     "@assistant-ui/react": "^0.5.0",

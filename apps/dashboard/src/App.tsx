@@ -17,10 +17,10 @@ import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { NetworkError } from "./components/ErrorComponents";
 import { SessionMonitor, NetworkStatus } from "./components/auth/AuthRecovery";
 import { FloatingCharacters } from "./components/roblox/FloatingCharacters";
+import PerformanceMonitor from "./components/common/PerformanceMonitor";
 
 // Terminal services removed - not part of application
-// Performance monitor disabled due to performance issues
-// import { performanceMonitor } from "./utils/performance-monitor";
+// Old performance monitor disabled due to performance issues
 
 export default function App() {
   const role = useAppSelector((s) => s.user.role);
@@ -37,39 +37,12 @@ export default function App() {
   // Initialize authentication and persistence
   useAuth();
 
-  // Performance monitoring disabled to improve app performance
-  // The monitoring itself was causing severe slowdowns (20-30 second renders)
+  // Lightweight performance monitoring for development
   React.useEffect(() => {
-    // Temporarily disabled performance monitoring
-    // Uncomment below to re-enable when performance issues are resolved
-    /*
-    if (isAuthenticated) {
-      console.log('🚀 Initializing performance monitoring');
-      
-      // Start performance monitoring
-      if (!performanceMonitor.isRunning()) {
-        performanceMonitor.startMonitoring();
-        console.log('✅ Performance monitoring started');
-      }
-    } else {
-      // Clean up services when not authenticated
-      if (performanceMonitor.isRunning()) {
-        performanceMonitor.stopMonitoring();
-        console.log('🛑 Performance monitoring stopped');
-      }
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🚀 Lightweight performance monitoring enabled');
     }
-    */
-    
-    // Cleanup on unmount
-    return () => {
-      // Disabled for now
-      /*
-      if (performanceMonitor.isRunning()) {
-        performanceMonitor.stopMonitoring();
-      }
-      */
-    };
-  }, [isAuthenticated]);
+  }, []);
 
   React.useEffect(() => {
     // Check if COPPA consent is needed
@@ -139,6 +112,9 @@ export default function App() {
         <SessionMonitor />
         <NetworkStatus />
         {loading && <LoadingOverlay />}
+
+        {/* Performance Monitoring - Development Only */}
+        <PerformanceMonitor enabled={process.env.NODE_ENV === 'development'} />
         
         {/* COPPA Consent Modal */}
         {showConsent && (

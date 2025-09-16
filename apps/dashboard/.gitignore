@@ -129,6 +129,10 @@ design/
 *.ma
 *.mb
 
+# Allow optimized design assets in public folder
+!public/assets/design/
+!public/assets/design/**/*
+
 # Design file parsing outputs (allow images folder)
 parsed_*.json
 **/parsed_*.json

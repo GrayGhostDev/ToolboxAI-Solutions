@@ -12,28 +12,54 @@ const muiIconsPath = fs.existsSync(path.resolve(__dirname, 'node_modules/@mui/ic
 export default defineConfig({
   plugins: [react()],
 
-  // Module optimization
+  // Module optimization for faster dev server startup
   optimizeDeps: {
     include: [
+      // Core dependencies that should be pre-bundled
       '@mui/material',
       '@mui/material/Unstable_Grid2',
       '@mui/material/Grid',
-      '@mui/icons-material',
+      '@mui/material/Box',
+      '@mui/material/Typography',
+      '@mui/material/Button',
+      '@mui/material/Card',
+      '@mui/material/CardContent',
+      '@mui/icons-material/Add',
+      '@mui/icons-material/Search',
+      '@mui/icons-material/Refresh',
       '@emotion/styled',
       '@emotion/react',
       'react-redux',
       '@reduxjs/toolkit',
+      '@reduxjs/toolkit/query',
       'pusher-js',
-      'recharts',
-      'chart.js',
-      'react-chartjs-2',
       'axios',
       'date-fns',
-      'zod'
+      'zod',
+      // Performance libraries
+      'react-window',
+      'web-vitals'
     ],
-    exclude: ['@vite/client', '@vite/env'],
+    exclude: [
+      '@vite/client',
+      '@vite/env',
+      // Exclude large libraries that are rarely used
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei',
+      // These will be loaded on demand
+      'recharts',
+      'chart.js',
+      'react-chartjs-2'
+    ],
     esbuildOptions: {
       target: 'es2020',
+      // Enable tree shaking for better performance
+      treeShaking: true,
+      // Minify deps in dev for smaller bundle
+      minify: false,
+      // Use more aggressive optimization
+      drop: ['console', 'debugger']
     }
   },
 
@@ -136,7 +162,7 @@ export default defineConfig({
     sourcemap: true,
     minify: 'terser',
     target: 'es2020',
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 800,
 
     // Terser options for better minification
     terserOptions: {
@@ -158,46 +184,90 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Manual chunks for optimal code splitting
-        manualChunks: {
-          // Core React ecosystem
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+        manualChunks: (id) => {
+          // Core React ecosystem - high priority, cache-stable
+          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+            return 'vendor-react';
+          }
 
-          // State management
-          'vendor-redux': ['@reduxjs/toolkit', 'react-redux'],
+          // State management - medium priority
+          if (id.includes('@reduxjs/toolkit') || id.includes('react-redux')) {
+            return 'vendor-redux';
+          }
 
-          // UI Framework
-          'vendor-mui': ['@mui/material', '@mui/icons-material'],
-          'vendor-emotion': ['@emotion/react', '@emotion/styled'],
+          // UI Framework - split into smaller chunks for better caching
+          if (id.includes('@mui/material')) {
+            return 'vendor-mui-core';
+          }
+          if (id.includes('@mui/icons-material')) {
+            return 'vendor-mui-icons';
+          }
+          if (id.includes('@emotion')) {
+            return 'vendor-emotion';
+          }
 
-          // Charts and visualization
-          'vendor-charts': ['recharts', 'chart.js', 'react-chartjs-2'],
+          // Charts and visualization - lazy loaded
+          if (id.includes('recharts') || id.includes('chart.js') || id.includes('react-chartjs-2')) {
+            return 'vendor-charts';
+          }
 
-          // Utilities
-          'vendor-utils': ['axios', 'date-fns', 'zod'],
+          // Performance and virtualization - separate chunk
+          if (id.includes('react-window') || id.includes('web-vitals')) {
+            return 'vendor-performance';
+          }
 
-          // Real-time communication
-          'vendor-realtime': ['pusher-js', 'socket.io-client'],
+          // 3D and Three.js - large but rarely used
+          if (id.includes('three') || id.includes('@react-three')) {
+            return 'vendor-3d';
+          }
+
+          // Communication and real-time
+          if (id.includes('pusher-js') || id.includes('socket.io-client')) {
+            return 'vendor-realtime';
+          }
+
+          // Utilities - small, commonly used
+          if (id.includes('axios') || id.includes('date-fns') || id.includes('zod')) {
+            return 'vendor-utils';
+          }
 
           // Internationalization
-          'vendor-i18n': ['i18next', 'react-i18next'],
+          if (id.includes('i18next') || id.includes('react-i18next')) {
+            return 'vendor-i18n';
+          }
 
-          // Chat components
-          'vendor-chat': ['react-chat-elements', 'react-markdown', 'react-syntax-highlighter'],
+          // Chat and markdown - feature-specific
+          if (id.includes('react-chat-elements') || id.includes('react-markdown') || id.includes('react-syntax-highlighter')) {
+            return 'vendor-chat';
+          }
+
+          // Animation libraries
+          if (id.includes('framer-motion')) {
+            return 'vendor-animation';
+          }
+
+          // All other node_modules go to vendor-misc
+          if (id.includes('node_modules')) {
+            return 'vendor-misc';
+          }
         },
 
         // Asset naming patterns for cache busting
-        entryFileNames: (chunkInfo) => {
-          return chunkInfo.name === 'index'
-            ? 'assets/[name].[hash].js'
-            : 'assets/[name].[hash].js';
-        },
+        entryFileNames: 'assets/app/[name].[hash:8].js',
         chunkFileNames: (chunkInfo) => {
-          // Use consistent naming for vendor chunks
+          // Use consistent naming for vendor chunks with cache optimization
           const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId : '';
-          if (facadeModuleId.includes('node_modules')) {
-            return 'assets/vendor/[name].[hash].js';
+          if (chunkInfo.name && chunkInfo.name.startsWith('vendor-')) {
+            return 'assets/vendor/[name].[hash:8].js';
           }
-          return 'assets/chunks/[name].[hash].js';
+          if (facadeModuleId.includes('node_modules')) {
+            return 'assets/vendor/[name].[hash:8].js';
+          }
+          // Pages and components get separate folder for better organization
+          if (chunkInfo.name && (chunkInfo.name.includes('pages') || chunkInfo.name.includes('components'))) {
+            return 'assets/app/[name].[hash:8].js';
+          }
+          return 'assets/chunks/[name].[hash:8].js';
         },
         assetFileNames: (assetInfo) => {
           const extType = assetInfo.name?.split('.').pop() || '';
@@ -208,14 +278,25 @@ export default defineConfig({
             return 'assets/fonts/[name].[hash][extname]';
           }
           if (extType === 'css') {
-            return 'assets/styles/[name].[hash][extname]';
+            return 'assets/styles/[name].[hash:8][extname]';
           }
-          return 'assets/[name].[hash][extname]';
+          return 'assets/[name].[hash:8][extname]';
         }
       },
 
-      // External dependencies (if needed for CDN)
-      external: [],
+      // External dependencies for CDN optimization (optional)
+      external: [
+        // Uncomment to load from CDN in production
+        // 'react',
+        // 'react-dom'
+      ],
+
+      // Tree shaking configuration
+      treeshake: {
+        moduleSideEffects: false,
+        propertyReadSideEffects: false,
+        tryCatchDeoptimization: false
+      },
 
       // Input configuration
       input: {
@@ -244,7 +325,15 @@ export default defineConfig({
     reportCompressedSize: true,
 
     // Polyfill configuration
-    polyfillModulePreload: true
+    polyfillModulePreload: true,
+
+    // Enable experimental features for better performance
+    experimentalDecorators: true,
+
+    // Module preload for better performance
+    modulePreload: {
+      polyfill: true
+    }
   },
 
   // Test configuration (consolidated from vitest.config.ts)
@@ -394,12 +483,15 @@ export default defineConfig({
   // Clear screen on start
   clearScreen: true,
 
-  // Define global constants
+  // Define global constants and enable dead code elimination
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
     __DEV__: process.env.NODE_ENV === 'development',
     __TEST__: process.env.NODE_ENV === 'test',
-    __PROD__: process.env.NODE_ENV === 'production'
+    __PROD__: process.env.NODE_ENV === 'production',
+    // Feature flags for tree shaking
+    __ENABLE_PERFORMANCE_MONITORING__: JSON.stringify(process.env.NODE_ENV === 'development'),
+    __ENABLE_DEBUG_TOOLS__: JSON.stringify(process.env.NODE_ENV === 'development')
   }
 })

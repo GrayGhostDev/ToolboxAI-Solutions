@@ -1,38 +1,60 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import { DashboardHome } from "./components/pages/DashboardHome";
-import Lessons from "./components/pages/Lessons";
-import Assessments from "./components/pages/Assessments";
-import Leaderboard from "./components/pages/Leaderboard";
-import Compliance from "./components/pages/Compliance";
-import Integrations from "./components/pages/Integrations";
-import Messages from "./components/pages/Messages";
-import Classes from "./components/pages/Classes";
-import ClassDetails from "./components/pages/ClassDetails";
-import Reports from "./components/pages/Reports";
-import Settings from "./components/pages/Settings";
-import Missions from "./components/pages/Missions";
-import Progress from "./components/pages/Progress";
-import Rewards from "./components/pages/Rewards";
-import Avatar from "./components/pages/Avatar";
-import GameplayReplay from "./components/pages/GameplayReplay";
-import Schools from "./components/pages/admin/Schools";
-import Users from "./components/pages/admin/Users";
-import Analytics from "./components/pages/admin/Analytics";
-import Play from "./components/pages/student/Play";
-import { WebSocketTest } from "./components/test/WebSocketTest";
-import WebSocketDemo from "./components/test/WebSocketDemo";
+import { Routes, Route, Navigate, Suspense } from "react-router-dom";
+import { lazy } from "react";
+import { CircularProgress, Box } from "@mui/material";
 import RoleGuard from "./components/common/RoleGuard";
 import { useAppSelector } from "./store";
-import TeacherRobloxDashboard from "./components/pages/TeacherRobloxDashboard";
-import EnvironmentCreator from "./components/roblox/EnvironmentCreator";
-import EnvironmentPreviewPage from "./components/roblox/EnvironmentPreviewPage";
-import RobloxStudioPage from "./components/pages/RobloxStudioPage";
+
+// Lazy load components for code splitting
+const DashboardHome = lazy(() => import("./components/pages/DashboardHome").then(module => ({ default: module.DashboardHome })));
+const Lessons = lazy(() => import("./components/pages/Lessons"));
+const Assessments = lazy(() => import("./components/pages/Assessments"));
+const Leaderboard = lazy(() => import("./components/pages/Leaderboard"));
+const Compliance = lazy(() => import("./components/pages/Compliance"));
+const Integrations = lazy(() => import("./components/pages/Integrations"));
+const Messages = lazy(() => import("./components/pages/Messages"));
+const Classes = lazy(() => import("./components/pages/Classes"));
+const ClassDetails = lazy(() => import("./components/pages/ClassDetails"));
+const Reports = lazy(() => import("./components/pages/Reports"));
+const Settings = lazy(() => import("./components/pages/Settings"));
+const Missions = lazy(() => import("./components/pages/Missions"));
+const Progress = lazy(() => import("./components/pages/Progress"));
+const Rewards = lazy(() => import("./components/pages/Rewards"));
+const Avatar = lazy(() => import("./components/pages/Avatar"));
+const GameplayReplay = lazy(() => import("./components/pages/GameplayReplay"));
+const Schools = lazy(() => import("./components/pages/admin/Schools"));
+const Users = lazy(() => import("./components/pages/admin/Users"));
+const Analytics = lazy(() => import("./components/pages/admin/Analytics"));
+const Play = lazy(() => import("./components/pages/student/Play"));
+const WebSocketTest = lazy(() => import("./components/test/WebSocketTest").then(module => ({ default: module.WebSocketTest })));
+const WebSocketDemo = lazy(() => import("./components/test/WebSocketDemo"));
+const TeacherRobloxDashboard = lazy(() => import("./components/pages/TeacherRobloxDashboard"));
+const EnvironmentCreator = lazy(() => import("./components/roblox/EnvironmentCreator"));
+const EnvironmentPreviewPage = lazy(() => import("./components/roblox/EnvironmentPreviewPage"));
+const RobloxStudioPage = lazy(() => import("./components/pages/RobloxStudioPage"));
+
+// Loading component for Suspense fallback
+const LoadingFallback = () => (
+  <Box
+    display="flex"
+    justifyContent="center"
+    alignItems="center"
+    minHeight="400px"
+    flexDirection="column"
+    gap={2}
+  >
+    <CircularProgress size={40} />
+    <Box component="span" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
+      Loading...
+    </Box>
+  </Box>
+);
 
 export default function AppRoutes() {
   const role = useAppSelector((s) => s.user.role);
 
   return (
-    <Routes>
+    <Suspense fallback={<LoadingFallback />}>
+      <Routes>
       <Route path="/" element={<DashboardHome role={role} />} />
 
       {/* Teacher Routes */}
@@ -234,8 +256,9 @@ export default function AppRoutes() {
         }
       />
 
-      {/* Catch all - redirect to home */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Catch all - redirect to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
