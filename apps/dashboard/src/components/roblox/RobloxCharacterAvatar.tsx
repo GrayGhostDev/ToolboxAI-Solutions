@@ -5,7 +5,7 @@
  * with fun animations and interactions for kids
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Avatar,
   Box,
@@ -27,7 +27,7 @@ import {
   EmojiEvents,
   AutoAwesome
 } from '@mui/icons-material';
-import { imageLoader } from '../../services/imageLoader';
+import { Procedural3DCharacter } from './Procedural3DCharacter';
 
 interface CharacterData {
   name: string;
@@ -36,7 +36,6 @@ interface CharacterData {
   xp: number;
   achievements: string[];
   isActive: boolean;
-  imagePath: string;
 }
 
 interface RobloxCharacterAvatarProps {
@@ -61,9 +60,6 @@ export const RobloxCharacterAvatar: React.FC<RobloxCharacterAvatarProps> = ({
   const theme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [imagePath, setImagePath] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
 
   const sizeMap = {
     small: 40,
@@ -72,50 +68,6 @@ export const RobloxCharacterAvatar: React.FC<RobloxCharacterAvatarProps> = ({
   };
 
   const avatarSize = sizeMap[size];
-
-  // Load the actual character image
-  useEffect(() => {
-    const loadCharacterImage = async () => {
-      try {
-        setLoading(true);
-        setError(false);
-        
-        let path: string | null = null;
-        
-        if (character.type === 'astronaut') {
-          path = await imageLoader.getCharacterVariationPath('astronaut', 1);
-        } else if (character.type === 'alien') {
-          path = await imageLoader.getCharacterVariationPath('alien', 1);
-        } else if (character.type === 'robot') {
-          // Use astronaut variation for robot for now
-          path = await imageLoader.getCharacterVariationPath('astronaut', 2);
-        }
-        
-        if (path) {
-          setImagePath(path);
-        } else {
-          setError(true);
-        }
-      } catch (err) {
-        console.warn(`Failed to load character image for ${character.type}:`, err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCharacterImage();
-  }, [character.type]);
-
-  useEffect(() => {
-    if (animated && character.isActive) {
-      const interval = setInterval(() => {
-        setIsAnimating(true);
-        setTimeout(() => setIsAnimating(false), 1000);
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [animated, character.isActive]);
 
   const handleClick = () => {
     if (onClick) {
@@ -197,28 +149,17 @@ export const RobloxCharacterAvatar: React.FC<RobloxCharacterAvatarProps> = ({
             ) : null
           }
         >
-          <Avatar
-            src={imagePath || undefined}
-            sx={{
+          <Procedural3DCharacter
+            characterType={character.type}
+            size={size}
+            animated={animated}
+            style={{
               width: avatarSize,
               height: avatarSize,
-              border: `3px solid ${alpha(theme.palette.primary.main, 0.3)}`,
               boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.3)}`,
               transition: 'all 0.3s ease',
-              '&:hover': {
-                border: `3px solid ${theme.palette.primary.main}`,
-                boxShadow: `0 8px 30px ${alpha(theme.palette.primary.main, 0.5)}`,
-              }
             }}
-          >
-            {loading ? (
-              <CircularProgress size={avatarSize * 0.5} />
-            ) : error ? (
-              <Typography variant="h4">
-                {character.type === 'astronaut' ? '👨‍🚀' : character.type === 'alien' ? '👽' : '🤖'}
-              </Typography>
-            ) : null}
-          </Avatar>
+          />
         </Badge>
       </Tooltip>
 

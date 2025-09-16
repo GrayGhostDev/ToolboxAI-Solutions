@@ -2,12 +2,12 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
-import { ThemeProvider, CssBaseline } from "@mui/material";
 import { store } from "./store";
-import { robloxTheme } from "./theme";
+import "./theme/injectAnimations";
 import App from "./App";
 import "./i18n/config";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ThemeWrapper } from "./components/ThemeWrapper";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -21,8 +21,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       }}
     >
       <Provider store={store}>
-        <ThemeProvider theme={robloxTheme}>
-          <CssBaseline />
+        <ThemeWrapper>
           <BrowserRouter
             future={{
               v7_startTransition: true,
@@ -31,7 +30,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           >
             <App />
           </BrowserRouter>
-        </ThemeProvider>
+        </ThemeWrapper>
       </Provider>
     </ErrorBoundary>
   </React.StrictMode>

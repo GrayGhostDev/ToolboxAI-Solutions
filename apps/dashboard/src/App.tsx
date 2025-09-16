@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
 import { useAppSelector } from "./store";
 import AppRoutes from "./routes";
@@ -16,6 +16,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { NetworkError } from "./components/ErrorComponents";
 import { SessionMonitor, NetworkStatus } from "./components/auth/AuthRecovery";
+import { FloatingCharacters } from "./components/roblox/FloatingCharacters";
 
 // Terminal services removed - not part of application
 // Performance monitor disabled due to performance issues
@@ -28,6 +29,10 @@ export default function App() {
   const [consentGiven, setConsentGiven] = React.useState(false);
   const [showConsent, setShowConsent] = React.useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Disable animations on Roblox Studio page to prevent movement
+  const isRobloxPage = location.pathname.includes('/roblox-studio');
 
   // Initialize authentication and persistence
   useAuth();
@@ -109,10 +114,25 @@ export default function App() {
   return (
     <ErrorBoundary>
       <WebSocketProvider autoConnect={true}>
-        <AppLayout role={role}>
+        {/* Floating 3D Characters Background - Disabled on Roblox page */}
+        {!isRobloxPage && (
+          <FloatingCharacters
+            characters={[
+              { type: 'astronaut', position: [-4, 2, -3] },
+              { type: 'robot', position: [4, 1, -2] },
+              { type: 'wizard', position: [0, 3, -4] },
+              { type: 'pirate', position: [-3, -1, -2] },
+              { type: 'ninja', position: [3, 0, -3] }
+            ]}
+            showStars={true}
+            showClouds={true}
+          />
+        )}
+
+        <AppLayout role={role} isRobloxPage={isRobloxPage}>
           <AppRoutes />
         </AppLayout>
-        
+
         {/* Global Components */}
         <NotificationToast />
         <RealtimeToast />

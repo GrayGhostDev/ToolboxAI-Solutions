@@ -76,8 +76,10 @@ export default function Topbar() {
       position="fixed"
       sx={{
         backdropFilter: "blur(8px)",
-        background: "linear-gradient(90deg, rgba(10, 10, 10, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%)",
-        color: "white",
+        background: theme === "dark"
+          ? "linear-gradient(90deg, rgba(10, 10, 10, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%)"
+          : "linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 245, 255, 0.95) 100%)",
+        color: theme === "dark" ? "white" : "#1a1a2e",
         borderBottom: "2px solid #00bcd4",
         boxShadow: "0 4px 20px rgba(0, 188, 212, 0.3)",
       }}
@@ -87,6 +89,7 @@ export default function Topbar() {
           aria-label="Toggle navigation"
           onClick={() => dispatch(toggleSidebar())}
           edge="start"
+          sx={{ color: theme === "dark" ? "white" : "#1a1a2e" }}
         >
           <MenuIcon />
         </IconButton>
@@ -163,6 +166,7 @@ export default function Topbar() {
           <IconButton
             onClick={() => dispatch(setTheme(theme === "light" ? "dark" : "light"))}
             aria-label="Toggle theme"
+            sx={{ color: theme === "dark" ? "white" : "#1a1a2e" }}
           >
             {theme === "light" ? <DarkModeIcon /> : <LightModeIcon />}
           </IconButton>
@@ -173,6 +177,7 @@ export default function Topbar() {
           <IconButton
             aria-label="Notifications"
             onClick={handleNotificationOpen}
+            sx={{ color: theme === "dark" ? "white" : "#1a1a2e" }}
           >
             <Badge badgeContent={notifications.length} color="error">
               <NotificationsIcon />

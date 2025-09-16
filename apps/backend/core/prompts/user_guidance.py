@@ -582,3 +582,4 @@ class UserGuidanceSystem:
 
         return next_steps
 
+

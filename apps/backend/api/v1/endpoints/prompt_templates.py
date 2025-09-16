@@ -452,3 +452,4 @@ async def get_guidance(stage: str):
             detail=f"Failed to get guidance: {str(e)}"
         )
 
+

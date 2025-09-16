@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, useTheme, alpha, keyframes, styled, CircularProgress } from '@mui/material';
-import { imageLoader } from '../../services/imageLoader';
+import React, { useState } from 'react';
+import { Box, Typography, useTheme, alpha, keyframes, styled } from '@mui/material';
+import { Procedural3DIcon } from './Procedural3DIcon';
 
 interface Real3DIconProps {
   iconName: string;
@@ -92,6 +92,56 @@ const StyledIconContainer = styled(Box)(({ theme, size }: any) => {
     },
   };
 });
+
+// Particle effect generator
+function createParticleEffect(x: number, y: number, type: string) {
+  const colors = ['#00ffff', '#ff00ff', '#ffff00', '#00ff00'];
+  const particleCount = type === 'burst' ? 20 : 10;
+
+  for (let i = 0; i < particleCount; i++) {
+    const particle = document.createElement('div');
+    particle.style.position = 'fixed';
+    particle.style.left = `${x}px`;
+    particle.style.top = `${y}px`;
+    particle.style.width = type === 'confetti' ? '10px' : '6px';
+    particle.style.height = type === 'confetti' ? '10px' : '6px';
+    particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+    particle.style.borderRadius = type === 'confetti' ? '2px' : '50%';
+    particle.style.pointerEvents = 'none';
+    particle.style.zIndex = '9999';
+    particle.style.boxShadow = `0 0 10px currentColor`;
+
+    const angle = (i / particleCount) * Math.PI * 2;
+    const velocity = 5 + Math.random() * 5;
+    const vx = Math.cos(angle) * velocity;
+    const vy = Math.sin(angle) * velocity - 5;
+
+    document.body.appendChild(particle);
+
+    let posX = 0;
+    let posY = 0;
+    let opacity = 1;
+    let rotation = 0;
+
+    const animate = () => {
+      posX += vx;
+      posY += vy + 0.5; // gravity
+      opacity -= 0.02;
+      rotation += 10;
+
+      particle.style.transform = `translate(${posX}px, ${posY}px) rotate(${rotation}deg)`;
+      particle.style.opacity = opacity.toString();
+
+      if (opacity > 0) {
+        requestAnimationFrame(animate);
+      } else {
+        particle.remove();
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }
+}
 
 // Icon mapping with actual 3D image data
 const iconMap: { [key: string]: { 
@@ -294,87 +344,49 @@ export const Real3DIcon: React.FC<Real3DIconProps> = ({
 }) => {
   const theme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
-  const [imagePath, setImagePath] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  
-  const iconData = iconMap[iconName] || iconMap['TROPHY'];
+
+  // Map icon names like ROCKET_1 to ROCKET
+  const cleanIconName = iconName.replace(/_\d+$/, '');
+  const iconData = iconMap[cleanIconName] || iconMap['TROPHY'];
   const displayDescription = description || iconData.description;
 
-  // Load the actual 3D icon image
-  useEffect(() => {
-    const loadImage = async () => {
-      try {
-        setLoading(true);
-        setError(false);
-        const path = await imageLoader.get3DIconPath(iconName, 1);
-        if (path) {
-          setImagePath(path);
-        } else {
-          setError(true);
-        }
-      } catch (err) {
-        console.warn(`Failed to load 3D icon ${iconName}:`, err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadImage();
-  }, [iconName]);
-
-  // Load the actual 3D icon image from design_files
+  // Handle click with particle effect
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      onClick();
+    }
+    // Create particle effect at click position
+    createParticleEffect(e.clientX, e.clientY, 'burst');
+  };
 
   return (
-    <StyledIconContainer
-      size={size}
-      onClick={onClick}
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 1,
+        position: 'relative',
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      sx={{
-        background: `linear-gradient(145deg, ${iconData.fallbackColor}, ${alpha(iconData.fallbackColor, 0.7)})`,
-        borderColor: iconData.fallbackColor,
-        boxShadow: `0 8px 25px ${alpha(iconData.fallbackColor, 0.3)}`,
-        '&:hover': {
-          boxShadow: `0 12px 35px ${alpha(iconData.fallbackColor, 0.5)}`,
-          borderColor: iconData.fallbackColor,
-        }
-      }}
+      onClick={handleClick}
     >
-      {loading ? (
-        <CircularProgress 
-          size={size === 'small' ? 20 : size === 'medium' ? 30 : 40} 
-          sx={{ color: iconData.fallbackColor }}
-        />
-      ) : error || !imagePath ? (
-        <Typography
-          sx={{
-            fontSize: size === 'small' ? '1.5rem' : size === 'medium' ? '2rem' : '2.5rem',
-            filter: isHovered ? 'brightness(1.2) contrast(1.1)' : 'none',
-            transition: 'all 0.3s ease',
-            textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-          }}
-        >
-          {iconData.emoji}
-        </Typography>
-      ) : (
-        <Box
-          component="img"
-          src={imagePath}
-          alt={displayDescription}
-          sx={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            filter: isHovered ? 'brightness(1.2) contrast(1.1)' : 'none',
-            transition: 'all 0.3s ease',
-            borderRadius: '50%',
-          }}
-        />
-      )}
-      
-      {displayDescription && (
+      {/* Use Procedural 3D Icon */}
+      <Procedural3DIcon
+        iconName={cleanIconName}
+        size={size}
+        color={iconData.fallbackColor}
+        animated={animated}
+        style={{
+          cursor: 'pointer',
+          transition: 'transform 0.3s ease',
+          transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+        }}
+      />
+
+      {/* Tooltip */}
+      {displayDescription && isHovered && (
         <Typography
           variant="caption"
           sx={{
@@ -386,18 +398,18 @@ export const Real3DIcon: React.FC<Real3DIconProps> = ({
             fontSize: '0.7rem',
             fontWeight: 600,
             color: theme.palette.text.primary,
-            background: alpha(theme.palette.background.paper, 0.9),
-            padding: '2px 8px',
-            borderRadius: 1,
-            border: `1px solid ${alpha(iconData.fallbackColor, 0.3)}`,
-            opacity: isHovered ? 1 : 0,
-            transition: 'opacity 0.3s ease',
+            background: alpha(theme.palette.background.paper, 0.95),
+            padding: '4px 12px',
+            borderRadius: 8,
+            border: `2px solid ${alpha(iconData.fallbackColor, 0.5)}`,
+            boxShadow: `0 4px 12px ${alpha('#000', 0.2)}`,
+            zIndex: 1000,
             pointerEvents: 'none',
           }}
         >
           {displayDescription}
         </Typography>
       )}
-    </StyledIconContainer>
+    </Box>
   );
 };

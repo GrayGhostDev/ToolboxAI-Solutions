@@ -17,7 +17,6 @@ import {
   Stack,
   Avatar,
   IconButton,
-  Fade,
   CircularProgress,
   Alert,
   Tooltip,
@@ -133,14 +132,17 @@ export const RobloxAIChat: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const streamingMessageRef = useRef<string>('');
   
-  // Auto-scroll to bottom
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
-  
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+  // COMPLETELY DISABLED AUTO-SCROLL TO PREVENT PAGE JUMPING
+  // const scrollToBottom = useCallback(() => {
+  //   const messagesContainer = document.getElementById('chat-messages-container');
+  //   if (messagesContainer) {
+  //     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  //   }
+  // }, []);
+
+  // useEffect(() => {
+  //   setTimeout(scrollToBottom, 100);
+  // }, [messages, scrollToBottom]);
   
   // Initialize WebSocket connection and subscriptions
   useEffect(() => {
@@ -482,13 +484,26 @@ export const RobloxAIChat: React.FC = () => {
       )}
       
       {/* Messages */}
-      <Box sx={{ 
-        flex: 1, 
-        overflow: 'auto', 
-        p: 1,
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
+      <Box
+        id="chat-messages-container"
+        sx={{
+          flex: 1,
+          overflow: 'auto',
+          p: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',  // Ensure relative positioning
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(0,0,0,0.1)',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'rgba(0,188,212,0.5)',
+            borderRadius: '4px',
+          },
+        }}>
         {messages.length === 0 && (
           <Box sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant="h6" gutterBottom>
@@ -517,8 +532,7 @@ export const RobloxAIChat: React.FC = () => {
         )}
         
         {messages.map((message) => (
-          <Fade key={message.id} in timeout={300}>
-            <Box sx={{ mb: 2 }}>
+          <Box key={message.id} sx={{ mb: 2 }}>
               <Stack 
                 direction="row" 
                 spacing={1}
@@ -578,7 +592,6 @@ export const RobloxAIChat: React.FC = () => {
                 )}
               </Stack>
             </Box>
-          </Fade>
         ))}
         
         {/* Generation Progress */}
@@ -616,7 +629,7 @@ export const RobloxAIChat: React.FC = () => {
           </Box>
         )}
         
-        <div ref={messagesEndRef} />
+        {/* Scroll anchor removed to prevent page jumping */}
       </Box>
       
       {/* Input */}

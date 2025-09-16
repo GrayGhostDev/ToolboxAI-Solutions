@@ -5,12 +5,14 @@ Integrates with LangChain/LangGraph for intelligent content generation and guida
 """
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, BackgroundTasks, status
+from fastapi.responses import StreamingResponse
 from typing import Dict, Any, List, Optional, AsyncGenerator
 from datetime import datetime
 import logging
 import json
 import uuid
 import asyncio
+import time
 from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 
@@ -106,7 +108,8 @@ ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", ANTHROPIC_MODEL_OPUS)  # Default 
 
 # OpenAI GPT Models
 OPENAI_MODEL_4O = "gpt-4o"  # GPT-4 Omni - 2x faster, 50% cheaper than Turbo
-OPENAI_MODEL_TURBO = "gpt-4-turbo-preview"  # Latest GPT-4 Turbo
+OPENAI_MODEL_4O_MINI = "gpt-4o-mini"  # Smaller, faster version of GPT-4o
+OPENAI_MODEL_TURBO = "gpt-4-turbo"  # Latest GPT-4 Turbo (stable)
 OPENAI_MODEL_41 = "gpt-4-1-preview"  # GPT-4.1 if available
 # Allow environment variable override
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", OPENAI_MODEL_4O)  # Default to GPT-4o
@@ -223,40 +226,65 @@ class RobloxAssistantGraph:
         self.async_openai_client = None
         self.conversation_memory = {}
 
-        # Prefer Anthropic if available - setup async client for scalability
-        if anthropic_key:
-            if LANGCHAIN_AVAILABLE and ChatAnthropic:
-                self.llm = ChatAnthropic(
-                    api_key=anthropic_key,
-                    model=ANTHROPIC_MODEL,
-                    streaming=True,
-                    temperature=0.7,
-                    max_tokens=4096
-                )
-                self._build_graph()
-                logger.info(f"Initialized with LangChain and Anthropic Claude ({ANTHROPIC_MODEL})")
-            elif ANTHROPIC_AVAILABLE:
+        # Setup BOTH Anthropic and OpenAI for automatic fallback
+        clients_initialized = []
+
+        # Setup Anthropic if key available
+        if anthropic_key and ANTHROPIC_AVAILABLE:
+            try:
                 # Setup both sync and async clients for flexibility
                 self.anthropic_client = Anthropic(api_key=anthropic_key)
                 self.async_anthropic_client = AsyncAnthropic(api_key=anthropic_key)
-                logger.info("Initialized with direct Anthropic API (async-ready)")
-        elif openai_key:
-            if LANGCHAIN_AVAILABLE and ChatOpenAI:
-                self.llm = ChatOpenAI(
-                    api_key=openai_key,
-                    model=OPENAI_MODEL,
-                    streaming=True,
-                    temperature=0.7
-                )
-                self._build_graph()
-                logger.info(f"Initialized with LangChain and OpenAI ({OPENAI_MODEL})")
-            elif OPENAI_AVAILABLE:
+                clients_initialized.append(f"Anthropic Claude ({ANTHROPIC_MODEL})")
+                logger.info(f"Initialized Anthropic Claude ({ANTHROPIC_MODEL}) for primary LLM")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Anthropic: {e}")
+
+        # Setup OpenAI if key available (as fallback or primary)
+        if openai_key and OPENAI_AVAILABLE:
+            try:
                 # Setup both sync and async clients for flexibility
                 self.openai_client = OpenAI(api_key=openai_key)
                 self.async_openai_client = AsyncOpenAI(api_key=openai_key)
-                logger.info("Initialized with direct OpenAI API (async-ready)")
+                clients_initialized.append(f"OpenAI ({OPENAI_MODEL})")
+                logger.info(f"Initialized OpenAI ({OPENAI_MODEL}) as {'fallback' if self.async_anthropic_client else 'primary'} LLM")
+            except Exception as e:
+                logger.warning(f"Failed to initialize OpenAI: {e}")
+
+        # Setup LangChain if available (as additional fallback)
+        if LANGCHAIN_AVAILABLE:
+            if anthropic_key and ChatAnthropic and not self.llm:
+                try:
+                    self.llm = ChatAnthropic(
+                        api_key=anthropic_key,
+                        model=ANTHROPIC_MODEL,
+                        streaming=True,
+                        temperature=0.7,
+                        max_tokens=4096
+                    )
+                    self._build_graph()
+                    clients_initialized.append("LangChain + Anthropic")
+                except Exception as e:
+                    logger.warning(f"Failed to initialize LangChain with Anthropic: {e}")
+
+            if openai_key and ChatOpenAI and not self.llm:
+                try:
+                    self.llm = ChatOpenAI(
+                        api_key=openai_key,
+                        model=OPENAI_MODEL,
+                        streaming=True,
+                        temperature=0.7
+                    )
+                    self._build_graph()
+                    clients_initialized.append("LangChain + OpenAI")
+                except Exception as e:
+                    logger.warning(f"Failed to initialize LangChain with OpenAI: {e}")
+
+        # Log initialization status
+        if clients_initialized:
+            logger.info(f"AI Assistant ready with: {', '.join(clients_initialized)}")
         else:
-            logger.warning("No API keys provided, running in mock mode")
+            logger.warning("No LLM clients initialized, running in mock mode")
 
     def _build_graph(self):
         """Build the LangGraph workflow"""
@@ -434,7 +462,7 @@ class RobloxAssistantGraph:
         return state
 
     async def process_message(self, conversation_id: str, message: str) -> AsyncGenerator[str, None]:
-        """Process a message and stream response with full context"""
+        """Process a message and stream response with full context and automatic fallback"""
         try:
             # Get conversation history
             if conversation_id not in self.conversation_memory:
@@ -448,117 +476,285 @@ class RobloxAssistantGraph:
             memory = self.conversation_memory[conversation_id]
             memory["messages"].append({"role": "user", "content": message})
 
-            # Use LangChain if available (Anthropic or OpenAI)
-            if self.llm:
-                # Build conversation context with system prompt
-                system_prompt = """You are an AI assistant helping teachers create educational Roblox environments.
-                You guide them through an 8-stage process:
-                1. Understanding their intent (lesson, environment, quiz)
-                2. Gathering requirements (grade level, subject, learning objectives)
-                3. Planning content structure
-                4. Designing interactive elements
-                5. Creating assessments
-                6. Review and refinement
-                7. Deployment preparation
-                8. Final delivery
+            # Extract context from ENTIRE conversation history
+            import re
+            full_conversation = " ".join([msg["content"].lower() for msg in memory["messages"]])
+            current_message_lower = message.lower()
 
-                Current stage: {stage}
-                Context: {context}
+            # Enhanced grade extraction (handles "4th grade", "4th grader", "grade 4", etc.)
+            grade_patterns = [
+                (r'(kindergarten|k-\d|k\d)', 'kindergarten'),
+                (r'(1st|first|grade 1)\s*(?:grade|grader)?', '1st grade'),
+                (r'(2nd|second|grade 2)\s*(?:grade|grader)?', '2nd grade'),
+                (r'(3rd|third|grade 3)\s*(?:grade|grader)?', '3rd grade'),
+                (r'(4th|fourth|grade 4)\s*(?:grade|grader)?', '4th grade'),
+                (r'(5th|fifth|grade 5)\s*(?:grade|grader)?', '5th grade'),
+                (r'(6th|sixth|grade 6)\s*(?:grade|grader)?', '6th grade'),
+                (r'(7th|seventh|grade 7)\s*(?:grade|grader)?', '7th grade'),
+                (r'(8th|eighth|grade 8)\s*(?:grade|grader)?', '8th grade'),
+                (r'(9th|ninth|grade 9)\s*(?:grade|grader)?', '9th grade'),
+                (r'(10th|tenth|grade 10)\s*(?:grade|grader)?', '10th grade'),
+                (r'(11th|eleventh|grade 11)\s*(?:grade|grader)?', '11th grade'),
+                (r'(12th|twelfth|grade 12)\s*(?:grade|grader)?', '12th grade'),
+            ]
 
-                Be helpful, ask clarifying questions when needed, and maintain context from the entire conversation.
-                When the user mentions something like "Puzzle" after discussing quizzes, understand they want puzzle-based quiz questions.
-                When generating Lua scripts, ensure they are properly formatted for Roblox Studio."""
+            if "grade" not in memory["context"]:
+                for pattern, grade_value in grade_patterns:
+                    if re.search(pattern, full_conversation):
+                        memory["context"]["grade"] = grade_value
+                        break
 
-                # Format messages for the LLM
-                formatted_messages = [
-                    SystemMessage(content=system_prompt.format(
-                        stage=memory["stage"],
-                        context=json.dumps(memory["context"])
-                    ))
-                ]
+            # Enhanced subject extraction (consolidated, no conflicts)
+            if "subject" not in memory["context"]:
+                subjects = {
+                    "math": ["math", "mathematics", "fraction", "pizza", "multiplication", "division", "geometry", "algebra", "number", "equation", "calculation"],
+                    "science": ["science", "biology", "chemistry", "physics", "ecosystem", "solar", "planet", "experiment", "lab", "atoms"],
+                    "history": ["history", "historical", "ancient", "civilization", "american", "world war", "timeline", "museum", "past"],
+                    "english": ["english", "reading", "writing", "grammar", "vocabulary", "literature", "story", "poem", "essay"]
+                }
 
-                for msg in memory["messages"]:
-                    if msg["role"] == "user":
-                        formatted_messages.append(HumanMessage(content=msg["content"]))
-                    elif msg["role"] == "assistant":
-                        formatted_messages.append(AIMessage(content=msg["content"]))
+                for subject, keywords in subjects.items():
+                    if any(keyword in full_conversation for keyword in keywords):
+                        memory["context"]["subject"] = subject
+                        break
 
-                # Generate response with LangChain
-                response_text = ""
-                async for chunk in self.llm.astream(formatted_messages):
-                    if hasattr(chunk, 'content'):
-                        response_text += chunk.content
-                        yield chunk.content
+            # Extract specific topic if mentioned (e.g., "fractions", "solar system")
+            if "topic" not in memory["context"]:
+                topics = {
+                    "fractions": ["fraction", "pizza", "parts", "halves", "thirds", "fourths", "eighths", "pieces"],
+                    "solar system": ["solar", "planet", "space", "mars", "jupiter", "saturn", "orbit"],
+                    "ancient civilizations": ["ancient", "egypt", "rome", "greece", "civilization", "museum"],
+                    "ecosystems": ["ecosystem", "habitat", "animal", "plant", "environment", "food chain"]
+                }
 
-                # Save assistant response to memory
-                memory["messages"].append({"role": "assistant", "content": response_text})
+                for topic, keywords in topics.items():
+                    if any(keyword in full_conversation for keyword in keywords):
+                        memory["context"]["topic"] = topic
+                        break
 
-            # Use async Anthropic API for scalability
-            elif self.async_anthropic_client:
-                # Build messages for Anthropic
-                anthropic_messages = []
-                system_content = f"""You are an AI assistant helping teachers create educational Roblox environments.
-                Guide them through creating lessons, environments, and quizzes.
-                Maintain context from the entire conversation.
-                When generating Lua scripts, ensure they are properly formatted for Roblox Studio.
-                Current context: {json.dumps(memory['context'])}"""
+            # Extract class size from full conversation
+            if "class_size" not in memory["context"]:
+                size_match = re.search(r'(\d+)\s*(?:students?|kids?|children|learners?)', full_conversation)
+                if size_match:
+                    memory["context"]["class_size"] = int(size_match.group(1))
 
-                for msg in memory["messages"]:
-                    anthropic_messages.append({
-                        "role": msg["role"],
-                        "content": msg["content"]
-                    })
+            # Extract game style preference from full conversation
+            if "style" not in memory["context"]:
+                if any(word in full_conversation for word in ["game", "play", "fun", "interactive", "adventure", "quest", "simulation"]):
+                    memory["context"]["style"] = "game"
+                elif any(word in full_conversation for word in ["worksheet", "quiz", "test", "assessment", "questions"]):
+                    memory["context"]["style"] = "assessment"
 
-                # Generate response with async Anthropic for better scalability
-                stream = await self.async_anthropic_client.messages.create(
-                    model=ANTHROPIC_MODEL,
-                    messages=anthropic_messages,
-                    system=system_content,
-                    stream=True,
-                    max_tokens=4096,
-                    temperature=0.7
-                )
+            # Check if user is giving creative control
+            if any(phrase in current_message_lower for phrase in ["you choose", "you decide", "i trust you", "up to you", "your call", "surprise me"]):
+                memory["context"]["user_control"] = "delegated"
 
-                response_text = ""
-                async for chunk in stream:
-                    if chunk.type == "content_block_delta":
-                        content = chunk.delta.text
-                        response_text += content
-                        yield content
+            # Determine if we have enough information to complete
+            has_grade = "grade" in memory["context"]
+            has_subject = "subject" in memory["context"] or "topic" in memory["context"]
+            has_style = "style" in memory["context"]
+            has_class_size = "class_size" in memory["context"]
+            message_count = len(memory["messages"])
 
-                # Save assistant response to memory
-                memory["messages"].append({"role": "assistant", "content": response_text})
+            # Force completion conditions
+            should_complete = False
+            if memory["context"].get("user_control") == "delegated":
+                should_complete = True
+                memory["context"]["force_complete"] = "User delegated control - DESIGN NOW!"
+            elif has_grade and has_subject and (has_style or has_class_size):
+                should_complete = True
+                memory["context"]["force_complete"] = "Have sufficient information - PRESENT DESIGN!"
+            elif message_count >= 6:  # 3 user messages + 3 AI messages
+                should_complete = True
+                memory["context"]["force_complete"] = "Maximum exchanges reached - COMPLETE NOW!"
 
-            # Use async OpenAI API for scalability
-            elif self.async_openai_client:
-                # Build messages for OpenAI
-                openai_messages = [
-                    {"role": "system", "content": f"""You are an AI assistant helping teachers create educational Roblox environments.
-                    Guide them through creating lessons, environments, and quizzes.
-                    Maintain context from the entire conversation.
-                    Current context: {json.dumps(memory['context'])}"""}
-                ]
-                openai_messages.extend(memory["messages"])
+            if should_complete:
+                memory["context"]["MUST_COMPLETE"] = True
 
-                # Generate response with async OpenAI for better scalability
-                stream = await self.async_openai_client.chat.completions.create(
-                    model=OPENAI_MODEL,
-                    messages=openai_messages,
-                    stream=True,
-                    temperature=0.7
-                )
+            # Try Anthropic first, then fallback to OpenAI, then LangChain
+            response_generated = False
 
-                response_text = ""
-                async for chunk in stream:
-                    if chunk.choices[0].delta.content:
-                        content = chunk.choices[0].delta.content
-                        response_text += content
-                        yield content
+            # First try: Anthropic API (direct)
+            if self.async_anthropic_client and not response_generated:
+                try:
+                    # Build messages for Anthropic
+                    anthropic_messages = []
+                    system_content = f"""You are a friendly educational consultant helping teachers design engaging Roblox learning experiences.
 
-                # Save assistant response to memory
-                memory["messages"].append({"role": "assistant", "content": response_text})
+{'🚨 URGENT: ' + memory['context'].get('force_complete', '') if memory['context'].get('MUST_COMPLETE') else ''}
 
-            else:
+⚠️ CRITICAL RULES:
+• NEVER ask for information already provided below
+• DO NOT ask "What subject?" or "What grade?" if already known
+• Maximum 3-4 total exchanges before presenting complete design
+• If user says "you choose", IMMEDIATELY design something specific
+
+📊 KNOWN INFORMATION (DO NOT ASK ABOUT THESE):
+{chr(10).join([f"✓ {k.upper()}: {v}" for k, v in memory['context'].items() if k not in ['MUST_COMPLETE', 'force_complete', 'user_control']])}
+
+📈 Conversation Progress: {len(memory['messages'])} messages exchanged
+
+{'''🎯 COMPLETION REQUIRED NOW!
+You MUST present a complete design with:
+1. "🎯 GOT IT!" header
+2. Full environment description
+3. All features and mechanics
+4. Assessment tools
+5. HTML button: <button style="background: linear-gradient(135deg, #00ff88, #00aaff); color: #0a0a0a; padding: 15px 40px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer;">🌟 View My World</button>
+6. Timer: <div>⏱️ Rendering Time: <span id="timer">00:00</span></div>''' if memory['context'].get('MUST_COMPLETE') else '''YOUR NEXT STEP:
+• If you have grade + subject + style/size → Present complete design
+• If missing critical info → Ask ONE specific question
+• Never repeat questions about known information'''}
+
+{f"🔴 USER GAVE YOU CONTROL: {memory['context'].get('user_control')} - CREATE SOMETHING NOW!" if memory['context'].get('user_control') == 'delegated' else ""}"""
+
+                    for msg in memory["messages"]:
+                        anthropic_messages.append({
+                            "role": msg["role"],
+                            "content": msg["content"]
+                        })
+
+                    # Generate response with async Anthropic for better scalability
+                    stream = await self.async_anthropic_client.messages.create(
+                        model=ANTHROPIC_MODEL,
+                        messages=anthropic_messages,
+                        system=system_content,
+                        stream=True,
+                        max_tokens=4096,
+                        temperature=0.7
+                    )
+
+                    response_text = ""
+                    async for chunk in stream:
+                        if chunk.type == "content_block_delta":
+                            content = chunk.delta.text
+                            response_text += content
+                            yield content
+
+                    # Save assistant response to memory
+                    memory["messages"].append({"role": "assistant", "content": response_text})
+                    response_generated = True
+                    logger.info(f"Response generated with Anthropic Claude ({ANTHROPIC_MODEL})")
+
+                except Exception as e:
+                    logger.warning(f"Anthropic API failed: {e}, trying OpenAI fallback")
+
+            # Second try: OpenAI API (fallback)
+            if self.async_openai_client and not response_generated:
+                try:
+                    # Build messages for OpenAI
+                    openai_messages = [
+                        {"role": "system", "content": f"""You are a friendly educational consultant helping teachers design engaging Roblox learning experiences.
+
+{'🚨 URGENT: ' + memory['context'].get('force_complete', '') if memory['context'].get('MUST_COMPLETE') else ''}
+
+⚠️ CRITICAL RULES:
+• NEVER ask for information already provided below
+• DO NOT ask "What subject?" or "What grade?" if already known
+• Maximum 3-4 total exchanges before presenting complete design
+• If user says "you choose", IMMEDIATELY design something specific
+
+📊 KNOWN INFORMATION (DO NOT ASK ABOUT THESE):
+{chr(10).join([f"✓ {k.upper()}: {v}" for k, v in memory['context'].items() if k not in ['MUST_COMPLETE', 'force_complete', 'user_control']])}
+
+📈 Conversation Progress: {len(memory['messages'])} messages exchanged
+
+{'''🎯 COMPLETION REQUIRED NOW!
+You MUST present a complete design with:
+1. "🎯 GOT IT!" header
+2. Full environment description
+3. All features and mechanics
+4. Assessment tools
+5. HTML button: <button style="background: linear-gradient(135deg, #00ff88, #00aaff); color: #0a0a0a; padding: 15px 40px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer;">🌟 View My World</button>
+6. Timer: <div>⏱️ Rendering Time: <span id="timer">00:00</span></div>''' if memory['context'].get('MUST_COMPLETE') else '''YOUR NEXT STEP:
+• If you have grade + subject + style/size → Present complete design
+• If missing critical info → Ask ONE specific question
+• Never repeat questions about known information'''}
+
+{f"🔴 USER GAVE YOU CONTROL: {memory['context'].get('user_control')} - CREATE SOMETHING NOW!" if memory['context'].get('user_control') == 'delegated' else ""}"""}
+                    ]
+                    openai_messages.extend(memory["messages"])
+
+                    # Generate response with async OpenAI for better scalability
+                    stream = await self.async_openai_client.chat.completions.create(
+                        model=OPENAI_MODEL,
+                        messages=openai_messages,
+                        stream=True,
+                        temperature=0.7
+                    )
+
+                    response_text = ""
+                    async for chunk in stream:
+                        if chunk.choices[0].delta.content:
+                            content = chunk.choices[0].delta.content
+                            response_text += content
+                            yield content
+
+                    # Save assistant response to memory
+                    memory["messages"].append({"role": "assistant", "content": response_text})
+                    response_generated = True
+                    logger.info(f"Response generated with OpenAI ({OPENAI_MODEL}) after Anthropic fallback")
+
+                except Exception as e:
+                    logger.warning(f"OpenAI API failed: {e}, trying LangChain fallback")
+
+            # Third try: LangChain if available (Anthropic or OpenAI)
+            if self.llm and not response_generated:
+                try:
+                    # Build conversation context with system prompt
+                    system_prompt = """You are a friendly educational consultant helping teachers design engaging Roblox learning experiences.
+
+                    CONVERSATION FLOW RULES:
+                    • Track what's been discussed - NEVER repeat questions
+                    • Maximum 3-4 total clarifying questions
+                    • If user says "you choose" or "I trust you", immediately create specific design
+                    • After basic understanding, present "🎯 GOT IT!" with complete design
+
+                    YOUR PROGRESSION:
+                    Stage 1: Quick info gathering (1-2 exchanges)
+                    Stage 2: Smart assumptions
+                    Stage 3: Complete design with "GOT IT!" message and View My World button
+
+                    Current stage: {stage}
+                    Context: {context}
+                    Messages so far: {len(messages) if 'messages' in locals() else 0}
+
+                    IMPORTANT:
+                    • Move conversation FORWARD each message
+                    • Include ALL features in final design
+                    • End with View My World button and timer display"""
+
+                    # Format messages for the LLM
+                    formatted_messages = [
+                        SystemMessage(content=system_prompt.format(
+                            stage=memory["stage"],
+                            context=json.dumps(memory["context"])
+                        ))
+                    ]
+
+                    for msg in memory["messages"]:
+                        if msg["role"] == "user":
+                            formatted_messages.append(HumanMessage(content=msg["content"]))
+                        elif msg["role"] == "assistant":
+                            formatted_messages.append(AIMessage(content=msg["content"]))
+
+                    # Generate response with LangChain
+                    response_text = ""
+                    async for chunk in self.llm.astream(formatted_messages):
+                        if hasattr(chunk, 'content'):
+                            response_text += chunk.content
+                            yield chunk.content
+
+                    # Save assistant response to memory
+                    memory["messages"].append({"role": "assistant", "content": response_text})
+                    response_generated = True
+                    logger.info("Response generated with LangChain after direct API fallback")
+
+                except Exception as e:
+                    logger.warning(f"LangChain failed: {e}, using contextual fallback")
+
+            # Final fallback: Context-aware response without LLM
+            if not response_generated:
                 # Improved fallback without LLM - context-aware responses
                 response = self._generate_contextual_fallback(message, memory)
 
@@ -569,10 +765,11 @@ class RobloxAssistantGraph:
 
                 # Save response to memory
                 memory["messages"].append({"role": "assistant", "content": response})
+                logger.info("Using contextual fallback response (no LLM available)")
 
         except Exception as e:
             logger.error(f"Message processing failed: {e}")
-            yield f"I encountered an issue: {str(e)}. Please try rephrasing your request."
+            yield f"I encountered an issue: {str(e)}. Let me try to help you with creating Roblox educational content. What would you like to create?"
 
     def _generate_contextual_fallback(self, message: str, memory: dict) -> str:
         """Generate context-aware fallback responses without LLM"""
@@ -583,15 +780,15 @@ class RobloxAssistantGraph:
         discussing_quiz = any("quiz" in msg.get("content", "").lower() for msg in last_messages)
 
         if discussing_quiz and "puzzle" in message.lower():
-            return "Great choice! I'll create puzzle-based assessments for your solar system quiz. Students will solve interactive puzzles about planets, orbits, and space phenomena. Each puzzle will reinforce key concepts while keeping students engaged."
+            return "Puzzle-based assessments are perfect for making learning about the solar system more engaging! Students love solving challenges while they learn. What specific concepts about the solar system would you like the puzzles to focus on? For example, we could create puzzles about planetary order, identifying moons, or understanding orbital patterns. What aspects are most important for your students to master?"
         elif "solar system" in message.lower() or "5th grade" in message.lower():
             memory["context"]["subject"] = "solar system"
             memory["context"]["grade"] = "5th grade"
-            return "Excellent! A 5th grade solar system simulation will be perfect. I'll create an interactive 3D environment where students can explore planets, learn about orbits, and understand scale. Should we include quizzes and mini-games?"
+            return "A 5th grade solar system simulation sounds fantastic! Students at that age are naturally curious about space. I can help you design an experience where they can explore planets and discover facts through gameplay. What are the main learning objectives you want to achieve? For example, should students learn about planetary characteristics, the scale of the solar system, or how gravity works? And would you like to include any assessments or challenges to check their understanding?"
         elif "quiz" in message.lower():
-            return "I'll create an interactive quiz! What type would you prefer: Multiple choice, True/false, Fill-in-the-blank, or Puzzle-based assessments?"
+            return "Interactive quizzes are a great way to check understanding while keeping students engaged! There are many fun ways to assess learning in a game environment. Would you prefer traditional question formats like multiple choice, or something more creative like puzzle challenges, scavenger hunts, or problem-solving missions? What approach would work best for your students' learning style?"
         else:
-            return "I'm ready to help you create engaging Roblox educational content! I can design lessons, create interactive environments, or generate quizzes. What would you like to work on?"
+            return "Hello! I'm here to help you create an amazing educational experience in Roblox for your students. Whether you're teaching math, science, history, or any other subject, we can design something both engaging and educational. To get started, could you tell me what subject you teach and what grade level your students are?"
 
 # =============================================================================
 # IN-MEMORY STORAGE (Replace with database in production)
@@ -757,29 +954,26 @@ async def send_message(
 
     return MessageResponse(**user_msg)
 
-@router.post("/generate", response_model=MessageResponse)
+@router.post("/generate")
 async def generate_ai_response_endpoint(
     request: SendMessageRequest,
     current_user: User = Depends(get_current_user)
-) -> MessageResponse:
-    """Generate AI response for a single message (convenience endpoint)"""
+):
+    """Generate AI response with streaming for faster response times"""
 
-    # Create a temporary conversation for this single interaction
-    conversation_id = f"temp_{uuid.uuid4().hex[:8]}"
-
-    # Create temporary conversation
-    conversations[conversation_id] = {
-        "id": conversation_id,
-        "title": "AI Assistant Chat",
-        "status": ConversationStatus.ACTIVE,
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow(),
-        "user_id": current_user.id if hasattr(current_user, 'id') else current_user.email,
-        "metadata": {"temporary": True}
-    }
-
-    # Initialize messages for this conversation
-    if conversation_id not in messages:
+    # Extract conversation_id from request or create temporary one
+    conversation_id = getattr(request, 'conversation_id', None)
+    if not conversation_id:
+        conversation_id = f"temp_{uuid.uuid4().hex[:8]}"
+        conversations[conversation_id] = {
+            "id": conversation_id,
+            "title": "AI Assistant Chat",
+            "status": ConversationStatus.ACTIVE,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "user_id": current_user.id if hasattr(current_user, 'id') else current_user.email,
+            "metadata": {"temporary": True}
+        }
         messages[conversation_id] = []
 
     # Add user message
@@ -792,45 +986,100 @@ async def generate_ai_response_endpoint(
     }
     messages[conversation_id].append(user_msg)
 
-    # Generate AI response
-    try:
-        if assistant_graph:
-            # Use the actual LangGraph workflow
-            response_text = ""
-            async for token in assistant_graph.process_message(conversation_id, request.message):
-                # Token is already a string from the async generator
-                response_text += token
+    async def stream_response():
+        """Stream the AI response with fast initial response"""
+        start_time = time.time()
+        response_text = ""
+        ai_msg_id = f"msg_{uuid.uuid4().hex[:8]}"
 
+        try:
+            # Send immediate acknowledgment
+            yield json.dumps({
+                "type": "start",
+                "id": ai_msg_id,
+                "timestamp": datetime.utcnow().isoformat()
+            }) + "\n"
+
+            # If using assistant_graph, stream the response
+            if assistant_graph:
+                # Quick initial response while LLM initializes
+                quick_text = "Let me help you with that"
+                for char in quick_text:
+                    yield json.dumps({"type": "token", "content": char}) + "\n"
+                    await asyncio.sleep(0.01)
+                yield json.dumps({"type": "token", "content": "... "}) + "\n"
+
+                # Stream actual LLM response
+                async for token in assistant_graph.process_message(conversation_id, request.message):
+                    response_text += token
+                    yield json.dumps({"type": "token", "content": token}) + "\n"
+
+                    # Timeout protection
+                    if time.time() - start_time > 55:
+                        yield json.dumps({
+                            "type": "token",
+                            "content": "\n\n[Response truncated due to time limit. Please continue the conversation.]"
+                        }) + "\n"
+                        response_text += "\n\n[Response truncated due to time limit. Please continue the conversation.]"
+                        break
+            else:
+                # Fast mock response for when assistant is not available
+                mock_response = f"I understand you want to: {request.message}\n\nI'm here to help you create educational Roblox environments!"
+                for word in mock_response.split():
+                    response_text += word + " "
+                    yield json.dumps({"type": "token", "content": word + " "}) + "\n"
+                    await asyncio.sleep(0.02)
+
+            # Save the complete message
             ai_msg = {
-                "id": f"msg_{uuid.uuid4().hex[:8]}",
-                "role": MessageRole.ASSISTANT,
-                "content": response_text,
+                "id": ai_msg_id,
+                "role": MessageRole.ASSISTANT.value,
+                "content": response_text.strip(),
                 "timestamp": datetime.utcnow(),
-                "metadata": {"generated": True}
+                "metadata": {"generated": True, "streaming": True}
             }
-        else:
-            # Mock response for development
-            ai_msg = {
-                "id": f"msg_{uuid.uuid4().hex[:8]}",
-                "role": MessageRole.ASSISTANT,
-                "content": f"I understand you want to: {request.message}\n\nI'm here to help you create educational Roblox environments! Could you tell me more about:\n- What grade level is this for?\n- What subject area?\n- What specific learning objectives?\n- How many students will participate?\n\nOnce I have these details, I can help you design the perfect educational environment!",
-                "timestamp": datetime.utcnow(),
-                "metadata": {"generated": True, "mock": True}
-            }
+            messages[conversation_id].append(ai_msg)
 
-        messages[conversation_id].append(ai_msg)
+            # Send completion signal with full message
+            yield json.dumps({
+                "type": "complete",
+                "message": {
+                    "id": ai_msg["id"],
+                    "role": ai_msg["role"],
+                    "content": ai_msg["content"],
+                    "timestamp": ai_msg["timestamp"].isoformat(),
+                    "metadata": ai_msg["metadata"]
+                }
+            }) + "\n"
 
-        # Clean up temporary conversation after a delay
-        asyncio.create_task(cleanup_temp_conversation(conversation_id))
+            # Also send via Pusher for other connected clients
+            try:
+                from apps.backend.services.pusher import trigger_event
+                channel = f"ai-chat-{conversation_id}"
+                trigger_event(
+                    channel=channel,
+                    event="ai_response",
+                    data={"conversation_id": conversation_id, "message": ai_msg}
+                )
+                logger.info(f"Sent AI response via Pusher to channel {channel}")
+            except Exception as e:
+                logger.warning(f"Pusher notification failed: {e}")
 
-        return MessageResponse(**ai_msg)
+            # Clean up temp conversation later
+            asyncio.create_task(cleanup_temp_conversation(conversation_id))
 
-    except Exception as e:
-        logger.error(f"Error generating AI response: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate AI response: {str(e)}"
-        )
+        except Exception as e:
+            logger.error(f"Streaming error: {e}")
+            yield json.dumps({"type": "error", "error": str(e)}) + "\n"
+
+    return StreamingResponse(
+        stream_response(),
+        media_type="application/x-ndjson",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no"  # Disable nginx buffering
+        }
+    )
 
 async def cleanup_temp_conversation(conversation_id: str):
     """Clean up temporary conversation after 5 minutes"""

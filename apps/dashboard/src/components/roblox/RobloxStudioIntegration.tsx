@@ -248,9 +248,21 @@ export const RobloxStudioIntegration: React.FC = () => {
   }, []);
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{
+      height: '100%',
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      // Removed positioning - let parent control
+      overflow: 'hidden'  // Prevent main container from scrolling
+    }}>
       {/* Header */}
-      <Paper elevation={1} sx={{ p: 2, mb: 2 }}>
+      <Paper elevation={1} sx={{
+        p: 2,
+        mb: 2,
+        // Removed sticky positioning to prevent movement
+        backgroundColor: 'background.paper'  // Ensure background is set
+      }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Box>
             <Typography variant="h5" gutterBottom>
@@ -314,17 +326,31 @@ export const RobloxStudioIntegration: React.FC = () => {
       )}
       
       {/* Main Content */}
-      <Grid container spacing={2} sx={{ flex: 1 }}>
+      <Grid container spacing={2} sx={{
+        flex: 1,
+        overflow: 'hidden',  // No scrolling at grid level
+        height: '100%'
+      }}>
         {/* AI Chat Interface */}
         <Grid item xs={12} md={6}>
-          <Paper elevation={2} sx={{ height: '100%' }}>
+          <Paper elevation={2} sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'  // Prevent paper from scrolling
+          }}>
             <RobloxAIChat />
           </Paper>
         </Grid>
         
         {/* Environment Management */}
         <Grid item xs={12} md={6}>
-          <Paper elevation={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <Paper elevation={2} sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'  // Prevent paper from scrolling
+          }}>
             <Box sx={{ p: 2, borderBottom: `1px solid ${theme.palette.divider}` }}>
               <Typography variant="h6">Generated Environments</Typography>
               <Typography variant="body2" color="text.secondary">
@@ -345,16 +371,18 @@ export const RobloxStudioIntegration: React.FC = () => {
               ) : (
                 <Stack spacing={2}>
                   {environments.map((environment) => (
-                    <Card 
+                    <Card
                       key={environment.id}
                       variant="outlined"
                       sx={{
                         cursor: 'pointer',
-                        '&:hover': { bgcolor: 'action.hover' },
+                        transition: 'none',
+                        transform: 'none',
                         border: selectedEnvironment === environment.id ? 2 : 1,
-                        borderColor: selectedEnvironment === environment.id 
-                          ? theme.palette.primary.main 
-                          : theme.palette.divider
+                        borderColor: selectedEnvironment === environment.id
+                          ? theme.palette.primary.main
+                          : theme.palette.divider,
+                        // Removed hover effects to prevent any movement
                       }}
                       onClick={() => setSelectedEnvironment(environment.id)}
                     >

@@ -653,3 +653,4 @@ This is going to be an unforgettable learning experience for your students! 🌟
         """Get templates with minimum priority"""
         return [t for t in self.templates.values() if t.priority >= min_priority and t.is_active]
 
+

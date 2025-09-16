@@ -40,6 +40,7 @@ import { RobloxProgressBar } from "../roblox/RobloxProgressBar";
 import { RobloxAchievementBadge } from "../roblox/RobloxAchievementBadge";
 import { Simple3DIcon } from "../roblox/Simple3DIcon";
 import { Real3DIcon } from "../roblox/Real3DIcon";
+import { robloxColors } from "../../theme/robloxTheme";
 import { useTheme, alpha, Fade, Zoom, Slide } from "@mui/material";
 
 export function DashboardHome({ role }: { role?: UserRole }) {
@@ -248,7 +249,25 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       textShadow: '0 2px 4px rgba(0,0,0,0.3)'
                     }}
                   >
-                    🚀 Welcome to Space Station! 👋
+                    <Stack direction="row" alignItems="center" spacing={1} component="span">
+                      <Real3DIcon
+                        iconName="ROCKET"
+                        size="small"
+                        animated={true}
+                        particleEffect="sparkle"
+                        glowColor={robloxColors.neon.electricBlue}
+                      />
+                      <span>Welcome to Space Station!</span>
+                      <Box sx={{ display: 'inline-flex', animation: 'neon-pulse 2s ease-in-out infinite' }}>
+                        <Real3DIcon
+                          iconName="STAR"
+                          size="small"
+                          animated={true}
+                          particleEffect="none"
+                          glowColor={robloxColors.neon.plasmaYellow}
+                        />
+                      </Box>
+                    </Stack>
                   </Typography>
                 </Fade>
                 <Slide in={true} direction="up" timeout={1500} appear={false}>
@@ -291,10 +310,20 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                 {role === "teacher" && (
                   <>
                     <Roblox3DButton
+                      iconName="ROCKET"
+                      label="Roblox Studio"
+                      onClick={() => navigate('/roblox-studio')}
+                      variant="primary"
+                      size="medium"
+                      animated={true}
+                      tooltip="Open Roblox Studio Integration"
+                      glowEffect={true}
+                    />
+                    <Roblox3DButton
                       iconName="OPEN_BOOK"
                       label="Create Lesson"
                       onClick={() => setCreateLessonOpen(true)}
-                      variant="primary"
+                      variant="secondary"
                       size="medium"
                       animated={true}
                       tooltip="Create a new lesson for your students"
@@ -416,7 +445,16 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                🎮 Your Learning Tools
+                <Stack direction="row" alignItems="center" spacing={1} justifyContent="center">
+                  <Real3DIcon
+                    iconName="SPORTS_ESPORTS"
+                    size="small"
+                    animated={true}
+                    particleEffect="none"
+                    glowColor={robloxColors.neon.hotPink}
+                  />
+                  <span>Your Learning Tools</span>
+                </Stack>
               </Typography>
               
               <Grid2 container spacing={3} justifyContent="center">
@@ -480,20 +518,37 @@ export function DashboardHome({ role }: { role?: UserRole }) {
             }}
           >
             <Typography variant="h6" sx={{ textAlign: 'center', mb: 2, fontWeight: 700 }}>
-              🧭 Navigation Hub
+              <Stack direction="row" alignItems="center" spacing={1} justifyContent="center">
+                <Real3DIcon
+                  iconName="BOARD"
+                  size="small"
+                  animated={true}
+                  particleEffect="none"
+                  glowColor={robloxColors.neon.electricBlue}
+                />
+                <span>Navigation Hub</span>
+              </Stack>
             </Typography>
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
               {[
-                { name: 'Dashboard', icon: '🏠', path: '/dashboard' },
-                { name: 'Lessons', icon: '📚', path: '/lessons', badge: 3 },
-                { name: 'Assessments', icon: '📝', path: '/assessments' },
-                { name: 'Rewards', icon: '🏆', path: '/rewards', badge: 5 },
-                { name: 'Profile', icon: '👤', path: '/profile' },
+                { name: 'Dashboard', icon: 'BOARD', iconColor: robloxColors.neon.electricBlue, path: '/dashboard' },
+                { name: 'Lessons', icon: 'BOOKS', iconColor: robloxColors.neon.toxicGreen, path: '/lessons', badge: 3 },
+                { name: 'Assessments', icon: 'ASSESSMENT', iconColor: robloxColors.neon.hotPink, path: '/assessments' },
+                { name: 'Rewards', icon: 'TROPHY', iconColor: robloxColors.neon.plasmaYellow, path: '/rewards', badge: 5 },
+                { name: 'Profile', icon: 'BADGE', iconColor: robloxColors.neon.deepPurple, path: '/profile' },
               ].map((item, index) => (
                 <Button
                   key={index}
                   variant="contained"
-                  startIcon={<Typography sx={{ fontSize: '1.2rem' }}>{item.icon}</Typography>}
+                  startIcon={
+                    <Real3DIcon
+                      iconName={item.icon}
+                      size="small"
+                      animated={false}
+                      particleEffect="none"
+                      glowColor={item.iconColor}
+                    />
+                  }
                   onClick={() => navigate(item.path)}
                   sx={{
                     background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,

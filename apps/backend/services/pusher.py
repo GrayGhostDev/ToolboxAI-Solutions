@@ -10,6 +10,7 @@ from __future__ import annotations
 import hmac
 import json
 import logging
+from datetime import datetime
 from hashlib import sha256
 from typing import Any, Dict, Optional
 
@@ -49,7 +50,30 @@ def get_pusher_client():
 
 def trigger_event(channel: str, event: str, data: Dict[str, Any]) -> Dict[str, Any]:
     client = get_pusher_client()
-    client.trigger(channel, event, data)
+
+    # Custom JSON encoder to handle datetime objects
+    class DateTimeEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, datetime):
+                return obj.isoformat()
+            return super().default(obj)
+
+    # Ensure data is properly serialized to avoid UTF-16 surrogate pair issues
+    try:
+        # Convert data to JSON string with datetime handling, then back to dict
+        # This ensures all non-serializable objects are converted
+        json_str = json.dumps(data, cls=DateTimeEncoder, ensure_ascii=False)
+        serializable_data = json.loads(json_str)
+        client.trigger(channel, event, serializable_data)
+    except (TypeError, ValueError, UnicodeEncodeError) as e:
+        logger.error(f"JSON encoding error in pusher trigger: {e}")
+        # Create a safe fallback payload
+        safe_data = {
+            "error": "Data encoding error",
+            "original_type": type(data).__name__,
+            "timestamp": str(datetime.now())
+        }
+        client.trigger(channel, event, safe_data)
     return {"channel": channel, "event": event}
 
 

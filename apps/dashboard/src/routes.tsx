@@ -26,6 +26,7 @@ import { useAppSelector } from "./store";
 import TeacherRobloxDashboard from "./components/pages/TeacherRobloxDashboard";
 import EnvironmentCreator from "./components/roblox/EnvironmentCreator";
 import EnvironmentPreviewPage from "./components/roblox/EnvironmentPreviewPage";
+import RobloxStudioPage from "./components/pages/RobloxStudioPage";
 
 export default function AppRoutes() {
   const role = useAppSelector((s) => s.user.role);
@@ -219,6 +220,16 @@ export default function AppRoutes() {
         element={
           <RoleGuard allow={["teacher", "admin"]}>
             <EnvironmentCreator />
+          </RoleGuard>
+        }
+      />
+
+      {/* Roblox Studio Integration Page */}
+      <Route
+        path="/roblox-studio"
+        element={
+          <RoleGuard allow={["teacher", "admin"]}>
+            <RobloxStudioPage />
           </RoleGuard>
         }
       />

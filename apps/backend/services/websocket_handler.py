@@ -113,7 +113,7 @@ class WebSocketHandler:
         """Handle ping message"""
         try:
             # Send pong response
-            await pusher_trigger_event(
+            pusher_trigger_event(
                 f"connection-{connection_id}",
                 "message",
                 {
@@ -142,7 +142,7 @@ class WebSocketHandler:
             self.active_connections[connection_id]['channels'].add(channel)
 
             # Send subscription confirmation
-            await pusher_trigger_event(
+            pusher_trigger_event(
                 f"connection-{connection_id}",
                 "message",
                 {
@@ -169,7 +169,7 @@ class WebSocketHandler:
                 self.active_connections[connection_id]['channels'].discard(channel)
 
             # Send unsubscription confirmation
-            await pusher_trigger_event(
+            pusher_trigger_event(
                 f"connection-{connection_id}",
                 "message",
                 {
@@ -199,7 +199,7 @@ class WebSocketHandler:
             result = await design_file_converter.process_design_file(file_path)
 
             # Send result back to client
-            await pusher_trigger_event(
+            pusher_trigger_event(
                 f"connection-{connection_id}",
                 "message",
                 {
@@ -230,7 +230,7 @@ class WebSocketHandler:
                 result = await design_folder_scanner.scan_design_folder(include_content)
 
             # Send result back to client
-            await pusher_trigger_event(
+            pusher_trigger_event(
                 f"connection-{connection_id}",
                 "message",
                 {
@@ -261,7 +261,7 @@ class WebSocketHandler:
             results = await design_folder_scanner.search_design_files(query, category)
 
             # Send result back to client
-            await pusher_trigger_event(
+            pusher_trigger_event(
                 f"connection-{connection_id}",
                 "message",
                 {
@@ -282,7 +282,7 @@ class WebSocketHandler:
         """Send error message to connection"""
         try:
             if connection_id:
-                await pusher_trigger_event(
+                pusher_trigger_event(
                     f"connection-{connection_id}",
                     "message",
                     {
@@ -322,7 +322,7 @@ class WebSocketHandler:
     async def broadcast_to_channel(self, channel: str, message_type: str, payload: Dict[str, Any]) -> None:
         """Broadcast message to all connections subscribed to a channel"""
         try:
-            await pusher_trigger_event(
+            pusher_trigger_event(
                 channel,
                 "message",
                 {
@@ -640,15 +640,20 @@ class WebSocketManager:
         # Prefer send_text with JSON for compatibility with tests
         try:
             if hasattr(websocket, 'send_text'):
-                await websocket.send_text(json.dumps(payload))
+                # Use ensure_ascii=False to properly handle UTF-8 characters
+                # and prevent UTF-16 surrogate pair issues
+                json_str = json.dumps(payload, ensure_ascii=False, separators=(',', ':'))
+                await websocket.send_text(json_str)
                 return
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error sending WebSocket message: {e}")
             pass
         # Fallback
         if hasattr(websocket, 'send_json'):
             try:
                 await websocket.send_json(payload)
-            except Exception:
+            except Exception as e:
+                logger.error(f"Error sending WebSocket JSON: {e}")
                 pass
 
     async def get_connection_stats(self) -> Dict[str, Any]:

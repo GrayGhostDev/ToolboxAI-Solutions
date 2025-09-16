@@ -547,6 +547,24 @@ IMPORTANT: When you have enough information to create an environment, end your r
         break;
       }
 
+      case 'ai_response': {
+        console.log('AI response received:', data.payload);
+
+        // Extract the message from the payload
+        const aiMessage = data.payload?.message;
+        if (aiMessage && isValidMessage(aiMessage)) {
+          // Convert timestamp if it's a string
+          if (typeof aiMessage.timestamp === 'string') {
+            aiMessage.timestamp = new Date(aiMessage.timestamp);
+          }
+          console.log('Adding AI response to messages:', aiMessage);
+          setMessages(prev => [...prev, aiMessage]);
+        } else {
+          console.warn('Invalid AI response message:', data.payload);
+        }
+        break;
+      }
+
       default:
         break;
     }
@@ -628,70 +646,143 @@ IMPORTANT: When you have enough information to create an environment, end your r
       setMessages(prev => [...prev, userMessage]);
       setInputValue('');
 
-      // Send via Pusher for streaming (only if enabled)
+      // Send via Pusher for real-time updates (if enabled)
       if (ENABLE_WEBSOCKET && pusherService.isConnected()) {
         try {
-          console.log('Sending via Pusher...');
+          console.log('Sending user message notification via Pusher...');
           await pusherService.send(WebSocketMessageType.AI_MESSAGE, {
             conversation_id: conversation.id,
             message: message
           }, {
             channel: `ai-chat-${conversation.id}`
           });
-          console.log('Message sent via Pusher');
+          console.log('User message notification sent via Pusher');
         } catch (pusherError) {
-          console.error('Pusher send failed:', pusherError);
-          // Fall through to HTTP API
+          console.error('Pusher notification failed:', pusherError);
+          // Continue anyway - Pusher is just for real-time updates
         }
-      } else {
-        console.log('WebSocket not available, using HTTP API');
-        // Fallback to HTTP API
-        try {
-          console.log('Sending via HTTP API...');
-          const response = await apiClient.request<any>({
-            method: 'POST',
-            url: '/api/v1/ai-chat/generate',
-            data: { message },
-            timeout: 60000 // 60 seconds timeout for AI generation
-          });
-          console.log('AI response received:', response);
+      }
 
-          // Add AI response to messages
-          const aiMessage: Message = {
+      // Always call the AI generation API with streaming support
+      try {
+        console.log('Calling AI generation API with streaming...');
+
+        // Create a temporary AI message for streaming content
+        const aiMessageId = `msg_${Date.now()}`;
+        const tempAiMessage: Message = {
+          id: aiMessageId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date(),
+          metadata: { generated: true, streaming: true }
+        };
+
+        // Add the temporary message immediately for visual feedback
+        setMessages(prev => [...prev, tempAiMessage]);
+
+        // Use fetch for streaming response
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8008'}/api/v1/ai-chat/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token') || 'dev-token'}`
+          },
+          body: JSON.stringify({
+            conversation_id: conversation.id,
+            message: message
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let streamedContent = '';
+
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n').filter(line => line.trim());
+
+            for (const line of lines) {
+              try {
+                const data = JSON.parse(line);
+
+                if (data.type === 'token') {
+                  streamedContent += data.content;
+                  // Update the message content in real-time
+                  setMessages(prev => prev.map(msg =>
+                    msg.id === aiMessageId
+                      ? { ...msg, content: streamedContent }
+                      : msg
+                  ));
+                } else if (data.type === 'complete') {
+                  // Final message received
+                  const finalMessage = data.message;
+                  setMessages(prev => prev.map(msg =>
+                    msg.id === aiMessageId
+                      ? {
+                          ...msg,
+                          content: finalMessage.content,
+                          timestamp: new Date(finalMessage.timestamp),
+                          metadata: { ...finalMessage.metadata, streaming: false }
+                        }
+                      : msg
+                  ));
+                  console.log('AI streaming completed');
+                } else if (data.type === 'error') {
+                  console.error('Streaming error:', data.error);
+                  setMessages(prev => prev.map(msg =>
+                    msg.id === aiMessageId
+                      ? { ...msg, content: `Error: ${data.error}` }
+                      : msg
+                  ));
+                }
+              } catch (e) {
+                // Ignore JSON parse errors for incomplete chunks
+              }
+            }
+          }
+        }
+
+        console.log('AI response streaming completed');
+
+        // Check if this should trigger environment creation
+        if (streamedContent && streamedContent.includes('CREATING_ENVIRONMENT_NOW')) {
+          console.log('Triggering environment creation from conversation');
+          await createEnvironmentFromConversation([...messages, userMessage, {
             id: `msg_${Date.now()}`,
             role: 'assistant',
-            content: response.content || 'I received your message but couldn\'t generate a response.',
-            timestamp: new Date(),
-            metadata: { generated: true }
-          };
-          setMessages(prev => [...prev, aiMessage]);
+            content: streamedContent,
+            timestamp: new Date()
+          }]);
+        }
+      } catch (httpError) {
+        console.error('AI generation API failed:', httpError);
 
-          // Check if this should trigger environment creation
-          if (response.content && response.content.includes('CREATING_ENVIRONMENT_NOW')) {
-            console.log('Triggering environment creation from conversation');
-            await createEnvironmentFromConversation([...messages, userMessage, aiMessage]);
-          }
-        } catch (httpError) {
-          console.error('HTTP API send failed:', httpError);
-
-          // Provide more specific error messages
-          if (httpError && typeof httpError === 'object' && 'code' in httpError && httpError.code === 'ECONNABORTED') {
-            setError('Message sending timed out. Please check your connection and try again.');
-          } else if (httpError && typeof httpError === 'object' && 'response' in httpError) {
-            const status = (httpError as any).response?.status;
-            if (status === 401) {
-              setError('Authentication expired. Please refresh the page and try again.');
-            } else if (status === 500) {
-              setError('Server error. Please try again in a moment.');
-            } else {
-              setError('Failed to send message. Please try again.');
-            }
+        // Provide more specific error messages
+        if (httpError && typeof httpError === 'object' && 'code' in httpError && httpError.code === 'ECONNABORTED') {
+          setError('AI generation timed out. Please check your connection and try again.');
+        } else if (httpError && typeof httpError === 'object' && 'response' in httpError) {
+          const status = (httpError as any).response?.status;
+          if (status === 401) {
+            setError('Authentication expired. Please refresh the page and try again.');
+          } else if (status === 500) {
+            setError('Server error. Please try again in a moment.');
           } else {
             setError('Failed to send message. Please try again.');
           }
+        } else {
+          setError('Failed to send message. Please try again.');
         }
+      }
 
-        // Use real-time LLM response - DISABLED (using HTTP API response above)
+      // Use real-time LLM response - DISABLED (using HTTP API response above)
         /*setTimeout(async () => {
           try {
             let aiContent: string;
@@ -745,7 +836,6 @@ IMPORTANT: When you have enough information to create an environment, end your r
             setMessages(prev => [...prev, errorMessage]);
           }
         }, 500);*/
-      }
     } catch (err: any) {
       setError(err.message || 'Failed to send message');
     } finally {
