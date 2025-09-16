@@ -1,5 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import { setupListeners } from '@reduxjs/toolkit/query';
+import { api } from './api';
 import uiReducer from "./slices/uiSlice";
 import userReducer from "./slices/userSlice";
 import gamificationReducer from "./slices/gamificationSlice";
@@ -21,6 +23,9 @@ const webSocketService = PusherService.getInstance();
 
 export const store = configureStore({
   reducer: {
+    // RTK Query API slice
+    [api.reducerPath]: api.reducer,
+    // Existing slices (keeping for backward compatibility during migration)
     ui: uiReducer,
     user: userReducer,
     gamification: gamificationReducer,
@@ -47,9 +52,19 @@ export const store = configureStore({
           "realtime/addSystemNotification",
           "realtime/updateContentProgress",
           "realtime/setContentComplete",
+          // RTK Query actions
+          'persist/PERSIST',
+          'persist/REHYDRATE',
         ],
         // Ignore these field paths in all actions
-        ignoredActionPaths: ["payload.timestamp", "payload.lastSeen", "payload.startedAt"],
+        ignoredActionPaths: [
+          "payload.timestamp",
+          "payload.lastSeen",
+          "payload.startedAt",
+          // RTK Query meta fields
+          "meta.arg",
+          "meta.baseQueryMeta",
+        ],
         // Ignore these paths in the state
         ignoredPaths: [
           "ui.notifications",
@@ -59,13 +74,21 @@ export const store = configureStore({
           "realtime.userPresence",
           "realtime.classrooms",
           "realtime.leaderboard.lastUpdated",
+          // RTK Query cache paths
+          `${api.reducerPath}.queries`,
+          `${api.reducerPath}.mutations`,
         ],
       },
-    }).concat(createWebSocketMiddleware(webSocketService)),
+    })
+    .concat(api.middleware)
+    .concat(createWebSocketMiddleware(webSocketService)),
 });
 
 // Setup WebSocket listeners after store is created
 setupWebSocketListeners(webSocketService, store.dispatch);
+
+// Enable automatic refetching when connections are restored
+setupListeners(store.dispatch);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

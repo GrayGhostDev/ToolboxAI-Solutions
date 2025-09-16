@@ -7,7 +7,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useNavigate } from 'react-router-dom';
 import { User, AuthResponse } from '../types/api';
 import { UserRole } from '../types/roles';
-import { getUserConfig, TEST_USERS } from '../config/users';
+import { getUserConfig, AUTH_CONFIG } from '../config/users';
 import ApiClient, { getMyProfile, updateUser as apiUpdateUser } from '../services/api';
 import { store } from '../store';
 import { addNotification } from '../store/slices/uiSlice';
@@ -70,24 +70,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  // Login function
+  // Login function - secure authentication via backend
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Check if it's a test user (for development)
-      const testUser = Object.values(TEST_USERS).find(
-        u => u.email === email || u.username === email
-      );
-      
-      if (testUser && testUser.password === password) {
-        // Use test user credentials
-        const response = await apiClient.login(testUser.username, password);
-        handleAuthSuccess(response);
-      } else {
-        // Regular login
-        const response = await apiClient.login(email, password);
-        handleAuthSuccess(response);
+      // Validate password meets requirements before sending
+      if (password.length < AUTH_CONFIG.passwordRequirements.minLength) {
+        throw new Error(`Password must be at least ${AUTH_CONFIG.passwordRequirements.minLength} characters`);
       }
+
+      // All authentication is handled by the backend
+      // Never validate credentials on the frontend
+      const response = await apiClient.login(email, password);
+      handleAuthSuccess(response);
     } catch (error: any) {
       store.dispatch(addNotification({
         type: 'error',

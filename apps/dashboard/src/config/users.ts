@@ -404,32 +404,31 @@ export function getUserConfig(role: UserRole): UserRoleConfig {
   return USER_ROLE_CONFIGS[role] || STUDENT_CONFIG;
 }
 
-// Test user credentials for development
-export const TEST_USERS = {
-  admin: {
-    username: "admin",
-    password: "Admin123!",
-    email: "admin@toolboxai.com",
-    role: "admin",
+// Authentication should be handled by the backend
+// Never store credentials in frontend code
+// Use the authentication service to validate users
+export const AUTH_CONFIG = {
+  loginEndpoint: "/api/v1/auth/login",
+  refreshEndpoint: "/api/v1/auth/refresh",
+  logoutEndpoint: "/api/v1/auth/logout",
+  tokenKey: "toolboxai_auth_token",
+  refreshTokenKey: "toolboxai_refresh_token",
+
+  // Password requirements for validation
+  passwordRequirements: {
+    minLength: 12,
+    requireUppercase: true,
+    requireLowercase: true,
+    requireNumbers: true,
+    requireSpecialChars: true,
+    specialChars: "!@#$%^&*()_+-=[]{}|;:,.<>?",
   },
-  teacher: {
-    username: "john_teacher",
-    password: "Teacher123!",
-    email: "john@teacher.com",
-    role: "teacher",
-  },
-  student: {
-    username: "sarah_student",
-    password: "Student123!",
-    email: "sarah@student.com",
-    role: "student",
-  },
-  parent: {
-    username: "mary_parent",
-    password: "Parent123!",
-    email: "mary@parent.com",
-    role: "parent",
-  },
+
+  // Session configuration
+  sessionTimeout: 1800000, // 30 minutes
+  rememberMeDuration: 604800000, // 7 days
+  maxLoginAttempts: 5,
+  lockoutDuration: 900000, // 15 minutes
 };
 
 // Default dashboard settings

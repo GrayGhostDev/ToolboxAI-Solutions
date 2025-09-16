@@ -386,9 +386,12 @@ async def validate_websocket_token(token: str) -> Optional[Dict[str, Any]]:
         jwt_secret = settings.JWT_SECRET_KEY
         jwt_algorithm = settings.JWT_ALGORITHM
     except ImportError:
-        # Fallback to default settings
-        jwt_secret = "your-mcp-secret-key-change-in-production"
-        jwt_algorithm = "HS256"
+        # No fallback to insecure defaults - security requirement
+        logger.error("CRITICAL: Cannot import JWT security settings. Authentication disabled.")
+        raise RuntimeError(
+            "JWT configuration not available. "
+            "Ensure toolboxai_settings is properly configured with JWT_SECRET_KEY."
+        )
     
     middleware = WebSocketAuthMiddleware(jwt_secret, jwt_algorithm)
     return await middleware.validate_websocket_token(token)
