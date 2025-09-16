@@ -260,8 +260,12 @@ def _get_cors_origins():
             "http://127.0.0.1:5178",
             "http://localhost:5179",
             "http://127.0.0.1:5179",
+            "http://localhost:5180",
+            "http://127.0.0.1:5180",
             "http://localhost:8008",
             "http://127.0.0.1:8008",
+            "http://localhost:8009",
+            "http://127.0.0.1:8009",
         ]
     else:
         # Production: Must be explicitly configured

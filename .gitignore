@@ -163,6 +163,8 @@ security_scan_report.json
 # Design files and assets (large binary files)
 design/
 **/design/
+design_files/
+**/design_files/
 *.fig
 *.sketch
 *.xd
@@ -174,6 +176,11 @@ design/
 *.max
 *.ma
 *.mb
+
+# Large JSON files from image parsing
+images/obj/*.json
+images/sketch/*.json
+images/blend/*.json
 
 # Design file parsing outputs (allow images folder)
 parsed_*.json

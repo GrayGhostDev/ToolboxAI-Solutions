@@ -66,37 +66,37 @@ export default defineConfig({
     proxy: {
       // Proxy all backend API endpoints
       '/dashboard': {
-        target: 'http://127.0.0.1:8008',
+        target: 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       },
       '/auth': {
-        target: 'http://127.0.0.1:8008',
+        target: 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       },
       '/realtime': {
-        target: 'http://127.0.0.1:8008',
+        target: 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       },
       '/lessons': {
-        target: 'http://127.0.0.1:8008',
+        target: 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       },
       '/classes': {
-        target: 'http://127.0.0.1:8008',
+        target: 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       },
       '/assessments': {
-        target: 'http://127.0.0.1:8008',
+        target: 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       },
       '/api': {
-        target: 'http://127.0.0.1:8008',
+        target: 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ''),
@@ -113,17 +113,17 @@ export default defineConfig({
         },
       },
       '/ws': {
-        target: 'ws://127.0.0.1:8008',
+        target: 'ws://127.0.0.1:8009',
         ws: true,
         changeOrigin: true
       },
       '/socket.io': {
-        target: 'ws://127.0.0.1:8008',
+        target: 'ws://127.0.0.1:8009',
         ws: true,
         changeOrigin: true,
       },
       '/pusher': {
-        target: 'http://127.0.0.1:8008',
+        target: 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       }

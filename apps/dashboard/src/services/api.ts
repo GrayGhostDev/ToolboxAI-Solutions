@@ -260,7 +260,7 @@ class ApiClient {
 
     const response = await this.request<AuthResponse>({
       method: "POST",
-      url: "/auth/login",
+      url: "/api/v1/auth/login",
       data: { username, password },
     });
 
@@ -289,7 +289,7 @@ class ApiClient {
 
     const response = await this.request<any>({
       method: "POST",
-      url: "/auth/register",
+      url: "/api/v1/auth/register",
       data: backendData,
     });
 
@@ -327,7 +327,7 @@ class ApiClient {
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
     return this.request<AuthResponse>({
       method: "POST",
-      url: "/auth/refresh",
+      url: "/api/v1/auth/refresh",
       data: { refresh_token: refreshToken },
     });
   }
@@ -335,7 +335,7 @@ class ApiClient {
   async logout(): Promise<void> {
     return this.request<void>({
       method: "POST",
-      url: "/auth/logout",
+      url: "/api/v1/auth/logout",
     });
   }
 
@@ -404,7 +404,7 @@ class ApiClient {
   async listLessons(classId?: string): Promise<Lesson[]> {
     return this.request<Lesson[]>({
       method: "GET",
-      url: "/lessons",
+      url: "/api/v1/lessons",
       params: { classId },
     });
   }
@@ -412,14 +412,14 @@ class ApiClient {
   async getLesson(id: string): Promise<Lesson> {
     return this.request<Lesson>({
       method: "GET",
-      url: `/lessons/${id}`,
+      url: `/api/v1/lessons/${id}`,
     });
   }
 
   async createLesson(data: Partial<Lesson>): Promise<Lesson> {
     return this.request<Lesson>({
       method: "POST",
-      url: "/lessons",
+      url: "/api/v1/lessons",
       data,
     });
   }
@@ -427,7 +427,7 @@ class ApiClient {
   async updateLesson(id: string, data: Partial<Lesson>): Promise<Lesson> {
     return this.request<Lesson>({
       method: "PUT",
-      url: `/lessons/${id}`,
+      url: `/api/v1/lessons/${id}`,
       data,
     });
   }
@@ -435,7 +435,7 @@ class ApiClient {
   async deleteLesson(id: string): Promise<void> {
     return this.request<void>({
       method: "DELETE",
-      url: `/lessons/${id}`,
+      url: `/api/v1/lessons/${id}`,
     });
   }
 
@@ -443,21 +443,21 @@ class ApiClient {
   async listClasses(): Promise<ClassSummary[]> {
     return this.request<ClassSummary[]>({
       method: "GET",
-      url: "/classes/",
+      url: "/api/v1/classes/",
     });
   }
 
   async getClass(id: string): Promise<ClassDetails> {
     return this.request<ClassDetails>({
       method: "GET",
-      url: `/classes/${id}`,
+      url: `/api/v1/classes/${id}`,
     });
   }
 
   async createClass(data: Partial<ClassSummary>): Promise<ClassSummary> {
     return this.request<ClassSummary>({
       method: "POST",
-      url: "/classes/",
+      url: "/api/v1/classes/",
       data,
     });
   }
@@ -466,7 +466,7 @@ class ApiClient {
   async listAssessments(classId?: string): Promise<Assessment[]> {
     return this.request<Assessment[]>({
       method: "GET",
-      url: "/assessments/",
+      url: "/api/v1/assessments/",
       params: classId ? { class_id: classId } : undefined, // Transform to snake_case for backend
     });
   }
@@ -474,7 +474,7 @@ class ApiClient {
   async getAssessment(id: string): Promise<Assessment> {
     return this.request<Assessment>({
       method: "GET",
-      url: `/assessments/${id}`,
+      url: `/api/v1/assessments/${id}`,
     });
   }
 
@@ -494,7 +494,7 @@ class ApiClient {
 
     return this.request<Assessment>({
       method: "POST",
-      url: "/assessments/",
+      url: "/api/v1/assessments/",
       data: transformedData,
     });
   }
@@ -510,7 +510,7 @@ class ApiClient {
   async updateAssessment(id: string, data: Partial<Assessment>): Promise<Assessment> {
     return this.request<Assessment>({
       method: "PUT",
-      url: `/assessments/${id}`,
+      url: `/api/v1/assessments/${id}`,
       data,
     });
   }
@@ -518,14 +518,14 @@ class ApiClient {
   async deleteAssessment(id: string): Promise<void> {
     return this.request<void>({
       method: "DELETE",
-      url: `/assessments/${id}`,
+      url: `/api/v1/assessments/${id}`,
     });
   }
 
   async getAssessmentSubmissions(assessmentId: string, studentId?: string): Promise<AssessmentSubmission[]> {
     return this.request<AssessmentSubmission[]>({
       method: "GET",
-      url: `/assessments/${assessmentId}/submissions`,
+      url: `/api/v1/assessments/${assessmentId}/submissions`,
       params: { student_id: studentId },
     });
   }
@@ -533,7 +533,7 @@ class ApiClient {
   async publishAssessment(assessmentId: string): Promise<Assessment> {
     return this.request<Assessment>({
       method: "PUT",
-      url: `/assessments/${assessmentId}/publish`,
+      url: `/api/v1/assessments/${assessmentId}/publish`,
     });
   }
 
@@ -541,28 +541,28 @@ class ApiClient {
   async getStudentProgress(studentId: string): Promise<StudentProgress> {
     return this.request<StudentProgress>({
       method: "GET",
-      url: `/progress/student/${studentId}`,
+      url: `/api/v1/progress/student/${studentId}`,
     });
   }
 
   async getClassProgress(classId: string): Promise<any> {
     return this.request<any>({
       method: "GET",
-      url: `/progress/class/${classId}`,
+      url: `/api/v1/progress/class/${classId}`,
     });
   }
 
   async getLessonAnalytics(lessonId: string): Promise<any> {
     return this.request<any>({
       method: "GET",
-      url: `/progress/lesson/${lessonId}`,
+      url: `/api/v1/progress/lesson/${lessonId}`,
     });
   }
 
   async updateProgress(lessonId: string, progressPercentage: number, timeSpentMinutes: number, score?: number): Promise<any> {
     return this.request<any>({
       method: "POST",
-      url: `/progress/update`,
+      url: `/api/v1/progress/update`,
       data: { lesson_id: lessonId, progress_percentage: progressPercentage, time_spent_minutes: timeSpentMinutes, score },
     });
   }
@@ -570,7 +570,7 @@ class ApiClient {
   async getProgressAnalytics(filters?: { studentId?: string; classId?: string; subject?: string }): Promise<any> {
     return this.request<any>({
       method: "GET",
-      url: `/progress/analytics`,
+      url: `/api/v1/progress/analytics`,
       params: filters,
     });
   }
@@ -579,14 +579,14 @@ class ApiClient {
   async getStudentXP(studentId: string): Promise<{ xp: number; level: number }> {
     return this.request<{ xp: number; level: number }>({
       method: "GET",
-      url: `/gamification/xp/${studentId}`,
+      url: `/api/v1/gamification/xp/${studentId}`,
     });
   }
 
   async addXP(studentId: string, amount: number, reason: string): Promise<XPTransaction> {
     return this.request<XPTransaction>({
       method: "POST",
-      url: `/gamification/xp/${studentId}`,
+      url: `/api/v1/gamification/xp/${studentId}`,
       data: { amount, reason },
     });
   }
@@ -594,7 +594,7 @@ class ApiClient {
   async getBadges(studentId?: string): Promise<Badge[]> {
     return this.request<Badge[]>({
       method: "GET",
-      url: "/gamification/badges",
+      url: "/api/v1/gamification/badges",
       params: { studentId },
     });
   }
@@ -602,7 +602,7 @@ class ApiClient {
   async awardBadge(studentId: string, badgeId: string): Promise<Badge> {
     return this.request<Badge>({
       method: "POST",
-      url: `/gamification/badges/award`,
+      url: `/api/v1/gamification/badges/award`,
       data: { studentId, badgeId },
     });
   }
@@ -619,7 +619,7 @@ class ApiClient {
   async listRobloxWorlds(lessonId?: string): Promise<RobloxWorld[]> {
     return this.request<RobloxWorld[]>({
       method: "GET",
-      url: "/roblox/worlds",
+      url: "/api/v1/roblox/worlds",
       params: { lessonId },
     });
   }
@@ -627,14 +627,14 @@ class ApiClient {
   async pushLessonToRoblox(lessonId: string): Promise<{ jobId: string; status: string }> {
     return this.request<{ jobId: string; status: string }>({
       method: "POST",
-      url: `/roblox/push/${lessonId}`,
+      url: `/api/v1/roblox/push/${lessonId}`,
     });
   }
 
   async getRobloxJoinUrl(classId: string): Promise<{ joinUrl: string }> {
     return this.request<{ joinUrl: string }>({
       method: "GET",
-      url: `/roblox/join/${classId}`,
+      url: `/api/v1/roblox/join/${classId}`,
     });
   }
 
@@ -642,14 +642,14 @@ class ApiClient {
   async initRobloxOAuth(): Promise<{ oauth_url: string; state: string }> {
     return this.request<{ oauth_url: string; state: string }>({
       method: "GET",
-      url: "/roblox/auth/login",
+      url: "/api/v1/roblox/auth/login",
     });
   }
 
   async getRobloxTemplates(category?: string, subject?: string): Promise<any[]> {
     return this.request<any[]>({
       method: "GET",
-      url: "/roblox/templates",
+      url: "/api/v1/roblox/templates",
       params: { category, subject },
     });
   }
@@ -657,7 +657,7 @@ class ApiClient {
   async createFromRobloxTemplate(templateId: number, data: any): Promise<any> {
     return this.request<any>({
       method: "POST",
-      url: `/roblox/templates/${templateId}/create`,
+      url: `/api/v1/roblox/templates/${templateId}/create`,
       data,
     });
   }
@@ -665,35 +665,35 @@ class ApiClient {
   async getRobloxSessions(): Promise<any[]> {
     return this.request<any[]>({
       method: "GET",
-      url: "/roblox/sessions",
+      url: "/api/v1/roblox/sessions",
     });
   }
 
   async getRobloxWorldAnalytics(worldId: string): Promise<any> {
     return this.request<any>({
       method: "GET",
-      url: `/roblox/analytics/${worldId}`,
+      url: `/api/v1/roblox/analytics/${worldId}`,
     });
   }
 
   async syncRobloxWorld(worldId: string): Promise<any> {
     return this.request<any>({
       method: "POST",
-      url: `/roblox/sync/${worldId}`,
+      url: `/api/v1/roblox/sync/${worldId}`,
     });
   }
 
   async checkRobloxPluginStatus(): Promise<{ connected: boolean; version?: string }> {
     return this.request<{ connected: boolean; version?: string }>({
       method: "GET",
-      url: "/roblox/plugin/status",
+      url: "/api/v1/roblox/plugin/status",
     });
   }
 
   async getRobloxPluginInstallInfo(): Promise<any> {
     return this.request<any>({
       method: "POST",
-      url: "/roblox/plugin/install",
+      url: "/api/v1/roblox/plugin/install",
     });
   }
 
@@ -715,7 +715,7 @@ class ApiClient {
   async listMessages(folder?: string, filters?: { unread_only?: boolean; class_id?: string; search?: string }): Promise<Message[]> {
     return this.request<Message[]>({
       method: "GET",
-      url: "/messages/",
+      url: "/api/v1/messages/",
       params: { folder, ...filters },
     });
   }
@@ -723,7 +723,7 @@ class ApiClient {
   async sendMessage(data: { subject: string; body: string; recipient_ids: string[]; class_id?: string; priority?: string }): Promise<Message> {
     return this.request<Message>({
       method: "POST",
-      url: "/messages/",
+      url: "/api/v1/messages/",
       data,
     });
   }
@@ -731,49 +731,49 @@ class ApiClient {
   async getMessage(id: string): Promise<Message> {
     return this.request<Message>({
       method: "GET",
-      url: `/messages/${id}`,
+      url: `/api/v1/messages/${id}`,
     });
   }
 
   async getMessageThread(threadId: string): Promise<any> {
     return this.request<any>({
       method: "GET",
-      url: `/messages/thread/${threadId}`,
+      url: `/api/v1/messages/thread/${threadId}`,
     });
   }
 
   async markMessageAsRead(id: string): Promise<void> {
     return this.request<void>({
       method: "PUT",
-      url: `/messages/${id}/read`,
+      url: `/api/v1/messages/${id}/read`,
     });
   }
 
   async markMessageAsUnread(id: string): Promise<void> {
     return this.request<void>({
       method: "PUT",
-      url: `/messages/${id}/unread`,
+      url: `/api/v1/messages/${id}/unread`,
     });
   }
 
   async starMessage(id: string): Promise<void> {
     return this.request<void>({
       method: "PUT",
-      url: `/messages/${id}/star`,
+      url: `/api/v1/messages/${id}/star`,
     });
   }
 
   async archiveMessage(id: string): Promise<void> {
     return this.request<void>({
       method: "PUT",
-      url: `/messages/${id}/archive`,
+      url: `/api/v1/messages/${id}/archive`,
     });
   }
 
   async deleteMessage(id: string, permanent?: boolean): Promise<void> {
     return this.request<void>({
       method: "DELETE",
-      url: `/messages/${id}`,
+      url: `/api/v1/messages/${id}`,
       params: { permanent },
     });
   }
@@ -781,7 +781,7 @@ class ApiClient {
   async replyToMessage(id: string, data: { subject: string; body: string; recipient_ids: string[] }): Promise<Message> {
     return this.request<Message>({
       method: "POST",
-      url: `/messages/${id}/reply`,
+      url: `/api/v1/messages/${id}/reply`,
       data,
     });
   }
@@ -789,7 +789,7 @@ class ApiClient {
   async forwardMessage(id: string, data: { subject: string; body: string; recipient_ids: string[] }): Promise<Message> {
     return this.request<Message>({
       method: "POST",
-      url: `/messages/${id}/forward`,
+      url: `/api/v1/messages/${id}/forward`,
       data,
     });
   }
@@ -797,7 +797,7 @@ class ApiClient {
   async getMessageStats(): Promise<any> {
     return this.request<any>({
       method: "GET",
-      url: "/messages/stats",
+      url: "/api/v1/messages/stats",
     });
   }
 
@@ -933,7 +933,7 @@ export const markAsRead = apiClient.markMessageAsRead.bind(apiClient);
 export const moveToFolder = async (messageId: string, folder: string) => {
   return apiClient['request']<any>({
     method: 'PUT',
-    url: `/messages/${messageId}/move`,
+    url: `/api/v1/messages/${messageId}/move`,
     data: { folder },
   });
 };
@@ -941,7 +941,7 @@ export const moveToFolder = async (messageId: string, folder: string) => {
 export const searchMessages = async (query: string) => {
   return apiClient['request']<any>({
     method: 'GET',
-    url: `/messages/search`,
+    url: `/api/v1/messages/search`,
     params: { q: query },
   });
 };
@@ -949,7 +949,7 @@ export const searchMessages = async (query: string) => {
 export const getUnreadCount = async () => {
   const response = await apiClient['request']<any>({
     method: 'GET',
-    url: `/messages/unread-count`,
+    url: `/api/v1/messages/unread-count`,
   });
   return response.count || 0;
 };
@@ -963,7 +963,7 @@ export const getProgressAnalytics = apiClient.getProgressAnalytics.bind(apiClien
 export const recordAchievement = async (studentId: string, data: { badgeId: string; xpEarned: number }) => {
   return apiClient['request']<any>({
     method: 'POST',
-    url: `/progress/student/${studentId}/achievement`,
+    url: `/api/v1/progress/student/${studentId}/achievement`,
     data,
   });
 };
@@ -971,7 +971,7 @@ export const recordAchievement = async (studentId: string, data: { badgeId: stri
 export const getSkillMastery = async (studentId: string, skillId: string) => {
   return apiClient['request']<any>({
     method: 'GET',
-    url: `/progress/student/${studentId}/skill/${skillId}`,
+    url: `/api/v1/progress/student/${studentId}/skill/${skillId}`,
   });
 };
 
