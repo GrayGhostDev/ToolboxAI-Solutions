@@ -8,8 +8,8 @@
     "npm": ">=9"
   },
   "overrides": {
-    "axios": "^1.12.2",
-    "esbuild": "^0.24.2",
+    "axios": "^1.7.9",
+    "esbuild": "0.24.2",
     "prismjs": "^1.30.0"
   },
   "scripts": {
@@ -54,7 +54,7 @@
     "react-reconciler": "^0.29.2",
     "@reduxjs/toolkit": "^2.2.7",
     "@types/react-window": "^1.8.8",
-    "axios": "^1.12.2",
+    "axios": "^1.7.9",
     "chart.js": "^4.5.0",
     "date-fns": "^2.30.0",
     "framer-motion": "^11.18.2",

@@ -26,8 +26,8 @@
           "Name": "Modules"
         }
       },
-      "Main": {
-        "$path": "src/Main.server.lua"
+      "Server": {
+        "$path": "src/server"
       }
     },
 
@@ -35,7 +35,12 @@
       "$className": "StarterPlayer",
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
-        "$path": "scripts/ClientScripts"
+        "ClientScripts": {
+          "$path": "scripts/ClientScripts"
+        },
+        "Client": {
+          "$path": "src/client"
+        }
       },
       "StarterCharacterScripts": {
         "$className": "StarterCharacterScripts",
@@ -47,6 +52,9 @@
 
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/shared"
+      },
       "RemoteEvents": {
         "$className": "Folder",
         "$properties": {

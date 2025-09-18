@@ -15,6 +15,8 @@ This is a monorepo that underwent significant restructuring in September 2025. T
 - **Disk Usage Reduced**: From 5.3GB to 4.6GB (700MB+ saved)
 - **Python Cache Eliminated**: 21,361 .pyc files and 2,682 __pycache__ dirs removed
 - **Virtual Environment**: Standardized on `venv/` (removed all venv_clean references)
+- **Source Directory Cleanup**: Removed `/src` directory - Roblox code moved to `roblox/src/`
+- **Duplicate Code Eliminated**: Removed duplicate Python packages (settings, types, utils)
 
 ### Recent Updates (2025-09-16)
 - **BasedPyright Configuration**: Migrated from `[tool.pyright]` to `[tool.basedpyright]` in pyproject.toml
@@ -64,6 +66,12 @@ This is a monorepo that underwent significant restructuring in September 2025. T
   - `dashboard/` - React frontend (port 5179)
 - **core/** - AI agents, MCP, coordinators, SPARC
 - **database/** - Models, migrations, services
+- **roblox/** - All Roblox-related code
+  - `src/client/` - Client-side Luau scripts
+  - `src/server/` - Server-side Luau scripts
+  - `src/shared/` - Shared Luau modules
+  - `scripts/` - Roblox utility scripts
+  - `plugins/` - Roblox Studio plugins
 - **scripts/**
   - `maintenance/` - Fix scripts, cleanup tools
   - `testing/` - Test runners and verification
@@ -75,6 +83,8 @@ This is a monorepo that underwent significant restructuring in September 2025. T
   - `05-features/` - Feature documentation
   - `09-meta/` - Meta documentation
   - `10-reports/` - Status reports
+- **toolboxai_settings/** - Centralized settings module
+- **toolboxai_utils/** - Shared utilities
 - **venv/** - Python virtual environment
 
 ### IDE Setup

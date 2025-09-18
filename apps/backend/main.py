@@ -207,9 +207,9 @@ async def lifespan(app: FastAPI):
             async with asyncio.timeout(10):  # 10 second timeout
                 await initialize_agents()
                 logger.info(
-                "Agent system initialized successfully",
-                extra_fields={"agent_count": len(agent_manager.agents) if hasattr(agent_manager, "agents") else 0}
-            )
+                    "Agent system initialized successfully",
+                    extra_fields={"agent_count": len(agent_manager.agents) if hasattr(agent_manager, "agents") else 0}
+                )
         except asyncio.TimeoutError:
             logger.warning("Agent initialization timed out - running in fallback mode")
         except (ImportError, AttributeError, RuntimeError, ValueError) as e:

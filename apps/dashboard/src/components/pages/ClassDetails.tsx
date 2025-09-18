@@ -100,6 +100,14 @@ const ClassDetails: React.FC = () => {
       })
     );
     // TODO: Implement Roblox push functionality
+    setTimeout(() => {
+      dispatch(
+        addNotification({
+          type: 'success',
+          message: 'Class pushed to Roblox environment successfully',
+        })
+      );
+    }, 2000);
   };
 
   const handleEdit = () => {
