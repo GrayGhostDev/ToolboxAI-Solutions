@@ -9,13 +9,13 @@ from datetime import datetime, timedelta
 import random
 import logging
 from apps.backend.api.auth.auth import get_current_user
-from apps.backend.models.schemas import User
+from database.models import User
 from apps.backend.services.database import db_service
 
 logger = logging.getLogger(__name__)
 
 # Create router for analytics endpoints
-analytics_router = APIRouter(prefix="/analytics", tags=["Analytics"])
+analytics_router = APIRouter(tags=["Analytics"])
 
 @analytics_router.get("/overview")
 async def get_analytics_overview(

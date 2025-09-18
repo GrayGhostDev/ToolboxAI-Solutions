@@ -78,7 +78,7 @@ jobs:
       continue-on-error: true
 
     - name: Upload health reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: documentation-health-reports
         path: docs/10-reports/

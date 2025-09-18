@@ -174,13 +174,13 @@ jobs:
           "
       
       - name: Upload generated scripts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: generated-scripts
           path: ToolboxAI-Roblox-Environment/Roblox/Scripts/Generated/
       
       - name: Upload build report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-report
           path: ToolboxAI-Roblox-Environment/build_report.json
@@ -195,13 +195,13 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Download generated scripts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: generated-scripts
           path: ToolboxAI-Roblox-Environment/Roblox/Scripts/Generated/
       
       - name: Download build report
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: build-report
           path: ToolboxAI-Roblox-Environment/
@@ -250,7 +250,7 @@ jobs:
           rojo build -o ToolboxAI.rbxl
       
       - name: Upload place file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: roblox-place
           path: ToolboxAI.rbxl
