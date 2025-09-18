@@ -18,10 +18,10 @@ import { pusherService } from "./services/pusher";
 import { NetworkError } from "./components/ErrorComponents";
 import { SessionMonitor, NetworkStatus } from "./components/auth/AuthRecovery";
 // Import new Three.js infrastructure
-import { ThreeProvider } from "./lib/three/ThreeProvider";
-import { Scene3D } from "./lib/three/Scene3D";
+import { ThreeProvider } from "./components/three/ThreeProvider";
+import { Scene3D } from "./components/three/Scene3D";
 import { FloatingCharactersV2 } from "./components/roblox/FloatingCharactersV2";
-import { Canvas2D } from "./lib/three/fallbacks/Canvas2D";
+import { Canvas2D } from "./components/three/fallbacks/Canvas2D";
 import { PerformanceMonitor } from "./components/common/PerformanceMonitor";
 // Import WebSocketProvider for context
 import { WebSocketProvider } from "./contexts/WebSocketContext";

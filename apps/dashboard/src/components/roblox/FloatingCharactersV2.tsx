@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { useThree } from '../../lib/three/useThree';
-import { Canvas2D } from '../../lib/three/fallbacks/Canvas2D';
+import { useThree } from '../three/useThree';
+import { Canvas2D } from '../three/fallbacks/Canvas2D';
 
 interface CharacterData {
   type: 'astronaut' | 'robot' | 'wizard' | 'pirate' | 'ninja';
