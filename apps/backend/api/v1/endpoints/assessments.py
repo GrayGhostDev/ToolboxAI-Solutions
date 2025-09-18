@@ -32,6 +32,9 @@ in_memory_assessments: List[Dict[str, Any]] = []
 # Create router for assessments endpoints
 assessments_router = APIRouter(prefix="/assessments", tags=["Assessments"])
 
+# Export standardized router name
+router = assessments_router
+
 @assessments_router.get("/")
 async def get_assessments(
     current_user: User = Depends(get_current_user),

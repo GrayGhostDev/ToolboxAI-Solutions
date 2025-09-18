@@ -602,3 +602,30 @@ class CurriculumAlignmentAgent(BaseAgent):
             "grade_range": "K-12",
             "subjects": ["math", "ela", "science", "social_studies", "technology"]
         }
+    async def _process_task(self, state: "AgentState") -> Any:
+        """
+        Process the task for this educational agent.
+
+        This implements the abstract method from BaseAgent.
+
+        Args:
+            state: Current agent state containing the task
+
+        Returns:
+            Task result
+        """
+        from typing import Any
+
+        # Extract the task
+        task = state.get("task", "")
+        context = state.get("context", {})
+
+        # For now, return a simple response
+        # This will be replaced with actual LLM integration
+        return {
+            "agent": self.__class__.__name__,
+            "task": task,
+            "status": "completed",
+            "result": f"{self.__class__.__name__} processed task: {task[:100] if task else 'No task'}...",
+            "context": context
+        }

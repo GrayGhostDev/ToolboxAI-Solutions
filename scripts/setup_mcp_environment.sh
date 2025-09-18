@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 ROBLOX_ENV="$PROJECT_ROOT/ToolboxAI-Roblox-Environment"
-VENV_PATH="$ROBLOX_ENV/venv_clean"
+VENV_PATH="$ROBLOX_ENV/venv"
 
 echo -e "${BLUE}🚀 Setting up ToolboxAI MCP Environment${NC}"
 echo "============================================="
@@ -52,7 +52,7 @@ fi
 if [ ! -d "$VENV_PATH" ]; then
     echo -e "${YELLOW}📦 Creating virtual environment...${NC}"
     cd "$ROBLOX_ENV"
-    python3 -m venv venv_clean
+    python3 -m venv venv
     cd "$PROJECT_ROOT"
 fi
 

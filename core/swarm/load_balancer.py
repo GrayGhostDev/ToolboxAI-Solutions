@@ -267,6 +267,10 @@ class LoadBalancingConfig:
     batch_timeout: float = 30.0
 
 
+# Alias for backward compatibility
+LoadBalancerConfig = LoadBalancingConfig
+
+
 class LoadBalancer:
     """
     Advanced load balancer for educational content generation with

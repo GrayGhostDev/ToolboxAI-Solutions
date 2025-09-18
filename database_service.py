@@ -130,15 +130,35 @@ class DatabaseService:
     async def health_check(self) -> bool:
         """Check database health"""
         try:
+            if not self.is_initialized:
+                await self.initialize()
+
             async with self.async_session_scope() as session:
-                result = await session.execute("SELECT 1")
+                from sqlalchemy import text
+                result = await session.execute(text("SELECT 1"))
                 return result.scalar() == 1
         except Exception as e:
             logger.error(f"Database health check failed: {e}")
             return False
 
+    # Backward compatibility aliases
+    async def connect(self):
+        """Alias for initialize() - for backward compatibility"""
+        return await self.initialize()
+
+    async def disconnect(self):
+        """Alias for shutdown() - for backward compatibility"""
+        return await self.shutdown()
+
+    async def close(self):
+        """Alias for shutdown() - for backward compatibility"""
+        return await self.shutdown()
+
 # Create global instance
 database_service = DatabaseService()
+
+# Export alias for compatibility
+db_service = database_service
 
 # Export for compatibility
 async def get_async_session() -> AsyncSession:

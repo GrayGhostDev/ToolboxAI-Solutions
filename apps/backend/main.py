@@ -195,7 +195,7 @@ async def lifespan(app: FastAPI):
     # Initialize database service
     try:
         from database_service import db_service
-        await db_service.connect()
+        await db_service.initialize()
         logger.info("Database service initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize database service: {e}")
@@ -217,6 +217,26 @@ async def lifespan(app: FastAPI):
             logger.warning("Agent features will be limited - running in fallback mode")
     else:
         logger.info("Skipping agent initialization (SKIP_AGENTS=true)")
+
+    # Initialize Integration Agents for cross-platform communication (fixed)
+    if not os.getenv("SKIP_INTEGRATION_AGENTS", "false").lower() == "true":
+        try:
+            from apps.backend.services.integration_agents import integration_manager
+            async with asyncio.timeout(15):  # 15 second timeout for integration agents
+                await integration_manager.initialize()
+                logger.info(
+                    "Integration Agents initialized successfully",
+                    extra_fields={"agent_count": len(integration_manager.agents)}
+                )
+        except asyncio.TimeoutError:
+            logger.warning("Integration Agents initialization timed out")
+        except Exception as e:
+            import traceback
+            logger.error(f"Failed to initialize Integration Agents: {e}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            logger.warning("Integration features will be limited")
+    else:
+        logger.info("Skipping Integration Agents initialization (SKIP_INTEGRATION_AGENTS=true)")
 
     # Start Flask bridge server if not running and not skipped
     if not os.getenv("SKIP_FLASK", "false").lower() == "true":
@@ -1420,6 +1440,22 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load Prompt Template endpoints: {e}")
 
+# Load Agent Swarm endpoints
+try:
+    from apps.backend.api.v1.endpoints.agent_swarm import router as agent_swarm_router
+    app.include_router(agent_swarm_router)
+    logger.info("Agent Swarm endpoints loaded successfully - Interactive AI enabled")
+except ImportError as e:
+    logger.warning(f"Could not load Agent Swarm endpoints: {e}")
+
+# Load Integration endpoints for Agent Swarm
+try:
+    from apps.backend.api.v1.endpoints.integration import router as integration_router
+    app.include_router(integration_router, prefix="/api/v1")
+    logger.info("Integration Agent endpoints loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not load Integration endpoints: {e}")
+
 # Load Pusher Authentication endpoints
 try:
     from apps.backend.api.v1.endpoints.pusher_auth import router as pusher_auth_router
@@ -1427,6 +1463,22 @@ try:
     logger.info("Pusher authentication endpoints loaded successfully")
 except ImportError as e:
     logger.warning(f"Could not load Pusher auth endpoints: {e}")
+
+# Load Database Swarm endpoints
+try:
+    from apps.backend.api.v1.endpoints.database_swarm import router as database_swarm_router
+    app.include_router(database_swarm_router, prefix="/api/v1")
+    logger.info("Database Swarm endpoints loaded successfully - Intelligent database management enabled")
+except ImportError as e:
+    logger.warning(f"Could not load Database Swarm endpoints: {e}")
+
+# Error Handling Swarm endpoints
+try:
+    from apps.backend.routers.error_handling_api import router as error_handling_router
+    app.include_router(error_handling_router)
+    logger.info("Error Handling Swarm endpoints loaded successfully - Comprehensive error management enabled")
+except ImportError as e:
+    logger.warning(f"Error Handling Swarm endpoints not loaded: {e}")
 
     # Add fallback AI chat endpoints if router fails to load
     @app.post("/api/v1/ai-chat/conversations")
@@ -1675,16 +1727,10 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load analytics endpoints: {e}")
 
-# Import and include API v1 endpoints (analytics, reports, admin)
+# Import and include API v1 endpoints
 try:
-    from apps.backend.api.v1.router import (
-        analytics_router as analytics_v1_router,
-        reports_router as reports_v1_router,
-        admin_router as admin_v1_router
-    )
-    app.include_router(analytics_v1_router)
-    app.include_router(reports_v1_router)
-    app.include_router(admin_v1_router)
+    from apps.backend.api.v1.router import api_router
+    app.include_router(api_router, prefix="/api/v1")
     logger.info("API v1 endpoints (analytics, reports, admin) loaded successfully")
 except ImportError as e:
     logger.warning(f"Could not load API v1 endpoints: {e}")
@@ -1825,7 +1871,7 @@ async def environment_creation_websocket(websocket: WebSocket):
             pass
 
 # WebSocket endpoint for real-time analytics
-@app.websocket("/api/v1/analytics/realtime")
+@app.websocket("/ws/analytics/realtime")
 async def analytics_realtime_websocket(websocket: WebSocket):
     """
     WebSocket endpoint for real-time analytics data.
@@ -1924,143 +1970,14 @@ async def analytics_realtime_websocket(websocket: WebSocket):
             pass
 
 
-# Summary analytics endpoint
-@app.get("/api/v1/analytics/summary", response_model=DashboardSummary, tags=["Analytics API v1"])
-async def get_dashboard_summary(
-    date_range: Optional[str] = Query(None, description="Date range (7d, 30d, 90d)"),
-    current_user: User = Depends(require_any_role(["admin", "teacher"]))
-):
-    """
-    Get dashboard summary statistics.
-    Returns total users, active courses, completion rates, etc.
-    """
-    try:
-        logger.info(f"Fetching dashboard summary for user: {current_user.username}")
-
-        # Use database service to get real data
-        if not db_service.pool:
-            await db_service.connect()
-
-        # Get analytics data based on user role
-        dashboard_data = await db_service.get_dashboard_data(
-            role=current_user.role.lower(),
-            user_id=int(current_user.id.split('-')[-1]) if current_user.id else 1
-        )
-
-        # Calculate date range
-        end_date = datetime.now(timezone.utc)
-        if date_range == "7d":
-            start_date = end_date - timedelta(days=7)
-        elif date_range == "90d":
-            start_date = end_date - timedelta(days=90)
-        else:  # default to 30d
-            start_date = end_date - timedelta(days=30)
-
-        # Extract summary statistics from dashboard data
-        total_users = dashboard_data.get('kpis', {}).get('totalStudents', 0)
-        active_courses = dashboard_data.get('kpis', {}).get('activeClasses', 0)
-
-        # Calculate completion rates from assignments
-        assignments = dashboard_data.get('assignments', [])
-        total_assignments = len(assignments)
-        completed_assignments = len([a for a in assignments if a.get('status') == 'completed'])
-        completion_rate = (completed_assignments / total_assignments * 100) if total_assignments > 0 else 0
-
-        completion_rates = {
-            "overall": completion_rate,
-            "assignments": completion_rate,
-            "courses": dashboard_data.get('kpis', {}).get('averageProgress', 0)
-        }
-
-        engagement_metrics = {
-            "daily_active_users": max(total_users // 3, 5),  # Estimated
-            "session_duration_avg": 25.5,  # minutes
-            "content_interactions": total_assignments * 3,
-            "quiz_attempts": dashboard_data.get('kpis', {}).get('pendingAssessments', 0) * 2
-        }
-
-        recent_activities = dashboard_data.get('recentActivity', [])
-
-        return DashboardSummary(
-            total_users=total_users,
-            active_courses=active_courses,
-            completion_rates=completion_rates,
-            engagement_metrics=engagement_metrics,
-            recent_activities=recent_activities
-        )
-
-    except Exception as e:
-        logger.error(f"Error fetching dashboard summary: {e}")
-        # Return fallback data in case of error
-        return DashboardSummary(
-            total_users=150,
-            active_courses=12,
-            completion_rates={"overall": 78.5, "assignments": 82.1, "courses": 75.3},
-            engagement_metrics={
-                "daily_active_users": 45,
-                "session_duration_avg": 28.3,
-                "content_interactions": 234,
-                "quiz_attempts": 89
-            },
-            recent_activities=[
-                {"time": "2 hours ago", "action": "Student completed Math Quiz", "type": "success"},
-                {"time": "3 hours ago", "action": "New course created: Science Lab", "type": "info"}
-            ]
-        )
+# Summary analytics endpoint now handled by API v1 router
+# @app.get("/api/v1/analytics/summary", response_model=DashboardSummary, tags=["Analytics API v1"])
+# Commented out to avoid conflicts with router-based endpoint
 
 
-# Report generation endpoint
-@app.post("/api/v1/reports/generate", tags=["Reports API v1"])
-async def generate_report(
-    request: ReportGenerationRequest,
-    background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Generate PDF/CSV reports for teachers/admins.
-    Returns report_id for download.
-    """
-    try:
-        # Validate user permissions with strict role checking
-        allowed_roles = ["teacher", "admin"]
-        if current_user.role.lower() not in allowed_roles:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Report generation requires one of the following roles: {', '.join(allowed_roles)}"
-            )
-
-        # Additional validation for sensitive report types
-        if request.report_type in ["analytics", "admin"] and current_user.role.lower() != "admin":
-            raise HTTPException(
-                status_code=403,
-                detail="Analytics and admin reports require admin role"
-            )
-
-        report_id = str(uuid.uuid4())
-        logger.info(f"Generating report {report_id} for user {current_user.username}")
-
-        # Add report generation to background tasks
-        background_tasks.add_task(
-            generate_report_background,
-            report_id,
-            request,
-            current_user
-        )
-
-        return {
-            "success": True,
-            "report_id": report_id,
-            "status": "processing",
-            "message": f"Report generation started. Report ID: {report_id}",
-            "estimated_completion": (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat(),
-            "download_url": f"/api/v1/reports/download/{report_id}"
-        }
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error initiating report generation: {e}")
-        raise HTTPException(status_code=500, detail="Failed to initiate report generation")
+# Report generation endpoint now handled by API v1 router
+# @app.post("/api/v1/reports/generate", tags=["Reports API v1"])
+# Commented out to avoid conflicts with router-based endpoint
 
 
 # Report download endpoint
@@ -2146,8 +2063,8 @@ async def list_users(
     """
     try:
         # Use database service to get real user data
-        if not db_service.pool:
-            await db_service.connect()
+        if not db_service.is_initialized:
+            await db_service.initialize()
 
         # For now, return mock data based on database patterns
         # In production, this would query the actual users table
@@ -2255,8 +2172,8 @@ async def create_user(
             )
 
         # Use database service to create user
-        if not db_service.pool:
-            await db_service.connect()
+        if not db_service.is_initialized:
+            await db_service.initialize()
 
         async with db_service.pool.acquire() as conn:
             # Check if user already exists
@@ -2310,8 +2227,8 @@ async def update_user(
     """
     try:
         # Use database service to update user
-        if not db_service.pool:
-            await db_service.connect()
+        if not db_service.is_initialized:
+            await db_service.initialize()
 
         async with db_service.pool.acquire() as conn:
             # Check if user exists
@@ -2414,8 +2331,8 @@ async def delete_user(
             )
 
         # Use database service to delete/deactivate user
-        if not db_service.pool:
-            await db_service.connect()
+        if not db_service.is_initialized:
+            await db_service.initialize()
 
         async with db_service.pool.acquire() as conn:
             # Check if user exists
@@ -2461,8 +2378,8 @@ async def get_realtime_analytics_data() -> Dict[str, Any]:
     Get real-time analytics data from the database.
     """
     try:
-        if not db_service.pool:
-            await db_service.connect()
+        if not db_service.is_initialized:
+            await db_service.initialize()
 
         async with db_service.pool.acquire() as conn:
             # Get active users (last 15 minutes)
@@ -2622,8 +2539,8 @@ async def generate_progress_report(user: User) -> Dict[str, Any]:
     """Generate a progress report"""
     # Use database service to get real progress data
     try:
-        if not db_service.pool:
-            await db_service.connect()
+        if not db_service.is_initialized:
+            await db_service.initialize()
 
         dashboard_data = await db_service.get_dashboard_data(
             role=user.role.lower(),
@@ -3953,8 +3870,12 @@ async def ensure_flask_server_running():
     try:
         import requests
 
+        # Use API_HOST since FLASK_HOST doesn't exist in settings
+        flask_host = getattr(settings, 'FLASK_HOST', getattr(settings, 'API_HOST', '127.0.0.1'))
+        flask_port = getattr(settings, 'FLASK_PORT', 5001)
+
         response = requests.get(
-            f"http://{settings.FLASK_HOST}:{settings.FLASK_PORT}/health", timeout=5
+            f"http://{flask_host}:{flask_port}/health", timeout=5
         )
         if response.status_code == 200:
             logger.info("Flask server is running")
@@ -3966,12 +3887,32 @@ async def ensure_flask_server_running():
             import sys
 
             flask_server_path = os.path.join(
-                os.path.dirname(__file__), "roblox_server.py"
+                os.path.dirname(__file__), "flask_bridge.py"
             )
-            subprocess.Popen([sys.executable, flask_server_path])
-            time.sleep(3)  # Give it time to start
+            # Use the same Python executable that's running this process (should be from venv)
+            python_executable = sys.executable
+            subprocess.Popen([python_executable, flask_server_path])
+
+            # Wait for Flask server to start and verify it's responding
+            for attempt in range(10):  # Try for up to 10 seconds
+                await asyncio.sleep(1)
+                try:
+                    response = requests.get(
+                        f"http://{flask_host}:{flask_port}/health",
+                        timeout=2
+                    )
+                    if response.status_code == 200:
+                        logger.info("Flask server started and responding")
+                        return True
+                except Exception:
+                    continue
+
+            logger.error("Flask server failed to start within timeout")
+            return False
+
         except Exception as e:
             logger.error(f"Failed to start Flask server: {e}")
+            return False
 
     return False
 
@@ -3981,12 +3922,18 @@ async def check_flask_server() -> bool:
     try:
         import httpx
 
-        async with httpx.AsyncClient(timeout=1.0) as client:
-            response = await client.get(
-                f"http://{settings.FLASK_HOST}:{settings.FLASK_PORT}/health"
-            )
+        # Use API_HOST since FLASK_HOST doesn't exist in settings
+        flask_host = getattr(settings, 'FLASK_HOST', getattr(settings, 'API_HOST', '127.0.0.1'))
+        flask_port = getattr(settings, 'FLASK_PORT', 5001)
+        url = f"http://{flask_host}:{flask_port}/health"
+        logger.debug(f"Checking Flask server at: {url}")
+
+        async with httpx.AsyncClient(timeout=5.0) as client:  # Increased timeout
+            response = await client.get(url)
+            logger.debug(f"Flask server response: {response.status_code}")
             return response.status_code == 200
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Flask server check failed: {e}")
         return False
 
 

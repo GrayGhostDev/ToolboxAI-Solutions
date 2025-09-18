@@ -29,6 +29,9 @@ logger = logging.getLogger(__name__)
 # Create router for messages endpoints
 messages_router = APIRouter(prefix="/messages", tags=["Messages"])
 
+# Export standardized router name
+router = messages_router
+
 @messages_router.get("/")
 async def get_messages(
     current_user: User = Depends(get_current_user),

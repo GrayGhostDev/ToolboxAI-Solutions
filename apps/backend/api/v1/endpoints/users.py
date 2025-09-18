@@ -8,8 +8,8 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from apps.backend.api.auth.auth import get_current_user, require_role
-from apps.backend.models.schemas import User
+from apps.backend.core.security.jwt_handler import get_current_user, require_role
+from database.models import User
 
 # Create routers for each role
 admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])
@@ -499,6 +499,13 @@ async def get_progress_chart(current_user: User = Depends(require_role("parent")
             "art": [95, 96, 96, 97]
         }
     }
+
+# Create a main router that combines all user routers
+router = APIRouter()
+router.include_router(admin_router)
+router.include_router(teacher_router)
+router.include_router(student_router)
+router.include_router(parent_router)
 
 # Function to register all user routers
 def register_user_routers(app):

@@ -34,7 +34,7 @@ class SecurityScanner:
         
         # Directories to skip
         self.skip_dirs = {
-            'venv', 'venv_clean', 'node_modules', '.git', '__pycache__',
+            'venv', 'node_modules', '.git', '__pycache__',
             'dist', 'build', '.pytest_cache', 'test-results', 'backups'
         }
         

@@ -1,0 +1,454 @@
+# ArgoCD Helm Chart Values for ToolBoxAI Solutions
+# Production-ready GitOps with security hardening
+
+global:
+  image:
+    repository: quay.io/argoproj/argocd
+    tag: v2.9.3
+    imagePullPolicy: IfNotPresent
+
+  securityContext:
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+    runAsNonRoot: true
+
+  networkPolicy:
+    create: true
+    defaultDenyIngress: true
+
+# ArgoCD Server Configuration
+server:
+  replicas: 3
+
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 70
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  containerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+  # Server configuration
+  config:
+    url: https://argocd.toolboxai.solutions
+
+    # OIDC Configuration
+    oidc.config: |
+      name: ToolBoxAI SSO
+      issuer: https://auth.toolboxai.solutions
+      clientId: argocd
+      clientSecret: $oidc.toolboxai.clientSecret
+      requestedScopes: ["openid", "profile", "email", "groups"]
+      requestedIDTokenClaims: {"groups": {"essential": true}}
+
+    # RBAC Configuration
+    policy.csv: |
+      p, role:admin, applications, *, */*, allow
+      p, role:admin, clusters, *, *, allow
+      p, role:admin, repositories, *, *, allow
+      p, role:admin, certificates, *, *, allow
+      p, role:admin, projects, *, *, allow
+      p, role:admin, accounts, *, *, allow
+      p, role:admin, gpgkeys, *, *, allow
+      p, role:readonly, applications, get, */*, allow
+      p, role:readonly, clusters, get, *, allow
+      p, role:readonly, repositories, get, *, allow
+      p, role:readonly, certificates, get, *, allow
+      p, role:readonly, projects, get, *, allow
+      p, role:developer, applications, *, dev/*, allow
+      p, role:developer, applications, *, staging/*, allow
+      p, role:developer, applications, get, prod/*, allow
+      g, toolboxai:admins, role:admin
+      g, toolboxai:developers, role:developer
+      g, toolboxai:readonly, role:readonly
+
+    policy.default: role:readonly
+
+    # Resource Customizations
+    resource.customizations: |
+      admissionregistration.k8s.io/MutatingWebhookConfiguration:
+        ignoreDifferences: |
+          jsonPointers:
+          - /webhooks/0/clientConfig/caBundle
+      admissionregistration.k8s.io/ValidatingWebhookConfiguration:
+        ignoreDifferences: |
+          jsonPointers:
+          - /webhooks/0/clientConfig/caBundle
+
+    # Application Configuration
+    application.instanceLabelKey: argocd.argoproj.io/instance
+
+    # Security Headers
+    server.disable.auth: false
+    server.insecure: false
+
+  # Ingress Configuration
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      nginx.ingress.kubernetes.io/backend-protocol: GRPC
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/grpc-backend: "true"
+    hosts:
+      - argocd.toolboxai.solutions
+    tls:
+      - secretName: argocd-server-tls
+        hosts:
+          - argocd.toolboxai.solutions
+
+  # Metrics
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      labels:
+        monitoring: prometheus
+
+# Repository Server
+repoServer:
+  replicas: 2
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 60
+    targetMemoryUtilizationPercentage: 80
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  containerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+  # Init containers for custom tools
+  volumes:
+    - name: custom-tools
+      emptyDir: {}
+
+  volumeMounts:
+    - name: custom-tools
+      mountPath: /usr/local/bin/custom-tools
+
+  initContainers:
+    - name: download-tools
+      image: alpine:3.18
+      command: [sh, -c]
+      args:
+        - |
+          wget -O /custom-tools/kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v5.2.1/kustomize_v5.2.1_linux_amd64.tar.gz &&
+          tar -xzf /custom-tools/kustomize -C /custom-tools/ &&
+          chmod +x /custom-tools/kustomize &&
+          wget -O /custom-tools/helm https://get.helm.sh/helm-v3.13.2-linux-amd64.tar.gz &&
+          tar -xzf /custom-tools/helm -C /custom-tools/ &&
+          chmod +x /custom-tools/linux-amd64/helm &&
+          mv /custom-tools/linux-amd64/helm /custom-tools/helm
+      volumeMounts:
+        - name: custom-tools
+          mountPath: /custom-tools
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      labels:
+        monitoring: prometheus
+
+# Application Controller
+controller:
+  replicas: 1
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+
+  containerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      labels:
+        monitoring: prometheus
+
+  # Application status processors
+  args:
+    statusProcessors: "20"
+    operationProcessors: "10"
+    appResyncPeriod: "180"
+    selfHealTimeout: "5"
+
+# Redis
+redis:
+  enabled: true
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+  containerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      labels:
+        monitoring: prometheus
+
+# Dex (OIDC provider)
+dex:
+  enabled: false  # Using external OIDC provider
+
+# ApplicationSet Controller
+applicationSet:
+  enabled: true
+  replicas: 2
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  containerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      labels:
+        monitoring: prometheus
+
+# Notifications Controller
+notifications:
+  enabled: true
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+  containerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      labels:
+        monitoring: prometheus
+
+  # Notification templates
+  notifiers:
+    service.slack: |
+      token: $slack-token
+
+    service.email: |
+      host: smtp.toolboxai.solutions
+      port: 587
+      from: argocd@toolboxai.solutions
+      username: $email-username
+      password: $email-password
+
+  templates:
+    template.app-deployed: |
+      email:
+        subject: |
+          Application {{.app.metadata.name}} has been deployed
+        body: |
+          {{range .app.status.conditions}}
+            * {{.message}}
+          {{end}}
+      slack:
+        attachments: |
+          [{
+            "title": "Application {{.app.metadata.name}} deployed",
+            "color": "#18be52",
+            "fields": [{
+              "title": "Repository",
+              "value": "{{.app.spec.source.repoURL}}",
+              "short": true
+            }, {
+              "title": "Revision",
+              "value": "{{.app.status.sync.revision}}",
+              "short": true
+            }]
+          }]
+
+    template.app-health-degraded: |
+      email:
+        subject: |
+          Application {{.app.metadata.name}} health degraded
+        body: |
+          Application health has degraded.
+          Details: {{range .app.status.conditions}}{{.message}}{{end}}
+      slack:
+        attachments: |
+          [{
+            "title": "Application {{.app.metadata.name}} health degraded",
+            "color": "#f4c030",
+            "fields": [{
+              "title": "Health Status",
+              "value": "{{.app.status.health.status}}",
+              "short": true
+            }]
+          }]
+
+    template.app-sync-failed: |
+      email:
+        subject: |
+          Application {{.app.metadata.name}} sync failed
+        body: |
+          Sync operation failed.
+          Error: {{.app.status.operationState.message}}
+      slack:
+        attachments: |
+          [{
+            "title": "Application {{.app.metadata.name}} sync failed",
+            "color": "#E96D76",
+            "fields": [{
+              "title": "Error",
+              "value": "{{.app.status.operationState.message}}",
+              "short": false
+            }]
+          }]
+
+  triggers:
+    trigger.on-deployed: |
+      - when: app.status.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
+        oncePer: app.status.sync.revision
+        send: [app-deployed]
+
+    trigger.on-health-degraded: |
+      - when: app.status.health.status == 'Degraded'
+        send: [app-health-degraded]
+
+    trigger.on-sync-failed: |
+      - when: app.status.operationState.phase in ['Failed', 'Error']
+        send: [app-sync-failed]
+
+  subscriptions:
+    - recipients:
+        - slack:default
+        - email:ops@toolboxai.solutions
+      triggers:
+        - on-deployed
+        - on-health-degraded
+        - on-sync-failed
+
+# Configs for ArgoCD CRDs
+configs:
+  secret:
+    createSecret: true
+    githubSecret: "${GITHUB_TOKEN}"
+    gitlabSecret: "${GITLAB_TOKEN}"
+
+  cm:
+    create: true
+
+    # Git repositories
+    repositories: |
+      - url: https://github.com/toolboxai-solutions/infrastructure.git
+        passwordSecret:
+          name: repo-creds
+          key: password
+        usernameSecret:
+          name: repo-creds
+          key: username
+      - url: https://github.com/toolboxai-solutions/applications.git
+        passwordSecret:
+          name: repo-creds
+          key: password
+        usernameSecret:
+          name: repo-creds
+          key: username
+
+    # Helm repositories
+    helm.repositories: |
+      - name: bitnami
+        url: https://charts.bitnami.com/bitnami
+        type: helm
+      - name: prometheus-community
+        url: https://prometheus-community.github.io/helm-charts
+        type: helm
+      - name: cert-manager
+        url: https://charts.jetstack.io
+        type: helm
+      - name: ingress-nginx
+        url: https://kubernetes.github.io/ingress-nginx
+        type: helm
+
+# CRDs
+crds:
+  install: true
+  keep: true

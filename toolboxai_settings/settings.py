@@ -23,7 +23,7 @@ ENV_NAME = os.getenv("ENV_NAME", "development")
 
 # Server Configuration
 API_HOST = os.getenv("API_HOST", "127.0.0.1")
-API_PORT = int(os.getenv("API_PORT", "8008"))
+API_PORT = int(os.getenv("API_PORT", "8009"))
 FLASK_PORT = int(os.getenv("FLASK_PORT", "5001"))
 MCP_PORT = int(os.getenv("MCP_PORT", "9876"))
 
@@ -262,8 +262,8 @@ def _get_cors_origins():
             "http://127.0.0.1:5179",
             "http://localhost:5180",
             "http://127.0.0.1:5180",
-            "http://localhost:8008",
-            "http://127.0.0.1:8008",
+            "http://localhost:8009",
+            "http://127.0.0.1:8009",
             "http://localhost:8009",
             "http://127.0.0.1:8009",
         ]

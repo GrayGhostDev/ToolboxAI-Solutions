@@ -2,36 +2,28 @@
 Authentication endpoints for ToolboxAI
 """
 
+import os
 from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import JWTError, jwt
+from fastapi.security import OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
-# Configuration
-SECRET_KEY = "development-secret-key-change-in-production"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+from apps.backend.core.security.jwt_handler import (
+    Token, TokenData, create_access_token, get_current_user
+)
+
+# Configuration from environment
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# OAuth2 scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 # Router setup
 auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 # Pydantic models
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    username: Optional[str] = None
-
 class UserLogin(BaseModel):
     username: str
     password: str
@@ -63,16 +55,7 @@ def authenticate_user(username: str, password: str):
         return False
     return user
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    """Create a JWT access token"""
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+# Use the imported create_access_token from jwt_handler
 
 @auth_router.post("/login", response_model=Token)
 async def login(user_credentials: UserLogin):
@@ -89,41 +72,39 @@ async def login(user_credentials: UserLogin):
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user["username"], "role": user["role"]},
+        data={"sub": user["username"], "role": user["role"], "user_id": 1},
         expires_delta=access_token_expires
     )
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        role=user["role"]
+    )
 
 @auth_router.post("/refresh", response_model=Token)
-async def refresh_token(token: str = Depends(oauth2_scheme)):
+async def refresh_token(current_user: TokenData = Depends(get_current_user)):
     """
     Refresh an existing token
     """
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Create new token
+    # Create new token with existing user data
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": username},
+        data={
+            "sub": current_user.username,
+            "role": current_user.role,
+            "user_id": current_user.user_id
+        },
         expires_delta=access_token_expires
     )
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        role=current_user.role
+    )
 
 @auth_router.post("/logout")
 async def logout():
@@ -133,3 +114,6 @@ async def logout():
     # In a real application, you would invalidate the token here
     # For now, just return success
     return {"message": "Successfully logged out"}
+
+# Export router with the expected name
+router = auth_router

@@ -29,7 +29,7 @@ This guide will help you get up and running with ToolBoxAI-Solutions quickly. Wh
 3. Click **"Publish to Class"**
 4. Share the access code with students
 
-**Next Steps**: Check out the [Educator Guide](../06-user-guides/educator-guide.md) for advanced features.
+**Next Steps**: Check out the [Educator Guide](../../06-user-guides/educator/educator-guide.md) for advanced features.
 
 ### 👨‍💼 For Administrators
 
@@ -54,7 +54,7 @@ This guide will help you get up and running with ToolBoxAI-Solutions quickly. Wh
 3. Follow the OAuth setup wizard
 4. Test the connection with a sample sync
 
-**Next Steps**: See the [Admin Guide](../06-user-guides/admin-guide.md) for detailed configuration options.
+**Next Steps**: See the [Admin Guide](../../06-user-guides/administrator/admin-guide.md) for detailed configuration options.
 
 ### 👨‍💻 For Developers
 
@@ -65,26 +65,36 @@ This guide will help you get up and running with ToolBoxAI-Solutions quickly. Wh
 git clone https://github.com/toolboxai/solutions.git
 cd solutions
 
-# Install dependencies
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install Python dependencies
 pip install -r requirements.txt
+
+# Install Node dependencies
+cd apps/dashboard
 npm install
 
 # Set up environment variables
 cp .env.example .env
 # Edit .env with your configuration
-```text
+```
+
 #### Step 2: Local Development
 
 ```bash
-# Start the backend server
-uvicorn main:app --reload --port 8000
+# Start the backend server (from root directory)
+cd apps/backend
+uvicorn main:app --reload --port 8008
 
 # In a new terminal, start the frontend
+cd apps/dashboard
 npm run dev
 
 # Access the application
-open http://localhost:3000
-```text
+open http://localhost:5179
+```
 #### Step 3: Roblox Studio Plugin
 
 1. Open Roblox Studio
@@ -92,7 +102,7 @@ open http://localhost:3000
 3. Install the ToolBoxAI plugin from the marketplace
 4. Configure plugin settings with your API endpoint
 
-**Next Steps**: Review [Development Setup](../04-implementation/development-setup.md) for detailed instructions.
+**Next Steps**: Review [Development Setup](../../04-implementation/development-setup/comprehensive-development-setup.md) for detailed instructions.
 
 ### 👦 For Students
 
@@ -114,7 +124,7 @@ open http://localhost:3000
 2. Complete activities to earn XP
 3. Check your progress on the dashboard
 
-**Next Steps**: Explore the [Student Guide](../06-user-guides/student-guide.md) for tips and tricks.
+**Next Steps**: Explore the [Student Guide](../../06-user-guides/student/student-guide.md) for tips and tricks.
 
 ## System Requirements
 
@@ -284,10 +294,10 @@ open http://localhost:3000
 
 Now that you're set up, explore these resources:
 
-1. **[Feature Overview](../05-features/)** - Discover all platform capabilities
-2. **[User Guides](../06-user-guides/)** - Deep dive into your specific role
-3. **[API Documentation](../03-api/)** - For developers and integrators
-4. **[Best Practices](../04-implementation/coding-standards.md)** - Learn from others' experiences
+1. **[Feature Overview](../../05-features/)** - Discover all platform capabilities
+2. **[User Guides](../../06-user-guides/)** - Deep dive into your specific role
+3. **[API Documentation](../../03-api/)** - For developers and integrators
+4. **[Best Practices](../../04-implementation/code-standards/coding-standards.md)** - Learn from others' experiences
 
 ## Welcome to the Community!
 
@@ -300,4 +310,10 @@ Join thousands of educators transforming education:
 
 ---
 
-_Questions? Check the [FAQ](../09-meta/faq.md) or contact support. We're here to help you succeed!_
+_Questions? Check the [FAQ](../../09-meta/feedback/faq.md) or contact support. We're here to help you succeed!_
+
+---
+
+*Last Updated: 2025-09-16*
+*Version: 2.1.0*
+*Compliance: COPPA, FERPA, GDPR, SOC 2 Type 2*

@@ -106,3 +106,10 @@ def verify_webhook(headers: Dict[str, str], body: bytes) -> Optional[Dict[str, A
     except Exception as e:
         logger.warning(f"Invalid Pusher webhook: {e}")
         return None
+
+
+# Export for compatibility with legacy code expecting pusher_service
+try:
+    pusher_service = get_pusher_client()
+except Exception:
+    pusher_service = None

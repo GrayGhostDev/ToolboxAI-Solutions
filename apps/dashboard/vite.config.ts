@@ -43,10 +43,11 @@ export default defineConfig({
     exclude: [
       '@vite/client',
       '@vite/env',
-      // Exclude large libraries that are rarely used
+      // Exclude Three.js libraries to avoid react-reconciler issues
       'three',
       '@react-three/fiber',
       '@react-three/drei',
+      'react-reconciler',
       // These will be loaded on demand
       'recharts',
       'chart.js',
@@ -60,7 +61,8 @@ export default defineConfig({
       minify: false,
       // Use more aggressive optimization
       drop: ['console', 'debugger']
-    }
+    },
+    force: true // Force re-optimization to clear cached issues
   },
 
   // Path resolution
@@ -143,11 +145,6 @@ export default defineConfig({
         ws: true,
         changeOrigin: true
       },
-      '/socket.io': {
-        target: 'ws://127.0.0.1:8009',
-        ws: true,
-        changeOrigin: true,
-      },
       '/pusher': {
         target: 'http://127.0.0.1:8009',
         changeOrigin: true,
@@ -222,7 +219,7 @@ export default defineConfig({
           }
 
           // Communication and real-time
-          if (id.includes('pusher-js') || id.includes('socket.io-client')) {
+          if (id.includes('pusher-js')) {
             return 'vendor-realtime';
           }
 
@@ -323,12 +320,6 @@ export default defineConfig({
 
     // Report compressed size
     reportCompressedSize: true,
-
-    // Polyfill configuration
-    polyfillModulePreload: true,
-
-    // Enable experimental features for better performance
-    experimentalDecorators: true,
 
     // Module preload for better performance
     modulePreload: {

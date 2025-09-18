@@ -254,6 +254,9 @@ def get_pusher_service() -> PusherRealtimeService:
     return _pusher_service
 
 
+# Export for compatibility
+pusher_service = get_pusher_service()
+
 # Event handlers for common operations
 async def emit_dashboard_update(data: Dict[str, Any]):
     """Emit dashboard update to all connected clients"""

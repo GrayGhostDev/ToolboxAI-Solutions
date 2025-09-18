@@ -6,9 +6,7 @@ enabling asynchronous communication, event routing, and state synchronization.
 
 from .message_bus import MessageBus, MessageBusConfig
 from .event_types import EventType, EventPriority, EventCategory
-from .agent_message import AgentMessage, MessageStatus, MessagePattern
-from .pubsub_manager import PubSubManager, Subscription, Topic
-from .event_router import EventRouter, RoutingRule
+from .agent_message import AgentMessage, MessageStatus, MessagePattern, MessageBuilder
 
 __all__ = [
     # Core message bus
@@ -24,13 +22,5 @@ __all__ = [
     "AgentMessage",
     "MessageStatus",
     "MessagePattern",
-
-    # Pub/Sub
-    "PubSubManager",
-    "Subscription",
-    "Topic",
-
-    # Routing
-    "EventRouter",
-    "RoutingRule",
+    "MessageBuilder",
 ]

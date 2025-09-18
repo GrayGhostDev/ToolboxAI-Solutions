@@ -1,8 +1,10 @@
 /**
- * Inject global animation styles for the wild Roblox theme
+ * Inject global animation styles for the Roblox-themed dashboard
  */
 
 import { animationStyles } from './robloxTheme';
+import { designTokens } from './designTokens';
+import { robloxColors } from './robloxTheme';
 
 export const injectAnimations = () => {
   // Check if animations are already injected
@@ -15,107 +17,285 @@ export const injectAnimations = () => {
   styleElement.id = 'roblox-animations';
   styleElement.innerHTML = animationStyles;
 
-  // Additional global styles for wild effects
+  // Additional global styles for Roblox effects
   styleElement.innerHTML += `
-    /* Global selection color */
-    ::selection {
-      background: rgba(255, 0, 255, 0.3);
-      color: #00ffff;
+    /* CSS Custom Properties for dynamic theming */
+    :root {
+      --roblox-primary-color: ${robloxColors.brand.red.primary};
+      --roblox-secondary-color: ${robloxColors.brand.gray.primary};
+      --roblox-success-color: ${robloxColors.semantic.success};
+      --roblox-error-color: ${robloxColors.semantic.error};
+      --roblox-warning-color: ${robloxColors.semantic.warning};
+      --roblox-info-color: ${robloxColors.semantic.info};
+      --roblox-border-radius: ${designTokens.borderRadius.xl};
+      --roblox-animation-duration: ${designTokens.animation.duration.normal};
+      --roblox-animation-easing: ${designTokens.animation.easing.inOut};
     }
 
-    /* Scrollbar styling */
-    ::-webkit-scrollbar {
-      width: 12px;
-      height: 12px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: linear-gradient(135deg, #00ffff, #ff00ff);
-      border-radius: 10px;
-      border: 2px solid transparent;
-      background-clip: padding-box;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(135deg, #ff00ff, #ffff00);
-      background-clip: padding-box;
-    }
-
-    /* Cursor trail effect on interactive elements */
-    button, a, [role="button"] {
-      cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="10" fill="%2300ffff" opacity="0.5"/><circle cx="16" cy="16" r="5" fill="%23ff00ff"/></svg>') 16 16, pointer;
-    }
-
-    /* Global glow effect for focused elements */
+    /* Enhanced focus styles for accessibility */
     *:focus-visible {
-      outline: 2px solid #00ffff !important;
+      outline: 2px solid var(--roblox-primary-color) !important;
       outline-offset: 2px;
-      box-shadow: 0 0 20px #00ffff !important;
+      box-shadow: 0 0 0 4px rgba(226, 35, 26, 0.2) !important;
+      transition: box-shadow var(--roblox-animation-duration) var(--roblox-animation-easing);
     }
 
-    /* Animated background for body */
-    body {
-      position: relative;
-      overflow-x: hidden;
+    /* Smooth transitions for interactive elements */
+    button, [role="button"], .MuiButton-root, .MuiIconButton-root, .MuiTab-root, .MuiMenuItem-root {
+      transition: all var(--roblox-animation-duration) var(--roblox-animation-easing);
     }
 
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background:
-        radial-gradient(circle at 20% 80%, rgba(0, 255, 255, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(255, 255, 0, 0.03) 0%, transparent 50%);
-      pointer-events: none;
-      z-index: 0;
-      animation: background-shift 20s ease-in-out infinite;
+    /* Enhanced button hover effects */
+    .MuiButton-contained:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(226, 35, 26, 0.3);
     }
 
-    @keyframes background-shift {
+    .MuiButton-contained:not(:disabled):active {
+      transform: translateY(0);
+    }
+
+    /* Card hover effects */
+    .MuiCard-root {
+      transition: all var(--roblox-animation-duration) var(--roblox-animation-easing);
+    }
+
+    .MuiCard-root:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Loading shimmer effect */
+    .roblox-shimmer {
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(226, 35, 26, 0.1),
+        transparent
+      );
+      background-size: 200% 100%;
+      animation: roblox-shimmer 2s infinite;
+    }
+
+    @keyframes roblox-shimmer {
+      0% {
+        background-position: -200% center;
+      }
+      100% {
+        background-position: 200% center;
+      }
+    }
+
+    /* Pulse animation for notifications */
+    .roblox-pulse {
+      animation: roblox-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes roblox-pulse {
       0%, 100% {
-        transform: translate(0, 0) scale(1);
+        opacity: 1;
+        transform: scale(1);
       }
-      33% {
-        transform: translate(-20px, -20px) scale(1.1);
-      }
-      66% {
-        transform: translate(20px, -10px) scale(1.05);
+      50% {
+        opacity: 0.9;
+        transform: scale(1.02);
       }
     }
 
-    /* Text glow for headings */
-    h1, h2, h3, h4, h5, h6 {
-      animation: neon-pulse 3s ease-in-out infinite;
+    /* Floating animation for gamification elements */
+    .roblox-float {
+      animation: roblox-float 3s ease-in-out infinite;
     }
 
-    /* Loading spinner override */
-    .MuiCircularProgress-circle {
-      stroke: url(#rainbow-gradient) !important;
+    @keyframes roblox-float {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-8px);
+      }
     }
 
-    /* Add rainbow gradient definition */
-    body::after {
-      content: '<svg width="0" height="0"><defs><linearGradient id="rainbow-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff0000"/><stop offset="16.66%" stop-color="#ff8800"/><stop offset="33.33%" stop-color="#ffff00"/><stop offset="50%" stop-color="#00ff00"/><stop offset="66.66%" stop-color="#00ffff"/><stop offset="83.33%" stop-color="#0088ff"/><stop offset="100%" stop-color="#ff00ff"/></linearGradient></defs></svg>';
-      position: absolute;
-      width: 0;
-      height: 0;
+    /* Glow effect for special elements */
+    .roblox-glow {
+      animation: roblox-glow 2s ease-in-out infinite;
+    }
+
+    @keyframes roblox-glow {
+      0%, 100% {
+        box-shadow: 0 0 5px rgba(226, 35, 26, 0.3);
+      }
+      50% {
+        box-shadow: 0 0 20px rgba(226, 35, 26, 0.6);
+      }
+    }
+
+    /* Bounce animation for achievements */
+    .roblox-bounce {
+      animation: roblox-bounce 1s ease-in-out infinite;
+    }
+
+    @keyframes roblox-bounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-4px);
+      }
+    }
+
+    /* Spin animation for loading states */
+    .roblox-spin {
+      animation: roblox-spin 1s linear infinite;
+    }
+
+    @keyframes roblox-spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Scale animation for interactive feedback */
+    .roblox-scale:hover {
+      transform: scale(1.05);
+      transition: transform var(--roblox-animation-duration) var(--roblox-animation-easing);
+    }
+
+    /* Slide animations for modals and drawers */
+    .roblox-slide-in-left {
+      animation: roblox-slide-in-left 0.3s ease-out;
+    }
+
+    @keyframes roblox-slide-in-left {
+      from {
+        transform: translateX(-100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .roblox-slide-in-right {
+      animation: roblox-slide-in-right 0.3s ease-out;
+    }
+
+    @keyframes roblox-slide-in-right {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* Fade animations */
+    .roblox-fade-in {
+      animation: roblox-fade-in 0.3s ease-out;
+    }
+
+    @keyframes roblox-fade-in {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .roblox-fade-out {
+      animation: roblox-fade-out 0.3s ease-out;
+    }
+
+    @keyframes roblox-fade-out {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+
+    /* Reduce motion for users who prefer it */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      :root {
+        --roblox-primary-color: #000000;
+        --roblox-secondary-color: #666666;
+      }
+
+      *:focus-visible {
+        outline: 3px solid #000000 !important;
+        outline-offset: 2px;
+      }
+    }
+
+    /* Print styles */
+    @media print {
+      .roblox-pulse,
+      .roblox-float,
+      .roblox-glow,
+      .roblox-bounce,
+      .roblox-spin,
+      .roblox-shimmer {
+        animation: none !important;
+      }
+
+      *:focus-visible {
+        outline: 2px solid #000000 !important;
+        box-shadow: none !important;
+      }
     }
   `;
 
   // Inject into head
   document.head.appendChild(styleElement);
+
+  // Set up CSS custom properties for dynamic theming
+  const updateCSSVariables = () => {
+    const root = document.documentElement;
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    // Update CSS variables based on theme
+    if (isDark) {
+      root.style.setProperty('--roblox-bg-primary', '#111827');
+      root.style.setProperty('--roblox-bg-secondary', '#1F2937');
+      root.style.setProperty('--roblox-text-primary', '#FFFFFF');
+      root.style.setProperty('--roblox-text-secondary', '#9CA3AF');
+    } else {
+      root.style.setProperty('--roblox-bg-primary', '#FFFFFF');
+      root.style.setProperty('--roblox-bg-secondary', '#F9FAFB');
+      root.style.setProperty('--roblox-text-primary', '#111827');
+      root.style.setProperty('--roblox-text-secondary', '#6B7280');
+    }
+  };
+
+  // Initial setup
+  updateCSSVariables();
+
+  // Listen for theme changes
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  mediaQuery.addEventListener('change', updateCSSVariables);
 };
 
 // Auto-inject on import
 if (typeof document !== 'undefined') {
   injectAnimations();
 }
+
+export default injectAnimations;

@@ -18,8 +18,15 @@ import json
 from abc import abstractmethod
 
 from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
-from core.sparc.reasoning_engine import ReasoningEngine, SPARCContext
 from pydantic import BaseModel, Field
+
+# Try to import SPARC if available
+try:
+    from core.sparc.reasoning_engine import ReasoningEngine, SPARCContext
+except ImportError:
+    # SPARC not available, use placeholder
+    class SPARCContext:
+        pass
 
 logger = logging.getLogger(__name__)
 
@@ -223,6 +230,20 @@ class BaseIntegrationAgent(BaseAgent):
     async def _process_integration_event(self, event: IntegrationEvent):
         """Process an integration event - must be implemented by subclasses"""
         pass
+
+    async def _process_task(self, state: AgentState) -> Any:
+        """
+        Default implementation of _process_task required by BaseAgent.
+        Integration agents primarily use execute_task and _process_integration_event.
+        """
+        # Convert state to task if needed
+        task_name = state.task if isinstance(state.task, str) else "process"
+        context = state.context if hasattr(state, 'context') else {}
+
+        # Execute the task using the integration agent's execute_task method
+        result = await self.execute_task(task_name, context)
+
+        return result
 
     async def execute_with_retry(
         self,

@@ -26,6 +26,9 @@ in_memory_lessons: List[Dict[str, Any]] = []
 # Create router for lessons endpoints
 lessons_router = APIRouter(prefix="/lessons", tags=["Lessons"])
 
+# Export standardized router name
+router = lessons_router
+
 @lessons_router.get("")
 async def get_lessons(
     current_user: User = Depends(get_current_user),

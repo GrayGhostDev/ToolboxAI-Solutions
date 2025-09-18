@@ -1,0 +1,70 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+      ],
+      "env": {
+        "MCP_FS_DENY": "$HOME/Library/**:$HOME/.ssh/**:$HOME/Library/Keychains/**:$HOME/.config/claude/secrets/**:venv/**:node_modules/**:.git/**",
+        "MCP_FS_ENABLE_WRITE": "true"
+      },
+      "description": "Filesystem access for ToolBoxAI-Solutions project"
+    },
+    "git": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-git"
+      ],
+      "description": "Git repository management for ToolBoxAI-Solutions"
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "description": "GitHub API integration for GrayGhostDev/ToolBoxAI-Solutions"
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres"
+      ],
+      "env": {
+        "DATABASE_URL": "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev"
+      },
+      "description": "PostgreSQL access for educational platform database"
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {
+        "MCP_MEMORY_DIR": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.claude/memory"
+      },
+      "description": "Persistent memory store for ToolBoxAI context"
+    },
+    "toolboxai-orchestrator": {
+      "command": "python",
+      "args": [
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/mcp/server.py"
+      ],
+      "env": {
+        "MCP_SERVER_TYPE": "orchestrator",
+        "REDIS_URL": "redis://localhost:6379",
+        "DATABASE_URL": "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev"
+      },
+      "description": "ToolBoxAI MCP orchestrator server for agent coordination"
+    }
+  }
+}

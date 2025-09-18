@@ -49,18 +49,18 @@ logger = logging.getLogger(__name__)
 sys.path.append(str(Path(__file__).parent.parent))
 
 try:
-    from apps.backend.core.agents.content_agent import ContentAgent  # type: ignore
-    from apps.backend.core.agents.orchestrator import OrchestrationEngine  # type: ignore
-    from apps.backend.core.agents.quiz_agent import QuizAgent  # type: ignore
-    from apps.backend.core.agents.review_agent import ReviewAgent  # type: ignore
-    from apps.backend.core.agents.script_agent import ScriptAgent  # type: ignore
-    from apps.backend.core.agents.supervisor import SupervisorAgent  # type: ignore
-    from apps.backend.core.agents.terrain_agent import TerrainAgent  # type: ignore
-    from apps.backend.core.coordinators.main_coordinator import MainCoordinator  # type: ignore
-    from apps.backend.core.sparc.state_manager import StateManager  # type: ignore
-    from apps.backend.core.swarm.swarm_controller import SwarmController  # type: ignore
-    from apps.backend.core.mcp.context_manager import MCPContextManager as ContextManager  # type: ignore
-    from apps.backend.core.mcp.server import MCPServer  # type: ignore
+    from core.agents.content_agent import ContentAgent  # type: ignore
+    from core.agents.orchestrator import Orchestrator as OrchestrationEngine  # type: ignore
+    from core.agents.quiz_agent import QuizAgent  # type: ignore
+    from core.agents.review_agent import ReviewAgent  # type: ignore
+    from core.agents.script_agent import ScriptAgent  # type: ignore
+    from core.agents.supervisor import SupervisorAgent  # type: ignore
+    from core.agents.terrain_agent import TerrainAgent  # type: ignore
+    from core.coordinators.main_coordinator import MainCoordinator  # type: ignore
+    from core.sparc.state_manager import StateManager  # type: ignore
+    from core.swarm.swarm_controller import SwarmController  # type: ignore
+    from core.mcp.context_manager import MCPContextManager as ContextManager  # type: ignore
+    from core.mcp.server import MCPServer  # type: ignore
 except ImportError as e:
     logger.warning(
         "Could not import agent modules: %s. Some features may be limited.", e

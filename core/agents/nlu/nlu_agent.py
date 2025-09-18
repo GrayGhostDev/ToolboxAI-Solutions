@@ -13,6 +13,7 @@ from enum import Enum
 from datetime import datetime
 
 from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
+from .llm_integration import LLMIntegration, LLMConfig, LLMProvider
 
 logger = logging.getLogger(__name__)
 
@@ -47,10 +48,14 @@ class IntentType(Enum):
     INVITE_COLLABORATOR = "invite_collaborator"
     REQUEST_FEEDBACK = "request_feedback"
 
+    # Performance & Analytics Intents
+    ANALYZE_PERFORMANCE = "analyze_performance"
+    PROVIDE_FEEDBACK = "provide_feedback"
+
     # Control Intents
+    DELEGATE_CONTROL = "delegate_control"
     START_SESSION = "start_session"
     END_SESSION = "end_session"
-    DELEGATE_CONTROL = "delegate_control"
     CONFIRM_ACTION = "confirm_action"
 
 
@@ -177,6 +182,15 @@ class NLUAgent(BaseAgent):
 
         # Intent keywords mapping
         self._init_intent_keywords()
+
+        # Initialize LLM integration for intelligent understanding
+        llm_config = LLMConfig(
+            provider=LLMProvider.MOCK,  # Will auto-detect if API keys are available
+            temperature=0.7
+        )
+        self.llm_integration = LLMIntegration(llm_config)
+        self.conversation_history = []
+        self.accumulated_context = {}
 
         # Entity patterns
         self._init_entity_patterns()
@@ -348,8 +362,41 @@ class NLUAgent(BaseAgent):
         # Preprocess input
         processed_text = self._preprocess_text(input_text)
 
-        # Extract intents
-        intents = await self._extract_intents(processed_text, context)
+        # Add to conversation history
+        self.conversation_history.append({"role": "user", "content": input_text})
+
+        # Update accumulated context
+        if context:
+            self.accumulated_context.update(context)
+
+        # Try LLM-based understanding first for better context awareness
+        llm_result = None
+        try:
+            llm_result = await self.llm_integration.understand_intent(
+                input_text,
+                self.conversation_history[-10:],  # Last 10 messages for context
+                self.accumulated_context
+            )
+
+            # Update accumulated context with what was understood
+            if llm_result.get("entities"):
+                self.accumulated_context.update(llm_result["entities"])
+
+        except Exception as e:
+            logger.debug(f"LLM understanding failed, falling back to rules: {e}")
+
+        # Extract intents (use LLM result if available, otherwise use rules)
+        if llm_result and llm_result.get("intent") != "unknown":
+            # Convert LLM intent string to IntentType
+            intent_str = llm_result.get("intent", "unknown")
+            try:
+                intent_type = IntentType(intent_str)
+                intents = [Intent(type=intent_type, confidence=llm_result.get("confidence", 0.5))]
+            except ValueError:
+                # Fall back to rule-based extraction
+                intents = await self._extract_intents(processed_text, context)
+        else:
+            intents = await self._extract_intents(processed_text, context)
 
         # Extract entities
         entities = await self._extract_entities(processed_text, context)
@@ -363,10 +410,14 @@ class NLUAgent(BaseAgent):
         # Generate suggestions
         suggestions = self._generate_suggestions(intents, entities, educational_context)
 
-        # Check if clarification is needed
-        requires_clarification, questions = self._check_clarification_needed(
-            intents, entities, educational_context
-        )
+        # Check if clarification is needed (use LLM result if available)
+        if llm_result and llm_result.get("clarifications_needed"):
+            requires_clarification = bool(llm_result["clarifications_needed"])
+            questions = llm_result["clarifications_needed"]
+        else:
+            requires_clarification, questions = self._check_clarification_needed(
+                intents, entities, educational_context
+            )
 
         processing_time = asyncio.get_event_loop().time() - start_time
 
@@ -729,3 +780,32 @@ class NLUAgent(BaseAgent):
             "languages": ["en"],
             "max_context_window": self.config.context_window
         }
+
+    async def _process_task(self, state: AgentState) -> Any:
+        """
+        Process a task through NLU.
+
+        This implements the abstract method from BaseAgent.
+
+        Args:
+            state: Current agent state containing the task
+
+        Returns:
+            NLUResult with extracted information
+        """
+        # Extract the task from the first message
+        task_text = ""
+        if state["messages"]:
+            # Get the content from the first message
+            first_message = state["messages"][0]
+            if hasattr(first_message, "content"):
+                task_text = first_message.content
+            else:
+                task_text = str(first_message)
+        else:
+            task_text = state.get("task", "")
+
+        # Process through NLU
+        result = await self.process(task_text, state.get("context"))
+
+        return result

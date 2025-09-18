@@ -1069,6 +1069,142 @@ class RobloxTemplate(Base):
 # student_progress = relationship("RobloxPlayerProgress", back_populates="lesson", cascade="all, delete-orphan")
 
 
+# Additional Models for Integration Agents
+
+class StudentProgress(Base):
+    """Student progress tracking (compatibility model)"""
+    __tablename__ = "student_progress"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    lesson_id = Column(UUID(as_uuid=True), ForeignKey("lessons.id"), nullable=False)
+
+    # Progress metrics
+    progress_percentage = Column(Float, default=0.0)
+    score = Column(Float)
+    time_spent_minutes = Column(Integer, default=0)
+    completed_at = Column(DateTime(timezone=True))
+    attempts = Column(Integer, default=0)
+    last_accessed = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    student = relationship("User", foreign_keys=[student_id])
+    lesson = relationship("Lesson", foreign_keys=[lesson_id])
+
+    __table_args__ = (
+        UniqueConstraint('student_id', 'lesson_id'),
+        Index('idx_student_progress_student', 'student_id'),
+        Index('idx_student_progress_lesson', 'lesson_id'),
+        CheckConstraint('progress_percentage >= 0 AND progress_percentage <= 100'),
+    )
+
+
+class SchemaDefinition(Base):
+    """Cross-platform schema definitions for validation"""
+    __tablename__ = "schema_definitions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    schema_id = Column(String(255), unique=True, nullable=False)
+    schema_name = Column(String(200), nullable=False)
+    schema_type = Column(String(50), nullable=False)  # json_schema, pydantic, etc.
+    version = Column(String(20), nullable=False)
+    definition = Column(JSONB, nullable=False)
+    platform = Column(String(50), nullable=False)  # backend, frontend, roblox
+
+    # Metadata
+    deprecated = Column(Boolean, default=False)
+    compatible_versions = Column(ARRAY(String), default=[])
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    __table_args__ = (
+        Index('idx_schema_definitions_platform', 'platform'),
+        Index('idx_schema_definitions_type', 'schema_type'),
+    )
+
+
+class SchemaMapping(Base):
+    """Cross-platform data transformation mappings"""
+    __tablename__ = "schema_mappings"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mapping_id = Column(String(255), unique=True, nullable=False)
+    source_schema_id = Column(String(255), nullable=False)
+    target_schema_id = Column(String(255), nullable=False)
+
+    # Mapping data
+    field_mappings = Column(JSONB, nullable=False)  # source_field -> target_field
+    transformations = Column(JSONB, default={})  # field -> transformation function
+    bidirectional = Column(Boolean, default=False)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        Index('idx_schema_mappings_source', 'source_schema_id'),
+        Index('idx_schema_mappings_target', 'target_schema_id'),
+    )
+
+
+class AgentHealthStatus(Base):
+    """Integration agent health monitoring"""
+    __tablename__ = "agent_health_status"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    agent_name = Column(String(100), nullable=False)
+    agent_type = Column(String(100), nullable=False)
+    status = Column(String(50), nullable=False)  # healthy, unhealthy, error, etc.
+    healthy = Column(Boolean, default=True)
+    message = Column(Text)
+    error_details = Column(JSONB)
+    metrics = Column(JSONB, default={})
+
+    # Timestamps
+    last_check_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        Index('idx_agent_health_name', 'agent_name'),
+        Index('idx_agent_health_type', 'agent_type'),
+        Index('idx_agent_health_status', 'status', 'healthy'),
+    )
+
+
+class IntegrationEvent(Base):
+    """Event bus tracking for integration events"""
+    __tablename__ = "integration_events"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id = Column(String(255), nullable=False)
+    event_type = Column(String(100), nullable=False)
+    source_platform = Column(String(50), nullable=False)
+    target_platform = Column(String(50))
+    payload = Column(JSONB, nullable=False)
+    correlation_id = Column(String(255))
+
+    # Processing status
+    processed = Column(Boolean, default=False)
+    processed_at = Column(DateTime(timezone=True))
+    error_message = Column(Text)
+    retry_count = Column(Integer, default=0)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        Index('idx_integration_events_type', 'event_type'),
+        Index('idx_integration_events_platform', 'source_platform'),
+        Index('idx_integration_events_processed', 'processed'),
+        Index('idx_integration_events_created', 'created_at'),
+    )
+
+
 # Backward compatibility alias
 # Some older code expects EducationalContent instead of Content
 EducationalContent = Content

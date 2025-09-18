@@ -58,7 +58,7 @@ echo ""
 echo "🧪 Running Unit Tests:"
 echo "========================================="
 cd ToolboxAI-Roblox-Environment
-source venv_clean/bin/activate
+source venv/bin/activate
 
 # Run quick unit tests
 python -m pytest tests/unit/ -v --tb=short -x 2>/dev/null || echo "⚠️ Some unit tests failed"

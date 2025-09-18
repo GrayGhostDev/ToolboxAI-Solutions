@@ -23,6 +23,17 @@ class ConversationStage(str, Enum):
     DEPLOYMENT = "deployment"
 
 
+class FlowDecision(str, Enum):
+    """Decision points in conversation flow"""
+    CONTINUE = "continue"
+    CLARIFY = "clarify"
+    REDIRECT = "redirect"
+    ESCALATE = "escalate"
+    COMPLETE = "complete"
+    RETRY = "retry"
+    ABORT = "abort"
+
+
 class ContentType(str, Enum):
     """Types of educational content that can be created"""
     LESSON = "lesson"
@@ -233,5 +244,6 @@ class AgentTrigger(BaseModel):
     trigger_data: Dict[str, Any]
     priority: int = Field(default=1, ge=1, le=10)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
 
 

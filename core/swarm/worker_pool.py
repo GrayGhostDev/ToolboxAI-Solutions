@@ -55,6 +55,20 @@ class WorkerCapability(Enum):
 
 
 @dataclass
+class WorkerConfig:
+    """Configuration for a worker agent in the pool."""
+
+    worker_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    capabilities: List[WorkerCapability] = field(default_factory=list)
+    max_concurrent_tasks: int = 5
+    timeout_seconds: int = 300
+    retry_attempts: int = 3
+    priority: int = 1
+    resource_limits: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
 class WorkerMetrics:
     """Metrics tracking for individual worker performance."""
 

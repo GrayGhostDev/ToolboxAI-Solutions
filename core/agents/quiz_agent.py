@@ -34,7 +34,7 @@ try:
         Quiz as DBQuiz, QuizQuestion as DBQuizQuestion,
         QuizAttempt, QuizResponse, DifficultyLevel
     )
-    from core.database.connection_manager import get_session
+    from core.database.connection_manager import get_async_session
     DATABASE_AVAILABLE = True
 except ImportError as e:
     DATABASE_AVAILABLE = False
@@ -285,11 +285,32 @@ Question Quality Criteria:
         # SPARC: Execute quiz generation action
         if self.action_executor and sparc_state:
             try:
-                action_result = await self.action_executor.execute({
-                    "action": "generate_quiz",
-                    "quiz_data": quiz.model_dump(),
-                    "state": sparc_state
-                })
+                # Create a proper Action object for SPARC
+                from dataclasses import dataclass
+                import uuid
+
+                @dataclass
+                class SimpleAction:
+                    action_id: str
+                    type: str
+                    parameters: dict
+                    priority: float = 0.5
+                    timeout: float = 30.0
+                    retry_attempts: int = 3
+                    safety_checks_required: bool = True
+                    scheduled_time = None
+                    deadline = None
+
+                action = SimpleAction(
+                    action_id=str(uuid.uuid4()),
+                    type="quiz_creation",
+                    parameters={
+                        "quiz_data": quiz.model_dump(),
+                        "state": sparc_state
+                    }
+                )
+
+                action_result = await self.action_executor.execute(action)
             except Exception as e:
                 logger.warning(f"Failed to execute SPARC action: {e}")
 
@@ -458,10 +479,14 @@ Format as JSON."""
         """Initialize database session if available"""
         if DATABASE_AVAILABLE and not self.db_session:
             try:
-                self.db_session = await get_session()
-                self.quiz_repo = QuizRepository(self.db_session)
-                self.content_repo = ContentRepository(self.db_session)
-                self.analytics_repo = AnalyticsRepository(self.db_session)
+                # Note: get_async_session is an async generator, we'll use it contextually when needed
+                # For now, we'll set to None and create sessions on demand
+                self.db_session = None
+                # Initialize repos without session - they'll be created when needed
+                self.quiz_repo = None
+                self.content_repo = None
+                self.analytics_repo = None
+                logger.info("Database initialization deferred - will create sessions on demand")
             except Exception as e:
                 logger.warning(f"Failed to initialize database session: {e}")
                 # Set instance variables to None to indicate database unavailability

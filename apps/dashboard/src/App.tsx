@@ -13,11 +13,19 @@ import Register from "./components/pages/Register";
 import PasswordReset from "./components/pages/PasswordReset";
 import { useAuth } from "./hooks/useAuth";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { WebSocketProvider } from "./contexts/WebSocketContext";
+// WebSocket removed - using Pusher for real-time features
+import { pusherService } from "./services/pusher";
 import { NetworkError } from "./components/ErrorComponents";
 import { SessionMonitor, NetworkStatus } from "./components/auth/AuthRecovery";
-import { FloatingCharacters } from "./components/roblox/FloatingCharacters";
-import PerformanceMonitor from "./components/common/PerformanceMonitor";
+// Import new Three.js infrastructure
+import { ThreeProvider } from "./lib/three/ThreeProvider";
+import { Scene3D } from "./lib/three/Scene3D";
+import { FloatingCharactersV2 } from "./components/roblox/FloatingCharactersV2";
+import { Canvas2D } from "./lib/three/fallbacks/Canvas2D";
+import { PerformanceMonitor } from "./components/common/PerformanceMonitor";
+
+// Keep old FloatingCharacters as fallback
+const FloatingCharacters = React.lazy(() => import("./components/roblox/FloatingCharacters").then(module => ({ default: module.FloatingCharacters })));
 
 // Terminal services removed - not part of application
 // Old performance monitor disabled due to performance issues
@@ -36,6 +44,40 @@ export default function App() {
 
   // Initialize authentication and persistence
   useAuth();
+
+  // Validate configuration on startup
+  React.useEffect(() => {
+    const validateConfig = async () => {
+      // Dynamic import to avoid loading in production
+      if (process.env.NODE_ENV === 'development') {
+        const { configHealthCheck } = await import('./utils/configHealthCheck');
+        const report = await configHealthCheck.runFullCheck();
+
+        if (report.overall === 'error') {
+          console.error('❌ Critical configuration issues detected:', report);
+          report.recommendations.forEach(rec => console.warn(`⚠️  ${rec}`));
+        } else if (report.overall === 'warning') {
+          console.warn('⚠️  Configuration warnings:', report);
+        } else {
+          console.log('✅ Configuration validated successfully');
+        }
+      }
+    };
+
+    validateConfig();
+  }, []);
+
+  // Initialize Pusher for real-time features
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      pusherService.connect();
+      console.log('✅ Pusher connected for real-time updates');
+    }
+
+    return () => {
+      pusherService.disconnect();
+    };
+  }, [isAuthenticated]);
 
   // Lightweight performance monitoring for development
   React.useEffect(() => {
@@ -86,20 +128,23 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <WebSocketProvider autoConnect={true}>
-        {/* Floating 3D Characters Background - Disabled on Roblox page */}
+      {/* Modern 3D Background with fallback support */}
         {!isRobloxPage && (
-          <FloatingCharacters
-            characters={[
-              { type: 'astronaut', position: [-4, 2, -3] },
-              { type: 'robot', position: [4, 1, -2] },
-              { type: 'wizard', position: [0, 3, -4] },
-              { type: 'pirate', position: [-3, -1, -2] },
-              { type: 'ninja', position: [3, 0, -3] }
-            ]}
-            showStars={true}
-            showClouds={true}
-          />
+          <ThreeProvider fallback={<Canvas2D particleCount={30} animate={true} />}>
+            <Scene3D>
+              <FloatingCharactersV2
+                characters={[
+                  { type: 'astronaut', position: [-4, 2, -3] },
+                  { type: 'robot', position: [4, 1, -2] },
+                  { type: 'wizard', position: [0, 3, -4] },
+                  { type: 'pirate', position: [-3, -1, -2] },
+                  { type: 'ninja', position: [3, 0, -3] }
+                ]}
+                showStars={true}
+                showClouds={true}
+              />
+            </Scene3D>
+          </ThreeProvider>
         )}
 
         <AppLayout role={role} isRobloxPage={isRobloxPage}>
@@ -123,7 +168,6 @@ export default function App() {
             onClose={handleConsentClose}
           />
         )}
-      </WebSocketProvider>
     </ErrorBoundary>
   );
 }

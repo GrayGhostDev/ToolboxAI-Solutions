@@ -2,17 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Current Repository State (After 2025-09-14 Cleanup)
+## Current Repository State (After 2025-09-16 Cleanup)
 
 This is a monorepo that underwent significant restructuring in September 2025. Multiple agents (warp001-warp007) have worked on various improvements. The repository is on branch `chore/repo-structure-cleanup` with main work tracked in `main` branch.
 
-### Major Reorganization (2025-09-14)
+### Major Reorganization (2025-09-16)
 - **Directory Cleanup**: Complete reorganization of root directory - see ROOT_DIRECTORY_ORGANIZATION.md
 - **Core Components Consolidated**: All AI agents, MCP, coordinators moved to `core/` directory
 - **Documentation Centralized**: All docs moved to `docs/` with organized subfolders
 - **Virtual Environment**: Cleaned up duplicate environments, use standard `venv/`
 
-### Recent Updates (2025-09-13)
+### Recent Updates (2025-09-16)
 - **BasedPyright Configuration**: Migrated from `[tool.pyright]` to `[tool.basedpyright]` in pyproject.toml
 - **Pydantic v2 Migration**: Updated all deprecated Pydantic v1 patterns to v2 (field_validator, model_config)
 - **Complete Type Implementations**: Replaced stub files (.pyi) with complete implementations
@@ -22,19 +22,19 @@ This is a monorepo that underwent significant restructuring in September 2025. M
 - **TOML Validation**: Fixed TOML parsing errors and removed invalid configuration options
 - **Comprehensive Testing**: All implementations tested and verified working correctly
 
-### Critical Context (Updated 2025-09-14)
-- **Nested Dashboard Structure**: The active dashboard is at `apps/dashboard/dashboard` (not `apps/dashboard`)
+### Critical Context (Updated 2025-09-16)
+- **Dashboard Structure**: The active dashboard is at `apps/dashboard/` (package.json confirmed)
 - **Realtime Migration**: Dashboard migrated from Socket.IO to Pusher Channels (warp007)
 - **Path Normalization**: All components now use canonical paths under `core/` directory
-- **Archived Content**: Old embedded dashboard backends archived to `Archive/2025-09-11/deprecated/`
+- **Archived Content**: Old embedded dashboard backends archived to `Archive/2025-09-16/deprecated/`
 - **Documentation Location**: This file now resides in `docs/09-meta/CLAUDE.md`
 
 ## Development Environment
 
-### Key Paths (Updated 2025-09-14)
+### Key Paths (Updated 2025-09-16)
 - **Python Environment**: `venv/` - Standard virtual environment (create with `python3 -m venv venv`)
 - **Backend API**: `apps/backend/` - FastAPI server on port 8008
-- **Dashboard**: `apps/dashboard/dashboard/` - React + TypeScript frontend on port 5179 (nested structure!)
+- **Dashboard**: `apps/dashboard/` - React + TypeScript frontend on port 5179
 - **Core Components**: `core/` - Contains agents, MCP, coordinators, sparc, database
 - **Database**: `database/` - Models and migrations
 - **Scripts**: `scripts/` - Automation and utility scripts
@@ -66,7 +66,7 @@ make dashboard # React dashboard on localhost:5179
 
 # Alternative: Run from specific directories
 cd apps/backend && uvicorn main:app --host 127.0.0.1 --port 8008 --reload
-cd apps/dashboard/dashboard && npm run dev
+cd apps/dashboard && npm run dev
 ```
 
 ### Type System & Configuration
@@ -108,10 +108,10 @@ pytest tests/unit/core/test_settings.py
 pytest -m unit        # Unit tests only
 pytest -m integration # Integration tests only
 
-# Dashboard tests (note the nested structure!)
-npm -w apps/dashboard/dashboard test
+# Dashboard tests
+npm -w apps/dashboard test
 # With coverage
-npm -w apps/dashboard/dashboard run test:coverage
+npm -w apps/dashboard run test:coverage
 
 # Run single test or test file
 pytest tests/test_specific.py::test_function_name -v
@@ -130,13 +130,13 @@ RUN_WS_INTEGRATION=1     # Enable WebSocket integration tests
 ```bash
 # Build dashboard for production
 make build
-# Or: npm -w apps/dashboard/dashboard run build
+# Or: npm -w apps/dashboard run build
 
 # Lint checks
 make lint
 # Or separately:
-npm -w apps/dashboard/dashboard run lint      # TypeScript/React
-npm -w apps/dashboard/dashboard run typecheck # Type checking only
+npm -w apps/dashboard run lint      # TypeScript/React
+npm -w apps/dashboard run typecheck # Type checking only
 
 # Python linting (if configured)
 black apps/backend
@@ -145,8 +145,8 @@ mypy apps/backend
 
 ### Dashboard-specific Commands
 ```bash
-# Development server with hot reload (note nested structure!)
-cd apps/dashboard/dashboard && npm run dev
+# Development server with hot reload
+cd apps/dashboard && npm run dev
 
 # Run on different port to avoid conflicts
 PORT=5180 npm run dev
@@ -170,8 +170,7 @@ npm run typecheck
 - Sentry for error tracking (when enabled)
 - CORS configured for multi-platform access
 
-#### 2. **React Dashboard** (`apps/dashboard/dashboard/`)
-- **IMPORTANT**: Nested structure - actual dashboard is in `dashboard/dashboard/`
+#### 2. **React Dashboard** (`apps/dashboard/`)
 - Material-UI based interface
 - Redux Toolkit for state management
 - Pusher.js for realtime updates (migrated from Socket.IO)
@@ -228,7 +227,7 @@ SENTRY_DSN=your-dsn
 
 #### Dashboard Environment (.env.local)
 ```bash
-# Create apps/dashboard/dashboard/.env.local
+# Create apps/dashboard/.env.local
 VITE_API_BASE_URL=http://127.0.0.1:8008
 VITE_WS_URL=http://127.0.0.1:8008
 VITE_ENABLE_WEBSOCKET=true
@@ -267,7 +266,7 @@ The backend still maintains WebSocket endpoints for backward compatibility:
 - Some tests gated behind environment flags (see above)
 
 #### Frontend Tests
-- Located in `apps/dashboard/dashboard/src/__tests__/`
+- Located in `apps/dashboard/src/__tests__/`
 - Uses Vitest with React Testing Library
 - Mock API responses with axios-mock-adapter
 - Component and integration tests
@@ -318,10 +317,10 @@ Compatibility layers exist for legacy test imports:
 
 ### Known Issues & Workarounds
 
-#### 1. Nested Dashboard Structure
-- **Issue**: Dashboard is at `apps/dashboard/dashboard/` not `apps/dashboard/`
-- **Impact**: npm workspace commands must use full path
-- **Workaround**: Always use `npm -w apps/dashboard/dashboard` or cd to directory
+#### 1. Dashboard Structure (RESOLVED)
+- **Previous Issue**: Documentation incorrectly stated nested structure
+- **Current State**: Dashboard is correctly at `apps/dashboard/`
+- **Status**: Fixed in documentation 2025-09-16
 
 #### 2. Import Path Issues
 - **Issue**: Some imports reference old `src/roblox-environment` path
@@ -362,7 +361,7 @@ Compatibility layers exist for legacy test imports:
 1. Create router in `apps/backend/routers/`
 2. Add Pydantic models for request/response
 3. Register router in `main.py`
-4. Add corresponding frontend API client in `apps/dashboard/dashboard/src/services/api.ts`
+4. Add corresponding frontend API client in `apps/dashboard/src/services/api.ts`
 5. Update tests for both backend and frontend
 
 ### Debugging Tips
@@ -419,7 +418,7 @@ Consider adding for:
 - Created WebSocket/Socket.IO guide
 
 #### warp003 - Documentation Cleanup
-- Archived historical docs to `Documentation/Archive/2025-09-11/`
+- Archived historical docs to `Documentation/Archive/2025-09-16/`
 - Added OpenAPI specs (JSON/YAML)
 - Added maintenance scripts for docs
 
@@ -451,13 +450,12 @@ Consider adding for:
 
 #### Regular Tasks
 - Run `make test` before commits
-- Check `npm -w apps/dashboard/dashboard run typecheck` for frontend
+- Check `npm -w apps/dashboard run typecheck` for frontend
 - Use narrow Pyright config for Python type checking
 - Monitor Pusher dashboard for realtime issues
 
 #### Cleanup Opportunities
 - Remove legacy Socket.IO code after full migration verified
-- Consolidate dashboard structure (hoist from nested to `apps/dashboard`)
 - Remove database shims after test refactoring
 - Archive old documentation in `Documentation/Archive/`
 
@@ -477,8 +475,8 @@ Consider adding for:
 
 ### Critical Reminders
 
-1. **Always use nested dashboard path**: `apps/dashboard/dashboard/`
-2. **Check venv activation**: Use `venv_clean` for clean environment
+1. **Dashboard path is `apps/dashboard/`**: Documentation corrected 2025-09-16
+2. **Check venv activation**: Use standard `venv/` virtual environment
 3. **Run tests with flags**: Some integration tests need environment variables
 4. **Use Pusher for new realtime features**: Socket.IO is legacy
 5. **Database uses shims**: Be aware of compatibility layers in tests

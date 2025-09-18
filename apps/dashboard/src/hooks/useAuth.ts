@@ -5,12 +5,13 @@ import { signInSuccess, signOut, updateToken, setUser } from "../store/slices/us
 import { refreshToken as refreshTokenAPI, logout as logoutAPI } from "../services/api";
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from "../config";
 import { authSync } from "../services/auth-sync";
+import { tokenRefreshManager } from "../utils/tokenRefreshManager";
 
 export const useAuth = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { isAuthenticated, userId, email, displayName, avatarUrl, role, token, refreshToken, schoolId, classIds } = useAppSelector((state) => state.user);
-  
+
   const user = {
     id: userId,
     email,
@@ -24,11 +25,12 @@ export const useAuth = () => {
   // Initialize authentication from localStorage on app start
   useEffect(() => {
     const initializeAuth = async () => {
-      // Initialize auth sync service
+      // Initialize both auth sync and token refresh manager
       try {
         await authSync.initialize();
+        tokenRefreshManager.initialize();
       } catch (error) {
-        console.error("Failed to initialize auth sync:", error);
+        console.error("Failed to initialize auth services:", error);
       }
 
       const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
@@ -42,52 +44,26 @@ export const useAuth = () => {
       }
 
       if (savedToken && savedRefreshToken) {
-        // For now, just restore the saved tokens without refreshing
-        // The API interceptor will handle refresh when needed
         try {
-          // Parse JWT to get user info (if needed)
+          // Parse JWT to get user info
           const tokenParts = savedToken.split('.');
           if (tokenParts.length === 3) {
             const payload = JSON.parse(atob(tokenParts[1]));
-            
-            // Check if token is expired
-            const now = Date.now() / 1000;
-            if (payload.exp && payload.exp < now) {
-              // Token expired, try to refresh
-              try {
-                const response = await refreshTokenAPI(savedRefreshToken);
-                
-                // Map response fields (handle both camelCase and snake_case)
-                const accessToken = response.accessToken || (response as any).access_token;
-                const refreshToken = response.refreshToken || (response as any).refresh_token;
-                
-                localStorage.setItem(AUTH_TOKEN_KEY, accessToken);
-                localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
-                
-                dispatch(signInSuccess({
-                  userId: response.user.id,
-                  email: response.user.email,
-                  displayName: response.user.displayName || response.user.username,
-                  avatarUrl: response.user.avatarUrl,
-                  role: response.user.role as any,
-                  token: accessToken,
-                  refreshToken: refreshToken,
-                  schoolId: response.user.schoolId,
-                  classIds: response.user.classIds,
-                }));
-              } catch (refreshError) {
-                // Refresh failed, clear tokens
-                localStorage.removeItem(AUTH_TOKEN_KEY);
-                localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
-                dispatch(signOut());
-              }
+
+            // Check if token needs refresh
+            if (tokenRefreshManager.needsRefresh()) {
+              // Let the token refresh manager handle it
+              await tokenRefreshManager.refreshToken();
             } else {
-              // Token still valid, just restore state
+              // Token still valid, restore state and schedule refresh
               dispatch(setUser({
                 token: savedToken,
                 refreshToken: savedRefreshToken,
                 isAuthenticated: true,
               }));
+
+              // Update token refresh manager
+              tokenRefreshManager.updateToken(savedToken, savedRefreshToken);
             }
           }
         } catch (error) {
@@ -101,17 +77,25 @@ export const useAuth = () => {
     };
 
     initializeAuth();
+
+    // Cleanup on unmount
+    return () => {
+      // Don't cleanup token refresh manager here as it's global
+    };
   }, [dispatch]);
 
   const logout = async () => {
+    // Clean up token refresh manager
+    tokenRefreshManager.cleanup();
+
     // Use auth sync service for coordinated logout
     await authSync.logout();
   };
 
   const refreshUserToken = async (): Promise<boolean> => {
-    // Use auth sync service for coordinated token refresh with retry logic
+    // Use token refresh manager for coordinated refresh
     try {
-      await authSync.refreshToken();
+      await tokenRefreshManager.forceRefresh();
       return true;
     } catch (error) {
       console.error("Token refresh failed:", error);

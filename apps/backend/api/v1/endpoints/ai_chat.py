@@ -24,7 +24,7 @@ try:
     from langchain.memory import ConversationBufferMemory
     from langgraph.graph import StateGraph, END
     from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-    from langgraph_checkpoint_sqlite import SqliteCheckpoint
+    from langgraph.checkpoint.sqlite import SqliteSaver
     LANGCHAIN_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"LangChain imports failed: {e}. Will use direct API.")

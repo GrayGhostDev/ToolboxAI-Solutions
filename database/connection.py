@@ -9,7 +9,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
@@ -35,11 +35,17 @@ class DatabaseManager:
     def __init__(self, database_url: Optional[str] = None):
         """
         Initialize database manager
-        
+
         Args:
             database_url: Database connection string (uses settings if not provided)
         """
-        self.database_url = database_url or settings.DATABASE_URL
+        # Ensure we use asyncpg driver for async operations
+        url = database_url or settings.DATABASE_URL
+        if url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        elif url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        self.database_url = url
         self._engine: Optional[AsyncEngine] = None
         self._sessionmaker: Optional[async_sessionmaker] = None
         self._initialized = False

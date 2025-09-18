@@ -135,7 +135,7 @@ class CreateGameRequest(BaseModel):
     settings: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Game settings")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "title": "Solar System Explorer",
                 "description": "Interactive space exploration game",

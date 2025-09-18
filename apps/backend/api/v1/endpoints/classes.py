@@ -32,6 +32,9 @@ in_memory_classes: List[Dict[str, Any]] = []
 # Create router for classes endpoints
 classes_router = APIRouter(prefix="/classes", tags=["Classes"])
 
+# Export standardized router name
+router = classes_router
+
 @classes_router.get("/")
 async def get_classes(
     current_user: User = Depends(get_current_user),

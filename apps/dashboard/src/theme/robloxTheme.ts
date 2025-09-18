@@ -23,7 +23,7 @@ export const robloxColors = {
   gray: "#b0b0b0",
   lightGray: "#ffffff",
   darkGray: "#3a3a3a",
-  dark: "#0a0a0a",
+  darkBase: "#0a0a0a",
   white: "#ffffff",
   gold: "#ffff00",
   silver: "#c0c0c0",
@@ -51,7 +51,7 @@ export const robloxColors = {
   },
 
   // Dark theme colors for space/tech feel
-  dark: {
+  darkTheme: {
     background: "#0a0a0a",
     surface: "#1a1a1a",
     card: "#2a2a2a",
@@ -385,196 +385,276 @@ export const robloxTheme = createTheme({
   },
 });
 
-// CSS animation keyframes to be injected
+// CSS animation keyframes for Roblox theme
 export const animationStyles = `
-  @keyframes subtle-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.9; }
-  }
-
-  @keyframes chip-glow {
-    0%, 100% { filter: brightness(1); }
-    50% { filter: brightness(1.2) drop-shadow(0 0 10px currentColor); }
-  }
-
-  @keyframes rainbow-shift {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
-  }
-
-  @keyframes progress-pulse {
-    0%, 100% { transform: scaleY(1); }
-    50% { transform: scaleY(1.1); }
-  }
-
-  @keyframes badge-bounce {
-    0%, 100% { transform: translateY(0); }
-    25% { transform: translateY(-2px) rotate(-5deg); }
-    75% { transform: translateY(2px) rotate(5deg); }
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    33% { transform: translateY(-10px) rotate(-3deg); }
-    66% { transform: translateY(-5px) rotate(3deg); }
-  }
-
-  @keyframes neon-pulse {
+  @keyframes roblox-pulse {
     0%, 100% {
-      filter: brightness(1);
-      text-shadow: 0 0 5px currentColor;
+      opacity: 1;
+      transform: scale(1);
     }
     50% {
-      filter: brightness(1.2);
-      text-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+      opacity: 0.9;
+      transform: scale(1.02);
     }
   }
 
-  @keyframes electric-border {
+  @keyframes roblox-glow {
     0%, 100% {
-      border-color: #00ffff;
-      box-shadow: 0 0 5px #00ffff;
-    }
-    25% {
-      border-color: #ff00ff;
-      box-shadow: 0 0 5px #ff00ff;
+      box-shadow: 0 0 5px rgba(226, 35, 26, 0.3);
     }
     50% {
-      border-color: #ffff00;
-      box-shadow: 0 0 5px #ffff00;
+      box-shadow: 0 0 20px rgba(226, 35, 26, 0.6);
     }
-    75% {
-      border-color: #00ff00;
-      box-shadow: 0 0 5px #00ff00;
+  }
+
+  @keyframes roblox-bounce {
+    0%, 100% {
+      transform: translateY(0);
     }
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+
+  @keyframes roblox-float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  @keyframes roblox-shimmer {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+
+  @keyframes roblox-rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .roblox-pulse {
+    animation: roblox-pulse 2s ease-in-out infinite;
+  }
+
+  .roblox-glow {
+    animation: roblox-glow 2s ease-in-out infinite;
+  }
+
+  .roblox-bounce {
+    animation: roblox-bounce 1s ease-in-out infinite;
+  }
+
+  .roblox-float {
+    animation: roblox-float 3s ease-in-out infinite;
+  }
+
+  .roblox-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(226, 35, 26, 0.1),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: roblox-shimmer 2s infinite;
+  }
+
+  .roblox-rotate {
+    animation: roblox-rotate 2s linear infinite;
   }
 `;
 
-// Light theme version with bright, energetic colors for daytime viewing
+// Light theme version with Roblox branding
 export const robloxLightTheme = createTheme({
+  ...baseThemeConfig,
   palette: {
     mode: "light",
     primary: {
-      main: "#0099ff", // Bright blue
-      light: "#64d0ff",
-      dark: "#0066cc",
+      main: robloxColors.brand.red.primary,
+      light: robloxColors.brand.red.light,
+      dark: robloxColors.brand.red.dark,
+      contrastText: robloxColors.white
     },
     secondary: {
-      main: "#ff0099", // Bright pink
-      light: "#ff64cc",
-      dark: "#cc0066",
+      main: robloxColors.brand.gray.primary,
+      light: robloxColors.brand.gray.light,
+      dark: robloxColors.brand.gray.dark,
+      contrastText: robloxColors.white
     },
     background: {
-      default: "#f5f5ff", // Light purple-tinted background
-      paper: "#ffffff",
+      default: lightModeTokens.colors.background.primary,
+      paper: lightModeTokens.colors.surface.primary
     },
+    surface: {
+      main: lightModeTokens.colors.surface.secondary
+    } as any,
     text: {
-      primary: "#1a1a2e", // Dark blue-gray
-      secondary: "#5a5a7e",
+      primary: lightModeTokens.colors.text.primary,
+      secondary: lightModeTokens.colors.text.secondary
     },
     success: {
-      main: "#00cc66",
+      main: robloxColors.semantic.success
     },
     error: {
-      main: "#ff3366",
+      main: robloxColors.semantic.error
     },
     warning: {
-      main: "#ff9900",
+      main: robloxColors.semantic.warning
     },
     info: {
-      main: "#0099cc",
+      main: robloxColors.semantic.info
     },
+    divider: lightModeTokens.colors.border.primary
   },
-  typography: robloxTheme.typography,
-  shape: robloxTheme.shape,
   components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: '12px',
-          textTransform: 'none',
-          fontWeight: 700,
-          padding: '10px 24px',
-          fontSize: '1rem',
-          transition: 'none',
-          transform: 'none',
-        },
-        contained: {
-          background: "linear-gradient(135deg, #0099ff, #ff0099)",
-          color: "#ffffff",
-          fontWeight: 700,
-          boxShadow: "0 4px 20px rgba(0, 153, 255, 0.3)",
-          transition: 'none',
-          "&:hover": {
-            background: "linear-gradient(135deg, #0099ff, #ff0099)",
-            boxShadow: "0 4px 20px rgba(0, 153, 255, 0.4)",
-            transform: 'none',
-            transition: 'none',
-            filter: 'brightness(1.1)',
-          },
-        },
-        outlined: {
-          borderWidth: '2px',
-          borderColor: "#0099ff",
-          color: "#0099ff",
-          "&:hover": {
-            borderColor: "#ff0099",
-            backgroundColor: alpha("#ff0099", 0.1),
-            color: "#ff0099",
-          },
-        },
-      },
-    },
+    ...robloxTheme.components,
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: "16px",
-          background: "#ffffff",
-          border: "2px solid rgba(0, 153, 255, 0.2)",
-          boxShadow: "0 8px 32px rgba(0, 153, 255, 0.1)",
-          transition: 'none',
-          transform: 'none',
-          "&:hover": {
-            transform: "none",
-            transition: 'none',
-            boxShadow: "0 8px 32px rgba(0, 153, 255, 0.15)",
-            borderColor: "rgba(0, 153, 255, 0.3)",
-          },
-        },
-      },
+          borderRadius: designTokens.borderRadius['2xl'],
+          backgroundColor: lightModeTokens.colors.surface.primary,
+          border: `1px solid ${lightModeTokens.colors.border.primary}`,
+          boxShadow: designTokens.shadows.base,
+          transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`,
+          '&:hover': {
+            transform: 'translateY(-2px)',
+            boxShadow: designTokens.shadows.lg,
+            borderColor: alpha(robloxColors.brand.red.primary, 0.3)
+          }
+        }
+      }
     },
     MuiAppBar: {
       styleOverrides: {
         root: {
-          background: "linear-gradient(90deg, #ffffff 0%, #f5f5ff 100%)",
-          color: "#1a1a2e",
-          borderBottom: "2px solid #0099ff",
-          boxShadow: "0 4px 20px rgba(0, 153, 255, 0.2)",
-        },
-      },
+          backgroundColor: lightModeTokens.colors.surface.primary,
+          borderBottom: `1px solid ${lightModeTokens.colors.border.primary}`,
+          boxShadow: designTokens.shadows.sm,
+          color: lightModeTokens.colors.text.primary
+        }
+      }
     },
-    MuiChip: {
+    MuiTextField: {
       styleOverrides: {
         root: {
-          borderRadius: '20px',
-          fontWeight: 600,
-          background: "linear-gradient(135deg, #0099ff, #ff0099)",
-          color: "#ffffff",
-          border: "none",
-          transition: 'none',
-          transform: 'none',
-          "&:hover": {
-            transform: 'none',
-            transition: 'none',
-            filter: 'brightness(1.1)',
-          },
-        },
-      },
-    },
-  },
+          '& .MuiOutlinedInput-root': {
+            borderRadius: designTokens.borderRadius.lg,
+            '& fieldset': {
+              borderColor: lightModeTokens.colors.border.primary
+            },
+            '&:hover fieldset': {
+              borderColor: lightModeTokens.colors.border.secondary
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: robloxColors.brand.red.primary
+            }
+          }
+        }
+      }
+    }
+  }
 });
 
-// Dark theme version - the original wild neon theme
+// Dark theme is the main theme
 export const robloxDarkTheme = robloxTheme;
 
-export default robloxTheme;
+// Export theme variants
+export { robloxTheme as default };
+
+// Theme selection helper
+export const getRobloxTheme = (mode: 'light' | 'dark') => {
+  return mode === 'light' ? robloxLightTheme : robloxDarkTheme;
+};
+
+// Theme utilities
+export const themeUtils = {
+  // Get theme-aware color
+  getColor: (theme: typeof robloxTheme, path: string) => {
+    return path.split('.').reduce((obj, key) => obj[key], theme.palette as any);
+  },
+
+  // Create theme-aware gradient
+  createGradient: (color1: string, color2: string, angle = 135) => {
+    return `linear-gradient(${angle}deg, ${color1} 0%, ${color2} 100%)`;
+  },
+
+  // Get responsive spacing
+  getSpacing: (theme: typeof robloxTheme, factor: number) => {
+    return theme.spacing(factor);
+  },
+
+  // Create theme-aware shadow
+  createShadow: (color: string, opacity = 0.1) => {
+    return `0 4px 12px ${alpha(color, opacity)}`;
+  }
+};
+
+// Gamification theme helpers
+export const gamificationHelpers = {
+  // Get XP progress color based on percentage
+  getXPColor: (percentage: number) => {
+    if (percentage >= 80) return robloxColors.gamification.star;
+    if (percentage >= 60) return robloxColors.gamification.level;
+    if (percentage >= 40) return robloxColors.gamification.badge;
+    return robloxColors.gamification.xp;
+  },
+
+  // Get badge color based on rarity
+  getBadgeColor: (rarity: 'common' | 'rare' | 'epic' | 'legendary') => {
+    switch (rarity) {
+      case 'legendary': return robloxColors.gamification.star;
+      case 'epic': return robloxColors.gamification.gem;
+      case 'rare': return robloxColors.gamification.achievement;
+      default: return robloxColors.gamification.badge;
+    }
+  },
+
+  // Create level-based gradient
+  getLevelGradient: (level: number) => {
+    const colors = [
+      robloxColors.gamification.xp,
+      robloxColors.gamification.badge,
+      robloxColors.gamification.achievement,
+      robloxColors.gamification.star
+    ];
+    const colorIndex = Math.min(Math.floor(level / 10), colors.length - 1);
+    const nextColorIndex = Math.min(colorIndex + 1, colors.length - 1);
+    return themeUtils.createGradient(colors[colorIndex], colors[nextColorIndex]);
+  }
+};
+
+// Accessibility helpers
+export const a11yHelpers = {
+  // Check color contrast ratio
+  getContrastRatio: (foreground: string, background: string) => {
+    // Simplified contrast ratio calculation
+    // In a real implementation, you'd use a proper contrast ratio library
+    return 4.5; // Placeholder for WCAG AA compliance
+  },
+
+  // Get accessible text color for background
+  getAccessibleTextColor: (backgroundColor: string, theme: typeof robloxTheme) => {
+    // Simplified logic - in practice, calculate actual contrast
+    return theme.palette.mode === 'dark'
+      ? darkModeTokens.colors.text.primary
+      : lightModeTokens.colors.text.primary;
+  },
+
+  // Focus ring styles
+  getFocusRing: (color = robloxColors.brand.red.primary) => ({
+    outline: `2px solid ${color}`,
+    outlineOffset: '2px',
+    borderRadius: designTokens.borderRadius.md
+  })
+};

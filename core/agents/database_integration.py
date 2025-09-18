@@ -64,6 +64,7 @@ class AgentDatabaseIntegration:
         self._use_real_data = should_use_real_data() and not self.env_config.use_mock_database
         self._connection_pool = None
         self._redis_client = None
+        self._redis_getter = None  # For deferred async redis initialization
         self._initialized = False
         self._session_factory = None
         
@@ -93,16 +94,16 @@ class AgentDatabaseIntegration:
                     # Note: get_redis_client might be async too
                     try:
                         if asyncio.iscoroutinefunction(get_redis_client):
-                            # Handle async redis client
-                            loop = asyncio.new_event_loop()
-                            self._redis_client = loop.run_until_complete(get_redis_client())
-                            loop.close()
+                            # Handle async redis client - defer to avoid event loop conflict
+                            # Will be initialized on first use in async context
+                            self._redis_client = None
+                            self._redis_getter = get_redis_client
+                            logger.info("Redis will be initialized on first async use")
                         else:
                             self._redis_client = get_redis_client()
-                        
-                        if self._redis_client:
-                            self._redis_client.ping()
-                            logger.info("Redis connection established for agents")
+                            if self._redis_client:
+                                self._redis_client.ping()
+                                logger.info("Redis connection established for agents")
                     except Exception as e:
                         logger.warning(f"Redis initialization failed: {e}")
                 

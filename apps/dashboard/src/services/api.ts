@@ -2,6 +2,8 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { API_BASE_URL, AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, API_TIMEOUT } from "../config/index";
 import { store } from '../store';
 import { addNotification } from "../store/slices/uiSlice";
+import { tokenRefreshManager } from '../utils/tokenRefreshManager';
+import { signOut } from '../store/slices/userSlice';
 import type {
   ApiResponse,
   AuthResponse,
@@ -44,6 +46,12 @@ class ApiClient {
       console.error("Failed to initialize API client:", error);
       throw new Error(`API Client initialization failed: ${error}`);
     }
+
+    // Listen for token updates from the token refresh manager
+    tokenRefreshManager.addListener((newToken: string) => {
+      // Update default headers for new requests
+      this.client.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+    });
 
     // Request interceptor to add auth token
     this.client.interceptors.request.use(
@@ -118,26 +126,23 @@ class ApiClient {
           originalRequest._retry = true;
 
           try {
-            const refreshToken = localStorage.getItem(AUTH_REFRESH_TOKEN_KEY);
-            if (refreshToken) {
-              const response = await this.refreshToken(refreshToken);
-              localStorage.setItem(AUTH_TOKEN_KEY, response.accessToken);
-              localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, response.refreshToken);
-              originalRequest.headers.Authorization = `Bearer ${response.accessToken}`;
+            // Use the centralized token refresh manager
+            await tokenRefreshManager.refreshToken();
+
+            // Get the new token and retry the request
+            const newToken = localStorage.getItem(AUTH_TOKEN_KEY);
+            if (newToken) {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
               return this.client(originalRequest);
             }
           } catch (refreshError) {
-            // Refresh failed, redirect to login
-            localStorage.removeItem(AUTH_TOKEN_KEY);
-            localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
+            // Refresh failed, token manager will handle cleanup and redirect
             store.dispatch(addNotification({
               type: 'error',
               message: 'Session expired. Please log in again.',
               autoHide: false,
             }));
-            setTimeout(() => {
-              window.location.href = "/login";
-            }, 2000);
+            // Token manager handles the redirect
             return Promise.reject(refreshError);
           }
         }
@@ -149,6 +154,13 @@ class ApiClient {
           const status = error.response.status;
           const data = error.response.data;
 
+          // Log error for debugging in development
+          if (process.env.NODE_ENV === 'development') {
+            const requestUrl = error.config?.url || '';
+            const requestMethod = error.config?.method?.toUpperCase() || '';
+            console.error(`[${requestMethod} ${requestUrl}] Error ${status}:`, data);
+          }
+
           // Extract error message from response
           if (data?.message) {
             errorMessage = data.message;
@@ -156,10 +168,16 @@ class ApiClient {
             // Handle Pydantic validation errors (422)
             if (Array.isArray(data.detail)) {
               // Extract messages from validation error array
-              const errors = data.detail.map((err: any) =>
-                err.msg || err.message || 'Validation error'
-              );
-              errorMessage = errors.join(', ');
+              const errors = data.detail.map((err: any) => {
+                if (typeof err === 'string') return err;
+                // Handle Pydantic v2 format: {loc: [...], msg: "...", type: "..."}
+                if (err.loc && err.msg) {
+                  const field = err.loc[err.loc.length - 1];
+                  return `${field}: ${err.msg}`;
+                }
+                return err.msg || err.message || 'Validation error';
+              });
+              errorMessage = errors.join('; ');
             } else if (typeof data.detail === 'string') {
               errorMessage = data.detail;
             } else {
@@ -171,13 +189,18 @@ class ApiClient {
             // Provide status-specific messages
             switch (status) {
               case 400:
-                errorMessage = 'Invalid request. Please check your input.';
+                errorMessage = error.config?.url?.includes('/auth/')
+                  ? 'Invalid credentials or request format.'
+                  : 'Invalid request. Please check your input.';
                 break;
               case 403:
-                errorMessage = 'You do not have permission to perform this action.';
+                errorMessage = error.config?.url?.includes('/admin/')
+                  ? 'Administrator access required.'
+                  : 'You do not have permission to perform this action.';
                 break;
               case 404:
-                errorMessage = 'The requested resource was not found.';
+                const resource = error.config?.url?.split('/').filter(Boolean).pop() || 'resource';
+                errorMessage = `The requested ${resource} was not found.`;
                 break;
               case 409:
                 errorMessage = 'This action conflicts with existing data.';
@@ -186,7 +209,10 @@ class ApiClient {
                 errorMessage = 'Validation error. Please check your input.';
                 break;
               case 429:
-                errorMessage = 'Too many requests. Please slow down.';
+                const retryAfter = error.response.headers['retry-after'];
+                errorMessage = retryAfter
+                  ? `Too many requests. Please try again in ${retryAfter} seconds.`
+                  : 'Too many requests. Please slow down.';
                 break;
               case 500:
                 errorMessage = 'Server error. Our team has been notified.';
@@ -199,7 +225,16 @@ class ApiClient {
           }
         } else if (error.request) {
           // Request was made but no response received
-          errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+          if (error.code === 'ECONNABORTED') {
+            errorMessage = 'Request timed out. Please try again.';
+          } else if (error.message?.includes('Network Error')) {
+            errorMessage = 'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = 'Unable to connect to the server (port 8009). Please ensure the backend is running.';
+          }
+        } else {
+          // Request setup error
+          errorMessage = error.message || 'Failed to make the request.';
         }
 
         // Dispatch error notification

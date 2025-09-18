@@ -18,6 +18,7 @@ from .orchestrator import OrchestrationRequest, OrchestrationResult, WorkflowTyp
 # Import agent classes lazily to avoid circular imports
 if TYPE_CHECKING:
     from .supervisor import SupervisorAgent
+    from .supervisor_complete import CompleteSupervisorAgent
     from .content_agent import ContentAgent
     from .quiz_agent import QuizAgent
     from .terrain_agent import TerrainAgent
@@ -25,6 +26,21 @@ if TYPE_CHECKING:
     from .review_agent import ReviewAgent
     from .testing_agent import TestingAgent
     from .orchestrator import Orchestrator
+
+# Direct imports for runtime access
+try:
+    from .supervisor import SupervisorAgent
+    from .supervisor_complete import CompleteSupervisorAgent
+    from .content_agent import ContentAgent
+    from .quiz_agent import QuizAgent
+    from .terrain_agent import TerrainAgent
+    from .script_agent import ScriptAgent
+    from .review_agent import ReviewAgent
+    from .testing_agent import TestingAgent
+    from .orchestrator import Orchestrator
+except ImportError as e:
+    import logging
+    logging.warning(f"Failed to import agents: {e}")
 
 # Version
 __version__ = "1.0.0"

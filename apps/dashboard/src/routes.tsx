@@ -1,11 +1,11 @@
-import { Routes, Route, Navigate, Suspense } from "react-router-dom";
-import { lazy } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { CircularProgress, Box } from "@mui/material";
 import RoleGuard from "./components/common/RoleGuard";
 import { useAppSelector } from "./store";
 
 // Lazy load components for code splitting
-const DashboardHome = lazy(() => import("./components/pages/DashboardHome").then(module => ({ default: module.DashboardHome })));
+const DashboardHome = lazy(() => import("./components/pages/DashboardHome"));
 const Lessons = lazy(() => import("./components/pages/Lessons"));
 const Assessments = lazy(() => import("./components/pages/Assessments"));
 const Leaderboard = lazy(() => import("./components/pages/Leaderboard"));
@@ -25,12 +25,13 @@ const Schools = lazy(() => import("./components/pages/admin/Schools"));
 const Users = lazy(() => import("./components/pages/admin/Users"));
 const Analytics = lazy(() => import("./components/pages/admin/Analytics"));
 const Play = lazy(() => import("./components/pages/student/Play"));
-const WebSocketTest = lazy(() => import("./components/test/WebSocketTest").then(module => ({ default: module.WebSocketTest })));
+const WebSocketTest = lazy(() => import("./components/test/WebSocketTest"));
 const WebSocketDemo = lazy(() => import("./components/test/WebSocketDemo"));
 const TeacherRobloxDashboard = lazy(() => import("./components/pages/TeacherRobloxDashboard"));
 const EnvironmentCreator = lazy(() => import("./components/roblox/EnvironmentCreator"));
 const EnvironmentPreviewPage = lazy(() => import("./components/roblox/EnvironmentPreviewPage"));
 const RobloxStudioPage = lazy(() => import("./components/pages/RobloxStudioPage"));
+const AgentDashboard = lazy(() => import("./pages/AgentDashboard"));
 
 // Loading component for Suspense fallback
 const LoadingFallback = () => (
@@ -207,6 +208,14 @@ export default function AppRoutes() {
         element={
           <RoleGuard allow={["admin"]}>
             <Analytics />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/agents"
+        element={
+          <RoleGuard allow={["admin"]}>
+            <AgentDashboard />
           </RoleGuard>
         }
       />

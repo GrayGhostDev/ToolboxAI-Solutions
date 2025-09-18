@@ -5,7 +5,7 @@ Provides unified configuration for all components of the ToolboxAI platform.
 Uses Pydantic v2 for validation and environment variable loading.
 """
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, computed_field
 from pathlib import Path
 from typing import List, Optional
@@ -86,7 +86,7 @@ class Settings(BaseSettings):
     
     # === API Configuration ===
     API_HOST: str = Field(default="127.0.0.1", env="API_HOST")
-    API_PORT: int = Field(default=8008, env="API_PORT")
+    API_PORT: int = Field(default=8009, env="API_PORT")
     API_PREFIX: str = Field(default="/api/v1", env="API_PREFIX")
     API_RELOAD: bool = Field(default=True, env="API_RELOAD")
     
@@ -206,15 +206,13 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: Optional[str] = Field(default=None, env="SMTP_PASSWORD")
     SMTP_USE_TLS: bool = Field(default=True, env="SMTP_USE_TLS")
     DEFAULT_FROM_EMAIL: str = Field(default="noreply@toolboxai.com", env="DEFAULT_FROM_EMAIL")
-    
-    class Config:
-        """Pydantic configuration"""
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
-        
-        # Allow extra fields for forward compatibility
-        extra = "allow"
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="allow"  # Allow extra fields for forward compatibility
+    )
     
     def get_database_url(self, test: bool = False) -> str:
         """Get the appropriate database URL"""

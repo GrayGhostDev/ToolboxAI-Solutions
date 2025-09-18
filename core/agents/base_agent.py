@@ -44,6 +44,18 @@ class AgentStatus(Enum):
     COMPLETED = "completed"
 
 
+class AgentCapability(Enum):
+    """Agent capabilities for routing"""
+
+    CONTENT_GENERATION = "content_generation"
+    EDUCATIONAL_SUPPORT = "educational_support"
+    ANALYSIS = "analysis"
+    VALIDATION = "validation"
+    ASSESSMENT = "assessment"
+    ADAPTATION = "adaptation"
+    ORCHESTRATION = "orchestration"
+
+
 class AgentPriority(Enum):
     """Task priority levels"""
 

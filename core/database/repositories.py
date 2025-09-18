@@ -21,7 +21,7 @@ from core.database.models import (
     Achievement, UserAchievement, Leaderboard, Enrollment,
     UserRole, ContentStatus, DifficultyLevel
 )
-from apps.backend.api.auth.auth import hash_password, verify_password
+from core.utils.password import hash_password, verify_password
 
 import logging
 

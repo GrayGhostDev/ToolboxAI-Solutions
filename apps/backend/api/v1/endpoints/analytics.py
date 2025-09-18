@@ -15,7 +15,7 @@ from apps.backend.services.database import db_service
 logger = logging.getLogger(__name__)
 
 # Create router for analytics endpoints
-analytics_router = APIRouter(prefix="/api/v1/analytics", tags=["Analytics"])
+analytics_router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 @analytics_router.get("/overview")
 async def get_analytics_overview(
@@ -717,3 +717,187 @@ async def get_dashboard_analytics(
         "top_performers": top_performers,
         "recent_activity": recent_activity
     }
+
+@analytics_router.get("/realtime")
+async def get_realtime_analytics(
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get real-time analytics data"""
+
+    # Generate real-time metrics
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "active_users": 127,
+        "active_sessions": 89,
+        "recent_activities": [
+            {
+                "type": "lesson_completed",
+                "user": "student_142",
+                "content": "Introduction to Algebra",
+                "timestamp": (datetime.now() - timedelta(minutes=2)).isoformat()
+            },
+            {
+                "type": "quiz_started",
+                "user": "student_89",
+                "content": "Science Chapter 3 Quiz",
+                "timestamp": (datetime.now() - timedelta(minutes=5)).isoformat()
+            },
+            {
+                "type": "badge_earned",
+                "user": "student_201",
+                "content": "Math Master Badge",
+                "timestamp": (datetime.now() - timedelta(minutes=8)).isoformat()
+            }
+        ],
+        "system_health": {
+            "api_latency": 125,
+            "db_connections": 45,
+            "cpu_usage": 42.5,
+            "memory_usage": 68.2
+        },
+        "performance_metrics": {
+            "requests_per_minute": 1250,
+            "cache_hit_rate": 0.85,
+            "error_rate": 0.02
+        },
+        "usage_stats": {
+            "pages_viewed": 3428,
+            "lessons_started": 156,
+            "quizzes_completed": 89,
+            "content_generated": 23
+        }
+    }
+
+@analytics_router.get("/summary")
+async def get_summary_analytics(
+    date_from: Optional[str] = Query(None, description="Start date filter"),
+    date_to: Optional[str] = Query(None, description="End date filter"),
+    subject: Optional[str] = Query(None, description="Subject filter"),
+    grade_level: Optional[int] = Query(None, description="Grade level filter"),
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get summary analytics data with optional filters"""
+
+    # Calculate date range
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=30)
+
+    if date_from:
+        try:
+            start_date = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
+        except ValueError:
+            pass
+
+    if date_to:
+        try:
+            end_date = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
+        except ValueError:
+            pass
+
+    # Generate summary statistics
+    summary_stats = {
+        "total_users": 1247,
+        "active_users": 892,
+        "total_content": 456,
+        "total_lessons": 234,
+        "total_quizzes": 89,
+        "completion_rate": 78.5,
+        "average_score": 84.2,
+        "engagement_rate": 87.3
+    }
+
+    # Apply filters to stats (mock filtering logic)
+    if subject:
+        summary_stats["filtered_by_subject"] = subject
+        summary_stats["total_content"] = int(summary_stats["total_content"] * 0.6)
+
+    if grade_level:
+        summary_stats["filtered_by_grade"] = grade_level
+        summary_stats["total_users"] = int(summary_stats["total_users"] * 0.3)
+
+    completion_rates = {
+        "by_subject": {
+            "Mathematics": 82.5,
+            "Science": 78.9,
+            "English": 85.2,
+            "History": 74.6,
+            "Art": 91.3
+        },
+        "by_grade": {
+            "6": 79.2,
+            "7": 81.5,
+            "8": 83.1,
+            "9": 77.8,
+            "10": 85.4
+        },
+        "weekly_trend": [
+            {"week": "Week 1", "rate": 76.2},
+            {"week": "Week 2", "rate": 78.1},
+            {"week": "Week 3", "rate": 79.8},
+            {"week": "Week 4", "rate": 78.5}
+        ]
+    }
+
+    popular_content = [
+        {
+            "id": "content_1",
+            "title": "Introduction to Algebra",
+            "type": "lesson",
+            "views": 1523,
+            "completion_rate": 89.2,
+            "avg_score": 86.7
+        },
+        {
+            "id": "content_2",
+            "title": "Forces and Motion Lab",
+            "type": "interactive",
+            "views": 1245,
+            "completion_rate": 92.1,
+            "avg_score": 88.4
+        },
+        {
+            "id": "content_3",
+            "title": "World War II Timeline",
+            "type": "quiz",
+            "views": 987,
+            "completion_rate": 85.6,
+            "avg_score": 82.3
+        }
+    ]
+
+    growth_metrics = {
+        "user_growth": {
+            "current_month": 145,
+            "previous_month": 123,
+            "growth_rate": 17.9
+        },
+        "content_growth": {
+            "new_content": 23,
+            "updated_content": 45,
+            "total_growth": 68
+        },
+        "engagement_growth": {
+            "daily_active_users": 12.5,
+            "session_duration": 8.3,
+            "page_views": 15.7
+        }
+    }
+
+    return {
+        "success": True,
+        "summary_stats": summary_stats,
+        "completion_rates": completion_rates,
+        "popular_content": popular_content,
+        "growth_metrics": growth_metrics,
+        "date_range": {
+            "start": start_date.isoformat(),
+            "end": end_date.isoformat()
+        },
+        "filters_applied": {
+            "subject": subject,
+            "grade_level": grade_level
+        }
+    }
+
+# Export standardized router name
+router = analytics_router

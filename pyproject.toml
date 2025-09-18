@@ -60,7 +60,6 @@ exclude = [
     "**/node_modules",
     "**/__pycache__",
     "**/venv",
-    "**/venv_clean",
     "**/.git",
     "**/.vscode",
     "**/.cursor",
@@ -75,7 +74,7 @@ exclude = [
 
 # Python environment configuration
 venvPath = "."
-venv = "venv_clean"
+venv = "venv"
 pythonVersion = "3.11"
 pythonPlatform = "Darwin"
 typeCheckingMode = "standard"

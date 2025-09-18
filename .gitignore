@@ -24,7 +24,6 @@ MANIFEST
 # Virtual environments (global)
 **/venv/
 **/.venv/
-**/venv_clean/
 **/env/
 **/ENV/
 **/pyvenv.cfg

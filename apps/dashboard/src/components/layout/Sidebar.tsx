@@ -26,6 +26,7 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import IntegrationInstructionsIcon from "@mui/icons-material/IntegrationInstructions";
 import FlagIcon from "@mui/icons-material/Flag";
 import GamesIcon from "@mui/icons-material/Games";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
 import { UserRole } from "../../types";
 import { useAppSelector } from "../../store";
 
@@ -42,6 +43,7 @@ const roleMenus: Record<UserRole, { label: string; icon: React.ReactNode; path: 
     { label: "Users", icon: <PeopleIcon />, path: "/users" },
     { label: "Compliance", icon: <SecurityIcon />, path: "/compliance" },
     { label: "Analytics", icon: <LeaderboardIcon />, path: "/analytics" },
+    { label: "Agent System", icon: <SmartToyIcon />, path: "/agents" },
     { label: "Roblox Studio", icon: <GamesIcon />, path: "/roblox" },
     { label: "Integrations", icon: <IntegrationInstructionsIcon />, path: "/integrations" },
     { label: "Settings", icon: <SettingsIcon />, path: "/settings" },

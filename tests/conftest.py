@@ -43,6 +43,14 @@ from apps.backend.core.security.rate_limit_manager import (
 )
 from apps.backend.core.config import settings
 
+# Import Pusher mocks
+from tests.fixtures.pusher_mocks import (
+    mock_pusher_client,
+    mock_pusher_service,
+    mock_pusher_connection,
+    mock_pusher_with_channels
+)
+
 # Configure test logging
 configure_test_logging()
 logger = logging.getLogger(__name__)

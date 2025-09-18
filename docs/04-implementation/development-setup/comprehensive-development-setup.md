@@ -4,7 +4,7 @@ description: Complete development environment setup for ToolboxAI Solutions
 audience: developers
 difficulty: intermediate
 estimated_time: 45 minutes
-last_updated: 2025-09-14
+last_updated: 2025-09-16
 prerequisites:
   - Python 3.11+
   - Node.js 20+
@@ -59,12 +59,12 @@ make dev
 
 ```bash
 # Create virtual environment
-python -m venv .venv
+python3 -m venv venv
 
 # Activate environment
-source .venv/bin/activate  # macOS/Linux
+source venv/bin/activate  # macOS/Linux
 # or
-.venv\Scripts\activate     # Windows
+venv\Scripts\activate     # Windows
 
 # Install dependencies
 pip install -r requirements.txt
@@ -139,7 +139,7 @@ alembic upgrade head
 
 ```json
 {
-  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python",
   "python.linting.enabled": true,
   "python.linting.pylintEnabled": false,
   "python.linting.flake8Enabled": true,
@@ -340,16 +340,22 @@ docker restart toolboxai-postgres
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
 # Or activate virtual environment
-source .venv/bin/activate
+source venv/bin/activate
 ```
 
 ## 📚 Additional Resources
 
-- [API Documentation](../03-api/)
-- [Architecture Overview](../02-architecture/)
-- [Contributing Guide](../09-meta/contributing.md)
-- [Troubleshooting Guide](../07-operations/troubleshooting.md)
+- [API Documentation](../../03-api/)
+- [Architecture Overview](../../02-architecture/)
+- [Contributing Guide](../../09-meta/contributing/contributing.md)
+- [Troubleshooting Guide](../../07-operations/troubleshooting/)
 
 ---
 
 **Need help?** Join our [Discord community](https://discord.gg/toolboxai) or [open an issue](https://github.com/toolboxai/solutions/issues).
+
+---
+
+*Last Updated: 2025-09-16*
+*Version: 2.1.0*
+*Compliance: COPPA, FERPA, GDPR, SOC 2 Type 2*

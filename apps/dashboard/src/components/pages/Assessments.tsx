@@ -115,13 +115,12 @@ export default function Assessments() {
   // Calculate statistics from real data
   const activeAssessments = assessments.filter((a) => a.status === 'active').length;
   const pendingGrading = submissions.filter((s) => !s.gradedAt).length;
+  const scoredSubmissions = submissions.filter((s) => s.score !== undefined && s.score !== null);
   const averageScore =
-    submissions.length > 0
+    scoredSubmissions.length > 0
       ? Math.round(
-          submissions
-            .filter((s) => s.score !== undefined && s.score !== null)
-            .reduce((acc, s) => acc + (s.score || 0), 0) /
-            submissions.filter((s) => s.score !== undefined).length
+          scoredSubmissions.reduce((acc, s) => acc + (s.score || 0), 0) /
+          scoredSubmissions.length
         )
       : 0;
   const completionRate =

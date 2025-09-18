@@ -4,7 +4,7 @@
 
 # Default ports
 API_HOST ?= 127.0.0.1
-API_PORT ?= 8008
+API_PORT ?= 8009
 DASHBOARD_PORT ?= 5179
 
 # Python

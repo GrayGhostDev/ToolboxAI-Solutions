@@ -30,7 +30,14 @@ from ..base_integration_agent import (
     TaskResult
 )
 from core.agents.base_agent import AgentConfig
-from core.sparc.reasoning_engine import SPARCContext
+
+# Try to import SPARC if available
+try:
+    from core.sparc.reasoning_engine import SPARCContext
+except ImportError:
+    # SPARC not available, use placeholder
+    class SPARCContext:
+        pass
 
 logger = logging.getLogger(__name__)
 

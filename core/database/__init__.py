@@ -28,6 +28,7 @@ from .connection_manager import (
     get_redis_client,
     get_redis_client_sync
 )
+from .connection import get_db
 from .roblox_models import *
 
 __all__ = [
@@ -48,7 +49,8 @@ __all__ = [
     # Connection management
     "db_manager",
     "get_async_session",
-    "get_session", 
+    "get_session",
+    "get_db",
     "initialize_databases",
     "cleanup_databases",
     "health_check",

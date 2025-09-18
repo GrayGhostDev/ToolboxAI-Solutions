@@ -197,6 +197,40 @@ class SchedulingPolicy:
     capability_factor_weight: float = 0.6
 
 
+@dataclass
+class DistributorConfig:
+    """Configuration for the TaskDistributor."""
+
+    timeout: int = 300
+    max_queue_size: int = 1000
+    scheduling_policy: Optional[SchedulingPolicy] = None
+    max_worker_load: float = 0.8
+    task_retry_enabled: bool = True
+    max_retries: int = 3
+    retry_delay: float = 5.0
+
+    # Educational optimization settings
+    enable_subject_prioritization: bool = True
+    enable_grade_level_optimization: bool = True
+    curriculum_alignment_weight: float = 0.3
+
+    # Performance settings
+    background_monitoring_enabled: bool = True
+    cleanup_interval: int = 300  # seconds
+    health_check_interval: int = 30  # seconds
+    metrics_retention_hours: int = 24
+
+    # Task distribution settings
+    load_balancing_algorithm: str = "weighted_round_robin"
+    enable_task_affinity: bool = True
+    worker_selection_strategy: str = "capability_load_balanced"
+
+    def __post_init__(self):
+        """Initialize scheduling policy if not provided."""
+        if self.scheduling_policy is None:
+            self.scheduling_policy = SchedulingPolicy()
+
+
 class TaskDistributor:
     """
     Intelligent task distribution and scheduling system optimized for
@@ -206,13 +240,26 @@ class TaskDistributor:
 
     def __init__(
         self,
+        config: Optional[DistributorConfig] = None,
         timeout: int = 300,
         max_queue_size: int = 1000,
         scheduling_policy: Optional[SchedulingPolicy] = None,
     ):
-        self.timeout = timeout
-        self.max_queue_size = max_queue_size
-        self.policy = scheduling_policy or SchedulingPolicy()
+        # Support both config object and individual parameters for backward compatibility
+        if config is not None:
+            self.config = config
+            self.timeout = config.timeout
+            self.max_queue_size = config.max_queue_size
+            self.policy = config.scheduling_policy
+        else:
+            self.config = DistributorConfig(
+                timeout=timeout,
+                max_queue_size=max_queue_size,
+                scheduling_policy=scheduling_policy
+            )
+            self.timeout = timeout
+            self.max_queue_size = max_queue_size
+            self.policy = scheduling_policy or SchedulingPolicy()
 
         # Task storage and queuing
         self.tasks: Dict[str, Task] = {}

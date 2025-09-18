@@ -60,7 +60,8 @@
         "extensions.autoCheckUpdates": true,
         "telemetry.telemetryLevel": "off",
         "update.mode": "start",
-        "update.showReleaseNotes": "onUpdate"
+        "update.showReleaseNotes": "onUpdate",
+        "vim.enabled": false
     },
     "extensions": {
         "recommendations": [

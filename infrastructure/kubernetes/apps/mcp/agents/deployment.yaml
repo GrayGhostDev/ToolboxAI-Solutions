@@ -1,0 +1,354 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-supervisor-agent
+  namespace: mcp-agents
+  labels:
+    app: mcp-agent
+    agent-type: supervisor
+    component: orchestration
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-agent
+      agent-type: supervisor
+  template:
+    metadata:
+      labels:
+        app: mcp-agent
+        agent-type: supervisor
+        component: orchestration
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+    spec:
+      serviceAccountName: mcp-agent-sa
+      containers:
+      - name: supervisor-agent
+        image: toolboxai/mcp-supervisor-agent:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        - containerPort: 9090
+        env:
+        - name: AGENT_TYPE
+          value: "supervisor"
+        - name: MCP_SERVER_URL
+          value: "ws://mcp-server.mcp.svc.cluster.local:9876"
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: openai-key
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: anthropic-key
+        - name: SQS_QUEUE_URL
+          value: "https://sqs.us-east-1.amazonaws.com/ACCOUNT_ID/mcp-production-supervisor-queue"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      nodeSelector:
+        workload: mcp
+      tolerations:
+      - key: "workload"
+        operator: "Equal"
+        value: "mcp"
+        effect: "NoSchedule"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-content-agents
+  namespace: mcp-agents
+  labels:
+    app: mcp-agent
+    agent-type: content
+    component: generation
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mcp-agent
+      agent-type: content
+  template:
+    metadata:
+      labels:
+        app: mcp-agent
+        agent-type: content
+        component: generation
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+    spec:
+      serviceAccountName: mcp-agent-sa
+      containers:
+      - name: content-agent
+        image: toolboxai/mcp-content-agent:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        - containerPort: 9090
+        env:
+        - name: AGENT_TYPE
+          value: "content"
+        - name: MCP_SERVER_URL
+          value: "ws://mcp-server.mcp.svc.cluster.local:9876"
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: openai-key
+        - name: SQS_QUEUE_URL
+          value: "https://sqs.us-east-1.amazonaws.com/ACCOUNT_ID/mcp-production-content-queue"
+        - name: S3_BUCKET
+          value: "mcp-production-agent-artifacts"
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+      nodeSelector:
+        workload: gpu
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-quiz-agents
+  namespace: mcp-agents
+  labels:
+    app: mcp-agent
+    agent-type: quiz
+    component: assessment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mcp-agent
+      agent-type: quiz
+  template:
+    metadata:
+      labels:
+        app: mcp-agent
+        agent-type: quiz
+        component: assessment
+    spec:
+      serviceAccountName: mcp-agent-sa
+      containers:
+      - name: quiz-agent
+        image: toolboxai/mcp-quiz-agent:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: AGENT_TYPE
+          value: "quiz"
+        - name: MCP_SERVER_URL
+          value: "ws://mcp-server.mcp.svc.cluster.local:9876"
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: openai-key
+        - name: SQS_QUEUE_URL
+          value: "https://sqs.us-east-1.amazonaws.com/ACCOUNT_ID/mcp-production-quiz-queue"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      nodeSelector:
+        workload: general
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-terrain-agents
+  namespace: mcp-agents
+  labels:
+    app: mcp-agent
+    agent-type: terrain
+    component: environment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mcp-agent
+      agent-type: terrain
+  template:
+    metadata:
+      labels:
+        app: mcp-agent
+        agent-type: terrain
+        component: environment
+    spec:
+      serviceAccountName: mcp-agent-sa
+      containers:
+      - name: terrain-agent
+        image: toolboxai/mcp-terrain-agent:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: AGENT_TYPE
+          value: "terrain"
+        - name: MCP_SERVER_URL
+          value: "ws://mcp-server.mcp.svc.cluster.local:9876"
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: openai-key
+        - name: SQS_QUEUE_URL
+          value: "https://sqs.us-east-1.amazonaws.com/ACCOUNT_ID/mcp-production-terrain-queue"
+        - name: S3_BUCKET
+          value: "mcp-production-agent-artifacts"
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+      nodeSelector:
+        workload: gpu
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-script-agents
+  namespace: mcp-agents
+  labels:
+    app: mcp-agent
+    agent-type: script
+    component: code-generation
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mcp-agent
+      agent-type: script
+  template:
+    metadata:
+      labels:
+        app: mcp-agent
+        agent-type: script
+        component: code-generation
+    spec:
+      serviceAccountName: mcp-agent-sa
+      containers:
+      - name: script-agent
+        image: toolboxai/mcp-script-agent:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: AGENT_TYPE
+          value: "script"
+        - name: MCP_SERVER_URL
+          value: "ws://mcp-server.mcp.svc.cluster.local:9876"
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: openai-key
+        - name: SQS_QUEUE_URL
+          value: "https://sqs.us-east-1.amazonaws.com/ACCOUNT_ID/mcp-production-script-queue"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      nodeSelector:
+        workload: general
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-review-agents
+  namespace: mcp-agents
+  labels:
+    app: mcp-agent
+    agent-type: review
+    component: quality-assurance
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mcp-agent
+      agent-type: review
+  template:
+    metadata:
+      labels:
+        app: mcp-agent
+        agent-type: review
+        component: quality-assurance
+    spec:
+      serviceAccountName: mcp-agent-sa
+      containers:
+      - name: review-agent
+        image: toolboxai/mcp-review-agent:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: AGENT_TYPE
+          value: "review"
+        - name: MCP_SERVER_URL
+          value: "ws://mcp-server.mcp.svc.cluster.local:9876"
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: anthropic-key
+        - name: SQS_QUEUE_URL
+          value: "https://sqs.us-east-1.amazonaws.com/ACCOUNT_ID/mcp-production-review-queue"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      nodeSelector:
+        workload: general
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-agents-service
+  namespace: mcp-agents
+  labels:
+    app: mcp-agent
+spec:
+  type: ClusterIP
+  selector:
+    app: mcp-agent
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  - name: metrics
+    port: 9090
+    targetPort: 9090

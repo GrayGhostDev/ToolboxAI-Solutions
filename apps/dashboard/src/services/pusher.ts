@@ -10,6 +10,7 @@
 
 import Pusher, { Channel, PresenceChannel } from 'pusher-js';
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, WS_CONFIG, WS_URL, PUSHER_KEY, PUSHER_CLUSTER, PUSHER_AUTH_ENDPOINT } from '../config';
+import { tokenRefreshManager } from '../utils/tokenRefreshManager';
 import {
   MessageAcknowledgment,
   QueuedMessage,
@@ -72,6 +73,11 @@ url: options.url || WS_URL,
       bytesReceived: 0,
       bytesSent: 0,
     };
+
+    // Listen for token updates from the centralized token refresh manager
+    tokenRefreshManager.addListener((newToken: string) => {
+      this.handleTokenRefresh(newToken);
+    });
   }
 
   /**
@@ -789,6 +795,29 @@ url: options.url || WS_URL,
     // Immediately call with current status
     callback(this.state);
     return () => this.connectionStatusCallbacks.delete(callback);
+  }
+
+  /**
+   * Handle token refresh from the centralized token manager
+   */
+  private handleTokenRefresh(newToken: string): void {
+    this.log('Token refreshed by token manager');
+    this.currentToken = newToken;
+
+    // Update Pusher auth headers if connected
+    if (this.pusher && this.state === WebSocketState.CONNECTED) {
+      // Pusher doesn't allow updating auth headers directly,
+      // but we can update the auth endpoint headers for future channel subscriptions
+      this.pusher.config.auth = {
+        ...this.pusher.config.auth,
+        headers: {
+          Authorization: `Bearer ${newToken}`,
+        },
+      };
+    }
+
+    // Notify any listeners about the token update
+    this.tokenRefreshCallbacks.forEach(callback => callback());
   }
 
   /**

@@ -340,7 +340,229 @@ services:
       <<: *healthcheck-defaults
       test: ["CMD", "curl", "-f", "http://localhost:5001/status"]
 
-  # WebSocket Server for Real-time Communication
+  # MCP Server - Model Context Protocol
+  mcp-server:
+    image: ghcr.io/toolboxai-solutions/mcp-server:${VERSION:-latest}
+    container_name: toolboxai-mcp-server
+    environment:
+      <<: *common-variables
+      ENVIRONMENT: production
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 9876
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      DATABASE_URL: postgresql://toolboxai_user:${POSTGRES_PASSWORD}@postgres:5432/mcp_memory
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      MAX_TOKENS: 128000
+      AGENT_DISCOVERY_ENABLED: "true"
+      AGENT_REGISTRY_TTL: 300
+    ports:
+      - '127.0.0.1:9876:9876'
+      - '127.0.0.1:9090:9090'  # Metrics
+    volumes:
+      - mcp_contexts:/data/contexts
+      - agent_data:/data/agents
+      - ./config/mcp-servers.json:/app/config/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+      - mcp_network
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "python", "-c", "import asyncio, websockets; asyncio.run(websockets.connect('ws://localhost:9876/health'))"]
+
+  # Agent Coordinator - Orchestrates all agents
+  agent-coordinator:
+    image: ghcr.io/toolboxai-solutions/agent-coordinator:${VERSION:-latest}
+    container_name: toolboxai-agent-coordinator
+    environment:
+      <<: *common-variables
+      ENVIRONMENT: production
+      COORDINATOR_PORT: 8888
+      MCP_SERVER_URL: ws://mcp-server:9876
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      DATABASE_URL: postgresql://toolboxai_user:${POSTGRES_PASSWORD}@postgres:5432/educational_platform
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      MAX_CONCURRENT_AGENTS: 10
+      TASK_TIMEOUT: 600
+      HEALTH_CHECK_INTERVAL: 30
+    ports:
+      - '127.0.0.1:8888:8888'
+    volumes:
+      - agent_data:/data/agents
+      - logs:/app/logs
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+      - mcp_network
+    deploy:
+      replicas: 1  # Single coordinator instance
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
+
+  # Educational Content Agent Workers
+  educational-agents:
+    image: ghcr.io/toolboxai-solutions/educational-agents:${VERSION:-latest}
+    environment:
+      <<: *common-variables
+      AGENT_TYPE: educational
+      AGENT_POOL_SIZE: 3
+      MCP_SERVER_URL: ws://mcp-server:9876
+      COORDINATOR_URL: http://agent-coordinator:8888
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      DATABASE_URL: postgresql://toolboxai_user:${POSTGRES_PASSWORD}@postgres:5432/educational_platform
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      REGISTRATION_INTERVAL: 60
+      TASK_BATCH_SIZE: 5
+    volumes:
+      - agent_data:/data/agents
+      - educational_content:/data/content
+    depends_on:
+      agent-coordinator:
+        condition: service_healthy
+      mcp-server:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+      - mcp_network
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8080/health')"]
+
+  # GitHub Integration Agents
+  github-agents:
+    image: ghcr.io/toolboxai-solutions/github-agents:${VERSION:-latest}
+    environment:
+      <<: *common-variables
+      AGENT_TYPE: github
+      AGENT_POOL_SIZE: 2
+      MCP_SERVER_URL: ws://mcp-server:9876
+      COORDINATOR_URL: http://agent-coordinator:8888
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
+      REGISTRATION_INTERVAL: 60
+    volumes:
+      - agent_data:/data/agents
+      - github_cache:/data/github
+    depends_on:
+      agent-coordinator:
+        condition: service_healthy
+      mcp-server:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+      - mcp_network
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8080/health')"]
+
+  # Database Management Agents
+  database-agents:
+    image: ghcr.io/toolboxai-solutions/database-agents:${VERSION:-latest}
+    environment:
+      <<: *common-variables
+      AGENT_TYPE: database
+      AGENT_POOL_SIZE: 2
+      MCP_SERVER_URL: ws://mcp-server:9876
+      COORDINATOR_URL: http://agent-coordinator:8888
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      DATABASE_URL: postgresql://toolboxai_user:${POSTGRES_PASSWORD}@postgres:5432/educational_platform
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      REGISTRATION_INTERVAL: 60
+    volumes:
+      - agent_data:/data/agents
+      - postgres_backup:/data/backups
+    depends_on:
+      agent-coordinator:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+      - mcp_network
+      - database_network
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8080/health')"]
+
+  # WebSocket Server for Real-time Communication (Legacy Support)
   websocket:
     image: ghcr.io/toolboxai-solutions/backend:${VERSION:-latest}
     container_name: toolboxai-websocket
@@ -358,7 +580,7 @@ services:
     networks:
       - toolboxai_network
     deploy:
-      replicas: 2
+      replicas: 1  # Reduced for legacy support
       resources:
         limits:
           cpus: '0.5'
@@ -488,6 +710,12 @@ volumes:
     driver: local
   grafana_data:
     driver: local
+  mcp_contexts:
+    driver: local
+  educational_content:
+    driver: local
+  github_cache:
+    driver: local
 
 networks:
   toolboxai_network:
@@ -502,3 +730,9 @@ networks:
     ipam:
       config:
         - subnet: 10.0.2.0/24
+  mcp_network:
+    driver: overlay
+    attachable: true
+    ipam:
+      config:
+        - subnet: 10.0.3.0/24

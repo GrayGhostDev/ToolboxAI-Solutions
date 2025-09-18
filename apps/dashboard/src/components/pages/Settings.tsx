@@ -50,6 +50,7 @@ import EmailIcon from "@mui/icons-material/Email";
 import SmartphoneIcon from "@mui/icons-material/Smartphone";
 import { useAppSelector, useAppDispatch } from "../../store";
 import { setTheme } from "../../store/slices/uiSlice";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -78,6 +79,22 @@ export default function Settings() {
   const theme = useAppSelector((s) => s.ui.theme);
   const [activeTab, setActiveTab] = React.useState(0);
   const [editMode, setEditMode] = React.useState(false);
+  const [adminSettings, setAdminSettings] = React.useState({
+    agentDashboard: {
+      teacherAccess: false,
+      autoRefreshInterval: 30,
+      maxConcurrentTasks: 10,
+      enableResourceMonitoring: true,
+      enableWorktreeCoordination: true,
+    },
+    systemLimits: {
+      maxAgentsPerType: 5,
+      taskQueueSize: 1000,
+      enableAutoScaling: false,
+      minAgents: 1,
+      maxAgents: 10,
+    },
+  });
   const [profileData, setProfileData] = React.useState({
     displayName: (user as any).displayName || "John Doe",
     email: user.email || "john@example.com",
@@ -131,6 +148,7 @@ export default function Settings() {
               <Tab icon={<LanguageIcon />} label="Language" />
               <Tab icon={<AccessibilityIcon />} label="Accessibility" />
               <Tab icon={<StorageIcon />} label="Data" />
+              {user.role === "admin" && <Tab icon={<AdminPanelSettingsIcon />} label="Admin" />}
             </Tabs>
 
             {/* Profile Tab */}
@@ -628,6 +646,247 @@ export default function Settings() {
                 </Card>
               </Stack>
             </TabPanel>
+
+            {/* Admin Settings Tab - Only visible to admins */}
+            {user.role === "admin" && (
+              <TabPanel value={activeTab} index={7}>
+                <Stack spacing={3}>
+                  <Alert severity="warning">
+                    <AlertTitle>Administrator Settings</AlertTitle>
+                    These settings affect system-wide behavior and should be changed carefully.
+                  </Alert>
+
+                  <Card variant="outlined">
+                    <CardContent>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+                        Agent Dashboard Access
+                      </Typography>
+                      <FormGroup>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={adminSettings.agentDashboard.teacherAccess}
+                              onChange={(e) =>
+                                setAdminSettings({
+                                  ...adminSettings,
+                                  agentDashboard: {
+                                    ...adminSettings.agentDashboard,
+                                    teacherAccess: e.target.checked,
+                                  },
+                                })
+                              }
+                            />
+                          }
+                          label="Allow teachers to access Agent Dashboard"
+                        />
+                        <Typography variant="caption" color="text.secondary" sx={{ ml: 4.5, mt: 0.5 }}>
+                          When enabled, teachers will see the Agent System option in their navigation menu
+                        </Typography>
+                      </FormGroup>
+
+                      <Divider sx={{ my: 2 }} />
+
+                      <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                        Agent Dashboard Configuration
+                      </Typography>
+                      <Stack spacing={2}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Auto-refresh Interval (seconds)"
+                          value={adminSettings.agentDashboard.autoRefreshInterval}
+                          onChange={(e) =>
+                            setAdminSettings({
+                              ...adminSettings,
+                              agentDashboard: {
+                                ...adminSettings.agentDashboard,
+                                autoRefreshInterval: parseInt(e.target.value) || 30,
+                              },
+                            })
+                          }
+                          InputProps={{ inputProps: { min: 5, max: 300 } }}
+                          helperText="How often the dashboard should refresh data"
+                        />
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Max Concurrent Tasks"
+                          value={adminSettings.agentDashboard.maxConcurrentTasks}
+                          onChange={(e) =>
+                            setAdminSettings({
+                              ...adminSettings,
+                              agentDashboard: {
+                                ...adminSettings.agentDashboard,
+                                maxConcurrentTasks: parseInt(e.target.value) || 10,
+                              },
+                            })
+                          }
+                          InputProps={{ inputProps: { min: 1, max: 50 } }}
+                          helperText="Maximum number of tasks that can run simultaneously"
+                        />
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={adminSettings.agentDashboard.enableResourceMonitoring}
+                              onChange={(e) =>
+                                setAdminSettings({
+                                  ...adminSettings,
+                                  agentDashboard: {
+                                    ...adminSettings.agentDashboard,
+                                    enableResourceMonitoring: e.target.checked,
+                                  },
+                                })
+                              }
+                            />
+                          }
+                          label="Enable Resource Monitoring"
+                        />
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={adminSettings.agentDashboard.enableWorktreeCoordination}
+                              onChange={(e) =>
+                                setAdminSettings({
+                                  ...adminSettings,
+                                  agentDashboard: {
+                                    ...adminSettings.agentDashboard,
+                                    enableWorktreeCoordination: e.target.checked,
+                                  },
+                                })
+                              }
+                            />
+                          }
+                          label="Enable Worktree Coordination"
+                        />
+                      </Stack>
+                    </CardContent>
+                  </Card>
+
+                  <Card variant="outlined">
+                    <CardContent>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+                        System Limits
+                      </Typography>
+                      <Stack spacing={2}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Max Agents Per Type"
+                          value={adminSettings.systemLimits.maxAgentsPerType}
+                          onChange={(e) =>
+                            setAdminSettings({
+                              ...adminSettings,
+                              systemLimits: {
+                                ...adminSettings.systemLimits,
+                                maxAgentsPerType: parseInt(e.target.value) || 5,
+                              },
+                            })
+                          }
+                          InputProps={{ inputProps: { min: 1, max: 20 } }}
+                          helperText="Maximum number of agents of each type that can be created"
+                        />
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Task Queue Size"
+                          value={adminSettings.systemLimits.taskQueueSize}
+                          onChange={(e) =>
+                            setAdminSettings({
+                              ...adminSettings,
+                              systemLimits: {
+                                ...adminSettings.systemLimits,
+                                taskQueueSize: parseInt(e.target.value) || 1000,
+                              },
+                            })
+                          }
+                          InputProps={{ inputProps: { min: 100, max: 10000 } }}
+                          helperText="Maximum number of tasks that can be queued"
+                        />
+
+                        <Divider />
+
+                        <Typography variant="subtitle2">Auto-scaling</Typography>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={adminSettings.systemLimits.enableAutoScaling}
+                              onChange={(e) =>
+                                setAdminSettings({
+                                  ...adminSettings,
+                                  systemLimits: {
+                                    ...adminSettings.systemLimits,
+                                    enableAutoScaling: e.target.checked,
+                                  },
+                                })
+                              }
+                            />
+                          }
+                          label="Enable Auto-scaling"
+                        />
+                        {adminSettings.systemLimits.enableAutoScaling && (
+                          <Grid2 container spacing={2}>
+                            <Grid2 xs={6}>
+                              <TextField
+                                fullWidth
+                                type="number"
+                                label="Min Agents"
+                                value={adminSettings.systemLimits.minAgents}
+                                onChange={(e) =>
+                                  setAdminSettings({
+                                    ...adminSettings,
+                                    systemLimits: {
+                                      ...adminSettings.systemLimits,
+                                      minAgents: parseInt(e.target.value) || 1,
+                                    },
+                                  })
+                                }
+                                InputProps={{ inputProps: { min: 1, max: 10 } }}
+                              />
+                            </Grid2>
+                            <Grid2 xs={6}>
+                              <TextField
+                                fullWidth
+                                type="number"
+                                label="Max Agents"
+                                value={adminSettings.systemLimits.maxAgents}
+                                onChange={(e) =>
+                                  setAdminSettings({
+                                    ...adminSettings,
+                                    systemLimits: {
+                                      ...adminSettings.systemLimits,
+                                      maxAgents: parseInt(e.target.value) || 10,
+                                    },
+                                  })
+                                }
+                                InputProps={{ inputProps: { min: 1, max: 50 } }}
+                              />
+                            </Grid2>
+                          </Grid2>
+                        )}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+
+                  <Stack direction="row" gap={2} justifyContent="flex-end">
+                    <Button variant="outlined" onClick={() => window.location.reload()}>
+                      Reset to Defaults
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<SaveIcon />}
+                      onClick={() => {
+                        // Save admin settings to backend
+                        console.log("Saving admin settings:", adminSettings);
+                        // TODO: Call API to save settings
+                      }}
+                    >
+                      Save Admin Settings
+                    </Button>
+                  </Stack>
+                </Stack>
+              </TabPanel>
+            )}
           </CardContent>
         </Card>
       </Grid2>

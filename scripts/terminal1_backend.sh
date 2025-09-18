@@ -47,11 +47,11 @@ cd "$PROJECT_ROOT/ToolboxAI-Roblox-Environment"
 lsof -ti:"$FASTAPI_PORT" | xargs -r kill -9 2>/dev/null || true
 
 # Activate virtual environment
-if [ -f "venv_clean/bin/activate" ]; then
+if [ -f "venv/bin/activate" ]; then
   # shellcheck disable=SC1091
-  . venv_clean/bin/activate
+  . venv/bin/activate
 else
-  die "venv_clean not found. Please set up the environment first."
+  die "venv not found. Please set up the environment first."
 fi
 
 # Start the server with Socket.io support (env-only; no inline secrets)

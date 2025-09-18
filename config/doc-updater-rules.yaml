@@ -1,0 +1,430 @@
+# Documentation Updater Rules Configuration
+# Defines when and how documentation should be updated based on code changes
+
+# Version and metadata
+format_version: "1.0"
+created_date: "2025-09-16"
+description: "ToolBoxAI Solutions Documentation Update Rules"
+
+# Main update rules
+update_rules:
+  # API endpoint documentation updates
+  api_endpoints:
+    description: "Updates API documentation when backend endpoints change"
+    patterns:
+      - "apps/backend/**/*.py"
+      - "core/agents/**/*.py"
+      - "core/mcp/**/*.py"
+    triggers:
+      - "function_added"
+      - "function_modified"
+      - "route_changed"
+      - "api_endpoint_added"
+      - "api_endpoint_modified"
+      - "class_modified"
+    update_targets:
+      - "docs/03-api/"
+      - "docs/08-reference/api-reference/"
+    priority: 3
+    auto_generate: true
+    require_review: false
+
+  # React component documentation
+  components:
+    description: "Updates component docs when frontend components change"
+    patterns:
+      - "apps/dashboard/**/*.tsx"
+      - "apps/dashboard/**/*.ts"
+      - "apps/dashboard/**/*.jsx"
+      - "apps/dashboard/**/*.js"
+    triggers:
+      - "component_added"
+      - "props_changed"
+      - "interface_modified"
+      - "type_definition_modified"
+    update_targets:
+      - "docs/05-features/dashboard/"
+      - "docs/08-reference/components/"
+    priority: 2
+    auto_generate: true
+    require_review: false
+
+  # Database model documentation
+  database:
+    description: "Updates database docs when models or schema change"
+    patterns:
+      - "database/**/*.py"
+      - "apps/backend/models/**/*.py"
+      - "database/migrations/**/*.py"
+    triggers:
+      - "model_added"
+      - "schema_changed"
+      - "migration_added"
+      - "class_modified"
+    update_targets:
+      - "docs/06-architecture/database/"
+      - "docs/08-reference/models/"
+    priority: 3
+    auto_generate: true
+    require_review: true
+
+  # Configuration documentation
+  configuration:
+    description: "Updates config docs when configuration files change"
+    patterns:
+      - "config/**/*.yaml"
+      - "config/**/*.yml"
+      - "config/**/*.json"
+      - "*.env*"
+      - "pyproject.toml"
+      - "package.json"
+      - "docker-compose*.yml"
+    triggers:
+      - "config_added"
+      - "setting_changed"
+      - "env_var_added"
+      - "file_added"
+      - "file_modified"
+    update_targets:
+      - "docs/02-setup/"
+      - "docs/08-reference/configuration/"
+    priority: 2
+    auto_generate: true
+    require_review: false
+
+  # Agent system documentation
+  agents:
+    description: "Updates agent docs when AI agents change"
+    patterns:
+      - "core/agents/**/*.py"
+      - "core/swarm/**/*.py"
+      - "core/coordinators/**/*.py"
+    triggers:
+      - "class_modified"
+      - "function_added"
+      - "agent_capability_changed"
+    update_targets:
+      - "docs/04-implementation/agent-system/"
+      - "docs/07-architecture/ai-agents/"
+    priority: 2
+    auto_generate: true
+    require_review: false
+
+  # Infrastructure documentation
+  infrastructure:
+    description: "Updates infrastructure docs"
+    patterns:
+      - "infrastructure/**/*"
+      - "scripts/deployment/**/*"
+      - "Dockerfile*"
+      - "render.yaml"
+      - "docker-compose*.yml"
+    triggers:
+      - "file_added"
+      - "file_modified"
+      - "deployment_changed"
+    update_targets:
+      - "docs/09-deployment/"
+      - "docs/08-reference/infrastructure/"
+    priority: 1
+    auto_generate: true
+    require_review: true
+
+  # Testing documentation
+  testing:
+    description: "Updates test documentation"
+    patterns:
+      - "tests/**/*.py"
+      - "apps/dashboard/**/test*"
+      - "apps/dashboard/**/*.test.*"
+      - "playwright.config.ts"
+      - "pytest.ini"
+    triggers:
+      - "test_added"
+      - "test_modified"
+      - "test_config_changed"
+    update_targets:
+      - "docs/04-implementation/testing/"
+    priority: 1
+    auto_generate: false
+    require_review: false
+
+# Documentation generation settings
+generation:
+  auto_generate: true
+  templates_dir: "scripts/doc-updater/templates/"
+  output_format: "markdown"
+  include_timestamps: true
+  include_author_info: true
+  include_source_references: true
+
+  # Content generation rules
+  content_rules:
+    max_description_length: 500
+    include_code_examples: true
+    include_parameter_tables: true
+    include_return_value_docs: true
+    generate_toc: true
+
+  # Quality requirements
+  require_review:
+    - "breaking_changes"
+    - "api_removals"
+    - "major_updates"
+    - "database_schema_changes"
+
+  # Auto-approval conditions
+  auto_approve:
+    - "minor_updates"
+    - "documentation_fixes"
+    - "comment_updates"
+
+# Validation settings
+validation:
+  enabled: true
+  check_links: true
+  validate_code_samples: true
+  check_references: true
+  validate_api_examples: true
+
+  # Reference validation
+  reference_validation:
+    check_internal_links: true
+    check_external_links: true
+    check_code_references: true
+    check_file_references: true
+    timeout_seconds: 30
+
+  # Code sample validation
+  code_validation:
+    validate_python: true
+    validate_typescript: true
+    validate_json: true
+    validate_yaml: true
+
+# Notification settings
+notifications:
+  enabled: true
+
+  # Slack integration
+  slack:
+    enabled: false
+    webhook_url: null
+    channel: "#documentation"
+    notify_on:
+      - "breaking_changes"
+      - "api_changes"
+      - "validation_failures"
+
+  # Email notifications
+  email:
+    enabled: false
+    smtp_host: null
+    smtp_port: 587
+    username: null
+    password: null
+    recipients: []
+    notify_on:
+      - "breaking_changes"
+      - "major_updates"
+
+  # GitHub integration
+  github:
+    enabled: true
+    create_issues: true
+    create_pull_requests: false
+    notify_on:
+      - "breaking_changes"
+      - "validation_failures"
+      - "review_required"
+
+    # Issue templates
+    issue_labels:
+      - "documentation"
+      - "auto-generated"
+
+    # PR settings
+    pr_settings:
+      auto_merge: false
+      require_approval: true
+      base_branch: "main"
+
+# Monitoring and reporting
+monitoring:
+  enabled: true
+
+  # Metrics collection
+  metrics:
+    track_update_frequency: true
+    track_validation_results: true
+    track_generation_time: true
+    track_file_coverage: true
+
+  # Report generation
+  reports:
+    daily_summary: true
+    weekly_detailed: true
+    monthly_analytics: true
+
+  # Dashboard settings
+  dashboard:
+    enabled: false
+    port: 8080
+    refresh_interval: 30
+
+# Performance settings
+performance:
+  # Concurrency limits
+  max_concurrent_validations: 10
+  max_concurrent_generations: 5
+
+  # Caching
+  cache_validation_results: true
+  cache_duration_hours: 24
+
+  # Rate limiting
+  api_rate_limit: 100  # requests per minute
+  external_link_delay: 1  # seconds between checks
+
+# File processing settings
+file_processing:
+  # File size limits
+  max_file_size_mb: 10
+
+  # Encoding
+  default_encoding: "utf-8"
+  fallback_encodings:
+    - "latin-1"
+    - "cp1252"
+
+  # Exclusions
+  exclude_patterns:
+    - "**/__pycache__/**"
+    - "**/node_modules/**"
+    - "**/.git/**"
+    - "**/venv/**"
+    - "**/.venv/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/*.pyc"
+    - "**/*.log"
+
+# Integration settings
+integrations:
+  # OpenAPI spec generation
+  openapi:
+    enabled: true
+    output_file: "docs/03-api/openapi-spec.json"
+    include_examples: true
+    validate_responses: true
+
+  # TypeScript type extraction
+  typescript:
+    enabled: true
+    config_file: "tsconfig.json"
+    extract_interfaces: true
+    extract_types: true
+
+  # Python AST analysis
+  python:
+    enabled: true
+    analyze_docstrings: true
+    extract_type_hints: true
+    parse_decorators: true
+
+# Security settings
+security:
+  # Sensitive data detection
+  detect_secrets: true
+  sensitive_patterns:
+    - "password"
+    - "secret"
+    - "token"
+    - "key"
+    - "api_key"
+
+  # Sanitization
+  sanitize_output: true
+  remove_sensitive_info: true
+
+  # Access control
+  restrict_file_access: true
+  allowed_directories:
+    - "docs/"
+    - "apps/"
+    - "core/"
+    - "database/"
+    - "config/"
+    - "scripts/"
+
+# Backup and recovery
+backup:
+  enabled: true
+  backup_before_update: true
+  retention_days: 30
+  backup_location: "logs/doc-updater/backups/"
+
+  # Version control integration
+  git_integration:
+    commit_changes: false
+    create_branches: false
+    tag_versions: false
+
+# Advanced features
+advanced:
+  # AI-powered content enhancement
+  ai_enhancement:
+    enabled: false
+    provider: "openai"
+    model: "gpt-4"
+    api_key: null
+
+  # Content analysis
+  content_analysis:
+    readability_scoring: true
+    completeness_checking: true
+    consistency_validation: true
+
+  # Automation
+  automation:
+    scheduled_updates: false
+    cron_expression: "0 2 * * *"  # Daily at 2 AM
+    auto_deploy_docs: false
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+  # Log files
+  files:
+    main_log: "logs/doc-updater/updater.log"
+    error_log: "logs/doc-updater/errors.log"
+    validation_log: "logs/doc-updater/validation.log"
+
+  # Log rotation
+  rotation:
+    enabled: true
+    max_size_mb: 10
+    backup_count: 5
+
+# Environment-specific overrides
+environments:
+  development:
+    auto_generate: true
+    require_review: false
+    validation.check_external_links: false
+    notifications.enabled: false
+
+  staging:
+    auto_generate: true
+    require_review: true
+    validation.check_external_links: true
+    notifications.github.enabled: true
+
+  production:
+    auto_generate: false
+    require_review: true
+    validation.check_external_links: true
+    notifications.enabled: true
+    backup.enabled: true

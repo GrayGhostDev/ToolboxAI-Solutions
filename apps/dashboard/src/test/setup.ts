@@ -107,29 +107,82 @@ vi.mock('@/contexts/WebSocketContext', () => ({
   }
 }));
 
-// Mock the pusher service module
+// Mock the pusher service module - Updated for Pusher (not WebSocket)
 vi.mock('@/services/pusher', () => {
+  const mockChannels = new Map();
+
   return {
     PusherService: {
       getInstance: vi.fn(() => ({
+        // Connection management
         connect: vi.fn().mockResolvedValue(undefined),
         disconnect: vi.fn(),
-        subscribe: vi.fn(() => ({
-          bind: vi.fn(),
-          unbind: vi.fn(),
-          trigger: vi.fn(),
-        })),
-        unsubscribe: vi.fn(),
-        trigger: vi.fn(),
+        reconnect: vi.fn().mockResolvedValue(undefined),
         isConnected: vi.fn(() => true),
         getConnectionState: vi.fn(() => 'connected'),
+
+        // Channel subscription
+        subscribe: vi.fn((channel) => {
+          const mockChannel = {
+            bind: vi.fn(),
+            unbind: vi.fn(),
+            trigger: vi.fn(),
+            unsubscribe: vi.fn(),
+          };
+          mockChannels.set(channel, mockChannel);
+          return mockChannel;
+        }),
+        unsubscribe: vi.fn((channel) => {
+          mockChannels.delete(channel);
+        }),
+
+        // Event triggering
+        trigger: vi.fn((channel, event, data) => ({
+          status: 'success',
+          messageId: `msg_${Date.now()}`
+        })),
+
+        // Authentication
+        authenticate: vi.fn((channel, socketId) => ({
+          auth: `${socketId}:${channel}:mock_auth`
+        })),
+
+        // Channel info
+        getChannel: vi.fn((channel) => mockChannels.get(channel)),
+        getChannels: vi.fn(() => Array.from(mockChannels.keys())),
+
+        // Event handling
         on: vi.fn(),
         off: vi.fn(),
+
+        // Auth token management
         setAuthToken: vi.fn(),
         clearAuthToken: vi.fn(),
-        reconnect: vi.fn().mockResolvedValue(undefined),
+
+        // Pusher specific
+        getSocketId: vi.fn(() => `mock_socket_${Date.now()}`),
       })),
-      resetInstance: vi.fn(),
+      resetInstance: vi.fn(() => {
+        mockChannels.clear();
+      }),
+    },
+
+    // Export channel types
+    ChannelType: {
+      PUBLIC: 'public',
+      PRIVATE: 'private',
+      PRESENCE: 'presence'
+    },
+
+    // Export event names
+    PusherEvents: {
+      CONNECTED: 'pusher:connected',
+      DISCONNECTED: 'pusher:disconnected',
+      ERROR: 'pusher:error',
+      SUBSCRIPTION_SUCCEEDED: 'pusher:subscription_succeeded',
+      SUBSCRIPTION_ERROR: 'pusher:subscription_error',
+      MEMBER_ADDED: 'pusher:member_added',
+      MEMBER_REMOVED: 'pusher:member_removed'
     }
   };
 });

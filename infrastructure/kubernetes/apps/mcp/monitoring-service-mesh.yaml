@@ -1,0 +1,640 @@
+# Monitoring and Service Mesh Configuration for MCP-Agent Platform
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: mcp-platform-monitor
+  namespace: mcp-platform
+  labels:
+    app: mcp-platform
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: mcp-server
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+  - port: metrics
+    path: /health
+    interval: 60s
+    scrapeTimeout: 5s
+
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: agent-coordinator-monitor
+  namespace: mcp-platform
+  labels:
+    app: agent-coordinator
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: agent-coordinator
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: educational-agents-monitor
+  namespace: mcp-platform
+  labels:
+    app: educational-agents
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: educational-agents
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+# Prometheus Rules for Alerting
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mcp-platform-alerts
+  namespace: mcp-platform
+  labels:
+    app: mcp-platform
+    component: alerting
+spec:
+  groups:
+  - name: mcp-server-alerts
+    rules:
+    - alert: MCPServerDown
+      expr: up{job="mcp-server"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        component: mcp-server
+      annotations:
+        summary: "MCP Server is down"
+        description: "MCP Server {{ $labels.instance }} has been down for more than 1 minute."
+
+    - alert: MCPServerHighMemoryUsage
+      expr: (container_memory_usage_bytes{pod=~"mcp-server-.*"} / container_spec_memory_limit_bytes) * 100 > 85
+      for: 5m
+      labels:
+        severity: warning
+        component: mcp-server
+      annotations:
+        summary: "MCP Server high memory usage"
+        description: "MCP Server {{ $labels.pod }} memory usage is above 85% for more than 5 minutes."
+
+    - alert: MCPServerHighCPUUsage
+      expr: (rate(container_cpu_usage_seconds_total{pod=~"mcp-server-.*"}[5m]) * 100) > 80
+      for: 5m
+      labels:
+        severity: warning
+        component: mcp-server
+      annotations:
+        summary: "MCP Server high CPU usage"
+        description: "MCP Server {{ $labels.pod }} CPU usage is above 80% for more than 5 minutes."
+
+  - name: agent-coordinator-alerts
+    rules:
+    - alert: AgentCoordinatorDown
+      expr: up{job="agent-coordinator"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        component: agent-coordinator
+      annotations:
+        summary: "Agent Coordinator is down"
+        description: "Agent Coordinator {{ $labels.instance }} has been down for more than 1 minute."
+
+    - alert: AgentCoordinatorTaskQueueFull
+      expr: agent_coordinator_task_queue_size > 900
+      for: 2m
+      labels:
+        severity: warning
+        component: agent-coordinator
+      annotations:
+        summary: "Agent Coordinator task queue is nearly full"
+        description: "Agent Coordinator task queue has {{ $value }} tasks, approaching the limit."
+
+  - name: educational-agents-alerts
+    rules:
+    - alert: EducationalAgentsLowAvailability
+      expr: count(up{job="educational-agents"} == 1) / count(up{job="educational-agents"}) < 0.5
+      for: 3m
+      labels:
+        severity: warning
+        component: educational-agents
+      annotations:
+        summary: "Low availability of Educational Agents"
+        description: "Less than 50% of Educational Agents are available."
+
+    - alert: EducationalAgentTaskFailureRate
+      expr: rate(educational_agent_task_failures_total[5m]) / rate(educational_agent_tasks_total[5m]) > 0.1
+      for: 5m
+      labels:
+        severity: warning
+        component: educational-agents
+      annotations:
+        summary: "High task failure rate for Educational Agents"
+        description: "Educational Agents task failure rate is above 10% for the last 5 minutes."
+
+---
+# Istio Service Mesh Configuration
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: mcp-platform-vs
+  namespace: mcp-platform
+  labels:
+    app: mcp-platform
+    component: service-mesh
+spec:
+  hosts:
+  - mcp-platform.toolboxai.solutions
+  gateways:
+  - mcp-platform-gateway
+  http:
+  - match:
+    - uri:
+        prefix: "/mcp"
+    route:
+    - destination:
+        host: mcp-server.mcp-platform.svc.cluster.local
+        port:
+          number: 9876
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+  - match:
+    - uri:
+        prefix: "/coordinator"
+    route:
+    - destination:
+        host: agent-coordinator.mcp-platform.svc.cluster.local
+        port:
+          number: 8888
+    timeout: 60s
+  - match:
+    - uri:
+        prefix: "/educational"
+    route:
+    - destination:
+        host: educational-agents.mcp-platform.svc.cluster.local
+        port:
+          number: 8080
+    timeout: 300s
+  - match:
+    - uri:
+        prefix: "/github"
+    route:
+    - destination:
+        host: github-agents.mcp-platform.svc.cluster.local
+        port:
+          number: 8080
+    timeout: 120s
+  - match:
+    - uri:
+        prefix: "/database"
+    route:
+    - destination:
+        host: database-agents.mcp-platform.svc.cluster.local
+        port:
+          number: 8080
+    timeout: 180s
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: mcp-platform-gateway
+  namespace: mcp-platform
+  labels:
+    app: mcp-platform
+    component: service-mesh
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - mcp-platform.toolboxai.solutions
+    tls:
+      httpsRedirect: true
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    hosts:
+    - mcp-platform.toolboxai.solutions
+    tls:
+      mode: SIMPLE
+      credentialName: mcp-platform-tls
+
+---
+# Destination Rules for Load Balancing and Circuit Breaking
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: mcp-server-dr
+  namespace: mcp-platform
+  labels:
+    app: mcp-server
+    component: service-mesh
+spec:
+  host: mcp-server.mcp-platform.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 10
+        consecutiveGatewayErrors: 5
+        interval: 30s
+        baseEjectionTime: 30s
+        maxEjectionPercent: 50
+    outlierDetection:
+      consecutiveGatewayErrors: 3
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 50
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: educational-agents-dr
+  namespace: mcp-platform
+  labels:
+    app: educational-agents
+    component: service-mesh
+spec:
+  host: educational-agents.mcp-platform.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+    connectionPool:
+      tcp:
+        maxConnections: 50
+      http:
+        http1MaxPendingRequests: 25
+        maxRequestsPerConnection: 5
+        consecutiveGatewayErrors: 3
+        interval: 15s
+        baseEjectionTime: 30s
+    outlierDetection:
+      consecutiveGatewayErrors: 2
+      interval: 15s
+      baseEjectionTime: 15s
+      maxEjectionPercent: 30
+
+---
+# PeerAuthentication for mTLS
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: mcp-platform-mtls
+  namespace: mcp-platform
+  labels:
+    app: mcp-platform
+    component: security
+spec:
+  mtls:
+    mode: STRICT
+
+---
+# AuthorizationPolicy for Access Control
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: mcp-platform-authz
+  namespace: mcp-platform
+  labels:
+    app: mcp-platform
+    component: security
+spec:
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/default/sa/backend-service"]
+    - source:
+        principals: ["cluster.local/ns/mcp-platform/sa/agent-coordinator-sa"]
+  - to:
+    - operation:
+        methods: ["GET", "POST"]
+        paths: ["/health", "/metrics", "/ready"]
+  - when:
+    - key: source.ip
+      values: ["10.0.0.0/8"]
+
+---
+# Kiali Configuration for Service Mesh Observability
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kiali-config
+  namespace: mcp-platform
+  labels:
+    app: kiali
+    component: observability
+data:
+  config.yaml: |
+    istio_namespace: istio-system
+    deployment:
+      accessible_namespaces: ["mcp-platform", "default"]
+    server:
+      web_root: /kiali
+    external_services:
+      prometheus:
+        url: "http://prometheus.monitoring.svc.cluster.local:9090"
+      grafana:
+        url: "http://grafana.monitoring.svc.cluster.local:3000"
+      jaeger:
+        url: "http://jaeger-query.tracing.svc.cluster.local:16686"
+
+---
+# Jaeger Tracing Configuration
+apiVersion: jaegertracing.io/v1
+kind: Jaeger
+metadata:
+  name: mcp-platform-jaeger
+  namespace: mcp-platform
+  labels:
+    app: jaeger
+    component: tracing
+spec:
+  strategy: production
+  storage:
+    type: elasticsearch
+    elasticsearch:
+      nodeCount: 3
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "500m"
+        limits:
+          memory: "4Gi"
+          cpu: "1"
+  query:
+    replicas: 2
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+  collector:
+    replicas: 3
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "1"
+
+---
+# Custom Resource Definitions for MCP Platform
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: mcpservers.toolboxai.io
+  labels:
+    app: mcp-platform
+    component: crd
+spec:
+  group: toolboxai.io
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              serverType:
+                type: string
+                enum: ["orchestrator", "content", "integration", "database"]
+              replicas:
+                type: integer
+                minimum: 1
+                maximum: 10
+              capabilities:
+                type: array
+                items:
+                  type: string
+              resources:
+                type: object
+                properties:
+                  requests:
+                    type: object
+                    properties:
+                      memory:
+                        type: string
+                      cpu:
+                        type: string
+                  limits:
+                    type: object
+                    properties:
+                      memory:
+                        type: string
+                      cpu:
+                        type: string
+          status:
+            type: object
+            properties:
+              phase:
+                type: string
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    status:
+                      type: string
+                    lastTransitionTime:
+                      type: string
+                      format: date-time
+                    reason:
+                      type: string
+                    message:
+                      type: string
+  scope: Namespaced
+  names:
+    plural: mcpservers
+    singular: mcpserver
+    kind: MCPServer
+    shortNames:
+    - mcp
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: agentpools.toolboxai.io
+  labels:
+    app: mcp-platform
+    component: crd
+spec:
+  group: toolboxai.io
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              agentType:
+                type: string
+                enum: ["educational", "github", "database", "custom"]
+              poolSize:
+                type: integer
+                minimum: 1
+                maximum: 20
+              capabilities:
+                type: array
+                items:
+                  type: string
+              image:
+                type: string
+              resources:
+                type: object
+                properties:
+                  requests:
+                    type: object
+                    properties:
+                      memory:
+                        type: string
+                      cpu:
+                        type: string
+                  limits:
+                    type: object
+                    properties:
+                      memory:
+                        type: string
+                      cpu:
+                        type: string
+              autoscaling:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+                  minReplicas:
+                    type: integer
+                  maxReplicas:
+                    type: integer
+                  targetCPUUtilizationPercentage:
+                    type: integer
+          status:
+            type: object
+            properties:
+              phase:
+                type: string
+              availableAgents:
+                type: integer
+              totalAgents:
+                type: integer
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    status:
+                      type: string
+                    lastTransitionTime:
+                      type: string
+                      format: date-time
+                    reason:
+                      type: string
+                    message:
+                      type: string
+  scope: Namespaced
+  names:
+    plural: agentpools
+    singular: agentpool
+    kind: AgentPool
+    shortNames:
+    - apool
+
+---
+# Example Custom Resources
+apiVersion: toolboxai.io/v1
+kind: MCPServer
+metadata:
+  name: primary-orchestrator
+  namespace: mcp-platform
+  labels:
+    app: mcp-platform
+    component: orchestrator
+spec:
+  serverType: orchestrator
+  replicas: 2
+  capabilities:
+    - task-distribution
+    - agent-coordination
+    - workflow-orchestration
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "1000m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+
+---
+apiVersion: toolboxai.io/v1
+kind: AgentPool
+metadata:
+  name: educational-content-pool
+  namespace: mcp-platform
+  labels:
+    app: educational-agents
+    component: content-generation
+spec:
+  agentType: educational
+  poolSize: 5
+  capabilities:
+    - content-generation
+    - curriculum-alignment
+    - assessment-design
+  image: ghcr.io/toolboxai-solutions/educational-agents:latest
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70

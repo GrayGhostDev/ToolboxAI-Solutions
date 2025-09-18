@@ -744,14 +744,8 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
     )
 
 
-def hash_password(password: str) -> str:
-    """Hash password using bcrypt"""
-    return pwd_context.hash(password)
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify password against hash"""
-    return pwd_context.verify(plain_password, hashed_password)
+# Import from centralized location to avoid circular dependencies
+from core.utils.password import hash_password, verify_password
 
 
 def create_user_token(user: User) -> str:

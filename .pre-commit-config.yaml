@@ -1,0 +1,53 @@
+# Pre-commit hooks for documentation maintenance
+repos:
+  # Documentation validation
+  - repo: local
+    hooks:
+      - id: validate-documentation-structure
+        name: Validate documentation structure
+        entry: python3 scripts/documentation/validate-structure.py
+        language: system
+        files: ^docs/.*\.md$
+        pass_filenames: false
+
+      - id: check-internal-links
+        name: Check internal documentation links
+        entry: python3 scripts/documentation/check-links.py --internal-only
+        language: system
+        files: ^docs/.*\.md$
+        pass_filenames: false
+
+      - id: update-timestamps
+        name: Update documentation timestamps
+        entry: python3 scripts/documentation/update-timestamps.py
+        language: system
+        files: ^docs/.*\.md$
+        pass_filenames: false
+
+  # General markdown checks
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.37.0
+    hooks:
+      - id: markdownlint
+        args: ['--config', '.markdownlint.json']
+        files: ^docs/.*\.md$
+
+  # YAML validation
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.32.0
+    hooks:
+      - id: yamllint
+        args: ['-d', '{extends: default, rules: {line-length: {max: 120}}}']
+
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        files: ^docs/.*\.md$
+      - id: end-of-file-fixer
+        files: ^docs/.*\.md$
+      - id: check-yaml
+      - id: check-json
+      - id: mixed-line-ending
+        files: ^docs/.*\.md$

@@ -671,5 +671,25 @@ class WebSocketManager:
                 counts[ch] = counts.get(ch, 0) + 1
         return counts
 
+    async def shutdown(self):
+        """Gracefully shutdown all WebSocket connections."""
+        logger.info(f"Shutting down WebSocket manager with {len(self.connections)} active connections")
+
+        # Copy the list of client IDs to avoid modification during iteration
+        client_ids = list(self.connections.keys())
+
+        # Disconnect all clients
+        for client_id in client_ids:
+            try:
+                await self.disconnect(client_id)
+            except Exception as e:
+                logger.error(f"Error disconnecting client {client_id} during shutdown: {e}")
+
+        # Clear any remaining connections
+        self.connections.clear()
+        self._stats['active_connections'] = 0
+
+        logger.info("WebSocket manager shutdown complete")
+
 # Create global websocket manager instance
 websocket_manager = WebSocketManager()

@@ -51,9 +51,6 @@ export const WS_CONFIG = {
   heartbeatInterval: 30000,
 };
 
-// Socket.IO ASGI path contract (must match backend; no trailing slash)
-export const SIO_PATH = "/socket.io";
-
 // API request timeout
 export const API_TIMEOUT = 30000;
 

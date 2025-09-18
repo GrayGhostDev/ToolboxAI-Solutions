@@ -62,7 +62,7 @@ class Settings:
 
     @property
     def FASTAPI_PORT(self):
-        return 8008
+        return 8009
 
     # CORS Configuration
     @property

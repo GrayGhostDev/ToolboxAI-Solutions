@@ -1,0 +1,357 @@
+name: Security Pipeline
+
+on:
+  push:
+    branches: [main, develop, 'release/*']
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 2 * * *'  # Daily security scan at 2 AM UTC
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20'
+  AWS_REGION: 'us-east-1'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  id-token: write
+
+jobs:
+  # Secret Scanning
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog Secret Scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          extra_args: --debug --only-verified
+
+      - name: GitLeaks Secret Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Detect Secrets
+        uses: reviewdog/action-detect-secrets@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+
+  # SAST - Static Application Security Testing
+  sast:
+    name: Static Security Analysis
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        language: [python, javascript]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended,security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          upload: true
+
+      - name: Semgrep Security Scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/owasp-top-ten
+            p/cwe-top-25
+            p/python
+            p/javascript
+            p/typescript
+
+      - name: Bandit Python Security Scan
+        if: matrix.language == 'python'
+        run: |
+          pip install bandit[toml]
+          bandit -r apps/backend core -f json -o bandit-report.json
+
+      - name: Upload Bandit Results
+        if: matrix.language == 'python'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: bandit-report.json
+
+  # Dependency Scanning
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Python Safety Check
+        run: |
+          pip install safety
+          safety check --json > safety-report.json || true
+
+      - name: npm Audit
+        run: |
+          cd apps/dashboard
+          npm audit --json > npm-audit.json || true
+          npm audit --audit-level=moderate
+
+      - name: OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'ToolBoxAI'
+          path: '.'
+          format: 'ALL'
+          args: >
+            --enableRetired
+            --enableExperimental
+
+      - name: Upload Dependency Check results
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: reports/
+
+  # Container Security Scanning
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    strategy:
+      matrix:
+        service: [backend, dashboard]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: |
+          docker build -t toolboxai/${{ matrix.service }}:scan -f apps/${{ matrix.service }}/Dockerfile apps/${{ matrix.service }}
+
+      - name: Run Trivy container scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'toolboxai/${{ matrix.service }}:scan'
+          format: 'sarif'
+          output: 'container-scan-${{ matrix.service }}.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload container scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'container-scan-${{ matrix.service }}.sarif'
+
+      - name: Grype Container Scan
+        uses: anchore/scan-action@v3
+        with:
+          image: 'toolboxai/${{ matrix.service }}:scan'
+          fail-build: true
+          severity-cutoff: high
+
+      - name: Docker Scout Analysis
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: 'toolboxai/${{ matrix.service }}:scan'
+          only-severities: critical,high
+          exit-code: true
+
+  # Infrastructure as Code Security
+  iac-security:
+    name: IaC Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkov IaC Scan
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: infrastructure/
+          framework: terraform,kubernetes,dockerfile
+          output_format: sarif
+          output_file_path: checkov-results.sarif
+
+      - name: Upload Checkov results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: checkov-results.sarif
+
+      - name: Terrascan IaC Scan
+        run: |
+          docker run --rm -v "$(pwd):/src" tenable/terrascan scan \
+            -i terraform -d infrastructure/terraform \
+            --output sarif > terrascan-results.sarif
+
+      - name: KICS Security Scan
+        uses: checkmarx/kics-github-action@v1.7.0
+        with:
+          path: 'infrastructure'
+          output_path: 'kics-results'
+          output_formats: 'json,sarif'
+
+      - name: Upload KICS results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'kics-results/results.sarif'
+
+  # Compliance Checks
+  compliance-check:
+    name: Compliance Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: COPPA Compliance Check
+        run: |
+          python scripts/compliance/coppa_validator.py
+
+      - name: FERPA Compliance Check
+        run: |
+          python scripts/compliance/ferpa_validator.py
+
+      - name: GDPR Compliance Check
+        run: |
+          python scripts/compliance/gdpr_validator.py
+
+      - name: CIS Benchmark Validation
+        run: |
+          docker run --rm -v $(pwd):/src \
+            aquasec/kube-bench:latest \
+            --json > cis-benchmark-results.json
+
+      - name: PCI DSS Compliance Check
+        if: github.ref == 'refs/heads/main'
+        run: |
+          python scripts/compliance/pci_dss_validator.py
+
+  # License Scanning
+  license-scan:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: License Finder
+        run: |
+          docker run --rm -v $(pwd):/scan licensefinder/license_finder
+
+      - name: FOSSA License Scan
+        uses: fossas/fossa-action@main
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+
+  # Security Report Generation
+  security-report:
+    name: Generate Security Report
+    runs-on: ubuntu-latest
+    needs: [secret-scan, sast, dependency-scan, container-scan, iac-security, compliance-check, license-scan]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate consolidated report
+        run: |
+          python scripts/security/generate_security_report.py \
+            --output security-report.html
+
+      - name: Upload security report
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-report
+          path: security-report.html
+
+      - name: Post to Slack
+        if: github.ref == 'refs/heads/main'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Security scan completed. Check the report for details.'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+      - name: Create GitHub Issue for vulnerabilities
+        if: failure() && github.ref == 'refs/heads/main'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Security vulnerabilities detected',
+              body: 'Security scan failed. Please review the security report for details.',
+              labels: ['security', 'high-priority']
+            });
+
+  # DAST - Dynamic Application Security Testing (for main branch only)
+  dast:
+    name: Dynamic Security Testing
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: [sast, dependency-scan]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: OWASP ZAP Full Scan
+        uses: zaproxy/action-full-scan@v0.8.0
+        with:
+          target: 'https://staging.toolboxai.solutions'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
+
+      - name: Nuclei Security Scan
+        uses: projectdiscovery/nuclei-action@main
+        with:
+          target: 'https://staging.toolboxai.solutions'
+          flags: '-severity critical,high,medium'
+
+      - name: Upload DAST results
+        uses: actions/upload-artifact@v3
+        with:
+          name: dast-results
+          path: |
+            zap-report.html
+            nuclei-report.json

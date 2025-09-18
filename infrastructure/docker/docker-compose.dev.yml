@@ -1,0 +1,368 @@
+x-common-variables: &common-variables
+  TZ: UTC
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: toolboxai-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_MULTIPLE_DATABASES: educational_platform,ghost_backend,roblox_data,mcp_memory
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    ports:
+      - '5434:5432'  # Changed to avoid conflict with local PostgreSQL
+    networks:
+      - toolboxai_network
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: toolboxai-redis
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - '6381:6379'  # Changed to avoid conflict with local Redis
+    networks:
+      - toolboxai_network
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+
+  # FastAPI Main Backend Server
+  fastapi-main:
+    image: ghcr.io/toolboxai-solutions/backend:${VERSION:-latest}
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/backend.Dockerfile
+    container_name: toolboxai-fastapi
+    environment:
+      <<: *common-variables
+      ENVIRONMENT: ${ENVIRONMENT}
+      DEBUG: ${DEBUG}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY}
+      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2}
+      LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT}
+      SENTRY_DSN: ${SENTRY_DSN}
+      # Pusher Configuration
+      PUSHER_ENABLED: ${PUSHER_ENABLED:-true}
+      PUSHER_APP_ID: ${PUSHER_APP_ID}
+      PUSHER_KEY: ${PUSHER_KEY}
+      PUSHER_SECRET: ${PUSHER_SECRET}
+      PUSHER_CLUSTER: ${PUSHER_CLUSTER:-us2}
+      PUSHER_SSL: ${PUSHER_SSL:-true}
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 9876
+      WORKERS: 2
+    ports:
+      - '8009:8009'
+      - '9876:9876'
+    volumes:
+      - ../../:/app:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
+
+  # MCP Server
+  mcp-server:
+    image: ghcr.io/toolboxai-solutions/mcp-server:${VERSION:-latest}
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/mcp-server.Dockerfile
+    container_name: toolboxai-mcp-server
+    environment:
+      <<: *common-variables
+      ENVIRONMENT: ${ENVIRONMENT}
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 9877
+      REDIS_URL: ${REDIS_URL}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/mcp_memory
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      MAX_TOKENS: ${MAX_TOKENS}
+      AGENT_DISCOVERY_ENABLED: ${AGENT_DISCOVERY_ENABLED}
+      AGENT_REGISTRY_TTL: ${AGENT_REGISTRY_TTL}
+    ports:
+      - '9877:9877'
+      - '9090:9090'
+    volumes:
+      - ../../tmp/mcp_contexts:/data/contexts
+      - ../../tmp/agent_data:/data/agents
+      - ../../config/mcp-servers.json:/app/config/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+      - mcp_network
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "python", "-c", "import asyncio, websockets; asyncio.run(websockets.connect('ws://localhost:9877/health'))"]
+
+  # Agent Coordinator
+  agent-coordinator:
+    image: ghcr.io/toolboxai-solutions/agent-coordinator:${VERSION:-latest}
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/agent-coordinator.Dockerfile
+    container_name: toolboxai-agent-coordinator
+    environment:
+      <<: *common-variables
+      ENVIRONMENT: ${ENVIRONMENT}
+      COORDINATOR_PORT: ${COORDINATOR_PORT}
+      MCP_SERVER_URL: ws://mcp-server:9877
+      REDIS_URL: ${REDIS_URL}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      MAX_CONCURRENT_AGENTS: ${MAX_CONCURRENT_AGENTS}
+      TASK_TIMEOUT: ${TASK_TIMEOUT}
+      HEALTH_CHECK_INTERVAL: ${HEALTH_CHECK_INTERVAL}
+    ports:
+      - '8888:8888'
+    volumes:
+      - ../../tmp/agent_data:/data/agents
+      - ../../tmp/logs:/app/logs
+      - ../../:/app:ro
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+      - mcp_network
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
+
+  # Educational Content Agent Workers
+  educational-agents:
+    image: ghcr.io/toolboxai-solutions/educational-agents:${VERSION:-latest}
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/educational-agents.Dockerfile
+    container_name: toolboxai-educational-agents
+    environment:
+      <<: *common-variables
+      AGENT_TYPE: educational
+      AGENT_POOL_SIZE: ${AGENT_POOL_SIZE}
+      MCP_SERVER_URL: ws://mcp-server:9877
+      COORDINATOR_URL: http://agent-coordinator:8888
+      REDIS_URL: ${REDIS_URL}
+      DATABASE_URL: ${DATABASE_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      REGISTRATION_INTERVAL: ${REGISTRATION_INTERVAL}
+      TASK_BATCH_SIZE: ${TASK_BATCH_SIZE}
+    volumes:
+      - ../../tmp/agent_data:/data/agents
+      - ../../tmp/educational_content:/data/content
+      - ../../:/app:ro
+    depends_on:
+      agent-coordinator:
+        condition: service_healthy
+      mcp-server:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+      - mcp_network
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8080/health')"]
+
+  # Flask Bridge for Roblox Integration
+  flask-bridge:
+    image: ghcr.io/toolboxai-solutions/flask-bridge:${VERSION:-latest}
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/flask-bridge.Dockerfile
+    container_name: toolboxai-flask-bridge
+    environment:
+      <<: *common-variables
+      FLASK_ENV: ${ENVIRONMENT}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/roblox_data
+      REDIS_URL: ${REDIS_URL}
+      FASTAPI_URL: http://fastapi-main:8009
+      JWT_SECRET: ${JWT_SECRET_KEY}
+      ROBLOX_API_KEY: ${ROBLOX_API_KEY}
+      ROBLOX_CLIENT_ID: ${ROBLOX_CLIENT_ID}
+      ROBLOX_CLIENT_SECRET: ${ROBLOX_CLIENT_SECRET}
+      # Add Pusher if Flask Bridge needs it
+      PUSHER_ENABLED: ${PUSHER_ENABLED:-true}
+      PUSHER_APP_ID: ${PUSHER_APP_ID}
+      PUSHER_KEY: ${PUSHER_KEY}
+      PUSHER_SECRET: ${PUSHER_SECRET}
+      PUSHER_CLUSTER: ${PUSHER_CLUSTER:-us2}
+      WORKERS: 2
+    ports:
+      - '5001:5001'
+    volumes:
+      - ../../:/app:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      fastapi-main:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:5001/status"]
+
+  # Dashboard Backend Service - COMMENTED OUT: Not needed, using fastapi-main instead
+  # dashboard-backend:
+  #   image: ghcr.io/toolboxai-solutions/dashboard-backend:${VERSION:-latest}
+  #   build:
+  #     context: ../..
+  #     dockerfile: infrastructure/docker/dashboard-backend.Dockerfile
+  #   container_name: toolboxai-dashboard-backend
+  #   environment:
+  #     <<: *common-variables
+  #     NODE_ENV: ${ENVIRONMENT}
+  #     API_BASE_URL: http://fastapi-main:8009
+  #     DATABASE_URL: ${DATABASE_URL}
+  #     REDIS_URL: ${REDIS_URL}
+  #     JWT_SECRET: ${JWT_SECRET_KEY}
+  #     CORS_ORIGINS: ${CORS_ORIGINS}
+  #   ports:
+  #     - '8001:8001'
+  #   volumes:
+  #     - ../../apps/backend:/app:ro
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     fastapi-main:
+  #       condition: service_healthy
+  #   networks:
+  #     - toolboxai_network
+  #   healthcheck:
+  #     <<: *healthcheck-defaults
+  #     test: ["CMD", "curl", "-f", "http://localhost:8001/api/health"]
+
+  # Dashboard Frontend
+  dashboard-frontend:
+    image: ghcr.io/toolboxai-solutions/frontend:${VERSION:-latest}
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/dashboard.Dockerfile
+    container_name: toolboxai-dashboard-frontend
+    environment:
+      <<: *common-variables
+      NODE_ENV: ${ENVIRONMENT}
+      VITE_API_BASE_URL: http://localhost:8009
+      VITE_FASTAPI_URL: http://localhost:8009
+      # Pusher Configuration
+      VITE_PUSHER_KEY: ${PUSHER_KEY}
+      VITE_PUSHER_CLUSTER: ${PUSHER_CLUSTER:-us2}
+      VITE_PUSHER_AUTH_ENDPOINT: /api/v1/pusher/auth
+      VITE_ENABLE_GAMIFICATION: ${ENABLE_GAMIFICATION}
+      VITE_ENABLE_ANALYTICS: ${ENABLE_ANALYTICS}
+    ports:
+      - '5176:5176'
+      - '5179:5179'
+    volumes:
+      - ../../apps/dashboard:/app:ro
+      - /app/node_modules
+    depends_on:
+      fastapi-main:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:5176"]
+
+  # Ghost Backend CMS
+  ghost-backend:
+    image: ghost:5-alpine
+    container_name: toolboxai-ghost
+    environment:
+      <<: *common-variables
+      NODE_ENV: ${ENVIRONMENT}
+      database__client: postgres
+      database__connection__host: postgres
+      database__connection__port: 5432
+      database__connection__database: ghost_backend
+      database__connection__user: ${POSTGRES_USER}
+      database__connection__password: ${POSTGRES_PASSWORD}
+      database__connection__pool__min: 2
+      database__connection__pool__max: 10
+      url: http://localhost:8000
+    ports:
+      - '8000:2368'
+    volumes:
+      - ghost_content:/var/lib/ghost/content
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:2368/ghost/api/admin/site/"]
+
+volumes:
+  postgres_data:
+    driver: local
+  postgres_backup:
+    driver: local
+  redis_data:
+    driver: local
+  agent_data:
+    driver: local
+  logs:
+    driver: local
+  static_files:
+    driver: local
+  ghost_content:
+    driver: local
+  mcp_contexts:
+    driver: local
+  educational_content:
+    driver: local
+
+networks:
+  toolboxai_network:
+    driver: bridge
+  mcp_network:
+    driver: bridge
