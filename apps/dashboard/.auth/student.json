@@ -1,0 +1,14 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:5179",
+      "localStorage": [
+        {
+          "name": "auth_token",
+          "value": "{\"access_token\":\"mock-student-jwt-token\",\"user\":{\"id\":\"3\",\"email\":\"student@toolboxai.edu\",\"role\":\"student\",\"name\":\"Test Student\"},\"expires_at\":1758240646502}"
+        }
+      ]
+    }
+  ]
+}

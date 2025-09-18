@@ -1,0 +1,406 @@
+# Real-time subscriptions for live updates
+
+extend type Subscription {
+  """
+  Subscribe to content generation updates
+  """
+  contentGeneration(
+    generationId: UUID!
+  ): ContentGenerationUpdate! @auth
+
+  """
+  Subscribe to quiz progress updates
+  """
+  quizProgress(
+    attemptId: UUID!
+  ): QuizProgressUpdate! @auth
+
+  """
+  Subscribe to course updates
+  """
+  courseUpdates(
+    courseId: UUID!
+  ): CourseUpdate! @auth
+
+  """
+  Subscribe to lesson progress updates
+  """
+  lessonProgress(
+    courseId: UUID!
+    studentId: UUID
+  ): LessonProgressUpdate! @auth
+
+  """
+  Subscribe to Roblox session updates
+  """
+  robloxSessionUpdates(
+    sessionId: UUID!
+  ): RobloxSessionUpdate! @auth
+
+  """
+  Subscribe to new messages
+  """
+  newMessages(
+    courseId: UUID
+    conversationId: UUID
+  ): MessageUpdate! @auth
+
+  """
+  Subscribe to grade updates
+  """
+  gradeUpdates(
+    studentId: UUID!
+  ): GradeUpdate! @auth
+
+  """
+  Subscribe to announcement updates
+  """
+  announcements(
+    courseId: UUID
+  ): AnnouncementUpdate! @auth
+}
+
+# Subscription update types
+
+type ContentGenerationUpdate {
+  """
+  Generation ID
+  """
+  generationId: UUID!
+
+  """
+  Current status
+  """
+  status: GenerationStatus!
+
+  """
+  Progress percentage
+  """
+  progress: Float!
+
+  """
+  Current step
+  """
+  currentStep: String
+
+  """
+  Partial result if available
+  """
+  partialResult: JSON
+
+  """
+  Error if any
+  """
+  error: String
+
+  """
+  Completion time estimate
+  """
+  estimatedCompletion: DateTime
+}
+
+enum GenerationStatus {
+  PENDING
+  PROCESSING
+  GENERATING
+  REVIEWING
+  COMPLETED
+  FAILED
+}
+
+type QuizProgressUpdate {
+  """
+  Attempt ID
+  """
+  attemptId: UUID!
+
+  """
+  Current question index
+  """
+  currentQuestion: Int!
+
+  """
+  Total questions
+  """
+  totalQuestions: Int!
+
+  """
+  Time elapsed in seconds
+  """
+  timeElapsed: Int!
+
+  """
+  Current score
+  """
+  currentScore: Float
+
+  """
+  Questions answered
+  """
+  answered: Int!
+
+  """
+  Questions skipped
+  """
+  skipped: Int!
+}
+
+type CourseUpdate {
+  """
+  Update type
+  """
+  type: CourseUpdateType!
+
+  """
+  Course ID
+  """
+  courseId: UUID!
+
+  """
+  Update data
+  """
+  data: JSON!
+
+  """
+  User who triggered update
+  """
+  triggeredBy: User
+
+  """
+  Timestamp
+  """
+  timestamp: DateTime!
+}
+
+enum CourseUpdateType {
+  CONTENT_ADDED
+  CONTENT_UPDATED
+  CONTENT_DELETED
+  ANNOUNCEMENT
+  ASSIGNMENT_POSTED
+  QUIZ_POSTED
+  GRADE_RELEASED
+  SETTINGS_CHANGED
+  STUDENT_ENROLLED
+  STUDENT_UNENROLLED
+}
+
+type LessonProgressUpdate {
+  """
+  Lesson ID
+  """
+  lessonId: UUID!
+
+  """
+  Student ID
+  """
+  studentId: UUID!
+
+  """
+  Progress percentage
+  """
+  progress: Float!
+
+  """
+  Current section
+  """
+  currentSection: String
+
+  """
+  Time spent in seconds
+  """
+  timeSpent: Int!
+
+  """
+  Completed
+  """
+  isCompleted: Boolean!
+}
+
+type RobloxSessionUpdate {
+  """
+  Session ID
+  """
+  sessionId: UUID!
+
+  """
+  Update type
+  """
+  type: RobloxUpdateType!
+
+  """
+  Update data
+  """
+  data: JSON!
+
+  """
+  Students in session
+  """
+  studentCount: Int!
+
+  """
+  Session status
+  """
+  status: RobloxSessionStatus!
+
+  """
+  Timestamp
+  """
+  timestamp: DateTime!
+}
+
+enum RobloxUpdateType {
+  SESSION_STARTED
+  SESSION_ENDED
+  STUDENT_JOINED
+  STUDENT_LEFT
+  ACTIVITY_COMPLETED
+  OBJECTIVE_ACHIEVED
+  ERROR_OCCURRED
+  ENVIRONMENT_CHANGED
+}
+
+type MessageUpdate {
+  """
+  Message ID
+  """
+  messageId: UUID!
+
+  """
+  Message type
+  """
+  type: MessageType!
+
+  """
+  Sender
+  """
+  sender: User!
+
+  """
+  Content
+  """
+  content: String!
+
+  """
+  Course if applicable
+  """
+  course: Course
+
+  """
+  Conversation ID
+  """
+  conversationId: UUID
+
+  """
+  Timestamp
+  """
+  timestamp: DateTime!
+}
+
+enum MessageType {
+  DIRECT
+  GROUP
+  ANNOUNCEMENT
+  SYSTEM
+}
+
+type GradeUpdate {
+  """
+  Grade ID
+  """
+  gradeId: UUID!
+
+  """
+  Student
+  """
+  student: User!
+
+  """
+  Course
+  """
+  course: Course!
+
+  """
+  Assignment or quiz
+  """
+  assessment: JSON!
+
+  """
+  New grade
+  """
+  grade: Grade!
+
+  """
+  Previous grade if updated
+  """
+  previousGrade: Grade
+
+  """
+  Teacher who graded
+  """
+  gradedBy: User!
+
+  """
+  Timestamp
+  """
+  timestamp: DateTime!
+}
+
+type AnnouncementUpdate {
+  """
+  Announcement ID
+  """
+  announcementId: UUID!
+
+  """
+  Type
+  """
+  type: AnnouncementType!
+
+  """
+  Title
+  """
+  title: String!
+
+  """
+  Content
+  """
+  content: String!
+
+  """
+  Course if applicable
+  """
+  course: Course
+
+  """
+  Author
+  """
+  author: User!
+
+  """
+  Priority
+  """
+  priority: Priority!
+
+  """
+  Timestamp
+  """
+  timestamp: DateTime!
+}
+
+enum AnnouncementType {
+  GENERAL
+  COURSE
+  ASSIGNMENT
+  EXAM
+  EVENT
+  MAINTENANCE
+  URGENT
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}

@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"$(date '+%Y-%m-%d %H:%M:%S'): User prompt submitted\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/audit.log"
+            "command": "echo \"$(date '+%Y-%m-%d %H:%M:%S'): User prompt submitted\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/audit.log\""
           }
         ]
       }
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"Python script execution: ${CLAUDE_TOOL_PARAMS}\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/python_exec.log",
+            "command": "echo \"Python script execution: ${CLAUDE_TOOL_PARAMS}\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/python_exec.log\"",
             "description": "Log Python script executions"
           }
         ]
@@ -39,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"NPM command: ${CLAUDE_TOOL_PARAMS}\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/npm_exec.log",
+            "command": "echo \"NPM command: ${CLAUDE_TOOL_PARAMS}\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/npm_exec.log\"",
             "description": "Log NPM commands"
           }
         ]
@@ -49,8 +49,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"WARNING: Environment file being modified\" && exit 1",
-            "description": "Block direct .env file modifications for security"
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/scripts/security/check_env_write.py\" \"${CLAUDE_TOOL_PARAMS}\" || exit 1",
+            "description": "Validate .env file modifications for security"
+          }
+        ]
+      },
+      {
+        "matcher": "Write\\(.*\\.json\\)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/scripts/security/check_json_secrets.py\" \"${CLAUDE_TOOL_PARAMS}\" || true",
+            "description": "Check JSON files for exposed secrets"
           }
         ]
       }

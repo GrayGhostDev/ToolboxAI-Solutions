@@ -1,0 +1,485 @@
+# Authentication and user management mutations
+
+extend type Mutation {
+  """
+  User login
+  """
+  login(
+    input: LoginInput!
+  ): AuthResult!
+
+  """
+  User signup/registration
+  """
+  signup(
+    input: SignupInput!
+  ): AuthResult!
+
+  """
+  Refresh authentication token
+  """
+  refreshToken(
+    refreshToken: String!
+  ): AuthResult! @auth
+
+  """
+  User logout
+  """
+  logout: LogoutResult! @auth
+
+  """
+  Request password reset
+  """
+  requestPasswordReset(
+    email: Email!
+  ): PasswordResetResult!
+
+  """
+  Reset password with token
+  """
+  resetPassword(
+    token: String!
+    newPassword: String!
+  ): PasswordResetResult!
+
+  """
+  Change password (authenticated)
+  """
+  changePassword(
+    currentPassword: String!
+    newPassword: String!
+  ): PasswordChangeResult! @auth
+
+  """
+  Verify email address
+  """
+  verifyEmail(
+    token: String!
+  ): EmailVerificationResult!
+
+  """
+  Resend verification email
+  """
+  resendVerificationEmail(
+    email: Email!
+  ): EmailVerificationResult!
+
+  """
+  Update user profile
+  """
+  updateProfile(
+    input: UpdateProfileInput!
+  ): UpdateProfileResult! @auth
+
+  """
+  Update user preferences
+  """
+  updatePreferences(
+    input: UpdatePreferencesInput!
+  ): UpdatePreferencesResult! @auth
+
+  """
+  Connect Roblox account
+  """
+  connectRobloxAccount(
+    userId: String!
+    verificationCode: String!
+  ): RobloxConnectionResult! @auth
+
+  """
+  Disconnect Roblox account
+  """
+  disconnectRobloxAccount: RobloxConnectionResult! @auth
+
+  """
+  Delete user account
+  """
+  deleteAccount(
+    password: String!
+    reason: String
+  ): AccountDeletionResult! @auth
+}
+
+# Input types
+
+input LoginInput {
+  """
+  Email or username
+  """
+  identifier: String!
+
+  """
+  Password
+  """
+  password: String!
+
+  """
+  Remember me for extended session
+  """
+  rememberMe: Boolean = false
+}
+
+input SignupInput {
+  """
+  Email address
+  """
+  email: Email!
+
+  """
+  Username
+  """
+  username: String!
+
+  """
+  Password
+  """
+  password: String!
+
+  """
+  User role
+  """
+  role: Role!
+
+  """
+  First name
+  """
+  firstName: String
+
+  """
+  Last name
+  """
+  lastName: String
+
+  """
+  Invitation code if required
+  """
+  invitationCode: String
+
+  """
+  Accept terms and conditions
+  """
+  acceptTerms: Boolean!
+}
+
+input UpdateProfileInput {
+  """
+  First name
+  """
+  firstName: String
+
+  """
+  Last name
+  """
+  lastName: String
+
+  """
+  Display name
+  """
+  displayName: String
+
+  """
+  Bio/description
+  """
+  bio: String
+
+  """
+  Avatar URL
+  """
+  avatar: URL
+
+  """
+  Date of birth
+  """
+  dateOfBirth: DateTime
+
+  """
+  Phone number
+  """
+  phone: String
+
+  """
+  Address
+  """
+  address: AddressInput
+}
+
+input AddressInput {
+  street1: String
+  street2: String
+  city: String
+  state: String
+  postalCode: String
+  country: String
+  latitude: Float
+  longitude: Float
+}
+
+input UpdatePreferencesInput {
+  """
+  Email notifications
+  """
+  emailNotifications: NotificationSettingsInput
+
+  """
+  Push notifications
+  """
+  pushNotifications: NotificationSettingsInput
+
+  """
+  UI theme
+  """
+  theme: String
+
+  """
+  Accessibility settings
+  """
+  accessibility: AccessibilitySettingsInput
+
+  """
+  Privacy settings
+  """
+  privacy: PrivacySettingsInput
+
+  """
+  Language preference
+  """
+  language: String
+
+  """
+  Timezone
+  """
+  timezone: String
+}
+
+input NotificationSettingsInput {
+  assignments: Boolean
+  grades: Boolean
+  messages: Boolean
+  announcements: Boolean
+  reminders: Boolean
+}
+
+input AccessibilitySettingsInput {
+  highContrast: Boolean
+  fontSize: String
+  screenReader: Boolean
+  keyboardNavigation: Boolean
+  reducedMotion: Boolean
+}
+
+input PrivacySettingsInput {
+  profileVisibility: ProfileVisibility
+  showOnlineStatus: Boolean
+  allowDirectMessages: Boolean
+  shareProgressWithParents: Boolean
+}
+
+# Result types
+
+type AuthResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  Authentication token
+  """
+  token: String
+
+  """
+  Refresh token
+  """
+  refreshToken: String
+
+  """
+  Token expiration time
+  """
+  expiresAt: DateTime
+
+  """
+  Authenticated user
+  """
+  user: User
+}
+
+type LogoutResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+}
+
+type PasswordResetResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  Email sent to
+  """
+  email: Email
+}
+
+type PasswordChangeResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+}
+
+type EmailVerificationResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  Verified email
+  """
+  email: Email
+
+  """
+  User if verification successful
+  """
+  user: User
+}
+
+type UpdateProfileResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  Updated user
+  """
+  user: User
+}
+
+type UpdatePreferencesResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  Updated preferences
+  """
+  preferences: UserPreferences
+}
+
+type RobloxConnectionResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  Roblox account info
+  """
+  robloxAccount: RobloxAccount
+}
+
+type AccountDeletionResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  Deletion scheduled for
+  """
+  scheduledFor: DateTime
+}

@@ -23,6 +23,8 @@ import { Scene3D } from "./lib/three/Scene3D";
 import { FloatingCharactersV2 } from "./components/roblox/FloatingCharactersV2";
 import { Canvas2D } from "./lib/three/fallbacks/Canvas2D";
 import { PerformanceMonitor } from "./components/common/PerformanceMonitor";
+// Import WebSocketProvider for context
+import { WebSocketProvider } from "./contexts/WebSocketContext";
 
 // Keep old FloatingCharacters as fallback
 const FloatingCharacters = React.lazy(() => import("./components/roblox/FloatingCharacters").then(module => ({ default: module.FloatingCharacters })));
@@ -51,7 +53,7 @@ export default function App() {
       // Dynamic import to avoid loading in production
       if (process.env.NODE_ENV === 'development') {
         const { configHealthCheck } = await import('./utils/configHealthCheck');
-        const report = await configHealthCheck.runFullCheck();
+        const report = await configHealthCheck.runHealthCheck();
 
         if (report.overall === 'error') {
           console.error('❌ Critical configuration issues detected:', report);
@@ -69,14 +71,24 @@ export default function App() {
 
   // Initialize Pusher for real-time features
   React.useEffect(() => {
-    if (isAuthenticated) {
-      pusherService.connect();
-      console.log('✅ Pusher connected for real-time updates');
-    }
+    let isConnected = false;
 
-    return () => {
-      pusherService.disconnect();
-    };
+    if (isAuthenticated) {
+      // Small delay to allow component to stabilize
+      const connectTimer = setTimeout(() => {
+        pusherService.connect();
+        isConnected = true;
+        console.log('✅ Pusher connected for real-time updates');
+      }, 100);
+
+      return () => {
+        clearTimeout(connectTimer);
+        // Only disconnect if we actually connected
+        if (isConnected) {
+          pusherService.disconnect();
+        }
+      };
+    }
   }, [isAuthenticated]);
 
   // Lightweight performance monitoring for development
@@ -128,7 +140,8 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      {/* Modern 3D Background with fallback support */}
+      <WebSocketProvider autoConnect={true} debug={process.env.NODE_ENV === 'development'}>
+        {/* Modern 3D Background with fallback support */}
         {!isRobloxPage && (
           <ThreeProvider fallback={<Canvas2D particleCount={30} animate={true} />}>
             <Scene3D>
@@ -160,14 +173,15 @@ export default function App() {
 
         {/* Performance Monitoring - Development Only */}
         <PerformanceMonitor enabled={process.env.NODE_ENV === 'development'} />
-        
+
         {/* COPPA Consent Modal */}
         {showConsent && (
-          <ConsentModal 
-            open={showConsent} 
+          <ConsentModal
+            open={showConsent}
             onClose={handleConsentClose}
           />
         )}
+      </WebSocketProvider>
     </ErrorBoundary>
   );
 }

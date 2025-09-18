@@ -1,0 +1,202 @@
+# Authentication-related GraphQL mutations
+
+mutation Login($input: LoginInput!) {
+  login(input: $input) {
+    success
+    message
+    token
+    refreshToken
+    expiresAt
+    user {
+      id
+      username
+      email
+      role
+      profile {
+        firstName
+        lastName
+        avatar
+      }
+    }
+    errors {
+      code
+      message
+      field
+    }
+  }
+}
+
+mutation Signup($input: SignupInput!) {
+  signup(input: $input) {
+    success
+    message
+    token
+    user {
+      id
+      username
+      email
+      role
+    }
+    errors {
+      code
+      message
+      field
+    }
+  }
+}
+
+mutation Logout {
+  logout {
+    success
+    message
+  }
+}
+
+mutation RefreshToken($refreshToken: String!) {
+  refreshToken(refreshToken: $refreshToken) {
+    success
+    message
+    token
+    refreshToken
+    expiresAt
+    errors {
+      code
+      message
+    }
+  }
+}
+
+mutation UpdateProfile($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
+    success
+    message
+    user {
+      id
+      profile {
+        firstName
+        lastName
+        displayName
+        avatar
+        bio
+        phone
+        dateOfBirth
+        address {
+          street1
+          street2
+          city
+          state
+          postalCode
+          country
+        }
+      }
+    }
+    errors {
+      code
+      message
+      field
+    }
+  }
+}
+
+mutation UpdatePreferences($input: UpdatePreferencesInput!) {
+  updatePreferences(input: $input) {
+    success
+    message
+    preferences {
+      theme
+      emailNotifications {
+        assignments
+        grades
+        messages
+        announcements
+        reminders
+      }
+      pushNotifications {
+        assignments
+        grades
+        messages
+        announcements
+        reminders
+      }
+      accessibility {
+        highContrast
+        fontSize
+        screenReader
+        keyboardNavigation
+        reducedMotion
+      }
+      privacy {
+        profileVisibility
+        showOnlineStatus
+        allowDirectMessages
+        shareProgressWithParents
+      }
+    }
+    errors {
+      code
+      message
+      field
+    }
+  }
+}
+
+mutation ChangePassword($currentPassword: String!, $newPassword: String!) {
+  changePassword(currentPassword: $currentPassword, newPassword: $newPassword) {
+    success
+    message
+    errors {
+      code
+      message
+    }
+  }
+}
+
+mutation RequestPasswordReset($email: Email!) {
+  requestPasswordReset(email: $email) {
+    success
+    message
+    email
+    errors {
+      code
+      message
+    }
+  }
+}
+
+mutation ResetPassword($token: String!, $newPassword: String!) {
+  resetPassword(token: $token, newPassword: $newPassword) {
+    success
+    message
+    errors {
+      code
+      message
+    }
+  }
+}
+
+mutation VerifyEmail($token: String!) {
+  verifyEmail(token: $token) {
+    success
+    message
+    user {
+      id
+      email
+      isVerified
+    }
+    errors {
+      code
+      message
+    }
+  }
+}
+
+mutation ResendVerificationEmail($email: Email!) {
+  resendVerificationEmail(email: $email) {
+    success
+    message
+    errors {
+      code
+      message
+    }
+  }
+}

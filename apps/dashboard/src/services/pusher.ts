@@ -304,19 +304,28 @@ url: options.url || WS_URL,
 
       // Subscribe to Pusher channel and bind unified 'message' event
       if (this.pusher) {
-        const ch = this.pusher.subscribe(sanitizedChannel);
-        ch.bind('message', (data: any) => {
-          // Expect server to send { type, payload, channel, timestamp }
-          const msg: WebSocketMessage = {
-            type: data?.type,
-            payload: data?.payload,
-            channel: sanitizedChannel,
-            timestamp: data?.timestamp || new Date().toISOString(),
-            messageId: data?.messageId || this.generateMessageId(),
-          };
-          this.handleMessage(msg);
-        });
-        this.channels.set(sanitizedChannel, ch);
+        // Check if we're already subscribed to this Pusher channel
+        let ch = this.channels.get(sanitizedChannel);
+        if (!ch) {
+          // Check Pusher's internal channel registry first
+          ch = this.pusher.channel(sanitizedChannel);
+          if (!ch) {
+            // Only subscribe if we don't have an existing channel
+            ch = this.pusher.subscribe(sanitizedChannel);
+            ch.bind('message', (data: any) => {
+              // Expect server to send { type, payload, channel, timestamp }
+              const msg: WebSocketMessage = {
+                type: data?.type,
+                payload: data?.payload,
+                channel: sanitizedChannel,
+                timestamp: data?.timestamp || new Date().toISOString(),
+                messageId: data?.messageId || this.generateMessageId(),
+              };
+              this.handleMessage(msg);
+            });
+          }
+          this.channels.set(sanitizedChannel, ch);
+        }
       }
     }
 
@@ -658,17 +667,22 @@ url: options.url || WS_URL,
     if (!this.pusher) return;
     const channels = Array.from(this.subscriptions.keys());
     channels.forEach((chName) => {
-      const ch = this.pusher!.subscribe(chName);
-      ch.bind('message', (data: any) => {
-        const msg: WebSocketMessage = {
-          type: data?.type,
-          payload: data?.payload,
-          channel: chName,
-          timestamp: data?.timestamp || new Date().toISOString(),
-          messageId: data?.messageId || this.generateMessageId(),
-        };
-        this.handleMessage(msg);
-      });
+      // Check if we're already subscribed to this channel
+      let ch = this.pusher!.channel(chName);
+      if (!ch) {
+        // Only subscribe if not already subscribed
+        ch = this.pusher!.subscribe(chName);
+        ch.bind('message', (data: any) => {
+          const msg: WebSocketMessage = {
+            type: data?.type,
+            payload: data?.payload,
+            channel: chName,
+            timestamp: data?.timestamp || new Date().toISOString(),
+            messageId: data?.messageId || this.generateMessageId(),
+          };
+          this.handleMessage(msg);
+        });
+      }
       this.channels.set(chName, ch);
     });
     if (channels.length > 0) {
@@ -825,6 +839,12 @@ url: options.url || WS_URL,
    */
   private scheduleTokenRefresh(token: string): void {
     this.clearTokenRefreshTimer();
+
+    // Skip token refresh for dev tokens
+    if (token.startsWith('dev-token-')) {
+      this.log('Development token detected, skipping refresh schedule');
+      return;
+    }
 
     try {
       // Parse JWT to get expiry time

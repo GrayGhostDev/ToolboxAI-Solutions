@@ -1,0 +1,246 @@
+# Roblox-specific queries
+
+extend type Query {
+  """
+  Get a specific Roblox environment by ID
+  """
+  robloxEnvironment(id: UUID!): RobloxEnvironment @auth
+
+  """
+  List all Roblox environments
+  """
+  robloxEnvironments(
+    type: RobloxEnvironmentType
+    status: RobloxEnvironmentStatus
+    courseId: UUID
+    pagination: PaginationInput
+  ): [RobloxEnvironment!]! @auth
+
+  """
+  Get Roblox environments for a course
+  """
+  courseRobloxEnvironments(
+    courseId: UUID!
+  ): [RobloxEnvironment!]! @auth
+
+  """
+  Get active Roblox sessions
+  """
+  activeRobloxSessions(
+    teacherId: UUID
+    courseId: UUID
+  ): [RobloxSession!]! @auth
+
+  """
+  Get a specific Roblox session
+  """
+  robloxSession(id: UUID!): RobloxSession @auth
+
+  """
+  Get Roblox session by join code
+  """
+  robloxSessionByCode(joinCode: String!): RobloxSession @auth
+
+  """
+  Get student's Roblox session history
+  """
+  studentRobloxSessions(
+    studentId: UUID!
+    courseId: UUID
+    limit: Int = 20
+  ): [RobloxSession!]! @auth
+
+  """
+  Search Roblox templates
+  """
+  robloxTemplates(
+    category: String
+    query: String
+    isPublic: Boolean = true
+    pagination: PaginationInput
+  ): [RobloxTemplate!]! @auth
+
+  """
+  Get a specific Roblox template
+  """
+  robloxTemplate(id: UUID!): RobloxTemplate @auth
+
+  """
+  Get Roblox deployment status
+  """
+  robloxDeployment(id: UUID!): RobloxDeployment @auth(requires: TEACHER)
+
+  """
+  Get Roblox deployment history
+  """
+  robloxDeploymentHistory(
+    environmentId: UUID!
+    limit: Int = 10
+  ): [RobloxDeployment!]! @auth(requires: TEACHER)
+
+  """
+  Get Roblox NPCs for an environment
+  """
+  environmentNPCs(
+    environmentId: UUID!
+  ): [RobloxNPC!]! @auth
+
+  """
+  Get Roblox elements for an environment
+  """
+  environmentElements(
+    environmentId: UUID!
+    type: RobloxElementType
+  ): [RobloxElement!]! @auth
+
+  """
+  Get available terrain templates
+  """
+  terrainTemplates(
+    type: TerrainType
+    size: TerrainSize
+  ): [TerrainTemplate!]! @auth
+
+  """
+  Verify Roblox account connection
+  """
+  verifyRobloxAccount(
+    userId: UUID!
+  ): RobloxAccountVerification! @auth
+
+  """
+  Get Roblox session analytics
+  """
+  robloxSessionAnalytics(
+    sessionId: UUID!
+  ): SessionAnalytics! @auth(requires: TEACHER)
+
+  """
+  Get recommended Roblox environments for a lesson
+  """
+  recommendedEnvironments(
+    lessonId: UUID!
+    limit: Int = 5
+  ): [RobloxEnvironment!]! @auth(requires: TEACHER)
+
+  """
+  Check if Roblox environment is available
+  """
+  isEnvironmentAvailable(
+    environmentId: UUID!
+  ): EnvironmentAvailability! @auth
+}
+
+# Terrain template type
+type TerrainTemplate {
+  """
+  Template ID
+  """
+  id: UUID!
+
+  """
+  Template name
+  """
+  name: String!
+
+  """
+  Template description
+  """
+  description: String!
+
+  """
+  Terrain type
+  """
+  type: TerrainType!
+
+  """
+  Terrain size
+  """
+  size: TerrainSize!
+
+  """
+  Preview image
+  """
+  preview: URL!
+
+  """
+  Template data
+  """
+  data: JSON!
+
+  """
+  Creator
+  """
+  creator: User!
+
+  """
+  Usage count
+  """
+  usageCount: Int!
+
+  """
+  Template tags
+  """
+  tags: [String!]!
+}
+
+# Roblox account verification result
+type RobloxAccountVerification {
+  """
+  Is the account verified
+  """
+  isVerified: Boolean!
+
+  """
+  Roblox user ID
+  """
+  userId: String
+
+  """
+  Roblox username
+  """
+  username: String
+
+  """
+  Verification status message
+  """
+  message: String!
+
+  """
+  Next verification step if needed
+  """
+  nextStep: String
+}
+
+# Environment availability status
+type EnvironmentAvailability {
+  """
+  Is the environment available
+  """
+  isAvailable: Boolean!
+
+  """
+  Reason if not available
+  """
+  reason: String
+
+  """
+  Active session if any
+  """
+  activeSession: RobloxSession
+
+  """
+  When it will be available
+  """
+  availableAt: DateTime
+
+  """
+  Current server capacity
+  """
+  currentCapacity: Int
+
+  """
+  Maximum capacity
+  """
+  maxCapacity: Int
+}

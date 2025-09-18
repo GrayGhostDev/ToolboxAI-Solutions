@@ -1,0 +1,118 @@
+# User-related GraphQL queries and fragments
+
+fragment UserFields on User {
+  id
+  username
+  email
+  role
+  profile {
+    firstName
+    lastName
+    displayName
+    avatar
+  }
+  isActive
+  isVerified
+  createdAt
+}
+
+query GetCurrentUser {
+  me {
+    ...UserFields
+    preferences {
+      theme
+      emailNotifications {
+        assignments
+        grades
+        messages
+        announcements
+        reminders
+      }
+    }
+    enrollments {
+      id
+      course {
+        id
+        title
+        code
+      }
+      progress
+    }
+  }
+}
+
+query GetUser($id: UUID!) {
+  user(id: $id) {
+    ...UserFields
+  }
+}
+
+query GetUsers(
+  $filter: UserFilter
+  $sort: UserSort
+  $pagination: PaginationInput
+) {
+  users(filter: $filter, sort: $sort, pagination: $pagination) {
+    nodes {
+      ...UserFields
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+query SearchUsers($query: String!, $role: Role, $limit: Int) {
+  searchUsers(query: $query, role: $role, limit: $limit) {
+    id
+    username
+    email
+    profile {
+      firstName
+      lastName
+      avatar
+    }
+  }
+}
+
+query GetUserProgress($userId: UUID!, $courseId: UUID) {
+  userProgress(userId: $userId, courseId: $courseId) {
+    id
+    course {
+      id
+      title
+    }
+    completedLessons {
+      id
+      title
+    }
+    currentLesson {
+      id
+      title
+    }
+    pointsEarned
+    pointsPossible
+    timeSpent
+    lastActivityAt
+  }
+}
+
+query GetUserAchievements($userId: UUID!, $type: AchievementType, $limit: Int) {
+  userAchievements(userId: $userId, type: $type, limit: $limit) {
+    id
+    achievement {
+      id
+      name
+      description
+      type
+      icon
+      points
+    }
+    earnedAt
+    progress
+  }
+}

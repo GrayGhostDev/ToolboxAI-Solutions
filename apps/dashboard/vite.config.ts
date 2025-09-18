@@ -38,20 +38,24 @@ export default defineConfig({
       'zod',
       // Performance libraries
       'react-window',
-      'web-vitals'
-    ],
-    exclude: [
-      '@vite/client',
-      '@vite/env',
-      // Exclude Three.js libraries to avoid react-reconciler issues
+      'web-vitals',
+      // Three.js libraries - pre-bundle to avoid reconciler issues
       'three',
       '@react-three/fiber',
       '@react-three/drei',
       'react-reconciler',
-      // These will be loaded on demand
+      // Charts and their dependencies
       'recharts',
+      'lodash',
+      'lodash/get',
+      'lodash/isNil',
+      'lodash/isFunction',
       'chart.js',
       'react-chartjs-2'
+    ],
+    exclude: [
+      '@vite/client',
+      '@vite/env'
     ],
     esbuildOptions: {
       target: 'es2020',
@@ -77,7 +81,7 @@ export default defineConfig({
       '@utils': path.resolve(__dirname, './src/utils'),
       '@test': path.resolve(__dirname, './src/test'),
     },
-    dedupe: ['@mui/icons-material', '@mui/material', 'react', 'react-dom'],
+    dedupe: ['@mui/icons-material', '@mui/material', 'react', 'react-dom', 'react-reconciler'],
   },
 
   // Development server configuration

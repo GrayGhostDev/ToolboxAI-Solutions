@@ -1,0 +1,721 @@
+# Roblox integration type definitions
+
+# Roblox environment configuration
+type RobloxEnvironment {
+  """
+  Environment ID
+  """
+  id: UUID!
+
+  """
+  Environment name
+  """
+  name: String!
+
+  """
+  Environment description
+  """
+  description: String!
+
+  """
+  Associated course
+  """
+  course: Course!
+
+  """
+  Environment type
+  """
+  type: RobloxEnvironmentType!
+
+  """
+  Roblox place ID
+  """
+  placeId: String
+
+  """
+  Roblox universe ID
+  """
+  universeId: String
+
+  """
+  Environment template
+  """
+  template: RobloxTemplate
+
+  """
+  Terrain configuration
+  """
+  terrain: TerrainConfig!
+
+  """
+  Interactive elements
+  """
+  elements: [RobloxElement!]!
+
+  """
+  NPCs in the environment
+  """
+  npcs: [RobloxNPC!]!
+
+  """
+  Environment settings
+  """
+  settings: RobloxEnvironmentSettings!
+
+  """
+  Environment status
+  """
+  status: RobloxEnvironmentStatus!
+
+  """
+  Active sessions
+  """
+  activeSessions: [RobloxSession!]!
+
+  """
+  Deployment information
+  """
+  deployment: RobloxDeployment
+
+  """
+  Timestamp information
+  """
+  timestamps: Timestamps!
+}
+
+# Roblox environment types
+enum RobloxEnvironmentType {
+  CLASSROOM
+  LABORATORY
+  OUTDOOR
+  HISTORICAL
+  FUTURISTIC
+  UNDERWATER
+  SPACE_STATION
+  FANTASY
+  CUSTOM
+}
+
+# Roblox environment status
+enum RobloxEnvironmentStatus {
+  DRAFT
+  TESTING
+  DEPLOYED
+  ACTIVE
+  MAINTENANCE
+  ARCHIVED
+}
+
+# Terrain configuration
+type TerrainConfig {
+  """
+  Terrain size
+  """
+  size: TerrainSize!
+
+  """
+  Terrain type
+  """
+  type: TerrainType!
+
+  """
+  Biome settings
+  """
+  biome: String!
+
+  """
+  Water enabled
+  """
+  hasWater: Boolean!
+
+  """
+  Water level
+  """
+  waterLevel: Float
+
+  """
+  Custom terrain data
+  """
+  customData: JSON
+}
+
+# Terrain size options
+enum TerrainSize {
+  SMALL
+  MEDIUM
+  LARGE
+  XLARGE
+}
+
+# Terrain types
+enum TerrainType {
+  FLAT
+  HILLS
+  MOUNTAINS
+  ISLANDS
+  CANYON
+  FOREST
+  DESERT
+  ARCTIC
+  CUSTOM
+}
+
+# Roblox interactive element
+type RobloxElement {
+  """
+  Element ID
+  """
+  id: UUID!
+
+  """
+  Element name
+  """
+  name: String!
+
+  """
+  Element type
+  """
+  type: RobloxElementType!
+
+  """
+  Position in 3D space
+  """
+  position: Vector3!
+
+  """
+  Rotation
+  """
+  rotation: Vector3!
+
+  """
+  Scale
+  """
+  scale: Vector3!
+
+  """
+  Element properties
+  """
+  properties: JSON!
+
+  """
+  Interaction scripts
+  """
+  scripts: [RobloxScript!]!
+
+  """
+  Educational content linked
+  """
+  linkedContent: ContentBlock
+
+  """
+  Is interactive
+  """
+  isInteractive: Boolean!
+
+  """
+  Interaction type
+  """
+  interactionType: InteractionType
+}
+
+# Roblox element types
+enum RobloxElementType {
+  MODEL
+  PART
+  GUI
+  SOUND
+  PARTICLE
+  LIGHT
+  NPC
+  TOOL
+  VEHICLE
+  TELEPORTER
+}
+
+# Interaction types
+enum InteractionType {
+  CLICK
+  TOUCH
+  PROXIMITY
+  COLLISION
+  KEYBOARD
+  VOICE
+}
+
+# 3D Vector
+type Vector3 {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+# Roblox NPC (Non-Player Character)
+type RobloxNPC {
+  """
+  NPC ID
+  """
+  id: UUID!
+
+  """
+  NPC name
+  """
+  name: String!
+
+  """
+  NPC type
+  """
+  type: NPCType!
+
+  """
+  NPC appearance/avatar
+  """
+  appearance: JSON!
+
+  """
+  Position in world
+  """
+  position: Vector3!
+
+  """
+  Dialogue tree
+  """
+  dialogue: DialogueTree
+
+  """
+  Behavior AI
+  """
+  behavior: NPCBehavior!
+
+  """
+  Educational role
+  """
+  role: NPCRole!
+
+  """
+  Associated lessons/content
+  """
+  linkedLessons: [Lesson!]!
+}
+
+# NPC types
+enum NPCType {
+  TEACHER
+  STUDENT
+  GUIDE
+  QUEST_GIVER
+  MERCHANT
+  HELPER
+  EXAMINER
+}
+
+# NPC roles in education
+enum NPCRole {
+  INSTRUCTOR
+  TUTOR
+  PEER
+  EVALUATOR
+  STORYTELLER
+  DEMONSTRATOR
+}
+
+# NPC behavior configuration
+type NPCBehavior {
+  """
+  Movement pattern
+  """
+  movementPattern: String!
+
+  """
+  Interaction range
+  """
+  interactionRange: Float!
+
+  """
+  Idle animations
+  """
+  idleAnimations: [String!]!
+
+  """
+  Response triggers
+  """
+  triggers: JSON!
+
+  """
+  AI complexity level
+  """
+  aiLevel: String!
+}
+
+# Dialogue tree for NPCs
+type DialogueTree {
+  """
+  Tree ID
+  """
+  id: UUID!
+
+  """
+  Root dialogue node
+  """
+  root: DialogueNode!
+
+  """
+  All dialogue nodes
+  """
+  nodes: [DialogueNode!]!
+}
+
+# Dialogue node
+type DialogueNode {
+  """
+  Node ID
+  """
+  id: String!
+
+  """
+  Speaker (NPC or Player)
+  """
+  speaker: String!
+
+  """
+  Dialogue text
+  """
+  text: String!
+
+  """
+  Response options
+  """
+  responses: [DialogueResponse!]!
+
+  """
+  Conditions to show this node
+  """
+  conditions: JSON
+
+  """
+  Actions when selected
+  """
+  actions: JSON
+}
+
+# Dialogue response option
+type DialogueResponse {
+  """
+  Response text
+  """
+  text: String!
+
+  """
+  Next dialogue node ID
+  """
+  nextNodeId: String
+
+  """
+  Conditions to show this response
+  """
+  conditions: JSON
+
+  """
+  Actions when selected
+  """
+  actions: JSON
+}
+
+# Roblox script
+type RobloxScript {
+  """
+  Script ID
+  """
+  id: UUID!
+
+  """
+  Script name
+  """
+  name: String!
+
+  """
+  Script type
+  """
+  type: RobloxScriptType!
+
+  """
+  Script content (Lua)
+  """
+  content: String!
+
+  """
+  Is enabled
+  """
+  enabled: Boolean!
+
+  """
+  Script metadata
+  """
+  metadata: JSON
+}
+
+# Roblox script types
+enum RobloxScriptType {
+  SERVER
+  CLIENT
+  MODULE
+  SHARED
+}
+
+# Roblox session (active game session)
+type RobloxSession {
+  """
+  Session ID
+  """
+  id: UUID!
+
+  """
+  Environment
+  """
+  environment: RobloxEnvironment!
+
+  """
+  Session teacher
+  """
+  teacher: User!
+
+  """
+  Session students
+  """
+  students: [User!]!
+
+  """
+  Session status
+  """
+  status: RobloxSessionStatus!
+
+  """
+  Server ID
+  """
+  serverId: String
+
+  """
+  Join code
+  """
+  joinCode: String!
+
+  """
+  Started at
+  """
+  startedAt: DateTime!
+
+  """
+  Ended at
+  """
+  endedAt: DateTime
+
+  """
+  Session recording URL
+  """
+  recordingUrl: URL
+
+  """
+  Session analytics
+  """
+  analytics: SessionAnalytics!
+}
+
+# Roblox session status
+enum RobloxSessionStatus {
+  PREPARING
+  ACTIVE
+  PAUSED
+  COMPLETED
+  DISCONNECTED
+  ERROR
+}
+
+# Session analytics
+type SessionAnalytics {
+  """
+  Student engagement metrics
+  """
+  engagement: JSON!
+
+  """
+  Interaction counts
+  """
+  interactions: JSON!
+
+  """
+  Learning objectives completed
+  """
+  objectivesCompleted: [String!]!
+
+  """
+  Average time on task
+  """
+  averageTimeOnTask: Int!
+
+  """
+  Participation rate
+  """
+  participationRate: Float!
+}
+
+# Roblox template for reusable environments
+type RobloxTemplate {
+  """
+  Template ID
+  """
+  id: UUID!
+
+  """
+  Template name
+  """
+  name: String!
+
+  """
+  Template description
+  """
+  description: String!
+
+  """
+  Template category
+  """
+  category: String!
+
+  """
+  Template thumbnail
+  """
+  thumbnail: URL!
+
+  """
+  Base configuration
+  """
+  configuration: JSON!
+
+  """
+  Is public template
+  """
+  isPublic: Boolean!
+
+  """
+  Usage count
+  """
+  usageCount: Int!
+
+  """
+  Creator
+  """
+  creator: User!
+
+  """
+  Template tags
+  """
+  tags: [String!]!
+
+  """
+  Timestamp information
+  """
+  timestamps: Timestamps!
+}
+
+# Roblox deployment information
+type RobloxDeployment {
+  """
+  Deployment ID
+  """
+  id: UUID!
+
+  """
+  Environment being deployed
+  """
+  environment: RobloxEnvironment!
+
+  """
+  Deployer
+  """
+  deployer: User!
+
+  """
+  Deployment status
+  """
+  status: DeploymentStatus!
+
+  """
+  Roblox place ID
+  """
+  placeId: String!
+
+  """
+  Version number
+  """
+  version: String!
+
+  """
+  Deployment logs
+  """
+  logs: String
+
+  """
+  Deployed at
+  """
+  deployedAt: DateTime!
+
+  """
+  Rollback information
+  """
+  rollbackTo: RobloxDeployment
+}
+
+# Deployment status
+enum DeploymentStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCESS
+  FAILED
+  ROLLED_BACK
+}
+
+# Roblox environment settings
+type RobloxEnvironmentSettings {
+  """
+  Max players allowed
+  """
+  maxPlayers: Int!
+
+  """
+  Allow spectators
+  """
+  allowSpectators: Boolean!
+
+  """
+  Enable voice chat
+  """
+  enableVoiceChat: Boolean!
+
+  """
+  Enable text chat
+  """
+  enableTextChat: Boolean!
+
+  """
+  Content moderation level
+  """
+  moderationLevel: String!
+
+  """
+  Age rating
+  """
+  ageRating: String!
+
+  """
+  Custom game rules
+  """
+  gameRules: JSON
+
+  """
+  Physics settings
+  """
+  physics: JSON
+
+  """
+  Lighting settings
+  """
+  lighting: JSON
+}

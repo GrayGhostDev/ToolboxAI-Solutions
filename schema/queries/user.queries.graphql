@@ -1,0 +1,188 @@
+# User-related queries
+
+extend type Query {
+  """
+  Get the currently authenticated user
+  """
+  me: User! @auth
+
+  """
+  Get a specific user by ID
+  """
+  user(id: UUID!): User @auth(requires: TEACHER)
+
+  """
+  Get a user by username
+  """
+  userByUsername(username: String!): User @auth(requires: TEACHER)
+
+  """
+  Get a user by email (admin only)
+  """
+  userByEmail(email: Email!): User @auth(requires: ADMIN)
+
+  """
+  List all users with filtering and pagination
+  """
+  users(
+    filter: UserFilter
+    sort: UserSort
+    pagination: PaginationInput
+  ): UserConnection! @auth(requires: ADMIN)
+
+  """
+  Search users by name, email, or username
+  """
+  searchUsers(
+    query: String!
+    role: Role
+    limit: Int = 10
+  ): [User!]! @auth(requires: TEACHER)
+
+  """
+  Get students in a specific course
+  """
+  courseStudents(
+    courseId: UUID!
+    filter: UserFilter
+    pagination: PaginationInput
+  ): UserConnection! @auth(requires: TEACHER)
+
+  """
+  Get user statistics for admin dashboard
+  """
+  userStatistics: UserStatistics! @auth(requires: ADMIN)
+
+  """
+  Check if a username is available
+  """
+  isUsernameAvailable(username: String!): Boolean!
+
+  """
+  Check if an email is available
+  """
+  isEmailAvailable(email: Email!): Boolean!
+
+  """
+  Get user's learning progress across all courses
+  """
+  userProgress(
+    userId: UUID!
+    courseId: UUID
+  ): [StudentProgress!]! @auth
+
+  """
+  Get user's achievements
+  """
+  userAchievements(
+    userId: UUID!
+    type: AchievementType
+    limit: Int = 20
+  ): [UserAchievement!]! @auth
+
+  """
+  Get user activity timeline
+  """
+  userActivity(
+    userId: UUID!
+    startDate: DateTime
+    endDate: DateTime
+    limit: Int = 50
+  ): [Activity!]! @auth
+}
+
+# User statistics type
+type UserStatistics {
+  """
+  Total number of users
+  """
+  totalUsers: Int!
+
+  """
+  Users by role
+  """
+  byRole: UserRoleStatistics!
+
+  """
+  Active users (logged in last 30 days)
+  """
+  activeUsers: Int!
+
+  """
+  New users in the last 30 days
+  """
+  newUsers: Int!
+
+  """
+  User growth rate (percentage)
+  """
+  growthRate: Float!
+
+  """
+  Average session duration in minutes
+  """
+  averageSessionDuration: Int!
+
+  """
+  User retention rate
+  """
+  retentionRate: Float!
+}
+
+# User role statistics
+type UserRoleStatistics {
+  students: Int!
+  teachers: Int!
+  admins: Int!
+  parents: Int!
+}
+
+# User activity entry
+type Activity {
+  """
+  Activity ID
+  """
+  id: UUID!
+
+  """
+  Activity type
+  """
+  type: ActivityType!
+
+  """
+  Activity description
+  """
+  description: String!
+
+  """
+  Related entity (course, quiz, etc.)
+  """
+  entity: JSON
+
+  """
+  Activity timestamp
+  """
+  timestamp: DateTime!
+
+  """
+  Activity metadata
+  """
+  metadata: JSON
+}
+
+# Activity types
+enum ActivityType {
+  LOGIN
+  LOGOUT
+  COURSE_ENROLLED
+  COURSE_COMPLETED
+  LESSON_STARTED
+  LESSON_COMPLETED
+  QUIZ_ATTEMPTED
+  QUIZ_COMPLETED
+  ASSIGNMENT_SUBMITTED
+  ACHIEVEMENT_EARNED
+  PROFILE_UPDATED
+  ROBLOX_SESSION_JOINED
+  ROBLOX_SESSION_LEFT
+}

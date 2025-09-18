@@ -1,0 +1,440 @@
+# User-related type definitions
+
+# User roles enum
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+  PARENT
+}
+
+# Main User type
+type User {
+  """
+  Unique user identifier
+  """
+  id: UUID!
+
+  """
+  User's email address
+  """
+  email: Email!
+
+  """
+  Unique username
+  """
+  username: String!
+
+  """
+  User's role in the system
+  """
+  role: Role!
+
+  """
+  User's profile information
+  """
+  profile: UserProfile!
+
+  """
+  User's preferences and settings
+  """
+  preferences: UserPreferences!
+
+  """
+  Roblox account integration
+  """
+  robloxAccount: RobloxAccount
+
+  """
+  Courses where user is enrolled (students)
+  """
+  enrollments: [Enrollment!]! @auth(requires: USER)
+
+  """
+  Courses taught by user (teachers)
+  """
+  teachingCourses: [Course!]! @auth(requires: TEACHER)
+
+  """
+  User's learning progress summary
+  """
+  progressSummary: ProgressSummary!
+
+  """
+  User's achievements
+  """
+  achievements: [UserAchievement!]!
+
+  """
+  User's quiz attempts
+  """
+  quizAttempts(
+    courseId: UUID
+    limit: Int = 10
+  ): [QuizAttempt!]!
+
+  """
+  Account status
+  """
+  isActive: Boolean!
+
+  """
+  Email verification status
+  """
+  isVerified: Boolean!
+
+  """
+  Last login timestamp
+  """
+  lastLogin: DateTime
+
+  """
+  Timestamp information
+  """
+  timestamps: Timestamps!
+}
+
+# User profile information
+type UserProfile {
+  """
+  User's first name
+  """
+  firstName: String
+
+  """
+  User's last name
+  """
+  lastName: String
+
+  """
+  Display name (overrides first + last)
+  """
+  displayName: String
+
+  """
+  Profile avatar URL
+  """
+  avatar: URL
+
+  """
+  User bio/description
+  """
+  bio: String
+
+  """
+  Date of birth (for age-appropriate content)
+  """
+  dateOfBirth: DateTime
+
+  """
+  Phone number
+  """
+  phone: String
+
+  """
+  User's address
+  """
+  address: Address
+
+  """
+  Preferred language
+  """
+  preferredLanguage: String
+
+  """
+  Timezone
+  """
+  timezone: String
+}
+
+# User preferences
+type UserPreferences {
+  """
+  Email notification settings
+  """
+  emailNotifications: NotificationSettings!
+
+  """
+  Push notification settings
+  """
+  pushNotifications: NotificationSettings!
+
+  """
+  UI theme preference
+  """
+  theme: String!
+
+  """
+  Accessibility settings
+  """
+  accessibility: AccessibilitySettings!
+
+  """
+  Privacy settings
+  """
+  privacy: PrivacySettings!
+
+  """
+  Custom preferences as JSON
+  """
+  custom: JSON
+}
+
+# Notification settings
+type NotificationSettings {
+  """
+  Receive notifications for new assignments
+  """
+  assignments: Boolean!
+
+  """
+  Receive notifications for grades
+  """
+  grades: Boolean!
+
+  """
+  Receive notifications for messages
+  """
+  messages: Boolean!
+
+  """
+  Receive notifications for announcements
+  """
+  announcements: Boolean!
+
+  """
+  Receive reminder notifications
+  """
+  reminders: Boolean!
+}
+
+# Accessibility settings
+type AccessibilitySettings {
+  """
+  Enable high contrast mode
+  """
+  highContrast: Boolean!
+
+  """
+  Font size preference
+  """
+  fontSize: String!
+
+  """
+  Enable screen reader optimization
+  """
+  screenReader: Boolean!
+
+  """
+  Enable keyboard navigation
+  """
+  keyboardNavigation: Boolean!
+
+  """
+  Enable reduced motion
+  """
+  reducedMotion: Boolean!
+}
+
+# Privacy settings
+type PrivacySettings {
+  """
+  Profile visibility
+  """
+  profileVisibility: ProfileVisibility!
+
+  """
+  Show online status
+  """
+  showOnlineStatus: Boolean!
+
+  """
+  Allow direct messages
+  """
+  allowDirectMessages: Boolean!
+
+  """
+  Share progress with parents (for students)
+  """
+  shareProgressWithParents: Boolean!
+}
+
+# Profile visibility enum
+enum ProfileVisibility {
+  PUBLIC
+  SCHOOL_ONLY
+  PRIVATE
+}
+
+# Roblox account integration
+type RobloxAccount {
+  """
+  Roblox user ID
+  """
+  userId: String!
+
+  """
+  Roblox username
+  """
+  username: String!
+
+  """
+  Account verification status
+  """
+  isVerified: Boolean!
+
+  """
+  Last sync timestamp
+  """
+  lastSyncAt: DateTime
+
+  """
+  Roblox avatar thumbnail URL
+  """
+  avatarUrl: URL
+}
+
+# User achievement
+type UserAchievement {
+  """
+  Achievement ID
+  """
+  id: UUID!
+
+  """
+  Achievement definition
+  """
+  achievement: Achievement!
+
+  """
+  User who earned it
+  """
+  user: User!
+
+  """
+  When the achievement was earned
+  """
+  earnedAt: DateTime!
+
+  """
+  Progress percentage
+  """
+  progress: Float!
+
+  """
+  Additional metadata
+  """
+  metadata: JSON
+}
+
+# Achievement definition
+type Achievement {
+  """
+  Unique achievement ID
+  """
+  id: UUID!
+
+  """
+  Achievement name
+  """
+  name: String!
+
+  """
+  Achievement description
+  """
+  description: String!
+
+  """
+  Achievement type
+  """
+  type: AchievementType!
+
+  """
+  Icon URL
+  """
+  icon: URL
+
+  """
+  Points awarded
+  """
+  points: Int!
+
+  """
+  Rarity level
+  """
+  rarity: String!
+
+  """
+  Requirements to earn
+  """
+  requirements: JSON!
+}
+
+# User connection for pagination
+type UserConnection {
+  """
+  List of users
+  """
+  nodes: [User!]!
+
+  """
+  Pagination information
+  """
+  pageInfo: PageInfo!
+
+  """
+  Total count of users
+  """
+  totalCount: Int!
+}
+
+# User filter input
+input UserFilter {
+  """
+  Filter by role
+  """
+  role: Role
+
+  """
+  Filter by active status
+  """
+  isActive: Boolean
+
+  """
+  Filter by verification status
+  """
+  isVerified: Boolean
+
+  """
+  Search query for name/email/username
+  """
+  search: String
+
+  """
+  Filter by creation date range
+  """
+  createdAfter: DateTime
+  createdBefore: DateTime
+}
+
+# User sort input
+input UserSort {
+  """
+  Field to sort by
+  """
+  field: UserSortField!
+
+  """
+  Sort direction
+  """
+  direction: SortDirection!
+}
+
+# User sort fields
+enum UserSortField {
+  USERNAME
+  EMAIL
+  CREATED_AT
+  LAST_LOGIN
+  ROLE
+}

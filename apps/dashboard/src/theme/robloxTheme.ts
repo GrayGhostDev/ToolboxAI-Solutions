@@ -30,6 +30,28 @@ export const robloxColors = {
   bronze: "#cd7f32",
   yellow: "#ffff00",
 
+  // Brand colors for Roblox
+  brand: {
+    red: {
+      primary: "#ee0000",
+      light: "#ff3333",
+      dark: "#cc0000"
+    },
+    gray: {
+      primary: "#474747",
+      light: "#707070",
+      dark: "#2b2b2b"
+    }
+  },
+
+  // Semantic colors
+  semantic: {
+    success: "#00ff00",
+    error: "#ff0066",
+    warning: "#ff8800",
+    info: "#00aaff"
+  },
+
   // WILD Neon colors for maximum visual impact
   neon: {
     electricBlue: "#00ffff",
@@ -84,7 +106,100 @@ export const robloxColors = {
   },
 };
 
+// Design tokens for consistent styling
+export const designTokens = {
+  borderRadius: {
+    sm: '4px',
+    md: '8px',
+    lg: '12px',
+    xl: '16px',
+    '2xl': '20px'
+  },
+  shadows: {
+    sm: '0 1px 3px rgba(0,0,0,0.12)',
+    base: '0 4px 6px rgba(0,0,0,0.1)',
+    md: '0 6px 12px rgba(0,0,0,0.15)',
+    lg: '0 10px 20px rgba(0,0,0,0.2)',
+    xl: '0 20px 40px rgba(0,0,0,0.3)'
+  },
+  animation: {
+    duration: {
+      fast: '150ms',
+      normal: '250ms',
+      slow: '350ms'
+    },
+    easing: {
+      inOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
+      out: 'cubic-bezier(0.0, 0, 0.2, 1)',
+      in: 'cubic-bezier(0.4, 0, 1, 1)'
+    }
+  }
+};
+
+// Light mode tokens
+export const lightModeTokens = {
+  colors: {
+    background: {
+      primary: '#ffffff',
+      secondary: '#f5f5f5'
+    },
+    surface: {
+      primary: '#ffffff',
+      secondary: '#fafafa'
+    },
+    text: {
+      primary: '#1a1a1a',
+      secondary: '#666666'
+    },
+    border: {
+      primary: '#e0e0e0',
+      secondary: '#d0d0d0'
+    }
+  }
+};
+
+// Base theme configuration shared between light and dark themes
+const baseThemeConfig = {
+  typography: {
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontSize: '2.5rem',
+      fontWeight: 800,
+      lineHeight: 1.2,
+    },
+    h2: {
+      fontSize: '2rem',
+      fontWeight: 700,
+      lineHeight: 1.3,
+    },
+    h3: {
+      fontSize: '1.75rem',
+      fontWeight: 600,
+      lineHeight: 1.4,
+    },
+    h4: {
+      fontSize: '1.5rem',
+      fontWeight: 600,
+      lineHeight: 1.4,
+    },
+    h5: {
+      fontSize: '1.25rem',
+      fontWeight: 600,
+      lineHeight: 1.5,
+    },
+    h6: {
+      fontSize: '1.125rem',
+      fontWeight: 600,
+      lineHeight: 1.5,
+    },
+  },
+  shape: {
+    borderRadius: 12,
+  },
+};
+
 export const robloxTheme = createTheme({
+  ...baseThemeConfig,
   palette: {
     mode: "dark",
     primary: {
@@ -98,7 +213,7 @@ export const robloxTheme = createTheme({
       dark: "#cc00cc",
     },
     background: {
-      default: robloxColors.dark,
+      default: robloxColors.darkBase,
       paper: "#1a1a1a",
     },
     text: {
@@ -120,53 +235,37 @@ export const robloxTheme = createTheme({
   },
 
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    ...baseThemeConfig.typography,
     h1: {
-      fontSize: '2.5rem',
-      fontWeight: 800,
-      lineHeight: 1.2,
+      ...baseThemeConfig.typography.h1,
       background: `linear-gradient(135deg, ${robloxColors.neon.blue}, ${robloxColors.neon.purple})`,
       backgroundClip: 'text',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
     },
     h2: {
-      fontSize: '2rem',
-      fontWeight: 700,
-      lineHeight: 1.3,
+      ...baseThemeConfig.typography.h2,
       background: `linear-gradient(135deg, ${robloxColors.neon.electricBlue}, ${robloxColors.neon.green})`,
       backgroundClip: 'text',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
     },
     h3: {
-      fontSize: '1.75rem',
-      fontWeight: 600,
-      lineHeight: 1.4,
+      ...baseThemeConfig.typography.h3,
       color: robloxColors.neon.blue,
     },
     h4: {
-      fontSize: '1.5rem',
-      fontWeight: 600,
-      lineHeight: 1.4,
+      ...baseThemeConfig.typography.h4,
       color: robloxColors.neon.purple,
     },
     h5: {
-      fontSize: '1.25rem',
-      fontWeight: 600,
-      lineHeight: 1.5,
+      ...baseThemeConfig.typography.h5,
       color: robloxColors.neon.green,
     },
     h6: {
-      fontSize: '1.125rem',
-      fontWeight: 600,
-      lineHeight: 1.5,
+      ...baseThemeConfig.typography.h6,
       color: robloxColors.neon.orange,
     },
-  },
-
-  shape: {
-    borderRadius: 12,
   },
 
   components: {
@@ -226,8 +325,8 @@ export const robloxTheme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: '16px',
-          background: `linear-gradient(145deg, ${robloxColors.dark.surface}, ${robloxColors.dark.card})`,
-          border: `1px solid ${robloxColors.dark.border}`,
+          background: `linear-gradient(145deg, ${robloxColors.darkTheme.surface}, ${robloxColors.darkTheme.card})`,
+          border: `1px solid ${robloxColors.darkTheme.border}`,
           boxShadow: `0 8px 32px ${alpha(robloxColors.neon.deepPurple, 0.3)}, inset 0 1px 0 ${alpha(robloxColors.neon.electricBlue, 0.2)}`,
           backdropFilter: 'blur(20px) saturate(1.5)',
           transition: 'none',
@@ -253,7 +352,7 @@ export const robloxTheme = createTheme({
           borderRadius: '20px',
           fontWeight: 700,
           background: robloxColors.effects.electricGradient,
-          color: robloxColors.dark.text,
+          color: robloxColors.darkTheme.text,
           border: `1px solid ${alpha(robloxColors.neon.electricBlue, 0.5)}`,
           boxShadow: `0 2px 10px ${alpha(robloxColors.neon.hotPink, 0.3)}`,
           animation: 'none',
@@ -305,7 +404,7 @@ export const robloxTheme = createTheme({
         root: {
           borderRadius: '10px',
           height: '8px',
-          backgroundColor: robloxColors.dark.border,
+          backgroundColor: robloxColors.darkTheme.border,
         },
         bar: {
           borderRadius: '10px',
@@ -329,7 +428,7 @@ export const robloxTheme = createTheme({
       styleOverrides: {
         badge: {
           background: robloxColors.effects.fireGradient,
-          color: robloxColors.dark.text,
+          color: robloxColors.darkTheme.text,
           fontWeight: 700,
           boxShadow: `0 0 15px ${robloxColors.neon.laserOrange}`,
           border: `1px solid ${alpha(robloxColors.neon.plasmaYellow, 0.5)}`,
@@ -361,7 +460,7 @@ export const robloxTheme = createTheme({
         root: {
           borderRadius: '12px',
           border: `1px solid ${robloxColors.neon.blue}40`,
-          background: `linear-gradient(145deg, ${robloxColors.dark.surface}, ${robloxColors.dark.card})`,
+          background: `linear-gradient(145deg, ${robloxColors.darkTheme.surface}, ${robloxColors.darkTheme.card})`,
           backdropFilter: 'blur(10px)',
         },
         standardInfo: {

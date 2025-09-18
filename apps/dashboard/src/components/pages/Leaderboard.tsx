@@ -52,26 +52,35 @@ export default function Leaderboard() {
     // Request initial leaderboard from realtime channel via server-triggered event
     void sendWebSocketMessage(WebSocketMessageType.REQUEST_LEADERBOARD, { classId: currentClassId }, { channel: 'public' });
 
-    // Listen for leaderboard updates
-    const handleLeaderboardUpdate = (message: any) => {
-      const data = message.payload || message;
-      dispatch(setLeaderboard(data.leaderboard || []));
+    // Unified handler for all public channel messages
+    const handlePublicLeaderboardMessage = (message: any) => {
+      switch (message.type) {
+        case WebSocketMessageType.LEADERBOARD_UPDATE: {
+          const data = message.payload || message;
+          dispatch(setLeaderboard(data.leaderboard || []));
+          break;
+        }
+        case WebSocketMessageType.XP_GAINED:
+        case WebSocketMessageType.BADGE_EARNED:
+          // Refresh leaderboard when XP is gained or badge is earned
+          dispatch(fetchLeaderboard({ classId: currentClassId, timeframe }));
+          break;
+      }
     };
 
-    const subLeaderboard = subscribeToChannel('public', handleLeaderboardUpdate, (msg) => msg.type === WebSocketMessageType.LEADERBOARD_UPDATE);
-
-    const refresh = () => {
-      dispatch(fetchLeaderboard({ classId: currentClassId, timeframe }));
-    };
-
-    const subXP = subscribeToChannel('public', refresh, (msg) => msg.type === WebSocketMessageType.XP_GAINED);
-    const subBadge = subscribeToChannel('public', refresh, (msg) => msg.type === WebSocketMessageType.BADGE_EARNED);
+    // Single subscription to public channel
+    const subscriptionId = subscribeToChannel(
+      'public',
+      handlePublicLeaderboardMessage,
+      (msg) =>
+        msg.type === WebSocketMessageType.LEADERBOARD_UPDATE ||
+        msg.type === WebSocketMessageType.XP_GAINED ||
+        msg.type === WebSocketMessageType.BADGE_EARNED
+    );
 
     // Cleanup
     return () => {
-      unsubscribeFromChannel(subLeaderboard);
-      unsubscribeFromChannel(subXP);
-      unsubscribeFromChannel(subBadge);
+      unsubscribeFromChannel(subscriptionId);
     };
   }, [dispatch, currentClassId, timeframe]);
 

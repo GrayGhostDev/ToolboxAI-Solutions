@@ -65,12 +65,12 @@
         "@modelcontextprotocol/server-postgres"
       ],
       "env": {
-        "DATABASE_URL": "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev",
-        "PGUSER": "eduplatform",
-        "PGPASSWORD": "eduplatform2024",
-        "PGHOST": "localhost",
-        "PGPORT": "5432",
-        "PGDATABASE": "educational_platform_dev"
+        "DATABASE_URL": "${DATABASE_URL}",
+        "PGUSER": "${PGUSER}",
+        "PGPASSWORD": "${PGPASSWORD}",
+        "PGHOST": "${PGHOST:-localhost}",
+        "PGPORT": "${PGPORT:-5432}",
+        "PGDATABASE": "${PGDATABASE}"
       },
       "description": "PostgreSQL access for educational platform database",
       "scope": "project"
@@ -95,8 +95,8 @@
       ],
       "env": {
         "MCP_SERVER_TYPE": "orchestrator",
-        "REDIS_URL": "${REDIS_URL:-redis://localhost:6379}",
-        "DATABASE_URL": "${DATABASE_URL:-postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev}",
+        "REDIS_URL": "${REDIS_URL}",
+        "DATABASE_URL": "${DATABASE_URL}",
         "PUSHER_APP_ID": "${PUSHER_APP_ID}",
         "PUSHER_KEY": "${PUSHER_KEY}",
         "PUSHER_SECRET": "${PUSHER_SECRET}",

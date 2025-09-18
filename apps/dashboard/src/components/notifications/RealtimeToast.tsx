@@ -19,38 +19,47 @@ export default function RealtimeToast() {
   React.useEffect(() => {
     if (!ENABLE_WEBSOCKET) return;
 
-    const handleClassOnline = (message: any) => {
-      setMessage({
-        text: `Class "${message.payload?.className || 'Unknown'}" is now online!`,
-        type: "info",
-        icon: "🏫",
-      });
+    // Unified message handler for all public channel messages
+    const handlePublicMessage = (message: any) => {
+      switch (message.type) {
+        case WebSocketMessageType.CLASS_ONLINE:
+          setMessage({
+            text: `Class "${message.payload?.className || 'Unknown'}" is now online!`,
+            type: "info",
+            icon: "🏫",
+          });
+          break;
+
+        case WebSocketMessageType.ACHIEVEMENT_UNLOCKED:
+          setMessage({
+            text: message.payload?.message || 'Achievement unlocked!',
+            type: "success",
+            icon: "🏆",
+          });
+          break;
+
+        case WebSocketMessageType.ASSIGNMENT_REMINDER:
+          setMessage({
+            text: message.payload?.message || 'Assignment due soon',
+            type: "warning",
+            icon: "📝",
+          });
+          break;
+      }
     };
 
-    const handleAchievement = (message: any) => {
-      setMessage({
-        text: message.payload?.message || 'Achievement unlocked!',
-        type: "success",
-        icon: "🏆",
-      });
-    };
-
-    const handleAssignmentReminder = (message: any) => {
-      setMessage({
-        text: message.payload?.message || 'Assignment due soon',
-        type: "warning",
-        icon: "📝",
-      });
-    };
-
-    const sub1 = subscribeToChannel('public', handleClassOnline, (msg) => msg.type === WebSocketMessageType.CLASS_ONLINE);
-    const sub2 = subscribeToChannel('public', handleAchievement, (msg) => msg.type === WebSocketMessageType.ACHIEVEMENT_UNLOCKED);
-    const sub3 = subscribeToChannel('public', handleAssignmentReminder, (msg) => msg.type === WebSocketMessageType.ASSIGNMENT_REMINDER);
+    // Single subscription with message type filtering
+    const subscriptionId = subscribeToChannel(
+      'public',
+      handlePublicMessage,
+      (msg) =>
+        msg.type === WebSocketMessageType.CLASS_ONLINE ||
+        msg.type === WebSocketMessageType.ACHIEVEMENT_UNLOCKED ||
+        msg.type === WebSocketMessageType.ASSIGNMENT_REMINDER
+    );
 
     return () => {
-      unsubscribeFromChannel(sub1);
-      unsubscribeFromChannel(sub2);
-      unsubscribeFromChannel(sub3);
+      unsubscribeFromChannel(subscriptionId);
     };
   }, []);
 

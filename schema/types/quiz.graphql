@@ -1,0 +1,633 @@
+# Quiz and assessment type definitions
+
+# Quiz type
+type Quiz {
+  """
+  Unique quiz identifier
+  """
+  id: UUID!
+
+  """
+  Quiz title
+  """
+  title: String!
+
+  """
+  Quiz description
+  """
+  description: String!
+
+  """
+  Parent course
+  """
+  course: Course!
+
+  """
+  Associated lesson
+  """
+  lesson: Lesson
+
+  """
+  Quiz questions
+  """
+  questions: [Question!]!
+
+  """
+  Total points possible
+  """
+  totalPoints: Int!
+
+  """
+  Time limit in minutes (null = unlimited)
+  """
+  timeLimit: Int
+
+  """
+  Number of allowed attempts
+  """
+  maxAttempts: Int
+
+  """
+  Passing score percentage
+  """
+  passingScore: Float!
+
+  """
+  Shuffle questions order
+  """
+  shuffleQuestions: Boolean!
+
+  """
+  Shuffle answer choices
+  """
+  shuffleAnswers: Boolean!
+
+  """
+  Show correct answers after submission
+  """
+  showCorrectAnswers: Boolean!
+
+  """
+  Show score immediately
+  """
+  showScore: Boolean!
+
+  """
+  Quiz type
+  """
+  type: QuizType!
+
+  """
+  Quiz status
+  """
+  status: QuizStatus!
+
+  """
+  Available from date
+  """
+  availableFrom: DateTime
+
+  """
+  Available until date
+  """
+  availableUntil: DateTime
+
+  """
+  Quiz tags for categorization
+  """
+  tags: [String!]!
+
+  """
+  Timestamp information
+  """
+  timestamps: Timestamps!
+}
+
+# Quiz types
+enum QuizType {
+  PRACTICE
+  GRADED
+  EXAM
+  SURVEY
+  SELF_ASSESSMENT
+}
+
+# Quiz status
+enum QuizStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  ARCHIVED
+}
+
+# Question type
+type Question {
+  """
+  Question ID
+  """
+  id: UUID!
+
+  """
+  Question text
+  """
+  text: String!
+
+  """
+  Question type
+  """
+  type: QuestionType!
+
+  """
+  Points for this question
+  """
+  points: Int!
+
+  """
+  Question explanation/solution
+  """
+  explanation: String
+
+  """
+  Question hint
+  """
+  hint: String
+
+  """
+  Media attachments
+  """
+  media: [Media!]!
+
+  """
+  Answer choices (for multiple choice, etc.)
+  """
+  choices: [AnswerChoice!]
+
+  """
+  Correct answer(s)
+  """
+  correctAnswer: JSON!
+
+  """
+  Question metadata
+  """
+  metadata: JSON
+
+  """
+  Question difficulty
+  """
+  difficulty: DifficultyLevel!
+
+  """
+  Learning objectives covered
+  """
+  objectives: [String!]!
+
+  """
+  Question tags
+  """
+  tags: [String!]!
+
+  """
+  Order in quiz
+  """
+  order: Int!
+}
+
+# Question types
+enum QuestionType {
+  MULTIPLE_CHOICE
+  MULTIPLE_SELECT
+  TRUE_FALSE
+  SHORT_ANSWER
+  LONG_ANSWER
+  FILL_BLANK
+  MATCHING
+  ORDERING
+  NUMERIC
+  CODE
+  ROBLOX_INTERACTIVE
+}
+
+# Answer choice for questions
+type AnswerChoice {
+  """
+  Choice ID
+  """
+  id: String!
+
+  """
+  Choice text
+  """
+  text: String!
+
+  """
+  Is this the correct answer
+  """
+  isCorrect: Boolean!
+
+  """
+  Feedback for this choice
+  """
+  feedback: String
+
+  """
+  Media attachment
+  """
+  media: Media
+
+  """
+  Order in choices list
+  """
+  order: Int!
+}
+
+# Media attachment
+type Media {
+  """
+  Media ID
+  """
+  id: UUID!
+
+  """
+  Media type
+  """
+  type: MediaType!
+
+  """
+  Media URL
+  """
+  url: URL!
+
+  """
+  Alt text for accessibility
+  """
+  altText: String
+
+  """
+  Caption
+  """
+  caption: String
+
+  """
+  Media metadata
+  """
+  metadata: JSON
+}
+
+# Media types
+enum MediaType {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+  ROBLOX_ASSET
+}
+
+# Quiz attempt by a student
+type QuizAttempt {
+  """
+  Attempt ID
+  """
+  id: UUID!
+
+  """
+  Quiz being attempted
+  """
+  quiz: Quiz!
+
+  """
+  Student taking the quiz
+  """
+  student: User!
+
+  """
+  Attempt number
+  """
+  attemptNumber: Int!
+
+  """
+  Start time
+  """
+  startedAt: DateTime!
+
+  """
+  Completion time
+  """
+  completedAt: DateTime
+
+  """
+  Time spent in seconds
+  """
+  timeSpent: Int
+
+  """
+  Student's answers
+  """
+  answers: [QuestionAnswer!]!
+
+  """
+  Score achieved
+  """
+  score: Float
+
+  """
+  Points earned
+  """
+  pointsEarned: Int
+
+  """
+  Points possible
+  """
+  pointsPossible: Int!
+
+  """
+  Passed/failed status
+  """
+  passed: Boolean
+
+  """
+  Attempt status
+  """
+  status: AttemptStatus!
+
+  """
+  Teacher feedback
+  """
+  feedback: String
+
+  """
+  Flagged for review
+  """
+  flaggedForReview: Boolean!
+}
+
+# Attempt status
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+  ABANDONED
+}
+
+# Student's answer to a question
+type QuestionAnswer {
+  """
+  Answer ID
+  """
+  id: UUID!
+
+  """
+  Question being answered
+  """
+  question: Question!
+
+  """
+  Student's answer
+  """
+  answer: JSON!
+
+  """
+  Is the answer correct
+  """
+  isCorrect: Boolean
+
+  """
+  Points earned
+  """
+  pointsEarned: Float
+
+  """
+  Time spent on question in seconds
+  """
+  timeSpent: Int
+
+  """
+  Answer timestamp
+  """
+  answeredAt: DateTime!
+
+  """
+  Teacher feedback for this answer
+  """
+  feedback: String
+}
+
+# Quiz score summary
+type QuizScore {
+  """
+  Score ID
+  """
+  id: UUID!
+
+  """
+  Quiz
+  """
+  quiz: Quiz!
+
+  """
+  Student
+  """
+  student: User!
+
+  """
+  Best score achieved
+  """
+  bestScore: Float!
+
+  """
+  Average score across attempts
+  """
+  averageScore: Float!
+
+  """
+  Number of attempts
+  """
+  attemptCount: Int!
+
+  """
+  First attempt date
+  """
+  firstAttemptAt: DateTime!
+
+  """
+  Last attempt date
+  """
+  lastAttemptAt: DateTime!
+
+  """
+  All attempts
+  """
+  attempts: [QuizAttempt!]!
+}
+
+# Quiz analytics
+type QuizAnalytics {
+  """
+  Quiz
+  """
+  quiz: Quiz!
+
+  """
+  Total number of attempts
+  """
+  totalAttempts: Int!
+
+  """
+  Number of unique students
+  """
+  uniqueStudents: Int!
+
+  """
+  Average score
+  """
+  averageScore: Float!
+
+  """
+  Median score
+  """
+  medianScore: Float!
+
+  """
+  Pass rate percentage
+  """
+  passRate: Float!
+
+  """
+  Average time spent
+  """
+  averageTimeSpent: Int!
+
+  """
+  Question difficulty analysis
+  """
+  questionAnalysis: [QuestionAnalytics!]!
+
+  """
+  Score distribution
+  """
+  scoreDistribution: JSON!
+
+  """
+  Common mistakes
+  """
+  commonMistakes: [CommonMistake!]!
+}
+
+# Question analytics
+type QuestionAnalytics {
+  """
+  Question
+  """
+  question: Question!
+
+  """
+  Correct answer rate
+  """
+  correctRate: Float!
+
+  """
+  Average time spent
+  """
+  averageTimeSpent: Int!
+
+  """
+  Skip rate
+  """
+  skipRate: Float!
+
+  """
+  Discrimination index
+  """
+  discriminationIndex: Float!
+
+  """
+  Most common wrong answers
+  """
+  commonWrongAnswers: [String!]!
+}
+
+# Common mistake pattern
+type CommonMistake {
+  """
+  Question
+  """
+  question: Question!
+
+  """
+  Wrong answer pattern
+  """
+  wrongAnswer: String!
+
+  """
+  Frequency
+  """
+  frequency: Int!
+
+  """
+  Percentage of students
+  """
+  percentage: Float!
+
+  """
+  Suggested remediation
+  """
+  remediation: String
+}
+
+# Quiz template for reuse
+type QuizTemplate {
+  """
+  Template ID
+  """
+  id: UUID!
+
+  """
+  Template name
+  """
+  name: String!
+
+  """
+  Template description
+  """
+  description: String!
+
+  """
+  Creator
+  """
+  creator: User!
+
+  """
+  Subject area
+  """
+  subject: Subject!
+
+  """
+  Grade level
+  """
+  gradeLevel: String!
+
+  """
+  Template questions
+  """
+  questions: [Question!]!
+
+  """
+  Usage count
+  """
+  usageCount: Int!
+
+  """
+  Is public template
+  """
+  isPublic: Boolean!
+
+  """
+  Template tags
+  """
+  tags: [String!]!
+
+  """
+  Timestamp information
+  """
+  timestamps: Timestamps!
+}

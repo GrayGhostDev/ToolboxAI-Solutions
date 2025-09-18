@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../store";
 import { signInSuccess, signOut, updateToken, setUser } from "../store/slices/userSlice";
@@ -11,6 +11,7 @@ export const useAuth = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { isAuthenticated, userId, email, displayName, avatarUrl, role, token, refreshToken, schoolId, classIds } = useAppSelector((state) => state.user);
+  const isInitializedRef = useRef(false);
 
   const user = {
     id: userId,
@@ -25,6 +26,12 @@ export const useAuth = () => {
   // Initialize authentication from localStorage on app start
   useEffect(() => {
     const initializeAuth = async () => {
+      // Skip if already initialized (prevents React StrictMode double initialization)
+      if (isInitializedRef.current) {
+        return;
+      }
+      isInitializedRef.current = true;
+
       // Initialize both auth sync and token refresh manager
       try {
         await authSync.initialize();

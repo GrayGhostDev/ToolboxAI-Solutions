@@ -1735,6 +1735,19 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load API v1 endpoints: {e}")
 
+# ==========================================
+# GraphQL Endpoint Setup
+# ==========================================
+
+try:
+    from apps.backend.graphql import setup_graphql
+    setup_graphql(app)
+    logger.info("GraphQL endpoint mounted at /graphql - Playground available in DEBUG mode")
+except ImportError as e:
+    logger.warning(f"Could not setup GraphQL endpoint: {e}")
+except Exception as e:
+    logger.error(f"Error setting up GraphQL endpoint: {e}")
+
 
 # ==========================================
 # Additional API v1 Endpoints for Terminal 2 Dashboard

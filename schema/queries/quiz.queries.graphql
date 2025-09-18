@@ -1,0 +1,176 @@
+# Quiz and assessment queries
+
+extend type Query {
+  """
+  Get a specific quiz by ID
+  """
+  quiz(id: UUID!): Quiz @auth
+
+  """
+  List quizzes for a course
+  """
+  courseQuizzes(
+    courseId: UUID!
+    type: QuizType
+    status: QuizStatus
+    includeHidden: Boolean = false
+  ): [Quiz!]! @auth
+
+  """
+  List quizzes for a lesson
+  """
+  lessonQuizzes(
+    lessonId: UUID!
+    includeHidden: Boolean = false
+  ): [Quiz!]! @auth
+
+  """
+  Get available quizzes for a student
+  """
+  availableQuizzes(
+    studentId: UUID
+    courseId: UUID
+    pagination: PaginationInput
+  ): [Quiz!]! @auth
+
+  """
+  Get upcoming quizzes for a student
+  """
+  upcomingQuizzes(
+    studentId: UUID
+    days: Int = 7
+  ): [Quiz!]! @auth
+
+  """
+  Get quiz attempt by ID
+  """
+  quizAttempt(id: UUID!): QuizAttempt @auth
+
+  """
+  Get quiz attempts for a student
+  """
+  studentQuizAttempts(
+    studentId: UUID!
+    quizId: UUID
+    courseId: UUID
+    status: AttemptStatus
+    pagination: PaginationInput
+  ): [QuizAttempt!]! @auth
+
+  """
+  Get quiz score summary for a student
+  """
+  quizScore(
+    studentId: UUID!
+    quizId: UUID!
+  ): QuizScore @auth
+
+  """
+  Get quiz analytics (teacher only)
+  """
+  quizAnalytics(
+    quizId: UUID!
+    startDate: DateTime
+    endDate: DateTime
+  ): QuizAnalytics! @auth(requires: TEACHER)
+
+  """
+  Get question analytics
+  """
+  questionAnalytics(
+    questionId: UUID!
+  ): QuestionAnalytics! @auth(requires: TEACHER)
+
+  """
+  Search quiz templates
+  """
+  quizTemplates(
+    subject: Subject
+    gradeLevel: String
+    query: String
+    isPublic: Boolean = true
+    pagination: PaginationInput
+  ): [QuizTemplate!]! @auth(requires: TEACHER)
+
+  """
+  Check if student can attempt quiz
+  """
+  canAttemptQuiz(
+    studentId: UUID
+    quizId: UUID!
+  ): QuizEligibility! @auth
+
+  """
+  Get quiz leaderboard
+  """
+  quizLeaderboard(
+    quizId: UUID!
+    limit: Int = 10
+  ): [QuizLeaderboardEntry!]! @auth
+
+  """
+  Get practice questions for a topic
+  """
+  practiceQuestions(
+    subject: Subject!
+    topic: String
+    difficulty: DifficultyLevel
+    count: Int = 10
+  ): [Question!]! @auth
+}
+
+# Quiz eligibility response
+type QuizEligibility {
+  """
+  Can the student attempt the quiz
+  """
+  canAttempt: Boolean!
+
+  """
+  Reason if cannot attempt
+  """
+  reason: String
+
+  """
+  Number of attempts remaining
+  """
+  attemptsRemaining: Int
+
+  """
+  When the quiz becomes available
+  """
+  availableAt: DateTime
+
+  """
+  When the quiz expires
+  """
+  expiresAt: DateTime
+}
+
+# Quiz leaderboard entry
+type QuizLeaderboardEntry {
+  """
+  Rank position
+  """
+  rank: Int!
+
+  """
+  Student
+  """
+  student: User!
+
+  """
+  Score achieved
+  """
+  score: Float!
+
+  """
+  Time taken in seconds
+  """
+  timeSpent: Int!
+
+  """
+  Attempt date
+  """
+  attemptedAt: DateTime!
+}

@@ -1,0 +1,24 @@
+# JetBrains preferred GraphQL configuration
+# This is a symlink/duplicate of graphql.config.yml for better IDE compatibility
+
+schema:
+  - "schema/**/*.graphql"
+
+documents:
+  - "apps/dashboard/src/**/*.{graphql,tsx,ts}"
+
+extensions:
+  endpoints:
+    default:
+      url: "http://localhost:8008/graphql"
+      headers:
+        Authorization: "Bearer ${env:AUTH_TOKEN}"
+
+  introspection:
+    enable: true
+
+  validation:
+    rules:
+      - require-id-when-available
+      - no-unused-fragments
+      - known-type-names

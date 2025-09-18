@@ -1,0 +1,61 @@
+# GraphQL Code Generator Configuration
+# This file configures automatic TypeScript type generation from GraphQL schema
+
+overwrite: true
+schema: "schema/**/*.graphql"
+
+generates:
+  # TypeScript types for frontend
+  apps/dashboard/src/graphql/generated/graphql.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
+    config:
+      # Custom scalar mappings
+      scalars:
+        DateTime: string
+        UUID: string
+        JSON: any
+        URL: string
+        Email: string
+
+      # Type generation options
+      strictScalars: true
+      typesPrefix: I
+      skipTypename: false
+      withHooks: true
+      withComponent: false
+      withHOC: false
+      withMutationFn: true
+      withRefetchFn: true
+      apolloReactHooksImportFrom: "@apollo/client"
+      apolloReactCommonImportFrom: "@apollo/client"
+
+      # Enum configuration
+      enumsAsTypes: false
+      constEnums: true
+
+      # Other options
+      avoidOptionals: false
+      maybeValue: T | undefined
+      inputMaybeValue: T | undefined
+
+      # Naming convention
+      namingConvention:
+        typeNames: pascal-case#pascalCase
+        enumValues: SCREAMING_SNAKE_CASE
+
+  # GraphQL schema introspection file
+  schema.json:
+    plugins:
+      - introspection
+    config:
+      minify: true
+
+  # SDL schema file for IDE support
+  schema.graphql:
+    plugins:
+      - schema-ast
+    config:
+      includeDirectives: true

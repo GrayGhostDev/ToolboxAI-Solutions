@@ -113,3 +113,9 @@ mkdocs-material==9.5.2
 
 # Security
 urllib3==2.2.3
+
+# GraphQL Dependencies
+ariadne[asgi]==0.23.0          # GraphQL server with FastAPI support
+ariadne-codegen==0.13.0        # Python code generation from schema
+aiodataloader==0.4.0           # DataLoader for N+1 query prevention
+graphql-core>=3.2.0            # GraphQL core implementation
