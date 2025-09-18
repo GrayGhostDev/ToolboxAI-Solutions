@@ -4,8 +4,8 @@ FROM node:20-alpine as builder
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY apps/dashboard/package*.json ./
+# Copy package files (only package.json to avoid lock file issues)
+COPY apps/dashboard/package.json ./
 
 # Install dependencies with legacy peer deps to resolve conflicts
 # Need all dependencies (including dev) for the build step

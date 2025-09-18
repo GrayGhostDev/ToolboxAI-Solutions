@@ -31,11 +31,11 @@ os.makedirs(PROJECT_ROOT / "logs", exist_ok=True)
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler(PROJECT_ROOT / "logs" / "server.log", mode='a')
-    ]
+        logging.FileHandler(PROJECT_ROOT / "logs" / "server.log", mode="a"),
+    ],
 )
 
 logger = logging.getLogger(__name__)
@@ -57,13 +57,13 @@ app = fastapi_app  # Tests can use this
 
 __all__ = [
     "fastapi_app",
-    "roblox_server", 
+    "roblox_server",
     "app",  # Backward compatibility
     "ALL_TOOLS",
     "settings",
     "__version__",
     "__author__",
-    "__description__"
+    "__description__",
 ]
 
 logger.info(f"ToolboxAI Roblox Environment Server v{__version__} initialized")

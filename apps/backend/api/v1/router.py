@@ -41,7 +41,7 @@ api_router.include_router(compliance.router, prefix="/compliance", tags=["compli
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
 api_router.include_router(roblox_ai.router, tags=["roblox-ai"])
 api_router.include_router(orchestrator.router, prefix="/orchestrator", tags=["orchestrator"])
-api_router.include_router(admin.router, tags=["admin"])
+api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 
 # Health check endpoint
 @api_router.get("/health")

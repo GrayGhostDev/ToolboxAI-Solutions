@@ -185,9 +185,7 @@ class ServerManager:
                         # Get stderr output
                         try:
                             stderr_output = (
-                                process.stderr.read().decode()
-                                if process.stderr
-                                else "No stderr"
+                                process.stderr.read().decode() if process.stderr else "No stderr"
                             )
                             if stderr_output and stderr_output != "No stderr":
                                 logger.error(f"Server stderr: {stderr_output}")
@@ -223,9 +221,7 @@ class ServerManager:
                 try:
                     process.wait(timeout=10)
                 except subprocess.TimeoutExpired:
-                    logger.warning(
-                        f"Process {i} didn't terminate gracefully, killing..."
-                    )
+                    logger.warning(f"Process {i} didn't terminate gracefully, killing...")
                     process.kill()
                     process.wait()
 
@@ -242,9 +238,7 @@ class ServerManager:
         if self.start_servers():
             try:
                 # Start monitoring in a separate thread
-                monitor_thread = threading.Thread(
-                    target=self.monitor_servers, daemon=True
-                )
+                monitor_thread = threading.Thread(target=self.monitor_servers, daemon=True)
                 monitor_thread.start()
 
                 # Wait for shutdown signal

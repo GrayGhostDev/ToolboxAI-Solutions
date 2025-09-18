@@ -74,6 +74,8 @@ jobs:
           REDIS_URL: redis://localhost:6379
           SECRET_KEY: test-secret-key
           JWT_SECRET: test-jwt-secret
+          JWT_SECRET_KEY: test-jwt-secret-key-for-ci-testing
+          OPENAI_API_KEY: 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
         run: |
           source venv/bin/activate
           pytest tests/unit tests/integration \

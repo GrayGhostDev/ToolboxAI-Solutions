@@ -84,7 +84,7 @@ services:
       - '8009:8009'
       - '9876:9876'
     volumes:
-      - ../../:/app:ro
+      - ../../:/app
     depends_on:
       postgres:
         condition: service_healthy
@@ -233,7 +233,7 @@ services:
     ports:
       - '5001:5001'
     volumes:
-      - ../../:/app:ro
+      - ../../:/app
     depends_on:
       postgres:
         condition: service_healthy

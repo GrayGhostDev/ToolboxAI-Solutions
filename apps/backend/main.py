@@ -1980,76 +1980,13 @@ async def analytics_realtime_websocket(websocket: WebSocket):
 # Commented out to avoid conflicts with router-based endpoint
 
 
-# Report download endpoint
-@app.get("/api/v1/reports/download/{report_id}", tags=["Reports API v1"])
-async def download_report(
-    report_id: str,
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Download generated report by ID.
-    Returns file with appropriate content-type.
-    """
-    try:
-        # Check if report exists in app state (temporary storage)
-        if not hasattr(app.state, "generated_reports"):
-            app.state.generated_reports = {}
-
-        report_data = app.state.generated_reports.get(report_id)
-        if not report_data:
-            raise HTTPException(status_code=404, detail="Report not found or expired")
-
-        # Check if user has access to this report
-        report_user_id = report_data.get("user_id")
-        if report_user_id != current_user.id:
-            # Non-admins cannot access reports they didn't create
-            if current_user.role.lower() != "admin":
-                raise HTTPException(status_code=403, detail="Access denied to this report")
-
-            # Enhanced admin validation - verify organizational scope and report type
-            report_type = report_data.get("report_type", "unknown")
-            if report_type in ["analytics", "admin"] and current_user.role.lower() != "admin":
-                raise HTTPException(status_code=403, detail="Insufficient permissions for this report type")
-
-            # Strict validation for admin cross-user access
-            # Admins can only access reports from users in their organizational scope
-            try:
-                current_org = current_user.id.split('-')[0] if '-' in current_user.id else current_user.id[:8]
-                report_org = report_user_id.split('-')[0] if '-' in report_user_id else report_user_id[:8]
-
-                if current_org != report_org:
-                    logger.warning(f"Admin {current_user.id} denied access to report {report_id} from different organization")
-                    raise HTTPException(status_code=403, detail="Cannot access reports from different organizational scope")
-
-            except (IndexError, AttributeError):
-                logger.warning(f"Invalid user ID format for cross-report access validation")
-                raise HTTPException(status_code=403, detail="Invalid access permissions")
-
-            logger.info(f"Admin {current_user.id} accessing report {report_id} created by {report_user_id} - access granted")
-
-        content_type = report_data.get("content_type", "application/octet-stream")
-        filename = report_data.get("filename", f"report_{report_id}.pdf")
-        content = report_data.get("content")
-
-        if not content:
-            raise HTTPException(status_code=500, detail="Report content not available")
-
-        # Create file response
-        return StreamingResponse(
-            io.BytesIO(content),
-            media_type=content_type,
-            headers={"Content-Disposition": f"attachment; filename={filename}"}
-        )
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error downloading report {report_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to download report")
+# Report download endpoint now handled by API v1 router
+# @app.get("/api/v1/reports/download/{report_id}", tags=["Reports API v1"])
+# Commented out to avoid conflicts with router-based endpoint
 
 
-# Admin user management endpoints
-@app.get("/api/v1/admin/users", tags=["Admin API v1"])
+# Admin user management endpoints now handled by API v1 router
+# @app.get("/api/v1/admin/users", tags=["Admin API v1"])
 async def list_users(
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=20, le=100),
@@ -2155,7 +2092,7 @@ async def list_users(
         }
 
 
-@app.post("/api/v1/admin/users", tags=["Admin API v1"])
+# @app.post("/api/v1/admin/users", tags=["Admin API v1"])
 async def create_user(
     request: UserManagementRequest,
     current_user: User = Depends(require_role("admin"))
@@ -2215,7 +2152,7 @@ async def create_user(
         raise HTTPException(status_code=500, detail="Failed to create user")
 
 
-@app.put("/api/v1/admin/users/{user_id}", tags=["Admin API v1"])
+# @app.put("/api/v1/admin/users/{user_id}", tags=["Admin API v1"])
 async def update_user(
     user_id: str,
     request: UserManagementRequest,
@@ -2312,7 +2249,7 @@ async def update_user(
         raise HTTPException(status_code=500, detail="Failed to update user")
 
 
-@app.delete("/api/v1/admin/users/{user_id}", tags=["Admin API v1"])
+# @app.delete("/api/v1/admin/users/{user_id}", tags=["Admin API v1"])
 async def delete_user(
     user_id: str,
     permanent: bool = Query(default=False),

@@ -22,15 +22,22 @@ class ContentGenerationAgent:
         self.content_templates = {
             "lesson": "Create an engaging lesson about {topic} for grade {grade}",
             "activity": "Design an interactive activity for {topic} suitable for {age} year olds",
-            "explanation": "Explain {concept} in simple terms for {grade} grade students"
+            "explanation": "Explain {concept} in simple terms for {grade} grade students",
         }
 
-    async def generate_content(self, subject: str, grade_level: int, objectives: list, 
-                              include_assessment: bool = True, *args, **kwargs):
+    async def generate_content(
+        self,
+        subject: str,
+        grade_level: int,
+        objectives: list,
+        include_assessment: bool = True,
+        *args,
+        **kwargs,
+    ):
         """Generate educational content based on curriculum requirements"""
         # Parse educational requirements
         age_range = grade_level + 5  # Approximate age from grade
-        
+
         # Build content prompt
         prompt = f"""
         Create educational content for:
@@ -44,20 +51,19 @@ class ContentGenerationAgent:
         3. Clear learning outcomes
         4. Roblox game integration opportunities
         """
-        
+
         if include_assessment:
             prompt += "\n5. Include assessment questions to test understanding"
-        
+
         # Generate content using LLM
         # Get recent messages from chat history
-        recent_messages = list(self.chat_history.messages)[-10:] if self.chat_history.messages else []
-        messages = [
-            HumanMessage(content=prompt),
-            *recent_messages  # Include recent context
-        ]
-        
+        recent_messages = (
+            list(self.chat_history.messages)[-10:] if self.chat_history.messages else []
+        )
+        messages = [HumanMessage(content=prompt), *recent_messages]  # Include recent context
+
         response = await self.llm.ainvoke(messages)
-        
+
         # Format for Roblox implementation
         content = {
             "subject": subject,
@@ -65,16 +71,16 @@ class ContentGenerationAgent:
             "objectives": objectives,
             "content": response.content,
             "interactive_elements": self._extract_interactive_elements(response.content),
-            "roblox_integration": self._generate_roblox_integration(subject, objectives)
+            "roblox_integration": self._generate_roblox_integration(subject, objectives),
         }
-        
+
         # Store in chat history
         self.chat_history.add_user_message(prompt)
         self.chat_history.add_ai_message(response.content)
-        
+
         logger.info("Generated content for %s grade %d", subject, grade_level)
         return content
-    
+
     def _extract_interactive_elements(self, content: str) -> list:
         """Extract interactive elements from generated content"""
         elements = []
@@ -85,15 +91,15 @@ class ContentGenerationAgent:
         if "game" in content.lower():
             elements.append("game")
         return elements
-    
+
     def _generate_roblox_integration(self, subject: str, objectives: list) -> dict:
         """Generate Roblox-specific integration suggestions"""
         return {
             "environment_type": self._suggest_environment(subject),
             "game_mechanics": self._suggest_mechanics(objectives),
-            "ui_elements": ["lesson_display", "progress_tracker", "reward_system"]
+            "ui_elements": ["lesson_display", "progress_tracker", "reward_system"],
         }
-    
+
     def _suggest_environment(self, subject: str) -> str:
         """Suggest appropriate Roblox environment for subject"""
         environments = {
@@ -101,10 +107,10 @@ class ContentGenerationAgent:
             "history": "time_machine",
             "math": "puzzle_world",
             "geography": "world_map",
-            "language": "library"
+            "language": "library",
         }
         return environments.get(subject.lower(), "classroom")
-    
+
     def _suggest_mechanics(self, objectives: list) -> list:
         """Suggest game mechanics based on learning objectives"""
         mechanics = []
@@ -121,7 +127,7 @@ class ContentGenerationAgent:
 
 class QuizGenerationAgent:
     """Quiz generation agent for assessments"""
-    
+
     def __init__(self, *args, **kwargs):
         # TODO: Initialize quiz generation agent
         pass
@@ -133,7 +139,7 @@ class QuizGenerationAgent:
 
 class TerrainGenerationAgent:
     """Terrain generation agent for Roblox environments"""
-    
+
     def __init__(self, *args, **kwargs):
         # TODO: Initialize terrain generation agent
         pass
@@ -145,7 +151,7 @@ class TerrainGenerationAgent:
 
 class ScriptGenerationAgent:
     """Script generation agent for Lua code"""
-    
+
     def __init__(self, *args, **kwargs):
         # TODO: Initialize script generation agent
         pass
@@ -157,7 +163,7 @@ class ScriptGenerationAgent:
 
 class CodeReviewAgent:
     """Code review agent for security and best practices"""
-    
+
     def __init__(self, *args, **kwargs):
         # TODO: Initialize code review agent
         pass

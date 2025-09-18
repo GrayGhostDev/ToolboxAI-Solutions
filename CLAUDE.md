@@ -2,15 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Current Repository State (After 2025-09-16 Cleanup)
+## Current Repository State (After 2025-09-18 Deep Clean)
 
-This is a monorepo that underwent significant restructuring in September 2025. Multiple agents (warp001-warp007) have worked on various improvements. The repository is on branch `chore/repo-structure-cleanup` with main work tracked in `main` branch.
+This is a monorepo that underwent significant restructuring in September 2025. The repository is on branch `feature/roblox-themed-dashboard` with main work tracked in `main` branch.
 
-### Major Reorganization (2025-09-16)
-- **Directory Cleanup**: Complete reorganization of root directory - see ROOT_DIRECTORY_ORGANIZATION.md
-- **Core Components Consolidated**: All AI agents, MCP, coordinators moved to `core/` directory
-- **Documentation Centralized**: All docs moved to `docs/` with organized subfolders
-- **Virtual Environment**: Cleaned up duplicate environments, use standard `venv/`
+### Latest Deep Clean (2025-09-18)
+- **Root Directory Optimized**: Only essential config files remain in root
+- **Documentation Reorganized**: All docs properly categorized in `docs/` subdirectories
+- **Test Files Consolidated**: All tests moved to `tests/` directory
+- **Environment Templates**: Config templates moved to `config/env-templates/`
+- **Scripts Organized**: Maintenance scripts moved to `scripts/maintenance/`
+- **Disk Usage Reduced**: From 5.3GB to 4.6GB (700MB+ saved)
+- **Python Cache Eliminated**: 21,361 .pyc files and 2,682 __pycache__ dirs removed
+- **Virtual Environment**: Standardized on `venv/` (removed all venv_clean references)
 
 ### Recent Updates (2025-09-16)
 - **BasedPyright Configuration**: Migrated from `[tool.pyright]` to `[tool.basedpyright]` in pyproject.toml
@@ -31,14 +35,47 @@ This is a monorepo that underwent significant restructuring in September 2025. M
 
 ## Development Environment
 
-### Key Paths (Updated 2025-09-16)
-- **Python Environment**: `venv/` - Standard virtual environment (create with `python3 -m venv venv`)
-- **Backend API**: `apps/backend/` - FastAPI server on port 8008
-- **Dashboard**: `apps/dashboard/` - React + TypeScript frontend on port 5179
-- **Core Components**: `core/` - Contains agents, MCP, coordinators, sparc, database
-- **Database**: `database/` - Models and migrations
-- **Scripts**: `scripts/` - Automation and utility scripts
-- **Configuration**: `config/` - All configuration files
+### Root Directory Files (Essential Only)
+```
+# Package Management & Build
+- package.json, package-lock.json  # NPM workspace config
+- pyproject.toml                   # Python project config
+- requirements.txt                 # Python dependencies
+- Makefile                        # Build automation
+
+# Configuration
+- .env, .env.example              # Environment variables
+- pytest.ini                      # Test configuration
+- render.yaml                     # Deployment config
+- .gitignore                      # Git exclusions
+
+# Documentation
+- README.md                       # Main documentation
+- CLAUDE.md                       # This file - AI guidance
+
+# Version Control
+- .nvmrc                          # Node version
+- .python-version                 # Python version
+```
+
+### Directory Structure (Updated 2025-09-18)
+- **apps/**
+  - `backend/` - FastAPI server (port 8008)
+  - `dashboard/` - React frontend (port 5179)
+- **core/** - AI agents, MCP, coordinators, SPARC
+- **database/** - Models, migrations, services
+- **scripts/**
+  - `maintenance/` - Fix scripts, cleanup tools
+  - `testing/` - Test runners and verification
+- **config/**
+  - `env-templates/` - Environment config examples
+- **tests/** - All test files
+- **docs/** - All documentation
+  - `04-implementation/` - Technical docs
+  - `05-features/` - Feature documentation
+  - `09-meta/` - Meta documentation
+  - `10-reports/` - Status reports
+- **venv/** - Python virtual environment
 
 ### IDE Setup
 ```bash
