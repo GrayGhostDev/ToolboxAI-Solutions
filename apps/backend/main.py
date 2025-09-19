@@ -1453,6 +1453,14 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load AI chat endpoints: {e}")
 
+# Load Enhanced Content Generation endpoints
+try:
+    from apps.backend.api.v1.endpoints.enhanced_content import router as enhanced_content_router
+    app.include_router(enhanced_content_router)
+    logger.info("Enhanced Content Generation endpoints loaded successfully - 5-stage pipeline with SPARC integration enabled")
+except ImportError as e:
+    logger.warning(f"Could not load Enhanced Content Generation endpoints: {e}")
+
 # Load Prompt Template endpoints
 try:
     from apps.backend.api.v1.endpoints.prompt_templates import router as prompt_templates_router

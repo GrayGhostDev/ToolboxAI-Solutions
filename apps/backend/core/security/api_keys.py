@@ -69,8 +69,8 @@ class APIKeyModel(Base):
     usage_count = Column(Integer, default=0)
     rate_limit = Column(Integer, default=1000)  # Requests per hour
 
-    # Metadata
-    metadata = Column(JSON, default=dict)
+    # Additional data
+    additional_metadata = Column('metadata', JSON, default=dict)
 
 
 class APIKeyCreate(BaseModel):

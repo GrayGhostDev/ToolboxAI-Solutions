@@ -293,14 +293,44 @@ class ApiClient {
     // Debug logging
     console.log('Login attempt with:', { username, email });
 
-    const response = await this.request<AuthResponse>({
+    const response = await this.request<any>({
       method: "POST",
       url: "/api/v1/auth/login",
       data: { username, email, password },  // Send both username and email
     });
 
     console.log('Login response:', response);
-    return response;
+
+    // Map backend response to frontend AuthResponse format
+    const mappedResponse: AuthResponse = {
+      accessToken: response.access_token || response.accessToken,
+      refreshToken: response.refresh_token || response.refreshToken || response.access_token, // Use access_token as fallback if no refresh_token
+      expiresIn: response.expires_in || response.expiresIn || 3600,
+      user: {
+        id: response.user.id || response.user.user_id || 1,
+        email: response.user.email,
+        username: response.user.username,
+        firstName: response.user.first_name || response.user.firstName || response.user.username,
+        lastName: response.user.last_name || response.user.lastName || '',
+        displayName: response.user.display_name || response.user.displayName || response.user.username,
+        avatarUrl: response.user.avatar_url || response.user.avatarUrl || '',
+        role: response.user.role || response.role, // Backend might return role at root level
+        schoolId: response.user.school_id || response.user.schoolId || null,
+        schoolName: response.user.school_name || response.user.schoolName || '',
+        classIds: response.user.class_ids || response.user.classIds || [],
+        parentIds: response.user.parent_ids || response.user.parentIds || [],
+        childIds: response.user.child_ids || response.user.childIds || [],
+        xp: response.user.xp || 0,
+        level: response.user.level || 1,
+        badges: response.user.badges || [],
+        achievements: response.user.achievements || [],
+        settings: response.user.settings || {},
+        createdAt: response.user.created_at || response.user.createdAt || new Date().toISOString(),
+        updatedAt: response.user.updated_at || response.user.updatedAt || new Date().toISOString(),
+      }
+    };
+
+    return mappedResponse;
   }
 
   async register(data: {

@@ -304,8 +304,16 @@ const updateProfile = useCallback(async (updates: Partial<User>) => {
       console.warn('Role switching is only available in development mode');
       return;
     }
-    
-    const testUser = Object.values(TEST_USERS).find(u => u.role === role);
+
+    // Define test users inline since TEST_USERS is not imported
+    const testUsers = {
+      teacher: { email: 'jane.smith@school.edu', password: 'Teacher123!', role: 'teacher' },
+      student: { email: 'alex.johnson@student.edu', password: 'Student123!', role: 'student' },
+      admin: { email: 'admin@toolboxai.com', password: 'Admin123!', role: 'admin' },
+      parent: { email: 'parent@example.com', password: 'Parent123!', role: 'parent' }
+    };
+
+    const testUser = Object.values(testUsers).find(u => u.role === role);
     if (testUser) {
       login(testUser.email, testUser.password);
     }
