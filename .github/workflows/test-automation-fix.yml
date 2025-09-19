@@ -83,8 +83,7 @@ jobs:
             --cov-report=term-missing \
             --tb=short \
             -v \
-            --ignore=tests/e2e \
-            || true  # Don't fail on test errors for now
+            --ignore=tests/e2e
 
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
@@ -117,17 +116,14 @@ jobs:
       - name: Run type checking
         working-directory: apps/dashboard
         run: npm run typecheck
-        continue-on-error: true
 
       - name: Run linting
         working-directory: apps/dashboard
         run: npm run lint
-        continue-on-error: true
 
       - name: Run unit tests
         working-directory: apps/dashboard
         run: npm test -- --run
-        continue-on-error: true
 
       - name: Build dashboard
         working-directory: apps/dashboard
