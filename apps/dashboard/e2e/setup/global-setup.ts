@@ -32,6 +32,8 @@ async function globalSetup(config: FullConfig) {
     // Navigate to login page
     const baseURL = config.projects[0].use?.baseURL || 'http://localhost:5179';
     await page.goto(`${baseURL}/login`);
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(1000); // Give React time to render
 
     // Check if backend is available (Docker container on port 8009)
     const apiURL = process.env.PLAYWRIGHT_API_URL || 'http://localhost:8009';
@@ -49,14 +51,16 @@ async function globalSetup(config: FullConfig) {
     }
 
     // Perform admin authentication and save state
-    const adminEmail = process.env.TEST_ADMIN_EMAIL || 'admin@toolboxai.edu';
-    const adminPassword = process.env.TEST_ADMIN_PASSWORD || 'TestAdmin123!';
+    // Using demo credentials from Login.tsx
+    const adminEmail = process.env.TEST_ADMIN_EMAIL || 'admin@toolboxai.com';
+    const adminPassword = process.env.TEST_ADMIN_PASSWORD || 'Admin123!';
 
     // Try to log in as admin
     try {
-      await page.fill('[data-testid="email-input"]', adminEmail);
-      await page.fill('[data-testid="password-input"]', adminPassword);
-      await page.click('[data-testid="login-submit"]');
+      // Use flexible selectors for better reliability
+      await page.locator('input[name="email"], [data-testid="email-input"]').first().fill(adminEmail);
+      await page.locator('input[name="password"], [data-testid="password-input"]').first().fill(adminPassword);
+      await page.locator('button[type="submit"], [data-testid="login-submit"]').first().click();
 
       // Wait for successful login
       await page.waitForURL(/\/dashboard/, { timeout: 5000 });
@@ -101,8 +105,9 @@ async function globalSetup(config: FullConfig) {
     }
 
     // Create teacher auth state
-    const teacherEmail = process.env.TEST_TEACHER_EMAIL || 'teacher@toolboxai.edu';
-    const teacherPassword = process.env.TEST_TEACHER_PASSWORD || 'TestTeacher123!';
+    // Using demo credentials from Login.tsx
+    const teacherEmail = process.env.TEST_TEACHER_EMAIL || 'jane.smith@school.edu';
+    const teacherPassword = process.env.TEST_TEACHER_PASSWORD || 'Teacher123!';
 
     const teacherAuthState = {
       cookies: [],
@@ -135,8 +140,9 @@ async function globalSetup(config: FullConfig) {
     console.log('✅ Teacher authentication state saved');
 
     // Create student auth state
-    const studentEmail = process.env.TEST_STUDENT_EMAIL || 'student@toolboxai.edu';
-    const studentPassword = process.env.TEST_STUDENT_PASSWORD || 'TestStudent123!';
+    // Using demo credentials from Login.tsx
+    const studentEmail = process.env.TEST_STUDENT_EMAIL || 'alex.johnson@student.edu';
+    const studentPassword = process.env.TEST_STUDENT_PASSWORD || 'Student123!';
 
     const studentAuthState = {
       cookies: [],

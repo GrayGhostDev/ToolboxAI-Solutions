@@ -89,6 +89,7 @@ export default function App() {
         }
       };
     }
+    return undefined; // Explicit return for when not authenticated
   }, [isAuthenticated]);
 
   // Lightweight performance monitoring for development

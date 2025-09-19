@@ -264,36 +264,45 @@ end
 function ScriptInjector:createScript(scriptData, source)
     local scriptType = scriptData.type or "Script"
     local script = Instance.new(scriptType)
-    
+
     script.Name = scriptData.name or ("GeneratedScript_" .. self.scriptCount)
-    
+
     -- Set source (this requires plugin-level permissions)
     local success = pcall(function()
         script.Source = source
     end)
-    
-    if not success then
-        -- If we can't set source directly, create a StringValue as fallback
-        local sourceValue = Instance.new("StringValue")
-        sourceValue.Name = "GeneratedSource"
-        sourceValue.Value = source
-        sourceValue.Parent = script
-        
-        -- Add loader script
-        local loaderSource = [[
-local sourceValue = script:WaitForChild("GeneratedSource")
-local source = sourceValue.Value
-sourceValue:Destroy()
 
--- Execute the source
-local func, err = loadstring(source)
-if func then
-    func()
-else
-    warn("Failed to load generated script:", err)
+    if not success then
+        -- Instead of using loadstring, use a template-based system
+        -- Store the script type and template ID, not the actual source
+        local templateConfig = Instance.new("Configuration")
+        templateConfig.Name = "TemplateConfig"
+        templateConfig.Parent = script
+
+        local templateId = Instance.new("StringValue")
+        templateId.Name = "TemplateId"
+        templateId.Value = scriptData.templateId or "default"
+        templateId.Parent = templateConfig
+
+        local parameters = Instance.new("StringValue")
+        parameters.Name = "Parameters"
+        parameters.Value = HttpService:JSONEncode(scriptData.parameters or {})
+        parameters.Parent = templateConfig
+
+        -- Use a safe executor that only runs predefined templates
+        local executorSource = [[
+local TemplateExecutor = require(game.ServerStorage:WaitForChild("TemplateExecutor"))
+local config = script:WaitForChild("TemplateConfig")
+local templateId = config:WaitForChild("TemplateId").Value
+local parameters = config:WaitForChild("Parameters").Value
+
+-- Execute only safe, predefined templates
+local success, result = TemplateExecutor:ExecuteTemplate(templateId, parameters)
+if not success then
+    warn("Failed to execute template:", templateId, result)
 end
 ]]
-        script.Source = loaderSource
+        script.Source = executorSource
     end
     
     -- Add metadata

@@ -101,3 +101,4 @@ declare module '@playwright/test' {
 }
 
 export { expect } from '@playwright/test';
+export type { Page } from '@playwright/test';

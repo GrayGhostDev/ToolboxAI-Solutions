@@ -19,13 +19,14 @@ interface UserState {
 
 const initialState: UserState = {
   role: "teacher",
-  isAuthenticated: process.env.NODE_ENV === 'development', // Auto-authenticate in development
-  userId: "dev-user-001",
-  email: "teacher@example.com",
-  displayName: "Development Teacher",
-  firstName: "Development",
-  lastName: "Teacher",
-  token: "dev-token",
+  // Auto-authenticate in development, but not during E2E tests
+  isAuthenticated: process.env.NODE_ENV === 'development' && !import.meta.env.VITE_E2E_TESTING,
+  userId: import.meta.env.VITE_E2E_TESTING ? undefined : "dev-user-001",
+  email: import.meta.env.VITE_E2E_TESTING ? undefined : "teacher@example.com",
+  displayName: import.meta.env.VITE_E2E_TESTING ? undefined : "Development Teacher",
+  firstName: import.meta.env.VITE_E2E_TESTING ? undefined : "Development",
+  lastName: import.meta.env.VITE_E2E_TESTING ? undefined : "Teacher",
+  token: import.meta.env.VITE_E2E_TESTING ? undefined : "dev-token",
 };
 
 export const userSlice = createSlice({

@@ -71,7 +71,7 @@ jobs:
           DATABASE_URL: postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev
           REDIS_URL: redis://localhost:6379
           JWT_SECRET_KEY: test-secret-key-for-ci-testing
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'sk-test-key-for-development' }}
           TESTING: true
           PYTHONPATH: ${{ github.workspace }}
         run: |

@@ -978,11 +978,18 @@ local function applyTerrainGeneration(terrainData)
     
     local success, error = pcall(function()
         if terrainData.script then
-            -- Execute terrain generation script
-            local terrainFunc = loadstring(terrainData.script)
-            if terrainFunc then
-                terrainFunc()
+            -- SECURITY FIX: Use template-based terrain generation instead of loadstring
+            -- The script field should now contain a template ID, not arbitrary code
+            local TemplateExecutor = require(game.ServerStorage:WaitForChild("TemplateExecutor"))
+            local templateSuccess, templateResult = TemplateExecutor:ExecuteTemplate(
+                terrainData.templateId or "terrain_generation",
+                HttpService:JSONEncode(terrainData.parameters or {})
+            )
+            if templateSuccess then
                 return true
+            else
+                warn("Terrain template execution failed:", templateResult)
+                return false
             end
         elseif terrainData.regions then
             -- Apply terrain regions

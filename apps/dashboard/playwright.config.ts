@@ -147,13 +147,14 @@ export default defineConfig({
       command: 'npm run dev',
       port: 5179,
       timeout: 120 * 1000,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,  // Use already running server
       env: {
         VITE_API_BASE_URL: apiURL,
         VITE_WS_URL: `ws://localhost:8008`,
         VITE_ENABLE_WEBSOCKET: 'true',
         VITE_PUSHER_KEY: process.env.VITE_PUSHER_KEY || 'test-key',
         VITE_PUSHER_CLUSTER: process.env.VITE_PUSHER_CLUSTER || 'us2',
+        VITE_E2E_TESTING: 'true',  // Disable auto-authentication for tests
       },
     },
   ],

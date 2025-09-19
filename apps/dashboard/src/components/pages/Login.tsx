@@ -45,6 +45,21 @@ export default function Login() {
     setLoading(true);
     setError("");
 
+    // Basic client-side validation
+    if (!formData.email || !formData.password) {
+      setError("Email and password are required");
+      setLoading(false);
+      return;
+    }
+
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email) && !formData.email.includes("_")) {
+      setError("Please enter a valid email address or username");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await login(formData.email, formData.password);
       
@@ -137,13 +152,16 @@ export default function Login() {
                 fullWidth
                 name="email"
                 label="Username or Email"
-                type="text"
+                type="email"
                 placeholder="e.g. john_teacher or john@teacher.com"
                 value={formData.email}
                 onChange={handleChange}
                 required
                 disabled={loading}
                 helperText="Enter your username or email address"
+                inputProps={{
+                  "data-testid": "email-input",
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -167,6 +185,9 @@ export default function Login() {
                 onChange={handleChange}
                 required
                 disabled={loading}
+                inputProps={{
+                  "data-testid": "password-input",
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -180,6 +201,7 @@ export default function Login() {
                         edge="end"
                         disabled={loading}
                         aria-label="toggle password visibility"
+                        data-testid="password-visibility-toggle"
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
@@ -199,6 +221,7 @@ export default function Login() {
                 variant="contained"
                 size="large"
                 disabled={loading}
+                data-testid="login-submit"
                 sx={{
                   borderRadius: 2,
                   py: 1.5,
