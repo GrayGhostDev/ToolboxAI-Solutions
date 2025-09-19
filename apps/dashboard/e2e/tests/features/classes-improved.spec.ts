@@ -1,4 +1,5 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 /**
  * Improved Classes Management E2E Tests
@@ -7,14 +8,75 @@ import { test, expect, Page } from '@playwright/test';
 
 // Helper function to login as teacher
 async function loginAsTeacher(page: Page) {
+  // First check if backend is accessible from test context
+  const apiResponse = await page.request.get('http://127.0.0.1:8009/health');
+  if (!apiResponse.ok()) {
+    console.error(`Backend not accessible: ${apiResponse.status()} ${apiResponse.statusText()}`);
+  }
+
   await page.goto('/login');
+
+  // Wait for login form to be ready
+  await page.waitForSelector('input[name="email"]', { state: 'visible' });
+  await page.waitForTimeout(500); // Let form initialize
+
   await page.locator('input[name="email"]').fill('jane.smith@school.edu');
   await page.locator('input[name="password"]').fill('Teacher123!');
-  await page.locator('button[type="submit"]').click();
+
+  // Setup API response interception to debug
+  const responsePromise = page.waitForResponse(
+    resp => resp.url().includes('/api/v1/auth/login'),
+    { timeout: 15000 }
+  );
+
+  // Click login button
+  const submitButton = page.locator('button[type="submit"]:has-text("Sign In")');
+  await submitButton.click();
+
+  try {
+    // Wait for the login API response
+    const response = await responsePromise;
+    console.log(`Login API response: ${response.status()}`);
+
+    if (response.ok()) {
+      const body = await response.json();
+      console.log(`User role from API: ${body.role}`);
+    }
+  } catch (error) {
+    console.error('Login API call failed:', error);
+  }
+
+  // Wait for navigation away from login
   await page.waitForURL(url => !url.pathname.includes('/login'), {
-    timeout: 10000,
-    waitUntil: 'networkidle'
+    timeout: 15000,
+    waitUntil: 'domcontentloaded' // Changed from 'networkidle' for faster response
   });
+
+  // Critical: Wait for authentication state to be fully propagated
+  // The AuthContext now dispatches to Redux, so we need to wait for that
+  await page.waitForTimeout(2000); // Give Redux time to update
+
+  // Verify we're logged in by checking for user menu or dashboard elements
+  const userIndicators = [
+    '[data-testid="user-menu"]',
+    '[aria-label*="Profile"]',
+    'button:has-text("jane_smith")',
+    '.MuiAvatar-root', // Avatar component
+    '[role="navigation"]' // Navigation sidebar
+  ];
+
+  let userFound = false;
+  for (const selector of userIndicators) {
+    if (await page.locator(selector).isVisible()) {
+      userFound = true;
+      console.log(`User authenticated - found: ${selector}`);
+      break;
+    }
+  }
+
+  if (!userFound) {
+    console.error('Warning: Could not verify user authentication state');
+  }
 }
 
 // Helper to navigate to classes
@@ -63,41 +125,53 @@ test.describe('Classes Management - Improved', () => {
     await loginAsTeacher(page);
     await navigateToClasses(page);
 
-    // Wait for the page to fully load
+    // Wait for the page to fully load and Redux state to propagate
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000); // Give time for Redux state updates
+
+    // Debug: Check Redux state in browser console
+    const role = await page.evaluate(() => {
+      // Access Redux store if available in window
+      const storeState = (window as any).__REDUX_DEVTOOLS_EXTENSION__?.()?.getState?.();
+      console.log('Redux state:', storeState);
+      return storeState?.user?.role || 'role-not-found';
+    });
+    console.log(`User role from Redux: ${role}`);
 
     // Debug: Take screenshot to see current state
-    await page.screenshot({ path: 'debug-before-button-click.png' });
+    await page.screenshot({ path: 'debug-classes-page.png' });
 
-    // Try multiple selectors for the Create Class button
-    let createButton = page.getByRole('button', { name: /Create Class/i });
+    // Look for Create Class button with multiple strategies
+    const buttonSelectors = [
+      'button:has-text("Create Class")',
+      'button[aria-label*="Create"]',
+      'button:has([data-testid="AddIcon"])',
+      'button:has(svg):has-text("Create")',
+      // Material-UI specific
+      '.MuiButton-root:has-text("Create Class")',
+      'button.MuiButton-contained:has-text("Create")',
+    ];
 
-    // Check if button exists at all
-    const buttonCount = await createButton.count();
-    console.log(`Found ${buttonCount} Create Class button(s)`);
-
-    if (buttonCount === 0) {
-      // Try alternative selectors
-      createButton = page.locator('button:has-text("Create Class")');
-      const altButtonCount = await createButton.count();
-      console.log(`Alternative selector found ${altButtonCount} button(s)`);
-
-      if (altButtonCount === 0) {
-        // Try looking for any button with Add icon
-        createButton = page.locator('button').filter({ has: page.locator('svg[data-testid*="Add"]') });
-        const iconButtonCount = await createButton.count();
-        console.log(`Icon button selector found ${iconButtonCount} button(s)`);
-
-        if (iconButtonCount === 0) {
-          throw new Error('Create Class button not found with any selector');
-        }
+    let createButton = null;
+    for (const selector of buttonSelectors) {
+      const count = await page.locator(selector).count();
+      console.log(`Selector "${selector}" found ${count} element(s)`);
+      if (count > 0) {
+        createButton = page.locator(selector).first();
+        break;
       }
     }
 
+    if (!createButton) {
+      // List all visible buttons for debugging
+      const allButtons = await page.locator('button').allTextContents();
+      console.log('All visible buttons:', allButtons);
+      throw new Error(`Create Class button not found. User role: ${role}`);
+    }
+
     // Wait for button to be visible and enabled
-    await expect(createButton.first()).toBeVisible({ timeout: 10000 });
-    await expect(createButton.first()).toBeEnabled({ timeout: 5000 });
+    await expect(createButton).toBeVisible({ timeout: 10000 });
+    await expect(createButton).toBeEnabled({ timeout: 5000 });
 
     // Scroll button into view if needed
     await createButton.first().scrollIntoViewIfNeeded();

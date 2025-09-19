@@ -1,0 +1,81 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'toolboxai-monitor'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'
+rule_files:
+  - "alert_rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # FastAPI Backend Metrics
+  - job_name: 'fastapi-backend'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.docker.internal:8008']
+        labels:
+          service: 'backend'
+          component: 'fastapi'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Node Exporter - System metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          service: 'system'
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+        labels:
+          service: 'database'
+          database: 'postgresql'
+
+  # Redis Exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'cache'
+          database: 'redis'
+
+  # Dashboard Frontend (if metrics endpoint is added)
+  - job_name: 'dashboard'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.docker.internal:5179']
+        labels:
+          service: 'frontend'
+          component: 'react'
+
+  # Additional FastAPI instances if running multiple
+  - job_name: 'fastapi-flask-bridge'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.docker.internal:5001']
+        labels:
+          service: 'backend'
+          component: 'flask-bridge'
+
+# Service discovery for dynamic environments (optional)
+# Can be configured for Kubernetes, Docker Swarm, etc.

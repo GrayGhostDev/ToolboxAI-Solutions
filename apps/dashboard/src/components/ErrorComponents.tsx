@@ -419,6 +419,7 @@ export function SuccessRecovery({
       const timer = setTimeout(onDismiss, 3000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [onDismiss]);
 
   return (

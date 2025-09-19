@@ -1,0 +1,244 @@
+groups:
+  - name: security_alerts
+    interval: 30s
+    rules:
+      # Authentication Alerts
+      - alert: HighAuthenticationFailureRate
+        expr: rate(auth_attempts_total{status="failed"}[5m]) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "High authentication failure rate detected"
+          description: "Authentication failures exceeding 30/min for {{ $labels.method }} method"
+
+      - alert: BruteForceAttempt
+        expr: rate(auth_attempts_total{status="failed"}[1m]) > 5
+        for: 30s
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "Possible brute force attack"
+          description: "More than 5 failed auth attempts per second detected"
+
+      # API Key Alerts
+      - alert: APIKeyRateLimitExceeded
+        expr: rate(api_key_validations_total{status="rate_limited"}[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+          category: api
+        annotations:
+          summary: "API key rate limits being hit"
+          description: "API key {{ $labels.key_id }} exceeding rate limits"
+
+      - alert: InvalidAPIKeyUsage
+        expr: rate(api_key_validations_total{status="invalid"}[5m]) > 0.2
+        for: 2m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "High rate of invalid API key attempts"
+          description: "Invalid API key usage detected - possible unauthorized access attempt"
+
+      # WebSocket Security Alerts
+      - alert: UnauthorizedWebSocketAttempts
+        expr: rate(websocket_connections_active{status="rejected"}[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+          category: websocket
+        annotations:
+          summary: "Unauthorized WebSocket connection attempts"
+          description: "Multiple rejected WebSocket connections detected"
+
+      # Roblox Security Alerts
+      - alert: HighRiskScriptValidations
+        expr: rate(roblox_validations_total{risk_level="high", status="failed"}[10m]) > 0.2
+        for: 5m
+        labels:
+          severity: critical
+          category: roblox
+        annotations:
+          summary: "High-risk Roblox scripts detected"
+          description: "Multiple high-risk scripts failing validation"
+
+      - alert: RobloxDeploymentFailures
+        expr: rate(roblox_deployments_total{status="failed"}[15m]) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          category: roblox
+        annotations:
+          summary: "Roblox deployment failures"
+          description: "High rate of failed Roblox deployments for {{ $labels.content_type }}"
+
+  - name: performance_alerts
+    interval: 30s
+    rules:
+      # Response Time Alerts
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High API latency detected"
+          description: "95th percentile latency > 2s for endpoint {{ $labels.endpoint }}"
+
+      - alert: CriticalAPILatency
+        expr: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) > 5
+        for: 2m
+        labels:
+          severity: critical
+          category: performance
+        annotations:
+          summary: "Critical API latency"
+          description: "99th percentile latency > 5s for endpoint {{ $labels.endpoint }}"
+
+      # Database Performance Alerts
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Database query time > 1s for operation {{ $labels.operation }} on table {{ $labels.table }}"
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: database_connections_active > 90
+        for: 2m
+        labels:
+          severity: critical
+          category: database
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "Active database connections: {{ $value }}"
+
+      # Agent System Alerts
+      - alert: AgentExecutionTimeout
+        expr: rate(agent_tasks_total{status="timeout"}[10m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          category: agents
+        annotations:
+          summary: "Agent execution timeouts"
+          description: "Agent {{ $labels.agent_type }} experiencing timeouts"
+
+      - alert: AgentPoolExhausted
+        expr: agent_pool_size{status="idle"} < 2
+        for: 5m
+        labels:
+          severity: warning
+          category: agents
+        annotations:
+          summary: "Agent pool nearly exhausted"
+          description: "Only {{ $value }} idle agents available for type {{ $labels.agent_type }}"
+
+  - name: availability_alerts
+    interval: 30s
+    rules:
+      # Service Health
+      - alert: BackendDown
+        expr: up{job="fastapi-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Backend API is down"
+          description: "FastAPI backend has been down for more than 1 minute"
+
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "PostgreSQL database connection lost"
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis cache server is not responding"
+
+      # Error Rate Alerts
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          category: errors
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate > 5% for endpoint {{ $labels.endpoint }}"
+
+      - alert: ApplicationErrors
+        expr: rate(application_errors_total{severity="critical"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          category: errors
+        annotations:
+          summary: "Critical application errors"
+          description: "Critical errors of type {{ $labels.error_type }} occurring"
+
+  - name: resource_alerts
+    interval: 30s
+    rules:
+      # Memory Alerts
+      - alert: HighMemoryUsage
+        expr: memory_usage_bytes{type="rss"} / memory_usage_bytes{type="available"} > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage above 80%"
+
+      - alert: CriticalMemoryUsage
+        expr: memory_usage_bytes{type="rss"} / memory_usage_bytes{type="available"} > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          category: resources
+        annotations:
+          summary: "Critical memory usage"
+          description: "Memory usage above 95% - OOM risk"
+
+      # CPU Alerts
+      - alert: HighCPUUsage
+        expr: cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage above 80% for 5 minutes"
+
+      # Redis Cache Alerts
+      - alert: LowCacheHitRate
+        expr: rate(redis_cache_hits_total[5m]) / (rate(redis_cache_hits_total[5m]) + rate(redis_cache_misses_total[5m])) < 0.5
+        for: 10m
+        labels:
+          severity: warning
+          category: cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate below 50% for {{ $labels.cache_type }}"

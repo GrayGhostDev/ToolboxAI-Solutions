@@ -11,6 +11,7 @@ import { getUserConfig, AUTH_CONFIG } from '../config/users';
 import ApiClient, { getMyProfile, updateUser as apiUpdateUser } from '../services/api';
 import { store } from '../store';
 import { addNotification } from '../store/slices/uiSlice';
+import { signInSuccess, signOut } from '../store/slices/userSlice';
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from '../config';
 
 interface AuthContextType {
@@ -130,22 +131,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Handle successful authentication
   const handleAuthSuccess = useCallback((response: AuthResponse) => {
     const { user, accessToken, refreshToken } = response;
-    
+
     // Store tokens
     localStorage.setItem(AUTH_TOKEN_KEY, accessToken);
     localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
-    
+
     // Schedule automatic token refresh
     scheduleTokenRefresh(accessToken);
-    
-    // Set user state
+
+    // Set user state in React context
     setUser(user);
     const config = getUserConfig(user.role as UserRole);
     setUserConfig(config);
-    
+
+    // CRITICAL: Also update Redux store to maintain consistency
+    store.dispatch(signInSuccess({
+      userId: user.id,
+      email: user.email,
+      displayName: user.displayName || user.firstName || user.username,
+      avatarUrl: user.avatarUrl,
+      role: user.role as any,
+      token: accessToken,
+      refreshToken: refreshToken,
+      schoolId: user.schoolId,
+      classIds: user.classIds || [],
+    }));
+
     // Navigate to appropriate dashboard
     navigate(config.defaultRoute);
-    
+
     // Show success notification
     store.dispatch(addNotification({
       type: 'success',
@@ -173,7 +187,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUserConfig(null);
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
-      
+
+      // Also clear Redux store
+      store.dispatch(signOut());
+
       // Navigate to login
       navigate('/login');
       

@@ -1,0 +1,155 @@
+global:
+  resolve_timeout: 5m
+  # Slack webhook URL (replace with your actual webhook)
+  slack_api_url: 'YOUR_SLACK_WEBHOOK_URL'
+
+# The directory from which notification templates are read
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# The root route on which each incoming alert enters
+route:
+  # Group alerts by these labels
+  group_by: ['alertname', 'cluster', 'service']
+
+  # Wait time before sending first notification
+  group_wait: 10s
+
+  # Wait time before sending updated notifications
+  group_interval: 10s
+
+  # Wait time before repeating notifications
+  repeat_interval: 1h
+
+  # Default receiver
+  receiver: 'team-notifications'
+
+  # Child routes
+  routes:
+    # Critical security alerts
+    - match:
+        severity: critical
+        category: security
+      receiver: security-critical
+      continue: true
+
+    # Authentication issues
+    - match_re:
+        alertname: '^(HighAuthenticationFailureRate|BruteForceAttempt|UnauthorizedWebSocketAttempts)$'
+      receiver: security-team
+      group_wait: 5s
+
+    # API Key issues
+    - match_re:
+        alertname: '^(APIKeyRateLimitExceeded|InvalidAPIKeyUsage)$'
+      receiver: api-team
+
+    # Roblox-specific alerts
+    - match:
+        category: roblox
+      receiver: roblox-team
+
+    # Database and performance issues
+    - match:
+        category: database
+      receiver: database-team
+
+    # Availability alerts
+    - match:
+        severity: critical
+        category: availability
+      receiver: ops-critical
+      group_wait: 0s
+      group_interval: 1m
+
+# Inhibition rules to mute certain alerts
+inhibit_rules:
+  # Inhibit warning alerts if critical alerts are firing for same service
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service']
+
+  # Inhibit low priority alerts when system is down
+  - source_match:
+      alertname: 'BackendDown'
+    target_match_re:
+      severity: 'warning|info'
+
+# Notification receivers
+receivers:
+  # Default receiver
+  - name: 'team-notifications'
+    email_configs:
+      - to: 'team@toolboxai.com'
+        from: 'alerts@toolboxai.com'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'alerts@toolboxai.com'
+        auth_password: 'YOUR_EMAIL_PASSWORD'
+        headers:
+          Subject: '🔔 [{{ .GroupLabels.severity | toUpper }}] {{ .GroupLabels.alertname }}'
+
+  # Security critical alerts
+  - name: 'security-critical'
+    email_configs:
+      - to: 'security@toolboxai.com'
+        from: 'alerts@toolboxai.com'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'alerts@toolboxai.com'
+        auth_password: 'YOUR_EMAIL_PASSWORD'
+        headers:
+          Subject: '🚨 CRITICAL SECURITY: {{ .GroupLabels.alertname }}'
+    slack_configs:
+      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        channel: '#security-critical'
+        title: '🚨 Critical Security Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}{{ end }}'
+
+  # Security team notifications
+  - name: 'security-team'
+    slack_configs:
+      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        channel: '#security-alerts'
+        title: '⚠️ Security Alert: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+  # API team notifications
+  - name: 'api-team'
+    slack_configs:
+      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        channel: '#api-alerts'
+        title: '🔑 API Alert: {{ .GroupLabels.alertname }}'
+
+  # Roblox team notifications
+  - name: 'roblox-team'
+    slack_configs:
+      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        channel: '#roblox-alerts'
+        title: '🎮 Roblox Alert: {{ .GroupLabels.alertname }}'
+
+  # Database team notifications
+  - name: 'database-team'
+    email_configs:
+      - to: 'database@toolboxai.com'
+        from: 'alerts@toolboxai.com'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'alerts@toolboxai.com'
+        auth_password: 'YOUR_EMAIL_PASSWORD'
+
+  # Operations critical
+  - name: 'ops-critical'
+    email_configs:
+      - to: 'ops@toolboxai.com'
+        from: 'alerts@toolboxai.com'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'alerts@toolboxai.com'
+        auth_password: 'YOUR_EMAIL_PASSWORD'
+        send_resolved: true
+    slack_configs:
+      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        channel: '#ops-critical'
+        title: '🔥 SYSTEM DOWN: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+    webhook_configs:
+      - url: 'http://pagerduty-webhook-endpoint'  # Optional PagerDuty integration

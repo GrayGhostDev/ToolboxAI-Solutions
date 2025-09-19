@@ -96,7 +96,7 @@ export const RobloxCard = styled(Card)(({ theme }) => ({
 }));
 
 // Gaming-style button
-export const RobloxButton = styled(Button)<{ variant?: 'contained' | 'outlined' | 'text' }>(({ theme, variant = 'contained' }) => ({
+export const RobloxButton = styled(Button)(({ theme }) => ({
   borderRadius: designTokens.borderRadius.xl,
   fontWeight: designTokens.typography.fontWeight.bold,
   fontSize: designTokens.typography.fontSize.sm[0],
@@ -150,7 +150,8 @@ export const RobloxButton = styled(Button)<{ variant?: 'contained' | 'outlined' 
 }));
 
 // Gamification chip
-export const RobloxChip = styled(Chip)<{ rarity?: 'common' | 'rare' | 'epic' | 'legendary' }>(({ theme, rarity = 'common' }) => {
+export const RobloxChip = styled(Chip)(({ theme }) => {
+  const rarity = 'common'; // Default rarity
   const colorMap = {
     common: '#10B981',
     rare: '#3B82F6',

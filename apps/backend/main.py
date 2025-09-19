@@ -540,6 +540,14 @@ app.add_middleware(
 # Error handling middleware (must be first to be added, last to execute to catch all errors)
 app.add_middleware(ErrorHandlingMiddleware, debug=settings.DEBUG)
 
+# Prometheus Metrics middleware
+try:
+    from apps.backend.core.monitoring.metrics import PrometheusMiddleware, metrics_endpoint
+    app.add_middleware(PrometheusMiddleware)
+    logger.info("Prometheus metrics middleware initialized")
+except ImportError as e:
+    logger.warning(f"Prometheus metrics not available: {e}")
+
 # Initialize Pusher service for realtime communication
 try:
     pusher_service = get_pusher_service()
@@ -803,6 +811,19 @@ async def health_check():
             "uptime": 0,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
+
+
+# Prometheus metrics endpoint
+try:
+    from apps.backend.core.monitoring.metrics import metrics_endpoint as prometheus_metrics_endpoint
+
+    @app.get("/metrics", tags=["System"], include_in_schema=False)
+    async def metrics(request: Request):
+        """Prometheus metrics endpoint for monitoring"""
+        return await prometheus_metrics_endpoint(request)
+
+except ImportError:
+    logger.warning("Prometheus metrics endpoint not available")
 
 
 @app.get("/ws/status", tags=["System"])
@@ -1447,6 +1468,14 @@ try:
     logger.info("Agent Swarm endpoints loaded successfully - Interactive AI enabled")
 except ImportError as e:
     logger.warning(f"Could not load Agent Swarm endpoints: {e}")
+
+# Load API Key Management endpoints
+try:
+    from apps.backend.api.v1.endpoints.api_keys import router as api_keys_router
+    app.include_router(api_keys_router, prefix="/api/v1")
+    logger.info("API Key Management endpoints loaded successfully - Secure Roblox plugin authentication enabled")
+except ImportError as e:
+    logger.warning(f"Could not load API Key endpoints: {e}")
 
 # Load Integration endpoints for Agent Swarm
 try:

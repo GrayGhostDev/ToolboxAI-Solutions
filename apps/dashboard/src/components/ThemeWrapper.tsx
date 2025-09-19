@@ -24,7 +24,8 @@ const globalStyles = {
     padding: 0,
     fontFamily: designTokens.typography.fontFamily.sans.join(', '),
     fontSize: designTokens.typography.fontSize.base[0],
-    lineHeight: designTokens.typography.fontSize.base[1].lineHeight,
+    lineHeight: typeof designTokens.typography.fontSize.base[1] === 'object' ?
+      designTokens.typography.fontSize.base[1].lineHeight : 1.5,
     WebkitFontSmoothing: 'antialiased',
     MozOsxFontSmoothing: 'grayscale',
     textSizeAdjust: '100%'
