@@ -48,6 +48,7 @@ from apps.backend.api.auth.auth import (
 )
 from apps.backend.models.schemas import User, BaseResponse
 from apps.backend.services.pusher import trigger_event as pusher_trigger
+from apps.backend.services.websocket_pipeline_manager import websocket_pipeline_manager
 from apps.backend.services.websocket_handler import websocket_manager
 from core.agents.enhanced_content_pipeline import (
     EnhancedContentPipeline,
@@ -727,63 +728,69 @@ async def content_generation_websocket(
     pipeline_id: str
 ):
     """
-    WebSocket endpoint for real-time content generation updates.
+    Enhanced WebSocket endpoint for real-time content generation updates.
 
-    Provides real-time updates about pipeline progress, stage transitions,
-    errors, and completion status.
+    Features:
+    - Automatic state management and recovery
+    - Redis-backed persistence for reliability
+    - Integrated Pusher fallback for redundancy
+    - Graceful error handling and reconnection support
+    - Detailed progress tracking across all pipeline stages
+
+    Connection Protocol:
+    1. Client connects to /ws/{pipeline_id}
+    2. Server sends current state if available
+    3. Server sends real-time updates during generation
+    4. Heartbeat keeps connection alive
+    5. Completion/error triggers cleanup after delay
     """
-    await websocket.accept()
-    websocket_connections[pipeline_id] = websocket
+    # Initialize manager if needed
+    if not hasattr(websocket_pipeline_manager, 'redis'):
+        await websocket_pipeline_manager.initialize()
+
+    # Connect to pipeline
+    await websocket_pipeline_manager.connect(websocket, pipeline_id)
 
     try:
-        # Send initial status
-        if pipeline_id in generation_sessions:
-            session = generation_sessions[pipeline_id]
-            await websocket.send_json({
-                "type": "status_update",
-                "pipeline_id": pipeline_id,
-                "status": session["status"],
-                "current_stage": session["current_stage"],
-                "progress": session.get("progress", 0.0),
-                "timestamp": datetime.now().isoformat()
-            })
-
-        # Keep connection alive and handle incoming messages
+        # Keep connection alive and handle messages
         while True:
             try:
-                # Wait for messages (ping/pong or status requests)
-                message = await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
+                # Wait for incoming messages with timeout
+                data = await asyncio.wait_for(
+                    websocket.receive_json(),
+                    timeout=60.0  # Longer timeout since we have heartbeat
+                )
 
-                if message == "ping":
-                    await websocket.send_text("pong")
-                elif message == "status":
-                    # Send current status
-                    if pipeline_id in generation_sessions:
-                        session = generation_sessions[pipeline_id]
-                        await websocket.send_json({
-                            "type": "status_update",
-                            "pipeline_id": pipeline_id,
-                            "status": session["status"],
-                            "current_stage": session["current_stage"],
-                            "progress": session.get("progress", 0.0),
-                            "timestamp": datetime.now().isoformat()
-                        })
+                # Handle message through manager
+                await websocket_pipeline_manager.handle_message(
+                    websocket, pipeline_id, data
+                )
 
             except asyncio.TimeoutError:
-                # Send periodic heartbeat
-                await websocket.send_json({
-                    "type": "heartbeat",
-                    "timestamp": datetime.now().isoformat()
-                })
+                # Timeout is normal - heartbeat handles keepalive
+                continue
+
+            except WebSocketDisconnect:
+                logger.info(f"WebSocket client disconnected for pipeline {pipeline_id}")
+                break
+
+            except Exception as e:
+                logger.error(f"Error handling WebSocket message: {e}")
+                await websocket_pipeline_manager.send_error(
+                    pipeline_id,
+                    f"Message handling error: {str(e)}"
+                )
 
     except WebSocketDisconnect:
-        logger.info(f"WebSocket disconnected for pipeline {pipeline_id}")
+        # Normal disconnection
+        pass
+
     except Exception as e:
         logger.error(f"WebSocket error for pipeline {pipeline_id}: {e}")
+
     finally:
         # Clean up connection
-        if pipeline_id in websocket_connections:
-            del websocket_connections[pipeline_id]
+        await websocket_pipeline_manager.disconnect(websocket, pipeline_id)
 
 
 # Background Tasks
@@ -894,9 +901,39 @@ async def send_pipeline_update(
     event_type: str,
     data: Dict[str, Any]
 ):
-    """Send pipeline update via both Pusher and WebSocket"""
+    """
+    Enhanced pipeline update sender using WebSocketPipelineManager.
 
-    # Send via Pusher
+    Sends updates via:
+    1. WebSocketPipelineManager for direct WebSocket connections
+    2. Pusher for redundancy and broader reach
+    3. Redis for persistence
+    """
+    # Extract stage and progress from data
+    stage = data.get("stage", PipelineStage.PROCESSING.value)
+    progress = data.get("progress", 0.0)
+    message = data.get("message", "Processing...")
+
+    # Send via WebSocketPipelineManager
+    try:
+        if not hasattr(websocket_pipeline_manager, 'redis'):
+            await websocket_pipeline_manager.initialize()
+
+        # Map string stage to enum if needed
+        if isinstance(stage, str):
+            stage = PipelineStage(stage)
+
+        await websocket_pipeline_manager.update_pipeline_state(
+            pipeline_id=pipeline_id,
+            stage=stage,
+            progress=progress,
+            message=message,
+            metadata=data
+        )
+    except Exception as e:
+        logger.warning(f"Failed to send WebSocket update: {e}")
+
+    # Send via Pusher for redundancy
     try:
         await pusher_trigger(
             pusher_channel,
@@ -909,19 +946,6 @@ async def send_pipeline_update(
         )
     except Exception as e:
         logger.warning(f"Failed to send Pusher update: {e}")
-
-    # Send via WebSocket if connected
-    if pipeline_id in websocket_connections:
-        try:
-            websocket = websocket_connections[pipeline_id]
-            await websocket.send_json({
-                "type": event_type,
-                "pipeline_id": pipeline_id,
-                "timestamp": datetime.now().isoformat(),
-                **data
-            })
-        except Exception as e:
-            logger.warning(f"Failed to send WebSocket update: {e}")
 
 
 # Export the router

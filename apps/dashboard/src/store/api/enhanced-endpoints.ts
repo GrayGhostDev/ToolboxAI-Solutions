@@ -86,10 +86,11 @@ const baseQueryWithValidation: BaseQueryFn<
         if (process.env.NODE_ENV === 'development') {
           return {
             error: {
-              status: 'VALIDATION_ERROR',
+              status: 'VALIDATION_ERROR' as const,
               error: `API response validation failed: ${validationResult.error}`,
               data: result.data,
-            },
+            } as FetchBaseQueryError,
+            data: undefined,
           };
         }
 

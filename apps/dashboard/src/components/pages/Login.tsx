@@ -62,15 +62,18 @@ export default function Login() {
 
     try {
       const response = await login(formData.email, formData.password);
-      
+
+      // Debug logging to see response structure
+      console.log('Login response structure:', response);
+
       // Map backend response to expected format (backend uses snake_case)
       const accessToken = response.accessToken || (response as any).access_token;
       const refreshToken = response.refreshToken || (response as any).refresh_token;
-      
+
       // Store tokens
       localStorage.setItem(AUTH_TOKEN_KEY, accessToken);
       localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
-      
+
       // Try to connect WebSocket after successful login via Pusher
       // Don't let WebSocket errors prevent login
       try {
@@ -80,14 +83,18 @@ export default function Login() {
       } catch (wsError) {
         console.warn('WebSocket connection failed, continuing without realtime features:', wsError);
       }
-      
+
+      // Get role from either user object or top-level
+      const userRole = response.user?.role || response.role || 'student';
+      console.log('Setting user role:', userRole);
+
       // Update Redux state
       dispatch(signInSuccess({
-        userId: response.user.id,
-        email: response.user.email,
-        displayName: response.user.displayName || response.user.username,
-        avatarUrl: response.user.avatarUrl,
-        role: response.user.role as any,
+        userId: response.user?.id || 1,
+        email: response.user?.email || formData.email,
+        displayName: response.user?.displayName || response.user?.username || formData.email.split('@')[0],
+        avatarUrl: response.user?.avatarUrl,
+        role: userRole as any,
         token: accessToken,
         refreshToken: refreshToken,
         schoolId: response.user.schoolId,

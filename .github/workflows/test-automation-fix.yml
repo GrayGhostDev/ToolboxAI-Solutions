@@ -66,6 +66,12 @@ jobs:
           grep -v "pdbpp" requirements.txt > requirements-ci.txt
           pip install -r requirements-ci.txt
 
+      - name: Setup database tables
+        env:
+          DATABASE_URL: postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev
+        run: |
+          python scripts/ci_setup_database.py
+
       - name: Run pytest
         env:
           DATABASE_URL: postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev

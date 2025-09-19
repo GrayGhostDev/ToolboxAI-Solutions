@@ -57,6 +57,13 @@ export const useAuth = () => {
           if (tokenParts.length === 3) {
             const payload = JSON.parse(atob(tokenParts[1]));
 
+            // Extract user info from JWT payload
+            const userRole = payload.role || 'student';
+            const userSub = payload.sub || payload.username || '';
+            const userId = payload.user_id || '1';
+
+            console.log('Restoring auth from token, role:', userRole);
+
             // Check if token needs refresh
             if (tokenRefreshManager.needsRefresh()) {
               // Let the token refresh manager handle it
@@ -67,6 +74,9 @@ export const useAuth = () => {
                 token: savedToken,
                 refreshToken: savedRefreshToken,
                 isAuthenticated: true,
+                role: userRole,
+                userId: userId,
+                displayName: userSub,
               }));
 
               // Update token refresh manager

@@ -287,16 +287,21 @@ class ApiClient {
 
   // Authentication
   async login(email: string, password: string): Promise<AuthResponse> {
-    // Handle both email and username inputs
-    const username = email.includes('@') ? email.split('@')[0] : email;
+    // Determine if input is email or username
+    const isEmail = email.includes('@');
 
     // Debug logging
-    console.log('Login attempt with:', { username, email });
+    console.log('Login attempt with:', isEmail ? { email } : { username: email });
+
+    // Send only the appropriate field based on input type
+    const loginData = isEmail
+      ? { email, password }  // Send email field for email addresses
+      : { username: email, password };  // Send username field for usernames
 
     const response = await this.request<any>({
       method: "POST",
       url: "/api/v1/auth/login",
-      data: { username, email, password },  // Send both username and email
+      data: loginData,
     });
 
     console.log('Login response:', response);
