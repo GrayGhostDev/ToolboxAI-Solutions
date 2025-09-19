@@ -180,15 +180,16 @@ export function UserActivityChart({
           const newData = [...prevData];
           const lastIndex = newData.length - 1;
           
-          if (lastIndex >= 0) {
+          if (lastIndex >= 0 && newData[lastIndex]) {
             // Update the latest data point
+            const currentData = newData[lastIndex]!; // We've already checked it exists
             newData[lastIndex] = {
-              ...newData[lastIndex],
-              activeUsers: message.payload.activeUsers || newData[lastIndex].activeUsers,
-              newUsers: message.payload.newUsers || newData[lastIndex].newUsers,
-              sessionDuration: message.payload.sessionDuration || newData[lastIndex].sessionDuration,
-              pageViews: message.payload.pageViews || newData[lastIndex].pageViews,
-              engagementRate: message.payload.engagementRate || newData[lastIndex].engagementRate,
+              date: currentData.date, // Preserve the date field explicitly
+              activeUsers: message.payload.activeUsers || currentData.activeUsers,
+              newUsers: message.payload.newUsers || currentData.newUsers,
+              sessionDuration: message.payload.sessionDuration || currentData.sessionDuration,
+              pageViews: message.payload.pageViews || currentData.pageViews,
+              engagementRate: message.payload.engagementRate || currentData.engagementRate,
             };
           }
           

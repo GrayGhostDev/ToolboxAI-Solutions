@@ -296,7 +296,7 @@ class ApiClient {
     const response = await this.request<AuthResponse>({
       method: "POST",
       url: "/api/v1/auth/login",
-      data: { username, password },
+      data: { username, email, password },  // Send both username and email
     });
 
     console.log('Login response:', response);

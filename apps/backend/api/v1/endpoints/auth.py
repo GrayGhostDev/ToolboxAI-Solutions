@@ -25,18 +25,40 @@ auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 # Pydantic models
 class UserLogin(BaseModel):
-    username: str
+    username: Optional[str] = None
+    email: Optional[str] = None
     password: str
 
-# Mock user database
+# Mock user database with demo users matching frontend
 fake_users_db = {
+    "admin@toolboxai.com": {
+        "username": "admin",
+        "email": "admin@toolboxai.com",
+        "hashed_password": pwd_context.hash("Admin123!"),
+        "role": "admin"
+    },
+    "jane.smith@school.edu": {
+        "username": "jane_smith",
+        "email": "jane.smith@school.edu",
+        "hashed_password": pwd_context.hash("Teacher123!"),
+        "role": "teacher"
+    },
+    "alex.johnson@student.edu": {
+        "username": "alex_johnson",
+        "email": "alex.johnson@student.edu",
+        "hashed_password": pwd_context.hash("Student123!"),
+        "role": "student"
+    },
+    # Keep old test users for backwards compatibility
     "test_teacher": {
         "username": "test_teacher",
+        "email": "test_teacher@test.com",
         "hashed_password": pwd_context.hash("TestPass123!"),
         "role": "teacher"
     },
     "test_student": {
         "username": "test_student",
+        "email": "test_student@test.com",
         "hashed_password": pwd_context.hash("StudentPass123!"),
         "role": "student"
     }
@@ -46,9 +68,14 @@ def verify_password(plain_password, hashed_password):
     """Verify a password against its hash"""
     return pwd_context.verify(plain_password, hashed_password)
 
-def authenticate_user(username: str, password: str):
-    """Authenticate a user"""
-    user = fake_users_db.get(username)
+def authenticate_user(username: Optional[str], email: Optional[str], password: str):
+    """Authenticate a user by username or email"""
+    # Try to find user by email first, then by username
+    lookup_key = email if email else username
+    if not lookup_key:
+        return False
+
+    user = fake_users_db.get(lookup_key)
     if not user:
         return False
     if not verify_password(password, user["hashed_password"]):
@@ -60,9 +87,9 @@ def authenticate_user(username: str, password: str):
 @auth_router.post("/login", response_model=Token)
 async def login(user_credentials: UserLogin):
     """
-    Login endpoint for authentication
+    Login endpoint for authentication - supports both username and email
     """
-    user = authenticate_user(user_credentials.username, user_credentials.password)
+    user = authenticate_user(user_credentials.username, user_credentials.email, user_credentials.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

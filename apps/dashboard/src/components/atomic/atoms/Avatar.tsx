@@ -159,5 +159,4 @@ const AtomicAvatar = forwardRef<HTMLDivElement, AvatarProps>(
 
 AtomicAvatar.displayName = 'AtomicAvatar';
 
-export type { AvatarProps };
 export default AtomicAvatar;

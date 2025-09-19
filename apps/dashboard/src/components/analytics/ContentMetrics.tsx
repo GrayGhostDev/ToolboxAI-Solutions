@@ -256,11 +256,11 @@ export function ContentMetrics({
 
       if (transformedSubjects.length === 0) {
         const mockSubjectData: SubjectPerformance[] = [
-          { subject: "Math", totalContent: 42, averageCompletion: 74.2, averageScore: 81.5, totalViews: 8943, color: COLORS[0] },
-          { subject: "Science", totalContent: 38, averageCompletion: 78.9, averageScore: 79.3, totalViews: 7621, color: COLORS[1] },
-          { subject: "Language", totalContent: 35, averageCompletion: 82.1, averageScore: 86.7, totalViews: 6834, color: COLORS[2] },
-          { subject: "Arts", totalContent: 28, averageCompletion: 69.5, averageScore: 77.2, totalViews: 4567, color: COLORS[3] },
-          { subject: "Technology", totalContent: 25, averageCompletion: 85.3, averageScore: 88.9, totalViews: 5432, color: COLORS[4] },
+          { subject: "Math", totalContent: 42, averageCompletion: 74.2, averageScore: 81.5, totalViews: 8943, color: COLORS[0] || '#2563EB' },
+          { subject: "Science", totalContent: 38, averageCompletion: 78.9, averageScore: 79.3, totalViews: 7621, color: COLORS[1] || '#22C55E' },
+          { subject: "Language", totalContent: 35, averageCompletion: 82.1, averageScore: 86.7, totalViews: 6834, color: COLORS[2] || '#FACC15' },
+          { subject: "Arts", totalContent: 28, averageCompletion: 69.5, averageScore: 77.2, totalViews: 4567, color: COLORS[3] || '#9333EA' },
+          { subject: "Technology", totalContent: 25, averageCompletion: 85.3, averageScore: 88.9, totalViews: 5432, color: COLORS[4] || '#EF4444' },
         ];
         setSubjectData(mockSubjectData);
       } else {
@@ -294,9 +294,9 @@ export function ContentMetrics({
       setContentData(mockContentData);
 
       const mockSubjectData: SubjectPerformance[] = [
-        { subject: "Math", totalContent: 42, averageCompletion: 74.2, averageScore: 81.5, totalViews: 8943, color: COLORS[0] },
-        { subject: "Science", totalContent: 38, averageCompletion: 78.9, averageScore: 79.3, totalViews: 7621, color: COLORS[1] },
-        { subject: "Language", totalContent: 35, averageCompletion: 82.1, averageScore: 86.7, totalViews: 6834, color: COLORS[2] },
+        { subject: "Math", totalContent: 42, averageCompletion: 74.2, averageScore: 81.5, totalViews: 8943, color: COLORS[0] || '#2563EB' },
+        { subject: "Science", totalContent: 38, averageCompletion: 78.9, averageScore: 79.3, totalViews: 7621, color: COLORS[1] || '#22C55E' },
+        { subject: "Language", totalContent: 35, averageCompletion: 82.1, averageScore: 86.7, totalViews: 6834, color: COLORS[2] || '#FACC15' },
       ];
       setSubjectData(mockSubjectData);
     } finally {
