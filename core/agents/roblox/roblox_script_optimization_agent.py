@@ -19,7 +19,7 @@ from langchain.tools import Tool, StructuredTool
 from langchain.schema import SystemMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 
-from core.agents.base_agent import BaseAgent
+from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
 
 
 class OptimizationLevel(Enum):
@@ -56,15 +56,31 @@ class RobloxScriptOptimizationAgent(BaseAgent):
 
     def __init__(
         self,
-        name: str = "RobloxScriptOptimizer",
+        config: Optional[AgentConfig] = None,
         llm: Optional[ChatOpenAI] = None,
         optimization_level: OptimizationLevel = OptimizationLevel.BALANCED
     ):
-        super().__init__(name)
-        self.llm = llm or ChatOpenAI(
-            model="gpt-4",
-            temperature=0.1  # Low temperature for consistent optimizations
-        )
+        # Create default config if not provided
+        if not config:
+            config = AgentConfig(
+                name="RobloxScriptOptimizer",
+                model="gpt-4",
+                temperature=0.1,  # Low temperature for consistent optimizations
+                system_prompt="""You are an expert Roblox Luau script optimizer.
+                You understand performance optimization, memory management, and Roblox-specific best practices.
+                Optimize scripts for performance while maintaining functionality.""",
+                verbose=True,
+                memory_enabled=True
+            )
+        super().__init__(config)
+        # Override llm if provided
+        if llm is not None:
+            self.llm = llm
+        elif not self.llm:
+            self.llm = ChatOpenAI(
+                model="gpt-4",
+                temperature=0.1
+            )
         self.optimization_level = optimization_level
         self.pattern_database = self._load_optimization_patterns()
 
@@ -589,6 +605,66 @@ return results
 
         response = self.llm.predict(prompt)
         return response
+
+    async def _process_task(self, state: AgentState) -> TaskResult:
+        """Process script optimization task"""
+        # Extract script and settings from state context
+        context = state.get("context", {})
+        script_code = context.get("script_code", "")
+        optimization_level = context.get("optimization_level", "balanced")
+        preserve_comments = context.get("preserve_comments", True)
+
+        # Map string optimization level to enum
+        level_map = {
+            "conservative": OptimizationLevel.CONSERVATIVE,
+            "balanced": OptimizationLevel.BALANCED,
+            "aggressive": OptimizationLevel.AGGRESSIVE
+        }
+        opt_level = level_map.get(optimization_level.lower(), OptimizationLevel.BALANCED)
+
+        if not script_code:
+            return TaskResult(
+                success=False,
+                error="No script provided for optimization",
+                message="Script code is required"
+            )
+
+        try:
+            # Perform optimization
+            result = self.optimize_script(
+                script_code,
+                optimization_level=opt_level,
+                preserve_comments=preserve_comments
+            )
+
+            return TaskResult(
+                success=True,
+                result={
+                    "original_code": result.original_code,
+                    "optimized_code": result.optimized_code,
+                    "issues_found": [
+                        {
+                            "severity": issue.severity,
+                            "location": issue.location,
+                            "type": issue.issue_type,
+                            "description": issue.description,
+                            "suggestion": issue.suggestion,
+                            "impact": issue.estimated_impact
+                        }
+                        for issue in result.issues_found
+                    ],
+                    "metrics": result.metrics,
+                    "optimization_level": result.optimization_level.value,
+                    "performance_gain": result.metrics.get("estimated_performance_gain", "Unknown")
+                },
+                message=f"Script optimized with {len(result.issues_found)} issues found"
+            )
+        except Exception as e:
+            return TaskResult(
+                success=False,
+                error=str(e),
+                message="Optimization failed"
+            )
 
 
 # Example usage

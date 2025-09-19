@@ -30,7 +30,7 @@ def test_content_generation_agent_creation():
     mock_llm = Mock()
     agent = RobloxContentGenerationAgent(llm=mock_llm)
 
-    assert agent.name == "RobloxContentGenerator"
+    assert agent.name == "RobloxContentGenerationAgent"
     assert agent.llm is mock_llm
 
 

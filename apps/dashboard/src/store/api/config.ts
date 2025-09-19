@@ -208,7 +208,7 @@ export function isRetryableError(error: FetchBaseQueryError | SerializedError): 
   }
 
   if ('name' in error && error.name) {
-    return RETRY_CONFIG.RETRYABLE_ERRORS.includes(error.name);
+    return RETRY_CONFIG.RETRYABLE_ERRORS.includes(error.name as typeof RETRY_CONFIG.RETRYABLE_ERRORS[number]);
   }
 
   return false;

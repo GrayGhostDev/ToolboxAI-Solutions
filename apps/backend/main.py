@@ -3617,6 +3617,33 @@ async def native_websocket_endpoint(websocket: WebSocket):
             pass  # Connection already closed
 
 
+# Roblox WebSocket endpoint for real-time synchronization with Roblox Studio
+@app.websocket("/ws/roblox")
+async def roblox_websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for Roblox Studio real-time synchronization
+
+    Requires JWT token in query parameters: ws://localhost:8008/ws/roblox?token=<jwt_token>
+    """
+    from apps.backend.services.roblox_websocket import get_websocket_handler
+
+    try:
+        # Extract token from query parameters
+        token = websocket.query_params.get("token")
+
+        # Get or create WebSocket handler
+        handler = await get_websocket_handler()
+
+        # Handle the WebSocket connection with authentication
+        await handler.handle_connection(websocket, token=token)
+
+    except Exception as e:
+        logger.error(f"Roblox WebSocket connection error: {e}")
+        try:
+            await websocket.close(code=1011, reason="Internal server error")
+        except Exception:
+            pass
+
+
 # WebSocket endpoint
 @app.websocket("/ws")
 async def websocket_endpoint_route(websocket: WebSocket):

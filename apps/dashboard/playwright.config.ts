@@ -81,8 +81,8 @@ export default defineConfig({
       locale: 'en-US',
       // Timezone
       timezoneId: 'America/New_York',
-      // Permissions
-      permissions: ['notifications', 'clipboard-read', 'clipboard-write'],
+      // Permissions (will be overridden per browser if needed)
+      permissions: ['notifications'],
     },
   },
 
@@ -95,16 +95,55 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         launchOptions: {
           args: ['--disable-blink-features=AutomationControlled']
+        },
+        contextOptions: {
+          // Chromium supports clipboard permissions
+          permissions: ['notifications', 'clipboard-read', 'clipboard-write'],
         }
       },
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: {
+        ...devices['Desktop Firefox'],
+        launchOptions: {
+          firefoxUserPrefs: {
+            // Allow third-party cookies and storage access
+            'network.cookie.cookieBehavior': 0,
+            'dom.security.https_first': false,
+            'privacy.partition.network_state': false,
+            // Disable tracking protection
+            'privacy.trackingprotection.enabled': false,
+            'privacy.trackingprotection.socialtracking.enabled': false,
+            // Allow insecure connections for localhost
+            'security.tls.insecure_fallback_hosts': 'localhost,127.0.0.1',
+          }
+        },
+        // Longer timeouts for Firefox
+        actionTimeout: 15 * 1000,
+        navigationTimeout: 45 * 1000,
+      },
     },
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: {
+        ...devices['Desktop Safari'],
+        launchOptions: {
+          args: [
+            '--disable-web-security',
+            '--disable-features=IsolateOrigins,site-per-process',
+          ]
+        },
+        // WebKit-specific context options
+        contextOptions: {
+          ignoreHTTPSErrors: true,
+          // WebKit handles cookies differently
+          storageState: undefined,
+        },
+        // Longer timeouts for WebKit
+        actionTimeout: 15 * 1000,
+        navigationTimeout: 45 * 1000,
+      },
     },
 
     // Mobile viewports
@@ -150,7 +189,7 @@ export default defineConfig({
       reuseExistingServer: true,  // Use already running server
       env: {
         VITE_API_BASE_URL: apiURL,
-        VITE_WS_URL: `ws://localhost:8008`,
+        VITE_WS_URL: `ws://localhost:8009`,
         VITE_ENABLE_WEBSOCKET: 'true',
         VITE_PUSHER_KEY: process.env.VITE_PUSHER_KEY || 'test-key',
         VITE_PUSHER_CLUSTER: process.env.VITE_PUSHER_CLUSTER || 'us2',

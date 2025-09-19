@@ -48,11 +48,11 @@ FLASK_URL = "http://127.0.0.1:5001"
 MCP_WS_URL = "ws://127.0.0.1:9876"
 SOCKETIO_URL = "http://127.0.0.1:8008"
 DB_CONFIG = {
-    'host': 'localhost',
-    'port': 5432,
-    'user': 'grayghostdata',
-    'password': 'grayghostdata',
-    'database': 'educational_platform'
+    'host': os.environ.get('DB_HOST', 'localhost'),
+    'port': int(os.environ.get('DB_PORT', 5432)),
+    'user': os.environ.get('DB_USER', 'eduplatform'),
+    'password': os.environ.get('DB_PASSWORD', 'eduplatform2024'),
+    'database': os.environ.get('DB_NAME', 'educational_platform_dev')
 }
 
 # Test credentials

@@ -14,11 +14,16 @@ pytestmark = pytest.mark.skipif(
 async def test_databases():
     """Test all database connections with real queries"""
     
+    # Use environment variables with fallback to standard CI credentials
+    db_user = os.environ.get('DB_USER', 'eduplatform')
+    db_password = os.environ.get('DB_PASSWORD', 'eduplatform2024')
+    db_host = os.environ.get('DB_HOST', 'localhost')
+
     databases = {
-        "ghost_backend": "postgresql://grayghostdata:securepass123@localhost/ghost_backend",
-        "educational_platform": "postgresql://grayghostdata:securepass123@localhost/educational_platform",
-        "roblox_data": "postgresql://grayghostdata:securepass123@localhost/roblox_data",
-        "mcp_memory": "postgresql://grayghostdata:securepass123@localhost/mcp_memory"
+        "ghost_backend": f"postgresql://{db_user}:{db_password}@{db_host}/ghost_backend",
+        "educational_platform": f"postgresql://{db_user}:{db_password}@{db_host}/educational_platform_dev",
+        "roblox_data": f"postgresql://{db_user}:{db_password}@{db_host}/roblox_data",
+        "mcp_memory": f"postgresql://{db_user}:{db_password}@{db_host}/mcp_memory"
     }
     
     results = {}

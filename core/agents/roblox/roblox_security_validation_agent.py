@@ -18,7 +18,7 @@ from langchain.tools import Tool, StructuredTool
 from langchain.schema import SystemMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 
-from core.agents.base_agent import BaseAgent
+from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
 
 
 class ThreatLevel(Enum):
@@ -78,15 +78,31 @@ class RobloxSecurityValidationAgent(BaseAgent):
 
     def __init__(
         self,
-        name: str = "RobloxSecurityValidator",
+        config: Optional[AgentConfig] = None,
         llm: Optional[ChatOpenAI] = None,
         strict_mode: bool = True
     ):
-        super().__init__(name)
-        self.llm = llm or ChatOpenAI(
-            model="gpt-4",
-            temperature=0  # Zero temperature for consistent security decisions
-        )
+        # Create default config if not provided
+        if not config:
+            config = AgentConfig(
+                name="RobloxSecurityValidator",
+                model="gpt-4",
+                temperature=0,  # Zero temperature for consistent security decisions
+                system_prompt="""You are an expert Roblox security analyst.
+                You identify vulnerabilities, malicious patterns, and policy violations in Luau scripts.
+                Provide clear security assessments with risk scores and remediation guidance.""",
+                verbose=True,
+                memory_enabled=True
+            )
+        super().__init__(config)
+        # Override llm if provided
+        if llm is not None:
+            self.llm = llm
+        elif not self.llm:
+            self.llm = ChatOpenAI(
+                model="gpt-4",
+                temperature=0
+            )
         self.strict_mode = strict_mode
         self.vulnerability_database = self._load_vulnerability_database()
         self.blocked_patterns = self._load_blocked_patterns()
@@ -146,10 +162,14 @@ class RobloxSecurityValidationAgent(BaseAgent):
                 r"require\([\d]+\)": "Module by ID (potential backdoor)"
             },
             "authentication_patterns": {
-                r"[\"']password[\"']": "Hardcoded password",
-                r"[\"']api[_-]?key[\"']": "Hardcoded API key",
-                r"[\"']token[\"']": "Hardcoded token",
-                r"[\"']secret[\"']": "Hardcoded secret",
+                r"[\"']password[\"']": "Hardcoded password string",
+                r"\bpassword\s*=\s*[\"']": "Hardcoded password variable",
+                r"[\"']api[_-]?key[\"']": "Hardcoded API key string",
+                r"\bapi[_-]?key\s*=\s*[\"']": "Hardcoded API key variable",
+                r"[\"']token[\"']": "Hardcoded token string",
+                r"\btoken\s*=\s*[\"']": "Hardcoded token variable",
+                r"[\"']secret[\"']": "Hardcoded secret string",
+                r"\bsecret\s*=\s*[\"']": "Hardcoded secret variable",
                 r"Bearer\s+[\w-]+": "Bearer token exposure"
             },
             "data_exposure_patterns": {
@@ -607,6 +627,61 @@ local apiKey = SecureConfig:getSecureValue("API_KEY")
 
         response = self.llm.predict(prompt)
         return response
+
+    async def _process_task(self, state: AgentState) -> TaskResult:
+        """Process security validation task"""
+        # Extract script and settings from state context
+        context = state.get("context", {})
+        script_code = context.get("script_code", "")
+        script_type = context.get("script_type", "ServerScript")
+        strict_mode = context.get("strict_mode", True)
+
+        if not script_code:
+            return TaskResult(
+                success=False,
+                error="No script provided for validation",
+                message="Script code is required"
+            )
+
+        try:
+            # Perform security validation
+            report = self.validate_script(script_code, script_type)
+
+            # Generate markdown report
+            report_markdown = self.generate_security_report_markdown(report)
+
+            return TaskResult(
+                success=True,
+                result={
+                    "scan_id": report.scan_id,
+                    "risk_score": report.risk_score,
+                    "vulnerabilities": [
+                        {
+                            "threat_level": vuln.threat_level.value,
+                            "type": vuln.vulnerability_type.value,
+                            "location": vuln.location,
+                            "description": vuln.description,
+                            "impact": vuln.impact,
+                            "remediation": vuln.remediation,
+                            "cvss_score": vuln.cvss_score,
+                            "exploitable": vuln.exploitable
+                        }
+                        for vuln in report.vulnerabilities
+                    ],
+                    "compliance_status": report.compliance_status,
+                    "recommendations": report.recommendations,
+                    "blocked_patterns": list(report.blocked_patterns),
+                    "safe_patterns": list(report.safe_patterns),
+                    "report_markdown": report_markdown
+                },
+                message=f"Security validation complete: Risk score {report.risk_score}/10"
+            )
+        except Exception as e:
+            return TaskResult(
+                success=False,
+                error=str(e),
+                message="Security validation failed"
+            )
 
 
 # Example usage

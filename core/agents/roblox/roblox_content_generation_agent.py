@@ -15,7 +15,7 @@ from langchain.chains import LLMChain
 from langchain.schema import Document
 from langchain.tools import Tool
 
-from core.agents.base_agent import BaseAgent, AgentConfig, TaskResult
+from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
 from core.agents.github_agents.base_github_agent import BaseGitHubAgent
 
 logger = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ class RobloxContentGenerationAgent(BaseAgent):
     - Adaptive difficulty content
     """
 
-    def __init__(self, config: Optional[AgentConfig] = None):
+    def __init__(self, config: Optional[AgentConfig] = None, llm=None):
         """Initialize the Roblox Content Generation Agent"""
         if not config:
             config = AgentConfig(
@@ -70,6 +70,9 @@ class RobloxContentGenerationAgent(BaseAgent):
                 memory_enabled=True
             )
         super().__init__(config)
+        # Override llm if provided
+        if llm is not None:
+            self.llm = llm
 
         self.content_templates = self._load_content_templates()
         self.asset_library = {}
@@ -1127,10 +1130,12 @@ return AccessibilityController
         """Create educational NPC dialogue"""
         return f"NPC Dialogue for: {query}"
 
-    async def _process_task(self, state: Dict[str, Any]) -> TaskResult:
-        """Process the task"""
-        # Extract generation request from state
-        request_data = state.get("request", {})
+    async def _process_task(self, state: AgentState) -> TaskResult:
+        """Process the task using AgentState"""
+        # Extract generation request from state context
+        context = state.get("context", {})
+        request_data = context.get("request", {})
+
         request = GenerationRequest(
             subject=request_data.get("subject", "General"),
             grade_level=request_data.get("grade_level", 5),

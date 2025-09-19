@@ -468,13 +468,19 @@ async def create_school(
 # Missing analytics endpoints for Reports page
 @analytics_router.get("/trends/engagement")
 async def get_engagement_trends(
-    start_date: datetime = Query(..., description="Start date for trends"),
-    end_date: datetime = Query(..., description="End date for trends"),
+    start_date: Optional[datetime] = Query(None, description="Start date for trends"),
+    end_date: Optional[datetime] = Query(None, description="End date for trends"),
     interval: str = Query("day", description="Interval for data points"),
     current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Get engagement trend data"""
-    
+
+    # Default to last 30 days if dates not provided
+    if not end_date:
+        end_date = datetime.now()
+    if not start_date:
+        start_date = end_date - timedelta(days=30)
+
     # Generate trend data points
     trends = []
     current = start_date
@@ -525,12 +531,18 @@ async def get_engagement_trends(
 
 @analytics_router.get("/trends/content")
 async def get_content_trends(
-    start_date: datetime = Query(..., description="Start date for trends"),
-    end_date: datetime = Query(..., description="End date for trends"),
+    start_date: Optional[datetime] = Query(None, description="Start date for trends"),
+    end_date: Optional[datetime] = Query(None, description="End date for trends"),
     current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Get content consumption trends"""
-    
+
+    # Default to last 30 days if dates not provided
+    if not end_date:
+        end_date = datetime.now()
+    if not start_date:
+        start_date = end_date - timedelta(days=30)
+
     # Generate content trends
     content_trends = []
     current = start_date
@@ -595,12 +607,18 @@ async def get_content_trends(
 
 @analytics_router.get("/dashboard")
 async def get_dashboard_analytics(
-    start_date: datetime = Query(..., description="Start date for analytics"),
-    end_date: datetime = Query(..., description="End date for analytics"),
+    start_date: Optional[datetime] = Query(None, description="Start date for analytics"),
+    end_date: Optional[datetime] = Query(None, description="End date for analytics"),
     current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Get dashboard analytics for the specified date range"""
-    
+
+    # Default to last 30 days if dates not provided
+    if not end_date:
+        end_date = datetime.now()
+    if not start_date:
+        start_date = end_date - timedelta(days=30)
+
     # Generate mock analytics data
     overview = {
         "total_students": 487,

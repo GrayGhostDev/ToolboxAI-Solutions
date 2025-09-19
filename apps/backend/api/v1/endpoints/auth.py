@@ -84,7 +84,7 @@ def authenticate_user(username: Optional[str], email: Optional[str], password: s
 
 # Use the imported create_access_token from jwt_handler
 
-@auth_router.post("/login", response_model=Token)
+@auth_router.post("/login")
 async def login(user_credentials: UserLogin):
     """
     Login endpoint for authentication - supports both username and email
@@ -103,12 +103,20 @@ async def login(user_credentials: UserLogin):
         expires_delta=access_token_expires
     )
 
-    return Token(
-        access_token=access_token,
-        token_type="bearer",
-        expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        role=user["role"]
-    )
+    # Return token with user information for frontend
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        "role": user["role"],
+        "user": {
+            "id": user.get("id", 1),  # Mock ID for now
+            "username": user["username"],
+            "email": user.get("email", ""),
+            "displayName": user.get("displayName", user["username"]),
+            "role": user["role"]
+        }
+    }
 
 @auth_router.post("/refresh", response_model=Token)
 async def refresh_token(current_user: TokenData = Depends(get_current_user)):
