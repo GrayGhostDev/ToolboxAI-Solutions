@@ -8,7 +8,8 @@ import React, { forwardRef } from 'react';
 import { Badge as MuiBadge, BadgeProps as MuiBadgeProps, styled, alpha } from '@mui/material';
 import { designTokens } from '../../../theme/designTokens';
 
-export interface BadgeProps extends Omit<MuiBadgeProps, 'color'> {
+// Custom props for our Badge component
+export interface AtomicBadgeProps {
   size?: 'sm' | 'md' | 'lg';
   variant?: 'standard' | 'dot' | 'achievement' | 'notification';
   rarity?: 'common' | 'rare' | 'epic' | 'legendary';
@@ -16,7 +17,11 @@ export interface BadgeProps extends Omit<MuiBadgeProps, 'color'> {
   pulse?: boolean;
   glow?: boolean;
   robloxTheme?: boolean;
+  children?: React.ReactNode;
 }
+
+// Combine with MUI badge props, excluding conflicting ones
+export type BadgeProps = AtomicBadgeProps & Omit<MuiBadgeProps, keyof AtomicBadgeProps | 'color' | 'variant'>;
 
 const rarityColors = {
   common: '#10B981',
@@ -25,7 +30,7 @@ const rarityColors = {
   legendary: '#F59E0B'
 };
 
-const StyledBadge = styled(MuiBadge)<BadgeProps>(({
+const StyledBadge = styled(MuiBadge)<AtomicBadgeProps>(({
   theme,
   size = 'md',
   variant = 'standard',
@@ -175,13 +180,13 @@ const AtomicBadge = forwardRef<HTMLSpanElement, BadgeProps>(
       <StyledBadge
         ref={ref}
         size={size}
-        variant={variant}
+        variant={(variant === 'achievement' || variant === 'notification') ? 'standard' : variant}
         rarity={rarity}
         color={color}
         pulse={pulse}
         glow={glow}
         robloxTheme={robloxTheme}
-        {...props}
+        {...props as any}
       >
         {children}
       </StyledBadge>
@@ -191,5 +196,5 @@ const AtomicBadge = forwardRef<HTMLSpanElement, BadgeProps>(
 
 AtomicBadge.displayName = 'AtomicBadge';
 
-export type { BadgeProps };
 export default AtomicBadge;
+export type { BadgeProps };

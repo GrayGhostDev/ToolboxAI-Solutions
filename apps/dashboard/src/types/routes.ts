@@ -325,13 +325,13 @@ export const parseUrl = (url: string, pattern: string): ParsedUrl => {
       // Try to parse as number
       const numValue = Number(value);
       if (!isNaN(numValue) && isFinite(numValue)) {
-        query[key] = numValue;
+        (query as any)[key] = numValue;
       } else if (value === 'true') {
-        query[key] = true;
+        (query as any)[key] = true;
       } else if (value === 'false') {
-        query[key] = false;
+        (query as any)[key] = false;
       } else {
-        query[key] = value;
+        (query as any)[key] = value;
       }
     });
   }

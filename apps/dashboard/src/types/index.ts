@@ -1,14 +1,72 @@
 // Legacy exports for backward compatibility
 export { type UserRole, type RolePermissions, ROLE_PERMISSIONS } from './roles';
-export * from './api';
 
-// New type system exports
+// API types - explicitly export to avoid conflicts
+export {
+  type User,
+  type UserCreate,
+  type UserUpdate,
+  type AuthResponse,
+  type Lesson,
+  type ClassSummary,
+  type ClassDetails,
+  type Student,
+  type Badge,
+  type XPTransaction,
+  type LeaderboardEntry,
+  type Assessment,
+  type Question,
+  type AssessmentSubmission,
+  type ProgressPoint,
+  type StudentProgress,
+  type SubjectProgress,
+  type Notification,
+  type Message,
+  type DashboardMetrics,
+  type Achievement,
+  type Mission,
+  type MissionProgress,
+  type MissionRequirement,
+  type Reward,
+  type RewardRedemption,
+  type Event,
+  type RobloxWorld,
+  type ApiError,
+  type ApiResponse,
+  type ComplianceCheck,
+  type ComplianceStatus as ApiComplianceStatus,
+} from './api';
+
+// Re-export specific items from other modules to avoid conflicts
 export * from './branded';
-export * from './schemas';
 export * from './discriminated-unions';
 export * from './utility-types';
 export * from './routes';
 export * from './events';
+
+// Schema exports - only export schemas, not types (to avoid conflicts with api.ts)
+export {
+  IdSchema,
+  EmailSchema,
+  UrlSchema,
+  DateStringSchema,
+  NonNegativeNumberSchema,
+  PositiveNumberSchema,
+  ProgressPercentageSchema,
+  UserRoleSchema,
+  UserStatusSchema,
+  SubjectSchema,
+  LessonStatusSchema,
+  BadgeCategorySchema,
+  BadgeRaritySchema,
+  AssessmentTypeSchema,
+  AssessmentStatusSchema,
+  QuestionTypeSchema,
+  XPSourceSchema,
+  NotificationTypeSchema,
+  ComplianceStatusSchema,
+  MissionTypeSchema,
+} from './schemas';
 
 // Enhanced Redux State Types with strict typing
 export interface UIState {

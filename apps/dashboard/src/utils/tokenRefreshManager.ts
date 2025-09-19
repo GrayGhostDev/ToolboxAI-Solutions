@@ -150,8 +150,8 @@ class TokenRefreshManager {
       const response = await refreshTokenAPI(currentRefreshToken);
 
       // Handle different response formats (access_token vs accessToken)
-      const newAccessToken = response.access_token || response.accessToken;
-      const newRefreshToken = response.refresh_token || response.refreshToken || currentRefreshToken;
+      const newAccessToken = (response as any).access_token || response.accessToken;
+      const newRefreshToken = (response as any).refresh_token || response.refreshToken || currentRefreshToken;
 
       if (newAccessToken) {
         // Update tokens in localStorage

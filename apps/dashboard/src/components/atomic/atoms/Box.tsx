@@ -21,7 +21,8 @@ type PolymorphicProps<T extends React.ElementType = 'div'> = {
 type SpacingValue = keyof typeof designTokens.spacing | 'auto';
 type ResponsiveSpacing = SpacingValue | { xs?: SpacingValue; sm?: SpacingValue; md?: SpacingValue; lg?: SpacingValue; xl?: SpacingValue };
 
-export interface BoxProps extends Omit<MuiBoxProps, 'p' | 'px' | 'py' | 'pt' | 'pr' | 'pb' | 'pl' | 'm' | 'mx' | 'my' | 'mt' | 'mr' | 'mb' | 'ml'> {
+// Custom props for our Box component
+export interface AtomicBoxProps {
   // Padding
   p?: ResponsiveSpacing;
   px?: ResponsiveSpacing;
@@ -59,8 +60,8 @@ export interface BoxProps extends Omit<MuiBoxProps, 'p' | 'px' | 'py' | 'pt' | '
   maxW?: string | number;
   maxH?: string | number;
 
-  // Border
-  border?: boolean | string;
+  // Border - use custom name to avoid conflict
+  customBorder?: boolean | string;
   borderRadius?: keyof typeof designTokens.borderRadius | string | number;
 
   // Background
@@ -72,13 +73,16 @@ export interface BoxProps extends Omit<MuiBoxProps, 'p' | 'px' | 'py' | 'pt' | '
   gameContainer?: boolean;
 }
 
-const StyledBox = styled(MuiBox)<BoxProps>(({
+// Combine with MUI box props, excluding conflicting ones
+export type BoxProps = AtomicBoxProps & Omit<MuiBoxProps, keyof AtomicBoxProps | 'border'>;
+
+const StyledBox = styled(MuiBox)<AtomicBoxProps>(({
   theme,
   robloxTheme = false,
   gameContainer = false,
   gradient = false,
   bg,
-  border,
+  customBorder,
   borderRadius,
   w,
   h,
@@ -124,9 +128,9 @@ const StyledBox = styled(MuiBox)<BoxProps>(({
   }
 
   // Border
-  if (border) {
-    if (typeof border === 'string') {
-      styles.border = border;
+  if (customBorder) {
+    if (typeof customBorder === 'string') {
+      styles.border = customBorder;
     } else {
       styles.border = `1px solid ${theme.palette.divider}`;
     }
@@ -219,5 +223,5 @@ const AtomicBox = forwardRef<HTMLDivElement, BoxProps & PolymorphicProps>(
 
 AtomicBox.displayName = 'AtomicBox';
 
-export type { BoxProps };
 export default AtomicBox;
+export type { BoxProps };

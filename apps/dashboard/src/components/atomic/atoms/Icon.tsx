@@ -127,7 +127,7 @@ const AtomicIcon = forwardRef<SVGSVGElement, IconProps>(
         <StyledIcon
           ref={ref}
           size={size}
-          color={color}
+          color={color as any}
           spin={spin}
           pulse={pulse}
           bounce={bounce}
@@ -149,7 +149,7 @@ const AtomicIcon = forwardRef<SVGSVGElement, IconProps>(
         <StyledIcon
           ref={ref}
           size={size}
-          color={color}
+          color={color as any}
           spin={spin}
           pulse={pulse}
           bounce={bounce}

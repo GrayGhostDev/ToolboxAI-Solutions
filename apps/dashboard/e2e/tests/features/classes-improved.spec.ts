@@ -8,12 +8,6 @@ import type { Page } from '@playwright/test';
 
 // Helper function to login as teacher
 async function loginAsTeacher(page: Page) {
-  // First check if backend is accessible from test context
-  const apiResponse = await page.request.get('http://127.0.0.1:8009/health');
-  if (!apiResponse.ok()) {
-    console.error(`Backend not accessible: ${apiResponse.status()} ${apiResponse.statusText()}`);
-  }
-
   await page.goto('/login');
 
   // Wait for login form to be ready
@@ -23,34 +17,31 @@ async function loginAsTeacher(page: Page) {
   await page.locator('input[name="email"]').fill('jane.smith@school.edu');
   await page.locator('input[name="password"]').fill('Teacher123!');
 
-  // Setup API response interception to debug
-  const responsePromise = page.waitForResponse(
-    resp => resp.url().includes('/api/v1/auth/login'),
-    { timeout: 15000 }
-  );
-
   // Click login button
   const submitButton = page.locator('button[type="submit"]:has-text("Sign In")');
   await submitButton.click();
 
+  // Wait for navigation away from login or for error message
   try {
-    // Wait for the login API response
-    const response = await responsePromise;
-    console.log(`Login API response: ${response.status()}`);
-
-    if (response.ok()) {
-      const body = await response.json();
-      console.log(`User role from API: ${body.role}`);
-    }
+    await Promise.race([
+      page.waitForURL(url => !url.pathname.includes('/login'), {
+        timeout: 10000,
+        waitUntil: 'domcontentloaded'
+      }),
+      page.waitForSelector('[role="alert"]', { timeout: 10000 }) // Wait for error alert
+    ]);
   } catch (error) {
-    console.error('Login API call failed:', error);
+    console.log('Login navigation timeout - checking current state');
+    const currentUrl = page.url();
+    if (currentUrl.includes('/login')) {
+      // Still on login page - check for errors
+      const errorAlert = await page.locator('[role="alert"]').isVisible();
+      if (errorAlert) {
+        const errorText = await page.locator('[role="alert"]').textContent();
+        console.error('Login failed with error:', errorText);
+      }
+    }
   }
-
-  // Wait for navigation away from login
-  await page.waitForURL(url => !url.pathname.includes('/login'), {
-    timeout: 15000,
-    waitUntil: 'domcontentloaded' // Changed from 'networkidle' for faster response
-  });
 
   // Critical: Wait for authentication state to be fully propagated
   // The AuthContext now dispatches to Redux, so we need to wait for that

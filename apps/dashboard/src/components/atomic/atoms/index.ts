@@ -55,35 +55,57 @@ export type { BoxProps } from './Box';
 export type { StackProps } from './Stack';
 export type { GridProps } from './Grid';
 
+// Import components for grouped export
+import ButtonDefault from './Button';
+import InputDefault from './Input';
+import LabelDefault from './Label';
+import TextDefault from './Text';
+import IconDefault from './Icon';
+import ImageDefault from './Image';
+import LinkDefault from './Link';
+import CheckboxDefault from './Checkbox';
+import RadioDefault from './Radio';
+import SwitchDefault from './Switch';
+import SliderDefault from './Slider';
+import BadgeDefault from './Badge';
+import ChipDefault from './Chip';
+import AvatarDefault from './Avatar';
+import DividerDefault from './Divider';
+import SkeletonDefault from './Skeleton';
+import SpinnerDefault from './Spinner';
+import BoxDefault from './Box';
+import StackDefault from './Stack';
+import GridDefault from './Grid';
+
 // Grouped exports for convenience
 const atoms = {
   // Basic Elements
-  Button: AtomicButton,
-  Input: AtomicInput,
-  Label: AtomicLabel,
-  Text: AtomicText,
-  Icon: AtomicIcon,
-  Image: AtomicImage,
-  Link: AtomicLink,
+  Button: ButtonDefault,
+  Input: InputDefault,
+  Label: LabelDefault,
+  Text: TextDefault,
+  Icon: IconDefault,
+  Image: ImageDefault,
+  Link: LinkDefault,
 
   // Form Elements
-  Checkbox: AtomicCheckbox,
-  Radio: AtomicRadio,
-  Switch: AtomicSwitch,
-  Slider: AtomicSlider,
+  Checkbox: CheckboxDefault,
+  Radio: RadioDefault,
+  Switch: SwitchDefault,
+  Slider: SliderDefault,
 
   // Visual Elements
-  Badge: AtomicBadge,
-  Chip: AtomicChip,
-  Avatar: AtomicAvatar,
-  Divider: AtomicDivider,
-  Skeleton: AtomicSkeleton,
-  Spinner: AtomicSpinner,
+  Badge: BadgeDefault,
+  Chip: ChipDefault,
+  Avatar: AvatarDefault,
+  Divider: DividerDefault,
+  Skeleton: SkeletonDefault,
+  Spinner: SpinnerDefault,
 
   // Layout Elements
-  Box: AtomicBox,
-  Stack: AtomicStack,
-  Grid: AtomicGrid
+  Box: BoxDefault,
+  Stack: StackDefault,
+  Grid: GridDefault
 } as const;
 
 export default atoms;

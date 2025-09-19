@@ -1,6 +1,12 @@
+// In development with Vite, use empty baseURL to enable relative URLs through proxy
+// This avoids CORS issues by routing all requests through the same origin
+const isDevelopment = import.meta.env.DEV;
 const rawApi = (import.meta.env.VITE_API_BASE_URL as string) || `http://127.0.0.1:8008`;
-// Normalize: remove trailing slashes and a single '/api/v1' if present to avoid double prefixing
-export const API_BASE_URL = rawApi.replace(/\/+$/, '').replace(/\/api\/v1$/, '');
+
+// Use empty string in development so axios uses relative URLs that go through Vite proxy
+export const API_BASE_URL = isDevelopment
+  ? ''
+  : rawApi.replace(/\/+$/, '').replace(/\/api\/v1$/, '');
 
 const rawWs = (import.meta.env.VITE_WS_URL as string) || `http://127.0.0.1:8008`;
 export const WS_URL = rawWs.replace(/\/+$/, '');
@@ -8,7 +14,9 @@ export const WS_URL = rawWs.replace(/\/+$/, '');
 // Pusher configuration (Channels)
 export const PUSHER_KEY = (import.meta.env.VITE_PUSHER_KEY as string) || '';
 export const PUSHER_CLUSTER = (import.meta.env.VITE_PUSHER_CLUSTER as string) || 'us2';
-export const PUSHER_AUTH_ENDPOINT = (import.meta.env.VITE_PUSHER_AUTH_ENDPOINT as string) || `${API_BASE_URL}/pusher/auth`;
+// In development, use relative URL for auth endpoint to go through proxy
+export const PUSHER_AUTH_ENDPOINT = (import.meta.env.VITE_PUSHER_AUTH_ENDPOINT as string) ||
+  (isDevelopment ? '/api/v1/pusher/auth' : `${rawApi}/api/v1/pusher/auth`);
 
 export const AUTH_TOKEN_KEY = import.meta.env.VITE_AUTH_TOKEN_KEY || "toolboxai_auth_token";
 export const AUTH_REFRESH_TOKEN_KEY = import.meta.env.VITE_AUTH_REFRESH_TOKEN_KEY || "toolboxai_refresh_token";

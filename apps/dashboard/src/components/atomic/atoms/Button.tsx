@@ -23,7 +23,8 @@ type PolymorphicProps<T extends React.ElementType = 'button'> = {
   children?: React.ReactNode;
 } & Omit<React.ComponentPropsWithoutRef<T>, 'as' | 'children'>;
 
-export interface ButtonProps extends Omit<MuiButtonProps, 'variant' | 'size'> {
+// Custom props for our Button component
+export interface AtomicButtonProps {
   variant?: 'primary' | 'secondary' | 'outlined' | 'text' | 'ghost' | 'danger';
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   loading?: boolean;
@@ -34,12 +35,15 @@ export interface ButtonProps extends Omit<MuiButtonProps, 'variant' | 'size'> {
   robloxTheme?: boolean;
 }
 
+// Combine with MUI button props, excluding conflicting ones
+export type ButtonProps = AtomicButtonProps & Omit<MuiButtonProps, keyof AtomicButtonProps | 'variant' | 'size'>;
+
 // Roblox brand colors
 const ROBLOX_RED = '#E2231A';
 const ROBLOX_RED_DARK = '#B71C15';
 const ROBLOX_WHITE = '#FFFFFF';
 
-const StyledButton = styled(MuiButton)<ButtonProps>(({
+const StyledButton = styled(MuiButton)<AtomicButtonProps>(({
   theme,
   variant = 'primary',
   size = 'md',
@@ -84,7 +88,7 @@ const StyledButton = styled(MuiButton)<ButtonProps>(({
       position: 'relative' as const,
       overflow: 'hidden' as const,
       transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`,
-      ...sizeMap[size]
+      ...sizeMap[size as keyof typeof sizeMap]
     };
 
     if (!robloxTheme) {
@@ -274,12 +278,12 @@ const AtomicButton = forwardRef<HTMLButtonElement, ButtonProps & PolymorphicProp
       <StyledButton
         ref={ref}
         component={Component}
-        variant={variant}
-        size={size}
+        variant={(variant === 'primary' || variant === 'secondary' || variant === 'danger' || variant === 'ghost') ? 'contained' : variant as any}
+        size={undefined}
         disabled={isDisabled}
         loading={loading}
         robloxTheme={robloxTheme}
-        {...props}
+        {...props as any}
       >
         {renderContent()}
       </StyledButton>
@@ -289,5 +293,5 @@ const AtomicButton = forwardRef<HTMLButtonElement, ButtonProps & PolymorphicProp
 
 AtomicButton.displayName = 'AtomicButton';
 
-export type { ButtonProps };
 export default AtomicButton;
+export type { ButtonProps };

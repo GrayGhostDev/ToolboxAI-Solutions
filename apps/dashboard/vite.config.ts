@@ -131,7 +131,7 @@ export default defineConfig({
         target: 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        // Don't rewrite the path - keep /api/v1/* as is for the backend
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
             console.log('proxy error', err);
@@ -143,6 +143,11 @@ export default defineConfig({
             console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
           });
         },
+      },
+      '/health': {
+        target: 'http://127.0.0.1:8009',
+        changeOrigin: true,
+        secure: false
       },
       '/ws': {
         target: 'ws://127.0.0.1:8009',

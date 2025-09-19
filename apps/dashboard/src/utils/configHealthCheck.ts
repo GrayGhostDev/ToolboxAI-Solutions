@@ -83,7 +83,8 @@ class ConfigurationHealthCheck {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      const response = await fetch(`${this.apiBaseUrl}/health`, {
+      // Use relative URL to go through Vite proxy instead of direct cross-origin request
+      const response = await fetch('/health', {
         signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
@@ -251,8 +252,9 @@ class ConfigurationHealthCheck {
       warnings.push('Service Worker not registered');
     }
 
-    // Check if too many background processes
-    if (performance.memory && performance.memory.usedJSHeapSize > 100 * 1024 * 1024) {
+    // Check if too many background processes (non-standard API with feature detection)
+    const perf = performance as any;
+    if (perf.memory && perf.memory.usedJSHeapSize > 100 * 1024 * 1024) {
       warnings.push('High memory usage detected (>100MB)');
     }
 
