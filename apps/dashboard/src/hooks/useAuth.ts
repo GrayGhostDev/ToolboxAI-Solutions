@@ -60,9 +60,12 @@ export const useAuth = () => {
             // Extract user info from JWT payload
             const userRole = payload.role || 'student';
             const userSub = payload.sub || payload.username || '';
-            const userId = payload.user_id || '1';
+            const userId = payload.user_id || payload.id || '1';
+            const userEmail = payload.email || payload.sub || '';
+            const schoolId = payload.school_id || payload.schoolId || null;
+            const classIds = payload.class_ids || payload.classIds || [];
 
-            console.log('Restoring auth from token, role:', userRole);
+            console.log('Restoring auth from token, role:', userRole, 'userId:', userId);
 
             // Check if token needs refresh
             if (tokenRefreshManager.needsRefresh()) {
@@ -77,6 +80,9 @@ export const useAuth = () => {
                 role: userRole,
                 userId: userId,
                 displayName: userSub,
+                email: userEmail,
+                schoolId: schoolId,
+                classIds: classIds,
               }));
 
               // Update token refresh manager

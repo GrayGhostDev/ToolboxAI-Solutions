@@ -1,4 +1,4 @@
-import { Page, expect, Locator } from '@playwright/test';
+import type { Page, expect, Locator } from '@playwright/test';
 
 /**
  * Dashboard Page Object Model

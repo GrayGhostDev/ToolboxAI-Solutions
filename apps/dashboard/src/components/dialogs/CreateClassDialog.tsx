@@ -11,121 +11,177 @@ import {
   Select,
   MenuItem,
   Stack,
+  SelectChangeEvent,
 } from "@mui/material";
 
 interface CreateClassDialogProps {
   open: boolean;
   onClose: () => void;
   onSave: (classData: any) => void;
+  editMode?: boolean;
+  initialData?: any;
 }
 
 const CreateClassDialog: React.FC<CreateClassDialogProps> = ({
   open,
   onClose,
   onSave,
+  editMode = false,
+  initialData = null,
 }) => {
-  const [className, setClassName] = useState("");
-  const [grade, setGrade] = useState("");
-  const [schedule, setSchedule] = useState("");
-  const [subject, setSubject] = useState("");
+  const [className, setClassName] = useState(initialData?.name || "");
+  const [grade, setGrade] = useState(initialData?.grade || "");
+  const [schedule, setSchedule] = useState(initialData?.schedule || "");
+  const [subject, setSubject] = useState(initialData?.subject || "Mathematics");
+  const [room, setRoom] = useState(initialData?.room || "");
+  const [description, setDescription] = useState(initialData?.description || "");
+
+  React.useEffect(() => {
+    if (initialData) {
+      setClassName(initialData.name || "");
+      setGrade(initialData.grade || initialData.grade_level || "");
+      setSchedule(initialData.schedule || "");
+      setSubject(initialData.subject || "Mathematics");
+      setRoom(initialData.room || "");
+      setDescription(initialData.description || "");
+    }
+  }, [initialData]);
 
   const handleSave = () => {
     if (className && grade) {
       onSave({
         name: className,
+        grade_level: parseInt(grade),
         grade: parseInt(grade),
         schedule,
         subject,
+        room,
+        description,
       });
       // Reset form
-      setClassName("");
-      setGrade("");
-      setSchedule("");
-      setSubject("");
+      if (!editMode) {
+        setClassName("");
+        setGrade("");
+        setSchedule("");
+        setSubject("Mathematics");
+        setRoom("");
+        setDescription("");
+      }
     }
   };
 
   const handleClose = () => {
-    // Reset form
-    setClassName("");
-    setGrade("");
-    setSchedule("");
-    setSubject("");
+    // Reset form if not in edit mode
+    if (!editMode) {
+      setClassName("");
+      setGrade("");
+      setSchedule("");
+      setSubject("Mathematics");
+      setRoom("");
+      setDescription("");
+    }
     onClose();
   };
 
+  const handleSubjectChange = (event: SelectChangeEvent) => {
+    setSubject(event.target.value);
+  };
+
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Create New Class</DialogTitle>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth role="dialog">
+      <DialogTitle>{editMode ? "Edit Class" : "Create New Class"}</DialogTitle>
       <DialogContent>
         <Stack spacing={3} sx={{ mt: 1 }}>
           <TextField
             label="Class Name"
-            fullWidth
+            name="name"
+            placeholder="Enter class name"
             value={className}
             onChange={(e) => setClassName(e.target.value)}
+            fullWidth
             required
-            placeholder="e.g., Math 101, English Literature"
+            autoFocus
+            data-testid="class-name-input"
           />
-          
-          <FormControl fullWidth required>
-            <InputLabel>Grade Level</InputLabel>
-            <Select
-              value={grade}
-              label="Grade Level"
-              onChange={(e) => setGrade(e.target.value)}
-            >
-              <MenuItem value="1">1st Grade</MenuItem>
-              <MenuItem value="2">2nd Grade</MenuItem>
-              <MenuItem value="3">3rd Grade</MenuItem>
-              <MenuItem value="4">4th Grade</MenuItem>
-              <MenuItem value="5">5th Grade</MenuItem>
-              <MenuItem value="6">6th Grade</MenuItem>
-              <MenuItem value="7">7th Grade</MenuItem>
-              <MenuItem value="8">8th Grade</MenuItem>
-              <MenuItem value="9">9th Grade</MenuItem>
-              <MenuItem value="10">10th Grade</MenuItem>
-              <MenuItem value="11">11th Grade</MenuItem>
-              <MenuItem value="12">12th Grade</MenuItem>
-            </Select>
-          </FormControl>
 
-          <FormControl fullWidth>
-            <InputLabel>Subject</InputLabel>
+          <FormControl fullWidth required>
+            <InputLabel id="subject-label">Subject</InputLabel>
             <Select
+              labelId="subject-label"
+              id="subject-select"
+              name="subject"
               value={subject}
               label="Subject"
-              onChange={(e) => setSubject(e.target.value)}
+              onChange={handleSubjectChange}
+              data-testid="subject-select"
             >
-              <MenuItem value="Math">Math</MenuItem>
+              <MenuItem value="Mathematics">Mathematics</MenuItem>
               <MenuItem value="Science">Science</MenuItem>
-              <MenuItem value="Language">Language Arts</MenuItem>
-              <MenuItem value="Social Studies">Social Studies</MenuItem>
-              <MenuItem value="Arts">Arts</MenuItem>
-              <MenuItem value="Technology">Technology</MenuItem>
+              <MenuItem value="English">English</MenuItem>
+              <MenuItem value="History">History</MenuItem>
+              <MenuItem value="Computer Science">Computer Science</MenuItem>
+              <MenuItem value="Art">Art</MenuItem>
+              <MenuItem value="Music">Music</MenuItem>
               <MenuItem value="Physical Education">Physical Education</MenuItem>
-              <MenuItem value="Life Skills">Life Skills</MenuItem>
             </Select>
           </FormControl>
 
           <TextField
-            label="Schedule"
+            label="Grade Level"
+            name="grade"
+            type="number"
+            value={grade}
+            onChange={(e) => setGrade(e.target.value)}
             fullWidth
+            required
+            inputProps={{ min: 1, max: 12 }}
+            data-testid="grade-input"
+          />
+
+          <TextField
+            label="Room"
+            name="room"
+            placeholder="e.g., Room 101"
+            value={room}
+            onChange={(e) => setRoom(e.target.value)}
+            fullWidth
+            data-testid="room-input"
+          />
+
+          <TextField
+            label="Schedule"
+            name="schedule"
+            placeholder="e.g., Mon/Wed/Fri 10:00 AM"
             value={schedule}
             onChange={(e) => setSchedule(e.target.value)}
-            placeholder="e.g., MWF 9:00-10:00 AM"
-            helperText="Optional: Add class schedule information"
+            fullWidth
+            data-testid="schedule-input"
+          />
+
+          <TextField
+            label="Description"
+            name="description"
+            placeholder="Class description (optional)"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            fullWidth
+            multiline
+            rows={3}
+            data-testid="description-input"
           />
         </Stack>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={handleClose} color="inherit">
+          Cancel
+        </Button>
         <Button
-          variant="contained"
           onClick={handleSave}
+          variant="contained"
           disabled={!className || !grade}
+          data-testid="save-class-button"
         >
-          Create Class
+          {editMode ? "Update" : "Create"} Class
         </Button>
       </DialogActions>
     </Dialog>

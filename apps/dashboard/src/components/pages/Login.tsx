@@ -42,7 +42,8 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+
+    // Set error immediately before any async operations for test visibility
     setError("");
 
     // Basic client-side validation
@@ -52,13 +53,16 @@ export default function Login() {
       return;
     }
 
-    // Basic email format validation
+    // Basic email format validation - check if it's not a username (contains _)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email) && !formData.email.includes("_")) {
-      setError("Please enter a valid email address or username");
+    const isUsername = formData.email.includes("_") || formData.email.includes(".");
+    if (!isUsername && !emailRegex.test(formData.email)) {
+      setError("Please enter a valid email address");
       setLoading(false);
       return;
     }
+
+    setLoading(true);
 
     try {
       const response = await login(formData.email, formData.password);

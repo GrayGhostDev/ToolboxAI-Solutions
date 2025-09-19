@@ -6,7 +6,7 @@
       "localStorage": [
         {
           "name": "auth_token",
-          "value": "{\"access_token\":\"mock-student-jwt-token\",\"user\":{\"id\":\"3\",\"email\":\"alex.johnson@student.edu\",\"role\":\"student\",\"name\":\"Test Student\"},\"expires_at\":1758311127609}"
+          "value": "{\"access_token\":\"mock-student-jwt-token\",\"user\":{\"id\":\"3\",\"email\":\"alex.johnson@student.edu\",\"role\":\"student\",\"name\":\"Test Student\"},\"expires_at\":1758312730670}"
         }
       ]
     }

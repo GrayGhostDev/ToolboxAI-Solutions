@@ -532,6 +532,21 @@ class ApiClient {
     });
   }
 
+  async updateClass(id: string, data: Partial<ClassSummary>): Promise<ClassSummary> {
+    return this.request<ClassSummary>({
+      method: "PUT",
+      url: `/api/v1/classes/${id}`,
+      data,
+    });
+  }
+
+  async deleteClass(id: string): Promise<void> {
+    return this.request<void>({
+      method: "DELETE",
+      url: `/api/v1/classes/${id}`,
+    });
+  }
+
   // Assessments
   async listAssessments(classId?: string): Promise<Assessment[]> {
     return this.request<Assessment[]>({
@@ -941,6 +956,8 @@ export const deleteLesson = apiClient.deleteLesson.bind(apiClient);
 export const listClasses = apiClient.listClasses.bind(apiClient);
 export const getClass = apiClient.getClass.bind(apiClient);
 export const createClass = apiClient.createClass.bind(apiClient);
+export const updateClass = apiClient.updateClass.bind(apiClient);
+export const deleteClass = apiClient.deleteClass.bind(apiClient);
 export const listAssessments = apiClient.listAssessments.bind(apiClient);
 export const getAssessment = apiClient.getAssessment.bind(apiClient);
 export const createAssessment = apiClient.createAssessment.bind(apiClient);

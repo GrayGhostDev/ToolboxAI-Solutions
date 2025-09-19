@@ -70,7 +70,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev
         run: |
-          python scripts/ci_setup_database.py
+          python database/ci_setup_database.py
 
       - name: Run pytest
         env:
