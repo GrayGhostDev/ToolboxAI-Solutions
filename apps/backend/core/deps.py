@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 import jwt
 from datetime import datetime, timedelta
 
-from database_service import DatabaseService
+from database.database_service import DatabaseService
 from database.models import User
 from toolboxai_settings import settings
 

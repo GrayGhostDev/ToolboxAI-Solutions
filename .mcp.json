@@ -95,12 +95,14 @@
       ],
       "env": {
         "MCP_SERVER_TYPE": "orchestrator",
-        "REDIS_URL": "${REDIS_URL}",
-        "DATABASE_URL": "${DATABASE_URL}",
+        "REDIS_URL": "${REDIS_URL:-redis://localhost:6381/0}",
+        "DATABASE_URL": "${DATABASE_URL:-postgresql://eduplatform:eduplatform2024@localhost:5434/educational_platform_dev}",
         "PUSHER_APP_ID": "${PUSHER_APP_ID}",
         "PUSHER_KEY": "${PUSHER_KEY}",
         "PUSHER_SECRET": "${PUSHER_SECRET}",
-        "PUSHER_CLUSTER": "${PUSHER_CLUSTER}"
+        "PUSHER_CLUSTER": "${PUSHER_CLUSTER:-us2}",
+        "BACKEND_PORT": "8009",
+        "BACKEND_URL": "http://localhost:8009"
       },
       "description": "ToolBoxAI MCP orchestrator server for agent coordination",
       "scope": "project"
@@ -112,7 +114,7 @@
     "rootPath": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
     "pythonPath": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/venv/bin/python",
     "nodeModulesPath": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/node_modules",
-    "backendPort": 8008,
+    "backendPort": 8009,
     "dashboardPort": 5179,
     "mcpOrchestratorPort": 9877
   }

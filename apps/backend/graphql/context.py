@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 from fastapi import Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database_service import get_async_session
+from database.database_service import get_async_session
 from apps.backend.api.auth.auth import get_current_user_optional
 from apps.backend.core.config import settings
 from .dataloaders import create_loaders

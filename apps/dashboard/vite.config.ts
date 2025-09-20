@@ -87,7 +87,7 @@ export default defineConfig({
   // Development server configuration
   server: {
     port: 5179,
-    host: '127.0.0.1',
+    host: '0.0.0.0', // Allow external connections (needed for Docker)
     strictPort: true,
     open: false,
     cors: true,
@@ -96,39 +96,41 @@ export default defineConfig({
       clientPort: 5179
     },
     proxy: {
-      // Proxy all backend API endpoints
+      // Use environment variable for proxy target, fallback to localhost for non-Docker development
+      // In Docker, VITE_PROXY_TARGET will be set to http://fastapi-main:8009
+      // For local development, it defaults to http://127.0.0.1:8009
       '/dashboard': {
-        target: 'http://127.0.0.1:8009',
+        target: process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       },
       '/auth': {
-        target: 'http://127.0.0.1:8009',
+        target: process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       },
       '/realtime': {
-        target: 'http://127.0.0.1:8009',
+        target: process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       },
       '/lessons': {
-        target: 'http://127.0.0.1:8009',
+        target: process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       },
       '/classes': {
-        target: 'http://127.0.0.1:8009',
+        target: process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       },
       '/assessments': {
-        target: 'http://127.0.0.1:8009',
+        target: process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       },
       '/api': {
-        target: 'http://127.0.0.1:8009',
+        target: process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false,
         // Don't rewrite the path - keep /api/v1/* as is for the backend
@@ -145,17 +147,17 @@ export default defineConfig({
         },
       },
       '/health': {
-        target: 'http://127.0.0.1:8009',
+        target: process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       },
       '/ws': {
-        target: 'ws://127.0.0.1:8009',
+        target: (process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:8009').replace('http://', 'ws://'),
         ws: true,
         changeOrigin: true
       },
       '/pusher': {
-        target: 'http://127.0.0.1:8009',
+        target: process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:8009',
         changeOrigin: true,
         secure: false
       }

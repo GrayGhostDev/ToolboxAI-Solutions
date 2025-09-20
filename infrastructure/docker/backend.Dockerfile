@@ -17,8 +17,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy requirements file
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --user -r requirements.txt
+# Clear pip cache and install dependencies with explicit upgrade strategy
+RUN pip cache purge && \
+    pip install --no-cache-dir --user --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --user --force-reinstall -r requirements.txt
 
 # Production stage
 FROM python:3.12-slim

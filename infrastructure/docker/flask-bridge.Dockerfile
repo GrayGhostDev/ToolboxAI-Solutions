@@ -22,6 +22,8 @@ RUN pip install --no-cache-dir \
     flask \
     flask-cors \
     flask-jwt-extended \
+    flask-socketio \
+    python-socketio \
     requests \
     redis \
     psycopg2-binary \

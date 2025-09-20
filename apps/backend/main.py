@@ -194,7 +194,7 @@ async def lifespan(app: FastAPI):
 
     # Initialize database service
     try:
-        from database_service import db_service
+        from database.database_service import db_service
         await db_service.initialize()
         logger.info("Database service initialized successfully")
     except Exception as e:
@@ -297,7 +297,7 @@ async def lifespan(app: FastAPI):
 
     # Shutdown database service
     try:
-        from database_service import db_service
+        from database.database_service import db_service
         await db_service.disconnect()
         logger.info("Database service shutdown completed")
     except Exception as e:

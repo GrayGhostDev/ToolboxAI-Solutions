@@ -436,16 +436,27 @@ export default function Classes() {
             <div style={{ display: 'none' }}>Classes List Container</div>
           </Grid>
           {filteredClasses.map((classData) => (
-            <Grid key={classData.id} item xs={12} md={6} lg={4}>
+            <Grid
+              key={classData.id}
+              item
+              xs={12}
+              md={6}
+              lg={4}
+              data-testid="class-row"
+              className="class-card"
+            >
             <Card
+              data-testid="class-card"
               sx={{
                 height: "100%",
                 transition: "all 0.3s",
+                cursor: "pointer",
                 "&:hover": {
                   transform: "translateY(-4px)",
                   boxShadow: 4,
                 },
               }}
+              onClick={() => navigate(`/classes/${classData.id}`)}
             >
               <CardContent>
                 <Stack spacing={2}>
@@ -453,7 +464,11 @@ export default function Classes() {
                   <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                     <Stack>
                       <Stack direction="row" alignItems="center" gap={1}>
-                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{ fontWeight: 600 }}
+                          data-testid="class-name"
+                        >
                           {classData.name}
                         </Typography>
                         {classData.isOnline && (
@@ -462,6 +477,7 @@ export default function Classes() {
                             size="small"
                             color="success"
                             sx={{ height: 20 }}
+                            data-testid="online-status"
                           />
                         )}
                       </Stack>
@@ -472,6 +488,8 @@ export default function Classes() {
                     <IconButton
                       size="small"
                       onClick={(e) => handleMenuOpen(e, classData)}
+                      aria-label="More options"
+                      data-testid="class-menu-button"
                     >
                       <MoreVertIcon />
                     </IconButton>
@@ -580,19 +598,26 @@ export default function Classes() {
           if (selectedClass) {
             handleEditClass(selectedClass);
           }
-        }}>
+        }}
+          data-testid="edit-class"
+        >
           <EditIcon fontSize="small" sx={{ mr: 1 }} />
           Edit Class
         </MenuItem>
         <MenuItem onClick={() => {
           // TODO: Navigate to manage students page
           handleMenuClose();
-        }}>
+        }}
+          data-testid="manage-students"
+        >
           <PeopleIcon fontSize="small" sx={{ mr: 1 }} />
           Manage Students
         </MenuItem>
         {selectedClass && !selectedClass.isOnline && (
-          <MenuItem onClick={() => selectedClass && handlePushToRoblox(selectedClass)}>
+          <MenuItem
+            onClick={() => selectedClass && handlePushToRoblox(selectedClass)}
+            data-testid="push-to-roblox"
+          >
             <RocketLaunchIcon fontSize="small" sx={{ mr: 1 }} />
             Push to Roblox
           </MenuItem>
@@ -600,6 +625,7 @@ export default function Classes() {
         <MenuItem
           onClick={() => selectedClass && handleDeleteClass(selectedClass)}
           sx={{ color: "error.main" }}
+          data-testid="delete-class"
         >
           <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
           Delete Class

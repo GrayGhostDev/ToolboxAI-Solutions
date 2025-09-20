@@ -13,7 +13,8 @@ const Compliance = lazy(() => import("./components/pages/Compliance"));
 const Integrations = lazy(() => import("./components/pages/Integrations"));
 const Messages = lazy(() => import("./components/pages/Messages"));
 const Classes = lazy(() => import("./components/pages/Classes"));
-const ClassDetails = lazy(() => import("./components/pages/ClassDetails"));
+// const ClassDetails = lazy(() => import("./components/pages/ClassDetails"));
+const ClassDetail = lazy(() => import("./components/ClassDetail/ClassDetail"));
 const Reports = lazy(() => import("./components/pages/Reports"));
 const Settings = lazy(() => import("./components/pages/Settings"));
 const Missions = lazy(() => import("./components/pages/Missions"));
@@ -84,10 +85,10 @@ export default function AppRoutes() {
         }
       />
       <Route
-        path="/classes/:id"
+        path="/classes/:classId"
         element={
           <RoleGuard allow={["teacher", "admin", "student", "parent"]}>
-            <ClassDetails />
+            <ClassDetail />
           </RoleGuard>
         }
       />

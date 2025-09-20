@@ -130,9 +130,13 @@ class User(Base):
     plugin_requests = relationship("PluginRequest", back_populates="user", cascade="all, delete-orphan")
     teaching_sessions = relationship("RobloxSession", back_populates="teacher", foreign_keys="RobloxSession.teacher_id")
     student_progress = relationship("StudentProgress", back_populates="student", foreign_keys="StudentProgress.student_id")
+    roblox_student_progress = relationship("RobloxPlayerProgress", back_populates="student", foreign_keys="RobloxPlayerProgress.student_id")
     deployments = relationship("RobloxDeployment", back_populates="deployer", cascade="all, delete-orphan")
     terrain_templates = relationship("TerrainTemplate", back_populates="creator", cascade="all, delete-orphan")
     quiz_templates = relationship("QuizTemplate", back_populates="creator", cascade="all, delete-orphan")
+    roblox_templates = relationship("RobloxTemplate", back_populates="creator", cascade="all, delete-orphan")
+    taught_classes = relationship("Class", back_populates="teacher", cascade="all, delete-orphan")
+    class_enrollments = relationship("ClassEnrollment", back_populates="student", cascade="all, delete-orphan")
     
     __table_args__ = (
         Index('idx_user_email_active', 'email', 'is_active'),
@@ -220,6 +224,7 @@ class Lesson(Base):
     roblox_contents = relationship("RobloxContent", back_populates="lesson", cascade="all, delete-orphan")
     sessions = relationship("RobloxSession", back_populates="lesson", cascade="all, delete-orphan")
     student_progress = relationship("StudentProgress", back_populates="lesson", cascade="all, delete-orphan")
+    roblox_player_progress = relationship("RobloxPlayerProgress", back_populates="lesson", cascade="all, delete-orphan")
     
     __table_args__ = (
         UniqueConstraint('course_id', 'order_index'),
@@ -827,8 +832,8 @@ class RobloxPlayerProgress(Base):
 
     # Relationships
     session = relationship("RobloxSession", back_populates="player_progress")
-    student = relationship("User", back_populates="student_progress", foreign_keys=[student_id])
-    lesson = relationship("Lesson", back_populates="student_progress")
+    student = relationship("User", back_populates="roblox_student_progress", foreign_keys=[student_id])
+    lesson = relationship("Lesson", back_populates="roblox_player_progress")
     quiz_results = relationship("RobloxQuizResult", back_populates="player_progress", cascade="all, delete-orphan")
 
     __table_args__ = (
@@ -1203,6 +1208,133 @@ class IntegrationEvent(Base):
         Index('idx_integration_events_processed', 'processed'),
         Index('idx_integration_events_created', 'created_at'),
     )
+
+
+# Class Management Models
+class Class(Base):
+    """Class model for managing educational classes"""
+    __tablename__ = "classes"
+    __table_args__ = (
+        CheckConstraint('grade_level >= 1 AND grade_level <= 12'),
+        CheckConstraint('max_students > 0'),
+        Index('idx_class_teacher', 'teacher_id'),
+        Index('idx_class_subject_grade', 'subject', 'grade_level'),
+        Index('idx_class_active', 'is_active')
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(200), nullable=False)
+    teacher_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    grade_level = Column(Integer, nullable=False)
+    subject = Column(String(100), nullable=False)
+    room = Column(String(100))
+    schedule = Column(String(200))
+    description = Column(Text)
+    start_time = Column(DateTime(timezone=True))
+    end_time = Column(DateTime(timezone=True))
+    max_students = Column(Integer, default=30)
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    teacher = relationship("User", back_populates="taught_classes")
+    enrollments = relationship("ClassEnrollment", back_populates="class_obj", cascade="all, delete-orphan")
+
+
+
+class ClassEnrollment(Base):
+    """Many-to-many relationship between classes and students"""
+    __tablename__ = "class_enrollments"
+    __table_args__ = (
+        UniqueConstraint('class_id', 'student_id'),
+        Index('idx_enrollment_class', 'class_id'),
+        Index('idx_enrollment_student', 'student_id'),
+        Index('idx_enrollment_status', 'status'),
+        CheckConstraint('attendance_percentage >= 0 AND attendance_percentage <= 100')
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    class_id = Column(UUID(as_uuid=True), ForeignKey("classes.id"), nullable=False)
+    student_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+
+    # Enrollment details
+    enrolled_at = Column(DateTime(timezone=True), server_default=func.now())
+    dropped_at = Column(DateTime(timezone=True))
+    status = Column(String(50), default="active")  # active, dropped, completed
+
+    # Academic tracking
+    final_grade = Column(Float)
+    attendance_percentage = Column(Float)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    class_obj = relationship("Class", back_populates="enrollments")
+    student = relationship("User", back_populates="class_enrollments")
+
+
+
+# Additional Models for Missing Relationships (stub implementations)
+
+class PluginRequest(Base):
+    """Plugin request tracking (stub for relationship)"""
+    __tablename__ = "plugin_requests"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    plugin_name = Column(String(200), nullable=False)
+    status = Column(String(50), default="pending")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    user = relationship("User", back_populates="plugin_requests")
+
+
+class RobloxDeployment(Base):
+    """Roblox deployment tracking (stub for relationship)"""
+    __tablename__ = "roblox_deployments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    deployer_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    deployment_name = Column(String(200), nullable=False)
+    status = Column(String(50), default="pending")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    deployer = relationship("User", back_populates="deployments")
+
+
+class TerrainTemplate(Base):
+    """Terrain template model (stub for relationship)"""
+    __tablename__ = "terrain_templates"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    creator_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    template_name = Column(String(200), nullable=False)
+    template_data = Column(JSONB, default={})
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    creator = relationship("User", back_populates="terrain_templates")
+
+
+class QuizTemplate(Base):
+    """Quiz template model (stub for relationship)"""
+    __tablename__ = "quiz_templates"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    creator_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    template_name = Column(String(200), nullable=False)
+    template_data = Column(JSONB, default={})
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    creator = relationship("User", back_populates="quiz_templates")
 
 
 # Backward compatibility alias

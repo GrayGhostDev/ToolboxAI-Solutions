@@ -94,7 +94,13 @@ class Settings(BaseSettings):
     DASHBOARD_URL: str = Field(default="http://localhost:5179", env="DASHBOARD_URL")
     DASHBOARD_HOST: str = Field(default="localhost", env="DASHBOARD_HOST")
     DASHBOARD_PORT: int = Field(default=5179, env="DASHBOARD_PORT")
-    
+
+    # === Flask Bridge Configuration ===
+    FLASK_HOST: str = Field(default="127.0.0.1", env="FLASK_HOST")
+    FLASK_PORT: int = Field(default=5001, env="FLASK_PORT")
+    FLASK_DEBUG: bool = Field(default=False, env="FLASK_DEBUG")
+    FLASK_WORKERS: int = Field(default=2, env="FLASK_WORKERS")
+
     # === CORS Configuration ===
     CORS_ORIGINS: List[str] = Field(
         default=[

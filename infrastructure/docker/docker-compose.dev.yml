@@ -279,18 +279,19 @@ services:
   #     <<: *healthcheck-defaults
   #     test: ["CMD", "curl", "-f", "http://localhost:8001/api/health"]
 
-  # Dashboard Frontend
+  # Dashboard Frontend (Development)
   dashboard-frontend:
-    image: ghcr.io/toolboxai-solutions/frontend:${VERSION:-latest}
+    image: ghcr.io/toolboxai-solutions/frontend-dev:${VERSION:-latest}
     build:
       context: ../..
-      dockerfile: infrastructure/docker/dashboard.Dockerfile
+      dockerfile: infrastructure/docker/dashboard.dev.Dockerfile
     container_name: toolboxai-dashboard-frontend
     environment:
       <<: *common-variables
-      NODE_ENV: ${ENVIRONMENT}
+      NODE_ENV: development
       VITE_API_BASE_URL: http://localhost:8009
       VITE_FASTAPI_URL: http://localhost:8009
+      VITE_WS_URL: ws://localhost:8009
       # Pusher Configuration
       VITE_PUSHER_KEY: ${PUSHER_KEY}
       VITE_PUSHER_CLUSTER: ${PUSHER_CLUSTER:-us2}
@@ -298,11 +299,12 @@ services:
       VITE_ENABLE_GAMIFICATION: ${ENABLE_GAMIFICATION}
       VITE_ENABLE_ANALYTICS: ${ENABLE_ANALYTICS}
     ports:
-      - '5176:5176'
       - '5179:5179'
-    volumes:
-      - ../../apps/dashboard:/app:ro
-      - /app/node_modules
+    # Remove volume mounts for now to avoid node_modules conflicts
+    # In development, rebuild the container when code changes
+    # volumes:
+    #   - ../../apps/dashboard:/app
+    #   - /app/node_modules
     depends_on:
       fastapi-main:
         condition: service_healthy
@@ -310,7 +312,7 @@ services:
       - toolboxai_network
     healthcheck:
       <<: *healthcheck-defaults
-      test: ["CMD", "curl", "-f", "http://localhost:5176"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5179', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => { process.exit(1); });"]
 
   # Ghost Backend CMS
   ghost-backend:
