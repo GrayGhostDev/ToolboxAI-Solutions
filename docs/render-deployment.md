@@ -165,6 +165,88 @@ Redis cache with:
 
 A separate staging blueprint is available at `render.staging.yaml`. It provisions `-staging` resources with lighter plans. Use it to create an isolated staging stack (backend, dashboard, Postgres, Redis, cron job) before promoting changes to production.
 
+### Adding a Background Worker Later
+
+Background workers are optional and not deployed by default. If you later introduce asynchronous tasks (e.g., DSAR export generation, email sending, report builds), add a worker service to your blueprint.
+
+Important: implement the worker entrypoint before enabling the service.
+
+Option A — Celery (requires a Celery app)
+
+```yaml
+services:
+  - type: worker
+    name: toolboxai-worker
+    runtime: python
+    region: oregon
+    plan: standard
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: |
+      cd apps/backend && \
+      celery -A your_package.worker_app worker \
+        --loglevel=info \
+        --concurrency=4
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: toolboxai-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+      - fromGroup: toolboxai-secrets
+```
+
+Notes:
+- Replace `your_package.worker_app` with your Celery application path.
+- Ensure the Celery app connects to the same Redis and database as the web service (if needed).
+
+Option B — Custom Python worker (async queue/loop)
+
+```yaml
+services:
+  - type: worker
+    name: toolboxai-worker
+    runtime: python
+    region: oregon
+    plan: standard
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: |
+      cd apps/backend && \
+      python -m scripts.worker  # Implement scripts/worker.py first
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: toolboxai-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+      - fromGroup: toolboxai-secrets
+```
+
+Validation checklist for enabling a worker:
+- Entry point exists and runs locally.
+- Uses proper logging and exits gracefully on SIGTERM.
+- Reads configuration via environment variables (no hard-coded secrets).
+- Observability: logs visible in Render dashboard; health/metrics if applicable.
+
 ### Development vs Production
 
 Use separate Render projects for different environments:
