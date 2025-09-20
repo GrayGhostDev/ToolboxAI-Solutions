@@ -1,0 +1,183 @@
+# Simplified production deployment for local testing
+# Uses bridge network instead of overlay for non-Swarm deployment
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: toolboxai-postgres-prod
+    environment:
+      POSTGRES_DB: educational_platform_dev
+      POSTGRES_USER: eduplatform
+      POSTGRES_PASSWORD: eduplatform2024
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    ports:
+      - '5434:5432'
+    networks:
+      - toolboxai_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eduplatform -d educational_platform_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: toolboxai-redis-prod
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_prod_data:/data
+    ports:
+      - '6381:6379'
+    networks:
+      - toolboxai_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend (Port 8009)
+  backend:
+    image: toolboxai-backend:fixed
+    container_name: toolboxai-backend-prod
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+      HOST: 0.0.0.0
+      PORT: 8009
+      DATABASE_URL: postgresql://eduplatform:eduplatform2024@postgres:5432/educational_platform_dev
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: V2Q.TU:w#0*ROJ_?A){Q2XkDTW>1TPzc{H-$h6%^7gZ)mTarD)@dx@?8&pTGM^4d
+      CORS_ORIGINS: '["http://localhost:5179","http://localhost:8009","ws://localhost:8009"]'
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 9877
+      FLASK_HOST: flask-bridge
+      FLASK_PORT: 5001
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-test-key}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-sk-test-key}
+      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY:-test-key}
+      LOG_DIR: /tmp
+      DATA_DIR: /tmp
+    ports:
+      - '8009:8009'
+      - '9877:9877'
+    volumes:
+      - agent_data:/app/agent_data
+      - logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Flask Bridge for Roblox
+  flask-bridge:
+    image: toolboxai-flask-bridge:latest
+    container_name: toolboxai-flask-bridge-prod
+    environment:
+      FLASK_ENV: production
+      DATABASE_URL: postgresql://eduplatform:eduplatform2024@postgres:5432/educational_platform_dev
+      REDIS_URL: redis://redis:6379/0
+      FASTAPI_URL: http://backend:8009
+      JWT_SECRET: V2Q.TU:w#0*ROJ_?A){Q2XkDTW>1TPzc{H-$h6%^7gZ)mTarD)@dx@?8&pTGM^4d
+    ports:
+      - '5001:5001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # MCP Server
+  mcp-server:
+    image: toolboxai-backend:latest  # Using same image for now
+    container_name: toolboxai-mcp-prod
+    command: python -m core.mcp.server
+    environment:
+      ENVIRONMENT: production
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 9876
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql://eduplatform:eduplatform2024@postgres:5432/educational_platform_dev
+      JWT_SECRET_KEY: V2Q.TU:w#0*ROJ_?A){Q2XkDTW>1TPzc{H-$h6%^7gZ)mTarD)@dx@?8&pTGM^4d
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-test-key}
+      LOG_DIR: /tmp
+    ports:
+      - '9876:9876'
+    volumes:
+      - mcp_contexts:/data/contexts
+      - agent_data:/data/agents
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 9876)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Agent Coordinator
+  agent-coordinator:
+    image: toolboxai-backend:latest  # Using same image for now
+    container_name: toolboxai-coordinator-prod
+    command: python -m core.agents.master_orchestrator
+    environment:
+      ENVIRONMENT: production
+      COORDINATOR_PORT: 8888
+      MCP_SERVER_URL: ws://mcp-server:9876
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql://eduplatform:eduplatform2024@postgres:5432/educational_platform_dev
+      JWT_SECRET_KEY: V2Q.TU:w#0*ROJ_?A){Q2XkDTW>1TPzc{H-$h6%^7gZ)mTarD)@dx@?8&pTGM^4d
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-test-key}
+      LOG_DIR: /tmp
+    ports:
+      - '8888:8888'
+    volumes:
+      - agent_data:/data/agents
+      - logs:/app/logs
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - toolboxai_network
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:
+  agent_data:
+  logs:
+  mcp_contexts:
+
+networks:
+  toolboxai_network:
+    driver: bridge

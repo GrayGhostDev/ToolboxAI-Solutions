@@ -1,0 +1,91 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: toolboxai-postgres
+    environment:
+      POSTGRES_DB: educational_platform_dev
+      POSTGRES_USER: eduplatform
+      POSTGRES_PASSWORD: eduplatform2024
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5434:5432'
+    networks:
+      - toolboxai_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eduplatform -d educational_platform_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: toolboxai-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - '6381:6379'
+    networks:
+      - toolboxai_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend - Using our fixed image with permission issues resolved
+  backend:
+    image: toolboxai-backend:fixed-v2
+    container_name: toolboxai-backend
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+      HOST: 0.0.0.0
+      PORT: 8009
+      DATABASE_URL: postgresql://eduplatform:eduplatform2024@postgres:5432/educational_platform_dev
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-development-secret-key}
+      CORS_ORIGINS: '["http://localhost:5179","http://localhost:8009"]'
+      DATA_DIR: /tmp
+      LOG_DIR: /tmp
+    ports:
+      - '8009:8009'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - toolboxai_net
+
+  # Flask Bridge for Roblox - Using our fixed image with flask-socketio
+  flask-bridge:
+    image: toolboxai-flask-bridge:fixed
+    container_name: toolboxai-flask
+    environment:
+      FLASK_ENV: production
+      DATABASE_URL: postgresql://eduplatform:eduplatform2024@postgres:5432/educational_platform_dev
+      REDIS_URL: redis://redis:6379/0
+      FASTAPI_URL: http://backend:8009
+      DATA_DIR: /tmp
+      LOG_DIR: /tmp
+    ports:
+      - '5001:5001'
+    depends_on:
+      - backend
+    networks:
+      - toolboxai_net
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  toolboxai_net:
+    driver: bridge
