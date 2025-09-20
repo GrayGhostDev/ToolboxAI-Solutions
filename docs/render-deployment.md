@@ -7,7 +7,7 @@ This guide provides comprehensive instructions for deploying the ToolboxAI Educa
 - React dashboard (static site)
 - PostgreSQL database
 - Redis cache
-- Background workers
+- Optional background workers (not deployed by default)
 - Scheduled jobs
 
 ## Prerequisites

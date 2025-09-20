@@ -101,36 +101,6 @@ services:
         source: /*
         destination: /index.html
 
-  # Background Worker (for async tasks)
-  - type: worker
-    name: toolboxai-worker
-    runtime: python
-    region: oregon
-    plan: standard
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-    startCommand: |
-      cd apps/backend && \
-      python -m celery -A worker.celery worker \
-        --loglevel=info \
-        --concurrency=4
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.12.0
-      - key: DATABASE_URL
-        fromDatabase:
-          name: toolboxai-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: toolboxai-redis
-          property: connectionString
-      - key: ENVIRONMENT
-        value: production
-      - fromGroup: toolboxai-secrets
-    autoDeploy: true
 
   # Scheduled Jobs (Cron)
   - type: cron
