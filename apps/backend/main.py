@@ -1,7 +1,7 @@
 """
 FastAPI Main Application for ToolboxAI Roblox Environment
 
-Main FastAPI server (port 8008) with comprehensive features:
+Main FastAPI server (port 8009) with comprehensive features:
 - Educational content generation endpoints
 - WebSocket support for real-time updates
 - Integration with agents, swarm, SPARC, and MCP systems
@@ -458,8 +458,15 @@ async def pusher_webhook(
 
 # Middleware order is important - they execute in reverse order
 # TrustedHost runs first (added last)
+# Configure Trusted Hosts via env (supports comma-separated hostnames)
+trusted_hosts_env = os.getenv("TRUSTED_HOSTS", "").strip()
+if trusted_hosts_env:
+    allowed_hosts = [h.strip() for h in trusted_hosts_env.split(",") if h.strip()]
+else:
+    allowed_hosts = ["localhost", "127.0.0.1", "testserver", "*.roblox.com"]
+
 app.add_middleware(
-    TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver", "*.roblox.com"]
+    TrustedHostMiddleware, allowed_hosts=allowed_hosts
 )
 
 # Correlation ID middleware for request tracking
@@ -1492,6 +1499,30 @@ try:
     logger.info("Integration Agent endpoints loaded successfully")
 except ImportError as e:
     logger.warning(f"Could not load Integration endpoints: {e}")
+
+# Load Privacy & DSAR endpoints
+try:
+    from apps.backend.api.v1.endpoints.privacy import router as privacy_router
+    app.include_router(privacy_router)
+    logger.info("Privacy & DSAR endpoints loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not load Privacy & DSAR endpoints: {e}")
+
+# Load Stripe webhook endpoints
+try:
+    from apps.backend.api.v1.endpoints.stripe_webhook import router as stripe_router
+    app.include_router(stripe_router)
+    logger.info("Stripe webhook endpoints loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not load Stripe webhook endpoints: {e}")
+
+# Load Stripe checkout endpoints
+try:
+    from apps.backend.api.v1.endpoints.stripe_checkout import router as stripe_checkout_router
+    app.include_router(stripe_checkout_router)
+    logger.info("Stripe checkout endpoints loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not load Stripe checkout endpoints: {e}")
 
 # Load Pusher Authentication endpoints
 try:
@@ -3659,7 +3690,7 @@ async def native_websocket_endpoint(websocket: WebSocket):
 async def roblox_websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for Roblox Studio real-time synchronization
 
-    Requires JWT token in query parameters: ws://localhost:8008/ws/roblox?token=<jwt_token>
+    Requires JWT token in query parameters: ws://localhost:8009/ws/roblox?token=<jwt_token>
     """
     from apps.backend.services.roblox_websocket import get_websocket_handler
 

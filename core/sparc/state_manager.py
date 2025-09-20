@@ -234,9 +234,16 @@ class StateManager:
         self.state_predictors = {}
         self.prediction_accuracy = {}
 
-        # Persistence
-        self.persistence_path = Path("data/state_manager")
-        self.persistence_path.mkdir(parents=True, exist_ok=True)
+        # Persistence - use environment-aware path for Docker compatibility
+        import os
+        data_dir = os.environ.get('DATA_DIR', '/tmp' if os.path.exists('/tmp') else 'data')
+        self.persistence_path = Path(data_dir) / "state_manager"
+        try:
+            self.persistence_path.mkdir(parents=True, exist_ok=True)
+        except PermissionError:
+            # Fallback to temp directory if permission denied
+            self.persistence_path = Path("/tmp/state_manager")
+            self.persistence_path.mkdir(parents=True, exist_ok=True)
         self.last_persistence = datetime.now()
 
         # Performance tracking

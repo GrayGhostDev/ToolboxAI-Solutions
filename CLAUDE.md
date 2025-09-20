@@ -62,7 +62,7 @@ This is a monorepo that underwent significant restructuring in September 2025. T
 
 ### Directory Structure (Updated 2025-09-18)
 - **apps/**
-  - `backend/` - FastAPI server (port 8008)
+  - `backend/` - FastAPI server (port 8009)
   - `dashboard/` - React frontend (port 5179)
 - **core/** - AI agents, MCP, coordinators, SPARC
 - **database/** - Models, migrations, services
@@ -108,11 +108,11 @@ pip install -r requirements.txt
 make dev
 
 # Or run separately:
-make backend   # FastAPI on localhost:8008
+make backend   # FastAPI on localhost:8009
 make dashboard # React dashboard on localhost:5179
 
 # Alternative: Run from specific directories
-cd apps/backend && uvicorn main:app --host 127.0.0.1 --port 8008 --reload
+cd apps/backend && uvicorn main:app --host 127.0.0.1 --port 8009 --reload
 cd apps/dashboard && npm run dev
 ```
 
@@ -275,8 +275,8 @@ SENTRY_DSN=your-dsn
 #### Dashboard Environment (.env.local)
 ```bash
 # Create apps/dashboard/.env.local
-VITE_API_BASE_URL=http://127.0.0.1:8008
-VITE_WS_URL=http://127.0.0.1:8008
+VITE_API_BASE_URL=http://127.0.0.1:8009
+VITE_WS_URL=http://127.0.0.1:8009
 VITE_ENABLE_WEBSOCKET=true
 VITE_PUSHER_KEY=your-key
 VITE_PUSHER_CLUSTER=your-cluster
@@ -328,15 +328,66 @@ Compatibility layers exist for legacy test imports:
 ### Docker & Deployment
 
 #### Docker Compose Files
-- `config/production/docker-compose.yml` - Production stack
-- `config/production/docker-compose.dev.yml` - Development overrides
-- `config/production/Dockerfile.*` - Service-specific Dockerfiles
+- `infrastructure/docker/docker-compose.dev.yml` - Development stack with hot-reload
+- `infrastructure/docker/docker-compose.prod.yml` - Production stack
+- `infrastructure/docker/docker-compose.staging.yml` - Staging environment
+- Service-specific Dockerfiles in `infrastructure/docker/`
 
-#### Services
-- PostgreSQL database (eduplatform user)
-- Redis cache
-- FastAPI backend
-- React dashboard (served by nginx in production)
+#### Development Docker Services
+- **PostgreSQL**: Port 5434 (postgres:15-alpine)
+- **Redis**: Port 6381 (redis:7-alpine)
+- **FastAPI Backend**: Port 8009 (with hot-reload via volume mounts)
+- **Dashboard Frontend**: Port 5179 (Vite dev server with hot-reload)
+- **MCP Server**: Port 9877 (Model Context Protocol)
+- **Agent Coordinator**: Port 8888 (AI agent orchestration)
+- **Flask Bridge**: Port 5001 (Roblox integration)
+- **Ghost CMS**: Port 8000 (content management)
+
+#### Docker Development Setup
+
+**Quick Start:**
+```bash
+# Start all services
+docker-compose -f infrastructure/docker/docker-compose.dev.yml up -d
+
+# Or individual services
+docker-compose -f infrastructure/docker/docker-compose.dev.yml up -d postgres redis
+docker-compose -f infrastructure/docker/docker-compose.dev.yml up fastapi-main
+docker-compose -f infrastructure/docker/docker-compose.dev.yml up dashboard-frontend
+```
+
+**Dashboard Docker Configuration:**
+- Uses Node.js 22-alpine base image
+- Vite dev server for hot-reload development
+- Volume mounts disabled to avoid node_modules conflicts
+- Environment variables for Docker service communication:
+  ```bash
+  VITE_API_BASE_URL=http://fastapi-main:8009  # Inter-container communication
+  VITE_PUSHER_KEY=${PUSHER_KEY}
+  VITE_PUSHER_CLUSTER=${PUSHER_CLUSTER:-us2}
+  ```
+
+**Development Workflow:**
+1. Build and start: `docker-compose -f infrastructure/docker/docker-compose.dev.yml up --build`
+2. Code changes automatically trigger rebuilds
+3. Access dashboard at http://localhost:5179
+4. Access backend at http://localhost:8009
+5. Health checks ensure >85% service availability
+
+**Environment Variables (.env):**
+```bash
+# Required for Docker development
+POSTGRES_DB=toolboxai_dev
+POSTGRES_USER=toolboxai
+POSTGRES_PASSWORD=dev_password
+REDIS_PASSWORD=dev_redis_pass
+DATABASE_URL=postgresql://toolboxai:dev_password@postgres:5432/toolboxai_dev
+REDIS_URL=redis://:dev_redis_pass@redis:6379
+PUSHER_ENABLED=true
+PUSHER_KEY=your-pusher-key
+PUSHER_SECRET=your-pusher-secret
+PUSHER_CLUSTER=us2
+```
 
 ### Important Patterns
 
@@ -426,9 +477,9 @@ Compatibility layers exist for legacy test imports:
 - Pusher debug: `Pusher.logToConsole = true` in development
 
 #### Common Issues
-- **Port conflicts**: Kill existing processes on 8008/5179
+- **Port conflicts**: Kill existing processes on 8009/5179
   ```bash
-  lsof -i :8008 | grep LISTEN
+  lsof -i :8009 | grep LISTEN
   lsof -i :5179 | grep LISTEN
   ```
 - **Database connection**: Ensure PostgreSQL is running
@@ -436,6 +487,37 @@ Compatibility layers exist for legacy test imports:
 - **Module imports**: Check Python path and venv activation
 - **CORS errors**: Verify backend CORS configuration matches frontend URL
 - **Vite proxy issues**: Check `vite.config.ts` proxy targets match backend
+
+#### Docker Development Issues
+- **Container startup failures**: Check service dependencies and health checks
+  ```bash
+  docker-compose -f infrastructure/docker/docker-compose.dev.yml logs dashboard-frontend
+  docker-compose -f infrastructure/docker/docker-compose.dev.yml ps
+  ```
+- **Hot-reload not working**: Ensure volume mounts are configured correctly
+  ```bash
+  # Restart dashboard service to force reload
+  docker-compose -f infrastructure/docker/docker-compose.dev.yml restart dashboard-frontend
+  ```
+- **Node modules conflicts**: Clear node_modules and rebuild
+  ```bash
+  docker-compose -f infrastructure/docker/docker-compose.dev.yml down
+  docker-compose -f infrastructure/docker/docker-compose.dev.yml build --no-cache dashboard-frontend
+  docker-compose -f infrastructure/docker/docker-compose.dev.yml up dashboard-frontend
+  ```
+- **Inter-container communication**: Verify service names match in environment variables
+  ```bash
+  # Check network connectivity
+  docker-compose -f infrastructure/docker/docker-compose.dev.yml exec dashboard-frontend ping fastapi-main
+  ```
+- **Test failure threshold**: If dashboard tests fall below 85%, check:
+  ```bash
+  # Run tests in container
+  docker-compose -f infrastructure/docker/docker-compose.dev.yml exec dashboard-frontend npm test
+
+  # Check test coverage
+  docker-compose -f infrastructure/docker/docker-compose.dev.yml exec dashboard-frontend npm run test:coverage
+  ```
 
 ### CI/CD & Quality
 

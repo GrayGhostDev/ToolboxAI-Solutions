@@ -442,13 +442,55 @@ async def create_game_instance(
     current_user: User = Depends(get_current_user)
 ) -> GameInstanceResponse:
     """
-    Create new educational game instance in Roblox.
+    Create new educational game instance in Roblox platform.
 
-    Creates a new game instance with the specified configuration,
-    generates a unique game ID, and initializes the Roblox environment.
+    Initializes a new game environment with educational content, assigns unique
+    identifiers, and configures the Roblox place for classroom use. Game setup
+    occurs asynchronously in the background.
 
-    Requires: Teacher or Admin role
-    Rate Limited: 10 requests per minute
+    Args:
+        request (CreateGameRequest): Game configuration containing:
+            - title (str): Game display name (3-100 chars)
+            - description (str, optional): Game description (max 500 chars)
+            - subject (str): Educational subject
+            - grade_level (int): Target grade level (1-12)
+            - max_players (int): Maximum concurrent players (1-50, default: 30)
+            - template_id (str, optional): Base template to use
+            - settings (dict, optional): Custom game settings
+
+    Returns:
+        GameInstanceResponse: Created game information including:
+            - game_id (str): Unique game identifier
+            - roblox_place_id (str): Roblox place identifier
+            - join_url (str): Direct game access URL
+            - status (str): Current game state ("creating" → "active")
+
+    Authentication:
+        Required: JWT token with teacher or admin role
+
+    Rate Limit:
+        10 requests per minute per user
+
+    Background Processing:
+        Game setup occurs asynchronously. Monitor status via:
+        - WebSocket: ws://host/api/v1/roblox/ws/game/{game_id}
+        - Polling: GET /api/v1/roblox/game/{game_id}
+
+    Raises:
+        HTTPException: 403 if user lacks permission to create games
+        HTTPException: 422 if validation fails
+
+    Example:
+        ```python
+        game = await create_game_instance({
+            "title": "Solar System Explorer",
+            "subject": "Science",
+            "grade_level": 5,
+            "template_id": "space_station",
+            "settings": {"difficulty": "medium"}
+        })
+        print(f"Game created: {game.join_url}")
+        ```
     """
     # Verify user permissions
     if current_user.role.lower() not in ["teacher", "admin"]:

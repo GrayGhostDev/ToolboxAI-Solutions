@@ -620,11 +620,8 @@ beforeAll(() => {
   process.env.VITE_PUSHER_KEY = 'test-pusher-key';
   process.env.VITE_PUSHER_CLUSTER = 'us2';
 
-  // Use fake timers to prevent hanging
-  vi.useFakeTimers({
-    shouldAdvanceTime: true,
-    toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date']
-  });
+  // Note: Timer mocking is now handled per-test using timer-utils.ts
+  // This prevents conflicts between tests that need different timer configurations
 
   // Start MSW server
   server.listen({
@@ -637,8 +634,7 @@ afterAll(() => {
   console.error = originalConsoleError;
   console.warn = originalConsoleWarn;
 
-  // Restore real timers
-  vi.useRealTimers();
+  // Note: Timer cleanup is now handled per-test using timer-utils.ts
 
   // Stop MSW server
   server.close();
@@ -660,16 +656,11 @@ afterEach(() => {
   // Cleanup React components
   cleanup();
 
-  // Clear all timers and run any pending
-  vi.runOnlyPendingTimers();
-  vi.clearAllTimers();
+  // Note: Timer cleanup is now handled per-test using timer-utils.ts
 
   // Clear localStorage/sessionStorage
   localStorage.clear();
   sessionStorage.clear();
-
-  // Clean up any pending promises
-  vi.runAllTimers();
 });
 
 // ============================================================================

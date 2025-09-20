@@ -22,6 +22,7 @@ import { signInSuccess } from "../../store/slices/userSlice";
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from "../../config";
 // import { wsService } from "../../services/ws";
 import { connectWebSocket } from "../../services/websocket";
+import { logger } from "../../utils/logger";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -68,7 +69,7 @@ export default function Login() {
       const response = await login(formData.email, formData.password);
 
       // Debug logging to see response structure
-      console.log('Login response structure:', response);
+      logger.debug('Login response structure', response);
 
       // Map backend response to expected format (backend uses snake_case)
       const accessToken = response.accessToken || (response as any).access_token;
@@ -85,12 +86,12 @@ export default function Login() {
           await connectWebSocket(accessToken);
         }
       } catch (wsError) {
-        console.warn('WebSocket connection failed, continuing without realtime features:', wsError);
+        logger.warn('WebSocket connection failed, continuing without realtime features', wsError);
       }
 
       // Get role from either user object or top-level
       const userRole = response.user?.role || response.role || 'student';
-      console.log('Setting user role:', userRole);
+      logger.debug('Setting user role', { role: userRole });
 
       // Update Redux state
       dispatch(signInSuccess({

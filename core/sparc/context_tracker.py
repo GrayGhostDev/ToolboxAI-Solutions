@@ -18,6 +18,7 @@ import asyncio
 import json
 import logging
 import gzip
+import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple, Union
 from dataclasses import dataclass, field, asdict
@@ -873,9 +874,15 @@ class ContextTracker:
             "session_count": 0,
         }
 
-        # Persistence
-        self.persistence_path = Path("data/context_tracker")
-        self.persistence_path.mkdir(parents=True, exist_ok=True)
+        # Persistence - use environment-aware path for Docker compatibility
+        data_dir = os.environ.get('DATA_DIR', '/tmp' if os.path.exists('/tmp') else 'data')
+        self.persistence_path = Path(data_dir) / "context_tracker"
+        try:
+            self.persistence_path.mkdir(parents=True, exist_ok=True)
+        except PermissionError:
+            # Fallback to temp directory if permission denied
+            self.persistence_path = Path("/tmp/context_tracker")
+            self.persistence_path.mkdir(parents=True, exist_ok=True)
 
         # Cleanup scheduler
         self.last_cleanup = datetime.now()

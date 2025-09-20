@@ -6,6 +6,7 @@ import { refreshToken as refreshTokenAPI, logout as logoutAPI } from "../service
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from "../config";
 import { authSync } from "../services/auth-sync";
 import { tokenRefreshManager } from "../utils/tokenRefreshManager";
+import { logger } from "../utils/logger";
 
 export const useAuth = () => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export const useAuth = () => {
         await authSync.initialize();
         tokenRefreshManager.initialize();
       } catch (error) {
-        console.error("Failed to initialize auth services:", error);
+        logger.error("Failed to initialize auth services", error);
       }
 
       const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
@@ -65,7 +66,7 @@ export const useAuth = () => {
             const schoolId = payload.school_id || payload.schoolId || null;
             const classIds = payload.class_ids || payload.classIds || [];
 
-            console.log('Restoring auth from token, role:', userRole, 'userId:', userId);
+            logger.info('Restoring auth from token', { role: userRole, userId });
 
             // Check if token needs refresh
             if (tokenRefreshManager.needsRefresh()) {
@@ -90,7 +91,7 @@ export const useAuth = () => {
             }
           }
         } catch (error) {
-          console.error("Error initializing auth:", error);
+          logger.error("Error initializing auth", error);
           // Clear invalid tokens
           localStorage.removeItem(AUTH_TOKEN_KEY);
           localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
@@ -121,7 +122,7 @@ export const useAuth = () => {
       await tokenRefreshManager.forceRefresh();
       return true;
     } catch (error) {
-      console.error("Token refresh failed:", error);
+      logger.error("Token refresh failed", error);
       return false;
     }
   };

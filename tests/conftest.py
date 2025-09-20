@@ -51,8 +51,8 @@ from tests.fixtures.pusher_mocks import (
     mock_pusher_with_channels
 )
 
-# Configure test logging
-configure_test_logging()
+# Configure test logging - disabled to prevent pytest conflicts
+# configure_test_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -341,12 +341,12 @@ def pytest_runtest_teardown(item):
 
 def pytest_sessionstart(session):
     """Called after the Session object has been created"""
-    logger.info("Starting test session with rate limit isolation")
-    
+    # logger.info("Starting test session with rate limit isolation")  # Disabled to prevent conflicts
+
     # Ensure clean start
     RateLimitManager.reset_instance()
     clear_all_rate_limits()
-    
+
     # Initialize test cleanup manager
     cleanup_manager = TestCleanupManager(
         test_log_dir=TEST_LOG_DIR,
@@ -355,29 +355,30 @@ def pytest_sessionstart(session):
         auto_cleanup=True
     )
     session.cleanup_manager = cleanup_manager
-    
-    # Initialize test logger
-    test_logger = TestLogger("test_session", "session")
-    test_logger.start_test("Test Session", f"session_{session.nodeid}")
-    session.test_logger = test_logger
+
+    # Initialize test logger - disabled to prevent pytest stdout conflicts
+    # test_logger = TestLogger("test_session", "session")
+    # test_logger.start_test("Test Session", f"session_{session.nodeid}")
+    # session.test_logger = test_logger
 
 
 def pytest_sessionfinish(session, exitstatus):
     """Called after whole test run finished"""
-    logger.info("Test session finished, cleaning up rate limit state")
-    
+    # logger.info("Test session finished, cleaning up rate limit state")  # Disabled to prevent conflicts
+
     # Final cleanup
     try:
         clear_all_rate_limits()
         RateLimitManager.reset_instance()
     except Exception as e:
-        logger.warning(f"Final cleanup error: {e}")
-    
-    # Complete test logging
-    if hasattr(session, 'test_logger'):
-        status = "passed" if exitstatus == 0 else "failed"
-        session.test_logger.end_test("Test Session", status)
-        session.test_logger.generate_report()
+        pass  # Silently handle cleanup errors
+        # logger.warning(f"Final cleanup error: {e}")
+
+    # Complete test logging - disabled to prevent pytest stdout conflicts
+    # if hasattr(session, 'test_logger'):
+    #     status = "passed" if exitstatus == 0 else "failed"
+    #     session.test_logger.end_test("Test Session", status)
+    #     session.test_logger.generate_report()
     
     # Perform test file cleanup
     if hasattr(session, 'cleanup_manager'):

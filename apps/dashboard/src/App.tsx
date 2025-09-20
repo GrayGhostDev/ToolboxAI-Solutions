@@ -5,6 +5,7 @@ import { useAppSelector } from "./store";
 import AppRoutes from "./routes";
 import { ConsentModal } from "./components/modals/ConsentModal";
 import { NotificationToast } from "./components/notifications/NotificationToast";
+import { logger } from "./utils/logger";
 import RealtimeToast from "./components/notifications/RealtimeToast";
 import { LoadingOverlay } from "./components/common/LoadingOverlay";
 import { COPPA_COMPLIANCE } from "./config";
@@ -32,6 +33,8 @@ const FloatingCharacters = React.lazy(() => import("./components/roblox/Floating
 // Terminal services removed - not part of application
 // Old performance monitor disabled due to performance issues
 
+const CookieBannerLazy = React.lazy(() => import('./components/consent/CookieBanner').then(m => ({ default: m.default })));
+
 export default function App() {
   const role = useAppSelector((s) => s.user.role);
   const isAuthenticated = useAppSelector((s) => s.user.isAuthenticated);
@@ -56,12 +59,12 @@ export default function App() {
         const report = await configHealthCheck.runHealthCheck();
 
         if (report.overall === 'error') {
-          console.error('❌ Critical configuration issues detected:', report);
-          report.recommendations.forEach(rec => console.warn(`⚠️  ${rec}`));
+          logger.error('Critical configuration issues detected', report);
+          report.recommendations.forEach(rec => logger.warn(rec));
         } else if (report.overall === 'warning') {
-          console.warn('⚠️  Configuration warnings:', report);
+          logger.warn('Configuration warnings detected', report);
         } else {
-          console.log('✅ Configuration validated successfully');
+          logger.info('Configuration validated successfully');
         }
       }
     };
@@ -78,7 +81,7 @@ export default function App() {
       const connectTimer = setTimeout(() => {
         pusherService.connect();
         isConnected = true;
-        console.log('✅ Pusher connected for real-time updates');
+        logger.info('Pusher connected for real-time updates');
       }, 100);
 
       return () => {
@@ -95,7 +98,7 @@ export default function App() {
   // Lightweight performance monitoring for development
   React.useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('🚀 Lightweight performance monitoring enabled');
+      logger.debug('Lightweight performance monitoring enabled');
     }
   }, []);
 
@@ -171,6 +174,13 @@ export default function App() {
         <SessionMonitor />
         <NetworkStatus />
         {loading && <LoadingOverlay />}
+
+        {/* Cookie Consent */}
+        {process.env.NODE_ENV === 'production' && (
+          <React.Suspense fallback={null}>
+            <CookieBannerLazy />
+          </React.Suspense>
+        )}
 
         {/* Performance Monitoring - Development Only */}
         <PerformanceMonitor enabled={process.env.NODE_ENV === 'development'} />

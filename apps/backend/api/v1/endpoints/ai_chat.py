@@ -959,7 +959,52 @@ async def generate_ai_response_endpoint(
     request: SendMessageRequest,
     current_user: User = Depends(get_current_user)
 ):
-    """Generate AI response with streaming for faster response times"""
+    """
+    Generate AI-powered educational content with streaming response.
+
+    Uses Anthropic Claude and OpenAI models to generate contextual educational
+    content for Roblox environments. Supports real-time streaming for immediate
+    user feedback and conversation memory for context-aware responses.
+
+    Args:
+        request (SendMessageRequest): Message request containing:
+            - message (str): User's prompt or question
+            - attachments (optional): File attachments for context
+
+    Returns:
+        StreamingResponse: Server-sent events stream containing:
+            - start: Generation initiation
+            - token: Incremental response tokens
+            - complete: Final response with full message
+
+    Authentication:
+        Required: JWT token in Authorization header
+
+    Permissions:
+        All authenticated users
+
+    Rate Limit:
+        5 requests per minute for content generation
+
+    Features:
+        - Context-aware conversation memory
+        - Automatic completion after 3-4 exchanges
+        - Creative delegation support ("you choose")
+        - Multi-model fallback (Anthropic → OpenAI → Mock)
+        - Grade level and subject extraction
+        - Pusher integration for notifications
+
+    Example:
+        ```python
+        async with client.stream('POST', '/ai-chat/generate', json={
+            "message": "Create a 5th grade solar system lesson"
+        }) as response:
+            async for line in response.aiter_lines():
+                data = json.loads(line)
+                if data["type"] == "token":
+                    print(data["content"], end="")
+        ```
+    """
 
     # Extract conversation_id from request or create temporary one
     conversation_id = getattr(request, 'conversation_id', None)

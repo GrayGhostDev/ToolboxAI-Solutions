@@ -20,10 +20,7 @@ EXPOSE 5179
 
 # Set environment variables for development
 ENV NODE_ENV=development
-# Use Docker service name for backend communication
-ENV VITE_API_BASE_URL=http://fastapi-main:8009
-ENV VITE_FASTAPI_URL=http://fastapi-main:8009
-ENV VITE_PROXY_TARGET=http://fastapi-main:8009
+# Environment variables will be passed from docker-compose.dev.yml
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

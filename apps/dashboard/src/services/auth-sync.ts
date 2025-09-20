@@ -24,6 +24,7 @@ import {
   TimerWrapper,
   getAuthConfig,
 } from './auth-sync-config';
+import { logger } from '../utils/logger';
 
 // Timer type definitions for cross-platform compatibility
 type TimerId = ReturnType<typeof setTimeout>;
@@ -112,12 +113,12 @@ export class AuthSyncService {
 
   public async initialize(): Promise<void> {
     if (this.isInitialized) {
-      console.warn('⚠️ Auth sync service already initialized');
+      logger.warn('Auth sync service already initialized');
       return;
     }
 
     if (import.meta.env.DEV) {
-      console.log('🔐 Initializing Authentication Sync Service');
+      logger.debug('Initializing Authentication Sync Service');
     }
 
     try {
@@ -145,11 +146,11 @@ export class AuthSyncService {
 
       this.isInitialized = true;
       if (import.meta.env.DEV) {
-        console.log('✅ Auth sync service initialized with cross-tab sync');
+        logger.info('Auth sync service initialized with cross-tab sync');
       }
 
     } catch (error) {
-      console.error('❌ Failed to initialize auth sync:', error);
+      logger.error('Failed to initialize auth sync', error);
       throw error;
     }
   }
@@ -178,7 +179,7 @@ export class AuthSyncService {
         refreshExpiresAt: refreshPayload?.exp ? refreshPayload.exp * 1000 : undefined
       };
     } catch (error) {
-      console.error('❌ Failed to get stored token:', error);
+      logger.error('Failed to get stored token', error);
       return null;
     }
   }
@@ -192,7 +193,7 @@ export class AuthSyncService {
       const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
       return JSON.parse(decoded);
     } catch (error) {
-      console.error('❌ Failed to decode JWT:', error);
+      logger.error('Failed to decode JWT', error);
       return null;
     }
   }
@@ -205,7 +206,7 @@ export class AuthSyncService {
     // Token is still valid
     if (timeUntilExpiry > thresholdMs) {
       if (import.meta.env.DEV) {
-        console.log(`✅ Token valid for ${Math.round(timeUntilExpiry / 60000)} minutes`);
+        logger.debug(`Token valid for ${Math.round(timeUntilExpiry / 60000)} minutes`);
       }
       this.scheduleTokenRefresh(authToken);
       return;
@@ -214,11 +215,11 @@ export class AuthSyncService {
     // Token needs refresh
     if (timeUntilExpiry > 0 && authToken.refreshToken) {
       if (import.meta.env.DEV) {
-        console.log('🔄 Token expiring soon, refreshing...');
+        logger.info('Token expiring soon, refreshing');
       }
       await this.refreshToken(authToken.refreshToken);
     } else if (timeUntilExpiry <= 0) {
-      console.warn('⚠️ Token expired, logging out...');
+      logger.warn('Token expired, logging out');
       this.handleAuthFailure('token_expired');
     }
   }
@@ -228,7 +229,7 @@ export class AuthSyncService {
       const authToken = this.getStoredToken();
       if (!authToken) {
         if (import.meta.env.DEV) {
-          console.log('No token found, stopping refresh timer');
+          logger.debug('No token found, stopping refresh timer');
         }
         this.clearTokenRefreshTimer();
         return;
@@ -242,7 +243,7 @@ export class AuthSyncService {
         if (authToken.refreshToken) {
           void this.refreshToken(authToken.refreshToken);
         } else {
-          console.warn('⚠️ No refresh token available');
+          logger.warn('No refresh token available');
           this.handleAuthFailure('no_refresh_token');
         }
       }
@@ -268,7 +269,7 @@ export class AuthSyncService {
     const refreshIn = Math.max(timeUntilExpiry - thresholdMs, 0);
 
     if (import.meta.env.DEV) {
-      console.log(`⏰ Scheduling token refresh in ${Math.round(refreshIn / 60000)} minutes`);
+      logger.debug(`Scheduling token refresh in ${Math.round(refreshIn / 60000)} minutes`);
     }
 
     this.clearTokenRefreshTimer();
@@ -297,7 +298,7 @@ export class AuthSyncService {
       }
 
       if (import.meta.env.DEV) {
-        console.log(`🔄 Refreshing authentication token... (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
+        logger.info(`Refreshing authentication token (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
       }
 
       const response = await FetchWrapper.fetch(`${API_BASE_URL}${AUTH_ENDPOINTS.REFRESH}`, {
@@ -357,11 +358,11 @@ export class AuthSyncService {
         try {
           await pusherService.refreshTokenAndReconnect();
         } catch (e) {
-          console.warn('⚠️ Failed to refresh realtime connection token:', e);
+          logger.warn('Failed to refresh realtime connection token', e);
         }
 
         if (import.meta.env.DEV) {
-          console.log('✅ Token refreshed successfully');
+          logger.info('Token refreshed successfully');
         }
 
       } else {
@@ -370,14 +371,14 @@ export class AuthSyncService {
       }
 
     } catch (error: any) {
-      console.error(`❌ Token refresh failed (attempt ${retryCount + 1}):`, error);
+      logger.error(`Token refresh failed (attempt ${retryCount + 1})`, error);
 
       // Retry logic with exponential backoff
       if (retryCount < MAX_RETRIES) {
         const delay = RETRY_DELAYS[retryCount] || 5000;
 
         if (import.meta.env.DEV) {
-          console.log(`⏳ Retrying token refresh in ${delay}ms...`);
+          logger.debug(`Retrying token refresh in ${delay}ms`);
         }
 
         // Check if error is recoverable
@@ -420,7 +421,7 @@ export class AuthSyncService {
     }, 60000); // Check every minute
 
     if (import.meta.env.DEV) {
-      console.log('📊 Session monitoring started');
+      logger.debug('Session monitoring started');
     }
   }
 
@@ -494,11 +495,11 @@ store.dispatch(addNotification({
       autoHide: false
     }));
 
-    console.warn(`⚠️ Inactivity warning: ${remainingMinutes} minutes until timeout`);
+    logger.warn(`Inactivity warning: ${remainingMinutes} minutes until timeout`);
   }
 
   private handleSessionTimeout(): void {
-    console.warn('⏰ Session timeout - logging out');
+    logger.warn('Session timeout - logging out');
 
     this.recordAuthEvent({
       type: 'timeout',
@@ -512,7 +513,7 @@ store.dispatch(addNotification({
   }
 
   private handleForceLogout(reason?: string): void {
-    console.warn('🔒 Force logout:', reason);
+    logger.warn('Force logout', { reason });
 
     this.recordAuthEvent({
       type: 'force_logout',
@@ -531,14 +532,14 @@ store.dispatch(addNotification({
     } else if (data.extend) {
       this.lastActivity = Date.now();
       if (import.meta.env.DEV) {
-        console.log('✅ Session extended by backend');
+        logger.debug('Session extended by backend');
       }
     }
   }
 
   private handlePermissionChange(data: { permissions?: string[] }): void {
     if (import.meta.env.DEV) {
-      console.log('🔐 Permission change detected:', data);
+      logger.debug('Permission change detected', data);
     }
 
     store.dispatch(addNotification({
@@ -552,7 +553,7 @@ store.dispatch(addNotification({
   }
 
   private handleAuthFailure(reason: string): void {
-    console.error('❌ Authentication failure:', reason);
+    logger.error('Authentication failure', { reason });
 
     this.recordAuthEvent({
       type: 'logout',
@@ -571,7 +572,7 @@ store.dispatch(addNotification({
         if (payload?.exp && payload.exp * 1000 > Date.now()) {
           // Refresh token is still valid, try once more after a delay
           if (import.meta.env.DEV) {
-            console.log('🔄 Attempting final recovery with valid refresh token...');
+            logger.info('Attempting final recovery with valid refresh token');
           }
 
           setTimeout(() => {
@@ -621,7 +622,7 @@ store.dispatch(addNotification({
     try {
       pusherService.disconnect('auth_logout');
     } catch (e) {
-      console.warn('⚠️ Realtime disconnect on logout failed:', e);
+      logger.warn('Realtime disconnect on logout failed', e);
     }
 
     // Show notification
@@ -647,7 +648,7 @@ store.dispatch(addNotification({
 
   public async logout(): Promise<void> {
     if (import.meta.env.DEV) {
-      console.log('👋 User initiated logout');
+      logger.info('User initiated logout');
     }
 
     try {
@@ -668,14 +669,14 @@ store.dispatch(addNotification({
             if (response.ok) break;
           } catch (error) {
             if (attempt === 2) {
-              console.warn('⚠️ Backend logout notification failed after 3 attempts:', error);
+              logger.warn('Backend logout notification failed after 3 attempts', error);
             }
             await new Promise(resolve => setTimeout(resolve, 1000));
           }
         }
       }
     } catch (error) {
-      console.warn('⚠️ Backend logout notification failed:', error);
+      logger.warn('Backend logout notification failed', error);
     }
 
     this.recordAuthEvent({
@@ -724,7 +725,7 @@ store.dispatch(addNotification({
         }));
       }
     } catch (error: any) {
-      console.error(`❌ Failed to refresh user data (attempt ${retryCount + 1}):`, error);
+      logger.error(`Failed to refresh user data (attempt ${retryCount + 1})`, error);
 
       // Retry for network errors
       if (retryCount < MAX_RETRIES &&
@@ -764,7 +765,7 @@ store.dispatch(addNotification({
 
     // Log to console in development
     if (import.meta.env.DEV) {
-      console.log('📝 Auth event:', event);
+      logger.debug('Auth event', event);
     }
   }
 
@@ -782,7 +783,7 @@ store.dispatch(addNotification({
 
   private cleanup(): void {
     if (import.meta.env.DEV) {
-      console.log('🧹 Cleaning up auth sync service');
+      logger.debug('Cleaning up auth sync service');
     }
 
     this.clearTokenRefreshTimer();
@@ -802,7 +803,7 @@ store.dispatch(addNotification({
     this.cleanup();
     this.isInitialized = false;
     if (import.meta.env.DEV) {
-      console.log('✅ Auth sync service shut down');
+      logger.info('Auth sync service shut down');
     }
   }
 
@@ -826,7 +827,7 @@ store.dispatch(addNotification({
   public updateConfig(newConfig: Partial<AuthSyncConfig>): void {
     this.config = { ...this.config, ...newConfig };
     if (import.meta.env.DEV) {
-      console.log('⚙️ Auth sync config updated:', this.config);
+      logger.debug('Auth sync config updated', this.config);
     }
 
     // Restart monitoring with new config
@@ -840,7 +841,7 @@ store.dispatch(addNotification({
     this.lastActivity = Date.now();
     this.setupInactivityTimer();
     if (import.meta.env.DEV) {
-      console.log('✅ Session extended manually');
+      logger.debug('Session extended manually');
     }
   }
 
@@ -869,10 +870,10 @@ store.dispatch(addNotification({
         (this as any).broadcastChannel = broadcastChannel;
 
         if (import.meta.env.DEV) {
-          console.log('✅ BroadcastChannel initialized for cross-tab sync');
+          logger.info('BroadcastChannel initialized for cross-tab sync');
         }
       } catch (error) {
-        console.warn('BroadcastChannel not available, falling back to localStorage events');
+        logger.warn('BroadcastChannel not available, falling back to localStorage events');
         this.setupStorageEventListener();
       }
     } else {
@@ -889,7 +890,7 @@ store.dispatch(addNotification({
           const message = JSON.parse(event.newValue);
           this.handleCrossTabMessage(message);
         } catch (error) {
-          console.error('Failed to parse cross-tab message:', error);
+          logger.error('Failed to parse cross-tab message', error);
         }
       }
     };
@@ -900,7 +901,7 @@ store.dispatch(addNotification({
     (this as any).storageEventListener = storageEventListener;
 
     if (import.meta.env.DEV) {
-      console.log('✅ Storage event listener initialized for cross-tab sync');
+      logger.info('Storage event listener initialized for cross-tab sync');
     }
   }
 
@@ -925,7 +926,7 @@ store.dispatch(addNotification({
     try {
       StorageWrapper.setItem(AUTH_TOKEN_KEY, token);
     } catch (e) {
-      console.error('Failed to store auth token:', e);
+      logger.error('Failed to store auth token', e);
     }
   }
 
@@ -933,7 +934,7 @@ store.dispatch(addNotification({
     try {
       StorageWrapper.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
     } catch (e) {
-      console.error('Failed to store refresh token:', e);
+      logger.error('Failed to store refresh token', e);
     }
   }
 
@@ -942,7 +943,7 @@ store.dispatch(addNotification({
       StorageWrapper.removeItem(AUTH_TOKEN_KEY);
       StorageWrapper.removeItem(AUTH_REFRESH_TOKEN_KEY);
     } catch (e) {
-      console.error('Failed to clear stored tokens:', e);
+      logger.error('Failed to clear stored tokens', e);
     }
   }
 
@@ -955,7 +956,7 @@ store.dispatch(addNotification({
         refreshToken
       }));
     } catch (e) {
-      console.warn('Failed to update Redux tokens:', e);
+      logger.warn('Failed to update Redux tokens', e);
     }
   }
 
@@ -1030,7 +1031,7 @@ store.dispatch(addNotification({
       try {
         broadcastChannel.postMessage(message);
       } catch (error) {
-        console.error('Failed to broadcast via BroadcastChannel:', error);
+        logger.error('Failed to broadcast via BroadcastChannel', error);
       }
     }
 
@@ -1042,7 +1043,7 @@ store.dispatch(addNotification({
         StorageWrapper.removeItem('toolboxai_auth_sync_message');
       }, 100);
     } catch (error) {
-      console.error('Failed to broadcast via localStorage:', error);
+      logger.error('Failed to broadcast via localStorage', error);
     }
   }
 }
@@ -1062,7 +1063,7 @@ if (typeof window !== 'undefined') {
   if (!import.meta.env.DEV) {
     setTimeout(() => {
       authSync.initialize().catch(error => {
-        console.error('❌ Auth sync initialization failed:', error);
+        logger.error('Auth sync initialization failed', error);
       });
     }, 1000);
   }

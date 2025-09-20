@@ -87,7 +87,39 @@ def authenticate_user(username: Optional[str], email: Optional[str], password: s
 @auth_router.post("/login")
 async def login(user_credentials: UserLogin):
     """
-    Login endpoint for authentication - supports both username and email
+    Authenticate user and return JWT access token.
+
+    Supports authentication using either username or email address.
+    Returns user information along with the access token.
+
+    Args:
+        user_credentials (UserLogin): Login credentials containing:
+            - username (optional): User's username
+            - email (optional): User's email address
+            - password (required): User's password
+
+    Returns:
+        dict: Authentication response containing:
+            - access_token (str): JWT access token
+            - token_type (str): Token type ("bearer")
+            - expires_in (int): Token expiration time in seconds
+            - role (str): User's role in the system
+            - user (dict): User profile information
+
+    Raises:
+        HTTPException: 401 if credentials are invalid
+
+    Rate Limit:
+        10 requests per minute per IP
+
+    Example:
+        ```python
+        response = await login({
+            "email": "teacher@school.edu",
+            "password": "SecurePass123!"
+        })
+        token = response["access_token"]
+        ```
     """
     user = authenticate_user(user_credentials.username, user_credentials.email, user_credentials.password)
     if not user:

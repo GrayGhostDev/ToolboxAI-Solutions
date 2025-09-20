@@ -27,6 +27,7 @@ import {
   WebSocketSubscription,
 } from '../types/websocket';
 import ApiClient from './api';
+import { logger } from '../utils/logger';
 
 export class PusherService {
   private static instance: PusherService | null = null;
@@ -333,7 +334,7 @@ url: options.url || WS_URL,
     if (channelSubs) {
       channelSubs.add(subscription);
     }
-    this.log(`Subscribed to channel: ${sanitizedChannel}`);
+    logger.debug('Subscribed to channel', { channel: sanitizedChannel });
 
     return subscription.subscriptionId!;
   }
@@ -366,7 +367,7 @@ url: options.url || WS_URL,
           this.channels.delete(channel);
         }
 
-        this.log(`Unsubscribed from channel: ${channel}`);
+        logger.debug('Unsubscribed from channel', { channel });
         return;
       }
     }
@@ -522,7 +523,7 @@ url: options.url || WS_URL,
       try {
         handler(error);
       } catch (e) {
-        console.error('Error handler failed:', e);
+        logger.error('Error handler failed', e);
       }
     });
 
@@ -981,7 +982,7 @@ url: options.url || WS_URL,
 
   private log(...args: any[]): void {
     if (this.options.debug) {
-      console.log('[WebSocket]', ...args);
+      logger.debug('[WebSocket]', ...args);
     }
   }
 }

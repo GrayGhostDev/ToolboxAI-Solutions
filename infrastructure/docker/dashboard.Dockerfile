@@ -1,5 +1,5 @@
 # Dashboard Frontend Dockerfile - Multi-stage build for production
-FROM node:20-alpine as builder
+FROM node:20-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -7,13 +7,23 @@ WORKDIR /app
 # Copy package files (only package.json to avoid lock file issues)
 COPY apps/dashboard/package.json ./
 
+# Clean node_modules and package-lock.json to prevent host version mismatch issues
+RUN rm -rf node_modules package-lock.json
+
 # Install dependencies with legacy peer deps to resolve conflicts
 # Need all dependencies (including dev) for the build step
-RUN npm install --legacy-peer-deps && \
+RUN npm install --legacy-peer-deps --force && \
     npm cache clean --force
 
 # Copy source code
 COPY apps/dashboard/ ./
+
+# Clean .vite cache to avoid build issues
+RUN rm -rf node_modules/.vite
+
+# Rebuild esbuild binary to match installed JS version
+RUN npm rebuild esbuild
+
 
 # Build the application
 ARG VITE_API_BASE_URL

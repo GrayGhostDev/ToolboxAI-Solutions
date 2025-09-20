@@ -25,6 +25,7 @@ import type {
   XPTransaction,
   ProgressPoint,
 } from '../types';
+import { logger } from '../utils/logger';
 
 class ApiClient {
   private client: AxiosInstance;
@@ -43,7 +44,7 @@ class ApiClient {
         throw new Error("Failed to create axios client instance");
       }
     } catch (error) {
-      console.error("Failed to initialize API client:", error);
+      logger.error("Failed to initialize API client", error);
       throw new Error(`API Client initialization failed: ${error}`);
     }
 
@@ -158,7 +159,7 @@ class ApiClient {
           if (process.env.NODE_ENV === 'development') {
             const requestUrl = error.config?.url || '';
             const requestMethod = error.config?.method?.toUpperCase() || '';
-            console.error(`[${requestMethod} ${requestUrl}] Error ${status}:`, data);
+            logger.error(`[${requestMethod} ${requestUrl}] Error ${status}`, data);
           }
 
           // Extract error message from response
@@ -275,7 +276,7 @@ class ApiClient {
 
       return undefined as unknown as T;
     } catch (error) {
-      console.error("API Error:", {
+      logger.error("API Error", {
         error,
         config,
         clientInitialized: !!this.client,
@@ -291,7 +292,7 @@ class ApiClient {
     const isEmail = email.includes('@');
 
     // Debug logging
-    console.log('Login attempt with:', isEmail ? { email } : { username: email });
+    logger.debug('Login attempt', isEmail ? { email } : { username: email });
 
     // Send only the appropriate field based on input type
     const loginData = isEmail
@@ -304,7 +305,7 @@ class ApiClient {
       data: loginData,
     });
 
-    console.log('Login response:', response);
+    logger.debug('Login response received', response);
 
     // Map backend response to frontend AuthResponse format
     const mappedResponse: AuthResponse = {
@@ -428,7 +429,7 @@ class ApiClient {
       });
     } catch (error) {
       // Silently handle realtime trigger errors to prevent console spam
-      console.warn('Realtime trigger failed (non-critical):', error);
+      logger.warn('Realtime trigger failed (non-critical)', error);
       return { ok: true, result: { channels: {}, event_id: 'fallback' } };
     }
   }

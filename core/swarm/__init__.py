@@ -165,10 +165,23 @@ async def create_educational_swarm(
 # Initialize default logger configuration
 def _setup_logging():
     """Setup default logging configuration for the swarm system."""
+    import os
+    handlers = [logging.StreamHandler()]
+
+    # Only add file handler if we can write to the log directory
+    try:
+        log_dir = os.environ.get('LOG_DIR', '/tmp')
+        log_file = os.path.join(log_dir, 'swarm.log')
+        if os.access(log_dir, os.W_OK):
+            handlers.append(logging.FileHandler(log_file))
+    except Exception:
+        # Silently ignore file handler errors in production
+        pass
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[logging.StreamHandler(), logging.FileHandler("swarm.log")],
+        handlers=handlers,
     )
 
 

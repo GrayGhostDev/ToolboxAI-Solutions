@@ -120,3 +120,6 @@ ariadne[asgi]==0.23.0          # GraphQL server with FastAPI support
 ariadne-codegen==0.13.0        # Python code generation from schema
 aiodataloader==0.4.0           # DataLoader for N+1 query prevention
 graphql-core>=3.2.0            # GraphQL core implementation
+
+# Payments
+stripe>=7.0.0,<11.0.0          # Stripe Python SDK for webhooks
