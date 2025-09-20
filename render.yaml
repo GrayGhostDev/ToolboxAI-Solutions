@@ -10,11 +10,6 @@ databases:
     ipAllowList: [] # Leave empty for internal access only
     postgresMajorVersion: 15
 
-  - name: toolboxai-redis
-    plan: standard # Options: free, starter, standard, pro
-    region: oregon
-    maxmemoryPolicy: allkeys-lru
-    ipAllowList: []
 
 services:
   # Backend API Service
@@ -50,11 +45,21 @@ services:
         value: production
       - key: LOG_LEVEL
         value: info
-      - key: CORS_ORIGINS
-        value: '["https://toolboxai-dashboard.onrender.com","https://www.yourdomain.com"]'
+      - key: ALLOWED_ORIGINS
+        value: https://toolboxai-dashboard.onrender.com,https://www.yourdomain.com
+      - key: TRUSTED_HOSTS
+        value: toolboxai-backend.onrender.com,api.yourdomain.com,localhost,127.0.0.1
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true # Auto-deploy on git push
+
+  # Redis (managed)
+  - type: redis
+    name: toolboxai-redis
+    plan: standard
+    region: oregon
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
 
   # Frontend Static Site
   - type: web
@@ -133,13 +138,13 @@ services:
     runtime: python
     region: oregon
     plan: standard
-    schedule: "0 */6 * * *" # Every 6 hours
+    schedule: "0 2 * * *" # Daily at 02:00 UTC
     buildCommand: |
       pip install --upgrade pip
       pip install -r requirements.txt
     command: |
       cd apps/backend && \
-      python -m scripts.maintenance
+      python -m scripts.retention
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
@@ -178,6 +183,12 @@ envVarGroups:
         sync: false
       - key: GITHUB_TOKEN
         sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
 
   # Frontend environment variables
   - name: toolboxai-frontend-env
@@ -191,6 +202,8 @@ envVarGroups:
       - key: VITE_SENTRY_DSN
         sync: false
       - key: VITE_GOOGLE_ANALYTICS_ID
+        sync: false
+      - key: VITE_STRIPE_PUBLISHABLE_KEY
         sync: false
 
 # Preview Environments Configuration

@@ -76,7 +76,7 @@ DATABASE_URL=postgresql://...
 REDIS_URL=redis://...
 
 # CORS (update with your domains)
-CORS_ORIGINS=["https://toolboxai-dashboard.onrender.com"]
+ALLOWED_ORIGINS=https://toolboxai-dashboard.onrender.com,https://www.yourdomain.com
 
 # API Keys
 OPENAI_API_KEY=sk-...
@@ -84,6 +84,15 @@ ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 ### Frontend Dashboard
+
+#### Stripe Configuration
+
+- Webhook endpoint path (backend): `/api/v1/payments/stripe/webhook`
+- Required environment variables:
+  - Backend: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+  - Frontend: `VITE_STRIPE_PUBLISHABLE_KEY`
+
+Configure a webhook in Stripe Dashboard to POST to the above path for your staging and production backends. Set the corresponding signing secret in the Render environment (`STRIPE_WEBHOOK_SECRET`).
 
 The dashboard is deployed as a static site:
 - **Build Command**: `cd apps/dashboard && npm ci && npm run build`
@@ -151,6 +160,10 @@ Redis cache with:
    - Verify health checks
 
 ## Environment Management
+
+### Staging Blueprint
+
+A separate staging blueprint is available at `render.staging.yaml`. It provisions `-staging` resources with lighter plans. Use it to create an isolated staging stack (backend, dashboard, Postgres, Redis, cron job) before promoting changes to production.
 
 ### Development vs Production
 
@@ -478,5 +491,5 @@ See `.env.render` for complete list of configuration options.
 
 ---
 
-Last Updated: 2025-09-15
+Last Updated: 2025-09-20
 Version: 1.0.0
