@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 import sys
 from pathlib import Path
 
@@ -99,6 +114,7 @@ mock_settings = MockSettings()
 
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_rbac_blocks_broadcast_for_student(monkeypatch):
     # Prepare mocked websocket
     ws = AsyncMock()
@@ -124,6 +140,7 @@ async def test_rbac_blocks_broadcast_for_student(monkeypatch):
 
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_rate_limit_enforced(monkeypatch):
     # Prepare mocked websocket
     ws = AsyncMock()

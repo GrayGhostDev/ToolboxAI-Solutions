@@ -319,3 +319,38 @@ def get_database_url() -> str:
         f"postgresql://{creds['username']}:{creds['password']}"
         f"@{creds['host']}:{creds['port']}/{creds['database']}"
     )
+
+
+def get_secret(secret_name: str, fallback_env: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """
+    Get a secret by name using the global secrets manager instance
+
+    Args:
+        secret_name: Name of the secret to retrieve
+        fallback_env: Environment variable to use as fallback
+
+    Returns:
+        Secret data or None if not found
+    """
+    manager = get_secrets_manager()
+    return manager.get_secret(secret_name, fallback_env)
+
+
+def get_required_secret(secret_name: str, fallback_env: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Get a required secret by name, raise exception if not found
+
+    Args:
+        secret_name: Name of the secret to retrieve
+        fallback_env: Environment variable to use as fallback
+
+    Returns:
+        Secret data
+
+    Raises:
+        ValueError: If secret is not found
+    """
+    secret = get_secret(secret_name, fallback_env)
+    if secret is None:
+        raise ValueError(f"Required secret '{secret_name}' not found")
+    return secret

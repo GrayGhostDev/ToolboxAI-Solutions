@@ -1,0 +1,16 @@
+# Jaeger Tracing Configuration
+service_name: toolboxai-api
+sampler:
+  type: probabilistic
+  param: 0.1  # Sample 10% of requests
+reporter:
+  log_spans: false
+  local_agent:
+    reporting_host: jaeger-agent
+    reporting_port: 6831
+  max_queue_size: 100
+throttler:
+  max_traces_per_second: 100
+tags:
+  environment: production
+  version: 1.0.0

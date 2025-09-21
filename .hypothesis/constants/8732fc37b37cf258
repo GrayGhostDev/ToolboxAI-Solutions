@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/auth/auth_secure.py
+# hypothesis_version: 6.139.2
+
+[100, 900, 3600, ':', 'HS256', 'Invalid token type', 'JWT_SECRET_KEY', 'Rate limit exceeded', 'Token has expired', 'access', 'admin', 'current_user', 'developer', 'exp', 'iat', 'id', 'jti', 'locked', 'parent', 'refresh', 'request', 'revoked', 'role', 'student', 'sub', 'teacher', 'token_id', 'type', 'utf-8', 'verify_exp']

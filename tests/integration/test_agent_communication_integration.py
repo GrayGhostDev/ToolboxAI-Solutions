@@ -1,3 +1,4 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """
 import pytest
@@ -136,7 +137,8 @@ class AgentCommunicationTester:
         return self._generate_test_report()
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_agent_initialization(self) -> bool:
+    @pytest.mark.asyncio
+async def test_agent_initialization(self) -> bool:
         """Test that all agents initialize properly"""
         try:
             # Test individual agent initialization
@@ -165,7 +167,8 @@ class AgentCommunicationTester:
             return False
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_agent_to_agent_communication(self) -> bool:
+    @pytest.mark.asyncio
+async def test_agent_to_agent_communication(self) -> bool:
         """Test agent-to-agent communication and collaboration"""
         try:
             # Test supervisor delegating to content agent
@@ -204,7 +207,8 @@ class AgentCommunicationTester:
             return False
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_sparc_framework_integration(self) -> bool:
+    @pytest.mark.asyncio
+async def test_sparc_framework_integration(self) -> bool:
         """Test SPARC framework integration"""
         if not FRAMEWORKS_AVAILABLE:
             logger.warning("SPARC framework not available, skipping test")
@@ -243,7 +247,8 @@ class AgentCommunicationTester:
             return False
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_swarm_controller_coordination(self) -> bool:
+    @pytest.mark.asyncio
+async def test_swarm_controller_coordination(self) -> bool:
         """Test Swarm controller coordination"""
         if not FRAMEWORKS_AVAILABLE:
             logger.warning("Swarm framework not available, skipping test")
@@ -294,7 +299,8 @@ class AgentCommunicationTester:
             return False
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_mcp_websocket_integration(self) -> bool:
+    @pytest.mark.asyncio
+async def test_mcp_websocket_integration(self) -> bool:
         """Test MCP WebSocket integration"""
         if not FRAMEWORKS_AVAILABLE:
             logger.warning("MCP framework not available, skipping test")
@@ -332,7 +338,8 @@ class AgentCommunicationTester:
             return False
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_content_generation_pipeline(self) -> bool:
+    @pytest.mark.asyncio
+async def test_content_generation_pipeline(self) -> bool:
         """Test end-to-end content generation pipeline"""
         try:
             # Create a comprehensive content generation request
@@ -377,7 +384,8 @@ class AgentCommunicationTester:
             return False
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_environment_creation_system(self) -> bool:
+    @pytest.mark.asyncio
+async def test_environment_creation_system(self) -> bool:
         """Test environment creation system (terrain, objects, scripts, UI)"""
         try:
             # Test terrain generation
@@ -428,7 +436,8 @@ class AgentCommunicationTester:
             return False
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_plugin_communication_hub(self) -> bool:
+    @pytest.mark.asyncio
+async def test_plugin_communication_hub(self) -> bool:
         """Test plugin communication hub functionality"""
         try:
             # Test hub initialization
@@ -456,7 +465,8 @@ class AgentCommunicationTester:
             return False
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_end_to_end_workflow(self) -> bool:
+    @pytest.mark.asyncio
+async def test_end_to_end_workflow(self) -> bool:
         """Test complete end-to-end workflow"""
         try:
             # Create a comprehensive educational content request

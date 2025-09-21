@@ -4,29 +4,26 @@
  * Main dashboard component that combines all Roblox-themed elements
  * with futuristic design, character integration, and 3D icons
  */
-
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Stack,
-  Chip,
-  Button,
-  Card,
-  CardContent,
-  Grid,
-  LinearProgress,
-  Avatar,
-  Badge,
-  IconButton,
-  Tooltip,
-  Fade,
-  Slide,
-  Zoom,
-  useTheme,
-  alpha
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Grid from '@mui/material/Grid';
+import LinearProgress from '@mui/material/LinearProgress';
+import Avatar from '@mui/material/Avatar';
+import Badge from '@mui/material/Badge';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Fade from '@mui/material/Fade';
+import Slide from '@mui/material/Slide';
+import Zoom from '@mui/material/Zoom';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import {
   RocketLaunch,
   Star,
@@ -43,36 +40,30 @@ import {
   Refresh
 } from '@mui/icons-material';
 import { ThemeProvider } from '@mui/material/styles';
-import { robloxTheme } from '../../theme/robloxTheme';
+import { robloxTheme } from '../..//robloxTheme';
 import RobloxDashboardHeader from '../roblox/RobloxDashboardHeader';
 import RobloxDashboardGrid from '../roblox/RobloxDashboardGrid';
 import RobloxCharacterAvatar from '../roblox/RobloxCharacterAvatar';
-import Roblox3DIcon from '../roblox/Roblox3DIcon';
-
 interface RobloxThemedDashboardProps {
   onNavigate?: (path: string) => void;
   onItemClick?: (item: any) => void;
 }
-
-export const RobloxThemedDashboard: React.FC<RobloxThemedDashboardProps> = ({
+export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboardProps> = ({
   onNavigate,
   onItemClick
 }) => {
   const theme = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [activeItems, setActiveItems] = useState<Set<string>>(new Set());
-
   useEffect(() => {
     // Simulate loading
     const timer = setTimeout(() => setIsLoading(false), 2000);
     return () => clearTimeout(timer);
   }, []);
-
   const handleItemPlay = (item: any) => {
     setActiveItems(prev => new Set([...prev, item.id]));
     console.log(`Playing ${item.name}`);
   };
-
   const handleItemPause = (item: any) => {
     setActiveItems(prev => {
       const newSet = new Set(prev);
@@ -81,18 +72,15 @@ export const RobloxThemedDashboard: React.FC<RobloxThemedDashboardProps> = ({
     });
     console.log(`Paused ${item.name}`);
   };
-
   const handleItemRefresh = (item: any) => {
     console.log(`Refreshing ${item.name}`);
   };
-
   const handleItemClick = (item: any) => {
     if (onItemClick) {
       onItemClick(item);
     }
     console.log(`Clicked ${item.name}`);
   };
-
   if (isLoading) {
     return (
       <ThemeProvider theme={robloxTheme}>
@@ -141,7 +129,6 @@ export const RobloxThemedDashboard: React.FC<RobloxThemedDashboardProps> = ({
       </ThemeProvider>
     );
   }
-
   return (
     <ThemeProvider theme={robloxTheme}>
       <Box
@@ -172,7 +159,6 @@ export const RobloxThemedDashboard: React.FC<RobloxThemedDashboardProps> = ({
             }
           }}
         />
-
         {/* Main content */}
         <Box sx={{ position: 'relative', zIndex: 1 }}>
           {/* Header */}
@@ -180,12 +166,11 @@ export const RobloxThemedDashboard: React.FC<RobloxThemedDashboardProps> = ({
             title="ToolBoxAI Space Station"
             subtitle="Your Learning Adventure Awaits!"
             onMenuClick={() => console.log('Menu clicked')}
-            onNotificationClick={(notification) => console.log('Notification clicked:', notification)}
+            onNotificationClick={(e: React.MouseEvent) => (notification) => console.log('Notification clicked:', notification)}
             onSettingsClick={() => console.log('Settings clicked')}
             onHelpClick={() => console.log('Help clicked')}
             onProfileClick={() => console.log('Profile clicked')}
           />
-
           {/* Main dashboard content */}
           <Container maxWidth="xl" sx={{ py: 4 }}>
             {/* Welcome section */}
@@ -271,7 +256,7 @@ export const RobloxThemedDashboard: React.FC<RobloxThemedDashboardProps> = ({
                           }}
                           size="large"
                           animated={true}
-                          onClick={() => console.log('Character clicked')}
+                          onClick={(e: React.MouseEvent) => () => console.log('Character clicked')}
                         />
                       </Box>
                     </Grid>
@@ -279,7 +264,6 @@ export const RobloxThemedDashboard: React.FC<RobloxThemedDashboardProps> = ({
                 </CardContent>
               </Card>
             </Fade>
-
             {/* Dashboard Grid */}
             <RobloxDashboardGrid
               onItemClick={handleItemClick}
@@ -287,7 +271,6 @@ export const RobloxThemedDashboard: React.FC<RobloxThemedDashboardProps> = ({
               onItemPause={handleItemPause}
               onItemRefresh={handleItemRefresh}
             />
-
             {/* Quick Actions */}
             <Fade in={true} timeout={2000}>
               <Card
@@ -347,5 +330,4 @@ export const RobloxThemedDashboard: React.FC<RobloxThemedDashboardProps> = ({
     </ThemeProvider>
   );
 };
-
 export default RobloxThemedDashboard;

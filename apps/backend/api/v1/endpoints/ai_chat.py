@@ -18,14 +18,16 @@ from enum import Enum
 
 # Import dependencies
 try:
-    from langchain_openai import ChatOpenAI
-    from langchain_anthropic import ChatAnthropic
-    from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-    from langchain.memory import ConversationBufferMemory
-    from langgraph.graph import StateGraph, END
-    from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-    from langgraph.checkpoint.sqlite import SqliteSaver
-    LANGCHAIN_AVAILABLE = True
+    # Skip LangChain imports temporarily due to Pydantic v2 compatibility issues
+    # from langchain_openai import ChatOpenAI
+    # from langchain_anthropic import ChatAnthropic
+    # from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+    # from langchain.memory import ConversationBufferMemory
+    # from langgraph.graph import StateGraph, END
+    # from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+    # from langgraph.checkpoint.sqlite import SqliteSaver
+    LANGCHAIN_AVAILABLE = False
+    logging.warning("LangChain temporarily disabled due to Pydantic v2 compatibility. Using direct OpenAI API.")
 except ImportError as e:
     logging.warning(f"LangChain imports failed: {e}. Will use direct API.")
     LANGCHAIN_AVAILABLE = False

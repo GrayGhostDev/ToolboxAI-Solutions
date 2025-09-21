@@ -27,18 +27,8 @@ from .realtime_update_agent import (
     MessageQueue
 )
 
-# Import other agents when available
-try:
-    from .component_generator_agent import ComponentGeneratorAgent
-except ImportError:
-    pass
-
-try:
-    from .state_management_agent import StateManagementAgent
-except ImportError:
-    pass
-
-__all__ = [
+# Track available exports dynamically
+_available_exports = [
     # UI Sync
     "UISyncAgent",
     "UIComponent",
@@ -54,11 +44,20 @@ __all__ = [
     "ConnectionState",
     "RealtimeMessage",
     "ConnectionMetrics",
-    "MessageQueue",
-
-    # Component Generation (future)
-    "ComponentGeneratorAgent",
-
-    # State Management (future)
-    "StateManagementAgent"
+    "MessageQueue"
 ]
+
+# Import other agents when available
+try:
+    from .component_generator_agent import ComponentGeneratorAgent
+    _available_exports.append("ComponentGeneratorAgent")
+except ImportError:
+    pass
+
+try:
+    from .state_management_agent import StateManagementAgent
+    _available_exports.append("StateManagementAgent")
+except ImportError:
+    pass
+
+__all__ = _available_exports

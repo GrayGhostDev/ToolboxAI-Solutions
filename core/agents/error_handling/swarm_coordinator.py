@@ -18,21 +18,8 @@ from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolExecutor
 from pydantic import BaseModel, Field
 
-# Try to import MemorySaver with fallback
-try:
-    from langgraph.checkpoint import MemorySaver
-except ImportError:
-    # Fallback implementation for missing MemorySaver
-    class MemorySaver:
-        """Fallback implementation for MemorySaver"""
-        def __init__(self):
-            self.storage = {}
-
-        def get(self, key: str):
-            return self.storage.get(key)
-
-        def put(self, key: str, value: Any):
-            self.storage[key] = value
+# Import MemorySaver with correct path
+from langgraph.checkpoint.memory import MemorySaver
 
 # Import all specialized agents
 from core.agents.error_handling.base_error_agent import ErrorState, ErrorType, ErrorPriority

@@ -409,3 +409,113 @@ class AutoRecoveryOrchestratorAgent(BaseErrorAgent):
             recovery_metrics["recovery_success_rate"] = successful / len(self.recovery_history)
 
         return {**base_metrics, **recovery_metrics}
+
+    async def _process_task(self, state) -> Any:
+        """
+        Process auto recovery orchestration task.
+
+        Args:
+            state: Agent state containing task information
+
+        Returns:
+            Task processing result
+        """
+        try:
+            task = state.get("task", {})
+            task_type = task.get("type", "orchestrate_recovery")
+
+            if task_type == "orchestrate_recovery":
+                error = task.get("error", {})
+                strategy = task.get("strategy", "adaptive")
+
+                # Convert dict error to ErrorState format if needed
+                if isinstance(error, dict):
+                    # Ensure error has required fields
+                    if "error_type" not in error:
+                        error["error_type"] = ErrorType.RUNTIME
+                    if "priority" not in error:
+                        error["priority"] = ErrorPriority.MEDIUM
+                    if "timestamp" not in error:
+                        error["timestamp"] = datetime.now().isoformat()
+
+                # Orchestrate recovery
+                result = await self.orchestrate_recovery(error, strategy)
+
+                return {
+                    "status": "completed",
+                    "result": result,
+                    "recovery_successful": result.success if result else False,
+                    "strategy_used": result.strategy if result else strategy
+                }
+
+            elif task_type == "create_rollback_point":
+                context = task.get("context", {})
+                description = task.get("description", "Auto rollback point")
+
+                rollback_point = await self.create_rollback_point(context, description)
+
+                return {
+                    "status": "completed",
+                    "result": rollback_point,
+                    "rollback_id": rollback_point.rollback_id if rollback_point else None
+                }
+
+            elif task_type == "execute_rollback":
+                rollback_id = task.get("rollback_id")
+                if rollback_id and rollback_id in self.rollback_points:
+                    rollback_point = self.rollback_points[rollback_id]
+                    result = await self.execute_rollback(rollback_point)
+
+                    return {
+                        "status": "completed",
+                        "result": result,
+                        "rollback_successful": result.success if result else False
+                    }
+                else:
+                    return {
+                        "status": "error",
+                        "error": f"Rollback point {rollback_id} not found",
+                        "result": None
+                    }
+
+            elif task_type == "check_circuit_breaker":
+                service_name = task.get("service_name", "default")
+
+                if service_name in self.circuit_breakers:
+                    breaker = self.circuit_breakers[service_name]
+                    return {
+                        "status": "completed",
+                        "result": {
+                            "state": breaker.state,
+                            "failure_count": breaker.failure_count,
+                            "last_failure": breaker.last_failure
+                        }
+                    }
+                else:
+                    return {
+                        "status": "error",
+                        "error": f"Circuit breaker {service_name} not found",
+                        "result": None
+                    }
+
+            elif task_type == "get_metrics":
+                metrics = await self.get_performance_metrics()
+                return {
+                    "status": "completed",
+                    "result": metrics
+                }
+
+            else:
+                return {
+                    "status": "error",
+                    "error": f"Unknown task type: {task_type}",
+                    "result": None
+                }
+
+        except Exception as e:
+            logger.error(f"Error processing auto recovery task: {e}")
+            return {
+                "status": "error",
+                "error": str(e),
+                "result": None
+            }

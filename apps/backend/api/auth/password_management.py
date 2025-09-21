@@ -451,3 +451,24 @@ def get_password_service(
         )
 
     return _password_service
+
+def check_password_strength(password: str) -> dict:
+    """Check password strength and return requirements"""
+    result = {
+        "strong": False,
+        "length": len(password) >= 8,
+        "uppercase": any(c.isupper() for c in password),
+        "lowercase": any(c.islower() for c in password),
+        "digit": any(c.isdigit() for c in password),
+        "special": any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password)
+    }
+
+    result["strong"] = all([
+        result["length"],
+        result["uppercase"],
+        result["lowercase"],
+        result["digit"],
+        result["special"]
+    ])
+
+    return result

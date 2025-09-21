@@ -4,20 +4,19 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Typography,
-  Chip,
-  TextField,
-  List,
-  ListItem,
-  ListItemText,
-  Alert,
-  CircularProgress
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import TextField from '@mui/material/TextField';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
+import CircularProgress from '@mui/material/CircularProgress';
 import { pusherService } from '../../services/pusher';
 import { WebSocketState, WebSocketMessageType } from '../../types/websocket';
 
@@ -28,7 +27,7 @@ interface Message {
   content: string;
 }
 
-const WebSocketDemo: React.FC = () => {
+const WebSocketDemo: React.FunctionComponent<Record<string, any>> = () => {
   const [state, setState] = useState<WebSocketState>(WebSocketState.DISCONNECTED);
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -183,14 +182,14 @@ const WebSocketDemo: React.FC = () => {
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
               variant="contained"
-              onClick={handleConnect}
+              onClick={(e: React.MouseEvent) => handleConnect}
               disabled={isConnected}
             >
               Connect
             </Button>
             <Button
               variant="outlined"
-              onClick={handleDisconnect}
+              onClick={(e: React.MouseEvent) => handleDisconnect}
               disabled={!isConnected}
             >
               Disconnect
@@ -259,7 +258,7 @@ const WebSocketDemo: React.FC = () => {
             />
             <Button
               variant="contained"
-              onClick={handleSendMessage}
+              onClick={(e: React.MouseEvent) => handleSendMessage}
               disabled={!isConnected || !messageInput.trim()}
             >
               Send
@@ -269,14 +268,14 @@ const WebSocketDemo: React.FC = () => {
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
               variant="outlined"
-              onClick={handleTestNotification}
+              onClick={(e: React.MouseEvent) => handleTestNotification}
               disabled={!isConnected}
             >
               Test Notification
             </Button>
             <Button
               variant="outlined"
-              onClick={handleTestProgress}
+              onClick={(e: React.MouseEvent) => handleTestProgress}
               disabled={!isConnected}
             >
               Test Progress Update

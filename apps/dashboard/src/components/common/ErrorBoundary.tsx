@@ -1,5 +1,8 @@
 import * as React from "react";
-import { Alert, Box, Button, Typography } from "@mui/material";
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 import { ErrorOutline, Refresh } from "@mui/icons-material";
 
 interface ErrorBoundaryState {
@@ -73,7 +76,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             <Button
               variant="outlined"
               startIcon={<Refresh />}
-              onClick={this.resetError}
+              onClick={(e: React.MouseEvent) => this.resetError}
               size="small"
             >
               Try Again

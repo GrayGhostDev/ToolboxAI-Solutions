@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 """
 Comprehensive Test Suite for Enhanced Content Pipeline
 Tests all components of the Week 2 implementation

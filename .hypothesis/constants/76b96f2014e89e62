@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/exceptions.py
+# hypothesis_version: 6.139.2
+
+[401, 403, 404, 409, 422, 429, 500, 503, 'APIError', 'AuthenticationError', 'AuthorizationError', 'Bearer', 'CacheError', 'ConflictError', 'DatabaseError', 'E001', 'E002', 'E003', 'E004', 'E005', 'E006', 'E007', 'E008', 'E009', 'E010', 'E011', 'ExternalServiceError', 'NotFoundError', 'Rate limit exceeded', 'RateLimitError', 'Resource conflict', 'Resource not found', 'Retry-After', 'Validation failed', 'ValidationError', 'WWW-Authenticate']

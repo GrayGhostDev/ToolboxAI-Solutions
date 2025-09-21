@@ -1,3 +1,5 @@
+jest.setTimeout(10000);
+
 import { test, expect } from '@playwright/test';
 
 test.describe('API Integration E2E Tests', () => {

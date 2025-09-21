@@ -1,39 +1,38 @@
 import * as React from "react";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardActions from '@mui/material/CardActions';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Box from '@mui/material/Box';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Grid from '@mui/material/Grid';
+import Avatar from '@mui/material/Avatar';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import Badge from '@mui/material/Badge';
+import Paper from '@mui/material/Paper';
+import InputAdornment from '@mui/material/InputAdornment';
+
 import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardActions,
-  Typography,
-  Button,
-  Stack,
-  Chip,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Box,
-  Tab,
-  Tabs,
-  Alert,
-  AlertTitle,
-  Grid,
-  Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  ListItemSecondaryAction,
-  Badge,
-  Paper,
-  InputAdornment,
-} from "@mui/material";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import StarIcon from "@mui/icons-material/Star";
@@ -373,7 +372,7 @@ export default function Rewards() {
                   <Button
                     variant="outlined"
                     startIcon={<AddIcon />}
-                    onClick={() => setCreateDialogOpen(true)}
+                    onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
                   >
                     Create Reward
                   </Button>
@@ -383,7 +382,7 @@ export default function Rewards() {
                     variant="contained"
                     startIcon={<ShoppingCartIcon />}
                     disabled={cart.length === 0}
-                    onClick={() => {
+                    onClick={(e: React.MouseEvent) => () => {
                       if (cart.length > 0) {
                         setConfirmDialogOpen(true);
                       }
@@ -519,7 +518,7 @@ export default function Rewards() {
                         <Stack direction="row" spacing={1}>
                           <IconButton
                             size="small"
-                            onClick={() => addToCart(reward)}
+                            onClick={(e: React.MouseEvent) => () => addToCart(reward)}
                             disabled={!canRedeem(reward)}
                           >
                             <AddIcon />
@@ -528,7 +527,7 @@ export default function Rewards() {
                             size="small"
                             variant="contained"
                             disabled={!canRedeem(reward)}
-                            onClick={() => handleRedeem(reward)}
+                            onClick={(e: React.MouseEvent) => () => handleRedeem(reward)}
                           >
                             Redeem
                           </Button>
@@ -627,7 +626,7 @@ export default function Rewards() {
                   <Button
                     variant="contained"
                     startIcon={<AddIcon />}
-                    onClick={() => setCreateDialogOpen(true)}
+                    onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
                   >
                     Create New Reward
                   </Button>
@@ -653,7 +652,7 @@ export default function Rewards() {
                             <Stack direction="row" spacing={1}>
                               <Button 
                                 size="small"
-                                onClick={() => {
+                                onClick={(e: React.MouseEvent) => () => {
                                   setSelectedReward(reward);
                                   setEditDialogOpen(true);
                                 }}
@@ -663,7 +662,7 @@ export default function Rewards() {
                           <Button 
                                 size="small" 
                                 color="error"
-                                onClick={handleRemoveReward}
+                                onClick={(e: React.MouseEvent) => handleRemoveReward}
                               >
                                 Remove
                               </Button>
@@ -699,8 +698,8 @@ export default function Rewards() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={confirmRedeem}>
+          <Button onClick={(e: React.MouseEvent) => () => setConfirmDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={(e: React.MouseEvent) => confirmRedeem}>
             Confirm Redemption
           </Button>
         </DialogActions>
@@ -738,7 +737,7 @@ export default function Rewards() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+          <Button onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={() => {
             dispatch(addNotification({
               type: "success",

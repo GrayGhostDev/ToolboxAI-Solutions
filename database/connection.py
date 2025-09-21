@@ -499,12 +499,42 @@ async def close_db():
     await db_manager.close()
 
 
+# Redis connection management
+try:
+    import redis.asyncio as aioredis
+    REDIS_AVAILABLE = True
+except ImportError:
+    REDIS_AVAILABLE = False
+    aioredis = None
+
+
+async def get_redis_client():
+    """
+    Get Redis client for caching and session management
+
+    Returns:
+        Redis client instance
+    """
+    if not REDIS_AVAILABLE:
+        logger.warning("Redis not available - some features may not work")
+        return None
+
+    try:
+        redis_url = getattr(settings, 'REDIS_URL', 'redis://localhost:6379')
+        client = aioredis.from_url(redis_url, decode_responses=True)
+        return client
+    except Exception as e:
+        logger.error(f"Failed to create Redis client: {e}")
+        return None
+
+
 # Export all public functions and classes
 __all__ = [
     "DatabaseManager",
     "db_manager",
     "get_db",
     "get_async_session",
+    "get_redis_client",
     "create_or_update",
     "bulk_insert",
     "paginate_query",

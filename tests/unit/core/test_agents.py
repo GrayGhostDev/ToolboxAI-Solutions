@@ -78,7 +78,7 @@ class TestBaseAgent:
     @pytest_asyncio.fixture(loop_scope="function")
     async def base_agent(self, mock_llm):
         """Create a base agent instance with proper cleanup."""
-        with patch('core.agents.base_agent.ChatOpenAI', return_value=mock_llm):
+        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI', return_value=mock_llm):
             config = AgentConfig(name="TestAgent")
             agent = ConcreteTestAgent(config)
             agent.llm = mock_llm
@@ -136,7 +136,7 @@ class TestContentAgent:
     @pytest_asyncio.fixture(loop_scope="function")
     async def content_agent(self, mock_llm):
         """Create a content agent instance with proper cleanup."""
-        with patch('core.agents.base_agent.ChatOpenAI', return_value=mock_llm):
+        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI', return_value=mock_llm):
             config = AgentConfig(name="ContentAgent", system_prompt="Educational content generator")
             agent = ContentAgent(config)
             agent.llm = mock_llm
@@ -218,7 +218,7 @@ class TestQuizAgent:
     @pytest_asyncio.fixture(loop_scope="function")
     async def quiz_agent(self, mock_llm):
         """Create a quiz agent instance with proper cleanup."""
-        with patch('core.agents.base_agent.ChatOpenAI', return_value=mock_llm):
+        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI', return_value=mock_llm):
             config = AgentConfig(name="QuizAgent", system_prompt="Quiz generator")
             agent = QuizAgent(config)
             agent.llm = mock_llm
@@ -300,7 +300,7 @@ class TestTerrainAgent:
     @pytest.fixture
     def terrain_agent(self, mock_llm):
         """Create a terrain agent instance."""
-        with patch('core.agents.base_agent.ChatOpenAI', return_value=mock_llm):
+        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI', return_value=mock_llm):
             agent = TerrainAgent()
             agent.llm = mock_llm
             return agent
@@ -368,7 +368,7 @@ class TestScriptAgent:
     @pytest.fixture
     def script_agent(self, mock_llm):
         """Create a script agent instance."""
-        with patch('core.agents.base_agent.ChatOpenAI', return_value=mock_llm):
+        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI', return_value=mock_llm):
             agent = ScriptAgent()
             agent.llm = mock_llm
             return agent
@@ -439,7 +439,7 @@ class TestReviewAgent:
     @pytest.fixture
     def review_agent(self, mock_llm):
         """Create a review agent instance."""
-        with patch('core.agents.base_agent.ChatOpenAI', return_value=mock_llm):
+        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI', return_value=mock_llm):
             agent = ReviewAgent()
             agent.llm = mock_llm
             return agent
@@ -514,7 +514,7 @@ class TestSupervisorAgent:
                 "script": MagicMock,
                 "review": MagicMock
             }
-            with patch('core.agents.base_agent.ChatOpenAI'):
+            with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI'):
                 agent = SupervisorAgent()
                 # Set managed_agents instead of agents
                 agent.managed_agents = mock_agents
@@ -523,7 +523,7 @@ class TestSupervisorAgent:
     @pytest.mark.asyncio(loop_scope="function")
     async def test_route_task(self, supervisor_agent):
         """Test task routing to appropriate agent."""
-        with patch('core.agents.base_agent.ChatOpenAI'):
+        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI'):
             # Test _routing_decision method which determines routing
             state = AgentState(
                 task="Generate quiz for Math",
@@ -634,7 +634,7 @@ class TestOrchestrator:
                     with patch('core.agents.orchestrator.TerrainAgent'):
                         with patch('core.agents.orchestrator.ScriptAgent'):
                             with patch('core.agents.orchestrator.ReviewAgent'):
-                                with patch('core.agents.base_agent.ChatOpenAI'):
+                                with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI'):
                                     orch = Orchestrator()
                                     orch.supervisor = mock_supervisor
                                     return orch
@@ -840,7 +840,7 @@ class TestTestingAgent:
     @pytest.fixture
     def testing_agent(self, mock_llm):
         """Create a testing agent instance"""
-        with patch('core.agents.base_agent.ChatOpenAI', return_value=mock_llm):
+        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI', return_value=mock_llm):
             agent = TestingAgent()
             agent.llm = mock_llm
             return agent

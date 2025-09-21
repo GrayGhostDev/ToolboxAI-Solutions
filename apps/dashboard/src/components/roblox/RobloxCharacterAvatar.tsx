@@ -6,21 +6,20 @@
  */
 
 import React, { useState } from 'react';
-import {
-  Avatar,
-  Box,
-  Tooltip,
-  Zoom,
-  Fade,
-  Badge,
-  IconButton,
-  Typography,
-  Chip,
-  Stack,
-  useTheme,
-  alpha,
-  CircularProgress
-} from '@mui/material';
+import Avatar from '@mui/material/Avatar';
+import Box from '@mui/material/Box';
+import Tooltip from '@mui/material/Tooltip';
+import Zoom from '@mui/material/Zoom';
+import Fade from '@mui/material/Fade';
+import Badge from '@mui/material/Badge';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import CircularProgress from '@mui/material/CircularProgress';
+import CircularProgress from '@mui/material/CircularProgress';
 import {
   RocketLaunch,
   Star,
@@ -49,7 +48,7 @@ interface RobloxCharacterAvatarProps {
 
 // Character images will be loaded dynamically from design_files
 
-export const RobloxCharacterAvatar: React.FC<RobloxCharacterAvatarProps> = ({
+export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvatarProps> = ({
   character,
   size = 'medium',
   showLevel = true,
@@ -86,7 +85,7 @@ export const RobloxCharacterAvatar: React.FC<RobloxCharacterAvatarProps> = ({
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={handleClick}
+      onClick={(e: React.MouseEvent) => handleClick}
     >
       <Tooltip
         title={

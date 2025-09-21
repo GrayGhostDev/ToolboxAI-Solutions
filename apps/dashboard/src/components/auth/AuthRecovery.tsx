@@ -3,22 +3,20 @@
  *
  * Provides UI for automatic token refresh and session recovery
  */
+import { useState, useEffect } from 'react';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import LinearProgress from '@mui/material/LinearProgress';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Snackbar from '@mui/material/Snackbar';
 
-import React, { useState, useEffect } from 'react';
-import {
-  Alert,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  LinearProgress,
-  Typography,
-  Box,
-  Stack,
-  Snackbar,
-} from '@mui/material';
 import {
   Refresh,
   Lock,
@@ -28,13 +26,11 @@ import {
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { authSync } from '../../services/auth-sync';
-
 interface AuthRecoveryProps {
   open: boolean;
   onClose: () => void;
   reason?: string;
 }
-
 export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
   const [isRecovering, setIsRecovering] = useState(false);
   const [recoveryStatus, setRecoveryStatus] = useState<'idle' | 'recovering' | 'success' | 'failed'>('idle');
@@ -42,17 +38,14 @@ export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
   const [retryCount, setRetryCount] = useState(0);
   const [countdown, setCountdown] = useState(0);
   const [error, setError] = useState<string | null>(null);
-
   const isAuthenticated = useAppSelector((state) => state.user.isAuthenticated);
   const dispatch = useAppDispatch();
-
   useEffect(() => {
     if (open && reason === 'token_expiring') {
       // Auto-start recovery for expiring tokens
       handleRecovery();
     }
   }, [open, reason]);
-
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => {
@@ -64,40 +57,33 @@ export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
       handleRecovery();
     }
   }, [countdown, recoveryStatus, retryCount]);
-
   const handleRecovery = async () => {
     setIsRecovering(true);
     setRecoveryStatus('recovering');
     setProgress(0);
     setError(null);
     setRetryCount(prev => prev + 1);
-
     // Simulate progress
     const progressInterval = setInterval(() => {
       setProgress(prev => Math.min(prev + 10, 90));
     }, 200);
-
     try {
       // Attempt token refresh
       await authSync.refreshToken();
-
       setProgress(100);
       setRecoveryStatus('success');
       clearInterval(progressInterval);
-
       // Auto-close after success
       setTimeout(() => {
         onClose();
         setRecoveryStatus('idle');
         setRetryCount(0);
       }, 2000);
-
     } catch (error: any) {
       clearInterval(progressInterval);
       setProgress(0);
       setRecoveryStatus('failed');
       setError(error.message || 'Recovery failed');
-
       // Set countdown for next retry
       if (retryCount < 3) {
         setCountdown(5 * retryCount); // Exponential backoff
@@ -106,17 +92,14 @@ export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
       setIsRecovering(false);
     }
   };
-
   const handleExtendSession = () => {
     authSync.extendSession();
     onClose();
   };
-
   const handleLogout = async () => {
     await authSync.logout();
     onClose();
   };
-
   const getReasonMessage = () => {
     switch (reason) {
       case 'token_expiring':
@@ -131,7 +114,6 @@ export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
         return 'Session recovery needed.';
     }
   };
-
   return (
     <Dialog
       open={open}
@@ -148,13 +130,11 @@ export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
         <Lock color="primary" />
         <Typography variant="h6">Session Recovery</Typography>
       </DialogTitle>
-
       <DialogContent>
         <Stack spacing={3} sx={{ mt: 2 }}>
           <Typography variant="body1" color="text.secondary">
             {getReasonMessage()}
           </Typography>
-
           {/* Recovery Status */}
           {recoveryStatus === 'recovering' && (
             <Box>
@@ -167,7 +147,6 @@ export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
               <LinearProgress variant="determinate" value={progress} />
             </Box>
           )}
-
           {recoveryStatus === 'success' && (
             <Alert
               severity="success"
@@ -176,7 +155,6 @@ export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
               Session recovered successfully!
             </Alert>
           )}
-
           {recoveryStatus === 'failed' && (
             <>
               <Alert
@@ -185,7 +163,6 @@ export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
               >
                 {error || 'Failed to recover session'}
               </Alert>
-
               {retryCount < 3 && countdown > 0 && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Timer color="action" />
@@ -196,7 +173,6 @@ export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
               )}
             </>
           )}
-
           {/* Session Info */}
           {reason === 'token_expiring' && (
             <Alert severity="warning">
@@ -206,19 +182,18 @@ export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
           )}
         </Stack>
       </DialogContent>
-
       <DialogActions sx={{ p: 2 }}>
         {reason === 'token_expiring' && recoveryStatus === 'idle' && (
           <>
             <Button
-              onClick={handleLogout}
+              onClick={(e: React.MouseEvent) => handleLogout}
               color="secondary"
               disabled={isRecovering}
             >
               Logout
             </Button>
             <Button
-              onClick={handleExtendSession}
+              onClick={(e: React.MouseEvent) => handleExtendSession}
               variant="contained"
               startIcon={<Refresh />}
               disabled={isRecovering}
@@ -227,18 +202,17 @@ export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
             </Button>
           </>
         )}
-
         {(recoveryStatus === 'failed' || recoveryStatus === 'recovering') && (
           <>
             <Button
-              onClick={handleLogout}
+              onClick={(e: React.MouseEvent) => handleLogout}
               color="secondary"
               disabled={isRecovering}
             >
               Logout
             </Button>
             <Button
-              onClick={handleRecovery}
+              onClick={(e: React.MouseEvent) => handleRecovery}
               variant="contained"
               startIcon={<Refresh />}
               disabled={isRecovering || countdown > 0}
@@ -247,10 +221,9 @@ export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
             </Button>
           </>
         )}
-
         {recoveryStatus === 'success' && (
           <Button
-            onClick={onClose}
+            onClick={(e: React.MouseEvent) => onClose}
             variant="contained"
             color="success"
             startIcon={<CheckCircle />}
@@ -262,7 +235,6 @@ export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
     </Dialog>
   );
 }
-
 /**
  * Session Monitor Component
  * Shows session status and allows manual refresh
@@ -271,17 +243,14 @@ export function SessionMonitor() {
   const [sessionInfo, setSessionInfo] = useState<any>(null);
   const [showRecovery, setShowRecovery] = useState(false);
   const [recoveryReason, setRecoveryReason] = useState<string>('');
-
   useEffect(() => {
     const checkSession = () => {
       const info = authSync.getSessionInfo();
       setSessionInfo(info);
-
       if (info && info.isActive) {
         const now = Date.now();
         const inactiveTime = now - info.lastActivity;
         const inactiveMinutes = Math.floor(inactiveTime / 60000);
-
         // Show warning if approaching timeout
         if (inactiveMinutes >= 25 && inactiveMinutes < 30) {
           setRecoveryReason('token_expiring');
@@ -289,31 +258,25 @@ export function SessionMonitor() {
         }
       }
     };
-
     // Check session every minute
     const interval = setInterval(checkSession, 60000);
     checkSession(); // Initial check
-
     return () => clearInterval(interval);
   }, []);
-
   if (!sessionInfo || !sessionInfo.isActive) {
     return null;
   }
-
   const getSessionDuration = () => {
     const duration = Date.now() - sessionInfo.startTime;
     const hours = Math.floor(duration / 3600000);
     const minutes = Math.floor((duration % 3600000) / 60000);
     return `${hours}h ${minutes}m`;
   };
-
   const getInactiveTime = () => {
     const inactive = Date.now() - sessionInfo.lastActivity;
     const minutes = Math.floor(inactive / 60000);
     return `${minutes} min`;
   };
-
   return (
     <>
       <Box
@@ -340,12 +303,11 @@ export function SessionMonitor() {
         </Typography>
         <Button
           size="small"
-          onClick={() => authSync.extendSession()}
+          onClick={(e: React.MouseEvent) => () => authSync.extendSession()}
         >
           Extend
         </Button>
       </Box>
-
       <AuthRecovery
         open={showRecovery}
         onClose={() => setShowRecovery(false)}
@@ -354,7 +316,6 @@ export function SessionMonitor() {
     </>
   );
 }
-
 /**
  * Network Status Monitor
  * Shows network connectivity status
@@ -362,28 +323,23 @@ export function SessionMonitor() {
 export function NetworkStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showAlert, setShowAlert] = useState(false);
-
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 3000);
     };
-
     const handleOffline = () => {
       setIsOnline(false);
       setShowAlert(true);
     };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
+    window.addEventListener("online", handleOnline as EventListener);
+    window.addEventListener("offline", handleOffline as EventListener);
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
-
   return (
     <Snackbar
       open={showAlert}
@@ -401,7 +357,6 @@ export function NetworkStatus() {
     </Snackbar>
   );
 }
-
 export default {
   AuthRecovery,
   SessionMonitor,

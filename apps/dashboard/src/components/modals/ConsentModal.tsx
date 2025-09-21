@@ -131,11 +131,11 @@ export function ConsentModal({ open, onClose }: Props) {
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => onClose(false)}>Cancel</Button>
+        <Button onClick={(e: React.MouseEvent) => () => onClose(false)}>Cancel</Button>
         <Button
           disabled={!allChecked || loading}
           variant="contained"
-          onClick={handleAccept}
+          onClick={(e: React.MouseEvent) => handleAccept}
         >
           {loading ? "Processing..." : "Accept & Continue"}
         </Button>

@@ -18,38 +18,34 @@ from .schema_validator_agent import (
     SchemaEvolution
 )
 
-# Import other agents when available
-try:
-    from .event_bus_agent import EventBusAgent
-except ImportError:
-    pass
-
-try:
-    from .cache_invalidation_agent import CacheInvalidationAgent
-except ImportError:
-    pass
-
-try:
-    from .conflict_resolution_agent import ConflictResolutionAgent
-except ImportError:
-    pass
-
-__all__ = [
-    # Schema Validation
+# Track available exports dynamically
+_available_exports = [
     "SchemaValidatorAgent",
     "Schema",
     "SchemaType",
     "ValidationLevel",
     "ValidationResult",
     "SchemaMapping",
-    "SchemaEvolution",
-
-    # Event Bus (future)
-    "EventBusAgent",
-
-    # Cache Invalidation (future)
-    "CacheInvalidationAgent",
-
-    # Conflict Resolution (future)
-    "ConflictResolutionAgent"
+    "SchemaEvolution"
 ]
+
+# Import other agents when available
+try:
+    from .event_bus_agent import EventBusAgent
+    _available_exports.append("EventBusAgent")
+except ImportError:
+    pass
+
+try:
+    from .cache_invalidation_agent import CacheInvalidationAgent
+    _available_exports.append("CacheInvalidationAgent")
+except ImportError:
+    pass
+
+try:
+    from .conflict_resolution_agent import ConflictResolutionAgent
+    _available_exports.append("ConflictResolutionAgent")
+except ImportError:
+    pass
+
+__all__ = _available_exports

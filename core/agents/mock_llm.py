@@ -249,7 +249,7 @@ def get_mock_llm(model_name: str = "gpt-3.5-turbo", **kwargs) -> MockLLM:
 def get_mock_chat_model(model_name: str = "gpt-3.5-turbo", **kwargs) -> MockChatModel:
     """
     Factory function to get mock chat model instance.
-    Replaces ChatOpenAI when OPENAI_API_KEY is not available.
+    Replaces from langchain_openai import ChatOpenAI when OPENAI_API_KEY is not available.
     """
     return MockChatModel(model_name=model_name, **kwargs)
 
@@ -265,12 +265,12 @@ def patch_langchain_for_testing():
     
     # Check if OpenAI API key is available
     if not os.getenv("OPENAI_API_KEY") or os.getenv("USE_MOCK_LLM") == "true":
-        # Patch ChatOpenAI import
+        # Patch from langchain_openai import ChatOpenAI import
         from unittest.mock import MagicMock
         
         # Create mock module
         mock_openai = MagicMock()
-        mock_openai.ChatOpenAI = MockChatModel
+        mock_openai.from langchain_openai import ChatOpenAI = MockChatModel
         
         # Inject into sys.modules
         sys.modules["langchain_openai"] = mock_openai

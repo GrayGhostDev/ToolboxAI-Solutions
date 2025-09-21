@@ -1,26 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Tab,
-  Tabs,
-  Avatar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Chip,
-  LinearProgress,
-  Alert,
-  IconButton,
-  Tooltip,
-  Paper,
-  Divider,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Avatar from '@mui/material/Avatar';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import Alert from '@mui/material/Alert';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Paper from '@mui/material/Paper';
+import Divider from '@mui/material/Divider';
+
 import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
@@ -79,7 +78,7 @@ interface TabPanelProps {
   value: number;
 }
 
-const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
+const TabPanel: React.FunctionComponent<TabPanelProps> = ({ children, value, index, ...other }) => {
   return (
     <div
       role="tabpanel"
@@ -334,7 +333,7 @@ export default function AdminDashboard({ section = 'overview' }: AdminDashboardP
           </Tabs>
           <Box sx={{ position: 'absolute', right: 16, top: 8 }}>
             <Tooltip title="Refresh">
-              <IconButton onClick={handleRefresh} disabled={refreshing}>
+              <IconButton onClick={(e: React.MouseEvent) => handleRefresh} disabled={refreshing}>
                 <RefreshIcon />
               </IconButton>
             </Tooltip>
@@ -437,7 +436,7 @@ export default function AdminDashboard({ section = 'overview' }: AdminDashboardP
                             <IconButton
                               edge="end"
                               aria-label="resolve"
-                              onClick={() => handleResolveAlert(alert.id)}
+                              onClick={(e: React.MouseEvent) => () => handleResolveAlert(alert.id)}
                             >
                               <CheckCircleIcon />
                             </IconButton>
@@ -522,7 +521,7 @@ export default function AdminDashboard({ section = 'overview' }: AdminDashboardP
           <Button
             variant="contained"
             startIcon={<DownloadIcon />}
-            onClick={() => console.log('Export logs')}
+            onClick={(e: React.MouseEvent) => () => console.log('Export logs')}
           >
             Export Logs
           </Button>
@@ -531,7 +530,7 @@ export default function AdminDashboard({ section = 'overview' }: AdminDashboardP
           <Button
             variant="outlined"
             startIcon={<UploadIcon />}
-            onClick={() => console.log('Backup system')}
+            onClick={(e: React.MouseEvent) => () => console.log('Backup system')}
           >
             Backup System
           </Button>
@@ -541,7 +540,7 @@ export default function AdminDashboard({ section = 'overview' }: AdminDashboardP
             variant="outlined"
             color="error"
             startIcon={<WarningIcon />}
-            onClick={() => console.log('Clear cache')}
+            onClick={(e: React.MouseEvent) => () => console.log('Clear cache')}
           >
             Clear Cache
           </Button>

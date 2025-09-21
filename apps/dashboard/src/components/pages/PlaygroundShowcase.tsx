@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { Box, Container, Typography, Grid, Card, Button, Fab } from '@mui/material';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import Button from '@mui/material/Button';
+import Fab from '@mui/material/Fab';
 import { styled, keyframes } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
@@ -98,7 +104,7 @@ const FloatingCard = styled(Card)<{ delay?: number }>(({ delay = 0 }) => ({
   },
 }));
 
-const PlaygroundShowcase: React.FC = () => {
+const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
   const [selectedMetric, setSelectedMetric] = useState<number | null>(null);
 
   // Sample data for components
@@ -232,7 +238,7 @@ const PlaygroundShowcase: React.FC = () => {
                 >
                   <Roblox3DMetricCard
                     {...metric}
-                    onClick={() => setSelectedMetric(index)}
+                    onClick={(e: React.MouseEvent) => () => setSelectedMetric(index)}
                     tooltip={`Click for more details about ${metric.title}`}
                   />
                 </motion.div>

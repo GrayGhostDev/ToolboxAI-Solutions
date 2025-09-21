@@ -1,3 +1,4 @@
+import pytest_asyncio
 """
 Comprehensive tests for Roblox plugin pipeline integration
 Tests the complete flow from plugin request to agent execution and response
@@ -64,7 +65,8 @@ class TestPluginCommunicationHub:
         )
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_hub_initialization(self, hub):
+    @pytest.mark.asyncio
+async def test_hub_initialization(self, hub):
         """Test hub initializes correctly"""
         await hub.initialize()
         
@@ -75,7 +77,8 @@ class TestPluginCommunicationHub:
         assert len(hub.active_requests) == 0
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_handle_content_generation_request(self, hub, sample_request):
+    @pytest.mark.asyncio
+async def test_handle_content_generation_request(self, hub, sample_request):
         """Test handling content generation request"""
         await hub.initialize()
         
@@ -106,7 +109,8 @@ class TestPluginCommunicationHub:
             mock_orchestrate.assert_called_once()
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_handle_quiz_creation_request(self, hub):
+    @pytest.mark.asyncio
+async def test_handle_quiz_creation_request(self, hub):
         """Test handling quiz creation request"""
         await hub.initialize()
         
@@ -142,7 +146,8 @@ class TestPluginCommunicationHub:
             mock_execute.assert_called_once()
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_handle_terrain_generation_request(self, hub):
+    @pytest.mark.asyncio
+async def test_handle_terrain_generation_request(self, hub):
         """Test handling terrain generation request"""
         await hub.initialize()
         
@@ -176,7 +181,8 @@ class TestPluginCommunicationHub:
             assert response.data is not None
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_handle_database_query(self, hub):
+    @pytest.mark.asyncio
+async def test_handle_database_query(self, hub):
         """Test handling database query from plugin"""
         await hub.initialize()
         
@@ -208,7 +214,8 @@ class TestPluginCommunicationHub:
             assert response.content is not None
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_handle_progress_update(self, hub):
+    @pytest.mark.asyncio
+async def test_handle_progress_update(self, hub):
         """Test handling progress update from plugin"""
         await hub.initialize()
         
@@ -240,7 +247,8 @@ class TestPluginCommunicationHub:
             mock_progress.assert_called_once()
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_cicd_pipeline_trigger(self, hub):
+    @pytest.mark.asyncio
+async def test_cicd_pipeline_trigger(self, hub):
         """Test CI/CD pipeline triggering"""
         await hub.initialize()
         
@@ -269,7 +277,8 @@ class TestPluginCommunicationHub:
             mock_cicd.assert_called_once()
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_error_handling(self, hub):
+    @pytest.mark.asyncio
+async def test_error_handling(self, hub):
         """Test error handling in plugin requests"""
         await hub.initialize()
         
@@ -288,7 +297,8 @@ class TestPluginCommunicationHub:
             assert "error" in response.data
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_concurrent_requests(self, hub):
+    @pytest.mark.asyncio
+async def test_concurrent_requests(self, hub):
         """Test handling multiple concurrent requests"""
         await hub.initialize()
         
@@ -314,7 +324,8 @@ class TestPluginCommunicationHub:
             assert mock_handle.call_count == 5
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_cleanup(self, hub):
+    @pytest.mark.asyncio
+async def test_cleanup(self, hub):
         """Test cleanup releases resources"""
         await hub.initialize()
         
@@ -366,7 +377,8 @@ class TestSupervisorPluginRouting:
             return supervisor
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_plugin_request_routing(self, supervisor):
+    @pytest.mark.asyncio
+async def test_plugin_request_routing(self, supervisor):
         """Test routing of plugin requests"""
         request = {
             "request_id": "plugin-001",
@@ -392,7 +404,8 @@ class TestSupervisorPluginRouting:
             assert response["request_id"] == "plugin-001"
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_dashboard_request_routing(self, supervisor):
+    @pytest.mark.asyncio
+async def test_dashboard_request_routing(self, supervisor):
         """Test routing of dashboard requests"""
         request = {
             "request_type": "lesson_creation",
@@ -411,7 +424,8 @@ class TestSupervisorPluginRouting:
             assert response["request_type"] == "lesson_creation"
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_cicd_request_routing(self, supervisor):
+    @pytest.mark.asyncio
+async def test_cicd_request_routing(self, supervisor):
         """Test routing of CI/CD pipeline requests"""
         request = {
             "stage": "generate",
@@ -519,7 +533,8 @@ class TestDatabaseIntegration:
         yield session
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_store_generated_content(self, db_session):
+    @pytest.mark.asyncio
+async def test_store_generated_content(self, db_session):
         """Test storing generated content - mocked"""
         from unittest.mock import MagicMock
         from core.database.roblox_models import RobloxDatabaseHelper
@@ -555,7 +570,8 @@ class TestDatabaseIntegration:
         assert content.generated_by == "terrain_agent"
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_get_content_for_lesson(self, db_session):
+    @pytest.mark.asyncio
+async def test_get_content_for_lesson(self, db_session):
         """Test retrieving content for a lesson - mocked"""
         from unittest.mock import MagicMock
         from core.database.roblox_models import RobloxDatabaseHelper
@@ -602,7 +618,8 @@ class TestDatabaseIntegration:
         assert any(c.content_type == "script" for c in contents)
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_track_student_progress(self, db_session):
+    @pytest.mark.asyncio
+async def test_track_student_progress(self, db_session):
         """Test tracking student progress - mocked"""
         from unittest.mock import MagicMock
         from core.database.roblox_models import RobloxDatabaseHelper
@@ -652,7 +669,8 @@ class TestDatabaseIntegration:
         assert progress.time_spent == 500  # Accumulated
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_create_session(self, db_session):
+    @pytest.mark.asyncio
+async def test_create_session(self, db_session):
         """Test creating a Roblox session - mocked"""
         from unittest.mock import MagicMock
         from core.database.roblox_models import RobloxDatabaseHelper
@@ -690,7 +708,8 @@ class TestEndToEndPluginFlow:
     """Test complete end-to-end plugin communication flow"""
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_complete_content_generation_flow(self):
+    @pytest.mark.asyncio
+async def test_complete_content_generation_flow(self):
         """Test complete flow from plugin request to content delivery"""
         # 1. Plugin sends request
         plugin_request = {
@@ -758,7 +777,8 @@ class TestEndToEndPluginFlow:
             assert call_args["config"]["subject"] == "Science"
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_complete_dashboard_sync_flow(self):
+    @pytest.mark.asyncio
+async def test_complete_dashboard_sync_flow(self):
         """Test complete dashboard synchronization flow"""
         # 1. Dashboard requests sync
         sync_request = {

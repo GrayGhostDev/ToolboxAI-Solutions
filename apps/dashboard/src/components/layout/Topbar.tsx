@@ -87,7 +87,7 @@ export default function Topbar() {
       <Toolbar sx={{ gap: 2 }}>
         <IconButton
           aria-label="Toggle navigation"
-          onClick={() => dispatch(toggleSidebar())}
+          onClick={(e: React.MouseEvent) => () => dispatch(toggleSidebar())}
           edge="start"
           sx={{ color: theme === "dark" ? "white" : "#1a1a2e" }}
         >
@@ -164,7 +164,7 @@ export default function Topbar() {
         {/* Theme Toggle */}
         <Tooltip title="Toggle theme">
           <IconButton
-            onClick={() => dispatch(setTheme(theme === "light" ? "dark" : "light"))}
+            onClick={(e: React.MouseEvent) => () => dispatch(setTheme(theme === "light" ? "dark" : "light"))}
             aria-label="Toggle theme"
             sx={{ color: theme === "dark" ? "white" : "#1a1a2e" }}
           >
@@ -176,7 +176,7 @@ export default function Topbar() {
         <Tooltip title="Notifications">
           <IconButton
             aria-label="Notifications"
-            onClick={handleNotificationOpen}
+            onClick={(e: React.MouseEvent) => handleNotificationOpen}
             sx={{ color: theme === "dark" ? "white" : "#1a1a2e" }}
           >
             <Badge badgeContent={notifications.length} color="error">
@@ -187,7 +187,7 @@ export default function Topbar() {
 
         {/* Profile Menu */}
         <Tooltip title="Profile menu">
-          <IconButton onClick={handleProfileMenuOpen} sx={{ p: 0.5 }}>
+          <IconButton onClick={(e: React.MouseEvent) => handleProfileMenuOpen} sx={{ p: 0.5 }}>
             {avatarUrl ? (
               <Avatar src={avatarUrl} alt={displayName || "User"} sx={{ width: 32, height: 32 }} />
             ) : (
@@ -209,11 +209,11 @@ export default function Topbar() {
               {displayName || "Guest User"}
             </Typography>
           </MenuItem>
-          <MenuItem onClick={handleSettings}>
+          <MenuItem onClick={(e: React.MouseEvent) => handleSettings}>
             <SettingsIcon fontSize="small" sx={{ mr: 1 }} />
             Settings
           </MenuItem>
-          <MenuItem onClick={handleSignOut}>
+          <MenuItem onClick={(e: React.MouseEvent) => handleSignOut}>
             <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
             Sign Out
           </MenuItem>
@@ -238,7 +238,7 @@ export default function Topbar() {
             </MenuItem>
           ) : (
             notifications.map((notif) => (
-              <MenuItem key={notif?.id || Math.random()} onClick={handleNotificationClose}>
+              <MenuItem key={notif?.id || Math.random()} onClick={(e: React.MouseEvent) => handleNotificationClose}>
                 <Typography variant="body2">{notif?.message}</Typography>
               </MenuItem>
             ))

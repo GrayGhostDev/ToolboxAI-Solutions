@@ -26,7 +26,7 @@ export interface LoadingComponentProps {
 }
 
 // Default loading component
-const DefaultLoadingComponent: React.FC<LoadingComponentProps> = ({
+const DefaultLoadingComponent: React.FunctionComponent<LoadingComponentProps> = ({
   loadingText = 'Loading...',
   spinnerSize = 'md',
   spinnerVariant = 'circular'
@@ -57,7 +57,7 @@ const DefaultLoadingComponent: React.FC<LoadingComponentProps> = ({
 );
 
 // Overlay loading component
-const OverlayLoadingComponent: React.FC<LoadingComponentProps> = ({
+const OverlayLoadingComponent: React.FunctionComponent<LoadingComponentProps> = ({
   loadingText = 'Loading...',
   spinnerSize = 'lg',
   spinnerVariant = 'circular'
@@ -118,8 +118,7 @@ const withLoading = <P extends object>(
   WrappedComponent: React.ComponentType<P>,
   defaultOptions: WithLoadingProps = {}
 ) => {
-  const ComponentWithLoading = React.forwardRef<any, P & WithLoadingProps>(
-    (props, ref) => {
+  const ComponentWithLoading = ({ ...props, ref }) => {
       const {
         loading = false,
         loadingText,

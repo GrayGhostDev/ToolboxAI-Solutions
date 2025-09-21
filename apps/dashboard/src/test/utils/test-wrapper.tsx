@@ -58,7 +58,7 @@ interface TestWrapperProps {
   initialState?: any;
 }
 
-export const TestWrapper: React.FC<TestWrapperProps> = ({ children, initialState = {} }) => {
+export const TestWrapper: React.FunctionComponent<TestWrapperProps> = ({ children, initialState = {} }) => {
   const store = createTestStore(initialState);
 
   return (

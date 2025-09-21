@@ -1,3 +1,4 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """
 Test script for DependencySecurityAgent
@@ -14,6 +15,7 @@ sys.path.insert(0, str(project_root))
 from core.agents.github_agents import DependencySecurityAgent
 
 
+@pytest.mark.asyncio
 async def test_dependency_security_agent():
     """Test the DependencySecurityAgent functionality."""
     print("🔍 Testing DependencySecurityAgent...")

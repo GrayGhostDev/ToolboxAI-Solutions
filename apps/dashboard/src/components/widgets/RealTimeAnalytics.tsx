@@ -1,21 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  Grid,
-  Typography,
-  Box,
-  LinearProgress,
-  Chip,
-  Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Paper,
-  Divider,
-} from '@mui/material';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import LinearProgress from '@mui/material/LinearProgress';
+import Chip from '@mui/material/Chip';
+import Avatar from '@mui/material/Avatar';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import ListItemText from '@mui/material/ListItemText';
+import Paper from '@mui/material/Paper';
+import Divider from '@mui/material/Divider';
+
 import {
   TrendingUp,
   TrendingDown,
@@ -26,7 +25,7 @@ import {
   Schedule,
   EmojiEvents,
 } from '@mui/icons-material';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { Line, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -42,7 +41,6 @@ import {
 } from 'chart.js';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import useRealTimeData from '../../hooks/useRealTimeData';
-
 // Register ChartJS components
 ChartJS.register(
   CategoryScale,
@@ -56,7 +54,6 @@ ChartJS.register(
   Legend,
   Filler
 );
-
 interface MetricCardProps {
   title: string;
   value: string | number;
@@ -64,8 +61,7 @@ interface MetricCardProps {
   icon: React.ReactNode;
   color: string;
 }
-
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon, color }) => {
+const MetricCard: React.FunctionComponent<MetricCardProps> = ({ title, value, change, icon, color }) => {
   return (
     <Card sx={{ height: '100%', position: 'relative', overflow: 'visible' }}>
       <CardContent>
@@ -102,13 +98,11 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon, col
     </Card>
   );
 };
-
-const RealTimeAnalytics: React.FC = () => {
+const RealTimeAnalytics: React.FunctionComponent<Record<string, any>> = () => {
   const { isConnected } = useWebSocketContext();
   const { data: analyticsData, loading } = useRealTimeData<any | Record<string, any>>('analytics', {
     refreshInterval: 5000,
   });
-
   // State for real-time metrics
   const [metrics, setMetrics] = useState({
     activeUsers: 0,
@@ -116,7 +110,6 @@ const RealTimeAnalytics: React.FC = () => {
     averageScore: 0,
     engagementRate: 0,
   });
-
   const [activityData, setActivityData] = useState<any>({
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     datasets: [
@@ -130,7 +123,6 @@ const RealTimeAnalytics: React.FC = () => {
       },
     ],
   });
-
   const [performanceData, setPerformanceData] = useState<any>({
     labels: ['Math', 'Science', 'English', 'History', 'Art'],
     datasets: [
@@ -147,7 +139,6 @@ const RealTimeAnalytics: React.FC = () => {
       },
     ],
   });
-
   const [recentActivities] = useState([
     {
       id: 1,
@@ -178,7 +169,6 @@ const RealTimeAnalytics: React.FC = () => {
       time: '15 minutes ago',
     },
   ]);
-
   // Update metrics when analytics data changes
   useEffect(() => {
     if (analyticsData && typeof analyticsData === 'object' && !Array.isArray(analyticsData)) {
@@ -189,7 +179,6 @@ const RealTimeAnalytics: React.FC = () => {
         averageScore: anyData.averageScore || Math.floor(Math.random() * 20) + 75,
         engagementRate: anyData.engagementRate || Math.floor(Math.random() * 30) + 65,
       });
-
       // Update charts if new data available
       if (anyData.activityChart) {
         setActivityData(anyData.activityChart);
@@ -199,7 +188,6 @@ const RealTimeAnalytics: React.FC = () => {
       }
     }
   }, [analyticsData]);
-
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -215,7 +203,6 @@ const RealTimeAnalytics: React.FC = () => {
       },
     },
   };
-
   const doughnutOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -225,15 +212,12 @@ const RealTimeAnalytics: React.FC = () => {
       },
     },
   };
-
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
       <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
         Real-Time Analytics Dashboard
       </Typography>
-
       {loading && <LinearProgress sx={{ mb: 2 }} />}
-
       {/* Connection Status */}
       <Box sx={{ mb: 2 }}>
         <Chip
@@ -251,7 +235,6 @@ const RealTimeAnalytics: React.FC = () => {
           />
         )}
       </Box>
-
       {/* Metric Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
@@ -291,7 +274,6 @@ const RealTimeAnalytics: React.FC = () => {
           />
         </Grid>
       </Grid>
-
       {/* Charts Row */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={8}>
@@ -315,7 +297,6 @@ const RealTimeAnalytics: React.FC = () => {
           </Card>
         </Grid>
       </Grid>
-
       {/* Recent Activities */}
       <Grid container spacing={3}>
         <Grid item xs={12}>
@@ -370,5 +351,4 @@ const RealTimeAnalytics: React.FC = () => {
     </Box>
   );
 };
-
 export default RealTimeAnalytics;

@@ -109,7 +109,7 @@ interface WebSocketProviderProps {
 /**
  * WebSocket Provider Component
  */
-export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
+export const WebSocketProvider: React.FunctionComponent<WebSocketProviderProps> = ({
   children,
   url = WS_URL,
   autoConnect = true,

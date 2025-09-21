@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 import sys
 from pathlib import Path
 
@@ -25,6 +40,7 @@ from apps.backend.core.security.rate_limit_manager import (
 
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_socketio_rbac_blocks_teacher_event_for_student(monkeypatch):
     # Save originals
     original_roles = dict(getattr(settings, "SIO_RBAC_REQUIRED_ROLES", {}))
@@ -64,6 +80,7 @@ async def test_socketio_rbac_blocks_teacher_event_for_student(monkeypatch):
 
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_socketio_rate_limit_enforced_for_ping(monkeypatch):
     # Configure tight rate limit
     original_limit = getattr(settings, "SIO_RATE_LIMIT_PER_MINUTE", 100)

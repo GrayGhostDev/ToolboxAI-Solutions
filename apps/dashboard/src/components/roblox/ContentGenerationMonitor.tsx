@@ -4,34 +4,32 @@
  * Real-time monitoring of AI content generation pipeline
  * Shows progress for each agent and overall generation status
  */
-
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  LinearProgress,
-  Grid,
-  Paper,
-  Chip,
-  IconButton,
-  Button,
-  Alert,
-  AlertTitle,
-  Collapse,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
-  CircularProgress,
-  Tooltip,
-  Badge,
-  Stack,
-  useTheme,
-  alpha
-} from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import LinearProgress from '@mui/material/LinearProgress';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Collapse from '@mui/material/Collapse';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Divider from '@mui/material/Divider';
+import CircularProgress from '@mui/material/CircularProgress';
+import Tooltip from '@mui/material/Tooltip';
+import Badge from '@mui/material/Badge';
+import Stack from '@mui/material/Stack';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import {
   PlayArrow,
   Pause,
@@ -64,7 +62,6 @@ import {
   WebSocketMessageType,
   WebSocketChannel
 } from '../../types/websocket';
-
 interface AgentStatus {
   id: string;
   name: string;
@@ -82,7 +79,6 @@ interface AgentStatus {
     memoryUsage?: number;
   };
 }
-
 interface GenerationSession {
   id: string;
   status: 'initializing' | 'processing' | 'reviewing' | 'completed' | 'failed' | 'cancelled';
@@ -105,7 +101,6 @@ interface GenerationSession {
   errors: string[];
   warnings: string[];
 }
-
 const getAgentIcon = (type: AgentStatus['type']) => {
   switch (type) {
     case 'supervisor': return <Psychology />;
@@ -117,7 +112,6 @@ const getAgentIcon = (type: AgentStatus['type']) => {
     default: return <Settings />;
   }
 };
-
 const getStatusColor = (status: AgentStatus['status']) => {
   switch (status) {
     case 'idle': return 'default';
@@ -128,8 +122,7 @@ const getStatusColor = (status: AgentStatus['status']) => {
     default: return 'default';
   }
 };
-
-export const ContentGenerationMonitor: React.FC = () => {
+export const ContentGenerationMonitor: React.FunctionComponent<Record<string, any>> = () => {
   const theme = useTheme();
   const { on, sendMessage, isConnected } = useWebSocketContext();
   const [session, setSession] = useState<GenerationSession | null>(null);
@@ -137,7 +130,6 @@ export const ContentGenerationMonitor: React.FC = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
   const [logs, setLogs] = useState<Array<{ time: Date; message: string; level: 'info' | 'warning' | 'error' }>>([]);
-
   // Initialize agent statuses
   const initializeAgents = (): AgentStatus[] => [
     { id: 'supervisor', name: 'Supervisor Agent', type: 'supervisor', status: 'idle', progress: 0 },
@@ -147,34 +139,27 @@ export const ContentGenerationMonitor: React.FC = () => {
     { id: 'script', name: 'Script Agent', type: 'script', status: 'idle', progress: 0 },
     { id: 'review', name: 'Review Agent', type: 'review', status: 'idle', progress: 0 }
   ];
-
   // WebSocket event handlers
   useEffect(() => {
     if (!isConnected) return;
-
     const unsubscribeProgress = on(WebSocketMessageType.CONTENT_PROGRESS, (data: ContentGenerationProgress) => {
       handleProgressUpdate(data);
     });
-
     const unsubscribeComplete = on(WebSocketMessageType.CONTENT_COMPLETE, (data: any) => {
       handleGenerationComplete(data);
     });
-
     const unsubscribeError = on(WebSocketMessageType.CONTENT_ERROR, (data: any) => {
       handleGenerationError(data);
     });
-
     return () => {
       unsubscribeProgress();
       unsubscribeComplete();
       unsubscribeError();
     };
   }, [isConnected]);
-
 const handleProgressUpdate = (prog: ContentGenerationProgress) => {
     setSession(prev => {
       if (!prev) return null;
-
       const updatedAgents = prev.agents.map(agent => {
         if (agent.id === prog.agentId) {
           return {
@@ -187,11 +172,8 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
         }
         return agent;
       });
-
       const totalProgress = updatedAgents.reduce((sum, agent) => sum + (agent.progress ?? 0), 0) / updatedAgents.length;
-
       addLog(`${prog.agentId}: ${prog.currentTask} (${prog.progress ?? 0}%)`, 'info');
-
       return {
         ...prev,
         agents: updatedAgents,
@@ -200,13 +182,10 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
       };
     });
   };
-
   const handleGenerationComplete = (data: any) => {
     setSession(prev => {
       if (!prev) return null;
-
       addLog('Content generation completed successfully!', 'info');
-
       return {
         ...prev,
         status: 'completed',
@@ -222,13 +201,10 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
       };
     });
   };
-
   const handleGenerationError = (data: any) => {
     setSession(prev => {
       if (!prev) return null;
-
       addLog(`Error: ${data.error}`, 'error');
-
       return {
         ...prev,
         status: 'failed',
@@ -246,11 +222,9 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
       };
     });
   };
-
   const addLog = (message: string, level: 'info' | 'warning' | 'error') => {
     setLogs(prev => [...prev, { time: new Date(), message, level }]);
   };
-
   const startGeneration = (request: GenerationSession['request']) => {
     const newSession: GenerationSession = {
       id: `gen_${Date.now()}`,
@@ -262,11 +236,9 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
       errors: [],
       warnings: []
     };
-
     setSession(newSession);
     setLogs([]);
     addLog('Starting content generation...', 'info');
-
     // Send generation request via WebSocket
     sendMessage(WebSocketMessageType.CONTENT_REQUEST, {
       sessionId: newSession.id,
@@ -275,14 +247,11 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
       channel: WebSocketChannel.CONTENT_UPDATES
     });
   };
-
   const cancelGeneration = () => {
     if (!session) return;
-
     sendMessage(WebSocketMessageType.CONTENT_CANCEL, {
       sessionId: session.id
     });
-
     setSession(prev => {
       if (!prev) return null;
       return {
@@ -295,10 +264,8 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
         }))
       };
     });
-
     addLog('Generation cancelled by user', 'warning');
   };
-
   const toggleAgentExpansion = (agentId: string) => {
     setExpandedAgents(prev => {
       const newSet = new Set(prev);
@@ -310,20 +277,16 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
       return newSet;
     });
   };
-
   const formatTime = (ms: number) => {
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
-
     if (hours > 0) return `${hours}h ${minutes % 60}m`;
     if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
     return `${seconds}s`;
   };
-
   const downloadOutput = () => {
     if (!session?.output) return;
-
     const blob = new Blob([JSON.stringify(session.output, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -332,7 +295,6 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
     a.click();
     URL.revokeObjectURL(url);
   };
-
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* Header */}
@@ -348,7 +310,6 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
                 </Typography>
               </Box>
             </Box>
-            
             <Stack direction="row" spacing={1}>
               <Chip
                 label={isConnected ? 'Connected' : 'Disconnected'}
@@ -366,7 +327,6 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
           </Box>
         </CardContent>
       </Card>
-
       {/* Session Overview */}
       {session && (
         <Card>
@@ -390,7 +350,6 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
                     </Typography>
                   </Box>
                 </Box>
-
                 <Grid container spacing={1}>
                   <Grid item xs={6} sm={3}>
                     <Typography variant="caption" color="text.secondary">Subject</Typography>
@@ -415,7 +374,6 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
                   </Grid>
                 </Grid>
               </Grid>
-
               <Grid item xs={12} md={4}>
                 <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                   {session.status === 'processing' && (
@@ -434,7 +392,7 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
                         color="error"
                         startIcon={<Cancel />}
                         size="small"
-                        onClick={cancelGeneration}
+                        onClick={(e: React.MouseEvent) => cancelGeneration}
                       >
                         Cancel
                       </Button>
@@ -446,7 +404,7 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
                         variant="outlined"
                         startIcon={<Download />}
                         size="small"
-                        onClick={downloadOutput}
+                        onClick={(e: React.MouseEvent) => downloadOutput}
                       >
                         Download
                       </Button>
@@ -454,7 +412,7 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
                         variant="outlined"
                         startIcon={<Preview />}
                         size="small"
-                        onClick={() => setShowPreview(!showPreview)}
+                        onClick={(e: React.MouseEvent) => () => setShowPreview(!showPreview)}
                       >
                         Preview
                       </Button>
@@ -464,7 +422,7 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
                     variant="outlined"
                     startIcon={<Refresh />}
                     size="small"
-                    onClick={() => setSession(null)}
+                    onClick={(e: React.MouseEvent) => () => setSession(null)}
                   >
                     Reset
                   </Button>
@@ -474,7 +432,6 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
           </CardContent>
         </Card>
       )}
-
       {/* Agent Status Grid */}
       {session && (
         <Grid container spacing={2} sx={{ flex: 1, overflow: 'auto' }}>
@@ -509,7 +466,6 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
                         {agent.name}
                       </Typography>
                     </Box>
-                    
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Chip
                         label={agent.status}
@@ -518,13 +474,12 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
                       />
                       <IconButton
                         size="small"
-                        onClick={() => toggleAgentExpansion(agent.id)}
+                        onClick={(e: React.MouseEvent) => () => toggleAgentExpansion(agent.id)}
                       >
                         {expandedAgents.has(agent.id) ? <ExpandLess /> : <ExpandMore />}
                       </IconButton>
                     </Box>
                   </Box>
-
                   <Box sx={{ mb: 1 }}>
                     <LinearProgress
                       variant="determinate"
@@ -540,7 +495,6 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
                       </Typography>
                     </Box>
                   </Box>
-
                   <Collapse in={expandedAgents.has(agent.id)}>
                     <Divider sx={{ my: 1 }} />
                     <Grid container spacing={1}>
@@ -591,7 +545,6 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
           ))}
         </Grid>
       )}
-
       {/* Activity Log */}
       {session && logs.length > 0 && (
         <Card sx={{ maxHeight: 200, overflow: 'auto' }}>
@@ -629,7 +582,6 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
           </CardContent>
         </Card>
       )}
-
       {/* Empty State */}
       {!session && (
         <Box
@@ -654,6 +606,6 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
     </Box>
   );
 };
-
 // Add missing import
-import { Switch, FormControlLabel } from '@mui/material';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';

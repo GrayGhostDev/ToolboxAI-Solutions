@@ -1,3 +1,4 @@
+import pytest_asyncio
 """
 Test Password Security and Session Invalidation
 
@@ -184,7 +185,8 @@ class TestSessionInvalidation:
         logger.logger.info(f"✅ Session limit enforced at {max_sessions} sessions")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_password_change_integration(self):
+    @pytest.mark.asyncio
+async def test_password_change_integration(self):
         """Test full password change flow with session invalidation"""
         logger.logger.info("Testing complete password change integration")
         

@@ -10,9 +10,9 @@ from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 from datetime import datetime
 
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from langchain.chains import LLMChain
-from langchain.schema import Document
+from langchain_core.messages import Document
 from langchain.tools import Tool
 
 from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
@@ -241,7 +241,7 @@ class RobloxContentGenerationAgent(BaseAgent):
         )
 
         if self.llm:
-            chain = LLMChain(llm=self.llm, prompt=prompt)
+            chain = LLMChain(llm=self.llm, prompt=prompt, verbose=False, output_key="output")
             result = await chain.arun(
                 subject=request.subject,
                 grade_level=request.grade_level,

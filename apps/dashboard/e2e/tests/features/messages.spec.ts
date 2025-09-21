@@ -1,5 +1,7 @@
+jest.setTimeout(10000);
+
 import { test, expect } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import { Page } from '@playwright/test';
 
 /**
  * Messages System E2E Tests

@@ -315,7 +315,7 @@ async def generate_enhanced_content(
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     pipeline: EnhancedContentPipeline = Depends(get_pipeline_orchestrator),
-    _: None = Depends(rate_limit(calls=10, period=60))  # 10 calls per minute
+    _: None = Depends(rate_limit(max_requests=10, window_seconds=60))  # 10 calls per minute
 ) -> ContentGenerationResponse:
     """
     Initiate enhanced content generation using the 5-stage pipeline.
@@ -520,7 +520,7 @@ async def validate_content(
     request: ContentValidationRequest,
     current_user: User = Depends(get_current_user),
     validator: ContentQualityValidator = Depends(get_quality_validator),
-    _: None = Depends(rate_limit(calls=20, period=60))  # 20 validations per minute
+    _: None = Depends(rate_limit(max_requests=20, window_seconds=60))  # 20 validations per minute
 ) -> ContentValidationResponse:
     """
     Validate existing content for quality, safety, and compliance.
@@ -656,7 +656,7 @@ async def get_content_history(
 async def apply_personalization(
     request: PersonalizationRequest,
     current_user: User = Depends(get_current_user),
-    _: None = Depends(rate_limit(calls=15, period=60))  # 15 personalizations per minute
+    _: None = Depends(rate_limit(max_requests=15, window_seconds=60))  # 15 personalizations per minute
 ) -> Dict[str, Any]:
     """
     Apply personalization to existing content based on user profile.

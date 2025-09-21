@@ -1,4 +1,25 @@
 import * as React from "react";
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+
 import { useState } from "react";
 import {
   listSchools,
@@ -10,28 +31,6 @@ import {
   type SchoolCreate,
 } from "../../../services/api";
 import { useRealTimeData } from "../../../hooks/useRealTimeData";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  IconButton,
-  Stack,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from "@mui/material";
 import { Add, Edit, Delete, School } from "@mui/icons-material";
 
 interface SchoolFormData {
@@ -156,7 +155,7 @@ export default function Schools() {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={handleAdd}
+          onClick={(e: React.MouseEvent) => handleAdd}
         >
           Add School
         </Button>
@@ -218,14 +217,14 @@ export default function Schools() {
                       <TableCell>{school.createdAt}</TableCell>
                       <TableCell>
                         <IconButton 
-                          onClick={() => handleEdit(school)} 
+                          onClick={(e: React.MouseEvent) => () => handleEdit(school)} 
                           size="small"
                           disabled={loading}
                         >
                           <Edit />
                         </IconButton>
                         <IconButton 
-                          onClick={() => handleDelete(school.id)} 
+                          onClick={(e: React.MouseEvent) => () => handleDelete(school.id)} 
                           size="small"
                           color="error"
                           disabled={loading}
@@ -343,14 +342,14 @@ export default function Schools() {
         </DialogContent>
         <DialogActions>
           <Button 
-            onClick={() => setOpenDialog(false)}
+            onClick={(e: React.MouseEvent) => () => setOpenDialog(false)}
             disabled={loading}
           >
             Cancel
           </Button>
           <Button 
             variant="contained" 
-            onClick={handleSave}
+            onClick={(e: React.MouseEvent) => handleSave}
             disabled={loading || !formData.name || !formData.address || !formData.city || !formData.state || !formData.zip_code}
           >
             {loading ? "Saving..." : (editingSchool ? "Update" : "Create")}

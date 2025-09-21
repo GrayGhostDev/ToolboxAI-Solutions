@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/errors/__init__.py
+# hypothesis_version: 6.139.2
+
+['AppValidationError', 'ApplicationError', 'AuthenticationError', 'AuthorizationError', 'ConfigurationError', 'ConflictError', 'DatabaseError', 'ErrorAggregator', 'ErrorCategory', 'ErrorContext', 'ErrorDetail', 'ErrorHandler', 'ErrorLevel', 'ErrorMetrics', 'ErrorResponse', 'ErrorSeverity', 'ExternalServiceError', 'NotFoundError', 'RateLimitError', 'ValidationError', 'get_error_handler']

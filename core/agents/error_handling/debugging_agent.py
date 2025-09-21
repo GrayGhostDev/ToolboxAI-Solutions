@@ -808,3 +808,90 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
 
         # Combine metrics
         return {**base_metrics, **debug_metrics}
+
+    async def _process_task(self, state) -> Any:
+        """
+        Process debugging task.
+
+        Args:
+            state: Agent state containing task information
+
+        Returns:
+            Task processing result
+        """
+        try:
+            task = state.get("task", {})
+            task_type = task.get("type", "debug_error")
+
+            if task_type == "debug_error":
+                error = task.get("error", {})
+                session_id = task.get("session_id", f"debug_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+
+                # Convert dict error to ErrorState format if needed
+                if isinstance(error, dict):
+                    # Ensure error has required fields
+                    if "error_type" not in error:
+                        error["error_type"] = ErrorType.RUNTIME
+                    if "priority" not in error:
+                        error["priority"] = ErrorPriority.MEDIUM
+                    if "timestamp" not in error:
+                        error["timestamp"] = datetime.now().isoformat()
+
+                # Start debugging session
+                result = await self.debug_error(error, session_id)
+
+                return {
+                    "status": "completed",
+                    "result": result,
+                    "session_id": session_id,
+                    "debug_complexity": result.complexity_score if result else 0.0
+                }
+
+            elif task_type == "analyze_stack_trace":
+                stack_trace = task.get("stack_trace", "")
+                context = task.get("context", {})
+
+                analysis = await self.analyze_stack_trace(stack_trace, context)
+
+                return {
+                    "status": "completed",
+                    "result": analysis,
+                    "root_cause_identified": analysis.root_cause if analysis else None
+                }
+
+            elif task_type == "get_session_status":
+                session_id = task.get("session_id")
+                if session_id and session_id in self.debug_sessions:
+                    session = self.debug_sessions[session_id]
+                    return {
+                        "status": "completed",
+                        "result": session
+                    }
+                else:
+                    return {
+                        "status": "error",
+                        "error": f"Session {session_id} not found",
+                        "result": None
+                    }
+
+            elif task_type == "get_metrics":
+                metrics = await self.get_performance_metrics()
+                return {
+                    "status": "completed",
+                    "result": metrics
+                }
+
+            else:
+                return {
+                    "status": "error",
+                    "error": f"Unknown task type: {task_type}",
+                    "result": None
+                }
+
+        except Exception as e:
+            logger.error(f"Error processing debugging task: {e}")
+            return {
+                "status": "error",
+                "error": str(e),
+                "result": None
+            }

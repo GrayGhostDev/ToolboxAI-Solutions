@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 import sys
 from pathlib import Path
 
@@ -31,6 +46,7 @@ from apps.backend.core.security.rate_limit_manager import RateLimitMode
 
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_rbac_override_via_settings():
     # Override RBAC so that user_message requires teacher
     original = dict(getattr(settings, "WS_RBAC_REQUIRED_ROLES", {}))
@@ -56,6 +72,7 @@ async def test_rbac_override_via_settings():
 
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_ws_rate_limit_override(monkeypatch):
     # Set WS rate limit to 1 for quick test
     original_ws = getattr(settings, "WS_RATE_LIMIT_PER_MINUTE", 100)

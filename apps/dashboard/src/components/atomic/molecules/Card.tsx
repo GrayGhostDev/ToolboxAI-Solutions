@@ -6,7 +6,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { styled } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { AtomicBox, AtomicText } from '../atoms';
 import type { BoxProps } from '../atoms/Box';
 import { designTokens } from '../../../theme/designTokens';

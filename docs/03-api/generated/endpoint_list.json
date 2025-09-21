@@ -1,0 +1,2316 @@
+{
+  "total": 385,
+  "generated_at": "2025-09-21T06:26:29.391396",
+  "endpoints": [
+    {
+      "method": "POST",
+      "path": "/pusher/auth",
+      "function": "get_field_path",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/realtime/trigger",
+      "function": "get_field_path",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/pusher/webhook",
+      "function": "get_field_path",
+      "file": "main.py"
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/health",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/metrics",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/ws/status",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/pusher/status",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/pusher/trigger",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/sentry/status",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/info",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/content/generate",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/content/{content_id}",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/endpoint/that/errors",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/sentry-debug",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/test/rate-limit",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/roblox/deploy/{content_id}",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/roblox/download/{content_id}",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/ai-chat/conversations",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/ai-chat/conversations/{conversation_id}/messages",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/ai-chat/generate",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/analytics/summary",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/reports/generate",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/reports/download/{report_id}",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/users",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/users",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/admin/users/{user_id}",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/admin/users/{user_id}",
+      "function": "generate_csv_content",
+      "file": "main.py"
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/auth/login",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/refresh",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/token",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/ws/rbac",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/ws/rbac",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/ws/rbac",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/status",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/users/me",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/dashboard/overview",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/analytics/weekly_xp",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/analytics/subject_mastery",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/auth/verify",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/verify",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/terminal/verification",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/generate_content",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/generate_quiz",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/generate_terrain_original",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/lms/courses",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/lms/course/{course_id}",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/plugin/register",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/plugin/message",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/status",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/broadcast",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/agents/health",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/user/profile",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/user/profile",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/sync",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/register_plugin",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/plugin/{plugin_id}/heartbeat",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/plugin/{plugin_id}",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/plugins",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/generate_simple_content",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/generate_terrain",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/script/{script_type}",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/status",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/config",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/config",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "POST",
+      "path": "/cache/clear",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/api/versions",
+      "function": "unknown",
+      "file": "main.py"
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "function": "unknown",
+      "file": "api/health.py"
+    },
+    {
+      "method": "GET",
+      "path": "/ready",
+      "function": "unknown",
+      "file": "api/health.py"
+    },
+    {
+      "method": "GET",
+      "path": "/live",
+      "function": "unknown",
+      "file": "api/health.py"
+    },
+    {
+      "method": "GET",
+      "path": "/metrics",
+      "function": "unknown",
+      "file": "api/health.py"
+    },
+    {
+      "method": "GET",
+      "path": "/environments",
+      "function": "unknown",
+      "file": "api/v1/roblox_environments.py"
+    },
+    {
+      "method": "POST",
+      "path": "/environments",
+      "function": "unknown",
+      "file": "api/v1/roblox_environments.py"
+    },
+    {
+      "method": "POST",
+      "path": "/environments/{environment_id}/generate",
+      "function": "unknown",
+      "file": "api/v1/roblox_environments.py"
+    },
+    {
+      "method": "POST",
+      "path": "/environments/{environment_id}/deploy",
+      "function": "unknown",
+      "file": "api/v1/roblox_environments.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/environments/{environment_id}",
+      "function": "unknown",
+      "file": "api/v1/roblox_environments.py"
+    },
+    {
+      "method": "POST",
+      "path": "/login",
+      "function": "unknown",
+      "file": "api/auth/rate_limiter.py"
+    },
+    {
+      "method": "GET",
+      "path": "/health/live",
+      "function": "unknown",
+      "file": "api/health/health_checks.py"
+    },
+    {
+      "method": "GET",
+      "path": "/health/ready",
+      "function": "unknown",
+      "file": "api/health/health_checks.py"
+    },
+    {
+      "method": "POST",
+      "path": "/setup/init",
+      "function": "unknown",
+      "file": "api/routes/mfa_routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/setup/confirm",
+      "function": "unknown",
+      "file": "api/routes/mfa_routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/verify",
+      "function": "unknown",
+      "file": "api/routes/mfa_routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/resend",
+      "function": "unknown",
+      "file": "api/routes/mfa_routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/disable",
+      "function": "unknown",
+      "file": "api/routes/mfa_routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/backup-codes",
+      "function": "unknown",
+      "file": "api/routes/mfa_routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/rollout",
+      "function": "unknown",
+      "file": "api/routes/mfa_routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/enable-role",
+      "function": "unknown",
+      "file": "api/routes/mfa_routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/enable-user",
+      "function": "unknown",
+      "file": "api/routes/mfa_routes.py"
+    },
+    {
+      "method": "GET",
+      "path": "/authorize",
+      "function": "unknown",
+      "file": "api/routes/oauth_routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/authorize/consent",
+      "function": "unknown",
+      "file": "api/routes/oauth_routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/token",
+      "function": "unknown",
+      "file": "api/routes/oauth_routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/introspect",
+      "function": "unknown",
+      "file": "api/routes/oauth_routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/revoke",
+      "function": "unknown",
+      "file": "api/routes/oauth_routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/register",
+      "function": "unknown",
+      "file": "api/routes/oauth_routes.py"
+    },
+    {
+      "method": "GET",
+      "path": "/clients",
+      "function": "unknown",
+      "file": "api/routes/oauth_routes.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/clients/{client_id}",
+      "function": "unknown",
+      "file": "api/routes/oauth_routes.py"
+    },
+    {
+      "method": "GET",
+      "path": "/.well-known/jwks.json",
+      "function": "unknown",
+      "file": "api/routes/oauth_routes.py"
+    },
+    {
+      "method": "GET",
+      "path": "/.well-known/oauth-authorization-server",
+      "function": "unknown",
+      "file": "api/routes/oauth_routes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/preview",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_environment.py"
+    },
+    {
+      "method": "POST",
+      "path": "/create",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_environment.py"
+    },
+    {
+      "method": "GET",
+      "path": "/status/{environment_name}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_environment.py"
+    },
+    {
+      "method": "GET",
+      "path": "/rojo/info",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_environment.py"
+    },
+    {
+      "method": "POST",
+      "path": "/rojo/check",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_environment.py"
+    },
+    {
+      "method": "GET",
+      "path": "/list",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_environment.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/{environment_name}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_environment.py"
+    },
+    {
+      "method": "POST",
+      "path": "/refresh",
+      "function": "unknown",
+      "file": "api/v1/endpoints/auth.py"
+    },
+    {
+      "method": "POST",
+      "path": "/logout",
+      "function": "unknown",
+      "file": "api/v1/endpoints/auth.py"
+    },
+    {
+      "method": "POST",
+      "path": "/webhooks",
+      "function": "unknown",
+      "file": "api/v1/endpoints/stripe_webhooks.py"
+    },
+    {
+      "method": "GET",
+      "path": "/webhook-status",
+      "function": "unknown",
+      "file": "api/v1/endpoints/stripe_webhooks.py"
+    },
+    {
+      "method": "GET",
+      "path": "/{lesson_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/lessons.py"
+    },
+    {
+      "method": "POST",
+      "path": "/",
+      "function": "unknown",
+      "file": "api/v1/endpoints/lessons.py"
+    },
+    {
+      "method": "PUT",
+      "path": "/{lesson_id}/progress",
+      "function": "unknown",
+      "file": "api/v1/endpoints/lessons.py"
+    },
+    {
+      "method": "GET",
+      "path": "/{lesson_id}/statistics",
+      "function": "unknown",
+      "file": "api/v1/endpoints/lessons.py"
+    },
+    {
+      "method": "POST",
+      "path": "/webhook",
+      "function": "unknown",
+      "file": "api/v1/endpoints/stripe_webhook.py"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/initiate",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "GET",
+      "path": "/oauth/callback",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/revoke",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/conversation/start",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/conversation/input",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/conversation/advance",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/conversation/generate",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "GET",
+      "path": "/rojo/check",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "GET",
+      "path": "/rojo/projects",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "GET",
+      "path": "/rojo/project/{project_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/rojo/project/{project_id}/start",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/rojo/project/{project_id}/stop",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/rojo/project/{project_id}/build",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/rojo/project/{project_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/assets/upload",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "GET",
+      "path": "/assets/{asset_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/datastore/set",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "GET",
+      "path": "/datastore/get",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/messaging/publish",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/tasks",
+      "function": "unknown",
+      "file": "api/v1/endpoints/ai_agent_orchestration.py"
+    },
+    {
+      "method": "GET",
+      "path": "/tasks",
+      "function": "unknown",
+      "file": "api/v1/endpoints/ai_agent_orchestration.py"
+    },
+    {
+      "method": "GET",
+      "path": "/tasks/{task_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/ai_agent_orchestration.py"
+    },
+    {
+      "method": "GET",
+      "path": "/agents",
+      "function": "unknown",
+      "file": "api/v1/endpoints/ai_agent_orchestration.py"
+    },
+    {
+      "method": "GET",
+      "path": "/agents/{agent_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/ai_agent_orchestration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/workflows",
+      "function": "unknown",
+      "file": "api/v1/endpoints/ai_agent_orchestration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/workflows/{workflow_id}/start",
+      "function": "unknown",
+      "file": "api/v1/endpoints/ai_agent_orchestration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/sparc",
+      "function": "unknown",
+      "file": "api/v1/endpoints/ai_agent_orchestration.py"
+    },
+    {
+      "method": "GET",
+      "path": "/sparc/{sparc_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/ai_agent_orchestration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/swarms",
+      "function": "unknown",
+      "file": "api/v1/endpoints/ai_agent_orchestration.py"
+    },
+    {
+      "method": "GET",
+      "path": "/performance/agents/{agent_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/ai_agent_orchestration.py"
+    },
+    {
+      "method": "GET",
+      "path": "/reports",
+      "function": "unknown",
+      "file": "api/v1/endpoints/compliance.py"
+    },
+    {
+      "method": "POST",
+      "path": "/reports",
+      "function": "unknown",
+      "file": "api/v1/endpoints/compliance.py"
+    },
+    {
+      "method": "GET",
+      "path": "/audit-logs",
+      "function": "unknown",
+      "file": "api/v1/endpoints/compliance.py"
+    },
+    {
+      "method": "POST",
+      "path": "/verify/{category}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/compliance.py"
+    },
+    {
+      "method": "GET",
+      "path": "/requirements/{category}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/compliance.py"
+    },
+    {
+      "method": "POST",
+      "path": "/conversations",
+      "function": "initialize_assistant",
+      "file": "api/v1/endpoints/ai_chat.py"
+    },
+    {
+      "method": "POST",
+      "path": "/conversations/{conversation_id}/messages",
+      "function": "initialize_assistant",
+      "file": "api/v1/endpoints/ai_chat.py"
+    },
+    {
+      "method": "POST",
+      "path": "/generate",
+      "function": "initialize_assistant",
+      "file": "api/v1/endpoints/ai_chat.py"
+    },
+    {
+      "method": "GET",
+      "path": "/conversations/{conversation_id}",
+      "function": "initialize_assistant",
+      "file": "api/v1/endpoints/ai_chat.py"
+    },
+    {
+      "method": "GET",
+      "path": "/conversations",
+      "function": "initialize_assistant",
+      "file": "api/v1/endpoints/ai_chat.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/conversations/{conversation_id}",
+      "function": "initialize_assistant",
+      "file": "api/v1/endpoints/ai_chat.py"
+    },
+    {
+      "method": "GET",
+      "path": "/stats/users",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/activity",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/revenue",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/support/queue",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/metrics",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/compliance/status",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/classes/today",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/progress",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/grades/pending",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/calendar",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/submissions",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/xp",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/assignments/due",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/achievements/recent",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/rank",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/path",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/roblox/worlds",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/children/overview",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/grades/recent",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/events",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/attendance/summary",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/chart",
+      "function": "register_user_routers",
+      "file": "api/v1/endpoints/users.py"
+    },
+    {
+      "method": "POST",
+      "path": "/chat",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_ai.py"
+    },
+    {
+      "method": "POST",
+      "path": "/generate",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_ai.py"
+    },
+    {
+      "method": "GET",
+      "path": "/conversation/{conversation_id}/status",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_ai.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/conversation/{conversation_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_ai.py"
+    },
+    {
+      "method": "POST",
+      "path": "/webhook/pusher",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_ai.py"
+    },
+    {
+      "method": "POST",
+      "path": "/checkout-session",
+      "function": "unknown",
+      "file": "api/v1/endpoints/stripe_checkout.py"
+    },
+    {
+      "method": "GET",
+      "path": "/{content_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/educational_content.py"
+    },
+    {
+      "method": "PUT",
+      "path": "/{content_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/educational_content.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/{content_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/educational_content.py"
+    },
+    {
+      "method": "GET",
+      "path": "/{content_id}/analytics",
+      "function": "unknown",
+      "file": "api/v1/endpoints/educational_content.py"
+    },
+    {
+      "method": "POST",
+      "path": "/{content_id}/publish",
+      "function": "unknown",
+      "file": "api/v1/endpoints/educational_content.py"
+    },
+    {
+      "method": "GET",
+      "path": "/standards/search",
+      "function": "unknown",
+      "file": "api/v1/endpoints/educational_content.py"
+    },
+    {
+      "method": "POST",
+      "path": "/query",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics_reporting.py"
+    },
+    {
+      "method": "GET",
+      "path": "/reports/{report_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics_reporting.py"
+    },
+    {
+      "method": "POST",
+      "path": "/dashboards",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics_reporting.py"
+    },
+    {
+      "method": "GET",
+      "path": "/dashboards",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics_reporting.py"
+    },
+    {
+      "method": "GET",
+      "path": "/dashboards/{dashboard_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics_reporting.py"
+    },
+    {
+      "method": "POST",
+      "path": "/learning-analytics",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics_reporting.py"
+    },
+    {
+      "method": "GET",
+      "path": "/system-health",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics_reporting.py"
+    },
+    {
+      "method": "GET",
+      "path": "/engagement",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics_reporting.py"
+    },
+    {
+      "method": "GET",
+      "path": "/export/{query_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics_reporting.py"
+    },
+    {
+      "method": "POST",
+      "path": "/conversations/start",
+      "function": "unknown",
+      "file": "api/v1/endpoints/prompt_templates.py"
+    },
+    {
+      "method": "POST",
+      "path": "/conversations/process",
+      "function": "unknown",
+      "file": "api/v1/endpoints/prompt_templates.py"
+    },
+    {
+      "method": "POST",
+      "path": "/conversations/{conversation_id}/personalize",
+      "function": "unknown",
+      "file": "api/v1/endpoints/prompt_templates.py"
+    },
+    {
+      "method": "POST",
+      "path": "/conversations/{conversation_id}/enhance-uniqueness",
+      "function": "unknown",
+      "file": "api/v1/endpoints/prompt_templates.py"
+    },
+    {
+      "method": "GET",
+      "path": "/conversations/{conversation_id}/validate",
+      "function": "unknown",
+      "file": "api/v1/endpoints/prompt_templates.py"
+    },
+    {
+      "method": "POST",
+      "path": "/conversations/{conversation_id}/generate-workflow",
+      "function": "unknown",
+      "file": "api/v1/endpoints/prompt_templates.py"
+    },
+    {
+      "method": "GET",
+      "path": "/conversations/{conversation_id}/analytics",
+      "function": "unknown",
+      "file": "api/v1/endpoints/prompt_templates.py"
+    },
+    {
+      "method": "GET",
+      "path": "/conversations",
+      "function": "unknown",
+      "file": "api/v1/endpoints/prompt_templates.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/conversations/{conversation_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/prompt_templates.py"
+    },
+    {
+      "method": "GET",
+      "path": "/system/status",
+      "function": "unknown",
+      "file": "api/v1/endpoints/prompt_templates.py"
+    },
+    {
+      "method": "GET",
+      "path": "/templates",
+      "function": "unknown",
+      "file": "api/v1/endpoints/prompt_templates.py"
+    },
+    {
+      "method": "GET",
+      "path": "/guidance/{stage}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/prompt_templates.py"
+    },
+    {
+      "method": "POST",
+      "path": "/register-device",
+      "function": "unknown",
+      "file": "api/v1/endpoints/mobile.py"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/mobile-login",
+      "function": "unknown",
+      "file": "api/v1/endpoints/mobile.py"
+    },
+    {
+      "method": "GET",
+      "path": "/content/mobile-list",
+      "function": "unknown",
+      "file": "api/v1/endpoints/mobile.py"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/batch-update",
+      "function": "unknown",
+      "file": "api/v1/endpoints/mobile.py"
+    },
+    {
+      "method": "POST",
+      "path": "/push/send",
+      "function": "unknown",
+      "file": "api/v1/endpoints/mobile.py"
+    },
+    {
+      "method": "GET",
+      "path": "/content/{content_id}/download",
+      "function": "unknown",
+      "file": "api/v1/endpoints/mobile.py"
+    },
+    {
+      "method": "GET",
+      "path": "/network-status",
+      "function": "unknown",
+      "file": "api/v1/endpoints/mobile.py"
+    },
+    {
+      "method": "GET",
+      "path": "/data-usage",
+      "function": "unknown",
+      "file": "api/v1/endpoints/mobile.py"
+    },
+    {
+      "method": "GET",
+      "path": "/",
+      "function": "unknown",
+      "file": "api/v1/endpoints/schools.py"
+    },
+    {
+      "method": "GET",
+      "path": "/{school_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/schools.py"
+    },
+    {
+      "method": "PUT",
+      "path": "/{school_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/schools.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/{school_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/schools.py"
+    },
+    {
+      "method": "POST",
+      "path": "/users",
+      "function": "unknown",
+      "file": "api/v1/endpoints/user_management_enhanced.py"
+    },
+    {
+      "method": "GET",
+      "path": "/users",
+      "function": "unknown",
+      "file": "api/v1/endpoints/user_management_enhanced.py"
+    },
+    {
+      "method": "GET",
+      "path": "/users/{user_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/user_management_enhanced.py"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/{user_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/user_management_enhanced.py"
+    },
+    {
+      "method": "GET",
+      "path": "/users/{user_id}/progress",
+      "function": "unknown",
+      "file": "api/v1/endpoints/user_management_enhanced.py"
+    },
+    {
+      "method": "POST",
+      "path": "/users/{user_id}/achievements",
+      "function": "unknown",
+      "file": "api/v1/endpoints/user_management_enhanced.py"
+    },
+    {
+      "method": "GET",
+      "path": "/parent-dashboard",
+      "function": "unknown",
+      "file": "api/v1/endpoints/user_management_enhanced.py"
+    },
+    {
+      "method": "POST",
+      "path": "/link-parent",
+      "function": "unknown",
+      "file": "api/v1/endpoints/user_management_enhanced.py"
+    },
+    {
+      "method": "GET",
+      "path": "/users/{user_id}/sessions",
+      "function": "unknown",
+      "file": "api/v1/endpoints/user_management_enhanced.py"
+    },
+    {
+      "method": "POST",
+      "path": "/workflow/create",
+      "function": "unknown",
+      "file": "api/v1/endpoints/integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/workflow/templates",
+      "function": "unknown",
+      "file": "api/v1/endpoints/integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/schema/register",
+      "function": "unknown",
+      "file": "api/v1/endpoints/integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/sync/trigger",
+      "function": "unknown",
+      "file": "api/v1/endpoints/integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/event/broadcast",
+      "function": "unknown",
+      "file": "api/v1/endpoints/integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/health/check",
+      "function": "unknown",
+      "file": "api/v1/endpoints/integration.py"
+    },
+    {
+      "method": "POST",
+      "path": "/maintenance/cleanup",
+      "function": "unknown",
+      "file": "api/v1/endpoints/integration.py"
+    },
+    {
+      "method": "GET",
+      "path": "/status/{pipeline_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/enhanced_content.py"
+    },
+    {
+      "method": "POST",
+      "path": "/validate",
+      "function": "unknown",
+      "file": "api/v1/endpoints/enhanced_content.py"
+    },
+    {
+      "method": "GET",
+      "path": "/history",
+      "function": "unknown",
+      "file": "api/v1/endpoints/enhanced_content.py"
+    },
+    {
+      "method": "POST",
+      "path": "/personalize",
+      "function": "unknown",
+      "file": "api/v1/endpoints/enhanced_content.py"
+    },
+    {
+      "method": "POST",
+      "path": "/game/create",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "GET",
+      "path": "/game/{game_id}",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "PUT",
+      "path": "/game/{game_id}/settings",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/game/{game_id}",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "POST",
+      "path": "/content/generate",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "GET",
+      "path": "/content/templates",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "POST",
+      "path": "/content/deploy",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "GET",
+      "path": "/content/{content_id}/status",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/update",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/{student_id}",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "POST",
+      "path": "/progress/checkpoint",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "GET",
+      "path": "/progress/leaderboard",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "POST",
+      "path": "/webhook",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "GET",
+      "path": "/analytics/session/{session_id}",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "GET",
+      "path": "/analytics/performance",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "POST",
+      "path": "/analytics/event",
+      "function": "estimate_generation_time",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/login",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "GET",
+      "path": "/plugin/status",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox.py"
+    },
+    {
+      "method": "GET",
+      "path": "/overview/{role}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/dashboard.py"
+    },
+    {
+      "method": "GET",
+      "path": "/notifications",
+      "function": "unknown",
+      "file": "api/v1/endpoints/dashboard.py"
+    },
+    {
+      "method": "GET",
+      "path": "/student",
+      "function": "unknown",
+      "file": "api/v1/endpoints/dashboard.py"
+    },
+    {
+      "method": "GET",
+      "path": "/teacher",
+      "function": "unknown",
+      "file": "api/v1/endpoints/dashboard.py"
+    },
+    {
+      "method": "GET",
+      "path": "/admin",
+      "function": "unknown",
+      "file": "api/v1/endpoints/dashboard.py"
+    },
+    {
+      "method": "GET",
+      "path": "/parent",
+      "function": "unknown",
+      "file": "api/v1/endpoints/dashboard.py"
+    },
+    {
+      "method": "GET",
+      "path": "/quick-stats",
+      "function": "unknown",
+      "file": "api/v1/endpoints/dashboard.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/users/{user_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/admin.py"
+    },
+    {
+      "method": "POST",
+      "path": "/auth",
+      "function": "unknown",
+      "file": "api/v1/endpoints/pusher_auth.py"
+    },
+    {
+      "method": "POST",
+      "path": "/submit",
+      "function": "unknown",
+      "file": "api/v1/endpoints/orchestrator.py"
+    },
+    {
+      "method": "GET",
+      "path": "/status/{task_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/orchestrator.py"
+    },
+    {
+      "method": "POST",
+      "path": "/worktree/distribute",
+      "function": "unknown",
+      "file": "api/v1/endpoints/orchestrator.py"
+    },
+    {
+      "method": "GET",
+      "path": "/worktree/sessions",
+      "function": "unknown",
+      "file": "api/v1/endpoints/orchestrator.py"
+    },
+    {
+      "method": "GET",
+      "path": "/resources/monitor",
+      "function": "unknown",
+      "file": "api/v1/endpoints/orchestrator.py"
+    },
+    {
+      "method": "GET",
+      "path": "/resources/alerts",
+      "function": "unknown",
+      "file": "api/v1/endpoints/orchestrator.py"
+    },
+    {
+      "method": "POST",
+      "path": "/resources/optimize",
+      "function": "unknown",
+      "file": "api/v1/endpoints/orchestrator.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/shutdown",
+      "function": "unknown",
+      "file": "api/v1/endpoints/orchestrator.py"
+    },
+    {
+      "method": "POST",
+      "path": "/chat/stream",
+      "function": "unknown",
+      "file": "api/v1/endpoints/agent_swarm.py"
+    },
+    {
+      "method": "POST",
+      "path": "/task",
+      "function": "unknown",
+      "file": "api/v1/endpoints/agent_swarm.py"
+    },
+    {
+      "method": "GET",
+      "path": "/session/{session_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/agent_swarm.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/session/{session_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/agent_swarm.py"
+    },
+    {
+      "method": "POST",
+      "path": "/reset",
+      "function": "unknown",
+      "file": "api/v1/endpoints/agent_swarm.py"
+    },
+    {
+      "method": "POST",
+      "path": "/lesson/create",
+      "function": "unknown",
+      "file": "api/v1/endpoints/agent_swarm.py"
+    },
+    {
+      "method": "POST",
+      "path": "/assessment/create",
+      "function": "unknown",
+      "file": "api/v1/endpoints/agent_swarm.py"
+    },
+    {
+      "method": "POST",
+      "path": "/analyze/progress",
+      "function": "unknown",
+      "file": "api/v1/endpoints/agent_swarm.py"
+    },
+    {
+      "method": "GET",
+      "path": "/unread-count",
+      "function": "unknown",
+      "file": "api/v1/endpoints/messages.py"
+    },
+    {
+      "method": "GET",
+      "path": "/{message_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/messages.py"
+    },
+    {
+      "method": "PUT",
+      "path": "/{message_id}/read",
+      "function": "unknown",
+      "file": "api/v1/endpoints/messages.py"
+    },
+    {
+      "method": "PUT",
+      "path": "/{message_id}/archive",
+      "function": "unknown",
+      "file": "api/v1/endpoints/messages.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/{message_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/messages.py"
+    },
+    {
+      "method": "GET",
+      "path": "/notifications/recent",
+      "function": "unknown",
+      "file": "api/v1/endpoints/messages.py"
+    },
+    {
+      "method": "GET",
+      "path": "/stats/overview",
+      "function": "unknown",
+      "file": "api/v1/endpoints/reports.py"
+    },
+    {
+      "method": "GET",
+      "path": "/{report_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/reports.py"
+    },
+    {
+      "method": "GET",
+      "path": "/analytics/engagement",
+      "function": "unknown",
+      "file": "api/v1/endpoints/reports.py"
+    },
+    {
+      "method": "GET",
+      "path": "/status/{report_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/reports.py"
+    },
+    {
+      "method": "GET",
+      "path": "/download/{report_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/reports.py"
+    },
+    {
+      "method": "POST",
+      "path": "/scripts/generate",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration_enhanced.py"
+    },
+    {
+      "method": "POST",
+      "path": "/scripts/validate",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration_enhanced.py"
+    },
+    {
+      "method": "GET",
+      "path": "/assets",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration_enhanced.py"
+    },
+    {
+      "method": "POST",
+      "path": "/environments/deploy",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration_enhanced.py"
+    },
+    {
+      "method": "GET",
+      "path": "/environments/{deployment_id}/status",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration_enhanced.py"
+    },
+    {
+      "method": "POST",
+      "path": "/studio/sync",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration_enhanced.py"
+    },
+    {
+      "method": "GET",
+      "path": "/environments/active",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration_enhanced.py"
+    },
+    {
+      "method": "GET",
+      "path": "/marketplace/browse",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_integration_enhanced.py"
+    },
+    {
+      "method": "GET",
+      "path": "/overview",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics.py"
+    },
+    {
+      "method": "GET",
+      "path": "/student-progress",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics.py"
+    },
+    {
+      "method": "GET",
+      "path": "/weekly_xp",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics.py"
+    },
+    {
+      "method": "GET",
+      "path": "/subject_mastery",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics.py"
+    },
+    {
+      "method": "GET",
+      "path": "/leaderboard",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics.py"
+    },
+    {
+      "method": "GET",
+      "path": "/{user_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics.py"
+    },
+    {
+      "method": "GET",
+      "path": "/trends/engagement",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics.py"
+    },
+    {
+      "method": "GET",
+      "path": "/trends/content",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics.py"
+    },
+    {
+      "method": "GET",
+      "path": "/dashboard",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics.py"
+    },
+    {
+      "method": "GET",
+      "path": "/realtime",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics.py"
+    },
+    {
+      "method": "GET",
+      "path": "/summary",
+      "function": "unknown",
+      "file": "api/v1/endpoints/analytics.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/{key_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/api_keys.py"
+    },
+    {
+      "method": "POST",
+      "path": "/roblox/generate-script",
+      "function": "unknown",
+      "file": "api/v1/endpoints/api_keys.py"
+    },
+    {
+      "method": "POST",
+      "path": "/roblox/validate-script",
+      "function": "unknown",
+      "file": "api/v1/endpoints/api_keys.py"
+    },
+    {
+      "method": "GET",
+      "path": "/roblox/content",
+      "function": "unknown",
+      "file": "api/v1/endpoints/api_keys.py"
+    },
+    {
+      "method": "GET",
+      "path": "/usage-stats",
+      "function": "unknown",
+      "file": "api/v1/endpoints/api_keys.py"
+    },
+    {
+      "method": "GET",
+      "path": "/{class_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/classes.py"
+    },
+    {
+      "method": "GET",
+      "path": "/{class_id}/students",
+      "function": "unknown",
+      "file": "api/v1/endpoints/classes.py"
+    },
+    {
+      "method": "PUT",
+      "path": "/{class_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/classes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/{class_id}/students/{student_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/classes.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/{class_id}/students/{student_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/classes.py"
+    },
+    {
+      "method": "POST",
+      "path": "/{class_id}/students/batch",
+      "function": "unknown",
+      "file": "api/v1/endpoints/classes.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/{class_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/classes.py"
+    },
+    {
+      "method": "GET",
+      "path": "/{item_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/progress.py"
+    },
+    {
+      "method": "POST",
+      "path": "/update",
+      "function": "unknown",
+      "file": "api/v1/endpoints/progress.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/{item_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/progress.py"
+    },
+    {
+      "method": "DELETE",
+      "path": "/",
+      "function": "unknown",
+      "file": "api/v1/endpoints/progress.py"
+    },
+    {
+      "method": "POST",
+      "path": "/generate-content",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_agents.py"
+    },
+    {
+      "method": "POST",
+      "path": "/optimize-script",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_agents.py"
+    },
+    {
+      "method": "POST",
+      "path": "/validate-security",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_agents.py"
+    },
+    {
+      "method": "POST",
+      "path": "/batch-validate",
+      "function": "unknown",
+      "file": "api/v1/endpoints/roblox_agents.py"
+    },
+    {
+      "method": "POST",
+      "path": "/process-file",
+      "function": "unknown",
+      "file": "api/v1/endpoints/design_files.py"
+    },
+    {
+      "method": "GET",
+      "path": "/scan-folder",
+      "function": "unknown",
+      "file": "api/v1/endpoints/design_files.py"
+    },
+    {
+      "method": "POST",
+      "path": "/search",
+      "function": "unknown",
+      "file": "api/v1/endpoints/design_files.py"
+    },
+    {
+      "method": "GET",
+      "path": "/folder/{folder_path:path}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/design_files.py"
+    },
+    {
+      "method": "GET",
+      "path": "/categories",
+      "function": "unknown",
+      "file": "api/v1/endpoints/design_files.py"
+    },
+    {
+      "method": "GET",
+      "path": "/supported-extensions",
+      "function": "unknown",
+      "file": "api/v1/endpoints/design_files.py"
+    },
+    {
+      "method": "POST",
+      "path": "/change",
+      "function": "unknown",
+      "file": "api/v1/endpoints/password.py"
+    },
+    {
+      "method": "GET",
+      "path": "/strength-requirements",
+      "function": "unknown",
+      "file": "api/v1/endpoints/password.py"
+    },
+    {
+      "method": "GET",
+      "path": "/sessions",
+      "function": "unknown",
+      "file": "api/v1/endpoints/password.py"
+    },
+    {
+      "method": "POST",
+      "path": "/logout-all",
+      "function": "unknown",
+      "file": "api/v1/endpoints/password.py"
+    },
+    {
+      "method": "GET",
+      "path": "/{assessment_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/assessments.py"
+    },
+    {
+      "method": "POST",
+      "path": "/{assessment_id}/submit",
+      "function": "unknown",
+      "file": "api/v1/endpoints/assessments.py"
+    },
+    {
+      "method": "GET",
+      "path": "/{assessment_id}/results",
+      "function": "unknown",
+      "file": "api/v1/endpoints/assessments.py"
+    },
+    {
+      "method": "GET",
+      "path": "/{assessment_id}/statistics",
+      "function": "unknown",
+      "file": "api/v1/endpoints/assessments.py"
+    },
+    {
+      "method": "POST",
+      "path": "/workflow/execute",
+      "function": "unknown",
+      "file": "api/v1/endpoints/database_swarm.py"
+    },
+    {
+      "method": "GET",
+      "path": "/workflow/state/{thread_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/database_swarm.py"
+    },
+    {
+      "method": "GET",
+      "path": "/agents/status",
+      "function": "unknown",
+      "file": "api/v1/endpoints/database_swarm.py"
+    },
+    {
+      "method": "POST",
+      "path": "/events/append",
+      "function": "unknown",
+      "file": "api/v1/endpoints/database_swarm.py"
+    },
+    {
+      "method": "GET",
+      "path": "/events/replay/{aggregate_id}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/database_swarm.py"
+    },
+    {
+      "method": "POST",
+      "path": "/query/optimize",
+      "function": "unknown",
+      "file": "api/v1/endpoints/database_swarm.py"
+    },
+    {
+      "method": "POST",
+      "path": "/backup/create",
+      "function": "unknown",
+      "file": "api/v1/endpoints/database_swarm.py"
+    },
+    {
+      "method": "POST",
+      "path": "/migration/execute",
+      "function": "unknown",
+      "file": "api/v1/endpoints/database_swarm.py"
+    },
+    {
+      "method": "GET",
+      "path": "/monitoring/metrics",
+      "function": "unknown",
+      "file": "api/v1/endpoints/database_swarm.py"
+    },
+    {
+      "method": "POST",
+      "path": "/cache/invalidate",
+      "function": "unknown",
+      "file": "api/v1/endpoints/database_swarm.py"
+    },
+    {
+      "method": "POST",
+      "path": "/request-export",
+      "function": "unknown",
+      "file": "api/v1/endpoints/privacy.py"
+    },
+    {
+      "method": "GET",
+      "path": "/export/{ticket}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/privacy.py"
+    },
+    {
+      "method": "POST",
+      "path": "/request-deletion",
+      "function": "unknown",
+      "file": "api/v1/endpoints/privacy.py"
+    },
+    {
+      "method": "GET",
+      "path": "/export-status/{ticket}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/privacy.py"
+    },
+    {
+      "method": "GET",
+      "path": "/consents",
+      "function": "unknown",
+      "file": "api/v1/endpoints/privacy.py"
+    },
+    {
+      "method": "POST",
+      "path": "/consents/parent-verify",
+      "function": "unknown",
+      "file": "api/v1/endpoints/privacy.py"
+    },
+    {
+      "method": "GET",
+      "path": "/achievements",
+      "function": "unknown",
+      "file": "api/v1/endpoints/gamification.py"
+    },
+    {
+      "method": "GET",
+      "path": "/badges",
+      "function": "unknown",
+      "file": "api/v1/endpoints/gamification.py"
+    },
+    {
+      "method": "POST",
+      "path": "/xp/add",
+      "function": "unknown",
+      "file": "api/v1/endpoints/gamification.py"
+    },
+    {
+      "method": "GET",
+      "path": "/stats/{userId}",
+      "function": "unknown",
+      "file": "api/v1/endpoints/gamification.py"
+    },
+    {
+      "method": "POST",
+      "path": "/validate",
+      "function": "_filter_report_by_type",
+      "file": "api/v1/endpoints/validation.py"
+    },
+    {
+      "method": "POST",
+      "path": "/validate/batch",
+      "function": "_filter_report_by_type",
+      "file": "api/v1/endpoints/validation.py"
+    },
+    {
+      "method": "GET",
+      "path": "/reports/{validation_id}",
+      "function": "_filter_report_by_type",
+      "file": "api/v1/endpoints/validation.py"
+    },
+    {
+      "method": "GET",
+      "path": "/statistics",
+      "function": "_filter_report_by_type",
+      "file": "api/v1/endpoints/validation.py"
+    },
+    {
+      "method": "POST",
+      "path": "/templates/secure",
+      "function": "_filter_report_by_type",
+      "file": "api/v1/endpoints/validation.py"
+    },
+    {
+      "method": "GET",
+      "path": "/checklists/security",
+      "function": "_filter_report_by_type",
+      "file": "api/v1/endpoints/validation.py"
+    },
+    {
+      "method": "GET",
+      "path": "/checklists/compliance",
+      "function": "_filter_report_by_type",
+      "file": "api/v1/endpoints/validation.py"
+    },
+    {
+      "method": "POST",
+      "path": "/report-error",
+      "function": "unknown",
+      "file": "routers/error_handling_api.py"
+    },
+    {
+      "method": "POST",
+      "path": "/process-errors",
+      "function": "unknown",
+      "file": "routers/error_handling_api.py"
+    },
+    {
+      "method": "GET",
+      "path": "/workflow/{workflow_id}/status",
+      "function": "unknown",
+      "file": "routers/error_handling_api.py"
+    },
+    {
+      "method": "GET",
+      "path": "/patterns/analyze",
+      "function": "unknown",
+      "file": "routers/error_handling_api.py"
+    },
+    {
+      "method": "POST",
+      "path": "/predict-errors",
+      "function": "unknown",
+      "file": "routers/error_handling_api.py"
+    },
+    {
+      "method": "GET",
+      "path": "/swarm/status",
+      "function": "unknown",
+      "file": "routers/error_handling_api.py"
+    },
+    {
+      "method": "POST",
+      "path": "/recovery/trigger",
+      "function": "unknown",
+      "file": "routers/error_handling_api.py"
+    }
+  ]
+}

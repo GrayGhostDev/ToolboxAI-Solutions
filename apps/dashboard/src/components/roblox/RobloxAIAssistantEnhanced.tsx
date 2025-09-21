@@ -4,38 +4,36 @@
  * Enhanced AI-powered chat assistant with improved accessibility and responsiveness
  * Features include keyboard navigation, screen reader support, and mobile optimization
  */
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Avatar from '@mui/material/Avatar';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
+import CircularProgress from '@mui/material/CircularProgress';
+import Fade from '@mui/material/Fade';
+import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
+import Alert from '@mui/material/Alert';
+import Tooltip from '@mui/material/Tooltip';
+import InputAdornment from '@mui/material/InputAdornment';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import ListItemText from '@mui/material/ListItemText';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import Skeleton from '@mui/material/Skeleton';
+import LinearProgress from '@mui/material/LinearProgress';
+import Badge from '@mui/material/Badge';
+import Collapse from '@mui/material/Collapse';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import {
-  Box,
-  Paper,
-  TextField,
-  IconButton,
-  Typography,
-  Avatar,
-  Chip,
-  Stack,
-  CircularProgress,
-  Fade,
-  Button,
-  Divider,
-  Alert,
-  Tooltip,
-  InputAdornment,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  useTheme,
-  useMediaQuery,
-  Skeleton,
-  LinearProgress,
-  Badge,
-  Collapse,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-} from '@mui/material';
 import {
   Send,
   SmartToy,
@@ -60,12 +58,9 @@ import {
   ContentCopy,
   Download,
 } from '@mui/icons-material';
-import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { useAppSelector, useAppDispatch } from '../../store';
+import { useAppDispatch } from '../../store';
 import { addNotification } from '../../store/slices/uiSlice';
-
 // Types
 interface Message {
   id: string;
@@ -83,7 +78,6 @@ interface Message {
     isLoading?: boolean;
   };
 }
-
 interface A11ySettings {
   highContrast: boolean;
   largeText: boolean;
@@ -92,16 +86,13 @@ interface A11ySettings {
   keyboardNavigation: boolean;
   speechOutput: boolean;
 }
-
 export default function RobloxAIAssistantEnhanced() {
   const theme = useTheme();
   const dispatch = useAppDispatch();
-
   // Responsive breakpoints
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
-
   // State
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -111,7 +102,6 @@ export default function RobloxAIAssistantEnhanced() {
   const [showPreview, setShowPreview] = useState(true);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; messageId: string } | null>(null);
-
   // Accessibility state
   const [a11ySettings, setA11ySettings] = useState<A11ySettings>({
     highContrast: false,
@@ -121,17 +111,14 @@ export default function RobloxAIAssistantEnhanced() {
     keyboardNavigation: true,
     speechOutput: false,
   });
-
   // Voice input state
   const [isListening, setIsListening] = useState(false);
   const recognition = useRef<any>(null);
-
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = useCallback(() => {
     if (!a11ySettings.reducedMotion) {
@@ -140,11 +127,9 @@ export default function RobloxAIAssistantEnhanced() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
     }
   }, [a11ySettings.reducedMotion]);
-
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
-
   // Initialize speech recognition
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -153,27 +138,22 @@ export default function RobloxAIAssistantEnhanced() {
       recognition.current.continuous = false;
       recognition.current.interimResults = true;
       recognition.current.lang = 'en-US';
-
       recognition.current.onresult = (event: any) => {
         const transcript = Array.from(event.results)
           .map((result: any) => result[0])
           .map((result: any) => result.transcript)
           .join('');
-
         setInput(transcript);
       };
-
       recognition.current.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
       };
-
       recognition.current.onend = () => {
         setIsListening(false);
       };
     }
   }, []);
-
   // Speech synthesis for screen reader mode
   const speak = useCallback((text: string) => {
     if (a11ySettings.speechOutput && 'speechSynthesis' in window) {
@@ -183,7 +163,6 @@ export default function RobloxAIAssistantEnhanced() {
       speechSynthesis.speak(utterance);
     }
   }, [a11ySettings.speechOutput]);
-
   // Toggle voice input
   const toggleVoiceInput = useCallback(() => {
     if (!recognition.current) {
@@ -193,7 +172,6 @@ export default function RobloxAIAssistantEnhanced() {
       }));
       return;
     }
-
     if (isListening) {
       recognition.current.stop();
     } else {
@@ -201,29 +179,24 @@ export default function RobloxAIAssistantEnhanced() {
       setIsListening(true);
     }
   }, [isListening, dispatch]);
-
   // Handle send message
   const handleSendMessage = useCallback(async () => {
     if (!input.trim() || isLoading) return;
-
     const userMessage: Message = {
       id: `msg-${Date.now()}`,
       role: 'user',
       content: input.trim(),
       timestamp: new Date(),
     };
-
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
     setError(null);
-
     // Announce for screen readers
     if (a11ySettings.screenReaderMode) {
       const announcement = `You said: ${userMessage.content}. Waiting for AI response.`;
       speak(announcement);
     }
-
     // Add typing indicator message
     const typingMessage: Message = {
       id: `typing-${Date.now()}`,
@@ -233,11 +206,9 @@ export default function RobloxAIAssistantEnhanced() {
       metadata: { isLoading: true },
     };
     setMessages(prev => [...prev, typingMessage]);
-
     try {
       // Simulate API call with abort controller for cancellation
       abortControllerRef.current = new AbortController();
-
       // Simulated streaming response
       await new Promise((resolve) => {
         setTimeout(() => {
@@ -245,26 +216,21 @@ export default function RobloxAIAssistantEnhanced() {
             id: `msg-${Date.now() + 1}`,
             role: 'assistant',
             content: `I'll help you create an educational Roblox environment. Based on your request "${userMessage.content}", I can generate interactive learning experiences with quizzes, terrain, and engaging gameplay elements.
-
 Here's what I can create for you:
 - Interactive quiz zones with automatic scoring
 - Educational terrain that visualizes concepts
 - NPC guides that explain topics
 - Collectible items that teach as players explore
-
 Would you like me to start with a specific subject area or learning objective?`,
             timestamp: new Date(),
             metadata: { generated: true },
           };
-
           // Remove typing indicator and add real message
           setMessages(prev => prev.filter(m => !m.metadata?.isLoading).concat(assistantMessage));
-
           // Announce response for screen readers
           if (a11ySettings.screenReaderMode) {
             speak(assistantMessage.content);
           }
-
           resolve(null);
         }, 1500);
       });
@@ -276,7 +242,6 @@ Would you like me to start with a specific subject area or learning objective?`,
           type: 'error',
         }));
       }
-
       // Remove typing indicator
       setMessages(prev => prev.filter(m => !m.metadata?.isLoading));
     } finally {
@@ -284,7 +249,6 @@ Would you like me to start with a specific subject area or learning objective?`,
       abortControllerRef.current = null;
     }
   }, [input, isLoading, a11ySettings.screenReaderMode, dispatch, speak]);
-
   // Cancel ongoing request
   const handleCancelRequest = useCallback(() => {
     if (abortControllerRef.current) {
@@ -293,7 +257,6 @@ Would you like me to start with a specific subject area or learning objective?`,
       setMessages(prev => prev.filter(m => !m.metadata?.isLoading));
     }
   }, []);
-
   // Copy message to clipboard
   const handleCopyMessage = useCallback((content: string) => {
     navigator.clipboard.writeText(content);
@@ -302,22 +265,18 @@ Would you like me to start with a specific subject area or learning objective?`,
       type: 'success',
     }));
   }, [dispatch]);
-
   // Keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!a11ySettings.keyboardNavigation) return;
-
     // Send message with Enter (Shift+Enter for new line)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
-
     // Cancel with Escape
     if (e.key === 'Escape' && isLoading) {
       handleCancelRequest();
     }
-
     // Navigate messages with arrow keys when not in input
     if (e.target !== inputRef.current) {
       if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -326,12 +285,10 @@ Would you like me to start with a specific subject area or learning objective?`,
       }
     }
   }, [a11ySettings.keyboardNavigation, handleSendMessage, isLoading, handleCancelRequest]);
-
   // Render message with proper semantic markup
   const renderMessage = useCallback((message: Message) => {
     const isUser = message.role === 'user';
     const isLoading = message.metadata?.isLoading;
-
     return (
       <ListItem
         key={message.id}
@@ -345,7 +302,7 @@ Would you like me to start with a specific subject area or learning objective?`,
           },
         }}
         selected={selectedMessageId === message.id}
-        onClick={() => setSelectedMessageId(message.id)}
+        onClick={(e: React.MouseEvent) => () => setSelectedMessageId(message.id)}
         onContextMenu={(e) => {
           e.preventDefault();
           setContextMenu({ x: e.clientX, y: e.clientY, messageId: message.id });
@@ -365,7 +322,6 @@ Would you like me to start with a specific subject area or learning objective?`,
             {isUser ? <Person /> : <SmartToy />}
           </Avatar>
         </ListItemAvatar>
-
         <ListItemText
           primary={
             <Box>
@@ -382,7 +338,6 @@ Would you like me to start with a specific subject area or learning objective?`,
                   aria-label={`Sent at ${new Date(message.timestamp).toLocaleTimeString()}`}
                 />
               </Typography>
-
               {isLoading ? (
                 <Box>
                   <Skeleton variant="text" width="80%" />
@@ -419,7 +374,6 @@ Would you like me to start with a specific subject area or learning objective?`,
       </ListItem>
     );
   }, [theme, isMobile, selectedMessageId, a11ySettings.largeText]);
-
   return (
     <Box
       sx={{
@@ -457,29 +411,26 @@ Would you like me to start with a specific subject area or learning objective?`,
             </Typography>
           </Box>
         </Stack>
-
         <Stack direction="row" spacing={1}>
           <Tooltip title="Accessibility Settings">
             <IconButton
-              onClick={() => setA11ySettings(prev => ({ ...prev, speechOutput: !prev.speechOutput }))}
+              onClick={(e: React.MouseEvent) => () => setA11ySettings(prev => ({ ...prev, speechOutput: !prev.speechOutput }))}
               aria-label="Toggle speech output"
             >
               {a11ySettings.speechOutput ? <VolumeUp /> : <VolumeOff />}
             </IconButton>
           </Tooltip>
-
           <Tooltip title="Toggle Preview">
             <IconButton
-              onClick={() => setShowPreview(!showPreview)}
+              onClick={(e: React.MouseEvent) => () => setShowPreview(!showPreview)}
               aria-label="Toggle preview panel"
             >
               <Preview />
             </IconButton>
           </Tooltip>
-
           <Tooltip title="Clear Chat">
             <IconButton
-              onClick={() => setMessages([])}
+              onClick={(e: React.MouseEvent) => () => setMessages([])}
               aria-label="Clear all messages"
             >
               <Clear />
@@ -487,7 +438,6 @@ Would you like me to start with a specific subject area or learning objective?`,
           </Tooltip>
         </Stack>
       </Paper>
-
       {/* Messages Area */}
       <Box
         ref={messageListRef}
@@ -505,7 +455,6 @@ Would you like me to start with a specific subject area or learning objective?`,
         </List>
         <div ref={messagesEndRef} />
       </Box>
-
       {/* Input Area */}
       <Paper
         elevation={3}
@@ -522,7 +471,6 @@ Would you like me to start with a specific subject area or learning objective?`,
             aria-label="Loading response"
           />
         )}
-
         <Stack direction="row" spacing={1} alignItems="flex-end">
           <TextField
             ref={inputRef}
@@ -542,7 +490,7 @@ Would you like me to start with a specific subject area or learning objective?`,
               startAdornment: (
                 <InputAdornment position="start">
                   <IconButton
-                    onClick={toggleVoiceInput}
+                    onClick={(e: React.MouseEvent) => toggleVoiceInput}
                     size="small"
                     color={isListening ? 'primary' : 'default'}
                     aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
@@ -562,10 +510,9 @@ Would you like me to start with a specific subject area or learning objective?`,
             aria-label="Message input"
             aria-describedby="input-helper-text"
           />
-
           {isLoading ? (
             <IconButton
-              onClick={handleCancelRequest}
+              onClick={(e: React.MouseEvent) => handleCancelRequest}
               color="error"
               size="large"
               aria-label="Cancel request"
@@ -574,7 +521,7 @@ Would you like me to start with a specific subject area or learning objective?`,
             </IconButton>
           ) : (
             <IconButton
-              onClick={handleSendMessage}
+              onClick={(e: React.MouseEvent) => handleSendMessage}
               color="primary"
               size="large"
               disabled={!input.trim()}
@@ -584,7 +531,6 @@ Would you like me to start with a specific subject area or learning objective?`,
             </IconButton>
           )}
         </Stack>
-
         <Typography
           id="input-helper-text"
           variant="caption"
@@ -594,7 +540,6 @@ Would you like me to start with a specific subject area or learning objective?`,
           Press Enter to send, Shift+Enter for new line
         </Typography>
       </Paper>
-
       {/* Context Menu */}
       <Menu
         open={Boolean(contextMenu)}
@@ -605,7 +550,7 @@ Would you like me to start with a specific subject area or learning objective?`,
         }
       >
         <MenuItem
-          onClick={() => {
+          onClick={(e: React.MouseEvent) => () => {
             const message = messages.find(m => m.id === contextMenu?.messageId);
             if (message) handleCopyMessage(message.content);
             setContextMenu(null);

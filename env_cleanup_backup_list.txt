@@ -1,0 +1,93 @@
+ENVIRONMENT FILES CLEANUP BACKUP LIST
+Generated: 2025-09-21
+Repository: ToolBoxAI-Solutions
+
+=== ACTUAL ENVIRONMENT FILES (CONTAIN SECRETS) ===
+These files may contain sensitive data and need to be removed from git:
+
+1. Root Level:
+   - ./.env
+   - ./.env.phase1
+   - ./.env.production
+   - ./.env.staging
+
+2. Apps/Backend:
+   - ./apps/backend/.env
+
+3. Apps/Dashboard:
+   - ./apps/dashboard/.env
+   - ./apps/dashboard/.env.local
+   - ./apps/dashboard/.env.docker
+
+4. Infrastructure:
+   - ./infrastructure/docker/.env
+
+5. Config:
+   - ./config/database.env
+   - ./config/environments/.env.prod
+   - ./config/production/production.env
+   - ./config/env-templates/.env.production
+   - ./config/env-templates/.env.render
+   - ./config/env-templates/.env.staging
+
+6. Archived (Deprecated):
+   - ./Archive/2025-09-11/deprecated/ghost-backend/.env.secure
+
+=== TEMPLATE/EXAMPLE FILES (KEEP) ===
+These are template files without secrets that should remain:
+
+1. Root Level:
+   - ./.env.example
+   - ./.env.secure.example
+   - ./.env.production.template
+
+2. Apps/Backend:
+   - ./apps/backend/.env.example
+
+3. Apps/Dashboard:
+   - ./apps/dashboard/.env.example
+   - ./apps/dashboard/.env.production.example
+
+4. Config:
+   - ./config/database.env.example
+   - ./config/env-templates/.env.sentry.example
+
+5. Archived Templates:
+   - ./Archive/2025-09-11/deprecated/ghost-backend/.env.docker.template
+   - ./Archive/2025-09-11/deprecated/ghost-backend/.env.example
+   - ./Archive/2025-09-11/deprecated/ghost-backend/.env.production.example
+   - ./Archive/2025-09-11/deprecated/ghost-backend/config/environments/.env.docker.template
+   - ./Archive/2025-09-11/deprecated/ghost-backend/config/environments/.env.example
+   - ./Archive/2025-09-11/deprecated/ghost-backend/config/environments/.env.production.example
+   - ./Archive/2025-09-11/deprecated/dashboard-backend/.env.example
+   - ./Archive/2025-09-11/deprecated/dashboard-backend/backend/.env.example
+   - ./Archive/2025-09-11/deprecated/dashboard-embedded-backend/.env.example
+
+=== OTHER ENVIRONMENT-RELATED FILES ===
+Configuration and Python files (keep):
+   - ./.cursor/environment.json
+   - ./.cursor/environment.json.bak.20250908-115815
+   - ./Archive/2025-09-11/deprecated/ghost-backend/.envrc (direnv config)
+   - ./config/environment.py
+   - ./core/agents/github_agents/environment_validation_agent.py
+
+=== FILES TO REMOVE FROM GIT TRACKING ===
+Total: 14 files containing potential secrets
+
+CRITICAL FILES TO CLEAN:
+1. ./.env
+2. ./.env.phase1
+3. ./.env.production
+4. ./.env.staging
+5. ./apps/backend/.env
+6. ./apps/dashboard/.env
+7. ./apps/dashboard/.env.local
+8. ./apps/dashboard/.env.docker
+9. ./infrastructure/docker/.env
+10. ./config/database.env
+11. ./config/environments/.env.prod
+12. ./config/production/production.env
+13. ./config/env-templates/.env.production
+14. ./config/env-templates/.env.render
+15. ./config/env-templates/.env.staging
+16. ./Archive/2025-09-11/deprecated/ghost-backend/.env.secure

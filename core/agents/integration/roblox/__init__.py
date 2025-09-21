@@ -17,37 +17,33 @@ from .studio_bridge_agent import (
     PluginCommand
 )
 
-# Import other agents when available
-try:
-    from .asset_deployment_agent import AssetDeploymentAgent
-except ImportError:
-    pass
-
-try:
-    from .game_instance_agent import GameInstanceAgent
-except ImportError:
-    pass
-
-try:
-    from .educational_content_agent import EducationalContentIntegrationAgent
-except ImportError:
-    pass
-
-__all__ = [
-    # Studio Bridge
+# Track available exports dynamically
+_available_exports = [
     "StudioBridgeAgent",
     "StudioSession",
     "StudioConnectionType",
     "CommandType",
     "ScriptSync",
-    "PluginCommand",
-
-    # Asset Deployment (future)
-    "AssetDeploymentAgent",
-
-    # Game Instance (future)
-    "GameInstanceAgent",
-
-    # Educational Content (future)
-    "EducationalContentIntegrationAgent"
+    "PluginCommand"
 ]
+
+# Import other agents when available
+try:
+    from .asset_deployment_agent import AssetDeploymentAgent
+    _available_exports.append("AssetDeploymentAgent")
+except ImportError:
+    pass
+
+try:
+    from .game_instance_agent import GameInstanceAgent
+    _available_exports.append("GameInstanceAgent")
+except ImportError:
+    pass
+
+try:
+    from .educational_content_agent import EducationalContentIntegrationAgent
+    _available_exports.append("EducationalContentIntegrationAgent")
+except ImportError:
+    pass
+
+__all__ = _available_exports

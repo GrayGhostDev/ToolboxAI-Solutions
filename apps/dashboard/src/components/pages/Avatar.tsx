@@ -1,29 +1,28 @@
 import * as React from "react";
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import { Avatar as MuiAvatar } from '@mui/material';
+import Paper from '@mui/material/Paper';
+import Slider from '@mui/material/Slider';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Divider from '@mui/material/Divider';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+
 import { useState } from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Grid,
-  Button,
-  Stack,
-  Chip,
-  IconButton,
-  Tabs,
-  Tab,
-  Avatar as MuiAvatar,
-  Paper,
-  Slider,
-  Switch,
-  FormControlLabel,
-  Divider,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from "@mui/material";
 import {
   Face,
   ColorLens,
@@ -371,7 +370,7 @@ export default function Avatar() {
                   variant="contained"
                   fullWidth
                   startIcon={<Save />}
-                  onClick={handleSaveAvatar}
+                  onClick={(e: React.MouseEvent) => handleSaveAvatar}
                 >
                   Save Avatar
                 </Button>
@@ -379,7 +378,7 @@ export default function Avatar() {
                   variant="outlined"
                   fullWidth
                   startIcon={<Refresh />}
-                  onClick={handleRandomize}
+                  onClick={(e: React.MouseEvent) => handleRandomize}
                 >
                   Randomize
                 </Button>
@@ -397,7 +396,7 @@ export default function Avatar() {
                 <Button
                   variant="outlined"
                   startIcon={<ShoppingCart />}
-                  onClick={() => setShowShop(!showShop)}
+                  onClick={(e: React.MouseEvent) => () => setShowShop(!showShop)}
                 >
                   {showShop ? "My Items" : "Shop"}
                 </Button>
@@ -438,7 +437,7 @@ export default function Avatar() {
                             boxShadow: 3,
                           } : {},
                         }}
-                        onClick={() => item.owned && handleEquipItem(item.id)}
+                        onClick={(e: React.MouseEvent) => () => item.owned && handleEquipItem(item.id)}
                       >
                         <CardContent sx={{ textAlign: "center", p: 1.5 }}>
                           <Typography fontSize="2.5rem">{item.preview}</Typography>
@@ -493,7 +492,7 @@ export default function Avatar() {
                               <IconButton
                                 color="primary"
                                 sx={{ bgcolor: "white", "&:hover": { bgcolor: "grey.100" } }}
-                                onClick={(e) => {
+                                onClick={(e: React.MouseEvent) => (e) => {
                                   e.stopPropagation();
                                   handlePurchaseItem(item);
                                 }}

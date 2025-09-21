@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { Box, Typography, useTheme, alpha, Tooltip, Zoom, keyframes } from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import Tooltip from '@mui/material/Tooltip';
+import Zoom from '@mui/material/Zoom';
+import { keyframes } from '@mui/material/styles';
 import { styled } from '@mui/material/styles';
 import { EmojiEvents, Star, LocalFireDepartment, School, SportsEsports } from '@mui/icons-material';
 
@@ -139,7 +145,7 @@ const getIconComponent = (iconName: string) => {
   return iconMap[iconName] || EmojiEvents;
 };
 
-export const RobloxAchievementBadge: React.FC<RobloxAchievementBadgeProps> = ({
+export const RobloxAchievementBadge: React.FunctionComponent<RobloxAchievementBadgeProps> = ({
   achievement,
   size = 'medium',
   animated = true,
@@ -197,7 +203,7 @@ export const RobloxAchievementBadge: React.FC<RobloxAchievementBadgeProps> = ({
         unlocked={achievement.unlocked}
         animated={animated}
         sx={sizeStyles[size]}
-        onClick={handleClick}
+        onClick={(e: React.MouseEvent) => handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >

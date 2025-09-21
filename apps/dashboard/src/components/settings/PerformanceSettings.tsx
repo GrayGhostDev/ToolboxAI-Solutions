@@ -6,26 +6,25 @@
  */
 
 import React from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Switch,
-  FormControlLabel,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Divider,
-  Alert,
-  AlertTitle,
-  Chip,
-  LinearProgress,
-  Button,
-  Stack,
-  Grid,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Divider from '@mui/material/Divider';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Grid from '@mui/material/Grid';
+
 import {
   Speed,
   Warning,
@@ -272,7 +271,7 @@ export default function PerformanceSettings() {
                   <Box mb={2}>
                     <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                       <Typography variant="subtitle1">Active Alerts</Typography>
-                      <Button size="small" startIcon={<Clear />} onClick={clearAlerts}>
+                      <Button size="small" startIcon={<Clear />} onClick={(e: React.MouseEvent) => clearAlerts}>
                         Clear All
                       </Button>
                     </Box>
@@ -330,7 +329,7 @@ export default function PerformanceSettings() {
           <Button
             size="small"
             startIcon={<Speed />}
-            onClick={startMonitoring}
+            onClick={(e: React.MouseEvent) => startMonitoring}
             sx={{ mt: 1 }}
           >
             Start Monitoring

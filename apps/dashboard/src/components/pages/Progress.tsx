@@ -1,32 +1,31 @@
 import React, { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Stack,
-  LinearProgress,
-  Chip,
-  Avatar,
-  Button,
-  IconButton,
-  Tab,
-  Tabs,
-  Paper,
-  CircularProgress,
-  Alert,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Tooltip,
-  Badge,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Divider,
-} from "@mui/material";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import LinearProgress from '@mui/material/LinearProgress';
+import Chip from '@mui/material/Chip';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Paper from '@mui/material/Paper';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Tooltip from '@mui/material/Tooltip';
+import Badge from '@mui/material/Badge';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import ListItemText from '@mui/material/ListItemText';
+import Divider from '@mui/material/Divider';
+
 import Grid2 from "@mui/material/Unstable_Grid2";
 import {
   TrendingUp,
@@ -207,13 +206,13 @@ export default function Progress() {
                     <MenuItem value={365}>Last Year</MenuItem>
                   </Select>
                 </FormControl>
-                <IconButton onClick={handleRefresh} disabled={loading}>
+                <IconButton onClick={(e: React.MouseEvent) => handleRefresh} disabled={loading}>
                   <Refresh />
                 </IconButton>
                 <Button
                   variant="outlined"
                   startIcon={<Download />}
-                  onClick={handleExportReport}
+                  onClick={(e: React.MouseEvent) => handleExportReport}
                 >
                   Export Report
                 </Button>

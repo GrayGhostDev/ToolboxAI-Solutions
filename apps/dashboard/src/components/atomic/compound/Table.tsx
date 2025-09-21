@@ -6,7 +6,7 @@
  */
 
 import React, { createContext, useContext, forwardRef } from 'react';
-import { styled } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { AtomicBox, AtomicText, AtomicCheckbox } from '../atoms';
 import { designTokens } from '../../../theme/designTokens';
 
@@ -219,7 +219,7 @@ const TableRow = forwardRef<HTMLTableRowElement, TableRowProps>(
         ref={ref}
         selectable={selectable}
         selected={selected}
-        onClick={onClick}
+        onClick={(e: React.MouseEvent) => onClick}
         {...props}
       >
         {children}
@@ -278,7 +278,7 @@ const TableCell = forwardRef<HTMLTableCellElement, TableCellProps>(
         as={Component}
         align={align}
         width={width}
-        onClick={isSortable ? handleSort : undefined}
+        onClick={(e: React.MouseEvent) => isSortable ? handleSort : undefined}
         style={{
           cursor: isSortable ? 'pointer' : 'default'
         }}

@@ -6,44 +6,43 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Grid,
-  Avatar,
-  AvatarGroup,
-  Chip,
-  IconButton,
-  Button,
-  LinearProgress,
-  CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
-  Paper,
-  Tooltip,
-  Badge,
-  Stack,
-  Alert,
-  AlertTitle,
-  useTheme,
-  alpha,
-  Divider,
-  ToggleButton,
-  ToggleButtonGroup,
-  TextField,
-  InputAdornment,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Avatar from '@mui/material/Avatar';
+import AvatarGroup from '@mui/material/AvatarGroup';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
+import LinearProgress from '@mui/material/LinearProgress';
+import CircularProgress from '@mui/material/CircularProgress';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TableSortLabel from '@mui/material/TableSortLabel';
+import Paper from '@mui/material/Paper';
+import Tooltip from '@mui/material/Tooltip';
+import Badge from '@mui/material/Badge';
+import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import Divider from '@mui/material/Divider';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemText from '@mui/material/ListItemText';
 import {
   School,
   Person,
@@ -143,7 +142,7 @@ const getMetricColor = (value: number) => {
   return 'error';
 };
 
-export const StudentProgressDashboard: React.FC = () => {
+export const StudentProgressDashboard: React.FunctionComponent<Record<string, any>> = () => {
   const theme = useTheme();
   const { on, sendMessage, isConnected } = useWebSocketContext();
   
@@ -354,7 +353,7 @@ const updateStudentProgress = (update: ProgressUpdate) => {
               />
               <IconButton
                 size="small"
-                onClick={() => setAutoRefresh(!autoRefresh)}
+                onClick={(e: React.MouseEvent) => () => setAutoRefresh(!autoRefresh)}
                 color={autoRefresh ? 'primary' : 'default'}
               >
                 <Refresh />
@@ -546,7 +545,7 @@ const updateStudentProgress = (update: ProgressUpdate) => {
                       
                       <IconButton
                         size="small"
-                        onClick={(e) => setAnchorEl(e.currentTarget)}
+                        onClick={(e: React.MouseEvent) => (e) => setAnchorEl(e.currentTarget)}
                       >
                         <MoreVert />
                       </IconButton>
@@ -628,7 +627,7 @@ const updateStudentProgress = (update: ProgressUpdate) => {
                     <TableSortLabel
                       active={sortField === 'username'}
                       direction={sortField === 'username' ? sortOrder : 'asc'}
-                      onClick={() => handleSort('username')}
+                      onClick={(e: React.MouseEvent) => () => handleSort('username')}
                     >
                       Student
                     </TableSortLabel>
@@ -639,7 +638,7 @@ const updateStudentProgress = (update: ProgressUpdate) => {
                     <TableSortLabel
                       active={sortField === 'progress'}
                       direction={sortField === 'progress' ? sortOrder : 'asc'}
-                      onClick={() => handleSort('progress')}
+                      onClick={(e: React.MouseEvent) => () => handleSort('progress')}
                     >
                       Progress
                     </TableSortLabel>
@@ -648,7 +647,7 @@ const updateStudentProgress = (update: ProgressUpdate) => {
                     <TableSortLabel
                       active={sortField === 'engagement'}
                       direction={sortField === 'engagement' ? sortOrder : 'asc'}
-                      onClick={() => handleSort('engagement')}
+                      onClick={(e: React.MouseEvent) => () => handleSort('engagement')}
                     >
                       Engagement
                     </TableSortLabel>
@@ -727,13 +726,13 @@ const updateStudentProgress = (update: ProgressUpdate) => {
                       <Stack direction="row" spacing={0.5} justifyContent="center">
                         <IconButton
                           size="small"
-                          onClick={() => handleStudentAction('view', student.userId)}
+                          onClick={(e: React.MouseEvent) => () => handleStudentAction('view', student.userId)}
                         >
                           <Visibility fontSize="small" />
                         </IconButton>
                         <IconButton
                           size="small"
-                          onClick={() => handleStudentAction('message', student.userId)}
+                          onClick={(e: React.MouseEvent) => () => handleStudentAction('message', student.userId)}
                         >
                           <Message fontSize="small" />
                         </IconButton>
@@ -741,7 +740,7 @@ const updateStudentProgress = (update: ProgressUpdate) => {
                           <IconButton
                             size="small"
                             color="warning"
-                            onClick={() => handleStudentAction('help', student.userId)}
+                            onClick={(e: React.MouseEvent) => () => handleStudentAction('help', student.userId)}
                           >
                             <Help fontSize="small" />
                           </IconButton>
@@ -762,19 +761,19 @@ const updateStudentProgress = (update: ProgressUpdate) => {
         open={Boolean(anchorEl)}
         onClose={() => setAnchorEl(null)}
       >
-        <MenuItem onClick={() => handleStudentAction('view', selectedStudent!)}>
+        <MenuItem onClick={(e: React.MouseEvent) => () => handleStudentAction('view', selectedStudent!)}>
           <ListItemIcon>
             <Visibility fontSize="small" />
           </ListItemIcon>
           <ListItemText>View Details</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleStudentAction('message', selectedStudent!)}>
+        <MenuItem onClick={(e: React.MouseEvent) => () => handleStudentAction('message', selectedStudent!)}>
           <ListItemIcon>
             <Message fontSize="small" />
           </ListItemIcon>
           <ListItemText>Send Message</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleStudentAction('help', selectedStudent!)}>
+        <MenuItem onClick={(e: React.MouseEvent) => () => handleStudentAction('help', selectedStudent!)}>
           <ListItemIcon>
             <Help fontSize="small" />
           </ListItemIcon>

@@ -5,7 +5,9 @@
  */
 
 import React, { forwardRef } from 'react';
-import { FormLabel, FormLabelProps, styled } from '@mui/material';
+import FormLabel from '@mui/material/FormLabel';
+import FormLabelProps from '@mui/material/FormLabelProps';
+import { styled } from '@mui/material/styles';
 import { designTokens } from '../../../theme/designTokens';
 
 export interface LabelProps extends FormLabelProps {

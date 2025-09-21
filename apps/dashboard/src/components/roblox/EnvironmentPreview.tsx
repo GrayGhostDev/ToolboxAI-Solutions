@@ -4,21 +4,20 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  CircularProgress,
-  Alert,
-  Chip,
-  Grid,
-  Paper,
-  IconButton,
-  Tooltip,
-  Divider
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import Chip from '@mui/material/Chip';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Divider from '@mui/material/Divider';
+import Divider from '@mui/material/Divider';
 import {
   Preview as PreviewIcon,
   Download as DownloadIcon,
@@ -41,7 +40,7 @@ interface EnvironmentPreviewProps {
   onClose?: () => void;
 }
 
-const EnvironmentPreview: React.FC<EnvironmentPreviewProps> = ({
+const EnvironmentPreview: React.FunctionComponent<EnvironmentPreviewProps> = ({
   environmentId,
   environmentDetails,
   onClose
@@ -176,12 +175,12 @@ const EnvironmentPreview: React.FC<EnvironmentPreviewProps> = ({
           </Typography>
           <Box>
             <Tooltip title="Refresh Preview">
-              <IconButton onClick={generatePreview} disabled={isGenerating}>
+              <IconButton onClick={(e: React.MouseEvent) => generatePreview} disabled={isGenerating}>
                 <RefreshIcon />
               </IconButton>
             </Tooltip>
             {onClose && (
-              <IconButton onClick={onClose}>
+              <IconButton onClick={(e: React.MouseEvent) => onClose}>
                 ×
               </IconButton>
             )}
@@ -402,7 +401,7 @@ const EnvironmentPreview: React.FC<EnvironmentPreviewProps> = ({
           <Button
             variant="contained"
             startIcon={<PreviewIcon />}
-            onClick={() => window.open(`/environment-preview/${environmentId}`, '_blank')}
+            onClick={(e: React.MouseEvent) => () => window.open(`/environment-preview/${environmentId}`, '_blank')}
             size="large"
           >
             View Full Preview
@@ -410,7 +409,7 @@ const EnvironmentPreview: React.FC<EnvironmentPreviewProps> = ({
           <Button
             variant="outlined"
             startIcon={<DownloadIcon />}
-            onClick={handleDownload}
+            onClick={(e: React.MouseEvent) => handleDownload}
             size="large"
           >
             Download .rbxl
@@ -418,7 +417,7 @@ const EnvironmentPreview: React.FC<EnvironmentPreviewProps> = ({
           <Button
             variant="outlined"
             startIcon={<CodeIcon />}
-            onClick={handleDeployToRoblox}
+            onClick={(e: React.MouseEvent) => handleDeployToRoblox}
             size="large"
           >
             Deploy to Roblox

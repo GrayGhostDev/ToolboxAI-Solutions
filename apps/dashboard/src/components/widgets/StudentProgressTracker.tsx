@@ -1,37 +1,36 @@
 import React, { useEffect, useState } from 'react';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import LinearProgress from '@mui/material/LinearProgress';
+import Avatar from '@mui/material/Avatar';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import ListItemText from '@mui/material/ListItemText';
+import Chip from '@mui/material/Chip';
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import CircularProgress from '@mui/material/CircularProgress';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
+
 import { useNavigate } from 'react-router-dom';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  Grid,
-  Typography,
-  Box,
-  LinearProgress,
-  Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Chip,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Tooltip,
-  CircularProgress,
-  TextField,
-  InputAdornment,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-} from '@mui/material';
 import {
   TrendingUp,
   TrendingDown,
@@ -78,7 +77,7 @@ interface ProgressMetrics {
   activeNow: number;
 }
 
-const StudentProgressTracker: React.FC = () => {
+const StudentProgressTracker: React.FunctionComponent<Record<string, any>> = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { isConnected } = useWebSocketContext();
@@ -325,7 +324,7 @@ const anyProgress: any = progressData as any;
                 sx={{ mr: 2 }}
               />
               <Tooltip title="Refresh data">
-                <IconButton onClick={() => refetch()}>
+                <IconButton onClick={(e: React.MouseEvent) => () => refetch()}>
                   <Refresh />
                 </IconButton>
               </Tooltip>
@@ -421,7 +420,7 @@ const anyProgress: any = progressData as any;
                         <Tooltip title="View Details">
                           <IconButton
                             size="small"
-                            onClick={() => {
+                            onClick={(e: React.MouseEvent) => () => {
                               setSelectedStudent(student);
                               setStudentDetailsOpen(true);
                             }}
@@ -492,7 +491,7 @@ const anyProgress: any = progressData as any;
             <Typography variant="h6">
               {selectedStudent?.name} - Progress Details
             </Typography>
-            <IconButton onClick={() => setStudentDetailsOpen(false)}>
+            <IconButton onClick={(e: React.MouseEvent) => () => setStudentDetailsOpen(false)}>
               <Close />
             </IconButton>
           </Box>
@@ -610,7 +609,7 @@ const anyProgress: any = progressData as any;
         </DialogContent>
         <DialogActions>
           <Button 
-            onClick={() => {
+            onClick={(e: React.MouseEvent) => () => {
               setStudentDetailsOpen(false);
               navigate(`/progress?studentId=${selectedStudent?.id}`);
             }}
@@ -619,7 +618,7 @@ const anyProgress: any = progressData as any;
           </Button>
           <Button 
             variant="contained"
-            onClick={() => setStudentDetailsOpen(false)}
+            onClick={(e: React.MouseEvent) => () => setStudentDetailsOpen(false)}
           >
             Close
           </Button>

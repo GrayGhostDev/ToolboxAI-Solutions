@@ -1,53 +1,46 @@
 import * as React from "react";
-import { useEffect, useState, memo, useMemo, useCallback } from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Stack,
-  Avatar,
-  Badge,
-  Chip,
-  IconButton,
-  List,
-  ListItemAvatar,
-  ListItemText,
-  ListItemButton,
-  TextField,
-  InputAdornment,
-  Box,
-  Divider,
-  Paper,
-  CircularProgress,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Autocomplete,
-} from "@mui/material";
-import Grid2 from "@mui/material/Unstable_Grid2";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import Badge from '@mui/material/Badge';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import List from '@mui/material/List';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemButton from '@mui/material/ListItemButton';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider';
+import Paper from '@mui/material/Paper';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Autocomplete from '@mui/material/Autocomplete';
+
+import { useEffect, useState, memo } from "react";
 import SendIcon from "@mui/icons-material/Send";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import SearchIcon from "@mui/icons-material/Search";
 import StarIcon from "@mui/icons-material/Star";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ArchiveIcon from "@mui/icons-material/Archive";
 import ReplyIcon from "@mui/icons-material/Reply";
 import ForwardIcon from "@mui/icons-material/Forward";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import DoneAllIcon from "@mui/icons-material/DoneAll";
 import CreateIcon from "@mui/icons-material/Create";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import InboxIcon from "@mui/icons-material/Inbox";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import DraftsIcon from "@mui/icons-material/Drafts";
-
-import { useAppSelector, useAppDispatch } from "../../store";
+import { useAppDispatch } from "../../store";
 import VirtualizedList from "../common/VirtualizedList";
 import { useOptimizedMemo, useOptimizedCallback, useDebouncedCallback, useRenderPerformance } from "../../hooks/usePerformance";
-
 interface Message {
   id: string;
   subject: string;
@@ -61,14 +54,12 @@ interface Message {
   hasAttachment: boolean;
   threadCount: number;
 }
-
 interface Conversation {
   id: string;
   messages: Message[];
   participants: string[];
   lastActivity: Date;
 }
-
 // Memoized message item component for virtual scrolling
 const MessageItem = memo<{
   message: Message;
@@ -79,24 +70,20 @@ const MessageItem = memo<{
   const handleClick = useOptimizedCallback(() => {
     onMessageClick(message);
   }, [onMessageClick, message], 'MessageItem:handleClick');
-
   const handleStarToggle = useOptimizedCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     onStarToggle(message.id);
   }, [onStarToggle, message.id], 'MessageItem:handleStarToggle');
-
   const handleDelete = useOptimizedCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     onDelete(message.id);
   }, [onDelete, message.id], 'MessageItem:handleDelete');
-
   const formattedTime = useOptimizedMemo(() => {
     return message.timestamp.toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit'
     });
   }, [message.timestamp], 'MessageItem:formattedTime');
-
   const priorityColor = useOptimizedMemo(() => {
     switch (message.priority) {
       case 'high': return 'error';
@@ -104,7 +91,6 @@ const MessageItem = memo<{
       default: return 'default';
     }
   }, [message.priority], 'MessageItem:priorityColor');
-
   return (
     <Paper
       elevation={message.isRead ? 0 : 1}
@@ -117,7 +103,7 @@ const MessageItem = memo<{
           backgroundColor: 'action.selected',
         },
       }}
-      onClick={handleClick}
+      onClick={(e: React.MouseEvent) => handleClick}
     >
       <Box p={2} height="100%" display="flex" alignItems="center">
         <Avatar
@@ -126,7 +112,6 @@ const MessageItem = memo<{
         >
           {message.sender.charAt(0).toUpperCase()}
         </Avatar>
-
         <Box flexGrow={1} minWidth={0}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
             <Typography
@@ -142,17 +127,16 @@ const MessageItem = memo<{
               </Typography>
               <IconButton
                 size="small"
-                onClick={handleStarToggle}
+                onClick={(e: React.MouseEvent) => handleStarToggle}
                 color={message.isStarred ? 'warning' : 'default'}
               >
                 <StarIcon fontSize="small" />
               </IconButton>
-              <IconButton size="small" onClick={handleDelete}>
+              <IconButton size="small" onClick={(e: React.MouseEvent) => handleDelete}>
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Box>
           </Box>
-
           <Typography
             variant="body2"
             fontWeight={message.isRead ? 'normal' : 'bold'}
@@ -161,7 +145,6 @@ const MessageItem = memo<{
           >
             {message.subject}
           </Typography>
-
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography
               variant="body2"
@@ -171,7 +154,6 @@ const MessageItem = memo<{
             >
               {message.preview}
             </Typography>
-
             <Box display="flex" gap={0.5}>
               {message.priority !== 'normal' && (
                 <Chip
@@ -198,9 +180,7 @@ const MessageItem = memo<{
     </Paper>
   );
 });
-
 MessageItem.displayName = 'MessageItem';
-
 // Memoized message filters component
 const MessageFilters = memo<{
   searchTerm: string;
@@ -214,14 +194,12 @@ const MessageFilters = memo<{
   const handleSearchChange = useDebouncedCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     onSearchChange(event.target.value);
   }, 300, [onSearchChange]);
-
   const filterOptions = useOptimizedMemo(() => [
     { value: 'all', label: 'All Messages', icon: <InboxIcon /> },
     { value: 'unread', label: 'Unread', icon: <DraftsIcon /> },
     { value: 'starred', label: 'Starred', icon: <StarIcon /> },
     { value: 'sent', label: 'Sent', icon: <SendOutlinedIcon /> },
   ], [], 'MessageFilters:filterOptions');
-
   return (
     <Box display="flex" gap={2} mb={3} flexWrap="wrap">
       <TextField
@@ -238,43 +216,38 @@ const MessageFilters = memo<{
           ),
         }}
       />
-
       <Box display="flex" gap={1}>
         {filterOptions.map((option) => (
           <Button
             key={option.value}
             variant={filterType === option.value ? 'contained' : 'outlined'}
             startIcon={option.icon}
-            onClick={() => onFilterChange(option.value)}
+            onClick={(e: React.MouseEvent) => () => onFilterChange(option.value)}
             size="small"
           >
             {option.label}
           </Button>
         ))}
       </Box>
-
       <Box display="flex" gap={1}>
         <Button
           variant="contained"
           startIcon={<CreateIcon />}
-          onClick={onCompose}
+          onClick={(e: React.MouseEvent) => onCompose}
         >
           Compose
         </Button>
-        <IconButton onClick={onRefresh} disabled={loading}>
+        <IconButton onClick={(e: React.MouseEvent) => onRefresh} disabled={loading}>
           <RefreshIcon />
         </IconButton>
       </Box>
     </Box>
   );
 });
-
 MessageFilters.displayName = 'MessageFilters';
-
 export default function MessagesOptimized() {
   // Performance tracking
   useRenderPerformance('MessagesOptimized');
-
   const dispatch = useAppDispatch();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
@@ -282,11 +255,9 @@ export default function MessagesOptimized() {
   const [filterType, setFilterType] = useState('all');
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
-
   // Memoized filtered and sorted messages
   const filteredMessages = useOptimizedMemo(() => {
     let filtered = messages;
-
     // Apply search filter
     if (searchTerm) {
       const lowercaseSearch = searchTerm.toLowerCase();
@@ -296,7 +267,6 @@ export default function MessagesOptimized() {
         message.preview.toLowerCase().includes(lowercaseSearch)
       );
     }
-
     // Apply type filter
     switch (filterType) {
       case 'unread':
@@ -309,11 +279,9 @@ export default function MessagesOptimized() {
         // This would filter sent messages if we had that data
         break;
     }
-
     // Sort by timestamp (newest first)
     return filtered.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }, [messages, searchTerm, filterType], 'MessagesOptimized:filteredMessages');
-
   // Optimized event handlers
   const handleMessageClick = useOptimizedCallback((message: Message) => {
     setSelectedMessage(message);
@@ -324,21 +292,17 @@ export default function MessagesOptimized() {
       ));
     }
   }, [], 'MessagesOptimized:handleMessageClick');
-
   const handleStarToggle = useOptimizedCallback((messageId: string) => {
     setMessages(prev => prev.map(m =>
       m.id === messageId ? { ...m, isStarred: !m.isStarred } : m
     ));
   }, [], 'MessagesOptimized:handleStarToggle');
-
   const handleDelete = useOptimizedCallback((messageId: string) => {
     setMessages(prev => prev.filter(m => m.id !== messageId));
   }, [], 'MessagesOptimized:handleDelete');
-
   const handleCompose = useOptimizedCallback(() => {
     setComposeOpen(true);
   }, [], 'MessagesOptimized:handleCompose');
-
   const handleRefresh = useOptimizedCallback(async () => {
     setLoading(true);
     try {
@@ -350,7 +314,6 @@ export default function MessagesOptimized() {
       setLoading(false);
     }
   }, [], 'MessagesOptimized:handleRefresh');
-
   // Mock data generation for demo
   const generateMockMessages = useOptimizedCallback(() => {
     const mockMessages: Message[] = Array.from({ length: 100 }, (_, i) => ({
@@ -367,11 +330,9 @@ export default function MessagesOptimized() {
     }));
     setMessages(mockMessages);
   }, [], 'MessagesOptimized:generateMockMessages');
-
   useEffect(() => {
     generateMockMessages();
   }, [generateMockMessages]);
-
   // Render function for virtual list
   const renderMessageItem = useOptimizedCallback((message: Message) => (
     <MessageItem
@@ -382,13 +343,11 @@ export default function MessagesOptimized() {
       onDelete={handleDelete}
     />
   ), [handleMessageClick, handleStarToggle, handleDelete], 'MessagesOptimized:renderMessageItem');
-
   return (
     <Box>
       <Typography variant="h4" component="h1" mb={3}>
         Messages
       </Typography>
-
       <MessageFilters
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -398,7 +357,6 @@ export default function MessagesOptimized() {
         onRefresh={handleRefresh}
         loading={loading}
       />
-
       {loading && filteredMessages.length === 0 ? (
         <Box display="flex" justifyContent="center" alignItems="center" height="400px">
           <CircularProgress />
@@ -419,7 +377,6 @@ export default function MessagesOptimized() {
           overscanCount={10}
         />
       )}
-
       {/* Message Detail Dialog */}
       <Dialog
         open={!!selectedMessage}
@@ -433,7 +390,7 @@ export default function MessagesOptimized() {
               <Box display="flex" justifyContent="space-between" alignItems="center">
                 <Typography variant="h6">{selectedMessage.subject}</Typography>
                 <Box>
-                  <IconButton onClick={() => handleStarToggle(selectedMessage.id)}>
+                  <IconButton onClick={(e: React.MouseEvent) => () => handleStarToggle(selectedMessage.id)}>
                     <StarIcon color={selectedMessage.isStarred ? "warning" : "inherit"} />
                   </IconButton>
                   <IconButton>
@@ -460,7 +417,7 @@ export default function MessagesOptimized() {
               </Typography>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setSelectedMessage(null)}>Close</Button>
+              <Button onClick={(e: React.MouseEvent) => () => setSelectedMessage(null)}>Close</Button>
               <Button variant="contained" startIcon={<ReplyIcon />}>
                 Reply
               </Button>
@@ -468,7 +425,6 @@ export default function MessagesOptimized() {
           </>
         )}
       </Dialog>
-
       {/* Compose Dialog */}
       <Dialog
         open={composeOpen}
@@ -499,7 +455,7 @@ export default function MessagesOptimized() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setComposeOpen(false)}>Cancel</Button>
+          <Button onClick={(e: React.MouseEvent) => () => setComposeOpen(false)}>Cancel</Button>
           <Button variant="contained" startIcon={<SendIcon />}>
             Send
           </Button>

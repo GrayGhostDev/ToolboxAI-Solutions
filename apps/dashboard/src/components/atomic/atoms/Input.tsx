@@ -6,14 +6,13 @@
  */
 
 import React, { forwardRef } from 'react';
-import {
-  TextField,
-  TextFieldProps,
-  InputAdornment,
-  IconButton,
-  styled,
-  alpha
-} from '@mui/material';
+import TextField from '@mui/material/TextField';
+import TextFieldProps from '@mui/material/TextFieldProps';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import { styled } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import { Visibility, VisibilityOff, Clear } from '@mui/icons-material';
 import { designTokens } from '../../../theme/designTokens';
 
@@ -231,7 +230,7 @@ const AtomicInput = forwardRef<HTMLDivElement, InputProps>(
           <IconButton
             key="clear"
             aria-label="clear input"
-            onClick={handleClear}
+            onClick={(e: React.MouseEvent) => handleClear}
             edge="end"
             size="small"
             sx={{ mr: 0.5 }}
@@ -247,7 +246,7 @@ const AtomicInput = forwardRef<HTMLDivElement, InputProps>(
           <IconButton
             key="password-toggle"
             aria-label="toggle password visibility"
-            onClick={handleTogglePassword}
+            onClick={(e: React.MouseEvent) => handleTogglePassword}
             edge="end"
             size="small"
           >

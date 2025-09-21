@@ -34,8 +34,8 @@ export default function CookieBanner() {
         variant="filled"
         action={
           <>
-            <Button color="inherit" size="small" onClick={decline}>Decline</Button>
-            <Button color="inherit" size="small" onClick={accept}>Accept</Button>
+            <Button color="inherit" size="small" onClick={(e: React.MouseEvent) => decline}>Decline</Button>
+            <Button color="inherit" size="small" onClick={(e: React.MouseEvent) => accept}>Accept</Button>
           </>
         }
       >

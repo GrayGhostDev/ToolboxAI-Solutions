@@ -1,3 +1,4 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """Test script to verify improved streaming response times for AI Assistant"""
 
@@ -11,6 +12,7 @@ from typing import AsyncGenerator
 API_BASE_URL = "http://127.0.0.1:8009"  # Using port 8009
 AUTH_TOKEN = "dev-token"
 
+@pytest.mark.asyncio
 async def test_streaming_response():
     """Test that AI responses start streaming immediately"""
 

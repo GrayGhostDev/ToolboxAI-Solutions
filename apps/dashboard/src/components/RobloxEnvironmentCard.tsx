@@ -1,17 +1,16 @@
 import React from 'react';
-import {
-  Card,
-  CardContent,
-  CardActions,
-  Typography,
-  Button,
-  Chip,
-  LinearProgress,
-  Box,
-  IconButton,
-  Menu,
-  MenuItem,
-} from '@mui/material';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardActions from '@mui/material/CardActions';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+
 import {
   PlayArrow as PlayIcon,
   Download as DownloadIcon,
@@ -32,7 +31,7 @@ interface RobloxEnvironmentCardProps {
   onPreview: (id: string) => void;
 }
 
-export const RobloxEnvironmentCard: React.FC<RobloxEnvironmentCardProps> = ({
+export const RobloxEnvironmentCard: React.FunctionComponent<RobloxEnvironmentCardProps> = ({
   environment,
   generationStatus,
   onGenerate,
@@ -78,7 +77,7 @@ export const RobloxEnvironmentCard: React.FC<RobloxEnvironmentCardProps> = ({
           </Typography>
           <IconButton
             size="small"
-            onClick={(e) => setMenuAnchor(e.currentTarget)}
+            onClick={(e: React.MouseEvent) => (e) => setMenuAnchor(e.currentTarget)}
           >
             <MoreIcon />
           </IconButton>
@@ -133,7 +132,7 @@ export const RobloxEnvironmentCard: React.FC<RobloxEnvironmentCardProps> = ({
         {canGenerate && (
           <Button
             startIcon={<PlayIcon />}
-            onClick={() => onGenerate(environment.id)}
+            onClick={(e: React.MouseEvent) => () => onGenerate(environment.id)}
             variant="contained"
             color="primary"
           >
@@ -144,7 +143,7 @@ export const RobloxEnvironmentCard: React.FC<RobloxEnvironmentCardProps> = ({
         {canDownload && (
           <Button
             startIcon={<DownloadIcon />}
-            onClick={() => onDownload(environment.id)}
+            onClick={(e: React.MouseEvent) => () => onDownload(environment.id)}
             size="small"
           >
             Download
@@ -154,7 +153,7 @@ export const RobloxEnvironmentCard: React.FC<RobloxEnvironmentCardProps> = ({
         {canDeploy && (
           <Button
             startIcon={<DeployIcon />}
-            onClick={() => onDeploy(environment.id)}
+            onClick={(e: React.MouseEvent) => () => onDeploy(environment.id)}
             size="small"
             variant="outlined"
           >
@@ -164,7 +163,7 @@ export const RobloxEnvironmentCard: React.FC<RobloxEnvironmentCardProps> = ({
 
         {environment.previewUrl && (
           <Button
-            onClick={() => onPreview(environment.id)}
+            onClick={(e: React.MouseEvent) => () => onPreview(environment.id)}
             size="small"
           >
             Preview
@@ -177,7 +176,7 @@ export const RobloxEnvironmentCard: React.FC<RobloxEnvironmentCardProps> = ({
         open={Boolean(menuAnchor)}
         onClose={() => setMenuAnchor(null)}
       >
-        <MenuItem onClick={() => {
+        <MenuItem onClick={(e: React.MouseEvent) => () => {
           onDelete(environment.id);
           setMenuAnchor(null);
         }}>

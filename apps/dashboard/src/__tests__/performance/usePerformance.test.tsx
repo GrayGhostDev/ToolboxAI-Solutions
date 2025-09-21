@@ -393,7 +393,7 @@ describe('useIntersectionObserver', () => {
 
 describe('Performance Hook Integration', () => {
   it('works together in a real component', () => {
-    const TestComponent: React.FC<{ items: number[] }> = ({ items }) => {
+    const TestComponent: React.FunctionComponent<{ items: number[] }> = ({ items }) => {
       useRenderPerformance('TestComponent');
       useComponentLifecycle('TestComponent');
 
@@ -420,7 +420,7 @@ describe('Performance Hook Integration', () => {
       return (
         <div>
           <span data-testid="sum">{sum}</span>
-          <button onClick={handleClick}>Log Sum</button>
+          <button onClick={(e: React.MouseEvent) => handleClick}>Log Sum</button>
         </div>
       );
     };

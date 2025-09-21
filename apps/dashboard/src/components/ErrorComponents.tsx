@@ -5,28 +5,27 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Typography,
-  Alert,
-  AlertTitle,
-  CircularProgress,
-  LinearProgress,
-  Stack,
-  Chip,
-  IconButton,
-  Collapse,
-  Paper,
-  Skeleton,
-  Fade,
-  Zoom,
-  useTheme,
-  Container,
-  Link,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import CircularProgress from '@mui/material/CircularProgress';
+import LinearProgress from '@mui/material/LinearProgress';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Collapse from '@mui/material/Collapse';
+import Paper from '@mui/material/Paper';
+import Skeleton from '@mui/material/Skeleton';
+import Fade from '@mui/material/Fade';
+import Zoom from '@mui/material/Zoom';
+import { useTheme } from '@mui/material/styles';
+import Container from '@mui/material/Container';
+import Link from '@mui/material/Link';
+
 import {
   WifiOff,
   CloudOff,
@@ -60,8 +59,8 @@ export function NetworkError({
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline as EventListener);
+    window.addEventListener("offline", handleOffline as EventListener);
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -95,7 +94,7 @@ export function NetworkError({
         <Button
           variant="contained"
           startIcon={<Refresh />}
-          onClick={onRetry}
+          onClick={(e: React.MouseEvent) => onRetry}
           disabled={!isOnline}
           fullWidth
         >
@@ -185,7 +184,7 @@ export function ApiError({
               variant="contained"
               size="small"
               startIcon={<Refresh />}
-              onClick={onRetry}
+              onClick={(e: React.MouseEvent) => onRetry}
             >
               Try Again
             </Button>
@@ -195,7 +194,7 @@ export function ApiError({
             <Button
               variant="outlined"
               size="small"
-              onClick={() => setExpanded(!expanded)}
+              onClick={(e: React.MouseEvent) => () => setExpanded(!expanded)}
             >
               {expanded ? 'Hide' : 'Show'} Details
             </Button>
@@ -250,7 +249,7 @@ export function LoadingError({
             <Button
               variant="outlined"
               startIcon={<ArrowBack />}
-              onClick={onGoBack}
+              onClick={(e: React.MouseEvent) => onGoBack}
             >
               Go Back
             </Button>
@@ -260,7 +259,7 @@ export function LoadingError({
             <Button
               variant="contained"
               startIcon={<Refresh />}
-              onClick={onRetry}
+              onClick={(e: React.MouseEvent) => onRetry}
             >
               Try Again
             </Button>
@@ -296,7 +295,7 @@ export function InlineError({
               aria-label="close"
               color="inherit"
               size="small"
-              onClick={onDismiss}
+              onClick={(e: React.MouseEvent) => onDismiss}
             >
               <Close fontSize="inherit" />
             </IconButton>
@@ -354,7 +353,7 @@ export function RetryTimer({
           </Typography>
         </Box>
         {onCancel && (
-          <Button size="small" onClick={onCancel}>
+          <Button size="small" onClick={(e: React.MouseEvent) => onCancel}>
             Cancel
           </Button>
         )}
@@ -388,7 +387,7 @@ export function EmptyState({
       }}
     >
       <Box sx={{ mb: 3, opacity: 0.5 }}>
-        {React.cloneElement(icon as React.ReactElement, {
+        {React./* TODO: React 19 - Review usage of cloneElement */ cloneElement(icon as React.ReactElement, {
           sx: { fontSize: 80 },
         })}
       </Box>
@@ -433,7 +432,7 @@ export function SuccessRecovery({
               aria-label="close"
               color="inherit"
               size="small"
-              onClick={onDismiss}
+              onClick={(e: React.MouseEvent) => onDismiss}
             >
               <Close fontSize="inherit" />
             </IconButton>

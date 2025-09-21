@@ -309,3 +309,78 @@ class ErrorAggregationIntelligenceAgent(BaseErrorAgent):
                 if aggregated.error_states:
                     return aggregated.error_states[0]
         return None
+
+    async def _process_task(self, state) -> Any:
+        """
+        Process error aggregation task.
+
+        Args:
+            state: Agent state containing task information
+
+        Returns:
+            Task processing result
+        """
+        try:
+            task = state.get("task", {})
+            task_type = task.get("type", "aggregate_errors")
+
+            if task_type == "aggregate_errors":
+                errors = task.get("errors", [])
+                source = task.get("source", "unknown")
+
+                # Convert dict errors to ErrorState format if needed
+                formatted_errors = []
+                for error in errors:
+                    if isinstance(error, dict):
+                        # Ensure error has required fields
+                        if "error_type" not in error:
+                            error["error_type"] = ErrorType.RUNTIME
+                        if "priority" not in error:
+                            error["priority"] = ErrorPriority.MEDIUM
+                        if "timestamp" not in error:
+                            error["timestamp"] = datetime.now().isoformat()
+                    formatted_errors.append(error)
+
+                # Perform aggregation
+                result = await self.aggregate_errors(formatted_errors, source)
+
+                return {
+                    "status": "completed",
+                    "result": result,
+                    "aggregated_count": len(result["aggregated_groups"]),
+                    "alerts_generated": len(result["alerts_generated"])
+                }
+
+            elif task_type == "get_queue_status":
+                result = await self.get_queue_status()
+                return {
+                    "status": "completed",
+                    "result": result
+                }
+
+            elif task_type == "process_next":
+                priority = task.get("priority", ErrorPriority.HIGH)
+                if isinstance(priority, str):
+                    priority = ErrorPriority[priority.upper()]
+
+                next_error = await self.process_next_error(priority)
+                return {
+                    "status": "completed",
+                    "result": next_error,
+                    "has_next": next_error is not None
+                }
+
+            else:
+                return {
+                    "status": "error",
+                    "error": f"Unknown task type: {task_type}",
+                    "result": None
+                }
+
+        except Exception as e:
+            logger.error(f"Error processing aggregation task: {e}")
+            return {
+                "status": "error",
+                "error": str(e),
+                "result": None
+            }

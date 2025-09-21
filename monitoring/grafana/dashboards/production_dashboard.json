@@ -1,0 +1,104 @@
+{
+  "dashboard": {
+    "title": "ToolBoxAI Production Dashboard",
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "{{method}} {{endpoint}}"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "GPT-4.1 Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(gpt41_requests_total[5m])) by (model)",
+            "legendFormat": "{{model}}"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Response Time (p95)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "p95 latency"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m]))",
+            "legendFormat": "5xx errors"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Database Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "pg_stat_database_numbackends",
+            "legendFormat": "{{datname}}"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Redis Memory Usage",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "redis_memory_used_bytes",
+            "legendFormat": "Memory Used"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Token Usage & Cost",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(gpt41_tokens_used_total)",
+            "legendFormat": "Total Tokens"
+          },
+          {
+            "expr": "sum(gpt41_cost_dollars_total)",
+            "legendFormat": "Total Cost ($)"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Active Users",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "count(increase(user_activity_total[1h]) > 0)",
+            "legendFormat": "Active Users"
+          }
+        ]
+      }
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "refresh": "10s"
+  }
+}

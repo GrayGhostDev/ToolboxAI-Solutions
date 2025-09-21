@@ -1,40 +1,39 @@
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Button,
-  Chip,
-  LinearProgress,
-  Tabs,
-  Tab,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  IconButton,
-  Badge,
-  Tooltip,
-  Alert,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemSecondaryAction,
-  Divider,
-  ToggleButton,
-  ToggleButtonGroup,
-  Skeleton,
-  Avatar,
-} from "@mui/material";
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import IconButton from '@mui/material/IconButton';
+import Badge from '@mui/material/Badge';
+import Tooltip from '@mui/material/Tooltip';
+import Alert from '@mui/material/Alert';
+import Paper from '@mui/material/Paper';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import Divider from '@mui/material/Divider';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Skeleton from '@mui/material/Skeleton';
+import Avatar from '@mui/material/Avatar';
+
 import {
   EmojiEvents,
   Timer,
@@ -73,9 +72,7 @@ import {
 } from "@mui/icons-material";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store";
-import { Mission, MissionProgress, Challenge, ChallengeLeaderboard } from "../../types/api";
-import apiClient from "../../services/api";
-
+import { Mission, MissionProgress, Challenge } from "../../types/api";
 const categoryIcons = {
   academic: <School />,
   social: <People />,
@@ -83,14 +80,12 @@ const categoryIcons = {
   physical: <FitnessCenter />,
   community: <Groups />,
 };
-
 const difficultyColors = {
   easy: "success",
   medium: "warning",
   hard: "error",
   expert: "secondary",
 } as const;
-
 const typeColors = {
   daily: "#4CAF50",
   weekly: "#2196F3",
@@ -98,7 +93,6 @@ const typeColors = {
   special: "#9C27B0",
   custom: "#607D8B",
 };
-
 const challengeTypeIcons = {
   speed: <Speed />,
   accuracy: <Psychology />,
@@ -106,12 +100,10 @@ const challengeTypeIcons = {
   collaboration: <Groups />,
   endurance: <Schedule />,
 };
-
-const Missions: React.FC = () => {
+const Missions: React.FunctionComponent<Record<string, any>> = () => {
   const dispatch = useDispatch();
   const { role, userId } = useSelector((state: RootState) => state.user);
   const { xp, level } = useSelector((state: RootState) => state.gamification);
-
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [missions, setMissions] = useState<Mission[]>([]);
@@ -125,7 +117,6 @@ const Missions: React.FC = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [missionDetailsOpen, setMissionDetailsOpen] = useState(false);
   const [challengeDetailsOpen, setChallengeDetailsOpen] = useState(false);
-
   // Mock data for development
   const mockMissions: Mission[] = [
     {
@@ -256,7 +247,6 @@ const Missions: React.FC = () => {
       createdAt: new Date().toISOString(),
     },
   ];
-
   const mockProgress: MissionProgress[] = [
     {
       id: "p1",
@@ -310,7 +300,6 @@ const Missions: React.FC = () => {
       completionCount: 0,
     },
   ];
-
   const mockChallenges: Challenge[] = [
     {
       id: "c1",
@@ -362,11 +351,9 @@ const Missions: React.FC = () => {
       createdAt: new Date().toISOString(),
     },
   ];
-
   useEffect(() => {
     loadMissionsAndChallenges();
   }, []);
-
   const loadMissionsAndChallenges = async () => {
     setLoading(true);
     try {
@@ -382,7 +369,6 @@ const Missions: React.FC = () => {
       setLoading(false);
     }
   };
-
   const handleStartMission = async (mission: Mission) => {
     try {
       // API call to start mission
@@ -401,13 +387,11 @@ const Missions: React.FC = () => {
         })),
         completionCount: 0,
       };
-      
       setMissionProgress(prev => new Map(prev).set(mission.id, newProgress));
     } catch (error) {
       console.error("Failed to start mission:", error);
     }
   };
-
   const handleClaimReward = async (mission: Mission) => {
     try {
       // API call to claim reward
@@ -420,7 +404,6 @@ const Missions: React.FC = () => {
       console.error("Failed to claim reward:", error);
     }
   };
-
   const handleJoinChallenge = async (challenge: Challenge) => {
     try {
       // API call to join challenge
@@ -433,13 +416,11 @@ const Missions: React.FC = () => {
       console.error("Failed to join challenge:", error);
     }
   };
-
   const renderMissionCard = (mission: Mission) => {
     const progress = missionProgress.get(mission.id);
     const isStarted = !!progress;
     const isCompleted = progress?.status === "completed";
     const isClaimed = progress?.status === "claimed";
-
     return (
       <Card
         key={mission.id}
@@ -472,15 +453,12 @@ const Missions: React.FC = () => {
               </Tooltip>
             )}
           </Box>
-
           <Typography variant="h6" gutterBottom>
             {mission.title}
           </Typography>
-
           <Typography variant="body2" color="text.secondary" gutterBottom>
             {mission.description}
           </Typography>
-
           <Box display="flex" alignItems="center" gap={1} my={2}>
             <AttachMoney />
             <Typography variant="h6" color="primary">
@@ -493,7 +471,6 @@ const Missions: React.FC = () => {
               </>
             )}
           </Box>
-
           {isStarted && progress && (
             <Box mb={2}>
               <Box display="flex" justifyContent="space-between" mb={1}>
@@ -507,7 +484,6 @@ const Missions: React.FC = () => {
               />
             </Box>
           )}
-
           <List dense>
             {mission.requirements.map((req) => {
               const reqProgress = progress?.requirementsProgress.find(
@@ -515,7 +491,6 @@ const Missions: React.FC = () => {
               );
               const current = reqProgress?.current || 0;
               const completed = reqProgress?.completed || false;
-
               return (
                 <ListItem key={req.id} disableGutters>
                   <ListItemIcon sx={{ minWidth: 32 }}>
@@ -535,7 +510,6 @@ const Missions: React.FC = () => {
               );
             })}
           </List>
-
           {mission.endDate && (
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="caption">
@@ -544,14 +518,13 @@ const Missions: React.FC = () => {
             </Alert>
           )}
         </CardContent>
-
         <Box p={2} pt={0}>
           {!isStarted && (
             <Button
               fullWidth
               variant="contained"
               startIcon={<PlayArrow />}
-              onClick={() => handleStartMission(mission)}
+              onClick={(e: React.MouseEvent) => () => handleStartMission(mission)}
             >
               Start Mission
             </Button>
@@ -560,7 +533,7 @@ const Missions: React.FC = () => {
             <Button
               fullWidth
               variant="outlined"
-              onClick={() => {
+              onClick={(e: React.MouseEvent) => () => {
                 setSelectedMission(mission);
                 setMissionDetailsOpen(true);
               }}
@@ -574,7 +547,7 @@ const Missions: React.FC = () => {
               variant="contained"
               color="success"
               startIcon={<Celebration />}
-              onClick={() => handleClaimReward(mission)}
+              onClick={(e: React.MouseEvent) => () => handleClaimReward(mission)}
             >
               Claim Reward
             </Button>
@@ -588,12 +561,10 @@ const Missions: React.FC = () => {
       </Card>
     );
   };
-
   const renderChallengeCard = (challenge: Challenge) => {
     const isParticipant = challenge.participants.includes(userId || "");
     const timeUntilStart = new Date(challenge.startTime).getTime() - Date.now();
     const timeUntilEnd = new Date(challenge.endTime).getTime() - Date.now();
-
     return (
       <Card key={challenge.id} sx={{ height: "100%" }}>
         <CardContent>
@@ -611,11 +582,9 @@ const Missions: React.FC = () => {
               }
             />
           </Box>
-
           <Typography variant="body2" color="text.secondary" gutterBottom>
             {challenge.description}
           </Typography>
-
           <Box my={2}>
             <Typography variant="caption" color="text.secondary">
               {challenge.status === "upcoming" && `Starts in ${Math.ceil(timeUntilStart / (1000 * 60 * 60 * 24))} days`}
@@ -623,14 +592,12 @@ const Missions: React.FC = () => {
               {challenge.status === "completed" && "Challenge ended"}
             </Typography>
           </Box>
-
           <Box display="flex" alignItems="center" gap={1} mb={2}>
             <People fontSize="small" />
             <Typography variant="body2">
               {challenge.participants.length} participants
             </Typography>
           </Box>
-
           {challenge.leaderboard && challenge.leaderboard.length > 0 && (
             <Box mb={2}>
               <Typography variant="subtitle2" gutterBottom>
@@ -655,7 +622,6 @@ const Missions: React.FC = () => {
               </List>
             </Box>
           )}
-
           <Typography variant="subtitle2" gutterBottom>
             Prizes
           </Typography>
@@ -670,14 +636,13 @@ const Missions: React.FC = () => {
             ))}
           </Box>
         </CardContent>
-
         <Box p={2} pt={0}>
           {challenge.status === "upcoming" && !isParticipant && (
             <Button
               fullWidth
               variant="contained"
               startIcon={<Flag />}
-              onClick={() => handleJoinChallenge(challenge)}
+              onClick={(e: React.MouseEvent) => () => handleJoinChallenge(challenge)}
             >
               Join Challenge
             </Button>
@@ -692,7 +657,7 @@ const Missions: React.FC = () => {
               fullWidth
               variant="contained"
               color="primary"
-              onClick={() => {
+              onClick={(e: React.MouseEvent) => () => {
                 setSelectedChallenge(challenge);
                 setChallengeDetailsOpen(true);
               }}
@@ -704,7 +669,7 @@ const Missions: React.FC = () => {
             <Button
               fullWidth
               variant="outlined"
-              onClick={() => {
+              onClick={(e: React.MouseEvent) => () => {
                 setSelectedChallenge(challenge);
                 setChallengeDetailsOpen(true);
               }}
@@ -716,18 +681,15 @@ const Missions: React.FC = () => {
       </Card>
     );
   };
-
   const filteredMissions = missions.filter(mission => {
     if (missionFilter !== "all" && mission.type !== missionFilter) return false;
     if (categoryFilter !== "all" && mission.category !== categoryFilter) return false;
     return true;
   });
-
   const filteredChallenges = challenges.filter(challenge => {
     if (challengeFilter === "all") return true;
     return challenge.status === challengeFilter;
   });
-
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -736,13 +698,12 @@ const Missions: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<Add />}
-            onClick={() => setCreateDialogOpen(true)}
+            onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
           >
             Create Mission
           </Button>
         )}
       </Box>
-
       <Paper sx={{ mb: 3, p: 2 }}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={3}>
@@ -795,13 +756,11 @@ const Missions: React.FC = () => {
           </Grid>
         </Grid>
       </Paper>
-
       <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ mb: 3 }}>
         <Tab label="Missions" icon={<Assignment />} iconPosition="start" />
         <Tab label="Challenges" icon={<EmojiEvents />} iconPosition="start" />
         <Tab label="History" icon={<Timer />} iconPosition="start" />
       </Tabs>
-
       {activeTab === 0 && (
         <>
           <Box display="flex" gap={2} mb={3} flexWrap="wrap">
@@ -817,7 +776,6 @@ const Missions: React.FC = () => {
               <ToggleButton value="monthly">Monthly</ToggleButton>
               <ToggleButton value="special">Special</ToggleButton>
             </ToggleButtonGroup>
-
             <FormControl size="small" sx={{ minWidth: 150 }}>
               <InputLabel>Category</InputLabel>
               <Select
@@ -834,7 +792,6 @@ const Missions: React.FC = () => {
               </Select>
             </FormControl>
           </Box>
-
           <Grid container spacing={3}>
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
@@ -852,7 +809,6 @@ const Missions: React.FC = () => {
           </Grid>
         </>
       )}
-
       {activeTab === 1 && (
         <>
           <Box display="flex" gap={2} mb={3}>
@@ -868,7 +824,6 @@ const Missions: React.FC = () => {
               <ToggleButton value="completed">Completed</ToggleButton>
             </ToggleButtonGroup>
           </Box>
-
           <Grid container spacing={3}>
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => (
@@ -886,7 +841,6 @@ const Missions: React.FC = () => {
           </Grid>
         </>
       )}
-
       {activeTab === 2 && (
         <Paper sx={{ p: 3 }}>
           <Typography variant="h6" gutterBottom>
@@ -898,7 +852,6 @@ const Missions: React.FC = () => {
               .map((progress) => {
                 const mission = missions.find(m => m.id === progress.missionId);
                 if (!mission) return null;
-
                 return (
                   <React.Fragment key={progress.id}>
                     <ListItem>
@@ -918,7 +871,6 @@ const Missions: React.FC = () => {
           </List>
         </Paper>
       )}
-
       {/* Mission Details Dialog */}
       <Dialog
         open={missionDetailsOpen}
@@ -936,12 +888,11 @@ const Missions: React.FC = () => {
               {/* Add more mission details here */}
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setMissionDetailsOpen(false)}>Close</Button>
+              <Button onClick={(e: React.MouseEvent) => () => setMissionDetailsOpen(false)}>Close</Button>
             </DialogActions>
           </>
         )}
       </Dialog>
-
       {/* Challenge Details Dialog */}
       <Dialog
         open={challengeDetailsOpen}
@@ -959,7 +910,7 @@ const Missions: React.FC = () => {
               {/* Add challenge submission form or results here */}
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setChallengeDetailsOpen(false)}>Close</Button>
+              <Button onClick={(e: React.MouseEvent) => () => setChallengeDetailsOpen(false)}>Close</Button>
             </DialogActions>
           </>
         )}
@@ -967,5 +918,4 @@ const Missions: React.FC = () => {
     </Box>
   );
 };
-
 export default Missions;

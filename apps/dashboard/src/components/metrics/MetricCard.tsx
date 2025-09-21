@@ -4,18 +4,17 @@
  */
 
 import React, { memo } from 'react';
-import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Stack,
-  Tooltip,
-  IconButton,
-  Skeleton,
-  useTheme,
-  alpha,
-} from '@mui/material';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
+import IconButton from '@mui/material/IconButton';
+import Skeleton from '@mui/material/Skeleton';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+
 import {
   TrendingUp,
   TrendingDown,
@@ -146,7 +145,7 @@ export const MetricCard = memo<MetricCardProps>(({
     <MotionCard
       whileHover={{ scale: onClick ? 1.02 : 1 }}
       transition={{ type: 'spring', stiffness: 300 }}
-      onClick={onClick}
+      onClick={(e: React.MouseEvent) => onClick}
       sx={{
         cursor: onClick ? 'pointer' : 'default',
         position: 'relative',
@@ -180,7 +179,7 @@ export const MetricCard = memo<MetricCardProps>(({
             <Stack direction="row" spacing={0.5}>
               {description && (
                 <Tooltip title={description}>
-                  <IconButton size="small" onClick={onInfoClick}>
+                  <IconButton size="small" onClick={(e: React.MouseEvent) => onInfoClick}>
                     <InfoIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>

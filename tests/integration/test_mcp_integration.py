@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 #!/usr/bin/env python3
 """
 MCP Server Integration Test Suite
@@ -44,7 +59,8 @@ class MCPIntegrationTest:
         self.test_results = []
         
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_connection(self):
+    @pytest.mark.asyncio
+async def test_websocket_connection(self):
         """Test basic WebSocket connection to MCP server"""
         print("\n🔍 Testing WebSocket Connection...")
         
@@ -96,7 +112,8 @@ class MCPIntegrationTest:
             return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_context_management(self):
+    @pytest.mark.asyncio
+async def test_context_management(self):
         """Test context add, update, and retrieval"""
         print("\n🔍 Testing Context Management...")
         
@@ -167,7 +184,8 @@ class MCPIntegrationTest:
             return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_priority_pruning(self):
+    @pytest.mark.asyncio
+async def test_priority_pruning(self):
         """Test context pruning based on priority"""
         print("\n🔍 Testing Priority-Based Pruning...")
         
@@ -232,7 +250,8 @@ class MCPIntegrationTest:
             return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_multi_client_sync(self):
+    @pytest.mark.asyncio
+async def test_multi_client_sync(self):
         """Test synchronization between multiple clients"""
         print("\n🔍 Testing Multi-Client Synchronization...")
         
@@ -292,7 +311,8 @@ class MCPIntegrationTest:
             return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_token_limit_enforcement(self):
+    @pytest.mark.asyncio
+async def test_token_limit_enforcement(self):
         """Test that token limits are enforced"""
         print("\n🔍 Testing Token Limit Enforcement...")
         
@@ -346,7 +366,8 @@ class MCPIntegrationTest:
             return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_agent_integration(self):
+    @pytest.mark.asyncio
+async def test_agent_integration(self):
         """Test if agents can communicate with MCP"""
         print("\n🔍 Testing Agent Integration with MCP...")
         
@@ -415,7 +436,8 @@ class MCPIntegrationTest:
             return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_error_handling(self):
+    @pytest.mark.asyncio
+async def test_error_handling(self):
         """Test error handling for invalid messages"""
         print("\n🔍 Testing Error Handling...")
         

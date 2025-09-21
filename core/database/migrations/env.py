@@ -29,7 +29,7 @@ import core.database.models
 import core.database.roblox_models
 
 # This is the Alembic Config object
-config = context.config
+config = context.config if hasattr(context, "config") else None
 
 # Interpret the config file for Python logging
 if config.config_file_name is not None:

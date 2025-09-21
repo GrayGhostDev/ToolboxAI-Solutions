@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/error_handling/error_aggregation_intelligence_agent.py
+# hypothesis_version: 6.139.2
+
+[0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 3600, 'CRITICAL', 'EMERGENCY', 'Error sources', 'ErrorCorrectionAgent', 'Errors in queue', 'HIGH', 'LOW', 'MEDIUM', 'Order of processing', 'Queue identifier', 'Queue priority level', 'Total error count', 'affected_components', 'agent_assignments', 'aggregated_groups', 'aggregation_id', 'alert_id', 'alerts_generated', 'assigned', 'count', 'error_type', 'frequency', 'gpt-4', 'impact', 'message', 'pending', 'priority', 'queue_assignments', 'recommended_action', 'severity', 'timestamp', 'total_errors', 'unknown']

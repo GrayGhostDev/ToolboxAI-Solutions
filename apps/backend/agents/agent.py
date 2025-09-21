@@ -298,6 +298,7 @@ class AgentPool:
 
     def _create_agent(self, agent_type: str) -> Any:
         """Create an agent of specified type"""
+        from langchain_openai import ChatOpenAI
         llm = ChatOpenAI(
             model=settings.OPENAI_MODEL,
             temperature=settings.OPENAI_TEMPERATURE,

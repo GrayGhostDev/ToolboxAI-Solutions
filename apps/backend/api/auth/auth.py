@@ -382,9 +382,18 @@ class RateLimiter:
                 client_ip = request.client.host
                 identifier = f"{client_ip}:{func.__name__}"
 
-                if not RateLimiter.check_rate_limit(
-                    identifier, window_seconds, max_requests
-                ):
+                # Convert to async check
+                manager = get_rate_limit_manager()
+                requests_limit = max_requests if max_requests is not None else settings.RATE_LIMIT_PER_MINUTE
+
+                allowed, _ = await manager.check_rate_limit(
+                    identifier=identifier,
+                    max_requests=requests_limit,
+                    window_seconds=window_seconds,
+                    source="auth"
+                )
+
+                if not allowed:
                     raise RateLimitError(f"Rate limit exceeded for {func.__name__}")
 
                 return await func(request, *args, **kwargs)
@@ -474,26 +483,42 @@ async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> User:
     """Get current authenticated user"""
-    # Development mode bypass for testing - but only if explicitly enabled
-    # and not in a testing environment where we want to test auth properly
-    if (settings.DEBUG and
-        settings.ENVIRONMENT == "development" and
-        not os.getenv("TESTING", "false").lower() == "true"):
-        # Return a default test user for development (no auth required)
-        if not credentials:  # No auth header at all - still allow in dev mode
+    # SECURE: Development mode bypass ONLY if explicitly enabled via feature flag
+    # This prevents accidental bypass activation in production
+    try:
+        from apps.backend.core.feature_flags import get_feature_flags, FeatureFlag
+        feature_flags = get_feature_flags()
+
+        # Triple-check: feature flag + environment + explicit testing opt-out
+        development_bypass_enabled = (
+            feature_flags.is_enabled(FeatureFlag.DEVELOPMENT_AUTH_BYPASS) and
+            settings.DEBUG and
+            settings.ENVIRONMENT == "development" and
+            not os.getenv("TESTING", "false").lower() == "true" and
+            not os.getenv("DISABLE_AUTH_BYPASS", "false").lower() == "true"
+        )
+
+        if development_bypass_enabled:
+            logger.warning("DEVELOPMENT AUTH BYPASS ACTIVE - NOT FOR PRODUCTION USE")
+            # Return a default test user for development (no auth required)
+            if not credentials:  # No auth header at all - still allow in dev mode
+                return User(
+                    id="dev-user-001",
+                    username="dev_user",
+                    email="dev@toolboxai.com",
+                    role="teacher",
+                )
+            # If there are credentials but they're just for testing, return dev user
             return User(
                 id="dev-user-001",
                 username="dev_user",
                 email="dev@toolboxai.com",
                 role="teacher",
             )
-        # If there are credentials but they're just for testing, return dev user
-        return User(
-            id="dev-user-001",
-            username="dev_user",
-            email="dev@toolboxai.com",
-            role="teacher",
-        )
+    except ImportError:
+        # Feature flags not available - fail safe to no bypass
+        logger.warning("Feature flags not available - disabling auth bypass")
+        pass
 
     # Production mode or testing mode - credentials required
     if not credentials:
@@ -626,65 +651,64 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
         logger.error(f"Database authentication error: {e}")
         # Fall through to test users if database fails
 
-    # In development mode, allow test credentials as fallback
-    if settings.DEBUG and settings.ENVIRONMENT == "development":
-        if username == "dev_user" and password == "dev_password":
-            return User(
-                id="dev-user-001",
-                username="dev_user",
-                email="dev@toolboxai.com",
-                role="teacher",
-            )
-        # Also check demo credentials if configured
-        if (settings.DEMO_USERNAME and settings.DEMO_PASSWORD and
-            username == settings.DEMO_USERNAME and password == settings.DEMO_PASSWORD):
-            return User(
-                id="demo-user-001",
-                username=settings.DEMO_USERNAME,
-                email="demo@toolboxai.com",
-                role="teacher",
-            )
+    # SECURE: Check development test credentials only if feature flag enabled
+    try:
+        from apps.backend.core.feature_flags import get_feature_flags, FeatureFlag
+        feature_flags = get_feature_flags()
 
-    # Fallback to mock database lookup for testing
-    # Store users by both username and email for flexible lookup
-    mock_users_data = [
-        {
-            "username": "admin@toolboxai.com",
-            "password_hash": hash_password("Admin123!"),
-            "id": "admin-001",
-            "email": "admin@toolboxai.com",
-            "role": "admin"
-        },
-        {
-            "username": "jane.smith@school.edu",
-            "password_hash": hash_password("Teacher123!"),
-            "id": "teacher-001",
-            "email": "jane.smith@school.edu",
-            "role": "teacher"
-        },
-        {
-            "username": "alex.johnson@student.edu",
-            "password_hash": hash_password("Student123!"),
-            "id": "student-001",
-            "email": "alex.johnson@student.edu",
-            "role": "student"
-        },
-        # Keep some legacy users for backward compatibility
-        {
-            "username": "teacher1",
-            "password_hash": hash_password("teacher123"),
-            "id": "teacher-002",
-            "email": "teacher@toolboxai.com",
-            "role": "teacher"
-        },
-        {
-            "username": "student1",
-            "password_hash": hash_password("student123"),
-            "id": "student-002",
-            "email": "student@toolboxai.com",
-            "role": "student"
-        }
-    ]
+        if (feature_flags.is_enabled(FeatureFlag.DEVELOPMENT_AUTH_BYPASS) and
+            settings.DEBUG and settings.ENVIRONMENT == "development"):
+
+            # Use secure test data generator instead of hardcoded credentials
+            from apps.backend.core.security.test_data_generator import get_development_credentials
+            dev_credentials = get_development_credentials()
+
+            # Check against generated development credentials
+            for cred in dev_credentials:
+                if (username == cred["username"] or username == cred["email"]):
+                    # Verify password using the secure hash
+                    if verify_password(password, cred["password_hash"]):
+                        return User(
+                            id=cred["id"],
+                            username=cred["username"],
+                            email=cred["email"],
+                            role=cred["role"],
+                        )
+
+            # Also check demo credentials if configured (but only specific ones)
+            if (settings.DEMO_USERNAME and settings.DEMO_PASSWORD and
+                username == settings.DEMO_USERNAME and password == settings.DEMO_PASSWORD):
+                return User(
+                    id="demo-user-001",
+                    username=settings.DEMO_USERNAME,
+                    email="demo@toolboxai.com",
+                    role="teacher",
+                )
+    except ImportError:
+        logger.warning("Secure test data generator not available")
+        pass
+
+    # SECURE: Generate test users dynamically instead of hardcoded credentials
+    # This prevents password leaks and makes credentials unpredictable
+    try:
+        from apps.backend.core.security.test_data_generator import get_testing_credentials
+
+        # Only allow fallback test users in testing environment or if explicitly enabled
+        testing_allowed = (
+            os.getenv("TESTING", "false").lower() == "true" or
+            os.getenv("ALLOW_TEST_FALLBACK", "false").lower() == "true"
+        )
+
+        if not testing_allowed:
+            logger.info("Test fallback authentication disabled - use proper database authentication")
+            return None
+
+        test_credentials = get_testing_credentials()
+        mock_users_data = test_credentials
+
+    except ImportError:
+        logger.warning("Secure test data generator not available for fallback authentication")
+        return None
 
     # Create lookup dictionaries for username, email, and short username
     mock_users = {}
@@ -702,31 +726,7 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
             if short_username not in mock_users:
                 mock_users[short_username] = user
 
-    # Special case: map "admin" to admin@toolboxai.com (overrides any conflicts)
-    mock_users["admin"] = {
-        "username": "admin@toolboxai.com",
-        "password_hash": hash_password("Admin123!"),
-        "id": "admin-001",
-        "email": "admin@toolboxai.com",
-        "role": "admin"
-    }
-
-    # Special case: map short names to full emails for dashboard users
-    mock_users["jane.smith"] = {
-        "username": "jane.smith@school.edu",
-        "password_hash": hash_password("Teacher123!"),
-        "id": "teacher-001",
-        "email": "jane.smith@school.edu",
-        "role": "teacher"
-    }
-
-    mock_users["alex.johnson"] = {
-        "username": "alex.johnson@student.edu",
-        "password_hash": hash_password("Student123!"),
-        "id": "student-001",
-        "email": "alex.johnson@student.edu",
-        "role": "student"
-    }
+    # Note: No hardcoded special cases - all users come from secure generator
 
     # Try to find user by username or email
     user_data = mock_users.get(username)
@@ -888,3 +888,27 @@ __all__ = [
 
 # Initialize on import
 initialize_auth()
+
+
+def decode_token(token: str) -> dict:
+    """Decode a JWT token"""
+    try:
+        # Simplified implementation for testing
+        import json
+        import base64
+
+        # Basic JWT structure: header.payload.signature
+        parts = token.split('.')
+        if len(parts) != 3:
+            return {"error": "Invalid token format"}
+
+        # Decode payload (add padding if needed)
+        payload = parts[1]
+        padding = 4 - len(payload) % 4
+        if padding != 4:
+            payload += '=' * padding
+
+        decoded = base64.urlsafe_b64decode(payload)
+        return json.loads(decoded)
+    except Exception as e:
+        return {"error": str(e)}

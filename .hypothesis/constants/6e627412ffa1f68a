@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/security/api_keys.py
+# hypothesis_version: 6.139.2
+
+[100, 128, 365, 500, 1000, 3600, 10000, ',', '1000', 'Invalid API key', 'active', 'admin', 'analytics.read', 'api_keys', 'content.access', 'deploy', 'expired', 'key_id', 'last_used', 'metadata', 'place_ids', 'rate_limit', 'read', 'revoked', 'roblox:apikey:', 'scopes', 'script.generate', 'script.validate', 'status', 'suspended', 'usage_count', 'user_id', 'utf-8', 'write']

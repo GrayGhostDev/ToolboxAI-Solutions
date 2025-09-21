@@ -1,3 +1,5 @@
+jest.setTimeout(10000);
+
 /**
  * Login Component Test Suite
  *

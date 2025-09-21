@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 """
 Database Performance Tests
 Tests for database query optimization, connection pooling, and throughput
@@ -29,7 +44,8 @@ class TestDatabasePerformance:
     """Database performance and optimization tests"""
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_database_connection_performance(self):
+    @pytest.mark.asyncio
+async def test_database_connection_performance(self):
         """Test database connection establishment and pooling"""
         try:
             from core.database.connection_manager import DatabaseManager
@@ -69,7 +85,8 @@ class TestDatabasePerformance:
             pytest.skip("DatabaseManager not available")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_query_performance(self):
+    @pytest.mark.asyncio
+async def test_query_performance(self):
         """Test database query performance for common operations"""
         try:
             from core.database.repositories import (
@@ -128,7 +145,8 @@ class TestDatabasePerformance:
             pytest.skip("Database repositories not available")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_concurrent_database_access(self):
+    @pytest.mark.asyncio
+async def test_concurrent_database_access(self):
         """Test database performance under concurrent access"""
         try:
             from core.database.connection_manager import DatabaseManager
@@ -197,7 +215,8 @@ class TestDatabasePerformance:
             pytest.skip("DatabaseManager not available")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_transaction_performance(self):
+    @pytest.mark.asyncio
+async def test_transaction_performance(self):
         """Test database transaction performance"""
         try:
             from core.database.connection_manager import DatabaseManager
@@ -239,7 +258,8 @@ class TestDatabasePerformance:
             pytest.skip("DatabaseManager not available")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_large_result_set_performance(self):
+    @pytest.mark.asyncio
+async def test_large_result_set_performance(self):
         """Test performance with large result sets"""
         try:
             from core.database.connection_manager import DatabaseManager
@@ -299,7 +319,8 @@ class TestDatabasePerformance:
             pytest.skip("DatabaseManager not available")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_connection_pool_efficiency(self):
+    @pytest.mark.asyncio
+async def test_connection_pool_efficiency(self):
         """Test database connection pool efficiency"""
         try:
             from core.database.connection_manager import DatabaseManager

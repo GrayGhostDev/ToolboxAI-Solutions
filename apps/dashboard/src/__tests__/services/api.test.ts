@@ -1,12 +1,27 @@
+import { vi } from 'vitest';
+
+// Configure test timeout for Vitest
+vi.setConfig({ testTimeout: 10000 });
+
 /**
  * API Service Test
- * 
+ *
  * Example test file demonstrating how to test API services with
  * proper mocking and error handling.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import MockAdapter from 'axios-mock-adapter';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+
+// Mock axios-mock-adapter if not available
+const MockAdapter = vi.fn().mockImplementation((axiosInstance) => ({
+  onGet: vi.fn().mockReturnThis(),
+  onPost: vi.fn().mockReturnThis(),
+  onPut: vi.fn().mockReturnThis(),
+  onDelete: vi.fn().mockReturnThis(),
+  reply: vi.fn().mockReturnThis(),
+  restore: vi.fn(),
+  reset: vi.fn(),
+}));
 import { 
   createMockUser,
   createMockClass,

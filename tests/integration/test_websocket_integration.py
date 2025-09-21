@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 #!/usr/bin/env python3
 """
 WebSocket Integration Test Suite
@@ -82,7 +97,8 @@ class WebSocketTester:
         return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_connection(self, service_name: str) -> Dict[str, Any]:
+    @pytest.mark.asyncio
+async def test_websocket_connection(self, service_name: str) -> Dict[str, Any]:
         """Test basic WebSocket connection"""
         config = SERVICES[service_name]
         result = {
@@ -121,7 +137,8 @@ class WebSocketTester:
         return result
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_message_broadcasting(self) -> Dict[str, Any]:
+    @pytest.mark.asyncio
+async def test_message_broadcasting(self) -> Dict[str, Any]:
         """Test message broadcasting within a service"""
         result = {
             "test": "broadcasting",
@@ -182,7 +199,8 @@ class WebSocketTester:
         return result
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_cross_service_communication(self) -> Dict[str, Any]:
+    @pytest.mark.asyncio
+async def test_cross_service_communication(self) -> Dict[str, Any]:
         """Test communication between different services"""
         result = {
             "test": "cross_service",
@@ -225,7 +243,8 @@ class WebSocketTester:
         return result
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_authentication_over_websocket(self) -> Dict[str, Any]:
+    @pytest.mark.asyncio
+async def test_authentication_over_websocket(self) -> Dict[str, Any]:
         """Test WebSocket authentication"""
         result = {
             "test": "authentication",
@@ -267,7 +286,8 @@ class WebSocketTester:
         return result
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_realtime_updates(self) -> Dict[str, Any]:
+    @pytest.mark.asyncio
+async def test_realtime_updates(self) -> Dict[str, Any]:
         """Test real-time update propagation"""
         result = {
             "test": "realtime_updates",
@@ -316,7 +336,8 @@ class WebSocketTester:
         return result
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_connection_resilience(self) -> Dict[str, Any]:
+    @pytest.mark.asyncio
+async def test_connection_resilience(self) -> Dict[str, Any]:
         """Test WebSocket reconnection and error handling"""
         result = {
             "test": "resilience",
@@ -356,7 +377,8 @@ class WebSocketTester:
         return result
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_performance(self) -> Dict[str, Any]:
+    @pytest.mark.asyncio
+async def test_performance(self) -> Dict[str, Any]:
         """Test WebSocket performance and throughput"""
         result = {
             "test": "performance",
@@ -497,6 +519,7 @@ class WebSocketTester:
 
 # Pytest integration
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_websocket_connections():
     """Pytest: Test WebSocket connections"""
     tester = WebSocketTester()
@@ -507,6 +530,7 @@ async def test_websocket_connections():
 
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_websocket_broadcasting():
     """Pytest: Test WebSocket broadcasting"""
     tester = WebSocketTester()
@@ -515,6 +539,7 @@ async def test_websocket_broadcasting():
 
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_websocket_performance():
     """Pytest: Test WebSocket performance"""
     tester = WebSocketTester()

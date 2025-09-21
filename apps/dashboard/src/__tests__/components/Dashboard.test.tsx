@@ -1,6 +1,6 @@
 /**
  * Dashboard Component Test
- * 
+ *
  * Example test file demonstrating how to test components using the
  * test infrastructure with all necessary mocks and utilities.
  */

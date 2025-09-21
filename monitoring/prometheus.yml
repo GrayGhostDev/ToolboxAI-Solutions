@@ -1,0 +1,79 @@
+# Prometheus Configuration for ToolBoxAI Production Monitoring
+# This configuration sets up comprehensive monitoring for the production environment
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'toolboxai-production'
+    environment: 'production'
+
+# Rule files for alerting
+rule_files:
+  - "alert_rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  # ToolBoxAI Backend API Metrics
+  - job_name: 'toolboxai-backend'
+    static_configs:
+      - targets: ['toolboxai-backend.onrender.com:443']
+    scheme: https
+    metrics_path: /metrics
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    tls_config:
+      insecure_skip_verify: false
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'backend-api'
+
+  # ToolBoxAI Monitoring Service
+  - job_name: 'toolboxai-monitoring'
+    static_configs:
+      - targets: ['toolboxai-monitoring.onrender.com:443']
+    scheme: https
+    metrics_path: /metrics
+    scrape_interval: 30s
+    tls_config:
+      insecure_skip_verify: false
+
+  # Health Check Endpoints
+  - job_name: 'toolboxai-health'
+    static_configs:
+      - targets: ['toolboxai-backend.onrender.com:443']
+    scheme: https
+    metrics_path: /health
+    scrape_interval: 30s
+    tls_config:
+      insecure_skip_verify: false
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'up'
+        target_label: service
+        replacement: 'backend-health'
+
+  # Frontend Static Site (Basic uptime monitoring)
+  - job_name: 'toolboxai-frontend'
+    static_configs:
+      - targets: ['toolboxai-dashboard.onrender.com:443']
+    scheme: https
+    metrics_path: /
+    scrape_interval: 60s
+    tls_config:
+      insecure_skip_verify: false
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager.yourdomain.com:9093
+
+# Storage configuration for long-term metrics retention
+storage:
+  tsdb:
+    retention.time: 30d
+    retention.size: 10GB
+    wal-compression: true

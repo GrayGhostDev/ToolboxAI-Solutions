@@ -1,3 +1,5 @@
+jest.setTimeout(10000);
+
 import { test, expect, APIRequestContext } from '@playwright/test';
 
 const API_URL = process.env.PLAYWRIGHT_API_URL || 'http://127.0.0.1:8008';

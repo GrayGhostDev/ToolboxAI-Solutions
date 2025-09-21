@@ -1,3 +1,4 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """
 Test script to verify that the rate limiting fix works correctly.
@@ -128,7 +129,8 @@ def test_rate_limit_manager_directly():
         manager.set_mode(RateLimitMode.BYPASS)
         
         @pytest.mark.asyncio(loop_scope="function")
-        async def test_bypass():
+        @pytest.mark.asyncio
+async def test_bypass():
             allowed, retry_after = await manager.check_rate_limit("test_id", max_requests=1)
             return allowed, retry_after
         
@@ -144,7 +146,8 @@ def test_rate_limit_manager_directly():
         manager.config = config
         
         @pytest.mark.asyncio(loop_scope="function")
-        async def test_production():
+        @pytest.mark.asyncio
+async def test_production():
             results = []
             for i in range(5):
                 allowed, retry_after = await manager.check_rate_limit(
@@ -177,7 +180,8 @@ def test_rate_limit_manager_directly():
         with RateLimitTestContext(bypass=True, clear_on_exit=True) as ctx:
             # Should bypass rate limits
             @pytest.mark.asyncio(loop_scope="function")
-            async def test_context():
+            @pytest.mark.asyncio
+async def test_context():
                 allowed, _ = await ctx.check_rate_limit("ctx_test", max_requests=1)
                 return allowed
             

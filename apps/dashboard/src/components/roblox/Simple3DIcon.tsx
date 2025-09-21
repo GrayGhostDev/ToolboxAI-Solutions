@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, useTheme, alpha, keyframes, styled } from '@mui/material';
-
+import React, { useState } from 'react';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import { keyframes } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 interface Simple3DIconProps {
   iconName: string;
   size?: 'small' | 'medium' | 'large';
@@ -8,32 +12,27 @@ interface Simple3DIconProps {
   onClick?: () => void;
   description?: string;
 }
-
 // Animations
 const floatAnimation = keyframes`
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(-3px) rotate(2deg); }
 `;
-
 const pulseAnimation = keyframes`
   0% { transform: scale(1); }
   50% { transform: scale(1.05); }
   100% { transform: scale(1); }
 `;
-
 const glowAnimation = keyframes`
   0% { box-shadow: 0 0 5px currentColor; }
   50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
   100% { box-shadow: 0 0 5px currentColor; }
 `;
-
 const StyledIconContainer = styled(Box)(({ theme, size }: any) => {
   const sizeStyles = {
     small: { width: 60, height: 60, fontSize: '2rem' },
     medium: { width: 80, height: 80, fontSize: '2.5rem' },
     large: { width: 100, height: 100, fontSize: '3rem' }
   };
-
   return {
     display: 'flex',
     flexDirection: 'column',
@@ -48,15 +47,12 @@ const StyledIconContainer = styled(Box)(({ theme, size }: any) => {
     position: 'relative',
     overflow: 'hidden',
     ...sizeStyles[size],
-    
     '&:hover': {
       transform: 'translateY(-5px) scale(1.1)',
       boxShadow: `0 12px 35px ${alpha(theme.palette.primary.main, 0.5)}`,
       borderColor: theme.palette.secondary.main,
     },
-    
     animation: `${floatAnimation} 3s ease-in-out infinite`,
-    
     '&::before': {
       content: '""',
       position: 'absolute',
@@ -68,11 +64,9 @@ const StyledIconContainer = styled(Box)(({ theme, size }: any) => {
       transform: 'translateX(-100%)',
       transition: 'transform 0.6s ease',
     },
-    
     '&:hover::before': {
       transform: 'translateX(100%)',
     },
-    
     '&::after': {
       content: '""',
       position: 'absolute',
@@ -85,13 +79,11 @@ const StyledIconContainer = styled(Box)(({ theme, size }: any) => {
       opacity: 0,
       transition: 'opacity 0.3s ease',
     },
-    
     '&:hover::after': {
       opacity: 1,
     },
   };
 });
-
 // Icon mapping based on the parsed JSON data
 const iconMap: { [key: string]: { emoji: string; color: string; description: string } } = {
   'ABC_CUBE': { emoji: '🧩', color: '#4CAF50', description: 'ABC Learning Cube' },
@@ -121,8 +113,7 @@ const iconMap: { [key: string]: { emoji: string; color: string; description: str
   'REFRESH': { emoji: '🔄', color: '#4CAF50', description: 'Refresh Data' },
   'SPORTS_ESPORTS': { emoji: '🎮', color: '#9C27B0', description: 'Gaming Controller' },
 };
-
-export const Simple3DIcon: React.FC<Simple3DIconProps> = ({
+export const Simple3DIcon: React.FunctionComponent<Simple3DIconProps> = ({
   iconName,
   size = 'medium',
   animated = true,
@@ -131,14 +122,12 @@ export const Simple3DIcon: React.FC<Simple3DIconProps> = ({
 }) => {
   const theme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
-  
   const iconData = iconMap[iconName] || iconMap['TROPHY'];
   const displayDescription = description || iconData.description;
-
   return (
     <StyledIconContainer
       size={size}
-      onClick={onClick}
+      onClick={(e: React.MouseEvent) => onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       sx={{
@@ -161,7 +150,6 @@ export const Simple3DIcon: React.FC<Simple3DIconProps> = ({
       >
         {iconData.emoji}
       </Typography>
-      
       {displayDescription && (
         <Typography
           variant="caption"

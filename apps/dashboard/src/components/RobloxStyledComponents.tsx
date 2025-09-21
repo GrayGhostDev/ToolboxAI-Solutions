@@ -3,29 +3,25 @@
  *
  * Pre-built components with Roblox theming and gamification elements.
  */
-
-import * as React from 'react';
-import {
-  Box,
-  Card,
-  Button,
-  Chip,
-  LinearProgress,
-  Avatar,
-  Badge,
-  IconButton,
-  styled,
-  alpha,
-  keyframes
-} from '@mui/material';
-import { designTokens } from '../theme/designTokens';
-
+import React from 'react';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import Avatar from '@mui/material/Avatar';
+import Badge from '@mui/material/Badge';
+import IconButton from '@mui/material/IconButton';
+import { styled } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import { keyframes } from '@mui/material/styles';
+import { keyframes } from '@mui/material/styles';
+import { designTokens } from '..//designTokens';
 // Roblox brand colors
 const ROBLOX_RED = '#E2231A';
 const ROBLOX_RED_DARK = '#B71C15';
 const ROBLOX_GRAY = '#393B3D';
 const ROBLOX_WHITE = '#FFFFFF';
-
 // Animations
 const robloxPulse = keyframes`
   0%, 100% {
@@ -37,7 +33,6 @@ const robloxPulse = keyframes`
     opacity: 0.9;
   }
 `;
-
 const robloxGlow = keyframes`
   0%, 100% {
     box-shadow: 0 0 5px rgba(226, 35, 26, 0.25);
@@ -46,7 +41,6 @@ const robloxGlow = keyframes`
     box-shadow: 0 0 20px rgba(226, 35, 26, 0.5);
   }
 `;
-
 const robloxShimmer = keyframes`
   0% {
     background-position: -200% center;
@@ -55,7 +49,6 @@ const robloxShimmer = keyframes`
     background-position: 200% center;
   }
 `;
-
 const robloxFloat = keyframes`
   0%, 100% {
     transform: translateY(0px);
@@ -64,7 +57,6 @@ const robloxFloat = keyframes`
     transform: translateY(-8px);
   }
 `;
-
 // Enhanced Card with Roblox styling
 export const RobloxCard = styled(Card)(({ theme }) => ({
   borderRadius: designTokens.borderRadius['2xl'],
@@ -76,7 +68,6 @@ export const RobloxCard = styled(Card)(({ theme }) => ({
   transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`,
   position: 'relative',
   overflow: 'hidden',
-
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -87,14 +78,12 @@ export const RobloxCard = styled(Card)(({ theme }) => ({
     background: `linear-gradient(135deg, ${ROBLOX_RED}, ${ROBLOX_RED_DARK})`,
     borderRadius: `${designTokens.borderRadius['2xl']} ${designTokens.borderRadius['2xl']} 0 0`
   },
-
   '&:hover': {
     transform: 'translateY(-4px)',
     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
     borderColor: alpha(ROBLOX_RED, 0.5)
   }
 }));
-
 // Gaming-style button
 export const RobloxButton = styled(Button)(({ theme }) => ({
   borderRadius: designTokens.borderRadius.xl,
@@ -105,12 +94,10 @@ export const RobloxButton = styled(Button)(({ theme }) => ({
   position: 'relative',
   overflow: 'hidden',
   transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`,
-
   ...(variant === 'contained' && {
     background: `linear-gradient(135deg, ${ROBLOX_RED}, ${ROBLOX_RED_DARK})`,
     color: ROBLOX_WHITE,
     boxShadow: `0 2px 8px rgba(226, 35, 26, 0.2)`,
-
     '&::before': {
       content: '""',
       position: 'absolute',
@@ -121,26 +108,21 @@ export const RobloxButton = styled(Button)(({ theme }) => ({
       background: `linear-gradient(90deg, transparent, ${alpha(ROBLOX_WHITE, 0.2)}, transparent)`,
       transition: `left ${designTokens.animation.duration.slow} ${designTokens.animation.easing.inOut}`
     },
-
     '&:hover': {
       transform: 'translateY(-2px) scale(1.02)',
       boxShadow: `0 8px 25px ${alpha(ROBLOX_RED, 0.4)}`,
-
       '&::before': {
         left: '100%'
       }
     },
-
     '&:active': {
       transform: 'translateY(0) scale(0.98)'
     }
   }),
-
   ...(variant === 'outlined' && {
     borderWidth: '2px',
     borderColor: ROBLOX_RED,
     color: ROBLOX_RED,
-
     '&:hover': {
       borderColor: ROBLOX_RED_DARK,
       backgroundColor: alpha(ROBLOX_RED, 0.1),
@@ -148,7 +130,6 @@ export const RobloxButton = styled(Button)(({ theme }) => ({
     }
   })
 }));
-
 // Gamification chip
 export const RobloxChip = styled(Chip)(({ theme }) => {
   const rarity = 'common'; // Default rarity
@@ -158,9 +139,7 @@ export const RobloxChip = styled(Chip)(({ theme }) => {
     epic: '#8B5CF6',
     legendary: '#F59E0B'
   };
-
   const color = colorMap[rarity];
-
   return {
     borderRadius: designTokens.borderRadius.full,
     fontWeight: designTokens.typography.fontWeight.bold,
@@ -172,7 +151,6 @@ export const RobloxChip = styled(Chip)(({ theme }) => {
     border: `1px solid ${alpha(color, 0.3)}`,
     boxShadow: `0 2px 8px ${alpha(color, 0.3)}`,
     transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`,
-
     '&:hover': {
       transform: 'scale(1.05)',
       boxShadow: `0 4px 15px ${alpha(color, 0.5)}`,
@@ -180,7 +158,6 @@ export const RobloxChip = styled(Chip)(({ theme }) => {
     }
   };
 });
-
 // XP Progress bar
 export const XPProgressBar = styled(LinearProgress)<{ level?: number }>(({ theme, level = 1 }) => ({
   height: 12,
@@ -188,12 +165,10 @@ export const XPProgressBar = styled(LinearProgress)<{ level?: number }>(({ theme
   backgroundColor: theme.palette.mode === 'dark'
     ? alpha(ROBLOX_GRAY, 0.3)
     : alpha(ROBLOX_GRAY, 0.1),
-
   '& .MuiLinearProgress-bar': {
     borderRadius: designTokens.borderRadius.full,
     background: 'linear-gradient(135deg, #8B5CF6, #F59E0B)',
     position: 'relative',
-
     '&::after': {
       content: '""',
       position: 'absolute',
@@ -207,7 +182,6 @@ export const XPProgressBar = styled(LinearProgress)<{ level?: number }>(({ theme
     }
   }
 }));
-
 // Floating action button with game-like effects
 export const RobloxFAB = styled(IconButton)(({ theme }) => ({
   width: 56,
@@ -217,30 +191,25 @@ export const RobloxFAB = styled(IconButton)(({ theme }) => ({
   borderRadius: designTokens.borderRadius.full,
   boxShadow: `0 2px 8px rgba(226, 35, 26, 0.2)`,
   transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`,
-
   '&:hover': {
     background: `linear-gradient(135deg, ${ROBLOX_RED_DARK}, ${ROBLOX_RED})`,
     transform: 'scale(1.1)',
     boxShadow: `0 8px 25px ${alpha(ROBLOX_RED, 0.4)}`,
     animation: `${robloxFloat} 2s ease-in-out infinite`
   },
-
   '&:active': {
     transform: 'scale(0.95)'
   }
 }));
-
 // Gaming avatar with level badge
 export const RobloxAvatar = styled(Box)<{ level?: number; isOnline?: boolean }>(({ theme, level, isOnline }) => ({
   position: 'relative',
   display: 'inline-block',
-
   '& .MuiAvatar-root': {
     border: `3px solid ${ROBLOX_RED}`,
     boxShadow: `0 0 0 2px ${alpha(ROBLOX_RED, 0.2)}`,
     transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`
   },
-
   ...(isOnline && {
     '&::after': {
       content: '""',
@@ -255,7 +224,6 @@ export const RobloxAvatar = styled(Box)<{ level?: number; isOnline?: boolean }>(
       animation: `${robloxPulse} 2s infinite`
     }
   }),
-
   ...(level && {
     '&::before': {
       content: `"${level}"`,
@@ -277,7 +245,6 @@ export const RobloxAvatar = styled(Box)<{ level?: number; isOnline?: boolean }>(
     }
   })
 }));
-
 // Achievement badge
 export const AchievementBadge = styled(Badge)<{ achievement?: 'bronze' | 'silver' | 'gold' | 'diamond' }>(({ theme, achievement = 'bronze' }) => {
   const colors = {
@@ -286,9 +253,7 @@ export const AchievementBadge = styled(Badge)<{ achievement?: 'bronze' | 'silver
     gold: '#F59E0B',
     diamond: '#B9F2FF'
   };
-
   const color = colors[achievement];
-
   return {
     '& .MuiBadge-badge': {
       backgroundColor: color,
@@ -304,7 +269,6 @@ export const AchievementBadge = styled(Badge)<{ achievement?: 'bronze' | 'silver
     }
   };
 });
-
 // Notification card with Roblox styling
 export const RobloxNotificationCard = styled(RobloxCard)<{ severity?: 'info' | 'success' | 'warning' | 'error' }>(({ theme, severity = 'info' }) => {
   const colors = {
@@ -313,19 +277,15 @@ export const RobloxNotificationCard = styled(RobloxCard)<{ severity?: 'info' | '
     warning: '#F59E0B',
     error: '#EF4444'
   };
-
   const color = colors[severity];
-
   return {
     backgroundColor: alpha(color, 0.1),
     borderColor: alpha(color, 0.3),
-
     '&::before': {
       background: color
     }
   };
 });
-
 // Loading skeleton with Roblox theme
 export const RobloxSkeleton = styled(Box)<{ width?: number | string; height?: number | string }>(({ theme, width = '100%', height = 20 }) => ({
   width,
@@ -337,7 +297,6 @@ export const RobloxSkeleton = styled(Box)<{ width?: number | string; height?: nu
   backgroundSize: '200% 100%',
   animation: `${robloxShimmer} 1.5s infinite`
 }));
-
 // Gamified container
 export const GameContainer = styled(Box)(({ theme }) => ({
   background: theme.palette.mode === 'dark'
@@ -347,7 +306,6 @@ export const GameContainer = styled(Box)(({ theme }) => ({
   padding: designTokens.spacing[6],
   position: 'relative',
   overflow: 'hidden',
-
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -360,7 +318,6 @@ export const GameContainer = styled(Box)(({ theme }) => ({
     pointerEvents: 'none'
   }
 }));
-
 export default {
   RobloxCard,
   RobloxButton,

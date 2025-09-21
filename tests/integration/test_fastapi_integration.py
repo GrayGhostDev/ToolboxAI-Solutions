@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 #!/usr/bin/env python3
 """
 FastAPI Integration Test Suite
@@ -56,7 +71,8 @@ class FastAPIIntegrationTest:
         return jwt.encode(payload, self.jwt_secret, algorithm="HS256")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_health_endpoint(self):
+    @pytest.mark.asyncio
+async def test_health_endpoint(self):
         """Test health check endpoint"""
         print("\n🔍 Testing Health Endpoint...")
         async with httpx.AsyncClient() as client:
@@ -79,7 +95,8 @@ class FastAPIIntegrationTest:
             return result["success"]
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_authentication(self):
+    @pytest.mark.asyncio
+async def test_authentication(self):
         """Test authentication endpoints"""
         print("\n🔍 Testing Authentication...")
         async with httpx.AsyncClient() as client:
@@ -117,7 +134,8 @@ class FastAPIIntegrationTest:
                 return test_token
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_content_generation(self, token: str):
+    @pytest.mark.asyncio
+async def test_content_generation(self, token: str):
         """Test content generation endpoint"""
         print("\n🔍 Testing Content Generation...")
         async with httpx.AsyncClient() as client:
@@ -159,7 +177,8 @@ class FastAPIIntegrationTest:
             return result["success"]
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_connection(self):
+    @pytest.mark.asyncio
+async def test_websocket_connection(self):
         """Test WebSocket connection"""
         print("\n🔍 Testing WebSocket Connection...")
         try:
@@ -201,7 +220,8 @@ class FastAPIIntegrationTest:
             return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_api_documentation(self):
+    @pytest.mark.asyncio
+async def test_api_documentation(self):
         """Test API documentation endpoints"""
         print("\n🔍 Testing API Documentation...")
         async with httpx.AsyncClient() as client:
@@ -233,7 +253,8 @@ class FastAPIIntegrationTest:
             return result["success"]
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_rate_limiting(self, token: str):
+    @pytest.mark.asyncio
+async def test_rate_limiting(self, token: str):
         """Test rate limiting functionality"""
         print("\n🔍 Testing Rate Limiting...")
         async with httpx.AsyncClient() as client:

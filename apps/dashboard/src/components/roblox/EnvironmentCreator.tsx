@@ -4,34 +4,33 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-  CircularProgress,
-  Chip,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
-  IconButton,
-  Tooltip
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
+import Chip from '@mui/material/Chip';
+import Grid from '@mui/material/Grid';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import StepContent from '@mui/material/StepContent';
+import Paper from '@mui/material/Paper';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Tooltip from '@mui/material/Tooltip';
 import {
   Create as CreateIcon,
   CheckCircle as CheckCircleIcon,
@@ -57,7 +56,7 @@ interface EnvironmentCreatorProps {
   onEnvironmentCreated?: (environment: EnvironmentCreationResponse) => void;
 }
 
-const EnvironmentCreator: React.FC<EnvironmentCreatorProps> = ({ onEnvironmentCreated }) => {
+const EnvironmentCreator: React.FunctionComponent<EnvironmentCreatorProps> = ({ onEnvironmentCreated }) => {
   // Form state
   const [formData, setFormData] = useState<EnvironmentCreationRequest>({
     name: '',
@@ -521,7 +520,7 @@ const EnvironmentCreator: React.FC<EnvironmentCreatorProps> = ({ onEnvironmentCr
                     {isCheckingRojo ? (
                       <CircularProgress size={20} />
                     ) : (
-                      <IconButton onClick={checkRojoConnection} size="small">
+                      <IconButton onClick={(e: React.MouseEvent) => checkRojoConnection} size="small">
                         <RefreshIcon />
                       </IconButton>
                     )}
@@ -666,7 +665,7 @@ const EnvironmentCreator: React.FC<EnvironmentCreatorProps> = ({ onEnvironmentCr
                         <Button
                           variant="contained"
                           startIcon={<CreateIcon />}
-                          onClick={handleReset}
+                          onClick={(e: React.MouseEvent) => handleReset}
                           sx={{ mr: 2 }}
                         >
                           Create Another Environment
@@ -681,14 +680,14 @@ const EnvironmentCreator: React.FC<EnvironmentCreatorProps> = ({ onEnvironmentCr
 
                       <Button
                         variant="outlined"
-                        onClick={() => setActiveStep(1)}
+                        onClick={(e: React.MouseEvent) => () => setActiveStep(1)}
                         sx={{ mr: 2 }}
                       >
                         Try Again
                       </Button>
                       <Button
                         variant="text"
-                        onClick={handleReset}
+                        onClick={(e: React.MouseEvent) => handleReset}
                       >
                         Start Over
                       </Button>
@@ -739,7 +738,7 @@ const EnvironmentCreator: React.FC<EnvironmentCreatorProps> = ({ onEnvironmentCr
                     {index === 0 && (
                       <Button
                         variant="contained"
-                        onClick={() => setActiveStep(1)}
+                        onClick={(e: React.MouseEvent) => () => setActiveStep(1)}
                         disabled={!formData.name || !formData.description}
                       >
                         Continue
@@ -750,7 +749,7 @@ const EnvironmentCreator: React.FC<EnvironmentCreatorProps> = ({ onEnvironmentCr
                       <Box sx={{ display: 'flex', gap: 2 }}>
                         <Button
                           variant="contained"
-                          onClick={handleCreateEnvironment}
+                          onClick={(e: React.MouseEvent) => handleCreateEnvironment}
                           disabled={isCreating || !rojoStatus?.rojo_connected}
                           startIcon={isCreating ? <CircularProgress size={20} /> : <CreateIcon />}
                         >
@@ -758,7 +757,7 @@ const EnvironmentCreator: React.FC<EnvironmentCreatorProps> = ({ onEnvironmentCr
                         </Button>
                         <Button
                           variant="outlined"
-                          onClick={() => setActiveStep(0)}
+                          onClick={(e: React.MouseEvent) => () => setActiveStep(0)}
                         >
                           Back
                         </Button>
@@ -768,7 +767,7 @@ const EnvironmentCreator: React.FC<EnvironmentCreatorProps> = ({ onEnvironmentCr
                     {index === 2 && (
                       <Button
                         variant="outlined"
-                        onClick={handleReset}
+                        onClick={(e: React.MouseEvent) => handleReset}
                       >
                         Create New Environment
                       </Button>

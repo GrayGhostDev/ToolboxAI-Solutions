@@ -826,3 +826,124 @@ Focus on test quality, coverage, and reliability."""
 
         # Combine metrics
         return {**base_metrics, **testing_metrics}
+
+    async def _process_task(self, state) -> Any:
+        """
+        Process testing orchestration task.
+
+        Args:
+            state: Agent state containing task information
+
+        Returns:
+            Task processing result
+        """
+        try:
+            task = state.get("task", {})
+            task_type = task.get("type", "orchestrate_tests")
+
+            if task_type == "orchestrate_tests":
+                error = task.get("error", {})
+                test_types = task.get("test_types", ["unit", "integration"])
+                coverage_requirement = task.get("coverage_requirement", 80.0)
+
+                # Convert dict error to ErrorState format if needed
+                if isinstance(error, dict):
+                    # Ensure error has required fields
+                    if "error_type" not in error:
+                        error["error_type"] = ErrorType.RUNTIME
+                    if "priority" not in error:
+                        error["priority"] = ErrorPriority.MEDIUM
+                    if "timestamp" not in error:
+                        error["timestamp"] = datetime.now().isoformat()
+
+                # Run orchestrated tests
+                result = await self.orchestrate_testing(error, test_types, coverage_requirement)
+
+                return {
+                    "status": "completed",
+                    "result": result,
+                    "tests_executed": len(result.test_results) if result else 0,
+                    "overall_status": result.overall_status if result else "unknown"
+                }
+
+            elif task_type == "run_test_suite":
+                suite_config = task.get("suite_config", {})
+                target_error = task.get("target_error", {})
+
+                suite = TestSuite(
+                    suite_id=suite_config.get("suite_id", f"suite_{datetime.now().strftime('%Y%m%d_%H%M%S')}"),
+                    test_types=suite_config.get("test_types", ["unit"]),
+                    target_files=suite_config.get("target_files", []),
+                    coverage_requirement=suite_config.get("coverage_requirement", 80.0),
+                    timeout=suite_config.get("timeout", 300),
+                    parallel_execution=suite_config.get("parallel_execution", True)
+                )
+
+                result = await self.run_test_suite(suite, target_error)
+
+                return {
+                    "status": "completed",
+                    "result": result,
+                    "suite_id": suite.suite_id,
+                    "execution_time": result.execution_time if result else 0
+                }
+
+            elif task_type == "generate_tests":
+                error = task.get("error", {})
+                test_type = task.get("test_type", "unit")
+
+                tests = await self.generate_targeted_tests(error, test_type)
+
+                return {
+                    "status": "completed",
+                    "result": tests,
+                    "tests_generated": len(tests)
+                }
+
+            elif task_type == "validate_fix":
+                fix_data = task.get("fix", {})
+                error = task.get("error", {})
+
+                # Convert to ErrorCorrection if needed
+                if isinstance(fix_data, dict):
+                    fix = ErrorCorrection(
+                        correction_id=fix_data.get("correction_id", f"fix_{datetime.now().strftime('%Y%m%d_%H%M%S')}"),
+                        error_type=ErrorType(fix_data.get("error_type", "runtime_error")),
+                        fix_type=fix_data.get("fix_type", "code_modification"),
+                        code_changes=fix_data.get("code_changes", []),
+                        confidence=fix_data.get("confidence", 0.5),
+                        description=fix_data.get("description", "Fix validation"),
+                        validation_steps=fix_data.get("validation_steps", [])
+                    )
+                else:
+                    fix = fix_data
+
+                validation_result = await self.validate_fix_with_tests(fix, error)
+
+                return {
+                    "status": "completed",
+                    "result": validation_result,
+                    "is_valid": validation_result.is_valid if validation_result else False
+                }
+
+            elif task_type == "get_metrics":
+                metrics = await self.get_performance_metrics()
+                return {
+                    "status": "completed",
+                    "result": metrics
+                }
+
+            else:
+                return {
+                    "status": "error",
+                    "error": f"Unknown task type: {task_type}",
+                    "result": None
+                }
+
+        except Exception as e:
+            logger.error(f"Error processing testing orchestration task: {e}")
+            return {
+                "status": "error",
+                "error": str(e),
+                "result": None
+            }

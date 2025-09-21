@@ -1,3 +1,4 @@
+import pytest_asyncio
 """
 Comprehensive Security Test Suite
 Tests all security implementations
@@ -162,7 +163,8 @@ class TestWebSocketSecurity:
         return MessageHandler(WebSocketManager())
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_rbac(self, message_handler):
+    @pytest.mark.asyncio
+async def test_websocket_rbac(self, message_handler):
         """Test WebSocket RBAC enforcement"""
         # Create mock connections with different roles
         student_conn = Mock()
@@ -198,7 +200,8 @@ class TestWebSocketSecurity:
         assert call_args.get("type") == "broadcast_sent"
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_rate_limiting(self, connection_manager):
+    @pytest.mark.asyncio
+async def test_websocket_rate_limiting(self, connection_manager):
         """Test WebSocket rate limiting"""
         client_id = "test_client"
         

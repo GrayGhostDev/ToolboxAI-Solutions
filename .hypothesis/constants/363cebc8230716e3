@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/auth/password_management.py
+# hypothesis_version: 6.139.2
+
+[100, 128, 365, 86400, '(.)\\1{2,}', '(qwerty|asdf|zxcv)', '12345678', 'Add a number (0-9)', 'Current password', 'New password', '[A-Z]', '[a-z]', '\\d', 'abc123', 'action_required', 'admin', 'admin_password_reset', 'admin_user_id', 'after', 'auto', 'bcrypt', 'confirm_password', 'data', 'digit', 'dragon', 'ip_address', 'issues', 'length', 'letmein', 'lowercase', 'message', 'minimum_score', 'monkey', 'new_password', 'password', 'password123', 'password_change', 'password_hash', 'password_history:', 'qwerty', 'reason', 'reset_by', 'reset_reason', 'score', 'sessions_invalidated', 'special', 'strong', 'success', 'suggestions', 'target_user_id', 'timestamp', 'uppercase', 'user_agent', 'user_id', 'username', 'utf-8', 'welcome']

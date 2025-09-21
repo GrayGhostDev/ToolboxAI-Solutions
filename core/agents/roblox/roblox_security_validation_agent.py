@@ -15,7 +15,7 @@ from datetime import datetime
 
 from langchain.agents import AgentExecutor
 from langchain.tools import Tool, StructuredTool
-from langchain.schema import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 
 from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
@@ -79,7 +79,7 @@ class RobloxSecurityValidationAgent(BaseAgent):
     def __init__(
         self,
         config: Optional[AgentConfig] = None,
-        llm: Optional[ChatOpenAI] = None,
+        llm: Optional[.* = None,
         strict_mode: bool = True
     ):
         # Create default config if not provided
@@ -99,7 +99,7 @@ class RobloxSecurityValidationAgent(BaseAgent):
         if llm is not None:
             self.llm = llm
         elif not self.llm:
-            self.llm = ChatOpenAI(
+            self.llm = from langchain_openai import ChatOpenAI(
                 model="gpt-4",
                 temperature=0
             )

@@ -5,7 +5,10 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Avatar as MuiAvatar, AvatarProps as MuiAvatarProps, styled, alpha } from '@mui/material';
+import { Avatar as MuiAvatar } from '@mui/material';
+import { AvatarProps as MuiAvatarProps } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import { designTokens } from '../../../theme/designTokens';
 
 export interface AvatarProps extends MuiAvatarProps {

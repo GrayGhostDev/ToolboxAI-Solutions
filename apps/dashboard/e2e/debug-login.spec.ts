@@ -1,3 +1,5 @@
+jest.setTimeout(10000);
+
 import { test } from '@playwright/test';
 
 test('debug login page', async ({ page }) => {

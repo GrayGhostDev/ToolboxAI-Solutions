@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 #!/usr/bin/env python3
 """
 Comprehensive Integration Testing Suite for ToolBoxAI Cloud Infrastructure
@@ -71,7 +86,8 @@ class IntegrationTester:
 
         print(f"{colors.get(status, '')} {name}: {message}")
 
-    async def test_aws_services(self) -> None:
+    @pytest.mark.asyncio
+async def test_aws_services(self) -> None:
         """Test AWS service integrations"""
         category = "AWS Services"
 
@@ -156,7 +172,8 @@ class IntegrationTester:
         except Exception as e:
             self.log_test("Redis Connection", "failed", str(e), category)
 
-    async def test_api_endpoints(self) -> None:
+    @pytest.mark.asyncio
+async def test_api_endpoints(self) -> None:
         """Test API endpoints"""
         category = "API Endpoints"
 
@@ -188,7 +205,8 @@ class IntegrationTester:
                 except Exception as e:
                     self.log_test(f"Endpoint {endpoint}", "failed", str(e), category)
 
-    async def test_websocket_connections(self) -> None:
+    @pytest.mark.asyncio
+async def test_websocket_connections(self) -> None:
         """Test WebSocket connections"""
         category = "WebSocket"
 

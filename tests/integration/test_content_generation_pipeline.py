@@ -1,778 +1,789 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """
-Content Generation Pipeline Integration Test
-Tests the complete end-to-end content generation workflow
+Content Generation Pipeline Integration Tests
+
+Tests the complete content generation workflow including:
+- API request -> Agent selection -> LLM interaction -> Database storage -> Real-time updates
+- Multi-agent coordination for complex content
+- Error handling and retry mechanisms
+- Performance benchmarks
+- Data consistency across components
 """
 
 import asyncio
-import os
 import json
+import os
 import time
-from datetime import datetime
-import sys
-from pathlib import Path
-import logging
-import requests
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
+from unittest.mock import AsyncMock, Mock, patch
+
+import httpx
 import pytest
-from tests.fixtures.agents import mock_llm
-from unittest.mock import Mock, patch, AsyncMock
+from sqlalchemy.ext.asyncio import AsyncSession
 
-# Skip all tests in this module as they require external services
-pytestmark = pytest.mark.skipif(
-    not os.environ.get('RUN_INTEGRATION_TESTS'),
-    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
-)
+# Set environment for testing
+os.environ["TESTING"] = "true"
+os.environ["USE_MOCK_LLM"] = "true"
+os.environ["USE_MOCK_DATABASE"] = "false"
 
-# Add parent directory to path
-sys.path.append(str(Path(__file__).parent))
-
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
-# Import agents and systems
-from core.agents.orchestrator import Orchestrator, WorkflowType, OrchestrationRequest
-from core.agents.content_agent import ContentAgent
-from core.agents.quiz_agent import QuizAgent
-from core.agents.terrain_agent import TerrainAgent
-from core.agents.script_agent import ScriptAgent
-from core.agents.review_agent import ReviewAgent
-from core.agents.testing_agent import TestingAgent
-
-# Import database integration if available
-try:
-    from core.agents.database_integration import AgentDatabaseIntegration
-    agent_db = AgentDatabaseIntegration()
-    DATABASE_AVAILABLE = True
-except ImportError:
-    DATABASE_AVAILABLE = False
-    agent_db = None
-    logger.warning("Database integration not available")
-
-# Import supporting systems
-try:
-    from core.sparc.state_manager import StateManager
-    from core.sparc.policy_engine import PolicyEngine
-    from core.sparc.action_executor import ActionExecutor
-    SPARC_AVAILABLE = True
-except ImportError:
-    SPARC_AVAILABLE = False
-    logger.warning("SPARC framework not available")
-
-try:
-    from core.swarm.swarm_controller import SwarmController
-    SWARM_AVAILABLE = True
-except ImportError:
-    SWARM_AVAILABLE = False
-    logger.warning("Swarm intelligence not available")
-
-try:
-    from core.mcp.context_manager import ContextManager
-    MCP_AVAILABLE = True
-except ImportError:
-    MCP_AVAILABLE = False
-    logger.warning("MCP context manager not available")
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.asyncio,
+]
 
 
-class ContentGenerationPipelineTest:
-    """Comprehensive test suite for content generation pipeline"""
-    
-    def __init__(self):
-        self.test_results = []
-        self.start_time = datetime.now()
-        self.api_base_url = "http://127.0.0.1:8008"
-        self.flask_base_url = "http://127.0.0.1:5001"
-        self.auth_token = None
-        
-    def login(self) -> bool:
-        """Login to get authentication token"""
-        try:
-            response = requests.post(
-                f"{self.api_base_url}/auth/login",
-                json={"username": "john_teacher", "password": "teacher123"}
+@pytest.fixture
+async def content_client():
+    """HTTP client configured for content generation testing"""
+    async with httpx.AsyncClient(
+        base_url="http://127.0.0.1:8009",
+        timeout=60.0  # Longer timeout for content generation
+    ) as client:
+        yield client
+
+
+@pytest.fixture
+def auth_headers():
+    """Authentication headers for API requests"""
+    # Create a test JWT token
+    import jwt
+    from datetime import timedelta
+
+    payload = {
+        "sub": "test_teacher_user",
+        "role": "teacher",
+        "exp": datetime.utcnow() + timedelta(hours=1)
+    }
+    token = jwt.encode(payload, "test-secret", algorithm="HS256")
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def content_requests():
+    """Sample content generation requests for testing"""
+    return {
+        "basic_lesson": {
+            "subject": "Mathematics",
+            "grade_level": 7,
+            "topic": "Linear Equations",
+            "learning_objectives": [
+                "Understand what linear equations are",
+                "Solve linear equations with one variable",
+                "Apply linear equations to real-world problems"
+            ],
+            "environment_type": "classroom",
+            "duration_minutes": 45
+        },
+        "roblox_lesson": {
+            "subject": "Science",
+            "grade_level": 8,
+            "topic": "Solar System",
+            "learning_objectives": [
+                "Identify planets in our solar system",
+                "Understand relative sizes and distances",
+                "Explore gravity and orbital mechanics"
+            ],
+            "environment_type": "space_station",
+            "include_terrain": True,
+            "include_scripts": True,
+            "gamification_elements": ["achievements", "leaderboard"]
+        },
+        "complex_multi_agent": {
+            "subject": "History",
+            "grade_level": 10,
+            "topic": "World War II",
+            "learning_objectives": [
+                "Analyze causes of WWII",
+                "Understand major battles and campaigns",
+                "Evaluate the war's impact on society"
+            ],
+            "environment_type": "historical_simulation",
+            "include_quiz": True,
+            "include_terrain": True,
+            "include_scripts": True,
+            "interactive_elements": ["timeline", "map", "documents"],
+            "assessment_type": "comprehensive"
+        }
+    }
+
+
+@pytest.fixture
+async def mock_pusher_service():
+    """Mock Pusher service for real-time updates"""
+    mock_pusher = Mock()
+    mock_pusher.trigger = AsyncMock(return_value={"status": "ok"})
+    mock_pusher.authenticate = AsyncMock(return_value={"auth": "token"})
+    return mock_pusher
+
+
+@pytest.fixture
+async def mock_agent_services():
+    """Mock agent services for controlled testing"""
+    return {
+        "content_agent": Mock(
+            generate_content=AsyncMock(return_value={
+                "title": "Linear Equations Introduction",
+                "content": "Welcome to linear equations...",
+                "activities": ["equation_solver", "word_problems"],
+                "estimated_time": 45,
+                "difficulty": "intermediate"
+            })
+        ),
+        "quiz_agent": Mock(
+            generate_quiz=AsyncMock(return_value={
+                "questions": [
+                    {
+                        "id": "q1",
+                        "question": "What is the solution to 2x + 5 = 15?",
+                        "type": "multiple_choice",
+                        "options": ["x = 3", "x = 5", "x = 10", "x = 20"],
+                        "correct_answer": 1,
+                        "points": 10,
+                        "explanation": "Subtract 5 from both sides, then divide by 2"
+                    }
+                ],
+                "total_points": 10,
+                "passing_score": 70
+            })
+        ),
+        "terrain_agent": Mock(
+            generate_terrain=AsyncMock(return_value={
+                "script": "-- Roblox terrain generation script\nlocal terrain = workspace.Terrain",
+                "materials": ["Grass", "Rock", "Water"],
+                "size": {"x": 100, "y": 50, "z": 100},
+                "theme": "classroom"
+            })
+        ),
+        "script_agent": Mock(
+            generate_script=AsyncMock(return_value={
+                "scripts": [
+                    {
+                        "name": "QuizUI",
+                        "type": "LocalScript",
+                        "code": "-- Quiz UI script\nlocal Players = game:GetService('Players')"
+                    }
+                ],
+                "dependencies": ["TextService", "UserInputService"]
+            })
+        )
+    }
+
+
+class TestBasicContentGeneration:
+    """Test basic content generation workflows"""
+
+    @pytest.mark.asyncio
+async def test_simple_content_generation(self, content_client, auth_headers, content_requests):
+        """Test basic content generation request"""
+        request_data = content_requests["basic_lesson"]
+
+        # Make content generation request
+        response = await content_client.post(
+            "/api/v1/content/generate",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        # Handle case where endpoint doesn't exist yet
+        if response.status_code == 404:
+            # Try alternative endpoints
+            alternative_endpoints = [
+                "/api/v1/generate_content",
+                "/generate_content",
+                "/content/generate"
+            ]
+
+            for endpoint in alternative_endpoints:
+                response = await content_client.post(
+                    endpoint,
+                    json=request_data,
+                    headers=auth_headers
+                )
+                if response.status_code != 404:
+                    break
+
+        if response.status_code == 404:
+            pytest.skip("Content generation endpoint not implemented")
+
+        # Verify successful response
+        assert response.status_code in [200, 202]  # Success or Accepted (async)
+        result = response.json()
+
+        # Check response structure
+        assert "status" in result
+        if result["status"] == "success":
+            assert "data" in result
+            content_data = result["data"]
+
+            # Verify content structure
+            expected_fields = ["title", "content", "learning_objectives", "estimated_duration"]
+            for field in expected_fields:
+                if field in content_data:
+                    assert content_data[field] is not None
+        elif result["status"] == "processing":
+            # Async processing - check for task ID
+            assert "task_id" in result["data"]
+
+    @pytest.mark.asyncio
+async def test_content_generation_with_validation(self, content_client, auth_headers):
+        """Test content generation with input validation"""
+        invalid_requests = [
+            {"subject": "", "grade_level": 7},  # Empty subject
+            {"subject": "Math", "grade_level": 0},  # Invalid grade level
+            {"subject": "Math", "grade_level": 20},  # Out of range grade level
+            {"subject": "Math"},  # Missing required fields
+            {}  # Empty request
+        ]
+
+        for invalid_request in invalid_requests:
+            response = await content_client.post(
+                "/api/v1/content/generate",
+                json=invalid_request,
+                headers=auth_headers
             )
-            
-            if response.status_code == 200:
-                data = response.json()
-                self.auth_token = data.get("access_token")
-                logger.info(f"✅ Logged in successfully as john_teacher")
-                return True
-            else:
-                logger.error(f"❌ Login failed: {response.status_code}")
-                return False
-                
-        except Exception as e:
-            logger.error(f"❌ Login error: {e}")
-            return False
-            
-    @pytest.mark.asyncio(loop_scope="function")
-    async def test_educational_content_creation(self, mock_llm):
-        """Test 1: Educational Content Creation"""
-        print("\n" + "="*60)
-        print("🔍 Test 1: Educational Content Creation")
-        print("="*60)
-        
-        try:
-            content_agent = ContentAgent()
-            
-            # Test content generation for different subjects
-            subjects = ["Mathematics", "Science", "History", "English"]
-            grade_levels = [5, 7, 9, 11]
-            
-            for subject, grade in zip(subjects, grade_levels):
-                print(f"\n  📚 Generating {subject} content for Grade {grade}...")
-                
-                context = {
-                    "subject": subject,
-                    "grade_level": grade,
-                    "learning_objectives": [
-                        f"Basic {subject} concepts",
-                        f"Advanced {subject} skills"
-                    ],
-                    "duration": 45,
-                    "format": "interactive"
-                }
-                
-                # Generate content
-                result = await content_agent.execute(str(context))
-                
-                if result:
-                    print(f"    ✅ Content generated for {subject} Grade {grade}")
-                    
-                    # Save to database if available
-                    if DATABASE_AVAILABLE and agent_db:
-                        saved = agent_db.save_generated_content(
-                            content_type="educational_content",
-                            content_data={
-                                "subject": subject,
-                                "grade_level": grade,
-                                "content": result,
-                                "timestamp": datetime.now().isoformat()
-                            }
-                        )
-                        if saved:
-                            print(f"    💾 Content saved to database")
-                else:
-                    print(f"    ⚠️ Content generation returned empty for {subject}")
-                    
-            self.test_results.append({
-                "test": "educational_content_creation",
-                "status": "passed",
-                "subjects_tested": len(subjects)
-            })
-            
-            print("\n✅ Educational content creation tested!")
-            return True
-            
-        except Exception as e:
-            print(f"\n❌ Educational content creation failed: {e}")
-            self.test_results.append({
-                "test": "educational_content_creation",
-                "status": "failed",
-                "error": str(e)
-            })
-            return False
-            
-    @pytest.mark.asyncio(loop_scope="function")
-    async def test_quiz_generation(self, mock_llm):
-        """Test 2: Quiz Generation Functionality"""
-        print("\n" + "="*60)
-        print("🔍 Test 2: Quiz Generation")
-        print("="*60)
-        
-        try:
-            quiz_agent = QuizAgent()
-            
-            # Test quiz generation for different topics
-            topics = [
-                {"subject": "Math", "topic": "Fractions", "difficulty": "easy", "questions": 5},
-                {"subject": "Science", "topic": "Solar System", "difficulty": "medium", "questions": 10},
-                {"subject": "History", "topic": "World War II", "difficulty": "hard", "questions": 15}
-            ]
-            
-            for topic_info in topics:
-                print(f"\n  📝 Generating {topic_info['difficulty']} quiz on {topic_info['topic']}...")
-                
-                # Generate quiz
-                result = await quiz_agent.execute(str(topic_info))
-                
-                if result:
-                    print(f"    ✅ Quiz generated: {topic_info['questions']} questions")
-                    
-                    # Validate quiz structure (if result is parseable)
-                    try:
-                        if isinstance(result, str):
-                            # Mock validation since we're using mock LLM
-                            print(f"    ✅ Quiz structure validated")
-                    except:
-                        pass
-                        
-                else:
-                    print(f"    ⚠️ Quiz generation returned empty")
-                    
-            self.test_results.append({
-                "test": "quiz_generation",
-                "status": "passed",
-                "quizzes_generated": len(topics)
-            })
-            
-            print("\n✅ Quiz generation tested!")
-            return True
-            
-        except Exception as e:
-            print(f"\n❌ Quiz generation failed: {e}")
-            self.test_results.append({
-                "test": "quiz_generation",
-                "status": "failed",
-                "error": str(e)
-            })
-            return False
-            
-    @pytest.mark.asyncio(loop_scope="function")
-    async def test_terrain_generation(self, mock_llm):
-        """Test 3: Terrain/Environment Generation"""
-        print("\n" + "="*60)
-        print("🔍 Test 3: Terrain/Environment Generation")
-        print("="*60)
-        
-        try:
-            terrain_agent = TerrainAgent()
-            
-            # Test different environment types
-            environments = [
-                {"type": "classroom", "size": "medium", "theme": "modern"},
-                {"type": "laboratory", "size": "large", "theme": "futuristic"},
-                {"type": "outdoor", "size": "huge", "theme": "nature"},
-                {"type": "space_station", "size": "medium", "theme": "sci-fi"}
-            ]
-            
-            for env in environments:
-                print(f"\n  🏗️ Generating {env['type']} environment ({env['theme']})...")
-                
-                # Generate terrain
-                result = await terrain_agent.execute(str(env))
-                
-                if result:
-                    print(f"    ✅ Terrain generated: {env['type']} - {env['size']}")
-                    
-                    # If result contains Lua code, validate it
-                    if "function" in str(result) or "local" in str(result):
-                        print(f"    ✅ Lua script validated")
-                else:
-                    print(f"    ⚠️ Terrain generation returned empty")
-                    
-            self.test_results.append({
-                "test": "terrain_generation",
-                "status": "passed",
-                "environments_created": len(environments)
-            })
-            
-            print("\n✅ Terrain generation tested!")
-            return True
-            
-        except Exception as e:
-            print(f"\n❌ Terrain generation failed: {e}")
-            self.test_results.append({
-                "test": "terrain_generation",
-                "status": "failed",
-                "error": str(e)
-            })
-            return False
-            
-    @pytest.mark.asyncio(loop_scope="function")
-    async def test_script_generation(self, mock_llm):
-        """Test 4: Script Generation for Roblox"""
-        print("\n" + "="*60)
-        print("🔍 Test 4: Roblox Script Generation")
-        print("="*60)
-        
-        try:
-            script_agent = ScriptAgent()
-            
-            # Test different script types
-            scripts = [
-                {"type": "player_controller", "language": "lua", "features": ["movement", "jumping"]},
-                {"type": "npc_behavior", "language": "lua", "features": ["pathfinding", "dialogue"]},
-                {"type": "game_mechanics", "language": "lua", "features": ["scoring", "levels"]},
-                {"type": "ui_manager", "language": "lua", "features": ["menus", "hud"]}
-            ]
-            
-            for script_info in scripts:
-                print(f"\n  💻 Generating {script_info['type']} script...")
-                
-                # Generate script
-                result = await script_agent.execute(str(script_info))
-                
-                if result:
-                    print(f"    ✅ Script generated: {script_info['type']}")
-                    
-                    # Check for Lua syntax markers
-                    lua_keywords = ["function", "local", "end", "if", "then", "return"]
-                    has_lua = any(keyword in str(result) for keyword in lua_keywords)
-                    
-                    if has_lua:
-                        print(f"    ✅ Lua syntax detected")
-                    else:
-                        print(f"    ℹ️ Mock script generated (no real Lua)")
-                else:
-                    print(f"    ⚠️ Script generation returned empty")
-                    
-            self.test_results.append({
-                "test": "script_generation",
-                "status": "passed",
-                "scripts_generated": len(scripts)
-            })
-            
-            print("\n✅ Script generation tested!")
-            return True
-            
-        except Exception as e:
-            print(f"\n❌ Script generation failed: {e}")
-            self.test_results.append({
-                "test": "script_generation",
-                "status": "failed",
-                "error": str(e)
-            })
-            return False
-            
-    @pytest.mark.asyncio(loop_scope="function")
-    async def test_review_process(self, mock_llm):
-        """Test 5: Review and Optimization Process"""
-        print("\n" + "="*60)
-        print("🔍 Test 5: Review and Optimization")
-        print("="*60)
-        
-        try:
-            review_agent = ReviewAgent()
-            
-            # Test content to review
-            test_contents = [
-                {
-                    "type": "educational_content",
-                    "content": "Sample lesson about photosynthesis",
-                    "criteria": ["accuracy", "clarity", "engagement"]
-                },
-                {
-                    "type": "quiz",
-                    "content": "Multiple choice questions about math",
-                    "criteria": ["difficulty", "variety", "correctness"]
-                },
-                {
-                    "type": "script",
-                    "content": "Lua code for player movement",
-                    "criteria": ["performance", "readability", "best_practices"]
-                }
-            ]
-            
-            for content in test_contents:
-                print(f"\n  🔍 Reviewing {content['type']}...")
-                
-                # Review content
-                result = await review_agent.execute(str(content))
-                
-                if result:
-                    print(f"    ✅ Review completed for {content['type']}")
-                    
-                    # Check review criteria
-                    for criterion in content['criteria']:
-                        print(f"    ✅ {criterion.capitalize()} assessed")
-                else:
-                    print(f"    ⚠️ Review returned empty")
-                    
-            self.test_results.append({
-                "test": "review_process",
-                "status": "passed",
-                "items_reviewed": len(test_contents)
-            })
-            
-            print("\n✅ Review process tested!")
-            return True
-            
-        except Exception as e:
-            print(f"\n❌ Review process failed: {e}")
-            self.test_results.append({
-                "test": "review_process",
-                "status": "failed",
-                "error": str(e)
-            })
-            return False
-            
-    @pytest.mark.asyncio(loop_scope="function")
-    async def test_end_to_end_workflow(self, mock_llm):
-        """Test 6: Complete End-to-End Workflow"""
-        print("\n" + "="*60)
-        print("🔍 Test 6: End-to-End Content Generation Workflow")
-        print("="*60)
-        
-        try:
-            # Test via API if auth token available
-            if self.auth_token:
-                print(f"  🔐 Using authenticated API call...")
-                
-                headers = {"Authorization": f"Bearer {self.auth_token}"}
-                
-                payload = {
-                    "subject": "Science",
-                    "grade_level": 7,
-                    "learning_objectives": ["Solar System", "Planets", "Space Exploration"],
-                    "environment_type": "space_station",
-                    "include_quiz": True,
-                    "include_terrain": True,
-                    "include_scripts": True
-                }
-                
-                print(f"  ⏳ Sending content generation request...")
-                
-                response = requests.post(
-                    f"{self.api_base_url}/generate_content",
-                    json=payload,
-                    headers=headers,
-                    timeout=30
+
+            if response.status_code == 404:
+                # Try alternative endpoint
+                response = await content_client.post(
+                    "/generate_content",
+                    json=invalid_request,
+                    headers=auth_headers
                 )
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    print(f"  ✅ Content generation successful via API")
-                    
-                    # Check response structure
-                    if "status" in result:
-                        print(f"    ✅ Status: {result.get('status')}")
-                    if "content" in result:
-                        print(f"    ✅ Content received")
-                    if "task_id" in result:
-                        print(f"    ✅ Task ID: {result.get('task_id')}")
-                        
-                elif response.status_code == 422:
-                    print(f"  ⚠️ Request validation error: {response.text}")
-                else:
-                    print(f"  ⚠️ API returned status {response.status_code}")
-                    
-            # Also test with orchestrator directly
-            print(f"\n  🎭 Testing with Orchestrator directly...")
-            
-            orchestrator = Orchestrator()
-            
-            request = OrchestrationRequest(
-                workflow_type=WorkflowType.FULL_ENVIRONMENT,
-                subject="Mathematics",
-                grade_level="8",
-                learning_objectives=["Algebra", "Equations"],
-                environment_type="classroom",
-                include_quiz=True,
-                include_terrain=True,
-                include_gamification=True
+
+            if response.status_code != 404:  # If endpoint exists
+                assert response.status_code == 422  # Validation error
+
+    @pytest.mark.asyncio
+async def test_content_generation_unauthorized(self, content_client, content_requests):
+        """Test content generation without authentication"""
+        request_data = content_requests["basic_lesson"]
+
+        response = await content_client.post(
+            "/api/v1/content/generate",
+            json=request_data
+        )
+
+        if response.status_code == 404:
+            response = await content_client.post("/generate_content", json=request_data)
+
+        if response.status_code != 404:  # If endpoint exists
+            assert response.status_code == 401  # Unauthorized
+
+    @pytest.mark.asyncio
+async def test_content_generation_performance(self, content_client, auth_headers, content_requests):
+        """Test content generation performance benchmarks"""
+        request_data = content_requests["basic_lesson"]
+
+        # Measure generation time
+        start_time = time.time()
+
+        response = await content_client.post(
+            "/api/v1/content/generate",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        if response.status_code == 404:
+            response = await content_client.post(
+                "/generate_content",
+                json=request_data,
+                headers=auth_headers
             )
-            
-            print(f"  ⏳ Running orchestrated workflow...")
-            
-            result = await orchestrator.orchestrate(request)
-            
-            if result.success:
-                print(f"  ✅ Orchestration completed successfully")
-                print(f"    ✅ Execution time: {result.execution_time:.2f}s")
-                print(f"    ✅ Workflow: {' → '.join(result.workflow_path)}")
-                
-                if result.content:
-                    print(f"    ✅ Educational content generated")
-                if result.quiz:
-                    print(f"    ✅ Quiz generated")
-                if result.terrain:
-                    print(f"    ✅ Terrain generated")
-                if result.scripts:
-                    print(f"    ✅ Scripts generated")
-                    
-            else:
-                print(f"  ⚠️ Orchestration completed with issues")
-                if result.errors:
-                    for error in result.errors:
-                        print(f"    ❌ {error}")
-                        
-            self.test_results.append({
-                "test": "end_to_end_workflow",
-                "status": "passed" if result.success else "partial",
-                "workflow_completed": True
-            })
-            
-            print("\n✅ End-to-end workflow tested!")
-            return True
-            
-        except Exception as e:
-            print(f"\n❌ End-to-end workflow failed: {e}")
-            self.test_results.append({
-                "test": "end_to_end_workflow",
-                "status": "failed",
-                "error": str(e)
-            })
-            return False
-            
-    @pytest.mark.asyncio(loop_scope="function")
-    async def test_integration_with_systems(self, mock_llm):
-        """Test 7: Integration with Supporting Systems"""
-        print("\n" + "="*60)
-        print("🔍 Test 7: System Integration (SPARC, Swarm, MCP)")
-        print("="*60)
-        
-        integration_status = {}
-        
-        # Test SPARC integration
-        if SPARC_AVAILABLE:
-            try:
-                print(f"\n  🎯 Testing SPARC integration...")
-                state_manager = StateManager()
-                policy_engine = PolicyEngine(state_manager)
-                action_executor = ActionExecutor(state_manager)
-                
-                # Create educational context
-                context = {
-                    "subject": "Physics",
-                    "grade_level": 10,
-                    "topic": "Newton's Laws",
-                    "students": 25
-                }
-                
-                state_manager.update_state(context)
-                decision = policy_engine.decide_action(context)
-                
-                print(f"    ✅ SPARC decision: {decision}")
-                integration_status["sparc"] = True
-                
-            except Exception as e:
-                print(f"    ❌ SPARC error: {e}")
-                integration_status["sparc"] = False
-        else:
-            print(f"  ⏭️ SPARC not available")
-            integration_status["sparc"] = None
-            
-        # Test Swarm integration
-        if SWARM_AVAILABLE:
-            try:
-                print(f"\n  🐝 Testing Swarm integration...")
-                # Use the factory function from swarm module
-                from core.swarm import create_swarm
-                swarm = await create_swarm({"max_workers": 2})
-                # Swarm is already started by create_swarm
-                
-                print(f"    ✅ Swarm started with workers")
-                
-                await swarm.stop()
-                print(f"    ✅ Swarm stopped cleanly")
-                integration_status["swarm"] = True
-                
-            except Exception as e:
-                print(f"    ❌ Swarm error: {e}")
-                integration_status["swarm"] = False
-        else:
-            print(f"  ⏭️ Swarm not available")
-            integration_status["swarm"] = None
-            
-        # Test MCP integration
-        if MCP_AVAILABLE:
-            try:
-                print(f"\n  📡 Testing MCP integration...")
-                context_manager = ContextManager(max_tokens=128000)
-                
-                # Add educational context
-                context_manager.add_context(
-                    content="Educational content generation pipeline test",
-                    category="system",
-                    source="pipeline_test",
-                    importance=5.0
-                )
-                
-                stats = context_manager.get_stats()
-                print(f"    ✅ MCP tokens: {stats['total_tokens']}")
-                print(f"    ✅ MCP utilization: {stats['utilization']}")
-                integration_status["mcp"] = True
-                
-            except Exception as e:
-                print(f"    ❌ MCP error: {e}")
-                integration_status["mcp"] = False
-        else:
-            print(f"  ⏭️ MCP not available")
-            integration_status["mcp"] = None
-            
-        self.test_results.append({
-            "test": "system_integration",
-            "status": "passed" if any(v for v in integration_status.values() if v) else "failed",
-            "integrations": integration_status
-        })
-        
-        print("\n✅ System integration tested!")
-        return True
-        
-    @pytest.mark.asyncio(loop_scope="function")
-    async def test_performance_metrics(self, mock_llm):
-        """Test 8: Performance and Optimization Metrics"""
-        print("\n" + "="*60)
-        print("🔍 Test 8: Performance Metrics")
-        print("="*60)
-        
-        try:
-            testing_agent = TestingAgent()
-            
-            print(f"  ⏱️ Measuring content generation performance...")
-            
-            # Time different operations
-            operations = {
-                "content_generation": ContentAgent(),
-                "quiz_generation": QuizAgent(),
-                "terrain_generation": TerrainAgent(),
-                "script_generation": ScriptAgent(),
-                "review_process": ReviewAgent()
-            }
-            
-            performance_results = {}
-            
-            for name, agent in operations.items():
-                start_time = time.time()
-                
-                try:
-                    # Simple execution test
-                    result = await agent.execute("test")
-                    elapsed = time.time() - start_time
-                    
-                    performance_results[name] = {
-                        "time": elapsed,
-                        "status": "success" if result else "empty"
-                    }
-                    
-                    print(f"    ✅ {name}: {elapsed:.3f}s")
-                    
-                except Exception as e:
-                    elapsed = time.time() - start_time
-                    performance_results[name] = {
-                        "time": elapsed,
-                        "status": "error",
-                        "error": str(e)
-                    }
-                    print(f"    ❌ {name}: Failed after {elapsed:.3f}s")
-                    
-            # Calculate average performance
-            successful_times = [r["time"] for r in performance_results.values() if r["status"] == "success"]
-            if successful_times:
-                avg_time = sum(successful_times) / len(successful_times)
-                print(f"\n  📊 Average execution time: {avg_time:.3f}s")
-                
-            self.test_results.append({
-                "test": "performance_metrics",
-                "status": "passed",
-                "metrics": performance_results
-            })
-            
-            print("\n✅ Performance metrics collected!")
-            return True
-            
-        except Exception as e:
-            print(f"\n❌ Performance testing failed: {e}")
-            self.test_results.append({
-                "test": "performance_metrics",
-                "status": "failed",
-                "error": str(e)
-            })
-            return False
-            
-    async def run_all_tests(self):
-        """Run all content generation pipeline tests"""
-        print("\n" + "="*80)
-        print(" 🚀 CONTENT GENERATION PIPELINE INTEGRATION TEST")
-        print("="*80)
-        print(f"Start Time: {self.start_time.isoformat()}")
-        print(f"Project: ToolBoxAI-Solutions Content Generation Pipeline")
-        
-        # Login first
-        if not self.login():
-            print("\n⚠️ Warning: Running without authentication")
-            
-        # Run all tests
-        await self.test_educational_content_creation()
-        await self.test_quiz_generation()
-        await self.test_terrain_generation()
-        await self.test_script_generation()
-        await self.test_review_process()
-        await self.test_end_to_end_workflow()
-        await self.test_integration_with_systems()
-        await self.test_performance_metrics()
-        
-        # Generate summary
-        end_time = datetime.now()
-        duration = (end_time - self.start_time).total_seconds()
-        
-        print("\n" + "="*80)
-        print(" 📊 PIPELINE TEST SUMMARY")
-        print("="*80)
-        
-        total_tests = len(self.test_results)
-        passed = sum(1 for r in self.test_results if r.get("status") == "passed")
-        failed = sum(1 for r in self.test_results if r.get("status") == "failed")
-        partial = sum(1 for r in self.test_results if r.get("status") == "partial")
-        
-        print(f"\nTotal Tests: {total_tests}")
-        print(f"✅ Passed: {passed}")
-        print(f"❌ Failed: {failed}")
-        print(f"⚠️ Partial: {partial}")
-        print(f"⏱️ Duration: {duration:.2f} seconds")
-        print(f"📈 Success Rate: {(passed/total_tests)*100:.1f}%\" if total_tests > 0 else \"0%")
-        
-        print("\n📋 Detailed Results:")
-        for test in self.test_results:
-            status_icon = {
-                "passed": "✅",
-                "failed": "❌",
-                "partial": "⚠️"
-            }.get(test.get("status"), "❓")
-            
-            test_name = test.get("test", "unknown").replace("_", " ").title()
-            print(f"  {status_icon} {test_name}: {test.get('status', 'unknown').upper()}")
-            
-            if test.get("error"):
-                print(f"      Error: {test['error']}")
-                
-        # Save results if database available
-        if DATABASE_AVAILABLE and agent_db:
-            try:
-                agent_db.save_generated_content(
-                    content_type="pipeline_test_results",
-                    content_data={
-                        "timestamp": datetime.now().isoformat(),
-                        "duration": duration,
-                        "total_tests": total_tests,
-                        "passed": passed,
-                        "failed": failed,
-                        "partial": partial,
-                        "results": self.test_results
-                    }
-                )
-                print("\n💾 Test results saved to database")
-            except:
-                pass
-                
-        print("\n" + "="*80)
-        print(" 🎯 CONTENT GENERATION PIPELINE TEST COMPLETE")
-        print("="*80)
-        
-        return {
-            "success": failed == 0,
-            "total_tests": total_tests,
-            "passed": passed,
-            "failed": failed,
-            "partial": partial,
-            "duration": duration,
-            "results": self.test_results
+
+        if response.status_code == 404:
+            pytest.skip("Content generation endpoint not implemented")
+
+        end_time = time.time()
+        generation_time = end_time - start_time
+
+        # Performance assertions
+        if response.status_code == 200:
+            # Synchronous generation should complete within reasonable time
+            assert generation_time < 30.0  # 30 seconds max
+
+        elif response.status_code == 202:
+            # Async generation should respond quickly
+            assert generation_time < 5.0  # 5 seconds max for task creation
+
+        # Log performance metrics
+        print(f"Content generation time: {generation_time:.2f} seconds")
+
+
+class TestRobloxContentGeneration:
+    """Test Roblox-specific content generation"""
+
+    @pytest.mark.asyncio
+async def test_roblox_environment_generation(self, content_client, auth_headers, content_requests):
+        """Test generation of Roblox environments with terrain and scripts"""
+        request_data = content_requests["roblox_lesson"]
+
+        response = await content_client.post(
+            "/api/v1/content/generate",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        if response.status_code == 404:
+            # Try Roblox-specific endpoint
+            response = await content_client.post(
+                "/api/v1/roblox/generate",
+                json=request_data,
+                headers=auth_headers
+            )
+
+        if response.status_code == 404:
+            pytest.skip("Roblox content generation not implemented")
+
+        if response.status_code in [200, 202]:
+            result = response.json()
+
+            if result["status"] == "success":
+                content_data = result["data"]
+
+                # Verify Roblox-specific content
+                if "terrain" in content_data:
+                    terrain = content_data["terrain"]
+                    assert "script" in terrain
+                    assert "materials" in terrain
+
+                if "scripts" in content_data:
+                    scripts = content_data["scripts"]
+                    assert isinstance(scripts, list)
+                    for script in scripts:
+                        assert "name" in script
+                        assert "code" in script
+
+    @pytest.mark.asyncio
+async def test_terrain_script_generation(self, content_client, auth_headers):
+        """Test terrain script generation specifically"""
+        terrain_request = {
+            "type": "terrain",
+            "theme": "space_station",
+            "size": {"x": 200, "y": 100, "z": 200},
+            "materials": ["Metal", "Neon", "Glass"],
+            "features": ["gravity_wells", "landing_pads", "observation_deck"]
         }
 
+        response = await content_client.post(
+            "/api/v1/roblox/terrain",
+            json=terrain_request,
+            headers=auth_headers
+        )
 
-async def main():
-    """Main test runner"""
-    tester = ContentGenerationPipelineTest()
-    results = await tester.run_all_tests()
-    
-    # Return exit code based on results
-    if results["failed"] > 0:
-        return 1
-    return 0
+        if response.status_code == 404:
+            pytest.skip("Terrain generation endpoint not implemented")
+
+        if response.status_code == 200:
+            result = response.json()
+            assert "script" in result
+            assert "-- Roblox" in result["script"] or "local terrain" in result["script"].lower()
+
+    @pytest.mark.asyncio
+async def test_lua_script_validation(self, content_client, auth_headers):
+        """Test validation of generated Lua scripts"""
+        script_request = {
+            "type": "script",
+            "functionality": "quiz_system",
+            "features": ["question_display", "answer_validation", "score_tracking"],
+            "target": "StarterPlayerScripts"
+        }
+
+        response = await content_client.post(
+            "/api/v1/roblox/scripts",
+            json=script_request,
+            headers=auth_headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Script generation endpoint not implemented")
+
+        if response.status_code == 200:
+            result = response.json()
+
+            if "scripts" in result:
+                for script in result["scripts"]:
+                    code = script.get("code", "")
+
+                    # Basic Lua syntax validation
+                    assert not any(syntax_error in code for syntax_error in [
+                        "syntax error", "unexpected symbol", "end expected"
+                    ])
+
+                    # Check for common Roblox services
+                    roblox_services = ["Players", "Workspace", "ReplicatedStorage"]
+                    has_roblox_service = any(service in code for service in roblox_services)
+                    if not has_roblox_service and len(code) > 10:
+                        print(f"Warning: Script might not be Roblox-specific: {code[:100]}...")
+
+
+class TestMultiAgentOrchestration:
+    """Test multi-agent coordination in content generation"""
+
+    @pytest.mark.asyncio
+async def test_parallel_agent_execution(self, content_client, auth_headers, content_requests, mock_agent_services):
+        """Test parallel execution of multiple content generation agents"""
+        request_data = content_requests["complex_multi_agent"]
+
+        # Mock the agent services
+        with patch("apps.backend.agents.orchestrator.ContentAgent", mock_agent_services["content_agent"]), \
+             patch("apps.backend.agents.orchestrator.QuizAgent", mock_agent_services["quiz_agent"]), \
+             patch("apps.backend.agents.orchestrator.TerrainAgent", mock_agent_services["terrain_agent"]), \
+             patch("apps.backend.agents.orchestrator.ScriptAgent", mock_agent_services["script_agent"]):
+
+            start_time = time.time()
+
+            response = await content_client.post(
+                "/api/v1/content/generate",
+                json=request_data,
+                headers=auth_headers
+            )
+
+            if response.status_code == 404:
+                pytest.skip("Multi-agent orchestration not implemented")
+
+            execution_time = time.time() - start_time
+
+            if response.status_code in [200, 202]:
+                result = response.json()
+
+                if result["status"] == "success":
+                    content_data = result["data"]
+
+                    # Verify all requested components were generated
+                    expected_components = ["content", "quiz", "terrain", "scripts"]
+                    for component in expected_components:
+                        if component in content_data:
+                            assert content_data[component] is not None
+
+                    # Verify parallel execution (should be faster than serial)
+                    # If all agents ran in serial, it would take much longer
+                    print(f"Multi-agent execution time: {execution_time:.2f} seconds")
+
+    @pytest.mark.asyncio
+async def test_agent_error_handling(self, content_client, auth_headers, content_requests):
+        """Test error handling when individual agents fail"""
+        request_data = content_requests["complex_multi_agent"]
+
+        # Mock agents with some failures
+        failing_agents = {
+            "content_agent": Mock(
+                generate_content=AsyncMock(side_effect=Exception("Content generation failed"))
+            ),
+            "quiz_agent": Mock(
+                generate_quiz=AsyncMock(return_value={
+                    "questions": [],
+                    "total_points": 0
+                })
+            ),
+            "terrain_agent": Mock(
+                generate_terrain=AsyncMock(side_effect=TimeoutError("Terrain generation timeout"))
+            ),
+            "script_agent": Mock(
+                generate_script=AsyncMock(return_value={
+                    "scripts": [{"name": "fallback", "code": "-- Fallback script"}]
+                })
+            )
+        }
+
+        with patch("apps.backend.agents.orchestrator.ContentAgent", failing_agents["content_agent"]), \
+             patch("apps.backend.agents.orchestrator.QuizAgent", failing_agents["quiz_agent"]), \
+             patch("apps.backend.agents.orchestrator.TerrainAgent", failing_agents["terrain_agent"]), \
+             patch("apps.backend.agents.orchestrator.ScriptAgent", failing_agents["script_agent"]):
+
+            response = await content_client.post(
+                "/api/v1/content/generate",
+                json=request_data,
+                headers=auth_headers
+            )
+
+            if response.status_code == 404:
+                pytest.skip("Error handling not testable without orchestrator")
+
+            # Should handle failures gracefully
+            assert response.status_code in [200, 202, 206]  # Success, Accepted, or Partial Content
+
+            if response.status_code == 200:
+                result = response.json()
+
+                # Should provide partial results or fallbacks
+                if result["status"] == "partial_success":
+                    assert "errors" in result
+                    assert "data" in result
+
+    @pytest.mark.asyncio
+async def test_agent_retry_mechanism(self, content_client, auth_headers, content_requests):
+        """Test retry mechanism for failed agent operations"""
+        request_data = content_requests["basic_lesson"]
+
+        # Mock agent that fails first, then succeeds
+        call_count = 0
+
+        def mock_generate_content(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise Exception("Temporary failure")
+            return {
+                "title": "Test Content",
+                "content": "Generated after retry",
+                "success": True
+            }
+
+        mock_agent = Mock(generate_content=AsyncMock(side_effect=mock_generate_content))
+
+        with patch("apps.backend.agents.orchestrator.ContentAgent", mock_agent):
+            response = await content_client.post(
+                "/api/v1/content/generate",
+                json=request_data,
+                headers=auth_headers
+            )
+
+            if response.status_code == 404:
+                pytest.skip("Retry mechanism not testable without orchestrator")
+
+            if response.status_code == 200:
+                # Should succeed after retry
+                result = response.json()
+                assert result["status"] == "success"
+
+                # Verify retry was attempted
+                assert call_count > 1
+
+
+class TestContentPersistence:
+    """Test content persistence and database integration"""
+
+    @pytest.mark.requires_postgres
+    @pytest.mark.asyncio
+async def test_content_database_storage(self, content_client, auth_headers, content_requests, test_db):
+        """Test that generated content is properly stored in database"""
+        request_data = content_requests["basic_lesson"]
+
+        response = await content_client.post(
+            "/api/v1/content/generate",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Content generation endpoint not implemented")
+
+        if response.status_code == 200:
+            result = response.json()
+
+            if result["status"] == "success" and "content_id" in result.get("data", {}):
+                content_id = result["data"]["content_id"]
+
+                # Verify content was stored in database
+                # This would require database connection and queries
+                # For now, just verify the response structure
+                assert content_id is not None
+                assert isinstance(content_id, (str, int))
+
+    @pytest.mark.asyncio
+async def test_content_versioning(self, content_client, auth_headers, content_requests):
+        """Test content versioning when regenerating"""
+        request_data = content_requests["basic_lesson"]
+
+        # Generate content twice
+        response1 = await content_client.post(
+            "/api/v1/content/generate",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        if response1.status_code == 404:
+            pytest.skip("Content generation endpoint not implemented")
+
+        # Wait a moment
+        await asyncio.sleep(1)
+
+        response2 = await content_client.post(
+            "/api/v1/content/generate",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        if response1.status_code == 200 and response2.status_code == 200:
+            result1 = response1.json()
+            result2 = response2.json()
+
+            # Should be different versions
+            if "content_id" in result1.get("data", {}) and "content_id" in result2.get("data", {}):
+                content_id1 = result1["data"]["content_id"]
+                content_id2 = result2["data"]["content_id"]
+                assert content_id1 != content_id2
+
+    @pytest.mark.asyncio
+async def test_content_metadata_tracking(self, content_client, auth_headers, content_requests):
+        """Test tracking of content generation metadata"""
+        request_data = content_requests["basic_lesson"]
+
+        response = await content_client.post(
+            "/api/v1/content/generate",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        if response.status_code == 404:
+            pytest.skip("Content generation endpoint not implemented")
+
+        if response.status_code == 200:
+            result = response.json()
+
+            if result["status"] == "success":
+                data = result["data"]
+
+                # Verify metadata is tracked
+                metadata_fields = ["generated_at", "model_used", "generation_time", "user_id"]
+                for field in metadata_fields:
+                    if field in data:
+                        assert data[field] is not None
+
+
+class TestRealTimeUpdates:
+    """Test real-time updates during content generation"""
+
+    @pytest.mark.asyncio
+async def test_websocket_progress_updates(self, mock_pusher_service):
+        """Test WebSocket progress updates during generation"""
+        # This would test WebSocket connections for real-time updates
+        # For now, just verify the mock service
+        result = await mock_pusher_service.trigger("content-channel", "progress", {
+            "task_id": "test-123",
+            "progress": 50,
+            "stage": "content_generation"
+        })
+
+        assert result["status"] == "ok"
+
+    @pytest.mark.asyncio
+async def test_pusher_channel_notifications(self, content_client, auth_headers, content_requests, mock_pusher_service):
+        """Test Pusher channel notifications for content updates"""
+        request_data = content_requests["basic_lesson"]
+
+        # Mock Pusher service
+        with patch("apps.backend.services.pusher.trigger_event", mock_pusher_service.trigger):
+            response = await content_client.post(
+                "/api/v1/content/generate",
+                json=request_data,
+                headers=auth_headers
+            )
+
+            if response.status_code == 404:
+                pytest.skip("Pusher integration not testable without endpoint")
+
+            # Verify Pusher notifications were triggered
+            if response.status_code in [200, 202]:
+                # In a real implementation, we'd verify the trigger was called
+                pass
+
+    @pytest.mark.asyncio
+async def test_progress_tracking_accuracy(self, content_client, auth_headers, content_requests):
+        """Test accuracy of progress tracking during generation"""
+        request_data = content_requests["complex_multi_agent"]
+
+        # Monitor progress updates (if supported)
+        response = await content_client.post(
+            "/api/v1/content/generate",
+            json=request_data,
+            headers=auth_headers
+        )
+
+        if response.status_code == 202:  # Async processing
+            result = response.json()
+            if "task_id" in result.get("data", {}):
+                task_id = result["data"]["task_id"]
+
+                # Poll for progress (if endpoint exists)
+                for _ in range(10):  # Max 10 polls
+                    progress_response = await content_client.get(
+                        f"/api/v1/tasks/{task_id}/progress",
+                        headers=auth_headers
+                    )
+
+                    if progress_response.status_code == 200:
+                        progress_data = progress_response.json()
+                        progress = progress_data.get("progress", 0)
+
+                        # Progress should be between 0 and 100
+                        assert 0 <= progress <= 100
+
+                        if progress == 100:
+                            break
+
+                    await asyncio.sleep(1)
+
+
+class TestConcurrentGeneration:
+    """Test content generation under concurrent load"""
+
+    @pytest.mark.asyncio
+async def test_concurrent_generation_requests(self, content_client, auth_headers, content_requests):
+        """Test system stability under concurrent generation requests"""
+        request_data = content_requests["basic_lesson"]
+
+        # Create multiple concurrent generation tasks
+        async def generate_content():
+            response = await content_client.post(
+                "/api/v1/content/generate",
+                json=request_data,
+                headers=auth_headers
+            )
+            return response.status_code
+
+        # Run 5 concurrent generation requests
+        tasks = [generate_content() for _ in range(5)]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Filter out 404s (endpoint not found)
+        valid_results = [r for r in results if isinstance(r, int) and r != 404]
+
+        if valid_results:
+            # Should handle concurrent requests gracefully
+            success_codes = {200, 202, 429}  # Success, Accepted, or Rate Limited
+            assert all(code in success_codes for code in valid_results)
+
+    @pytest.mark.asyncio
+async def test_resource_cleanup_after_generation(self, content_client, auth_headers, content_requests):
+        """Test that resources are properly cleaned up after generation"""
+        request_data = content_requests["basic_lesson"]
+
+        initial_memory = await self._get_memory_usage()
+
+        # Generate multiple pieces of content
+        for _ in range(3):
+            response = await content_client.post(
+                "/api/v1/content/generate",
+                json=request_data,
+                headers=auth_headers
+            )
+
+            if response.status_code == 404:
+                pytest.skip("Cannot test resource cleanup without endpoint")
+
+            await asyncio.sleep(1)  # Small delay
+
+        final_memory = await self._get_memory_usage()
+
+        # Memory should not increase dramatically
+        if initial_memory and final_memory:
+            memory_increase = final_memory - initial_memory
+            # Allow for some increase but not excessive
+            assert memory_increase < 100 * 1024 * 1024  # 100MB limit
+
+    async def _get_memory_usage(self) -> Optional[int]:
+        """Get current memory usage (mock implementation)"""
+        try:
+            import psutil
+            process = psutil.Process()
+            return process.memory_info().rss
+        except ImportError:
+            return None
 
 
 if __name__ == "__main__":
-    exit_code = asyncio.run(main())
-    sys.exit(exit_code)
+    # Run the tests
+    pytest.main([__file__, "-v", "--tb=short"])

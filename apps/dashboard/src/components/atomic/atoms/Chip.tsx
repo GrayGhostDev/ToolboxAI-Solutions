@@ -17,7 +17,7 @@ export interface GridProps {}
 // For now, create basic placeholder components
 import React from 'react';
 
-const AtomicChip = React.forwardRef<HTMLDivElement, ChipProps>((props, ref) => (
+const AtomicChip = (({ ...props, ref }: HTMLDivElement, ChipProps & { ref?: React.Ref<any> }) => (
   <div ref={ref} {...props}>Chip Component</div>
 ));
 

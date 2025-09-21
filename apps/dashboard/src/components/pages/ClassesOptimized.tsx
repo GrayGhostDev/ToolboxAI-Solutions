@@ -1,22 +1,21 @@
 import * as React from "react";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import AvatarGroup from '@mui/material/AvatarGroup';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Box from '@mui/material/Box';
+import LinearProgress from '@mui/material/LinearProgress';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Stack,
-  Avatar,
-  AvatarGroup,
-  Chip,
-  IconButton,
-  Menu,
-  MenuItem,
-  Box,
-  LinearProgress,
-  TextField,
-  InputAdornment,
-} from "@mui/material";
 import Grid from "@mui/material/Grid";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
@@ -24,22 +23,17 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PeopleIcon from "@mui/icons-material/People";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import ScheduleIcon from "@mui/icons-material/Schedule";
-import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-
 import { useAppDispatch, useAppSelector } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
 import { setClasses, removeClass, setClassOnlineStatus } from "../../store/slices/classesSlice";
-import { listClasses, createClass } from "../../services/api";
-import { useApiData } from "../../hooks/useApiData";
-import { ROUTES, getClassDetailsRoute } from "../../config/routes";
+import { listClasses } from "../../services/api";
+import { getClassDetailsRoute } from "../../config/routes";
 import CreateClassDialog from "../dialogs/CreateClassDialog";
-import StudentProgressTracker from "../widgets/StudentProgressTracker";
 import VirtualizedList from "../common/VirtualizedList";
 import { performanceUtils } from "../common/PerformanceMonitor";
-
 interface ClassCardData {
   id: string;
   name: string;
@@ -52,7 +46,6 @@ interface ClassCardData {
   isOnline: boolean;
   studentAvatars: string[];
 }
-
 // Memoized class card component for better performance
 const ClassCard = React.memo<{
   classData: ClassCardData;
@@ -63,23 +56,19 @@ const ClassCard = React.memo<{
     event.stopPropagation();
     onMenuClick(event, classData);
   }, [onMenuClick, classData]);
-
   const handleCardClick = React.useCallback(() => {
     onCardClick(classData);
   }, [onCardClick, classData]);
-
   const performanceMark = React.useMemo(() => performanceUtils.measureComponent('ClassCard'), []);
-
   React.useEffect(() => {
     performanceMark.start();
     return () => {
       performanceMark.end();
     };
   }, [performanceMark]);
-
   return (
     <Card
-      onClick={handleCardClick}
+      onClick={(e: React.MouseEvent) => handleCardClick}
       sx={{
         cursor: "pointer",
         transition: "all 0.2s ease-in-out",
@@ -96,11 +85,10 @@ const ClassCard = React.memo<{
           <Typography variant="h6" component="h2" noWrap>
             {classData.name}
           </Typography>
-          <IconButton size="small" onClick={handleMenuClick}>
+          <IconButton size="small" onClick={(e: React.MouseEvent) => handleMenuClick}>
             <MoreVertIcon />
           </IconButton>
         </Box>
-
         <Stack spacing={2}>
           <Box display="flex" alignItems="center" gap={1}>
             <PeopleIcon color="primary" />
@@ -108,14 +96,12 @@ const ClassCard = React.memo<{
               Grade {classData.grade} • {classData.studentCount} students
             </Typography>
           </Box>
-
           <Box display="flex" alignItems="center" gap={1}>
             <ScheduleIcon color="action" />
             <Typography variant="body2" color="text.secondary" noWrap>
               {classData.schedule}
             </Typography>
           </Box>
-
           <Box>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
               <Typography variant="body2" color="text.secondary">
@@ -131,7 +117,6 @@ const ClassCard = React.memo<{
               sx={{ height: 6, borderRadius: 3 }}
             />
           </Box>
-
           <Box display="flex" alignItems="center" gap={1}>
             <TrendingUpIcon color="success" />
             <Typography variant="body2" color="text.secondary">
@@ -144,7 +129,6 @@ const ClassCard = React.memo<{
               variant="outlined"
             />
           </Box>
-
           {classData.studentAvatars.length > 0 && (
             <AvatarGroup max={4} sx={{ justifyContent: "flex-start" }}>
               {classData.studentAvatars.map((avatar, index) => (
@@ -157,9 +141,7 @@ const ClassCard = React.memo<{
     </Card>
   );
 });
-
 ClassCard.displayName = 'ClassCard';
-
 // Memoized search and filters component
 const ClassFilters = React.memo<{
   searchTerm: string;
@@ -169,7 +151,6 @@ const ClassFilters = React.memo<{
   const handleSearchChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     onSearchChange(event.target.value);
   }, [onSearchChange]);
-
   return (
     <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
       <TextField
@@ -189,7 +170,7 @@ const ClassFilters = React.memo<{
       <Button
         variant="contained"
         startIcon={<AddIcon />}
-        onClick={onCreateClass}
+        onClick={(e: React.MouseEvent) => onCreateClass}
         sx={{ minWidth: 140 }}
       >
         New Class
@@ -197,14 +178,11 @@ const ClassFilters = React.memo<{
     </Box>
   );
 });
-
 ClassFilters.displayName = 'ClassFilters';
-
 export default function ClassesOptimized() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const role = useAppSelector((s) => s.user.role);
-
   // State management with useState
   const [classes, setClassesState] = React.useState<ClassCardData[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -212,10 +190,8 @@ export default function ClassesOptimized() {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [selectedClass, setSelectedClass] = React.useState<ClassCardData | null>(null);
   const [createClassOpen, setCreateClassOpen] = React.useState(false);
-
   // Performance tracking
   const performanceMark = React.useMemo(() => performanceUtils.measureComponent('ClassesPage'), []);
-
   React.useEffect(() => {
     performanceMark.start();
     fetchClasses();
@@ -223,11 +199,9 @@ export default function ClassesOptimized() {
       performanceMark.end();
     };
   }, [performanceMark]);
-
   // Memoized filtered classes for performance
   const filteredClasses = React.useMemo(() => {
     if (!searchTerm) return classes;
-
     const lowercaseSearch = searchTerm.toLowerCase();
     return classes.filter(classItem =>
       classItem.name.toLowerCase().includes(lowercaseSearch) ||
@@ -235,13 +209,11 @@ export default function ClassesOptimized() {
       classItem.schedule.toLowerCase().includes(lowercaseSearch)
     );
   }, [classes, searchTerm]);
-
   // Optimized fetch function with useCallback
   const fetchClasses = React.useCallback(async () => {
     setLoading(true);
     try {
       const data = await listClasses();
-
       // Transform API response to match component interface
       const transformedClasses: ClassCardData[] = data.map((classItem: any) => ({
         id: classItem.id,
@@ -255,13 +227,11 @@ export default function ClassesOptimized() {
         isOnline: classItem.is_online || false,
         studentAvatars: [], // Will be populated when we have student endpoints
       }));
-
       setClassesState(transformedClasses);
     } catch (error: any) {
       console.error("Failed to fetch classes:", error);
       const errorDetail = error.response?.data?.detail;
       let errorMessage = "Failed to load classes. Please try again.";
-
       if (typeof errorDetail === 'string') {
         errorMessage = errorDetail;
       } else if (Array.isArray(errorDetail)) {
@@ -270,7 +240,6 @@ export default function ClassesOptimized() {
           err.msg || err.message || 'Validation error'
         ).join(', ');
       }
-
       dispatch(addNotification({
         type: "error",
         message: errorMessage,
@@ -279,35 +248,28 @@ export default function ClassesOptimized() {
       setLoading(false);
     }
   }, [dispatch]);
-
   // Memoized event handlers
   const handleMenuClick = React.useCallback((event: React.MouseEvent<HTMLElement>, classData: ClassCardData) => {
     setAnchorEl(event.currentTarget);
     setSelectedClass(classData);
   }, []);
-
   const handleMenuClose = React.useCallback(() => {
     setAnchorEl(null);
     setSelectedClass(null);
   }, []);
-
   const handleCardClick = React.useCallback((classData: ClassCardData) => {
     navigate(getClassDetailsRoute(classData.id));
   }, [navigate]);
-
   const handleCreateClass = React.useCallback(() => {
     setCreateClassOpen(true);
   }, []);
-
   const handleCreateClassClose = React.useCallback(() => {
     setCreateClassOpen(false);
   }, []);
-
   const handleCreateClassSuccess = React.useCallback(() => {
     setCreateClassOpen(false);
     fetchClasses();
   }, [fetchClasses]);
-
   const handleDeleteClass = React.useCallback(async () => {
     if (selectedClass) {
       try {
@@ -326,7 +288,6 @@ export default function ClassesOptimized() {
     }
     handleMenuClose();
   }, [selectedClass, dispatch, handleMenuClose]);
-
   // Render item function for virtualized list
   const renderClassItem = React.useCallback((item: ClassCardData, index: number) => (
     <ClassCard
@@ -336,7 +297,6 @@ export default function ClassesOptimized() {
       onCardClick={handleCardClick}
     />
   ), [handleMenuClick, handleCardClick]);
-
   if (loading && classes.length === 0) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="400px">
@@ -344,7 +304,6 @@ export default function ClassesOptimized() {
       </Box>
     );
   }
-
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -353,19 +312,17 @@ export default function ClassesOptimized() {
         </Typography>
         <Button
           variant="outlined"
-          onClick={fetchClasses}
+          onClick={(e: React.MouseEvent) => fetchClasses}
           disabled={loading}
         >
           Refresh
         </Button>
       </Box>
-
       <ClassFilters
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onCreateClass={handleCreateClass}
       />
-
       {/* Use VirtualizedList for large datasets */}
       {filteredClasses.length > 20 ? (
         <VirtualizedList
@@ -389,7 +346,6 @@ export default function ClassesOptimized() {
           ))}
         </Grid>
       )}
-
       {filteredClasses.length === 0 && !loading && (
         <Box display="flex" justifyContent="center" alignItems="center" height="200px">
           <Typography color="text.secondary">
@@ -397,27 +353,25 @@ export default function ClassesOptimized() {
           </Typography>
         </Box>
       )}
-
       {/* Context Menu */}
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={() => selectedClass && handleCardClick(selectedClass)}>
+        <MenuItem onClick={(e: React.MouseEvent) => () => selectedClass && handleCardClick(selectedClass)}>
           <VisibilityIcon sx={{ mr: 1 }} />
           View Details
         </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
+        <MenuItem onClick={(e: React.MouseEvent) => handleMenuClose}>
           <EditIcon sx={{ mr: 1 }} />
           Edit Class
         </MenuItem>
-        <MenuItem onClick={handleDeleteClass}>
+        <MenuItem onClick={(e: React.MouseEvent) => handleDeleteClass}>
           <DeleteIcon sx={{ mr: 1 }} />
           Delete Class
         </MenuItem>
       </Menu>
-
       {/* Create Class Dialog */}
       <CreateClassDialog
         open={createClassOpen}

@@ -1,15 +1,13 @@
 import React from 'react';
-import {
-  IconButton,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
-  Tooltip,
-  Box,
-  Typography,
-  useTheme
-} from '@mui/material';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Tooltip from '@mui/material/Tooltip';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { useTheme } from '@mui/material/styles';
 import {
   Brightness4,
   Brightness7,
@@ -25,7 +23,7 @@ interface ThemeSwitcherProps {
   size?: 'small' | 'medium' | 'large';
 }
 
-const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
+const ThemeSwitcher: React.FunctionComponent<ThemeSwitcherProps> = ({
   variant = 'icon',
   showLabel = false,
   size = 'medium'
@@ -98,7 +96,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
     return (
       <Box
         component="button"
-        onClick={handleClick}
+        onClick={(e: React.MouseEvent) => handleClick}
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -134,7 +132,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
     <>
       <Tooltip title={getTooltip()} placement="bottom">
         <IconButton
-          onClick={handleClick}
+          onClick={(e: React.MouseEvent) => handleClick}
           size={size}
           sx={{
             color: theme.palette.text.primary,
@@ -176,7 +174,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
           {themeOptions.map((option) => (
             <MenuItem
               key={option.mode}
-              onClick={() => handleModeSelect(option.mode)}
+              onClick={(e: React.MouseEvent) => () => handleModeSelect(option.mode)}
               selected={mode === option.mode}
               sx={{
                 borderRadius: designTokens.borderRadius.lg,

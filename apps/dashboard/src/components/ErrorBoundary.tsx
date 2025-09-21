@@ -6,24 +6,22 @@
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Paper,
-  Alert,
-  AlertTitle,
-  Stack,
-  Collapse,
-  IconButton,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  useTheme,
-  Link,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Paper from '@mui/material/Paper';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Stack from '@mui/material/Stack';
+import Collapse from '@mui/material/Collapse';
+import IconButton from '@mui/material/IconButton';
+import Divider from '@mui/material/Divider';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import { useTheme } from '@mui/material/styles';
+import Link from '@mui/material/Link';
 import {
   Error as ErrorIcon,
   Refresh,
@@ -304,7 +302,7 @@ function ErrorFallback({
             <Button
               variant="contained"
               startIcon={<Refresh />}
-              onClick={onReset}
+              onClick={(e: React.MouseEvent) => onReset}
               disabled={isRecovering}
             >
               {isRecovering ? 'Recovering...' : 'Try Again'}
@@ -313,7 +311,7 @@ function ErrorFallback({
             <Button
               variant="outlined"
               startIcon={<Home />}
-              onClick={onGoHome}
+              onClick={(e: React.MouseEvent) => onGoHome}
             >
               Go to Homepage
             </Button>
@@ -323,7 +321,7 @@ function ErrorFallback({
             <>
               <Button
                 size="small"
-                onClick={onToggleDetails}
+                onClick={(e: React.MouseEvent) => onToggleDetails}
                 endIcon={showDetails ? <ExpandLess /> : <ExpandMore />}
               >
                 {showDetails ? 'Hide' : 'Show'} Technical Details
@@ -344,7 +342,7 @@ function ErrorFallback({
                         <Typography variant="subtitle2" gutterBottom>
                           Stack Trace
                         </Typography>
-                        <IconButton size="small" onClick={onCopy}>
+                        <IconButton size="small" onClick={(e: React.MouseEvent) => onCopy}>
                           {copied ? <Check color="success" /> : <ContentCopy />}
                         </IconButton>
                       </Stack>
@@ -395,7 +393,7 @@ function ErrorFallback({
         <Button
           size="small"
           variant="outlined"
-          onClick={onReset}
+          onClick={(e: React.MouseEvent) => onReset}
           disabled={isRecovering}
         >
           Retry

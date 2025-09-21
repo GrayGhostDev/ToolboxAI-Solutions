@@ -9,7 +9,7 @@ export interface ImageProps {
   alt?: string;
 }
 
-const AtomicImage = React.forwardRef<HTMLImageElement, ImageProps>((props, ref) => (
+const AtomicImage = (({ ...props, ref }: HTMLImageElement, ImageProps & { ref?: React.Ref<any> }) => (
   <img ref={ref} {...props} />
 ));
 

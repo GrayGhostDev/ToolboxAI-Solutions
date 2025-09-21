@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/error_handling/code_review_sentinel_agent.py
+# hypothesis_version: 6.139.2
+
+[95.0, 'CodeReviewSentinel', 'Review passed', 'ReviewFinding', 'ReviewSeverity', 'agent', 'category', 'code_review', 'code_snippet', 'completed', 'credentials', 'critical', 'error_handling', 'eval\\(', 'except\\s*:', 'exec\\(', 'failed', 'file_path', 'files_analyzed', 'findings', 'findings_count', 'full', 'healthy', 'high', 'info', 'injection', 'line_number', 'low', 'medium', 'message', 'os\\.system\\(', 'pass\\s*$', 'patterns', 'patterns_loaded', 'performance', 'pickle\\.loads', 'project_path', 'quality_check', 'quality_score', 'recommendations', 'review_type', 'security', 'security_scan', 'severity', 'state', 'status', 'success', 'suggestion', 'summary', 'time\\.sleep\\(', 'timestamp', 'total', 'total_findings', 'warning']

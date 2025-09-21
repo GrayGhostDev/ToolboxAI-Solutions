@@ -1,32 +1,31 @@
 import * as React from "react";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import Badge from '@mui/material/Badge';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import List from '@mui/material/List';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemButton from '@mui/material/ListItemButton';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider';
+import Paper from '@mui/material/Paper';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Autocomplete from '@mui/material/Autocomplete';
+
 import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Stack,
-  Avatar,
-  Badge,
-  Chip,
-  IconButton,
-  List,
-  ListItemAvatar,
-  ListItemText,
-  ListItemButton,
-  TextField,
-  InputAdornment,
-  Box,
-  Divider,
-  Paper,
-  CircularProgress,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Autocomplete,
-} from "@mui/material";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import SendIcon from "@mui/icons-material/Send";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
@@ -295,7 +294,7 @@ export default function Messages() {
                     </Stack>
                   }
                   size="small"
-                  onClick={() => handleTabChange(tab)}
+                  onClick={(e: React.MouseEvent) => () => handleTabChange(tab)}
                   color={filters.folder === tab ? "primary" : "default"}
                   variant={filters.folder === tab ? "filled" : "outlined"}
                 />
@@ -310,7 +309,7 @@ export default function Messages() {
                 <ListItemButton
                   key={conversation.id}
                   selected={selectedConversation?.id === conversation.id}
-                  onClick={() => setSelectedConversation(conversation)}
+                  onClick={(e: React.MouseEvent) => () => setSelectedConversation(conversation)}
                 >
                   <ListItemAvatar>
                     <Badge
@@ -369,14 +368,14 @@ export default function Messages() {
                 <Chip label={`${messages.length} messages`} size="small" />
               </Stack>
               <Stack direction="row" gap={1}>
-                <IconButton size="small" onClick={handleRefresh} disabled={loading}>
+                <IconButton size="small" onClick={(e: React.MouseEvent) => handleRefresh} disabled={loading}>
                   <RefreshIcon />
                 </IconButton>
                 <Button 
                   variant="contained" 
                   startIcon={<CreateIcon />} 
                   size="small"
-                  onClick={() => {
+                  onClick={(e: React.MouseEvent) => () => {
                     dispatch(openCompose({}));
                     setShowComposeDialog(true);
                   }}
@@ -406,7 +405,7 @@ export default function Messages() {
                   <ListItemButton
                     key={message.id}
                     selected={currentMessage?.id === message.id}
-                    onClick={() => handleMessageSelect(message)}
+                    onClick={(e: React.MouseEvent) => () => handleMessageSelect(message)}
                     sx={{
                       bgcolor: !message.read ? "action.hover" : "transparent",
                     }}
@@ -502,19 +501,19 @@ export default function Messages() {
                   <Stack direction="row" gap={1}>
                     <IconButton 
                       size="small"
-                      onClick={() => handleStarMessage(currentMessage.id)}
+                      onClick={(e: React.MouseEvent) => () => handleStarMessage(currentMessage.id)}
                     >
                       <StarIcon color="action" />
                     </IconButton>
                     <IconButton 
                       size="small"
-                      onClick={() => setReplyText(`\n\n---\nReplying to: ${currentMessage.subject}`)}
+                      onClick={(e: React.MouseEvent) => () => setReplyText(`\n\n---\nReplying to: ${currentMessage.subject}`)}
                     >
                       <ReplyIcon />
                     </IconButton>
                     <IconButton 
                       size="small"
-                      onClick={() => {
+                      onClick={(e: React.MouseEvent) => () => {
                         dispatch(openCompose({ 
                           subject: `Fwd: ${currentMessage.subject}`,
                           content: `\n\n--- Forwarded message ---\n${currentMessage.content}`
@@ -526,13 +525,13 @@ export default function Messages() {
                     </IconButton>
                     <IconButton 
                       size="small"
-                      onClick={() => handleArchiveMessage(currentMessage.id)}
+                      onClick={(e: React.MouseEvent) => () => handleArchiveMessage(currentMessage.id)}
                     >
                       <ArchiveIcon />
                     </IconButton>
                     <IconButton 
                       size="small"
-                      onClick={() => handleDeleteMessage(currentMessage.id)}
+                      onClick={(e: React.MouseEvent) => () => handleDeleteMessage(currentMessage.id)}
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -591,7 +590,7 @@ export default function Messages() {
                       </IconButton>
                       <Button
                         variant="contained"
-                        onClick={handleSendReply}
+                        onClick={(e: React.MouseEvent) => handleSendReply}
                         disabled={!replyText.trim() || sending}
                       >
                         {sending ? <CircularProgress size={20} /> : <SendIcon />}
@@ -679,7 +678,7 @@ export default function Messages() {
         </DialogContent>
         <DialogActions>
           <Button 
-            onClick={() => {
+            onClick={(e: React.MouseEvent) => () => {
               setShowComposeDialog(false);
               dispatch(closeCompose());
             }}
@@ -688,7 +687,7 @@ export default function Messages() {
           </Button>
           <Button 
             variant="contained" 
-            onClick={handleComposeSubmit}
+            onClick={(e: React.MouseEvent) => handleComposeSubmit}
             disabled={!compose.subject || !compose.content || selectedRecipients.length === 0 || sending}
             startIcon={sending ? <CircularProgress size={16} /> : <SendIcon />}
           >

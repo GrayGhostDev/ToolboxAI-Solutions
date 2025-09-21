@@ -4,36 +4,33 @@
  * Admin-only dashboard for monitoring and controlling the AI agent system.
  * Admins can enable access for teachers through settings.
  */
-
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Grid,
-  Paper,
-  Typography,
-  Card,
-  CardContent,
-  Chip,
-  LinearProgress,
-  IconButton,
-  Button,
-  Alert,
-  AlertTitle,
-  Tabs,
-  Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  CircularProgress,
-  Tooltip,
-  Badge,
-  Divider,
-  Switch,
-  FormControlLabel,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import CircularProgress from '@mui/material/CircularProgress';
+import Tooltip from '@mui/material/Tooltip';
+import Badge from '@mui/material/Badge';
+import Divider from '@mui/material/Divider';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import {
   SmartToy as AgentIcon,
   Memory as ResourceIcon,
@@ -58,11 +55,9 @@ import { useAuth } from '../hooks/useAuth';
 import { orchestratorApi } from '../services/orchestratorApi';
 import { pusherService } from '../services/pusher';
 import { Chart as ChartJS, ArcElement, Tooltip as ChartTooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement } from 'chart.js';
-import { Doughnut, Line, Bar } from 'react-chartjs-2';
-
+import { Doughnut, Bar } from 'react-chartjs-2';
 // Register Chart.js components
 ChartJS.register(ArcElement, ChartTooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement);
-
 interface AgentInfo {
   name: string;
   category: string;
@@ -71,7 +66,6 @@ interface AgentInfo {
   status: string;
   metrics: Record<string, any>;
 }
-
 interface SystemStatus {
   orchestrator: {
     is_running: boolean;
@@ -98,7 +92,6 @@ interface SystemStatus {
   };
   worktrees?: any;
 }
-
 interface TaskInfo {
   task_id: string;
   status: string;
@@ -107,12 +100,10 @@ interface TaskInfo {
   message?: string;
   result?: any;
 }
-
-const AgentDashboard: React.FC = () => {
+const AgentDashboard: React.FunctionComponent<Record<string, any>> = () => {
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const settings = useSelector((state: RootState) => state.settings);
-
   // State
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -122,21 +113,18 @@ const AgentDashboard: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(5000);
-
   // Check access permissions
   const canAccess = useCallback(() => {
     if (hasRole('admin')) return true;
     if (hasRole('teacher') && settings?.agentDashboard?.teacherAccess) return true;
     return false;
   }, [hasRole, settings]);
-
   // Redirect if no access
   useEffect(() => {
     if (!canAccess()) {
       navigate('/dashboard');
     }
   }, [canAccess, navigate]);
-
   // Fetch agents
   const fetchAgents = useCallback(async () => {
     try {
@@ -146,7 +134,6 @@ const AgentDashboard: React.FC = () => {
       console.error('Failed to fetch agents:', err);
     }
   }, []);
-
   // Fetch system status
   const fetchSystemStatus = useCallback(async () => {
     try {
@@ -156,7 +143,6 @@ const AgentDashboard: React.FC = () => {
       console.error('Failed to fetch system status:', err);
     }
   }, []);
-
   // Initial load
   useEffect(() => {
     const loadData = async () => {
@@ -173,25 +159,19 @@ const AgentDashboard: React.FC = () => {
         setLoading(false);
       }
     };
-
     loadData();
   }, [fetchAgents, fetchSystemStatus]);
-
   // Auto-refresh
   useEffect(() => {
     if (!autoRefresh) return;
-
     const interval = setInterval(() => {
       fetchSystemStatus();
     }, refreshInterval);
-
     return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval, fetchSystemStatus]);
-
   // Subscribe to Pusher for real-time updates
   useEffect(() => {
     const channel = pusherService.subscribe('agent-system');
-
     channel.bind('task-update', (data: any) => {
       // Update task in recentTasks if it exists
       setRecentTasks(prev => {
@@ -204,7 +184,6 @@ const AgentDashboard: React.FC = () => {
         return [data, ...prev].slice(0, 10); // Keep last 10 tasks
       });
     });
-
     channel.bind('agent-status', (data: any) => {
       // Update agent status
       setAgents(prev => {
@@ -217,17 +196,14 @@ const AgentDashboard: React.FC = () => {
         return prev;
       });
     });
-
     channel.bind('system-metrics', (data: any) => {
       // Update system metrics
       setSystemStatus(prev => prev ? { ...prev, ...data } : null);
     });
-
     return () => {
       pusherService.unsubscribe('agent-system');
     };
   }, []);
-
   // Submit test task
   const submitTestTask = async () => {
     try {
@@ -239,14 +215,12 @@ const AgentDashboard: React.FC = () => {
         },
         priority: 3,
       });
-
       // Add to recent tasks
       setRecentTasks(prev => [result, ...prev].slice(0, 10));
     } catch (err) {
       console.error('Failed to submit test task:', err);
     }
   };
-
   // Format uptime
   const formatUptime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -254,7 +228,6 @@ const AgentDashboard: React.FC = () => {
     const secs = Math.floor(seconds % 60);
     return `${hours}h ${minutes}m ${secs}s`;
   };
-
   // Get status color
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -275,7 +248,6 @@ const AgentDashboard: React.FC = () => {
         return 'default';
     }
   };
-
   // Get status icon
   const getStatusIcon = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -296,7 +268,6 @@ const AgentDashboard: React.FC = () => {
         return null;
     }
   };
-
   // Prepare chart data
   const agentDistributionData = systemStatus ? {
     labels: Object.keys(systemStatus.agents),
@@ -312,7 +283,6 @@ const AgentDashboard: React.FC = () => {
       ],
     }],
   } : null;
-
   const taskStatusData = systemStatus ? {
     labels: ['Pending', 'Active', 'Completed', 'Failed'],
     datasets: [{
@@ -326,7 +296,6 @@ const AgentDashboard: React.FC = () => {
       backgroundColor: ['#36A2EB', '#FFCE56', '#4BC0C0', '#FF6384'],
     }],
   } : null;
-
   const resourceUsageData = systemStatus ? {
     labels: ['CPU', 'Memory', 'Disk'],
     datasets: [{
@@ -340,7 +309,6 @@ const AgentDashboard: React.FC = () => {
       borderWidth: 1,
     }],
   } : null;
-
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -348,7 +316,6 @@ const AgentDashboard: React.FC = () => {
       </Box>
     );
   }
-
   if (error) {
     return (
       <Alert severity="error">
@@ -357,7 +324,6 @@ const AgentDashboard: React.FC = () => {
       </Alert>
     );
   }
-
   return (
     <Box>
       {/* Header */}
@@ -366,7 +332,6 @@ const AgentDashboard: React.FC = () => {
           <AgentIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
           Agent System Dashboard
         </Typography>
-
         <Box display="flex" gap={2} alignItems="center">
           <FormControlLabel
             control={
@@ -377,19 +342,16 @@ const AgentDashboard: React.FC = () => {
             }
             label="Auto-refresh"
           />
-
-          <IconButton onClick={fetchSystemStatus} title="Refresh">
+          <IconButton onClick={(e: React.MouseEvent) => fetchSystemStatus} title="Refresh">
             <RefreshIcon />
           </IconButton>
-
           {hasRole('admin') && (
-            <IconButton onClick={() => navigate('/settings/agents')} title="Settings">
+            <IconButton onClick={(e: React.MouseEvent) => () => navigate('/settings/agents')} title="Settings">
               <SettingsIcon />
             </IconButton>
           )}
         </Box>
       </Box>
-
       {/* System Overview */}
       <Grid container spacing={3} mb={3}>
         <Grid item xs={12} md={3}>
@@ -421,7 +383,6 @@ const AgentDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-
         <Grid item xs={12} md={3}>
           <Card>
             <CardContent>
@@ -437,7 +398,6 @@ const AgentDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-
         <Grid item xs={12} md={3}>
           <Card>
             <CardContent>
@@ -462,7 +422,6 @@ const AgentDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-
         <Grid item xs={12} md={3}>
           <Card>
             <CardContent>
@@ -481,7 +440,6 @@ const AgentDashboard: React.FC = () => {
                   value={systemStatus?.resources.cpu_percent || 0}
                   sx={{ my: 0.5 }}
                 />
-
                 <Box display="flex" justifyContent="space-between">
                   <Typography variant="body2">Memory</Typography>
                   <Typography variant="body2">
@@ -498,7 +456,6 @@ const AgentDashboard: React.FC = () => {
           </Card>
         </Grid>
       </Grid>
-
       {/* Tabs */}
       <Paper sx={{ mb: 3 }}>
         <Tabs value={selectedTab} onChange={(e, v) => setSelectedTab(v)}>
@@ -507,7 +464,6 @@ const AgentDashboard: React.FC = () => {
           <Tab label="Resources" icon={<ResourceIcon />} iconPosition="start" />
           <Tab label="Analytics" icon={<PerformanceIcon />} iconPosition="start" />
         </Tabs>
-
         <Box p={3}>
           {/* Agents Tab */}
           {selectedTab === 0 && (
@@ -560,7 +516,6 @@ const AgentDashboard: React.FC = () => {
                   </Table>
                 </TableContainer>
               </Grid>
-
               <Grid item xs={12} md={4}>
                 <Typography variant="h6" gutterBottom>
                   Agent Distribution
@@ -583,7 +538,6 @@ const AgentDashboard: React.FC = () => {
               </Grid>
             </Grid>
           )}
-
           {/* Tasks Tab */}
           {selectedTab === 1 && (
             <Grid container spacing={3}>
@@ -595,12 +549,11 @@ const AgentDashboard: React.FC = () => {
                   <Button
                     variant="outlined"
                     startIcon={<PlayArrow />}
-                    onClick={submitTestTask}
+                    onClick={(e: React.MouseEvent) => submitTestTask}
                   >
                     Submit Test Task
                   </Button>
                 </Box>
-
                 <TableContainer component={Paper} variant="outlined">
                   <Table size="small">
                     <TableHead>
@@ -655,7 +608,6 @@ const AgentDashboard: React.FC = () => {
                   </Table>
                 </TableContainer>
               </Grid>
-
               <Grid item xs={12} md={4}>
                 <Typography variant="h6" gutterBottom>
                   Task Status
@@ -678,7 +630,6 @@ const AgentDashboard: React.FC = () => {
               </Grid>
             </Grid>
           )}
-
           {/* Resources Tab */}
           {selectedTab === 2 && (
             <Grid container spacing={3}>
@@ -708,7 +659,6 @@ const AgentDashboard: React.FC = () => {
                   />
                 )}
               </Grid>
-
               <Grid item xs={12} md={6}>
                 <Typography variant="h6" gutterBottom>
                   System Metrics
@@ -752,7 +702,6 @@ const AgentDashboard: React.FC = () => {
               </Grid>
             </Grid>
           )}
-
           {/* Analytics Tab */}
           {selectedTab === 3 && (
             <Grid container spacing={3}>
@@ -777,5 +726,4 @@ const AgentDashboard: React.FC = () => {
     </Box>
   );
 };
-
 export default AgentDashboard;

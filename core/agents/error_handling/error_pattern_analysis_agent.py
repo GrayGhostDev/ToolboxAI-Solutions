@@ -838,3 +838,76 @@ Use statistical and machine learning techniques to provide accurate predictions.
 
         # Combine metrics
         return {**base_metrics, **analysis_metrics}
+
+    async def _process_task(self, state) -> Any:
+        """
+        Process pattern analysis task.
+
+        Args:
+            state: Agent state containing task information
+
+        Returns:
+            Task processing result
+        """
+        try:
+            task = state.get("task", {})
+            task_type = task.get("type", "analyze_patterns")
+
+            if task_type == "analyze_patterns":
+                errors = task.get("errors", [])
+                time_window = task.get("time_window", 24)  # hours
+
+                # Convert dict errors to ErrorState format if needed
+                formatted_errors = []
+                for error in errors:
+                    if isinstance(error, dict):
+                        # Ensure error has required fields
+                        if "error_type" not in error:
+                            error["error_type"] = ErrorType.RUNTIME
+                        if "priority" not in error:
+                            error["priority"] = ErrorPriority.MEDIUM
+                        if "timestamp" not in error:
+                            error["timestamp"] = datetime.now().isoformat()
+                    formatted_errors.append(error)
+
+                # Perform analysis
+                result = await self.analyze_patterns(formatted_errors, time_window)
+
+                return {
+                    "status": "completed",
+                    "result": result,
+                    "patterns_found": len(result.get("patterns", [])),
+                    "insights_generated": len(result.get("insights", []))
+                }
+
+            elif task_type == "predict_errors":
+                context = task.get("context", {})
+                prediction = await self.predict_error(context)
+
+                return {
+                    "status": "completed",
+                    "result": prediction,
+                    "prediction_confidence": prediction.confidence if prediction else 0.0
+                }
+
+            elif task_type == "get_metrics":
+                metrics = await self.get_performance_metrics()
+                return {
+                    "status": "completed",
+                    "result": metrics
+                }
+
+            else:
+                return {
+                    "status": "error",
+                    "error": f"Unknown task type: {task_type}",
+                    "result": None
+                }
+
+        except Exception as e:
+            logger.error(f"Error processing pattern analysis task: {e}")
+            return {
+                "status": "error",
+                "error": str(e),
+                "result": None
+            }

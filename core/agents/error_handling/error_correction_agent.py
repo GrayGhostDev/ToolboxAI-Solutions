@@ -778,3 +778,128 @@ Return only the fixed code, no explanations."""
 
         # Combine metrics
         return {**base_metrics, **correction_metrics}
+
+    async def _process_task(self, state) -> Any:
+        """
+        Process error correction task.
+
+        Args:
+            state: Agent state containing task information
+
+        Returns:
+            Task processing result
+        """
+        try:
+            task = state.get("task", {})
+            task_type = task.get("type", "correct_error")
+
+            if task_type == "correct_error":
+                error = task.get("error", {})
+                auto_apply = task.get("auto_apply", False)
+
+                # Convert dict error to ErrorState format if needed
+                if isinstance(error, dict):
+                    # Ensure error has required fields
+                    if "error_type" not in error:
+                        error["error_type"] = ErrorType.RUNTIME
+                    if "priority" not in error:
+                        error["priority"] = ErrorPriority.MEDIUM
+                    if "timestamp" not in error:
+                        error["timestamp"] = datetime.now().isoformat()
+
+                # Generate correction
+                correction = await self.generate_correction(error)
+
+                result = {
+                    "status": "completed",
+                    "result": correction,
+                    "correction_id": correction.correction_id if correction else None,
+                    "confidence": correction.confidence if correction else 0.0
+                }
+
+                # Auto-apply if requested and confidence is high
+                if auto_apply and correction and correction.confidence > 0.8:
+                    apply_result = await self.apply_correction(correction, error)
+                    result["applied"] = apply_result.success if apply_result else False
+                    result["apply_result"] = apply_result
+
+                return result
+
+            elif task_type == "apply_correction":
+                correction_data = task.get("correction", {})
+                error = task.get("error", {})
+
+                # Convert to ErrorCorrection object if needed
+                if isinstance(correction_data, dict):
+                    correction = ErrorCorrection(
+                        correction_id=correction_data.get("correction_id", f"corr_{datetime.now().strftime('%Y%m%d_%H%M%S')}"),
+                        error_type=ErrorType(correction_data.get("error_type", "runtime_error")),
+                        fix_type=correction_data.get("fix_type", "code_modification"),
+                        code_changes=correction_data.get("code_changes", []),
+                        confidence=correction_data.get("confidence", 0.5),
+                        description=correction_data.get("description", "Auto-generated fix"),
+                        validation_steps=correction_data.get("validation_steps", [])
+                    )
+                else:
+                    correction = correction_data
+
+                # Apply the correction
+                result = await self.apply_correction(correction, error)
+
+                return {
+                    "status": "completed",
+                    "result": result,
+                    "success": result.success if result else False
+                }
+
+            elif task_type == "validate_fix":
+                fix_id = task.get("fix_id")
+                if fix_id:
+                    # Find the fix
+                    fix = None
+                    for applied_fix in self.applied_fixes:
+                        if applied_fix.correction_id == fix_id:
+                            fix = applied_fix
+                            break
+
+                    if fix:
+                        validation_result = await self.validate_fix(fix)
+                        return {
+                            "status": "completed",
+                            "result": validation_result,
+                            "is_valid": validation_result.is_valid if validation_result else False
+                        }
+                    else:
+                        return {
+                            "status": "error",
+                            "error": f"Fix {fix_id} not found",
+                            "result": None
+                        }
+                else:
+                    return {
+                        "status": "error",
+                        "error": "fix_id is required for validation",
+                        "result": None
+                    }
+
+            elif task_type == "get_metrics":
+                metrics = await self.get_performance_metrics()
+                return {
+                    "status": "completed",
+                    "result": metrics
+                }
+
+            else:
+                return {
+                    "status": "error",
+                    "error": f"Unknown task type: {task_type}",
+                    "result": None
+                }
+
+        except Exception as e:
+            logger.error(f"Error processing correction task: {e}")
+            return {
+                "status": "error",
+                "error": str(e),
+                "result": None
+            }

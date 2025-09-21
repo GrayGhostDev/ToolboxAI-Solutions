@@ -4,21 +4,20 @@
  */
 
 import React, { useState } from 'react';
-import {
-  Box,
-  IconButton,
-  Tooltip,
-  Typography,
-  Paper,
-  Collapse,
-  Chip,
-  LinearProgress,
-  Button,
-  Alert,
-  Stack,
-  Divider,
-  Grid
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Collapse from '@mui/material/Collapse';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
+import Divider from '@mui/material/Divider';
+import Grid from '@mui/material/Grid';
+import Grid from '@mui/material/Grid';
 import {
   WifiTethering as ConnectedIcon,
   WifiTetheringOff as DisconnectedIcon,
@@ -49,7 +48,7 @@ interface ConnectionStatusProps {
   };
 }
 
-export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
+export const ConnectionStatus: React.FunctionComponent<ConnectionStatusProps> = ({
   variant = 'compact',
   showStats = true,
   position = 'relative',
@@ -189,7 +188,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
         >
           <IconButton
             size="small"
-            onClick={() => setExpanded(!expanded)}
+            onClick={(e: React.MouseEvent) => () => setExpanded(!expanded)}
             sx={{
               backgroundColor: 'background.paper',
               border: '1px solid',
@@ -228,7 +227,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
           </Typography>
         </Box>
         {variant === 'compact' && (
-          <IconButton size="small" onClick={() => setExpanded(!expanded)}>
+          <IconButton size="small" onClick={(e: React.MouseEvent) => () => setExpanded(!expanded)}>
             {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </IconButton>
         )}
@@ -347,7 +346,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
 };
 
 // Mini status indicator for app bar
-export const ConnectionStatusIndicator: React.FC = () => {
+export const ConnectionStatusIndicator: React.FunctionComponent<Record<string, any>> = () => {
   const status = useWebSocketStatus();
   
   const getColor = () => {

@@ -1,0 +1,586 @@
+{
+  "info": {
+    "name": "ToolBoxAI API Collection",
+    "description": "Comprehensive API collection for ToolBoxAI Educational Platform\n\nThis collection includes all endpoints for authentication, content generation, Roblox integration, analytics, and more.\n\n## Setup Instructions\n1. Import this collection into Postman\n2. Set up environment variables (see Environment Variables section)\n3. Run the authentication request first to get JWT token\n4. Token will be automatically set for subsequent requests\n\n## Environment Variables\nCreate a new environment with these variables:\n- `base_url`: API base URL (http://localhost:8009 for dev)\n- `jwt_token`: Will be set automatically after login\n- `user_email`: Your test user email\n- `user_password`: Your test user password",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-set base URL if not set",
+          "if (!pm.environment.get('base_url')) {",
+          "    pm.environment.set('base_url', 'http://localhost:8009');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "{{base_url}}",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Extract JWT token and set as environment variable",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.access_token) {",
+                  "        pm.environment.set('jwt_token', response.access_token);",
+                  "        pm.environment.set('user_role', response.role);",
+                  "        pm.environment.set('user_id', response.user.id);",
+                  "        console.log('JWT token set successfully');",
+                  "        console.log('User role:', response.role);",
+                  "    }",
+                  "}",
+                  "",
+                  "pm.test('Login successful', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    pm.expect(pm.response.json()).to.have.property('access_token');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Authenticate user and receive JWT token.\n\nDemo accounts:\n- Admin: admin@toolboxai.com / Admin123!\n- Teacher: jane.smith@school.edu / Teacher123!\n- Student: alex.johnson@student.edu / Student123!"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            },
+            "description": "Refresh the JWT token before it expires"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            },
+            "description": "Logout and invalidate the current token"
+          }
+        }
+      ],
+      "description": "Authentication endpoints for login, token refresh, and logout"
+    },
+    {
+      "name": "Content Generation",
+      "item": [
+        {
+          "name": "Generate Educational Content",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Store session ID for status checking",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.session_id) {",
+                  "        pm.environment.set('generation_session_id', response.data.session_id);",
+                  "        console.log('Generation session ID:', response.data.session_id);",
+                  "    }",
+                  "}",
+                  "",
+                  "pm.test('Content generation started', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "    pm.expect(pm.response.json().data).to.have.property('session_id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Science\",\n  \"grade_level\": \"6-8\",\n  \"content_type\": \"interactive_lesson\",\n  \"learning_objectives\": [\n    \"Understand the solar system\",\n    \"Learn about planetary orbits\",\n    \"Explore space exploration history\"\n  ],\n  \"environment_theme\": \"space_station\",\n  \"difficulty\": \"medium\",\n  \"duration_minutes\": 45,\n  \"include_quiz\": true,\n  \"personalization\": {\n    \"learning_style\": \"visual\",\n    \"previous_knowledge\": \"basic_astronomy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/content/generate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "content", "generate"]
+            },
+            "description": "Generate comprehensive educational content using AI agents with SPARC framework integration"
+          }
+        },
+        {
+          "name": "Get Generation Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/content/generation/{{generation_session_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "content", "generation", "{{generation_session_id}}", "status"]
+            },
+            "description": "Get real-time status and progress of content generation"
+          }
+        }
+      ],
+      "description": "AI-powered educational content generation endpoints"
+    },
+    {
+      "name": "Classes",
+      "item": [
+        {
+          "name": "Get Classes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/classes?limit=20&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "classes"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                },
+                {
+                  "key": "subject",
+                  "value": "Science",
+                  "disabled": true
+                },
+                {
+                  "key": "grade_level",
+                  "value": "7",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get classes based on user role and optional filters"
+          }
+        },
+        {
+          "name": "Create Class",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Store class ID for future requests",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.class_id) {",
+                  "        pm.environment.set('class_id', response.data.class_id);",
+                  "        console.log('Class ID:', response.data.class_id);",
+                  "    }",
+                  "}",
+                  "",
+                  "pm.test('Class created successfully', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"8th Grade Physics\",\n  \"subject\": \"Science\",\n  \"grade_level\": 8,\n  \"description\": \"Introduction to physics concepts with Roblox simulations\",\n  \"schedule\": {\n    \"days\": [\"Monday\", \"Wednesday\", \"Friday\"],\n    \"time\": \"10:00\",\n    \"duration_minutes\": 50\n  },\n  \"capacity\": 25,\n  \"settings\": {\n    \"allow_self_enrollment\": false,\n    \"require_parent_approval\": true,\n    \"enable_notifications\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/classes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "classes"]
+            },
+            "description": "Create a new class (Teacher or Admin role required)"
+          }
+        }
+      ],
+      "description": "Class management endpoints for creating and managing classrooms"
+    },
+    {
+      "name": "Roblox Integration",
+      "item": [
+        {
+          "name": "Initiate Roblox OAuth",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"additional_scopes\": [\n    \"universe-messaging-service:publish\",\n    \"user.details\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/roblox/auth/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "roblox", "auth", "initiate"]
+            },
+            "description": "Start Roblox OAuth2 authentication flow"
+          }
+        },
+        {
+          "name": "Generate Roblox Environment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content_id\": \"content_123\",\n  \"environment_type\": \"space_station\",\n  \"size\": \"medium\",\n  \"features\": {\n    \"terrain\": true,\n    \"buildings\": true,\n    \"interactive_objects\": true,\n    \"npcs\": true\n  },\n  \"customizations\": {\n    \"theme_color\": \"#0066cc\",\n    \"lighting\": \"dramatic\",\n    \"weather\": \"clear\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/roblox-environment/generate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "roblox-environment", "generate"]
+            },
+            "description": "Generate 3D Roblox environment for educational content"
+          }
+        }
+      ],
+      "description": "Roblox platform integration and environment generation"
+    },
+    {
+      "name": "AI Chat",
+      "item": [
+        {
+          "name": "Start AI Conversation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Store conversation ID",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.conversation_id) {",
+                  "        pm.environment.set('conversation_id', response.data.conversation_id);",
+                  "        console.log('Conversation ID:', response.data.conversation_id);",
+                  "    }",
+                  "}",
+                  "",
+                  "pm.test('Conversation started', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "    pm.expect(pm.response.json().data).to.have.property('conversation_id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"initial_message\": \"Help me create a lesson plan about marine biology for 9th grade students\",\n  \"context\": {\n    \"subject\": \"Science\",\n    \"grade_level\": \"9-12\",\n    \"lesson_duration\": 50\n  },\n  \"agent_type\": \"educational_assistant\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/ai-chat/conversation/start",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "ai-chat", "conversation", "start"]
+            },
+            "description": "Start a new AI conversation session with educational assistant"
+          }
+        }
+      ],
+      "description": "AI-powered chat and educational assistance"
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get Dashboard Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/analytics/dashboard?time_range=30d",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "analytics", "dashboard"],
+              "query": [
+                {
+                  "key": "time_range",
+                  "value": "30d",
+                  "description": "7d, 30d, 90d, 1y"
+                },
+                {
+                  "key": "role",
+                  "value": "teacher",
+                  "disabled": true,
+                  "description": "Filter by role (admin only)"
+                }
+              ]
+            },
+            "description": "Get comprehensive dashboard analytics based on user role"
+          }
+        }
+      ],
+      "description": "Learning analytics and performance metrics"
+    },
+    {
+      "name": "Real-time",
+      "item": [
+        {
+          "name": "Pusher Channel Authentication",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "socket_id",
+                  "value": "123.456",
+                  "description": "Pusher socket ID from client"
+                },
+                {
+                  "key": "channel_name",
+                  "value": "private-dashboard-updates",
+                  "description": "Channel name to authenticate"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/pusher/auth",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "pusher", "auth"]
+            },
+            "description": "Authenticate Pusher channel subscription for real-time features"
+          }
+        }
+      ],
+      "description": "Real-time communication authentication"
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get User Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/stats/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "stats", "users"]
+            },
+            "description": "Get user statistics for admin dashboard (Admin role required)"
+          }
+        },
+        {
+          "name": "Get System Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "health"]
+            },
+            "description": "Get system health metrics (Admin role required)"
+          }
+        }
+      ],
+      "description": "Administrative endpoints (Admin role required)"
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Create Checkout Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price_id\": \"price_premium_monthly\",\n  \"quantity\": 1,\n  \"success_url\": \"https://app.toolboxai.com/success\",\n  \"cancel_url\": \"https://app.toolboxai.com/cancel\",\n  \"metadata\": {\n    \"school_id\": \"school_123\",\n    \"user_id\": \"{{user_id}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/stripe/checkout/session",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "stripe", "checkout", "session"]
+            },
+            "description": "Create Stripe checkout session for subscription (Admin role required)"
+          }
+        }
+      ],
+      "description": "Payment processing with Stripe (Admin role required)"
+    },
+    {
+      "name": "Health Checks",
+      "item": [
+        {
+          "name": "API Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Check API health and status (no authentication required)"
+          }
+        },
+        {
+          "name": "WebSocket Test",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/ws/test",
+              "host": ["{{base_url}}"],
+              "path": ["ws", "test"]
+            },
+            "description": "Test WebSocket connectivity (no authentication required)"
+          }
+        }
+      ],
+      "description": "Health checks and system status endpoints"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "console.log('Making request to:', pm.request.url.toString());",
+          "",
+          "// Set default environment variables if not set",
+          "if (!pm.environment.get('base_url')) {",
+          "    pm.environment.set('base_url', 'http://localhost:8009');",
+          "}",
+          "",
+          "// Set demo credentials if not set",
+          "if (!pm.environment.get('user_email')) {",
+          "    pm.environment.set('user_email', 'jane.smith@school.edu');",
+          "    pm.environment.set('user_password', 'Teacher123!');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "pm.test('Response time is acceptable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "pm.test('Response has correct content type', function () {",
+          "    if (pm.response.code !== 204) {",
+          "        pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "    }",
+          "});",
+          "",
+          "// Log response for debugging",
+          "if (pm.response.code >= 400) {",
+          "    console.log('Error response:', pm.response.text());",
+          "}"
+        ]
+      }
+    }
+  ]
+}

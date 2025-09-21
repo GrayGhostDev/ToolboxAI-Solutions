@@ -1,3 +1,8 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import pytest_asyncio
 """Comprehensive Test Suite for AI Chat System
 
 Tests the AI chat communication system for Roblox educational assistant.
@@ -314,7 +319,8 @@ class TestLangGraphWorkflow:
     """Test LangGraph workflow functionality"""
 
     @pytest.mark.asyncio
-    async def test_intent_classification_create_lesson(self):
+    @pytest.mark.asyncio
+async def test_intent_classification_create_lesson(self):
         """Test intent classification for lesson creation"""
         graph = RobloxAssistantGraph()
         state = ConversationState(
@@ -328,7 +334,8 @@ class TestLangGraphWorkflow:
         assert result.intent == IntentType.CREATE_LESSON
 
     @pytest.mark.asyncio
-    async def test_intent_classification_design_environment(self):
+    @pytest.mark.asyncio
+async def test_intent_classification_design_environment(self):
         """Test intent classification for environment design"""
         graph = RobloxAssistantGraph()
         state = ConversationState(
@@ -342,7 +349,8 @@ class TestLangGraphWorkflow:
         assert result.intent == IntentType.DESIGN_ENVIRONMENT
 
     @pytest.mark.asyncio
-    async def test_intent_classification_unclear(self):
+    @pytest.mark.asyncio
+async def test_intent_classification_unclear(self):
         """Test unclear intent classification"""
         graph = RobloxAssistantGraph()
         state = ConversationState(
@@ -353,7 +361,8 @@ class TestLangGraphWorkflow:
         assert result.intent == IntentType.UNCLEAR
 
     @pytest.mark.asyncio
-    async def test_content_planning(self):
+    @pytest.mark.asyncio
+async def test_content_planning(self):
         """Test content planning node"""
         graph = RobloxAssistantGraph()
         state = ConversationState(intent=IntentType.CREATE_LESSON)
@@ -365,7 +374,8 @@ class TestLangGraphWorkflow:
         assert "task_started" in result.context
 
     @pytest.mark.asyncio
-    async def test_resource_generation(self):
+    @pytest.mark.asyncio
+async def test_resource_generation(self):
         """Test resource generation node"""
         graph = RobloxAssistantGraph()
         state = ConversationState(intent=IntentType.GENERATE_QUIZ)
@@ -378,7 +388,8 @@ class TestLangGraphWorkflow:
         assert result.generated_content["status"] in ["generating", "generated", "failed", "error"]
 
     @pytest.mark.asyncio
-    async def test_preview_creation(self):
+    @pytest.mark.asyncio
+async def test_preview_creation(self):
         """Test preview creation node"""
         graph = RobloxAssistantGraph()
         state = ConversationState(
@@ -391,7 +402,8 @@ class TestLangGraphWorkflow:
         assert result.generated_content["preview"]["type"] == "3d_environment"
 
     @pytest.mark.asyncio
-    async def test_message_processing_streaming(self):
+    @pytest.mark.asyncio
+async def test_message_processing_streaming(self):
         """Test message processing with streaming"""
         graph = RobloxAssistantGraph()
 
@@ -407,7 +419,8 @@ class TestLangGraphWorkflow:
             assert len(tokens) == 2
 
     @pytest.mark.asyncio
-    async def test_workflow_error_handling(self):
+    @pytest.mark.asyncio
+async def test_workflow_error_handling(self):
         """Test workflow error handling"""
         graph = RobloxAssistantGraph()
         state = ConversationState()
@@ -418,7 +431,8 @@ class TestLangGraphWorkflow:
         assert result.intent == IntentType.UNCLEAR
 
     @pytest.mark.asyncio
-    async def test_context_management(self):
+    @pytest.mark.asyncio
+async def test_context_management(self):
         """Test context management in workflow"""
         graph = RobloxAssistantGraph()
         state = ConversationState(
@@ -430,7 +444,8 @@ class TestLangGraphWorkflow:
         assert state.context["subject"] == "math"
 
     @pytest.mark.asyncio
-    async def test_memory_persistence(self):
+    @pytest.mark.asyncio
+async def test_memory_persistence(self):
         """Test conversation memory persistence"""
         # Test with mock checkpointer
         try:
@@ -452,7 +467,8 @@ class TestWebSocket:
     """Test WebSocket functionality"""
 
     @pytest.mark.asyncio
-    async def test_websocket_connection(self):
+    @pytest.mark.asyncio
+async def test_websocket_connection(self):
         """Test WebSocket connection establishment"""
         mock_ws = AsyncMock(spec=WebSocket)
         await chat_manager.connect(mock_ws, "conv_123")
@@ -470,7 +486,8 @@ class TestWebSocket:
         assert "conv_123" not in chat_manager.active_connections
 
     @pytest.mark.asyncio
-    async def test_websocket_send_message(self):
+    @pytest.mark.asyncio
+async def test_websocket_send_message(self):
         """Test sending message via WebSocket"""
         mock_ws = AsyncMock(spec=WebSocket)
         chat_manager.active_connections["conv_123"] = mock_ws
@@ -480,7 +497,8 @@ class TestWebSocket:
         mock_ws.send_json.assert_called_once_with({"type": "test"})
 
     @pytest.mark.asyncio
-    async def test_websocket_broadcast(self):
+    @pytest.mark.asyncio
+async def test_websocket_broadcast(self):
         """Test broadcasting to all connections"""
         mock_ws1 = AsyncMock(spec=WebSocket)
         mock_ws2 = AsyncMock(spec=WebSocket)
@@ -495,7 +513,8 @@ class TestWebSocket:
         mock_ws2.send_json.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_websocket_error_recovery(self):
+    @pytest.mark.asyncio
+async def test_websocket_error_recovery(self):
         """Test WebSocket error recovery"""
         mock_ws = AsyncMock(spec=WebSocket)
         mock_ws.send_json.side_effect = Exception("Connection error")
@@ -506,7 +525,8 @@ class TestWebSocket:
         assert "conv_123" not in chat_manager.active_connections
 
     @pytest.mark.asyncio
-    async def test_websocket_streaming_start(self):
+    @pytest.mark.asyncio
+async def test_websocket_streaming_start(self):
         """Test streaming start message"""
         message = {
             "type": "stream_start",
@@ -517,7 +537,8 @@ class TestWebSocket:
         assert "timestamp" in message
 
     @pytest.mark.asyncio
-    async def test_websocket_streaming_token(self):
+    @pytest.mark.asyncio
+async def test_websocket_streaming_token(self):
         """Test streaming token message"""
         message = {
             "type": "stream_token",
@@ -529,7 +550,8 @@ class TestWebSocket:
         assert message["content"] == "Hello "
 
     @pytest.mark.asyncio
-    async def test_websocket_ping_pong(self):
+    @pytest.mark.asyncio
+async def test_websocket_ping_pong(self):
         """Test WebSocket ping/pong mechanism"""
         mock_ws = AsyncMock(spec=WebSocket)
         mock_ws.receive_json = AsyncMock(return_value={"type": "ping"})
@@ -549,7 +571,8 @@ class TestIntegration:
     """Test integration with other systems"""
 
     @pytest.mark.asyncio
-    async def test_roblox_content_generation_integration(self):
+    @pytest.mark.asyncio
+async def test_roblox_content_generation_integration(self):
         """Test integration with Roblox content generation"""
         try:
             from apps.backend.api.v1.endpoints.ai_chat import generate_ai_response
@@ -590,7 +613,8 @@ class TestIntegration:
         assert messages[conv_id][0]["content"] == "Test message"
 
     @pytest.mark.asyncio
-    async def test_pusher_integration(self):
+    @pytest.mark.asyncio
+async def test_pusher_integration(self):
         """Test Pusher channel integration"""
         # Mock Pusher integration
         with patch('pusher.Pusher') as mock_pusher:
@@ -623,7 +647,8 @@ class TestIntegration:
         assert state.generated_content["preview"]["available"]
 
     @pytest.mark.asyncio
-    async def test_authentication_integration(self):
+    @pytest.mark.asyncio
+async def test_authentication_integration(self):
         """Test authentication system integration"""
         # Test that we can import and use get_current_user
         try:
@@ -670,7 +695,8 @@ class TestIntegration:
         assert "Test error" in errors[0]["error"]
 
     @pytest.mark.asyncio
-    async def test_content_pipeline_integration(self):
+    @pytest.mark.asyncio
+async def test_content_pipeline_integration(self):
         """Test content generation pipeline integration"""
         # Mock content pipeline
         async def generate_content(request):
@@ -694,7 +720,8 @@ class TestIntegration:
         assert len(manager.active_connections) == 0
 
     @pytest.mark.asyncio
-    async def test_streaming_response_integration(self):
+    @pytest.mark.asyncio
+async def test_streaming_response_integration(self):
         """Test streaming response integration"""
         async def stream_tokens():
             for token in ["Hello", " ", "world"]:
@@ -730,7 +757,8 @@ class TestPerformance:
     """Test performance requirements"""
 
     @pytest.mark.asyncio
-    async def test_response_latency(self):
+    @pytest.mark.asyncio
+async def test_response_latency(self):
         """Test response latency < 100ms"""
         import time
         start = time.time()
@@ -742,7 +770,8 @@ class TestPerformance:
         assert elapsed < 100
 
     @pytest.mark.asyncio
-    async def test_streaming_throughput(self):
+    @pytest.mark.asyncio
+async def test_streaming_throughput(self):
         """Test streaming throughput > 50 tokens/second"""
         tokens = ["token"] * 100
         start = datetime.utcnow()
@@ -768,7 +797,8 @@ class TestPerformance:
         assert elapsed < 500
 
     @pytest.mark.asyncio
-    async def test_preview_generation_time(self):
+    @pytest.mark.asyncio
+async def test_preview_generation_time(self):
         """Test preview generation < 3 seconds"""
         start = datetime.utcnow()
 
@@ -793,7 +823,8 @@ class TestPerformance:
         assert size < 10 * 1024 * 1024  # Less than 10MB
 
     @pytest.mark.asyncio
-    async def test_concurrent_connections(self):
+    @pytest.mark.asyncio
+async def test_concurrent_connections(self):
         """Test handling concurrent WebSocket connections"""
         tasks = []
         for i in range(10):
@@ -819,7 +850,8 @@ class TestPerformance:
         assert elapsed < 1  # Process 100 messages in < 1 second
 
     @pytest.mark.asyncio
-    async def test_database_query_performance(self):
+    @pytest.mark.asyncio
+async def test_database_query_performance(self):
         """Test database query performance"""
         # Mock database query
         async def query_conversations(user_id, limit=20):
@@ -851,7 +883,8 @@ class TestPerformance:
         assert hit_rate > 0.8  # 80% cache hit rate
 
     @pytest.mark.asyncio
-    async def test_error_recovery_time(self):
+    @pytest.mark.asyncio
+async def test_error_recovery_time(self):
         """Test error recovery time"""
         start = datetime.utcnow()
 

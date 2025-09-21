@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Avatar } from '@mui/material';
+import Box from '@mui/material/Box';
 import { Procedural3DIcon } from './Procedural3DIcon';
-import { robloxColors } from '../../theme/robloxTheme';
-
 interface Safe3DIconProps {
   iconName: string;
   size?: 'small' | 'medium' | 'large';
@@ -11,8 +9,7 @@ interface Safe3DIconProps {
   fallbackSrc?: string;
   style?: React.CSSProperties;
 }
-
-export const Safe3DIcon: React.FC<Safe3DIconProps> = ({
+export const Safe3DIcon: React.FunctionComponent<Safe3DIconProps> = ({
   iconName,
   size = 'medium',
   color,
@@ -22,15 +19,12 @@ export const Safe3DIcon: React.FC<Safe3DIconProps> = ({
 }) => {
   const [useProceduralIcon, setUseProceduralIcon] = useState(false);
   const [imageError, setImageError] = useState(false);
-
   const sizeMap = {
     small: 40,
     medium: 60,
     large: 80,
   };
-
   const iconSize = sizeMap[size];
-
   // Always use procedural icons for now since we don't have image assets
   if (true || useProceduralIcon || imageError) {
     return (
@@ -43,7 +37,6 @@ export const Safe3DIcon: React.FC<Safe3DIconProps> = ({
       />
     );
   }
-
   // This code path won't be reached but keeping for future when we have real assets
   return (
     <Box
@@ -70,8 +63,6 @@ export const Safe3DIcon: React.FC<Safe3DIconProps> = ({
     </Box>
   );
 };
-
 // Export a function to replace Real3DIcon globally
 export const Real3DIcon = Safe3DIcon;
-
 export default Safe3DIcon;

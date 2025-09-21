@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/security/jwt/jwt_secret_generator.py
+# hypothesis_version: 6.139.2
+
+[b'toolboxai-jwt-salt', 0.0, 3.0, 384, 100000, '\nIssues:', '\nRecommendations:', '12345', 'MASTER_KEY', 'Secret rotation', 'Usage:', '__main__', 'admin', 'ascii', 'change-in-production', 'character_diversity', 'created_at', 'default', 'demo', 'description', 'dev', 'encrypted_secret', 'entropy_ok', 'entropy_score', 'example', 'generate', 'hash', 'id', 'issues', 'key', 'length_ok', 'metadata', 'no_weak_patterns', 'password', 'prod', 'r', 'recommendations', 'secret', 'staging', 'test', 'token', 'validate', 'w', 'your-secret-key']

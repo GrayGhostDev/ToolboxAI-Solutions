@@ -14,9 +14,9 @@ from enum import Enum
 from langchain.agents import AgentExecutor
 from langchain.agents.format_scratchpad import format_to_openai_function_messages
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.tools import Tool, StructuredTool
-from langchain.schema import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 
 from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
@@ -57,7 +57,7 @@ class RobloxScriptOptimizationAgent(BaseAgent):
     def __init__(
         self,
         config: Optional[AgentConfig] = None,
-        llm: Optional[ChatOpenAI] = None,
+        llm: Optional[.* = None,
         optimization_level: OptimizationLevel = OptimizationLevel.BALANCED
     ):
         # Create default config if not provided
@@ -77,7 +77,7 @@ class RobloxScriptOptimizationAgent(BaseAgent):
         if llm is not None:
             self.llm = llm
         elif not self.llm:
-            self.llm = ChatOpenAI(
+            self.llm = from langchain_openai import ChatOpenAI(
                 model="gpt-4",
                 temperature=0.1
             )

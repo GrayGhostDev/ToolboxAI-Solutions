@@ -1,43 +1,42 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import * as React from "react";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Skeleton from '@mui/material/Skeleton';
+import Alert from '@mui/material/Alert';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+import Grid from '@mui/material/Grid';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Badge from '@mui/material/Badge';
+import Tooltip from '@mui/material/Tooltip';
+import Menu from '@mui/material/Menu';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
+
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Stack,
-  Avatar,
-  Chip,
-  IconButton,
-  Skeleton,
-  Alert,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Grid,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  TextField,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Tabs,
-  Tab,
-  Badge,
-  Tooltip,
-  Menu,
-  Switch,
-  FormControlLabel,
-} from "@mui/material";
 import {
   Person,
   Add,
@@ -437,7 +436,7 @@ export function UserManagement({
                   <Button
                     variant="contained"
                     startIcon={<PersonAdd />}
-                    onClick={() => setIsCreateDialogOpen(true)}
+                    onClick={(e: React.MouseEvent) => () => setIsCreateDialogOpen(true)}
                   >
                     Add User
                   </Button>
@@ -505,7 +504,7 @@ export function UserManagement({
                     ))}
                   </Select>
                 </FormControl>
-                <IconButton onClick={fetchData}>
+                <IconButton onClick={(e: React.MouseEvent) => fetchData}>
                   <Refresh />
                 </IconButton>
               </Stack>
@@ -644,7 +643,7 @@ export function UserManagement({
                             <Tooltip title={user.status === "suspended" ? "Unsuspend User" : "Suspend User"}>
                               <IconButton
                                 size="small"
-                                onClick={() => handleSuspendUser(user.id)}
+                                onClick={(e: React.MouseEvent) => () => handleSuspendUser(user.id)}
                                 color={user.status === "suspended" ? "success" : "warning"}
                               >
                                 {user.status === "suspended" ? <CheckCircle /> : <Block />}
@@ -653,7 +652,7 @@ export function UserManagement({
                             <Tooltip title="Delete User">
                               <IconButton
                                 size="small"
-                                onClick={() => handleDeleteUser(user.id)}
+                                onClick={(e: React.MouseEvent) => () => handleDeleteUser(user.id)}
                                 color="error"
                               >
                                 <Delete />
@@ -743,8 +742,8 @@ export function UserManagement({
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleCreateUser} variant="contained">Create User</Button>
+          <Button onClick={(e: React.MouseEvent) => () => setIsCreateDialogOpen(false)}>Cancel</Button>
+          <Button onClick={(e: React.MouseEvent) => handleCreateUser} variant="contained">Create User</Button>
         </DialogActions>
       </Dialog>
 
@@ -807,8 +806,8 @@ export function UserManagement({
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleUpdateUser} variant="contained">Update User</Button>
+          <Button onClick={(e: React.MouseEvent) => () => setIsEditDialogOpen(false)}>Cancel</Button>
+          <Button onClick={(e: React.MouseEvent) => handleUpdateUser} variant="contained">Update User</Button>
         </DialogActions>
       </Dialog>
     </LocalizationProvider>

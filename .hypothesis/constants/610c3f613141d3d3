@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/agent_registry.py
+# hypothesis_version: 6.139.2
+
+[0.7, 100, 300, '.', '1.0.0', '_', 'assessment', 'busy', 'busy_instances', 'by_capability', 'by_category', 'cache_hits', 'cache_misses', 'can_', 'capabilities', 'cleanup', 'content', 'core.agents', 'core.agents.database', 'core.agents.nlu', 'database', 'documentation', 'educational', 'github', 'gpt-3.5-turbo', 'idle', 'idle_instances', 'integration', 'metrics', 'monitoring', 'nlu', 'orchestration', 'pools', 'quality', 'review', 'tags', 'testing', 'total', 'total_agents', 'total_created', 'total_destroyed', 'total_instances', 'worktree']

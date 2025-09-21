@@ -7,11 +7,11 @@ with parallel processing, consensus mechanisms, and adaptive routing.
 
 import asyncio
 import logging
-from typing import Dict, Any, List, TypedDict, Annotated, Sequence
+from typing import Dict, Any, List, TypedDict, Annotated, Sequence, Optional
 from datetime import datetime
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolExecutor, ToolInvocation
-from langgraph.checkpoint import MemorySaver
+from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from pydantic import BaseModel, Field
 

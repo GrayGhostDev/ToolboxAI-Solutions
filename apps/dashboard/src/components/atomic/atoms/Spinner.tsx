@@ -5,7 +5,10 @@
  */
 
 import React, { forwardRef } from 'react';
-import { CircularProgress, CircularProgressProps, styled, keyframes } from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
+import CircularProgressProps from '@mui/material/CircularProgressProps';
+import { styled } from '@mui/material/styles';
+import { keyframes } from '@mui/material/styles';
 import { designTokens } from '../../../theme/designTokens';
 
 export interface SpinnerProps extends Omit<CircularProgressProps, 'size'> {

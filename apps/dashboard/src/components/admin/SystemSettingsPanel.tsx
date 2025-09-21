@@ -2,54 +2,52 @@
  * SystemSettingsPanel Component
  * Comprehensive system configuration interface for administrators
  */
+import { memo, useState, useEffect } from 'react';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Chip from '@mui/material/Chip';
+import Slider from '@mui/material/Slider';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import IconButton from '@mui/material/IconButton';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import Divider from '@mui/material/Divider';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import InputAdornment from '@mui/material/InputAdornment';
+import Tooltip from '@mui/material/Tooltip';
+import Badge from '@mui/material/Badge';
+import CircularProgress from '@mui/material/CircularProgress';
+import LinearProgress from '@mui/material/LinearProgress';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 
-import React, { memo, useState, useCallback, useEffect } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Stack,
-  TextField,
-  Switch,
-  FormControlLabel,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Button,
-  Alert,
-  AlertTitle,
-  Chip,
-  Slider,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  Divider,
-  Tab,
-  Tabs,
-  InputAdornment,
-  Tooltip,
-  Badge,
-  CircularProgress,
-  LinearProgress,
-  useTheme,
-  alpha,
-} from '@mui/material';
 import {
   ExpandMore as ExpandIcon,
   Settings as SettingsIcon,
@@ -78,8 +76,6 @@ import {
   Group as UsersIcon,
   School as EducationIcon,
 } from '@mui/icons-material';
-import { api } from '@/services/api';
-
 interface SystemSettings {
   general: {
     siteName: string;
@@ -168,14 +164,12 @@ interface SystemSettings {
     }>;
   };
 }
-
 export interface SystemSettingsPanelProps {
   onSettingsChange?: (settings: Partial<SystemSettings>) => void;
   onSettingsSave?: (settings: SystemSettings) => void;
   allowDangerousActions?: boolean;
   readOnly?: boolean;
 }
-
 export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
   onSettingsChange,
   onSettingsSave,
@@ -189,7 +183,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
   const [success, setSuccess] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
   const [expandedPanel, setExpandedPanel] = useState<string | false>('general');
-
   // Settings state
   const [settings, setSettings] = useState<SystemSettings>({
     general: {
@@ -268,18 +261,15 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
       webhooks: [],
     },
   });
-
   // Dialog states
   const [webhookDialogOpen, setWebhookDialogOpen] = useState(false);
   const [ipDialogOpen, setIpDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<string>('');
-
   // Fetch settings
   useEffect(() => {
     fetchSettings();
   }, []);
-
   const fetchSettings = async () => {
     setLoading(true);
     try {
@@ -292,7 +282,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
       setLoading(false);
     }
   };
-
   const handleSettingChange = (category: keyof SystemSettings, field: string, value: any) => {
     const newSettings = {
       ...settings,
@@ -304,19 +293,15 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
     setSettings(newSettings);
     onSettingsChange?.({ [category]: { [field]: value } });
   };
-
   const handleSaveSettings = async () => {
     setSaving(true);
     setError(null);
     setSuccess(null);
-
     try {
       // In a real app, save to API
       // await api.post('/admin/settings', settings);
-
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-
       setSuccess('Settings saved successfully');
       onSettingsSave?.(settings);
     } catch (err) {
@@ -325,12 +310,10 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
       setSaving(false);
     }
   };
-
   const handleResetSettings = () => {
     setConfirmAction('reset');
     setConfirmDialogOpen(true);
   };
-
   const handleRunBackup = async () => {
     setSaving(true);
     try {
@@ -343,14 +326,12 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
       setSaving(false);
     }
   };
-
   const formatBytes = (bytes: number) => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     if (bytes === 0) return '0 Bytes';
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   };
-
   const renderGeneralSettings = () => (
     <Stack spacing={3}>
       <TextField
@@ -424,7 +405,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
       </Alert>
     </Stack>
   );
-
   const renderSecuritySettings = () => (
     <Stack spacing={3}>
       <Typography variant="subtitle1" fontWeight="bold">
@@ -485,9 +465,7 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
           label="Require special characters"
         />
       </Stack>
-
       <Divider />
-
       <Typography variant="subtitle1" fontWeight="bold">
         Session & Login
       </Typography>
@@ -519,9 +497,7 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
           label="Enable Two-Factor Authentication"
         />
       </Stack>
-
       <Divider />
-
       <Typography variant="subtitle1" fontWeight="bold">
         IP Access Control
       </Typography>
@@ -529,7 +505,7 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
         <Button
           variant="outlined"
           startIcon={<AddIcon />}
-          onClick={() => setIpDialogOpen(true)}
+          onClick={(e: React.MouseEvent) => () => setIpDialogOpen(true)}
           disabled={readOnly}
         >
           Manage IP Whitelist/Blacklist
@@ -549,7 +525,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
       </Stack>
     </Stack>
   );
-
   const renderPerformanceSettings = () => (
     <Stack spacing={3}>
       <Typography variant="subtitle1" fontWeight="bold">
@@ -577,9 +552,7 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
           />
         )}
       </Stack>
-
       <Divider />
-
       <Typography variant="subtitle1" fontWeight="bold">
         Optimization
       </Typography>
@@ -624,9 +597,7 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
           />
         )}
       </Stack>
-
       <Divider />
-
       <Typography variant="subtitle1" fontWeight="bold">
         Rate Limiting
       </Typography>
@@ -664,7 +635,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
       </Stack>
     </Stack>
   );
-
   const renderBackupSettings = () => (
     <Stack spacing={3}>
       <Alert severity="info">
@@ -678,7 +648,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
           </Typography>
         </Stack>
       </Alert>
-
       <FormControlLabel
         control={
           <Switch
@@ -689,7 +658,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
         }
         label="Enable Automatic Backups"
       />
-
       {settings.backup.autoBackupEnabled && (
         <>
           <FormControl fullWidth disabled={readOnly}>
@@ -704,7 +672,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
               <MenuItem value="monthly">Monthly</MenuItem>
             </Select>
           </FormControl>
-
           <TextField
             label="Backup Time"
             type="time"
@@ -714,7 +681,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
             disabled={readOnly}
             InputLabelProps={{ shrink: true }}
           />
-
           <TextField
             label="Retention Period (days)"
             type="number"
@@ -725,18 +691,16 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
           />
         </>
       )}
-
       <Button
         variant="contained"
         startIcon={<BackupIcon />}
-        onClick={handleRunBackup}
+        onClick={(e: React.MouseEvent) => handleRunBackup}
         disabled={readOnly || saving}
       >
         Run Manual Backup Now
       </Button>
     </Stack>
   );
-
   return (
     <Paper sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
@@ -751,7 +715,7 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
                 size="small"
                 color="error"
                 startIcon={<ResetIcon />}
-                onClick={handleResetSettings}
+                onClick={(e: React.MouseEvent) => handleResetSettings}
                 disabled={readOnly}
               >
                 Reset to Defaults
@@ -761,7 +725,7 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
               variant="contained"
               size="small"
               startIcon={<SaveIcon />}
-              onClick={handleSaveSettings}
+              onClick={(e: React.MouseEvent) => handleSaveSettings}
               disabled={readOnly || saving}
             >
               Save Changes
@@ -769,10 +733,8 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
           </Stack>
         </Stack>
       </Box>
-
       {/* Loading */}
       {loading && <LinearProgress />}
-
       {/* Alerts */}
       {error && (
         <Alert severity="error" onClose={() => setError(null)} sx={{ m: 2 }}>
@@ -784,7 +746,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
           {success}
         </Alert>
       )}
-
       {/* Content */}
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
         {/* General Settings */}
@@ -800,7 +761,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
           </AccordionSummary>
           <AccordionDetails>{renderGeneralSettings()}</AccordionDetails>
         </Accordion>
-
         {/* Security Settings */}
         <Accordion
           expanded={expandedPanel === 'security'}
@@ -814,7 +774,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
           </AccordionSummary>
           <AccordionDetails>{renderSecuritySettings()}</AccordionDetails>
         </Accordion>
-
         {/* Performance Settings */}
         <Accordion
           expanded={expandedPanel === 'performance'}
@@ -828,7 +787,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
           </AccordionSummary>
           <AccordionDetails>{renderPerformanceSettings()}</AccordionDetails>
         </Accordion>
-
         {/* Backup Settings */}
         <Accordion
           expanded={expandedPanel === 'backup'}
@@ -843,7 +801,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
           <AccordionDetails>{renderBackupSettings()}</AccordionDetails>
         </Accordion>
       </Box>
-
       {/* Confirmation Dialog */}
       <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
         <DialogTitle>Confirm Action</DialogTitle>
@@ -855,11 +812,11 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDialogOpen(false)}>Cancel</Button>
+          <Button onClick={(e: React.MouseEvent) => () => setConfirmDialogOpen(false)}>Cancel</Button>
           <Button
             variant="contained"
             color="error"
-            onClick={() => {
+            onClick={(e: React.MouseEvent) => () => {
               if (confirmAction === 'reset') {
                 // Reset settings to defaults
                 fetchSettings();
@@ -874,7 +831,5 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
     </Paper>
   );
 });
-
 SystemSettingsPanel.displayName = 'SystemSettingsPanel';
-
 export default SystemSettingsPanel;

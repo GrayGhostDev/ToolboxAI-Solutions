@@ -6,25 +6,24 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Tab,
-  Tabs,
-  Paper,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Chip,
-  Stack,
-  Button,
-  IconButton,
-  Badge,
-  Alert,
-  AlertTitle,
-  useTheme,
-  alpha
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Badge from '@mui/material/Badge';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import {
   Dashboard,
   Psychology,
@@ -172,10 +171,10 @@ export default function TeacherRobloxDashboard() {
               />
 
               {/* Actions */}
-              <IconButton onClick={handleRefresh} size="small">
+              <IconButton onClick={(e: React.MouseEvent) => handleRefresh} size="small">
                 <Refresh />
               </IconButton>
-              <IconButton onClick={() => setShowHelp(!showHelp)} size="small">
+              <IconButton onClick={(e: React.MouseEvent) => () => setShowHelp(!showHelp)} size="small">
                 <Help />
               </IconButton>
             </Stack>

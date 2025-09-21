@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 """
 WebSocket Performance Tests
 Comprehensive WebSocket connection and message throughput tests
@@ -33,7 +48,8 @@ class TestWebSocketPerformance:
     """WebSocket performance and scalability tests"""
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_connection_establishment(self):
+    @pytest.mark.asyncio
+async def test_websocket_connection_establishment(self):
         """Test WebSocket connection establishment time"""
         url = "ws://localhost:9876"
         num_connections = 100
@@ -67,7 +83,8 @@ class TestWebSocketPerformance:
             print(f"  Max time: {max(connection_times)*1000:.2f}ms")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_message_latency(self):
+    @pytest.mark.asyncio
+async def test_websocket_message_latency(self):
         """Test WebSocket message round-trip latency"""
         url = "ws://localhost:9876"
         num_messages = 100
@@ -115,7 +132,8 @@ class TestWebSocketPerformance:
             pytest.fail("No successful message exchanges")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_concurrent_connections(self):
+    @pytest.mark.asyncio
+async def test_websocket_concurrent_connections(self):
         """Test handling of many concurrent WebSocket connections"""
         url = "ws://localhost:9876"
         target_connections = 50  # Reduced for stability
@@ -161,7 +179,8 @@ class TestWebSocketPerformance:
         assert successful >= target_connections * 0.8, f"Too many failed connections: {successful}/{target_connections}"
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_message_throughput(self):
+    @pytest.mark.asyncio
+async def test_websocket_message_throughput(self):
         """Test WebSocket message throughput"""
         url = "ws://localhost:9876"
         num_clients = 5
@@ -234,7 +253,8 @@ class TestWebSocketPerformance:
             pytest.fail("Could not measure throughput")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_memory_usage(self):
+    @pytest.mark.asyncio
+async def test_websocket_memory_usage(self):
         """Test WebSocket memory usage with many connections"""
         import psutil
         import os

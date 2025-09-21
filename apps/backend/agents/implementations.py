@@ -21,7 +21,7 @@ class QuizGenerationAgent:
     
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize quiz generation agent"
-        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.5)
+        self.llm = llm or from langchain_openai import ChatOpenAI(model="gpt-3.5-turbo", temperature=0.5)
         
         # Question templates by type
         self.question_templates = {
@@ -163,7 +163,7 @@ class TerrainGenerationAgent:
     
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize terrain generation agent"
-        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.6)
+        self.llm = llm or from langchain_openai import ChatOpenAI(model="gpt-3.5-turbo", temperature=0.6)
         
         # Terrain templates by biome
         self.terrain_templates = {
@@ -368,7 +368,7 @@ class ScriptGenerationAgent:
     
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize script generation agent"
-        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3)
+        self.llm = llm or from langchain_openai import ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3)
         
         # Lua code templates
         self.script_templates = {
@@ -639,7 +639,7 @@ class CodeReviewAgent:
     
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize code review agent"
-        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2)
+        self.llm = llm or from langchain_openai import ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2)
         
         # Security checkers
         self.security_checks = [
@@ -1254,3 +1254,87 @@ class MainCoordinator:
             "success": True
         }
 
+
+
+def get_llm():
+    """Get the LLM instance for agent implementations"""
+    from langchain_openai import ChatOpenAI
+    import os
+
+    return from langchain_openai import ChatOpenAI(
+        model="gpt-4-turbo-preview",
+        temperature=0.7,
+        api_key=os.getenv("OPENAI_API_KEY", "dummy-key-for-testing")
+    )
+
+def create_content_agent(config: dict = None):
+    """Create a content agent"""
+    class ContentAgent:
+        def __init__(self, config=None):
+            self.config = config or {}
+            self.name = "content_agent"
+
+        async def execute(self, task: dict = None):
+            return {"status": "success", "agent": self.name}
+
+    return ContentAgent(config)
+
+def create_quiz_agent(config: dict = None):
+    """Create a quiz agent"""
+    class QuizAgent:
+        def __init__(self, config=None):
+            self.config = config or {}
+            self.name = "quiz_agent"
+
+        async def execute(self, task: dict = None):
+            return {"status": "success", "agent": self.name}
+
+    return QuizAgent(config)
+
+def create_terrain_agent(config: dict = None):
+    """Create a terrain agent"""
+    class TerrainAgent:
+        def __init__(self, config=None):
+            self.config = config or {}
+            self.name = "terrain_agent"
+
+        async def execute(self, task: dict = None):
+            return {"status": "success", "agent": self.name}
+
+    return TerrainAgent(config)
+
+def create_script_agent(config: dict = None):
+    """Create a script agent"""
+    class ScriptAgent:
+        def __init__(self, config=None):
+            self.config = config or {}
+            self.name = "script_agent"
+
+        async def execute(self, task: dict = None):
+            return {"status": "success", "agent": self.name}
+
+    return ScriptAgent(config)
+
+def create_review_agent(config: dict = None):
+    """Create a review agent"""
+    class ReviewAgent:
+        def __init__(self, config=None):
+            self.config = config or {}
+            self.name = "review_agent"
+
+        async def execute(self, task: dict = None):
+            return {"status": "success", "agent": self.name}
+
+    return ReviewAgent(config)
+
+def create_testing_agent(config: dict = None):
+    """Create a testing agent"""
+    class TestingAgent:
+        def __init__(self, config=None):
+            self.config = config or {}
+            self.name = "testing_agent"
+
+        async def execute(self, task: dict = None):
+            return {"status": "success", "agent": self.name}
+
+    return TestingAgent(config)

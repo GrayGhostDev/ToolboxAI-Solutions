@@ -170,42 +170,93 @@ export default defineConfig({
     sourcemap: true,
     minify: 'terser',
     target: 'es2020',
-    chunkSizeWarningLimit: 800,
+    chunkSizeWarningLimit: 500, // Reduced from 800 to enforce smaller chunks
 
-    // Terser options for better minification
+    // Enhanced Terser options for better minification
     terserOptions: {
       compress: {
         drop_console: true,
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info'],
-        passes: 2
+        pure_funcs: ['console.log', 'console.info', 'console.warn'],
+        passes: 3, // Increased passes for better compression
+        unsafe: true,
+        unsafe_comps: true,
+        unsafe_math: true,
+        unsafe_proto: true,
+        dead_code: true,
+        keep_infinity: true,
+        reduce_vars: true,
+        sequences: true,
+        conditionals: true,
+        comparisons: true,
+        evaluate: true,
+        booleans: true,
+        loops: true,
+        unused: true,
+        hoist_funs: true,
+        hoist_props: true,
+        hoist_vars: true,
+        if_return: true,
+        inline: true,
+        join_vars: true,
+        cascade: true,
+        collapse_vars: true,
+        reduce_funcs: true,
+        warnings: false,
+        negate_iife: true,
+        pure_getters: true,
+        pure_new: true,
+        keep_fargs: false,
+        keep_fnames: false
       },
       mangle: {
-        safari10: true
+        safari10: true,
+        properties: {
+          regex: /^_/
+        }
       },
       format: {
-        comments: false
+        comments: false,
+        ascii_only: true
       }
     },
 
     // Rollup configuration
     rollupOptions: {
       output: {
-        // Manual chunks for optimal code splitting
+        // Enhanced manual chunks for optimal code splitting
         manualChunks: (id) => {
-          // Core React ecosystem - high priority, cache-stable
-          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
-            return 'vendor-react';
+          // Core React ecosystem - split for better caching
+          if (id.includes('react/') && !id.includes('react-router') && !id.includes('react-redux')) {
+            return 'vendor-react-core';
+          }
+          if (id.includes('react-dom')) {
+            return 'vendor-react-dom';
+          }
+          if (id.includes('react-router')) {
+            return 'vendor-react-router';
           }
 
-          // State management - medium priority
+          // State management - separate from React
           if (id.includes('@reduxjs/toolkit') || id.includes('react-redux')) {
             return 'vendor-redux';
           }
 
-          // UI Framework - split into smaller chunks for better caching
-          if (id.includes('@mui/material')) {
+          // UI Framework - granular chunks for better caching
+          if (id.includes('@mui/material/styles') || id.includes('@mui/system')) {
+            return 'vendor-mui-system';
+          }
+          if (id.includes('@mui/material') && (id.includes('Button') || id.includes('TextField') || id.includes('Typography') || id.includes('Box') || id.includes('Stack'))) {
             return 'vendor-mui-core';
+          }
+          if (id.includes('@mui/material') && (id.includes('Table') || id.includes('Grid') || id.includes('Card') || id.includes('Paper'))) {
+            return 'vendor-mui-layout';
+          }
+          if (id.includes('@mui/material') && (id.includes('Dialog') || id.includes('Drawer') || id.includes('Menu') || id.includes('Popover'))) {
+            return 'vendor-mui-navigation';
+          }
+          if (id.includes('@mui/material')) {
+            return 'vendor-mui-components';
           }
           if (id.includes('@mui/icons-material')) {
             return 'vendor-mui-icons';
@@ -214,29 +265,48 @@ export default defineConfig({
             return 'vendor-emotion';
           }
 
-          // Charts and visualization - lazy loaded
-          if (id.includes('recharts') || id.includes('chart.js') || id.includes('react-chartjs-2')) {
-            return 'vendor-charts';
+          // Charts and visualization - separate by library type
+          if (id.includes('recharts')) {
+            return 'vendor-charts-recharts';
+          }
+          if (id.includes('chart.js') || id.includes('react-chartjs-2')) {
+            return 'vendor-charts-chartjs';
           }
 
-          // Performance and virtualization - separate chunk
-          if (id.includes('react-window') || id.includes('web-vitals')) {
-            return 'vendor-performance';
+          // 3D and Three.js - split by functionality for lazy loading
+          if (id.includes('three/build/three.module.js')) {
+            return 'vendor-3d-core';
           }
-
-          // 3D and Three.js - large but rarely used
-          if (id.includes('three') || id.includes('@react-three')) {
-            return 'vendor-3d';
+          if (id.includes('three/') && id.includes('loaders')) {
+            return 'vendor-3d-loaders';
+          }
+          if (id.includes('@react-three/fiber')) {
+            return 'vendor-3d-fiber';
+          }
+          if (id.includes('@react-three/drei')) {
+            return 'vendor-3d-drei';
+          }
+          if (id.includes('three')) {
+            return 'vendor-3d-utils';
           }
 
           // Communication and real-time
           if (id.includes('pusher-js')) {
-            return 'vendor-realtime';
+            return 'vendor-realtime-pusher';
+          }
+          if (id.includes('axios')) {
+            return 'vendor-http';
           }
 
-          // Utilities - small, commonly used
-          if (id.includes('axios') || id.includes('date-fns') || id.includes('zod')) {
-            return 'vendor-utils';
+          // Utilities - split by usage frequency
+          if (id.includes('date-fns')) {
+            return 'vendor-date';
+          }
+          if (id.includes('zod')) {
+            return 'vendor-validation';
+          }
+          if (id.includes('lodash')) {
+            return 'vendor-lodash';
           }
 
           // Internationalization
@@ -245,8 +315,11 @@ export default defineConfig({
           }
 
           // Chat and markdown - feature-specific
-          if (id.includes('react-chat-elements') || id.includes('react-markdown') || id.includes('react-syntax-highlighter')) {
+          if (id.includes('react-chat-elements')) {
             return 'vendor-chat';
+          }
+          if (id.includes('react-markdown') || id.includes('react-syntax-highlighter')) {
+            return 'vendor-markdown';
           }
 
           // Animation libraries
@@ -254,7 +327,30 @@ export default defineConfig({
             return 'vendor-animation';
           }
 
-          // All other node_modules go to vendor-misc
+          // Performance monitoring
+          if (id.includes('react-window') || id.includes('web-vitals')) {
+            return 'vendor-performance';
+          }
+
+          // GraphQL
+          if (id.includes('@apollo/client') || id.includes('graphql')) {
+            return 'vendor-graphql';
+          }
+
+          // Small utilities that can be grouped
+          if (id.includes('node_modules') && (
+            id.includes('classnames') ||
+            id.includes('clsx') ||
+            id.includes('prop-types') ||
+            id.includes('react-is') ||
+            id.includes('scheduler') ||
+            id.includes('object-assign') ||
+            id.includes('loose-envify')
+          )) {
+            return 'vendor-utils-small';
+          }
+
+          // Everything else from node_modules
           if (id.includes('node_modules')) {
             return 'vendor-misc';
           }

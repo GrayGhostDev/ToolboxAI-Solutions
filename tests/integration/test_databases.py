@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 import asyncio
 import os
 import asyncpg
@@ -11,6 +26,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_databases():
     """Test all database connections with real queries"""
     

@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 # Core imports with modern patterns
 try:
     # Models - Using modern initialization patterns
-    from langchain.chat_models import init_chat_model
+    from langchain_community.chat_models import init_chat_model
     from langchain_openai import ChatOpenAI, AzureChatOpenAI
     from langchain_anthropic import ChatAnthropic
 

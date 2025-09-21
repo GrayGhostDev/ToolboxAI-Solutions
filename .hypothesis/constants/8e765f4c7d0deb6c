@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/v1/endpoints/stripe_webhook.py
+# hypothesis_version: 6.139.2
+
+[400, 503, '/webhook', 'Invalid payload', 'Invalid signature', 'Payments', 'Stripe-Signature', 'data', 'event_type', 'id', 'object', 'received', 'session_id', 'type']

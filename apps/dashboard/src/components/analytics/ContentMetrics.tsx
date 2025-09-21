@@ -1,27 +1,26 @@
 import * as React from "react";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import IconButton from '@mui/material/IconButton';
+import Skeleton from '@mui/material/Skeleton';
+import Alert from '@mui/material/Alert';
+import Tooltip from '@mui/material/Tooltip';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Grid,
-  Paper,
-  Stack,
-  Chip,
-  LinearProgress,
-  IconButton,
-  Skeleton,
-  Alert,
-  Tooltip,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-} from "@mui/material";
 import {
   TrendingUp,
   TrendingDown,
@@ -397,7 +396,7 @@ export function ContentMetrics({
                 {isConnected && autoRefresh && (
                   <Chip label="Live" color="success" size="small" />
                 )}
-                <IconButton size="small" onClick={fetchData}>
+                <IconButton size="small" onClick={(e: React.MouseEvent) => fetchData}>
                   <Refresh />
                 </IconButton>
               </Stack>

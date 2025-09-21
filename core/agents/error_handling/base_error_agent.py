@@ -299,12 +299,12 @@ Always provide clear, actionable recommendations with risk assessments."""
             "graceful_degradation": {
                 "description": "Provide reduced functionality",
                 "fallback_mode": "cached_data",
-                "applicable_to": [ErrorType.INTEGRATION_ERROR, ErrorType.API_ERROR]
+                "applicable_to": [ErrorType.INTEGRATION, ErrorType.API_ERROR]
             },
             "rollback": {
                 "description": "Rollback to previous working state",
                 "checkpoint_required": True,
-                "applicable_to": [ErrorType.CONFIGURATION_ERROR, ErrorType.RUNTIME]
+                "applicable_to": [ErrorType.CONFIGURATION, ErrorType.RUNTIME]
             },
             "auto_fix": {
                 "description": "Attempt automatic fix based on patterns",

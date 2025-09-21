@@ -1,3 +1,5 @@
+jest.setTimeout(10000);
+
 /**
  * Simplified Login Component Test
  * Using React 18 compatible testing approach

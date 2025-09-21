@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 #!/usr/bin/env python3
 """
 Comprehensive FastAPI Test Suite - Complete Backend Testing
@@ -129,7 +144,8 @@ class FastAPITester:
         self.print_summary()
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_imports(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_imports(self, mock_llm):
         """Test all required imports"""
         logger.info("\n🔍 Testing Python Imports...")
         
@@ -156,7 +172,8 @@ class FastAPITester:
                 self.results.add_fail(f"Import {display_name}", str(e))
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_dependencies(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_dependencies(self, mock_llm):
         """Test external service dependencies"""
         logger.info("\n🔗 Testing External Dependencies...")
         
@@ -194,7 +211,8 @@ class FastAPITester:
             self.results.add_skip("OpenAI API key", "Not configured")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_server_startup(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_server_startup(self, mock_llm):
         """Test server startup and health"""
         logger.info("\n🚀 Testing Server Startup...")
         
@@ -215,7 +233,8 @@ class FastAPITester:
             self.results.add_fail("Server connection", str(e))
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_basic_endpoints(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_basic_endpoints(self, mock_llm):
         """Test basic API endpoints"""
         logger.info("\n📡 Testing Basic Endpoints...")
         
@@ -243,7 +262,8 @@ class FastAPITester:
             self.results.add_fail("HTTP client", str(e))
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_authentication(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_authentication(self, mock_llm):
         """Test authentication system"""
         logger.info("\n🔐 Testing Authentication...")
         
@@ -283,7 +303,8 @@ class FastAPITester:
             self.results.add_skip("Authentication tests", str(e))
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_content_generation(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_content_generation(self, mock_llm):
         """Test content generation endpoint"""
         logger.info("\n📝 Testing Content Generation...")
         
@@ -318,7 +339,8 @@ class FastAPITester:
             self.results.add_skip("Content generation", str(e))
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_quiz_generation(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_quiz_generation(self, mock_llm):
         """Test quiz generation endpoint"""
         logger.info("\n❓ Testing Quiz Generation...")
         
@@ -353,7 +375,8 @@ class FastAPITester:
             self.results.add_skip("Quiz generation", str(e))
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_terrain_generation(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_terrain_generation(self, mock_llm):
         """Test terrain generation endpoint"""
         logger.info("\n🏔️ Testing Terrain Generation...")
         
@@ -386,7 +409,8 @@ class FastAPITester:
             self.results.add_skip("Terrain generation", str(e))
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_connection(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_websocket_connection(self, mock_llm):
         """Test WebSocket connection"""
         logger.info("\n🔌 Testing WebSocket Connection...")
         
@@ -420,7 +444,8 @@ class FastAPITester:
             self.results.add_skip("WebSocket tests", "websockets module not installed")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_flask_bridge(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_flask_bridge(self, mock_llm):
         """Test Flask bridge server integration"""
         logger.info("\n🌉 Testing Flask Bridge Server...")
         
@@ -456,7 +481,8 @@ class FastAPITester:
             self.results.add_skip("Flask bridge tests", str(e))
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_mcp_integration(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_mcp_integration(self, mock_llm):
         """Test MCP (Model Context Protocol) integration"""
         logger.info("\n🧠 Testing MCP Integration...")
         
@@ -483,7 +509,8 @@ class FastAPITester:
             self.results.add_skip("MCP tests", "websockets module not installed")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_agent_system(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_agent_system(self, mock_llm):
         """Test LangChain agent system"""
         logger.info("\n🤖 Testing Agent System...")
         
@@ -506,7 +533,8 @@ class FastAPITester:
             self.results.add_skip("Agent system", str(e))
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_sparc_framework(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_sparc_framework(self, mock_llm):
         """Test SPARC framework components"""
         logger.info("\n⚡ Testing SPARC Framework...")
         
@@ -530,7 +558,8 @@ class FastAPITester:
             self.results.add_skip("SPARC framework", str(e))
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_swarm_intelligence(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_swarm_intelligence(self, mock_llm):
         """Test swarm intelligence system"""
         logger.info("\n🐝 Testing Swarm Intelligence...")
         
@@ -552,7 +581,8 @@ class FastAPITester:
             self.results.add_skip("Swarm intelligence", str(e))
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_error_handling(self, mock_llm):
+    @pytest.mark.asyncio
+async def test_error_handling(self, mock_llm):
         """Test error handling and validation"""
         logger.info("\n⚠️ Testing Error Handling...")
         
@@ -586,7 +616,8 @@ class FastAPITester:
             self.results.add_skip("Error handling tests", str(e))
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_performance(self):
+    @pytest.mark.asyncio
+async def test_performance(self):
         """Test performance metrics"""
         logger.info("\n⚡ Testing Performance...")
         

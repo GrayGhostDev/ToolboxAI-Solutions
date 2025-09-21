@@ -20,7 +20,7 @@ import { withLoading, withErrorBoundary } from '../hoc';
 import { useToggle, useDisclosure } from '../../../hooks/atomic';
 
 // Example 1: Form Composition
-export const RegistrationForm: React.FC = () => {
+export const RegistrationForm: React.FunctionComponent<Record<string, any>> = () => {
   const [formData, setFormData] = React.useState({
     username: '',
     email: '',
@@ -113,7 +113,7 @@ export const RegistrationForm: React.FC = () => {
 };
 
 // Example 2: Data Display with Interactive Elements
-export const PlayerLeaderboard: React.FC = () => {
+export const PlayerLeaderboard: React.FunctionComponent<Record<string, any>> = () => {
   const [sortField, setSortField] = React.useState<'rank' | 'name' | 'score' | 'level'>('rank');
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
   const [selectedPlayers, setSelectedPlayers] = React.useState<Set<string>>(new Set());
@@ -246,7 +246,7 @@ export const PlayerLeaderboard: React.FC = () => {
             <Table.Row
               key={player.id}
               selected={selectedPlayers.has(player.id)}
-              onClick={() => togglePlayerSelection(player.id)}
+              onClick={(e: React.MouseEvent) => () => togglePlayerSelection(player.id)}
             >
               <Table.Cell>
                 <input
@@ -389,7 +389,7 @@ const EnhancedGameStats = withErrorBoundary(
 );
 
 // Main composition example
-export const ComponentCompositionShowcase: React.FC = () => {
+export const ComponentCompositionShowcase: React.FunctionComponent<Record<string, any>> = () => {
   const gameStatsModal = useDisclosure();
 
   return (
@@ -426,7 +426,7 @@ export const ComponentCompositionShowcase: React.FC = () => {
         </AtomicText>
         <AtomicButton
           variant="primary"
-          onClick={gameStatsModal.open}
+          onClick={(e: React.MouseEvent) => gameStatsModal.open}
           mb={2}
         >
           Load Game Stats
@@ -436,7 +436,7 @@ export const ComponentCompositionShowcase: React.FC = () => {
             <EnhancedGameStats gameId="game-123" loading={true} />
             <AtomicButton
               variant="outlined"
-              onClick={gameStatsModal.close}
+              onClick={(e: React.MouseEvent) => gameStatsModal.close}
               mt={2}
             >
               Close Stats

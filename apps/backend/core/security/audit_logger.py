@@ -11,7 +11,7 @@ import hmac
 import logging
 import os
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional, Callable
 from dataclasses import dataclass, asdict
 from enum import Enum
@@ -29,6 +29,17 @@ import redis
 from toolboxai_settings import settings
 
 logger = logging.getLogger(__name__)
+
+
+def _serialize_audit_event(event: "AuditEvent") -> Dict[str, Any]:
+    """Convert AuditEvent to JSON-serializable dict"""
+    event_dict = asdict(event)
+    # Convert enums to their values
+    if isinstance(event_dict.get("category"), Enum):
+        event_dict["category"] = event.category.value
+    if isinstance(event_dict.get("severity"), Enum):
+        event_dict["severity"] = event.severity.value
+    return event_dict
 
 Base = declarative_base()
 
@@ -271,7 +282,7 @@ class SecurityAuditLogger:
     async def _queue_event(self, event: AuditEvent):
         """Queue event for async processing"""
         try:
-            self.event_queue.put_nowait(asdict(event))
+            self.event_queue.put_nowait(_serialize_audit_event(event))
         except:
             # If queue is full, process synchronously
             await self._process_event(event)
@@ -319,7 +330,7 @@ class SecurityAuditLogger:
     async def _write_to_file(self, event: AuditEvent):
         """Write event to audit log file"""
         try:
-            log_line = json.dumps(asdict(event)) + "\n"
+            log_line = json.dumps(_serialize_audit_event(event)) + "\n"
 
             # Atomic write with rotation
             with open(self.log_file_path, 'a', encoding='utf-8') as f:
@@ -370,7 +381,7 @@ class SecurityAuditLogger:
             "source": self.service_name,
             "sourcetype": "security_audit",
             "host": event.host,
-            "event": asdict(event)
+            "event": _serialize_audit_event(event)
         }
 
         # Send to SIEM endpoint
@@ -380,7 +391,7 @@ class SecurityAuditLogger:
         """Publish event to Redis for real-time monitoring"""
         try:
             channel = f"audit:{event.category.value}:{event.severity.value}"
-            message = json.dumps(asdict(event))
+            message = json.dumps(_serialize_audit_event(event))
             self.redis.publish(channel, message)
 
             # Store in Redis for recent events
@@ -413,7 +424,7 @@ class SecurityAuditLogger:
         alert = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "message": message,
-            "event": asdict(event)
+            "event": _serialize_audit_event(event)
         }
 
         # Execute alert callbacks

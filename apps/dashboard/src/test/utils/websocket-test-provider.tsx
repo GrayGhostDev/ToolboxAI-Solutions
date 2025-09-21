@@ -28,7 +28,7 @@ interface WebSocketProviderProps {
   children: React.ReactNode;
 }
 
-export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
+export const WebSocketProvider: React.FunctionComponent<WebSocketProviderProps> = ({ children }) => {
   const value = {
     isConnected: true,
     connectionState: 'connected' as const,

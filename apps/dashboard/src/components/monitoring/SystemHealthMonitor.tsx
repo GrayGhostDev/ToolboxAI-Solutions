@@ -2,29 +2,27 @@
  * SystemHealthMonitor Component
  * Real-time monitoring of system health metrics
  */
+import { memo, useEffect, useState, useMemo } from 'react';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Stack from '@mui/material/Stack';
+import LinearProgress from '@mui/material/LinearProgress';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Button from '@mui/material/Button';
+import Collapse from '@mui/material/Collapse';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 
-import React, { memo, useEffect, useState, useMemo } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  Grid,
-  Stack,
-  LinearProgress,
-  Chip,
-  IconButton,
-  Tooltip,
-  Alert,
-  AlertTitle,
-  Button,
-  Collapse,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  useTheme,
-  alpha,
-} from '@mui/material';
 import {
   Speed as CPUIcon,
   Memory as MemoryIcon,
@@ -41,11 +39,9 @@ import {
   TrendingUp,
   TrendingDown,
 } from '@mui/icons-material';
-import { LineChart, Line, AreaChart, Area, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, Tooltip as ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
-import { api } from '@/services/api';
 import { usePusher } from '@/hooks/usePusher';
-
 export interface SystemMetric {
   name: string;
   value: number;
@@ -57,7 +53,6 @@ export interface SystemMetric {
   };
   history?: Array<{ time: string; value: number }>;
 }
-
 export interface ServiceStatus {
   name: string;
   status: 'online' | 'offline' | 'degraded';
@@ -66,7 +61,6 @@ export interface ServiceStatus {
   responseTime?: number;
   error?: string;
 }
-
 export interface SystemHealthMonitorProps {
   autoRefresh?: boolean;
   refreshInterval?: number;
@@ -75,9 +69,7 @@ export interface SystemHealthMonitorProps {
   onMetricClick?: (metric: SystemMetric) => void;
   onServiceClick?: (service: ServiceStatus) => void;
 }
-
 const MotionPaper = motion(Paper);
-
 export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
   autoRefresh = true,
   refreshInterval = 30000, // 30 seconds
@@ -91,7 +83,6 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
-
   // System metrics
   const [metrics, setMetrics] = useState<Record<string, SystemMetric>>({
     cpu: {
@@ -138,7 +129,6 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
       })),
     },
   });
-
   // Service statuses
   const [services, setServices] = useState<ServiceStatus[]>([
     {
@@ -178,33 +168,26 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
       error: 'High latency detected',
     },
   ]);
-
   // Setup Pusher for real-time updates
   const { subscribe, unsubscribe } = usePusher();
-
   useEffect(() => {
     const channel = 'system-health';
-
     const handleMetricUpdate = (data: { metric: string; value: SystemMetric }) => {
       setMetrics(prev => ({
         ...prev,
         [data.metric]: data.value,
       }));
     };
-
     const handleServiceUpdate = (data: ServiceStatus[]) => {
       setServices(data);
     };
-
     subscribe(channel, 'metric-update', handleMetricUpdate);
     subscribe(channel, 'service-status', handleServiceUpdate);
-
     return () => {
       unsubscribe(channel, 'metric-update', handleMetricUpdate);
       unsubscribe(channel, 'service-status', handleServiceUpdate);
     };
   }, [subscribe, unsubscribe]);
-
   // Auto-refresh
   useEffect(() => {
     if (autoRefresh) {
@@ -222,20 +205,16 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
           setLoading(false);
         }
       };
-
       fetchHealthData();
       const interval = setInterval(fetchHealthData, refreshInterval);
-
       return () => clearInterval(interval);
     }
   }, [autoRefresh, refreshInterval]);
-
   const overallHealth = useMemo(() => {
     const criticalCount = Object.values(metrics).filter(m => m.status === 'critical').length;
     const warningCount = Object.values(metrics).filter(m => m.status === 'warning').length;
     const offlineCount = services.filter(s => s.status === 'offline').length;
     const degradedCount = services.filter(s => s.status === 'degraded').length;
-
     if (criticalCount > 0 || offlineCount > 0) {
       return 'critical';
     }
@@ -244,7 +223,6 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
     }
     return 'healthy';
   }, [metrics, services]);
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'healthy':
@@ -260,7 +238,6 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
         return theme.palette.text.secondary;
     }
   };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'healthy':
@@ -276,7 +253,6 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
         return null;
     }
   };
-
   const getMetricIcon = (metric: string) => {
     switch (metric) {
       case 'cpu':
@@ -291,7 +267,6 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
         return <DataUsage Icon />;
     }
   };
-
   const handleRefresh = async () => {
     setLoading(true);
     try {
@@ -303,7 +278,6 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
       setLoading(false);
     }
   };
-
   return (
     <MotionPaper
       initial={{ opacity: 0 }}
@@ -336,16 +310,15 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
                 {lastUpdate.toLocaleTimeString()}
               </Typography>
             </Tooltip>
-            <IconButton size="small" onClick={handleRefresh} disabled={loading}>
+            <IconButton size="small" onClick={(e: React.MouseEvent) => handleRefresh} disabled={loading}>
               <RefreshIcon />
             </IconButton>
-            <IconButton size="small" onClick={() => setExpanded(!expanded)}>
+            <IconButton size="small" onClick={(e: React.MouseEvent) => () => setExpanded(!expanded)}>
               {expanded ? <CollapseIcon /> : <ExpandIcon />}
             </IconButton>
           </Stack>
         </Stack>
       </Box>
-
       <Collapse in={expanded}>
         <Box sx={{ p: 2, flex: 1, overflow: 'auto' }}>
           {error && (
@@ -353,7 +326,6 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
               {error}
             </Alert>
           )}
-
           {/* System Metrics */}
           <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 2 }}>
             System Metrics
@@ -373,7 +345,7 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
                         }
                       : {},
                   }}
-                  onClick={() => onMetricClick?.(metric)}
+                  onClick={(e: React.MouseEvent) => () => onMetricClick?.(metric)}
                 >
                   <Stack spacing={1}>
                     <Stack direction="row" alignItems="center" spacing={1}>
@@ -424,7 +396,6 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
               </Grid>
             ))}
           </Grid>
-
           {/* Service Status */}
           <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 2 }}>
             Service Status
@@ -434,7 +405,7 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
               <ListItem
                 key={service.name}
                 button={!!onServiceClick}
-                onClick={() => onServiceClick?.(service)}
+                onClick={(e: React.MouseEvent) => () => onServiceClick?.(service)}
                 sx={{
                   mb: 1,
                   border: 1,
@@ -486,7 +457,5 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
     </MotionPaper>
   );
 });
-
 SystemHealthMonitor.displayName = 'SystemHealthMonitor';
-
 export default SystemHealthMonitor;

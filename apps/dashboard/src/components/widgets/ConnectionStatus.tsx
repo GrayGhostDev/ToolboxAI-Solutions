@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Chip, Tooltip, CircularProgress } from '@mui/material';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import Tooltip from '@mui/material/Tooltip';
+import CircularProgress from '@mui/material/CircularProgress';
 import {
   WifiOff,
   Wifi,
@@ -15,7 +18,7 @@ interface ConnectionStatusProps {
   size?: 'small' | 'medium';
 }
 
-const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
+const ConnectionStatus: React.FunctionComponent<ConnectionStatusProps> = ({
   showLabel = true,
   size = 'small',
 }) => {

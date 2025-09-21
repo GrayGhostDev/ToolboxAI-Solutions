@@ -53,7 +53,7 @@ const storeTheme = (mode: ThemeMode) => {
   }
 };
 
-export const RobloxThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+export const RobloxThemeProvider: React.FunctionComponent<ThemeProviderProps> = ({ children }) => {
   const dispatch = useAppDispatch();
   const reduxTheme = useAppSelector((state) => state.ui.theme);
   
@@ -86,7 +86,7 @@ export const RobloxThemeProvider: React.FC<ThemeProviderProps> = ({ children }) 
       }
     };
 
-    mediaQuery.addEventListener('change', handleChange);
+    mediaQuery.addEventListener("change", handleChange as EventListener);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [mode, dispatch]);
 

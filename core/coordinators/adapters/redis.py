@@ -16,7 +16,7 @@ class RedisAdapter:
     def __init__(self, url: Optional[str] = None):
         self.url = url or DEFAULT_REDIS_URL
         if redis is None:
-            raise RuntimeError("redis-py not installed. Please `pip install redis`.')
+            raise RuntimeError("redis-py not installed. Please `pip install redis`.")
         self.r = redis.Redis.from_url(self.url, decode_responses=True)
 
     def ping(self) -> bool:

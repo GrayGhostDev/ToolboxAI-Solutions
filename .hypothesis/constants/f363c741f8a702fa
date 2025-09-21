@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/mcp/memory_store.py
+# hypothesis_version: 6.139.2
+
+[0.0, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 5.0, 500, 1000, 1536, 10000, 'access_count', 'average_access_count', 'average_importance', 'content', 'database_size', 'embedding', 'exported_at', 'id', 'importance', 'is_error', 'is_success', 'is_user_feedback', 'last_accessed', 'memories', 'memory_count', 'memory_store.db', 'metadata', 'r', 'recently_accessed', 'source', 'timestamp', 'total_memories', 'user', 'w']

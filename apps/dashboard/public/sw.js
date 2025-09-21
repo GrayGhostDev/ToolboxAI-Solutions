@@ -1,0 +1,285 @@
+// Service Worker for ToolBoxAI Dashboard
+// Implements aggressive caching for performance optimization
+
+const CACHE_NAME = 'toolboxai-dashboard-v1.3.0';
+const STATIC_CACHE = 'toolboxai-static-v1.3.0';
+const DYNAMIC_CACHE = 'toolboxai-dynamic-v1.3.0';
+const API_CACHE = 'toolboxai-api-v1.3.0';
+
+// Assets to cache immediately
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  // Core CSS and JS will be added dynamically
+];
+
+// API endpoints to cache
+const CACHEABLE_API_PATTERNS = [
+  /\/api\/v1\/analytics\//,
+  /\/api\/v1\/classes\//,
+  /\/api\/v1\/lessons\//,
+  /\/api\/v1\/assessments\//,
+  // Add more patterns as needed
+];
+
+// Assets that should never be cached
+const CACHE_BLACKLIST = [
+  /\/api\/v1\/auth\//,
+  /\/realtime\//,
+  /\/pusher\//,
+  /\/ws\//,
+  /\.hot-update\./,
+];
+
+// Cache strategies
+const CACHE_STRATEGIES = {
+  CACHE_FIRST: 'cache-first',
+  NETWORK_FIRST: 'network-first',
+  STALE_WHILE_REVALIDATE: 'stale-while-revalidate',
+  NETWORK_ONLY: 'network-only',
+  CACHE_ONLY: 'cache-only'
+};
+
+// Install event - cache static assets
+self.addEventListener('install', (event) => {
+  console.log('SW: Installing...');
+
+  event.waitUntil(
+    Promise.all([
+      caches.open(STATIC_CACHE).then((cache) => {
+        return cache.addAll(STATIC_ASSETS);
+      }),
+      // Skip waiting to activate immediately
+      self.skipWaiting()
+    ])
+  );
+});
+
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+  console.log('SW: Activating...');
+
+  event.waitUntil(
+    Promise.all([
+      // Clean up old caches
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (
+              cacheName !== CACHE_NAME &&
+              cacheName !== STATIC_CACHE &&
+              cacheName !== DYNAMIC_CACHE &&
+              cacheName !== API_CACHE
+            ) {
+              console.log('SW: Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      // Take control of all clients
+      self.clients.claim()
+    ])
+  );
+});
+
+// Fetch event - implement caching strategies
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip non-GET requests
+  if (request.method !== 'GET') {
+    return;
+  }
+
+  // Skip blacklisted URLs
+  if (CACHE_BLACKLIST.some(pattern => pattern.test(url.pathname))) {
+    return;
+  }
+
+  // Handle different types of requests
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(handleApiRequest(request));
+  } else if (isStaticAsset(url.pathname)) {
+    event.respondWith(handleStaticAsset(request));
+  } else if (isDynamicContent(url.pathname)) {
+    event.respondWith(handleDynamicContent(request));
+  } else {
+    event.respondWith(handleDefaultRequest(request));
+  }
+});
+
+// Handle API requests with appropriate caching
+async function handleApiRequest(request) {
+  const url = new URL(request.url);
+  const cache = await caches.open(API_CACHE);
+
+  // Check if this API endpoint should be cached
+  const shouldCache = CACHEABLE_API_PATTERNS.some(pattern =>
+    pattern.test(url.pathname)
+  );
+
+  if (!shouldCache) {
+    return fetch(request);
+  }
+
+  try {
+    // Network first for API requests
+    const response = await fetch(request);
+
+    if (response.ok) {
+      // Cache successful responses
+      cache.put(request, response.clone());
+    }
+
+    return response;
+  } catch (error) {
+    // Fallback to cache if network fails
+    const cachedResponse = await cache.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    throw error;
+  }
+}
+
+// Handle static assets (JS, CSS, images)
+async function handleStaticAsset(request) {
+  const cache = await caches.open(STATIC_CACHE);
+
+  // Cache first strategy for static assets
+  const cachedResponse = await cache.match(request);
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    console.error('SW: Failed to fetch static asset:', request.url);
+    throw error;
+  }
+}
+
+// Handle dynamic content (HTML pages)
+async function handleDynamicContent(request) {
+  const cache = await caches.open(DYNAMIC_CACHE);
+
+  try {
+    // Stale while revalidate strategy
+    const [cachedResponse, networkResponse] = await Promise.allSettled([
+      cache.match(request),
+      fetch(request)
+    ]);
+
+    // Return cached response immediately if available
+    if (cachedResponse.status === 'fulfilled' && cachedResponse.value) {
+      // Update cache in background if network succeeded
+      if (networkResponse.status === 'fulfilled' && networkResponse.value.ok) {
+        cache.put(request, networkResponse.value.clone());
+      }
+      return cachedResponse.value;
+    }
+
+    // Return network response if cache miss
+    if (networkResponse.status === 'fulfilled' && networkResponse.value.ok) {
+      cache.put(request, networkResponse.value.clone());
+      return networkResponse.value;
+    }
+
+    throw new Error('Both cache and network failed');
+  } catch (error) {
+    console.error('SW: Failed to handle dynamic content:', request.url);
+    throw error;
+  }
+}
+
+// Default request handler
+async function handleDefaultRequest(request) {
+  const cache = await caches.open(DYNAMIC_CACHE);
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cachedResponse = await cache.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    throw error;
+  }
+}
+
+// Utility functions
+function isStaticAsset(pathname) {
+  return /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/i.test(pathname);
+}
+
+function isDynamicContent(pathname) {
+  return pathname === '/' || pathname.startsWith('/dashboard') || /\.html$/i.test(pathname);
+}
+
+// Background sync for failed requests
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'background-sync') {
+    event.waitUntil(doBackgroundSync());
+  }
+});
+
+async function doBackgroundSync() {
+  // Implement background sync logic if needed
+  console.log('SW: Background sync triggered');
+}
+
+// Push notifications support
+self.addEventListener('push', (event) => {
+  const options = {
+    body: event.data ? event.data.text() : 'New notification',
+    icon: '/icon-192x192.png',
+    badge: '/icon-192x192.png',
+    vibrate: [100, 50, 100],
+    data: {
+      dateOfArrival: Date.now(),
+      primaryKey: 1
+    }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification('ToolBoxAI Dashboard', options)
+  );
+});
+
+// Notification click handler
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  event.waitUntil(
+    clients.openWindow('/')
+  );
+});
+
+// Message handler for cache control
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  } else if (event.data && event.data.type === 'CLEAR_CACHE') {
+    event.waitUntil(clearCaches());
+  }
+});
+
+async function clearCaches() {
+  const cacheNames = await caches.keys();
+  return Promise.all(
+    cacheNames.map(cacheName => caches.delete(cacheName))
+  );
+}

@@ -1,0 +1,42 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    /* Phase 2 TypeScript Strict Mode - Progressive Enablement */
+    /* Only enable settings that reduce errors or maintain current error count */
+
+    /* Keep same as base for now to avoid increasing errors */
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "strict": false,
+
+    /* Progressive improvements that help reduce errors */
+    "strictFunctionTypes": false,
+    "strictBindCallApply": false,
+    "strictPropertyInitialization": false,
+    "noImplicitThis": false,
+    "alwaysStrict": false,
+
+    /* Additional Checks - Enable progressively */
+    "noUnusedLocals": true,  /* Help identify dead code */
+    "noUnusedParameters": false,  /* Too many false positives initially */
+    "noImplicitReturns": false,  /* Keep disabled for now */
+    "noFallthroughCasesInSwitch": true,  /* Good practice, minimal errors */
+    "noUncheckedIndexedAccess": false,  /* Would create too many errors */
+    "noImplicitOverride": false,  /* Keep disabled */
+    "exactOptionalPropertyTypes": false,  /* Keep disabled */
+
+    /* Helpful compiler options that don't create errors */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Better source maps for debugging */
+    "sourceMap": true,
+    "declaration": false,
+    "declarationMap": false,
+
+    /* Performance options */
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo"
+  }
+}

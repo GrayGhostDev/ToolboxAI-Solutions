@@ -246,13 +246,7 @@ class APIGatewayAgent(BaseIntegrationAgent):
     ) -> Dict[str, Any]:
         """Transform request between API versions"""
         # Use SPARC reasoning for complex transformations
-        context = SPARCContext(
-            situation=f"Transform request from {source_version.value} to {target_version.value}",
-            parameters={"request_data": request_data},
-            actions=["analyze_differences", "map_fields", "apply_transformations"],
-            results={},
-            conclusions=[]
-        )
+        context = SPARCContext()
 
         # Default transformation (can be enhanced with version-specific logic)
         transformed = request_data.copy()

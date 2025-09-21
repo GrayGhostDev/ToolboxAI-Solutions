@@ -1,3 +1,22 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 """
 Integration Test for Agent Swarm Startup
 
@@ -13,6 +32,7 @@ from datetime import datetime
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+@pytest.mark.asyncio
 async def test_integration_manager_initialization():
     """Test that the integration manager can be initialized"""
     # Set environment to skip actual service connections in test
@@ -58,6 +78,7 @@ async def test_integration_manager_initialization():
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+@pytest.mark.asyncio
 async def test_integration_endpoints_available():
     """Test that integration endpoints are properly registered"""
     from apps.backend.api.v1.endpoints.integration import router
@@ -81,6 +102,7 @@ async def test_integration_endpoints_available():
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+@pytest.mark.asyncio
 async def test_agent_status_endpoint_response():
     """Test the agent status endpoint returns expected structure"""
     from apps.backend.services.integration_agents import IntegrationAgentsManager
@@ -99,6 +121,7 @@ async def test_agent_status_endpoint_response():
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+@pytest.mark.asyncio
 async def test_workflow_execution_structure():
     """Test workflow execution returns expected structure"""
     from apps.backend.services.integration_agents import IntegrationAgentsManager
@@ -139,6 +162,7 @@ async def test_workflow_execution_structure():
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+@pytest.mark.asyncio
 async def test_all_agents_import():
     """Test that all integration agents can be imported"""
     agents_to_test = [
@@ -162,6 +186,7 @@ async def test_all_agents_import():
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+@pytest.mark.asyncio
 async def test_circuit_breaker_functionality():
     """Test that circuit breaker pattern works in base agent"""
     from core.agents.integration.base_integration_agent import CircuitBreaker, CircuitBreakerState
@@ -192,6 +217,7 @@ async def test_circuit_breaker_functionality():
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+@pytest.mark.asyncio
 async def test_integration_event_model():
     """Test the IntegrationEvent model structure"""
     from core.agents.integration import IntegrationEvent, IntegrationPlatform

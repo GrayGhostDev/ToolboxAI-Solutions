@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/github_agents/large_file_detection_agent.py
+# hypothesis_version: 6.139.2
+
+[100, 1024, '## Large Files', '## Recommendations', '## Summary', '*', '.', '.fig', '.gif', '.git/', '.jpeg', '.jpg', '.json', '.png', '.sketch', '.xd', '0 B', 'File not found', 'No staged files', '__pycache__/', 'analyze', 'blocker', 'blockers', 'check_file', 'critical', 'critical_mb', 'error', 'exceeds_github_limit', 'exempt_patterns', 'file_info', 'file_path', 'file_path required', 'file_type', 'files_found', 'github_limit_mb', 'is_large', 'json', 'large_file_detection', 'large_files', 'ls-files', 'markdown', 'message', 'node_modules/', 'path', 'pre_commit_check', 'recommendations', 'scan', 'severity', 'size_bytes', 'size_formatted', 'size_mb', 'size_thresholds', 'stdout', 'success', 'summary', 'total_files', 'total_size', 'total_size_mb', 'venv/', 'warning', 'warning_mb', 'warnings']

@@ -1,25 +1,23 @@
-import * as React from "react";
 import { useState, useEffect } from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Grid,
-  Paper,
-  Stack,
-  Chip,
-  LinearProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  CircularProgress,
-  Alert,
-  IconButton,
-  Button,
-  Skeleton,
-} from "@mui/material";
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
+import Skeleton from '@mui/material/Skeleton';
+
 import {
   School,
   Person,
@@ -59,9 +57,7 @@ import {
   setTimeRange,
   clearError,
 } from "../../../store/slices/analyticsSlice";
-
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1'];
-
 export default function Analytics() {
   const dispatch = useAppDispatch();
   const {
@@ -76,23 +72,18 @@ export default function Analytics() {
     timeRange,
     lastUpdated,
   } = useAppSelector((state) => state.analytics);
-  
   const [selectedTab, setSelectedTab] = useState(0);
-  
   useEffect(() => {
     // Load all analytics data on mount
     dispatch(refreshAllAnalytics(timeRange));
   }, [dispatch, timeRange]);
-  
   const handleTimeRangeChange = (newRange: string) => {
     dispatch(setTimeRange(newRange));
     dispatch(refreshAllAnalytics(newRange));
   };
-  
   const handleRefresh = () => {
     dispatch(refreshAllAnalytics(timeRange));
   };
-  
   const handleExport = () => {
     // Generate CSV or PDF report
     const data = {
@@ -109,7 +100,6 @@ export default function Analytics() {
     a.download = `analytics-report-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
   };
-
   const StatCard = ({ title, value, subtitle, icon, color }: any) => (
     <Card>
       <CardContent>
@@ -143,7 +133,6 @@ export default function Analytics() {
       </CardContent>
     </Card>
   );
-
   if (loading && !platform) {
     return (
       <Box sx={{ p: 3 }}>
@@ -161,7 +150,6 @@ export default function Analytics() {
       </Box>
     );
   }
-  
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
@@ -182,27 +170,24 @@ export default function Analytics() {
               <MenuItem value="1y">Last year</MenuItem>
             </Select>
           </FormControl>
-          <IconButton onClick={handleRefresh} disabled={loading}>
+          <IconButton onClick={(e: React.MouseEvent) => handleRefresh} disabled={loading}>
             <Refresh />
           </IconButton>
-          <Button variant="outlined" startIcon={<Download />} onClick={handleExport}>
+          <Button variant="outlined" startIcon={<Download />} onClick={(e: React.MouseEvent) => handleExport}>
             Export
           </Button>
         </Stack>
       </Stack>
-      
       {error && (
         <Alert severity="error" onClose={() => dispatch(clearError())} sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
-      
       {lastUpdated && (
         <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
           Last updated: {new Date(lastUpdated).toLocaleString()}
         </Typography>
       )}
-
       {/* Overview Stats */}
       <Grid container spacing={3} mb={4}>
         <Grid item xs={12} sm={6} md={3}>
@@ -242,7 +227,6 @@ export default function Analytics() {
           />
         </Grid>
       </Grid>
-
       <Grid container spacing={3}>
         {/* Top Performers */}
         <Grid item xs={12} md={6}>
@@ -284,7 +268,6 @@ export default function Analytics() {
             </CardContent>
           </Card>
         </Grid>
-
         {/* Subject Mastery */}
         <Grid item xs={12} md={6}>
           <Card>
@@ -334,7 +317,6 @@ export default function Analytics() {
             </CardContent>
           </Card>
         </Grid>
-
         {/* Roblox Engagement */}
         <Grid item xs={12}>
           <Card>

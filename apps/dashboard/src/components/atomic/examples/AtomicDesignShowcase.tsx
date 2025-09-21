@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { styled } from '@mui/material';
+import { styled } from '@mui/material/styles';
 
 // Atomic imports
 import {
@@ -73,7 +73,7 @@ const ShowcaseContainer = styled(AtomicBox)(({ theme }) => ({
 }));
 
 // Atoms showcase
-const AtomsShowcase: React.FC = () => {
+const AtomsShowcase: React.FunctionComponent<Record<string, any>> = () => {
   const buttonStates = useToggle(false);
 
   return (
@@ -91,7 +91,7 @@ const AtomsShowcase: React.FC = () => {
               size="md"
               loading={buttonStates.value}
               loadingText="Processing..."
-              onClick={buttonStates.toggle}
+              onClick={(e: React.MouseEvent) => buttonStates.toggle}
             >
               Toggle Loading
             </AtomicButton>
@@ -178,7 +178,7 @@ const AtomsShowcase: React.FC = () => {
 };
 
 // Molecules showcase
-const MoleculesShowcase: React.FC = () => {
+const MoleculesShowcase: React.FunctionComponent<Record<string, any>> = () => {
   const [searchValue, setSearchValue] = React.useState('');
   const [email, setEmail] = React.useState('');
 
@@ -268,7 +268,7 @@ const MoleculesShowcase: React.FC = () => {
 };
 
 // Organisms showcase (using compound components)
-const OrganismsShowcase: React.FC = () => {
+const OrganismsShowcase: React.FunctionComponent<Record<string, any>> = () => {
   const [sortColumn, setSortColumn] = React.useState<'rank' | 'name' | 'score'>('rank');
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
 
@@ -382,7 +382,7 @@ const LoadingDemo = withLoading(
 );
 
 // Main showcase component
-const AtomicDesignShowcase: React.FC = () => {
+const AtomicDesignShowcase: React.FunctionComponent<Record<string, any>> = () => {
   const loadingDemo = useToggle(false);
 
   React.useEffect(() => {
@@ -423,7 +423,7 @@ const AtomicDesignShowcase: React.FC = () => {
         <AtomicBox display="flex" gap={2} mb={3}>
           <AtomicButton
             variant="primary"
-            onClick={loadingDemo.toggle}
+            onClick={(e: React.MouseEvent) => loadingDemo.toggle}
             disabled={loadingDemo.value}
           >
             {loadingDemo.value ? 'Loading...' : 'Demo HOC Loading'}

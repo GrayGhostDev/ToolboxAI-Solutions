@@ -112,6 +112,7 @@ from apps.backend.core.security.middleware import (
     RateLimitConfig,
     CircuitBreakerConfig,
 )
+from apps.backend.core.security.headers import SecurityHeadersMiddleware, SecurityHeadersConfig
 from apps.backend.core.security.secrets import init_secrets_manager
 
 # Import new middleware modules
@@ -528,6 +529,24 @@ app.add_middleware(
     redis_client=None,  # Will use local rate limiting
     enable_request_id=True,
     max_request_size=50 * 1024 * 1024,  # 50MB for large payloads
+)
+
+# Security headers middleware - must come after SecurityMiddleware
+security_headers_config = SecurityHeadersConfig(
+    environment=settings.ENVIRONMENT,
+    enable_hsts=not settings.DEBUG,  # Only enable HSTS in production
+    custom_headers={
+        "X-API-Version": "2.0.0",
+        "X-Service": "ToolBoxAI-Backend"
+    }
+)
+app.add_middleware(
+    SecurityHeadersMiddleware,
+    hsts_max_age=security_headers_config.hsts_max_age,
+    csp_policy=security_headers_config.get_csp_policy(),
+    enable_hsts=security_headers_config.enable_hsts,
+    enable_xss_protection=security_headers_config.enable_xss_protection,
+    custom_headers=security_headers_config.custom_headers
 )
 
 # API versioning middleware
@@ -1547,6 +1566,16 @@ try:
     logger.info("Error Handling Swarm endpoints loaded successfully - Comprehensive error management enabled")
 except ImportError as e:
     logger.warning(f"Error Handling Swarm endpoints not loaded: {e}")
+
+# GPT-4.1 Migration Monitoring endpoints
+try:
+    from apps.backend.api.v1.endpoints.gpt4_migration_monitoring import router as gpt4_migration_router
+    app.include_router(gpt4_migration_router, prefix="/api/v1")
+    logger.info("GPT-4.1 migration monitoring endpoints loaded successfully - Migration tracking enabled")
+except ImportError as e:
+    logger.warning(f"GPT-4.1 migration monitoring endpoints not loaded: {e}")
+except Exception as e:
+    logger.error(f"Error loading GPT-4.1 migration monitoring router: {e}")
 
     # Add fallback AI chat endpoints if router fails to load
     @app.post("/api/v1/ai-chat/conversations")
@@ -3376,7 +3405,7 @@ async def generate_quiz(
     try:
         # Use tools to generate quiz
         from apps.backend.utils.tools import RobloxQuizGenerator
-        from apps.backend.models import DifficultyLevel
+        from apps.backend.models.schemas import DifficultyLevel
 
         # Convert string difficulty to enum
         try:
@@ -3403,7 +3432,7 @@ async def generate_quiz(
         quiz_data = json.loads(result)
 
         # Create quiz object
-        from apps.backend.models import SubjectType
+        from apps.backend.models.schemas import SubjectType
 
         # Convert string subject to SubjectType enum
         try:

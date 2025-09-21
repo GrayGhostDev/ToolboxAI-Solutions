@@ -121,6 +121,129 @@ agent_pool_size = Gauge(
     registry=metrics_registry
 )
 
+# GPT-5 API Metrics (Phase 1)
+gpt5_api_requests = Counter(
+    'gpt5_api_requests_total',
+    'Total number of GPT-5 API requests',
+    ['model', 'status', 'fallback'],  # model: gpt-5, gpt-5-mini, etc | status: success, error | fallback: true, false
+    registry=metrics_registry
+)
+
+gpt5_api_latency = Histogram(
+    'gpt5_api_latency_seconds',
+    'GPT-5 API request latency',
+    ['model'],
+    buckets=(0.1, 0.25, 0.5, 1, 2.5, 5, 10, 25, 60),
+    registry=metrics_registry
+)
+
+gpt5_tokens_used = Counter(
+    'gpt5_tokens_used_total',
+    'Total GPT-5 tokens used',
+    ['model', 'token_type'],  # token_type: input, output, reasoning
+    registry=metrics_registry
+)
+
+gpt5_api_cost = Counter(
+    'gpt5_api_cost_dollars',
+    'GPT-5 API cost in dollars',
+    ['model'],
+    registry=metrics_registry
+)
+
+gpt5_reasoning_effort = Counter(
+    'gpt5_reasoning_effort_distribution',
+    'Distribution of reasoning effort settings',
+    ['model', 'effort_level'],  # effort_level: minimal, medium, high
+    registry=metrics_registry
+)
+
+gpt5_fallback_rate = Gauge(
+    'gpt5_fallback_rate',
+    'Rate of fallbacks from GPT-5 to GPT-4',
+    registry=metrics_registry
+)
+
+# OAuth 2.1 Metrics (Phase 1)
+oauth21_auth_requests = Counter(
+    'oauth21_auth_requests_total',
+    'Total OAuth 2.1 authorization requests',
+    ['grant_type', 'status'],  # grant_type: authorization_code, refresh_token | status: success, failed
+    registry=metrics_registry
+)
+
+oauth21_token_requests = Counter(
+    'oauth21_token_requests_total',
+    'Total OAuth 2.1 token requests',
+    ['grant_type', 'status'],
+    registry=metrics_registry
+)
+
+oauth21_token_revocations = Counter(
+    'oauth21_token_revocations_total',
+    'Total OAuth 2.1 token revocations',
+    ['token_type', 'status'],  # token_type: access, refresh | status: success, failed
+    registry=metrics_registry
+)
+
+oauth21_pkce_validations = Counter(
+    'oauth21_pkce_validations_total',
+    'Total PKCE validation attempts',
+    ['result'],  # result: success, failed, invalid_method
+    registry=metrics_registry
+)
+
+oauth21_active_sessions = Gauge(
+    'oauth21_active_sessions',
+    'Number of active OAuth 2.1 sessions',
+    registry=metrics_registry
+)
+
+oauth21_token_lifetime = Histogram(
+    'oauth21_token_lifetime_seconds',
+    'OAuth 2.1 token lifetime',
+    ['token_type'],
+    buckets=(300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400),
+    registry=metrics_registry
+)
+
+# Feature Flag Metrics (Phase 1)
+feature_flag_evaluations = Counter(
+    'feature_flag_evaluations_total',
+    'Total feature flag evaluations',
+    ['flag_name', 'result'],  # result: enabled, disabled
+    registry=metrics_registry
+)
+
+feature_flag_changes = Counter(
+    'feature_flag_changes_total',
+    'Total feature flag changes',
+    ['flag_name', 'change_type'],  # change_type: enabled, disabled, rollout_change
+    registry=metrics_registry
+)
+
+# Security Metrics (Phase 1 Enhancement)
+security_violations = Counter(
+    'security_violations_total',
+    'Total security violations detected',
+    ['violation_type', 'severity'],  # violation_type: invalid_redirect, pkce_failure, etc
+    registry=metrics_registry
+)
+
+rate_limit_hits = Counter(
+    'rate_limit_hits_total',
+    'Total rate limit hits',
+    ['endpoint', 'limit_type'],  # limit_type: per_minute, per_hour, per_day
+    registry=metrics_registry
+)
+
+jwt_validations = Counter(
+    'jwt_validations_total',
+    'Total JWT validation attempts',
+    ['result'],  # result: success, expired, invalid, malformed
+    registry=metrics_registry
+)
+
 # Roblox Integration Metrics
 roblox_deployments = Counter(
     'roblox_deployments_total',
@@ -337,6 +460,105 @@ def track_roblox_validation(risk_level: str, passed: bool):
     """Track Roblox script validations"""
     status = "passed" if passed else "failed"
     roblox_validations.labels(risk_level=risk_level, status=status).inc()
+
+
+# Phase 1 Tracking Functions
+
+def track_gpt5_api_request(model: str, success: bool, is_fallback: bool = False):
+    """Track GPT-5 API requests"""
+    status = "success" if success else "error"
+    gpt5_api_requests.labels(
+        model=model,
+        status=status,
+        fallback=str(is_fallback)
+    ).inc()
+
+
+def track_gpt5_latency(model: str, duration: float):
+    """Track GPT-5 API latency"""
+    gpt5_api_latency.labels(model=model).observe(duration)
+
+
+def track_gpt5_tokens(model: str, input_tokens: int, output_tokens: int, reasoning_tokens: int = 0):
+    """Track GPT-5 token usage"""
+    gpt5_tokens_used.labels(model=model, token_type="input").inc(input_tokens)
+    gpt5_tokens_used.labels(model=model, token_type="output").inc(output_tokens)
+    if reasoning_tokens > 0:
+        gpt5_tokens_used.labels(model=model, token_type="reasoning").inc(reasoning_tokens)
+
+
+def track_gpt5_cost(model: str, cost: float):
+    """Track GPT-5 API cost"""
+    gpt5_api_cost.labels(model=model).inc(cost)
+
+
+def track_gpt5_reasoning_effort(model: str, effort_level: str):
+    """Track GPT-5 reasoning effort distribution"""
+    gpt5_reasoning_effort.labels(model=model, effort_level=effort_level).inc()
+
+
+def update_gpt5_fallback_rate(rate: float):
+    """Update GPT-5 fallback rate"""
+    gpt5_fallback_rate.set(rate)
+
+
+def track_oauth21_auth_request(grant_type: str, success: bool):
+    """Track OAuth 2.1 authorization requests"""
+    status = "success" if success else "failed"
+    oauth21_auth_requests.labels(grant_type=grant_type, status=status).inc()
+
+
+def track_oauth21_token_request(grant_type: str, success: bool):
+    """Track OAuth 2.1 token requests"""
+    status = "success" if success else "failed"
+    oauth21_token_requests.labels(grant_type=grant_type, status=status).inc()
+
+
+def track_oauth21_token_revocation(token_type: str, success: bool):
+    """Track OAuth 2.1 token revocations"""
+    status = "success" if success else "failed"
+    oauth21_token_revocations.labels(token_type=token_type, status=status).inc()
+
+
+def track_oauth21_pkce_validation(result: str):
+    """Track PKCE validation attempts"""
+    oauth21_pkce_validations.labels(result=result).inc()
+
+
+def update_oauth21_active_sessions(count: int):
+    """Update active OAuth 2.1 sessions"""
+    oauth21_active_sessions.set(count)
+
+
+def track_oauth21_token_lifetime(token_type: str, lifetime_seconds: float):
+    """Track OAuth 2.1 token lifetime"""
+    oauth21_token_lifetime.labels(token_type=token_type).observe(lifetime_seconds)
+
+
+def track_feature_flag_evaluation(flag_name: str, enabled: bool):
+    """Track feature flag evaluations"""
+    result = "enabled" if enabled else "disabled"
+    feature_flag_evaluations.labels(flag_name=flag_name, result=result).inc()
+
+
+def track_feature_flag_change(flag_name: str, change_type: str):
+    """Track feature flag changes"""
+    feature_flag_changes.labels(flag_name=flag_name, change_type=change_type).inc()
+
+
+def track_security_violation(violation_type: str, severity: str):
+    """Track security violations"""
+    security_violations.labels(violation_type=violation_type, severity=severity).inc()
+
+
+def track_rate_limit_hit(endpoint: str, limit_type: str):
+    """Track rate limit hits"""
+    rate_limit_hits.labels(endpoint=endpoint, limit_type=limit_type).inc()
+
+
+def track_jwt_validation(result: str):
+    """Track JWT validation attempts"""
+    jwt_validations.labels(result=result).inc()
 
 
 def update_system_metrics():

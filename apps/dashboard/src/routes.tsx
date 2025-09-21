@@ -1,63 +1,146 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import { CircularProgress, Box } from "@mui/material";
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
 import RoleGuard from "./components/common/RoleGuard";
 import { useAppSelector } from "./store";
+import ProgressiveEnhancement from "./components/performance/ProgressiveEnhancement";
+import { PerformanceSkeleton } from "./components/atomic/atoms/PerformanceSkeleton";
 
-// Lazy load components for code splitting
+// Lazy load components with performance-aware loading
+// High priority components (frequently used)
 const DashboardHome = lazy(() => import("./components/pages/DashboardHome"));
+const Settings = lazy(() => import("./components/pages/Settings"));
+
+// Medium priority components (teacher/admin features)
 const Lessons = lazy(() => import("./components/pages/Lessons"));
 const Assessments = lazy(() => import("./components/pages/Assessments"));
-const Leaderboard = lazy(() => import("./components/pages/Leaderboard"));
-const Compliance = lazy(() => import("./components/pages/Compliance"));
-const Integrations = lazy(() => import("./components/pages/Integrations"));
-const Messages = lazy(() => import("./components/pages/Messages"));
 const Classes = lazy(() => import("./components/pages/Classes"));
-// const ClassDetails = lazy(() => import("./components/pages/ClassDetails"));
 const ClassDetail = lazy(() => import("./components/ClassDetail/ClassDetail"));
+const Messages = lazy(() => import("./components/pages/Messages"));
 const Reports = lazy(() => import("./components/pages/Reports"));
-const Settings = lazy(() => import("./components/pages/Settings"));
+
+// Low priority components (less frequently used)
+const Leaderboard = lazy(() =>
+  import("./components/pages/Leaderboard").then(module => ({
+    default: module.default
+  }))
+);
+const Compliance = lazy(() =>
+  import("./components/pages/Compliance").then(module => ({
+    default: module.default
+  }))
+);
+const Integrations = lazy(() =>
+  import("./components/pages/Integrations").then(module => ({
+    default: module.default
+  }))
+);
+
+// Student-specific components
 const Missions = lazy(() => import("./components/pages/Missions"));
 const Progress = lazy(() => import("./components/pages/Progress"));
 const Rewards = lazy(() => import("./components/pages/Rewards"));
 const Avatar = lazy(() => import("./components/pages/Avatar"));
-const GameplayReplay = lazy(() => import("./components/pages/GameplayReplay"));
-const Schools = lazy(() => import("./components/pages/admin/Schools"));
-const Users = lazy(() => import("./components/pages/admin/Users"));
-const Analytics = lazy(() => import("./components/pages/admin/Analytics"));
 const Play = lazy(() => import("./components/pages/student/Play"));
-const WebSocketTest = lazy(() => import("./components/test/WebSocketTest"));
-const WebSocketDemo = lazy(() => import("./components/test/WebSocketDemo"));
-const TeacherRobloxDashboard = lazy(() => import("./components/pages/TeacherRobloxDashboard"));
-const EnvironmentCreator = lazy(() => import("./components/roblox/EnvironmentCreator"));
-const EnvironmentPreviewPage = lazy(() => import("./components/roblox/EnvironmentPreviewPage"));
-const RobloxStudioPage = lazy(() => import("./components/pages/RobloxStudioPage"));
-const AgentDashboard = lazy(() => import("./pages/AgentDashboard"));
 
-// Loading component for Suspense fallback
-const LoadingFallback = () => (
-  <Box
-    display="flex"
-    justifyContent="center"
-    alignItems="center"
-    minHeight="400px"
-    flexDirection="column"
-    gap={2}
+// Heavy/complex components (3D, charts, admin)
+const GameplayReplay = lazy(() =>
+  import("./components/pages/GameplayReplay").then(module => ({
+    default: module.default
+  }))
+);
+const Schools = lazy(() =>
+  import("./components/pages/admin/Schools").then(module => ({
+    default: module.default
+  }))
+);
+const Users = lazy(() =>
+  import("./components/pages/admin/Users").then(module => ({
+    default: module.default
+  }))
+);
+const Analytics = lazy(() =>
+  import("./components/pages/admin/Analytics").then(module => ({
+    default: module.default
+  }))
+);
+
+// 3D and Roblox components (heaviest)
+const TeacherRobloxDashboard = lazy(() =>
+  import("./components/pages/TeacherRobloxDashboard").then(module => ({
+    default: module.default
+  }))
+);
+const EnvironmentCreator = lazy(() =>
+  import("./components/roblox/EnvironmentCreator").then(module => ({
+    default: module.default
+  }))
+);
+const EnvironmentPreviewPage = lazy(() =>
+  import("./components/roblox/EnvironmentPreviewPage").then(module => ({
+    default: module.default
+  }))
+);
+const RobloxStudioPage = lazy(() =>
+  import("./components/pages/RobloxStudioPage").then(module => ({
+    default: module.default
+  }))
+);
+
+// Development/test components
+const WebSocketTest = lazy(() =>
+  import("./components/test/WebSocketTest").then(module => ({
+    default: module.default
+  }))
+);
+const WebSocketDemo = lazy(() =>
+  import("./components/test/WebSocketDemo").then(module => ({
+    default: module.default
+  }))
+);
+const AgentDashboard = lazy(() =>
+  import("./pages/AgentDashboard").then(module => ({
+    default: module.default
+  }))
+);
+const GPT4MigrationDashboard = lazy(() =>
+  import("./components/pages/GPT4MigrationDashboard").then(module => ({
+    default: module.default
+  }))
+);
+
+// Enhanced loading components for different scenarios
+const LoadingFallback = ({ variant = 'dashboard' }: { variant?: 'dashboard' | 'card' | 'list' | 'form' }) => (
+  <PerformanceSkeleton variant={variant} animate={true} />
+);
+
+// Performance-aware route wrapper
+const PerformanceRoute: React.FC<{
+  children: React.ReactNode;
+  priority?: 'high' | 'medium' | 'low';
+  skeletonVariant?: 'dashboard' | 'card' | 'list' | 'chart' | 'navigation' | 'form';
+}> = ({ children, priority = 'medium', skeletonVariant = 'dashboard' }) => (
+  <ProgressiveEnhancement
+    priority={priority}
+    skeletonVariant={skeletonVariant}
+    enableIntersectionObserver={priority !== 'high'}
   >
-    <CircularProgress size={40} />
-    <Box component="span" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
-      Loading...
-    </Box>
-  </Box>
+    {children}
+  </ProgressiveEnhancement>
 );
 
 export default function AppRoutes() {
   const role = useAppSelector((s) => s.user.role);
 
   return (
-    <Suspense fallback={<LoadingFallback />}>
+    <Suspense fallback={<LoadingFallback variant="dashboard" />}>
       <Routes>
-      <Route path="/" element={<DashboardHome role={role} />} />
+      <Route path="/" element={
+        <PerformanceRoute priority="high" skeletonVariant="dashboard">
+          <DashboardHome role={role} />
+        </PerformanceRoute>
+      } />
 
       {/* Teacher Routes */}
       <Route
@@ -127,12 +210,14 @@ export default function AppRoutes() {
         }
       />
 
-      {/* Roblox Routes */}
+      {/* Roblox Routes - Heavy 3D components with low priority */}
       <Route
         path="/roblox/*"
         element={
           <RoleGuard allow={["teacher", "admin"]}>
-            <TeacherRobloxDashboard />
+            <PerformanceRoute priority="low" skeletonVariant="dashboard">
+              <TeacherRobloxDashboard />
+            </PerformanceRoute>
           </RoleGuard>
         }
       />
@@ -140,7 +225,9 @@ export default function AppRoutes() {
         path="/environment-preview/:environmentId"
         element={
           <RoleGuard allow={["teacher", "admin", "student"]}>
-            <EnvironmentPreviewPage />
+            <PerformanceRoute priority="low" skeletonVariant="dashboard">
+              <EnvironmentPreviewPage />
+            </PerformanceRoute>
           </RoleGuard>
         }
       />
@@ -241,6 +328,16 @@ export default function AppRoutes() {
 
       {/* Settings - All roles */}
       <Route path="/settings" element={<Settings />} />
+
+      {/* GPT-4.1 Migration Monitoring - Admin only */}
+      <Route
+        path="/gpt4-migration"
+        element={
+          <RoleGuard allowedRoles={["admin"]}>
+            <GPT4MigrationDashboard />
+          </RoleGuard>
+        }
+      />
 
       {/* Development Test Routes */}
       <Route path="/websocket-test" element={<WebSocketTest />} />

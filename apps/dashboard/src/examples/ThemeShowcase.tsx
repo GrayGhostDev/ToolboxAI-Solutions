@@ -6,15 +6,14 @@
  */
 
 import React from 'react';
-import {
-  Box,
-  Typography,
-  Grid,
-  Stack,
-  Divider,
-  Paper,
-  Avatar
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Stack from '@mui/material/Stack';
+import Divider from '@mui/material/Divider';
+import Paper from '@mui/material/Paper';
+import Avatar from '@mui/material/Avatar';
+import Avatar from '@mui/material/Avatar';
 import {
   Star,
   EmojiEvents,
@@ -39,7 +38,7 @@ import {
   useThemeContext
 } from '../theme';
 
-const ThemeShowcase: React.FC = () => {
+const ThemeShowcase: React.FunctionComponent<Record<string, any>> = () => {
   const { isDark, mode } = useThemeContext();
 
   return (

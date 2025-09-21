@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/services/rojo_manager.py
+# hypothesis_version: 6.139.2
+
+[200, 34872, '$', '$path', '**/*.lock', '**/.git', '**/node_modules', '*.lua', '--output', '--port', '--version', '.lua', '/', '/tmp/rojo_projects', '127.0.0.1', '7.4', '7.5', 'Connection timeout', 'MAX_ROJO_PROJECTS', 'Project not found', 'Project not running', 'ROJO_BASE_PORT', 'ROJO_PROJECTS_DIR', 'build', 'clientCount', 'default.project.json', 'error', 'globIgnorePaths', 'localhost', 'name', 'projectName', 'r', 'rojo', 'running', 'serve', 'serveAddress', 'servePort', 'sessionId', 'src', 'starting', 'stopped', 'tree', 'w']

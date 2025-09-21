@@ -1,5 +1,7 @@
+jest.setTimeout(10000);
+
 import { test, expect } from '../../fixtures/auth.fixture';
-import type { Page } from '@playwright/test';
+import { Page } from '@playwright/test';
 
 /**
  * Real-time Pusher Updates E2E Tests

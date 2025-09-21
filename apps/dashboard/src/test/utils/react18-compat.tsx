@@ -40,7 +40,7 @@ console.error = (...args: any[]) => {
     typeof args[0] === 'string' &&
     (args[0].includes('Should not already be working') ||
      args[0].includes('useInsertionEffect must not schedule updates') ||
-     args[0].includes('Warning: ReactDOM.render is no longer supported') ||
+     args[0].includes('Warning: ReactDOM.createRoot is no longer supported') ||
      args[0].includes('Cannot update a component') ||
      args[0].includes('Warning: An update to') ||
      args[0].includes('Warning: Attempted to synchronously unmount'))

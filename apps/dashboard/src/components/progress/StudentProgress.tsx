@@ -1,21 +1,20 @@
 import * as React from "react";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import LinearProgress from '@mui/material/LinearProgress';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Skeleton from '@mui/material/Skeleton';
+import Alert from '@mui/material/Alert';
+import Paper from '@mui/material/Paper';
+import Badge from '@mui/material/Badge';
+import Grid from '@mui/material/Grid';
+
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Stack,
-  Avatar,
-  LinearProgress,
-  Chip,
-  IconButton,
-  Skeleton,
-  Alert,
-  Paper,
-  Badge,
-  Grid,
-} from "@mui/material";
 import {
   EmojiEvents,
   TrendingUp,
@@ -426,7 +425,7 @@ export function StudentProgress({
                   </Typography>
                 </Box>
               </Stack>
-              <IconButton size="small" onClick={fetchData}>
+              <IconButton size="small" onClick={(e: React.MouseEvent) => fetchData}>
                 <Refresh />
               </IconButton>
             </Stack>

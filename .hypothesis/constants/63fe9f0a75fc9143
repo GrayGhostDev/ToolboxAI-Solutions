@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/langchain_compat.py
+# hypothesis_version: 6.139.2
+
+[0.7, 'AIMessage', 'AzureChatOpenAI', 'BaseMessage', 'ChatAnthropic', 'ChatOpenAI', 'ChatPromptTemplate', 'DEFAULT_MODEL', 'END', 'FunctionMessage', 'HumanMessage', 'JsonOutputParser', 'LANGCHAIN_AVAILABLE', 'MemorySaver', 'MessagesPlaceholder', 'PromptTemplate', 'PydanticOutputParser', 'Runnable', 'RunnableBranch', 'RunnableLambda', 'RunnableParallel', 'RunnablePassthrough', 'RunnableSequence', 'StateGraph', 'StrOutputParser', 'StructuredTool', 'SystemMessage', 'Tool', 'ToolMessage', 'anthropic', 'azure', 'claude', 'get_chat_model', 'gpt', 'gpt-3.5-turbo', 'history', 'openai', 'tool', 'turbo', '{input}']

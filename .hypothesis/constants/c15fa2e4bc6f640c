@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/database/content_pipeline_models.py
+# hypothesis_version: 6.139.2
+
+[100, 200, 500, 3600, 'ContentFeedback', 'all, delete-orphan', 'cache_key', 'cache_type', 'content', 'content_cache', 'content_feedback', 'content_id', 'created_at', 'effectiveness_score', 'expires_at', 'feedback_records', 'idx_cc_expires', 'idx_cc_key', 'idx_cc_type', 'idx_cf_created_at', 'idx_cf_user', 'idx_cgb_created_at', 'idx_cgb_user_status', 'idx_cpl_content', 'idx_cpl_user_date', 'idx_cqm_created_at', 'idx_ecg_created_at', 'idx_ecg_user_status', 'idx_lp_updated', 'idx_lp_user', 'last_updated', 'learning_profiles', 'pending', 'personalization_logs', 'processing', 'quality_metrics', 'quality_score', 'rating', 'status', 'user_id', 'users.id']

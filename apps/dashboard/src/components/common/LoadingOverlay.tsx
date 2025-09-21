@@ -3,7 +3,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import { Roblox3DLoader } from "../roblox/Roblox3DLoader";
-import { useTheme } from "@mui/material";
+import { useTheme } from '@mui/material/styles';
 
 interface Props {
   message?: string;

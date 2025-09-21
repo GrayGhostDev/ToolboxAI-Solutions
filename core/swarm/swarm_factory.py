@@ -89,16 +89,15 @@ def create_test_swarm_controller() -> SwarmController:
         health_check_interval=60
     )
     
-    worker_config = WorkerConfig(max_workers=2, min_workers=1)
+    worker_config = WorkerConfig()
     distributor_config = DistributorConfig()
-    consensus_config = ConsensusConfig(threshold=0.5)
-    balancer_config = LoadBalancerConfig(strategy="round_robin")
-    
+    consensus_config = ConsensusConfig(confidence_threshold=0.5)
+
     # Create components
-    worker_pool = WorkerPool(worker_config)
+    worker_pool = WorkerPool(max_workers=2, min_workers=1)
     task_distributor = TaskDistributor(distributor_config)
     consensus_engine = ConsensusEngine(consensus_config)
-    load_balancer = LoadBalancer(balancer_config)
+    load_balancer = LoadBalancer(strategy="round_robin")
     
     # Create controller
     controller = SwarmController(

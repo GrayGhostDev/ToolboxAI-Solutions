@@ -4,22 +4,20 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import {
-  Box,
-  Badge,
-  IconButton,
-  Popover,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Typography,
-  Button,
-  Divider,
-  Chip,
-  Paper,
-  Alert
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Badge from '@mui/material/Badge';
+import IconButton from '@mui/material/IconButton';
+import Popover from '@mui/material/Popover';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
+import Chip from '@mui/material/Chip';
+import Paper from '@mui/material/Paper';
+import Alert from '@mui/material/Alert';
 import {
   Notifications as NotificationsIcon,
   NotificationsActive as ActiveNotificationsIcon,
@@ -49,7 +47,7 @@ interface RealtimeNotificationsProps {
   autoMarkReadDelay?: number;
 }
 
-export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
+export const RealtimeNotifications: React.FunctionComponent<RealtimeNotificationsProps> = ({
   maxNotifications = 20,
   autoMarkReadDelay = 5000
 }) => {
@@ -147,7 +145,7 @@ export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
     <>
       <IconButton
         color="inherit"
-        onClick={handleOpen}
+        onClick={(e: React.MouseEvent) => handleOpen}
         sx={{
           animation: unreadCount > 0 ? 'shake 0.5s' : 'none',
           '@keyframes shake': {
@@ -200,11 +198,11 @@ export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
             </Typography>
             <Box>
               {unreadCount > 0 && (
-                <IconButton size="small" onClick={handleMarkAllRead}>
+                <IconButton size="small" onClick={(e: React.MouseEvent) => handleMarkAllRead}>
                   <MarkAllReadIcon />
                 </IconButton>
               )}
-              <IconButton size="small" onClick={handleClearAll}>
+              <IconButton size="small" onClick={(e: React.MouseEvent) => handleClearAll}>
                 <ClearIcon />
               </IconButton>
             </Box>
@@ -223,7 +221,7 @@ export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
               {visibleNotifications.map((notification, index) => (
                 <React.Fragment key={notification.id}>
                   <ListItem
-                    onClick={() => !notification.read && handleMarkRead(notification.id)}
+                    onClick={(e: React.MouseEvent) => () => !notification.read && handleMarkRead(notification.id)}
                     sx={{
                       bgcolor: notification.read ? 'transparent' : 'action.hover',
                       cursor: notification.read ? 'default' : 'pointer',
@@ -300,7 +298,7 @@ export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
 };
 
 // Notification toast for immediate alerts
-export const RealtimeNotificationToast: React.FC = () => {
+export const RealtimeNotificationToast: React.FunctionComponent<Record<string, any>> = () => {
   const notifications = useAppSelector(selectNotifications);
   const [latestNotification, setLatestNotification] = useState<SystemNotification | null>(null);
   const [open, setOpen] = useState(false);

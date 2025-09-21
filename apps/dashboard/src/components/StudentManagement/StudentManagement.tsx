@@ -1,34 +1,33 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Checkbox,
-  Avatar,
-  Chip,
-  Alert,
-  CircularProgress,
-  Tooltip,
-  InputAdornment,
-  Grid,
-  FormControlLabel,
-  Switch,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Checkbox from '@mui/material/Checkbox';
+import Avatar from '@mui/material/Avatar';
+import Chip from '@mui/material/Chip';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
+import Tooltip from '@mui/material/Tooltip';
+import InputAdornment from '@mui/material/InputAdornment';
+import Grid from '@mui/material/Grid';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
+
 import {
   Delete as DeleteIcon,
   PersonAdd as PersonAddIcon,
@@ -63,7 +62,7 @@ interface StudentManagementProps {
   onStudentCountChange?: (count: number) => void;
 }
 
-export const StudentManagement: React.FC<StudentManagementProps> = ({
+export const StudentManagement: React.FunctionComponent<StudentManagementProps> = ({
   classId,
   className,
   teacherId,
@@ -285,7 +284,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
               <Button
                 variant="contained"
                 startIcon={<PersonAddIcon />}
-                onClick={() => {
+                onClick={(e: React.MouseEvent) => () => {
                   loadAvailableStudents();
                   setAddDialogOpen(true);
                 }}
@@ -363,7 +362,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
                         <Tooltip title="Remove from class">
                           <IconButton
                             color="error"
-                            onClick={() => {
+                            onClick={(e: React.MouseEvent) => () => {
                               setStudentToRemove(student);
                               setRemoveDialogOpen(true);
                             }}
@@ -441,7 +440,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
                       bgcolor: selectedStudents.has(student.id) ? 'action.selected' : 'background.paper',
                       '&:hover': { bgcolor: 'action.hover' },
                     }}
-                    onClick={() => {
+                    onClick={(e: React.MouseEvent) => () => {
                       if (batchMode) {
                         toggleStudentSelection(student.id);
                       } else {
@@ -457,7 +456,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
                           {batchMode && (
                             <Checkbox
                               checked={selectedStudents.has(student.id)}
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e: React.MouseEvent) => (e) => e.stopPropagation()}
                               onChange={() => toggleStudentSelection(student.id)}
                             />
                           )}
@@ -483,7 +482,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => {
+          <Button onClick={(e: React.MouseEvent) => () => {
             setAddDialogOpen(false);
             setSelectedStudents(new Set());
             setBatchMode(false);
@@ -495,7 +494,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
             <Button
               variant="contained"
               startIcon={<GroupAddIcon />}
-              onClick={batchEnrollStudents}
+              onClick={(e: React.MouseEvent) => batchEnrollStudents}
               disabled={selectedStudents.size === 0}
             >
               Add {selectedStudents.size} Students
@@ -525,7 +524,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => {
+          <Button onClick={(e: React.MouseEvent) => () => {
             setRemoveDialogOpen(false);
             setStudentToRemove(null);
           }}>
@@ -535,7 +534,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
             variant="contained"
             color="error"
             startIcon={<DeleteIcon />}
-            onClick={() => studentToRemove && unenrollStudent(studentToRemove.id)}
+            onClick={(e: React.MouseEvent) => () => studentToRemove && unenrollStudent(studentToRemove.id)}
           >
             Remove Student
           </Button>

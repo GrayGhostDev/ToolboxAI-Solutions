@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/websocket.py
+# hypothesis_version: 6.139.2
+
+[100, ':', 'Internal error', 'MessageHandler', 'MessageType', 'Missing channel', 'Missing message type', 'Rate limit exceeded', 'WebSocketConnection', 'admin', 'admin:', 'anonymous', 'auth', 'authenticated', 'blocked_connections', 'broadcast', 'broadcast_sent', 'channel', 'connections_by_role', 'data', 'direct', 'direct_sent', 'error', 'from', 'message', 'ping', 'pong', 'public:', 'role', 'role:', 'student', 'subscribe', 'subscribed', 'teacher', 'timestamp', 'token', 'total_channels', 'total_connections', 'type', 'unknown', 'unsubscribe', 'unsubscribed', 'user:', 'user_id', 'users_connected']

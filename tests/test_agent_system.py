@@ -1,3 +1,4 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """
 Test script for verifying the Agent System functionality.
@@ -55,6 +56,7 @@ def print_section(title):
     print(f"{BLUE}{'=' * 60}{NC}\n")
 
 
+@pytest.mark.asyncio
 async def test_agent_registry():
     """Test the Agent Registry and Factory system."""
     print_section("Testing Agent Registry and Factory")
@@ -106,6 +108,7 @@ async def test_agent_registry():
         return False
 
 
+@pytest.mark.asyncio
 async def test_master_orchestrator():
     """Test the Master Orchestrator."""
     print_section("Testing Master Orchestrator")
@@ -167,6 +170,7 @@ async def test_master_orchestrator():
         return False
 
 
+@pytest.mark.asyncio
 async def test_worktree_coordinator():
     """Test the Worktree-Agent Coordinator."""
     print_section("Testing Worktree-Agent Coordinator")
@@ -207,6 +211,7 @@ async def test_worktree_coordinator():
         return False
 
 
+@pytest.mark.asyncio
 async def test_resource_monitor():
     """Test the Resource Monitor Agent."""
     print_section("Testing Resource Monitor Agent")
@@ -269,6 +274,7 @@ async def test_resource_monitor():
         return False
 
 
+@pytest.mark.asyncio
 async def test_agent_communication():
     """Test inter-agent communication."""
     print_section("Testing Inter-Agent Communication")

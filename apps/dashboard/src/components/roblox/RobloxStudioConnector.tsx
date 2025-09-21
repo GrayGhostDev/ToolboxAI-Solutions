@@ -1,34 +1,33 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  Alert,
-  Card,
-  CardContent,
-  CardActions,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Chip,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
-  CircularProgress,
-  Tooltip,
-  TextField,
-  Switch,
-  FormControlLabel
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardActions from '@mui/material/CardActions';
+import Grid from '@mui/material/Grid';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import StepContent from '@mui/material/StepContent';
+import CircularProgress from '@mui/material/CircularProgress';
+import Tooltip from '@mui/material/Tooltip';
+import TextField from '@mui/material/TextField';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import {
   CloudUpload,
   CloudDownload,
@@ -80,7 +79,7 @@ interface OAuthStatus {
   expires_at?: string;
 }
 
-const RobloxStudioConnector: React.FC = () => {
+const RobloxStudioConnector: React.FunctionComponent<Record<string, any>> = () => {
   const [projects, setProjects] = useState<RojoProject[]>([]);
   const [selectedProject, setSelectedProject] = useState<RojoProject | null>(null);
   const [syncStatus, setSyncStatus] = useState<RojoSyncStatus | null>(null);
@@ -349,7 +348,7 @@ const RobloxStudioConnector: React.FC = () => {
                 <Button
                   variant="outlined"
                   size="small"
-                  onClick={() => setAuthDialogOpen(true)}
+                  onClick={(e: React.MouseEvent) => () => setAuthDialogOpen(true)}
                   startIcon={<Link />}
                 >
                   Connect Roblox
@@ -418,7 +417,7 @@ const RobloxStudioConnector: React.FC = () => {
                     border: selectedProject?.project_id === project.project_id ? 2 : 0,
                     borderColor: 'primary.main'
                   }}
-                  onClick={() => setSelectedProject(project)}
+                  onClick={(e: React.MouseEvent) => () => setSelectedProject(project)}
                 >
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -459,7 +458,7 @@ const RobloxStudioConnector: React.FC = () => {
                       <Button
                         size="small"
                         startIcon={<PlayArrow />}
-                        onClick={(e) => {
+                        onClick={(e: React.MouseEvent) => (e) => {
                           e.stopPropagation();
                           startProject(project.project_id);
                         }}
@@ -470,7 +469,7 @@ const RobloxStudioConnector: React.FC = () => {
                       <Button
                         size="small"
                         startIcon={<Stop />}
-                        onClick={(e) => {
+                        onClick={(e: React.MouseEvent) => (e) => {
                           e.stopPropagation();
                           stopProject(project.project_id);
                         }}
@@ -481,7 +480,7 @@ const RobloxStudioConnector: React.FC = () => {
                     <Button
                       size="small"
                       startIcon={<Build />}
-                      onClick={(e) => {
+                      onClick={(e: React.MouseEvent) => (e) => {
                         e.stopPropagation();
                         buildProject(project.project_id);
                       }}
@@ -490,7 +489,7 @@ const RobloxStudioConnector: React.FC = () => {
                     </Button>
                     <IconButton
                       size="small"
-                      onClick={(e) => {
+                      onClick={(e: React.MouseEvent) => (e) => {
                         e.stopPropagation();
                         deleteProject(project.project_id);
                       }}
@@ -532,8 +531,8 @@ const RobloxStudioConnector: React.FC = () => {
           </Alert>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAuthDialogOpen(false)}>Cancel</Button>
-          <Button onClick={initiateOAuth} variant="contained" disabled={loading}>
+          <Button onClick={(e: React.MouseEvent) => () => setAuthDialogOpen(false)}>Cancel</Button>
+          <Button onClick={(e: React.MouseEvent) => initiateOAuth} variant="contained" disabled={loading}>
             {loading ? <CircularProgress size={24} /> : 'Connect'}
           </Button>
         </DialogActions>
@@ -582,7 +581,7 @@ const RobloxStudioConnector: React.FC = () => {
                     </Typography>
                     <IconButton
                       size="small"
-                      onClick={() => copyToClipboard(`http://localhost:${selectedProject?.port || '34872'}`)}
+                      onClick={(e: React.MouseEvent) => () => copyToClipboard(`http://localhost:${selectedProject?.port || '34872'}`)}
                     >
                       <ContentCopy />
                     </IconButton>
@@ -601,7 +600,7 @@ const RobloxStudioConnector: React.FC = () => {
           </Stepper>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConnectionDialogOpen(false)}>Close</Button>
+          <Button onClick={(e: React.MouseEvent) => () => setConnectionDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
 

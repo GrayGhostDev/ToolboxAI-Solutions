@@ -59,7 +59,10 @@ import RobloxCharacterAvatar from "../roblox/RobloxCharacterAvatar";
 import { Roblox3DButton } from "../roblox/Roblox3DButton";
 import { Real3DIcon } from "../roblox/Real3DIcon";
 import { robloxColors } from "../../theme/robloxTheme";
-import { useTheme, alpha, Zoom, Slide } from "@mui/material";
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import Zoom from '@mui/material/Zoom';
+import Slide from '@mui/material/Slide';
 
 interface DashboardHomeRTKProps {
   role?: UserRole;
@@ -241,7 +244,7 @@ export function DashboardHomeRTK({
 
         <Stack direction="row" spacing={2} flexWrap="wrap">
           <Button
-            onClick={handleRefresh}
+            onClick={(e: React.MouseEvent) => handleRefresh}
             variant="contained"
             disabled={isFetching}
             startIcon={isFetching ? <CircularProgress size={16} /> : <RefreshIcon />}
@@ -249,14 +252,14 @@ export function DashboardHomeRTK({
             {isFetching ? 'Retrying...' : 'Retry'}
           </Button>
           <Button
-            onClick={() => window.location.reload()}
+            onClick={(e: React.MouseEvent) => () => window.location.reload()}
             variant="outlined"
           >
             Refresh Page
           </Button>
           {showMigrationInfo && (
             <Button
-              onClick={() => setShowCacheStats(!showCacheStats)}
+              onClick={(e: React.MouseEvent) => () => setShowCacheStats(!showCacheStats)}
               variant="text"
               size="small"
             >
@@ -424,7 +427,7 @@ export function DashboardHomeRTK({
                       <Roblox3DButton
                         iconName="ROCKET"
                         label="Roblox Studio"
-                        onClick={() => navigate('/roblox-studio')}
+                        onClick={(e: React.MouseEvent) => () => navigate('/roblox-studio')}
                         variant="primary"
                         size="medium"
                         animated={true}
@@ -435,7 +438,7 @@ export function DashboardHomeRTK({
                       <Roblox3DButton
                         iconName="OPEN_BOOK"
                         label="Create Lesson"
-                        onClick={() => setCreateLessonOpen(true)}
+                        onClick={(e: React.MouseEvent) => () => setCreateLessonOpen(true)}
                         variant="secondary"
                         size="medium"
                         animated={true}
@@ -447,7 +450,7 @@ export function DashboardHomeRTK({
                   <Roblox3DButton
                     iconName="REFRESH"
                     label={isFetching ? "Syncing..." : "Refresh"}
-                    onClick={handleRefresh}
+                    onClick={(e: React.MouseEvent) => handleRefresh}
                     variant="info"
                     size="medium"
                     animated={!isFetching}

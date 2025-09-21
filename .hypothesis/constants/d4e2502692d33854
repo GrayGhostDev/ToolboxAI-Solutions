@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/nlu/llm_integration.py
+# hypothesis_version: 6.139.2
+
+[0.3, 0.5, 0.7, 0.8, 1500, '. ', '5', '5th grade', '; ', 'ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'anthropic', 'assessment', 'change', 'confidence', 'content', 'create', 'create_content', 'create_game', 'create_lesson', 'create_quiz', 'entities', 'fraction', 'fractions', 'game', 'get_help', 'gpt-4-turbo-preview', 'grade 5', 'grade_level', 'help', 'intent', 'is_followup', 'json_object', 'lesson', 'make', 'math', 'mathematics', 'message', 'mock', 'modify', 'modify_content', 'openai', 'quiz', 'raw_response', 'role', 'subject', 'success', 'suggestions', 'system', 'topic', 'type', 'understood_context', 'unknown', 'user']

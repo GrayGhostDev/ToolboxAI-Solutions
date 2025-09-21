@@ -1,21 +1,19 @@
-import * as React from "react";
-import { useState, useEffect } from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Grid,
-  Stack,
-  Chip,
-  Avatar,
-  Paper,
-  IconButton,
-  Divider,
-  Alert,
-  LinearProgress,
-} from "@mui/material";
+import { useState } from "react";
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Grid from '@mui/material/Grid';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import Avatar from '@mui/material/Avatar';
+import Paper from '@mui/material/Paper';
+import IconButton from '@mui/material/IconButton';
+import Divider from '@mui/material/Divider';
+import Alert from '@mui/material/Alert';
+import LinearProgress from '@mui/material/LinearProgress';
+
 import {
   SportsEsports,
   PlayArrow,
@@ -26,7 +24,6 @@ import {
   Refresh,
 } from "@mui/icons-material";
 import { useAppSelector } from "../../../store";
-
 interface RobloxWorld {
   id: string;
   name: string;
@@ -41,7 +38,6 @@ interface RobloxWorld {
   isLocked: boolean;
   completionRate: number;
 }
-
 export default function Play() {
   const user = useAppSelector((s) => s.user);
   const userXP = useAppSelector((s) => s.gamification.xp);
@@ -103,9 +99,7 @@ export default function Play() {
       completionRate: 45,
     },
   ]);
-
   const [loading, setLoading] = useState(false);
-
   const handleJoinWorld = async (worldId: string) => {
     setLoading(true);
     try {
@@ -119,7 +113,6 @@ export default function Play() {
       setLoading(false);
     }
   };
-
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "Easy": return "success";
@@ -128,7 +121,6 @@ export default function Play() {
       default: return "default";
     }
   };
-
   const getSubjectColor = (subject: string) => {
     switch (subject) {
       case "Mathematics": return "#1976d2";
@@ -138,7 +130,6 @@ export default function Play() {
       default: return "#666";
     }
   };
-
   return (
     <Box>
       <Stack direction="row" justifyContent="between" alignItems="center" mb={3}>
@@ -150,11 +141,10 @@ export default function Play() {
             Learn through immersive gaming experiences
           </Typography>
         </Box>
-        <IconButton onClick={() => window.location.reload()}>
+        <IconButton onClick={(e: React.MouseEvent) => () => window.location.reload()}>
           <Refresh />
         </IconButton>
       </Stack>
-
       {/* Current Session Info */}
       {user && (
         <Alert severity="info" sx={{ mb: 3 }}>
@@ -164,7 +154,6 @@ export default function Play() {
           </Typography>
         </Alert>
       )}
-
       <Grid container spacing={3}>
         {worlds.map((world) => (
           <Grid item xs={12} md={6} lg={4} key={world.id}>
@@ -201,16 +190,13 @@ export default function Play() {
                   />
                 )}
               </Box>
-
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
                   {world.name}
                 </Typography>
-                
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                   {world.description}
                 </Typography>
-
                 <Stack spacing={2}>
                   <Stack direction="row" spacing={1} flexWrap="wrap">
                     <Chip
@@ -224,7 +210,6 @@ export default function Play() {
                       variant="outlined"
                     />
                   </Stack>
-
                   <Stack spacing={1}>
                     <Stack direction="row" justifyContent="between" alignItems="center">
                       <Typography variant="caption" color="text.secondary">
@@ -240,9 +225,7 @@ export default function Play() {
                       sx={{ height: 6, borderRadius: 3 }}
                     />
                   </Stack>
-
                   <Divider />
-
                   <Stack spacing={1}>
                     <Stack direction="row" alignItems="center" spacing={1}>
                       <Timer fontSize="small" />
@@ -263,7 +246,6 @@ export default function Play() {
                       </Typography>
                     </Stack>
                   </Stack>
-
                   {world.badges.length > 0 && (
                     <>
                       <Divider />
@@ -285,13 +267,12 @@ export default function Play() {
                       </Box>
                     </>
                   )}
-
                   <Button
                     fullWidth
                     variant="contained"
                     size="large"
                     startIcon={<PlayArrow />}
-                    onClick={() => handleJoinWorld(world.id)}
+                    onClick={(e: React.MouseEvent) => () => handleJoinWorld(world.id)}
                     disabled={world.isLocked || loading}
                     sx={{
                       borderRadius: 2,
@@ -308,7 +289,6 @@ export default function Play() {
           </Grid>
         ))}
       </Grid>
-
       {/* Quick Tips */}
       <Card sx={{ mt: 4 }}>
         <CardContent>

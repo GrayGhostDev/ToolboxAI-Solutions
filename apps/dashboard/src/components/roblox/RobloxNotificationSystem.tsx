@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
-  useTheme, 
-  alpha, 
-  Slide, 
-  Fade, 
-  IconButton, 
-  Badge,
-  Stack,
-  Chip
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import Slide from '@mui/material/Slide';
+import Fade from '@mui/material/Fade';
+import IconButton from '@mui/material/IconButton';
+import Badge from '@mui/material/Badge';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import Chip from '@mui/material/Chip';
 import { styled, keyframes } from '@mui/material/styles';
 import { 
   Close, 
@@ -191,7 +190,7 @@ const getNotificationIcon = (type: string) => {
   return iconMap[type] || Notifications;
 };
 
-export const RobloxNotificationSystem: React.FC<RobloxNotificationSystemProps> = ({
+export const RobloxNotificationSystem: React.FunctionComponent<RobloxNotificationSystemProps> = ({
   notifications,
   onMarkAsRead,
   onRemove,
@@ -269,7 +268,7 @@ export const RobloxNotificationSystem: React.FC<RobloxNotificationSystemProps> =
             <NotificationCard
               notificationType={notification.type}
               priority={notification.priority}
-              onClick={() => handleNotificationClick(notification)}
+              onClick={(e: React.MouseEvent) => () => handleNotificationClick(notification)}
             >
               <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                 <NotificationIcon notificationType={notification.type}>
@@ -318,7 +317,7 @@ export const RobloxNotificationSystem: React.FC<RobloxNotificationSystemProps> =
                         <Chip
                           label={notification.action.label}
                           size="small"
-                          onClick={(e) => {
+                          onClick={(e: React.MouseEvent) => (e) => {
                             e.stopPropagation();
                             notification.action!.onClick();
                           }}
@@ -336,7 +335,7 @@ export const RobloxNotificationSystem: React.FC<RobloxNotificationSystemProps> =
                       
                       <IconButton
                         size="small"
-                        onClick={(e) => {
+                        onClick={(e: React.MouseEvent) => (e) => {
                           e.stopPropagation();
                           onRemove(notification.id);
                         }}
@@ -363,7 +362,7 @@ export const RobloxNotificationSystem: React.FC<RobloxNotificationSystemProps> =
         <Box sx={{ textAlign: 'center', mt: 1 }}>
           <Chip
             label={`+${notifications.length - maxVisible} more notifications`}
-            onClick={onClearAll}
+            onClick={(e: React.MouseEvent) => onClearAll}
             sx={{
               backgroundColor: alpha(theme.palette.primary.main, 0.1),
               color: theme.palette.primary.main,

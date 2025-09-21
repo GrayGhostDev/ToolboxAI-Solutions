@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/v1/endpoints/pusher_auth.py
+# hypothesis_version: 6.139.2
+
+[400, 500, 503, '/auth', '/pusher', '/webhook', 'Authorization', 'Bearer dev-token-', 'Development User', 'Guest User', 'Invalid webhook', 'Unknown User', 'application/json', 'channel_name', 'content-type', 'dev-user', 'dev@toolboxai.com', 'email', 'guest-user', 'guest@toolboxai.com', 'id', 'name', 'ok', 'presence-', 'private-', 'pusher', 'socket_id', 'status', 'unknown']

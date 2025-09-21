@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 import sys
 from pathlib import Path
 
@@ -29,6 +44,7 @@ from apps.backend.core.config import settings
 
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_websocket_channel_rbac_by_prefix():
     # Configure prefixes for this test
     original_prefixes = dict(getattr(settings, "WS_CHANNEL_ROLE_PREFIXES", {}))
@@ -54,6 +70,7 @@ async def test_websocket_channel_rbac_by_prefix():
 
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_ws_capacity_enforcement(monkeypatch):
     # Enforce small capacity using monkeypatch
     monkeypatch.setattr(settings.__class__, "WS_MAX_CONNECTIONS", property(lambda self: 1))

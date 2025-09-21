@@ -29,8 +29,47 @@ logger = logging.getLogger(__name__)
 # Create Flask app
 app = Flask(__name__)
 
-# Configure CORS
-CORS(app, origins="*")
+# Configure CORS with environment-specific origins
+def get_cors_origins():
+    """Get CORS origins based on environment"""
+    # Get environment from settings
+    environment = os.getenv('ENVIRONMENT', 'development').lower()
+
+    if environment == 'production':
+        # Production: Only allow specific domains
+        allowed_origins = [
+            'https://toolboxai.com',
+            'https://www.toolboxai.com',
+            'https://app.toolboxai.com',
+            'https://dashboard.toolboxai.com'
+        ]
+        # Add any custom production origins from environment
+        custom_origins = os.getenv('FLASK_CORS_ORIGINS', '')
+        if custom_origins:
+            allowed_origins.extend([origin.strip() for origin in custom_origins.split(',')])
+        return allowed_origins
+    elif environment == 'staging':
+        # Staging: Allow staging domains
+        return [
+            'https://staging.toolboxai.com',
+            'https://staging-app.toolboxai.com',
+            'http://localhost:5179',  # Local dashboard
+            'http://localhost:3000',  # Alternative local port
+        ]
+    else:
+        # Development: Allow local development origins only
+        return [
+            'http://localhost:5179',   # Main dashboard port
+            'http://localhost:3000',   # Alternative React port
+            'http://localhost:8080',   # Alternative development port
+            'http://127.0.0.1:5179',   # Explicit localhost
+            'http://127.0.0.1:3000',   # Explicit localhost
+            'http://127.0.0.1:8080',   # Explicit localhost
+        ]
+
+cors_origins = get_cors_origins()
+logger.info(f"Configuring CORS with origins: {cors_origins}")
+CORS(app, origins=cors_origins)
 
 # Configuration
 app.config['PORT'] = int(os.getenv('FLASK_PORT', '5001'))

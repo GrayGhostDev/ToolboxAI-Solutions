@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/auth/websocket_auth.py
+# hypothesis_version: 6.139.2
+
+[4001, 'Authorization', 'Bearer ', 'JWT', 'Session closed', 'Session timeout', 'Token user mismatch', 'WebSocketAuthSession', 'access_token', 'active_sessions', 'admin', 'auth_error', 'auth_method', 'auth_success', 'authenticated_at', 'authorization', 'client_state', 'code', 'email', 'exp', 'expires_at', 'features', 'id', 'is_active', 'last_activity', 'message', 'real_time_updates', 'reason', 'refresh_token', 'role', 'role_distribution', 'secure_messaging', 'session_id', 'student', 'sub', 'success', 'teacher', 'timestamp', 'token', 'token_refresh', 'token_refreshed', 'total_sessions', 'type', 'unknown', 'unknown@example.com', 'user', 'user_id', 'username']

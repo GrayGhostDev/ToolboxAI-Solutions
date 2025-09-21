@@ -1,3 +1,4 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """
 Test Enhanced Content Agent Real Data Integration
@@ -37,6 +38,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_enhanced_content_agent(mock_llm):
     """Test the enhanced Content Agent with real data integration"""
     
@@ -246,6 +248,7 @@ async def test_enhanced_content_agent(mock_llm):
         return False
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_real_openai_integration(mock_llm):
     """Test real OpenAI API integration if available"""
     

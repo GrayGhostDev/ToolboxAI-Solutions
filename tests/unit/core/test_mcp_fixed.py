@@ -1,3 +1,4 @@
+import pytest_asyncio
 """
 Unit tests for MCP (Model Context Protocol) components - Fixed Version.
 """
@@ -80,7 +81,8 @@ class TestMCPServer:
     """Test MCP Server functionality"""
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_server_initialization(self, mcp_server):
+    @pytest.mark.asyncio
+async def test_server_initialization(self, mcp_server):
         """Test server initializes correctly"""
         assert mcp_server.port == 9877
         assert mcp_server.authenticated_clients == {}
@@ -88,7 +90,8 @@ class TestMCPServer:
         assert mcp_server.max_tokens == 128000
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_client_registration(self, mcp_server):
+    @pytest.mark.asyncio
+async def test_client_registration(self, mcp_server):
         """Test client registration with authentication"""
         websocket = MockWebSocket()
         

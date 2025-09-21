@@ -1,35 +1,34 @@
 import * as React from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Stack,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  TextField,
-  Chip,
-  Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Alert,
-  AlertTitle,
-  LinearProgress,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  ListItemSecondaryAction,
-  Tabs,
-  Tab,
-} from "@mui/material";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import TextField from '@mui/material/TextField';
+import Chip from '@mui/material/Chip';
+import Box from '@mui/material/Box';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import IconButton from '@mui/material/IconButton';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import LinearProgress from '@mui/material/LinearProgress';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+
 import Grid2 from "@mui/material/Unstable_Grid2";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -630,7 +629,7 @@ export default function Reports() {
                         <Button
                           variant="contained"
                           startIcon={<FileDownloadIcon />}
-                          onClick={handleGenerateReport}
+                          onClick={(e: React.MouseEvent) => handleGenerateReport}
                           sx={{ flex: 1 }}
                         >
                           Generate Report
@@ -638,7 +637,7 @@ export default function Reports() {
                         <Button 
                           variant="outlined" 
                           startIcon={<ScheduleIcon />}
-                          onClick={handleScheduleReport}
+                          onClick={(e: React.MouseEvent) => handleScheduleReport}
                         >
                           Schedule
                         </Button>
@@ -646,7 +645,7 @@ export default function Reports() {
                           variant="outlined" 
                           startIcon={<EmailIcon />}
                           disabled={reports.length === 0}
-                          onClick={() => reports.length > 0 && handleEmailReport(reports[0].id)}
+                          onClick={(e: React.MouseEvent) => () => reports.length > 0 && handleEmailReport(reports[0].id)}
                         >
                           Email
                         </Button>
@@ -669,7 +668,7 @@ export default function Reports() {
                   </Typography>
                   <List dense>
                     {reportTemplates.filter(t => t.is_popular).map((template) => (
-                      <ListItem key={template.id} button onClick={() => setSelectedTemplate(template)}>
+                      <ListItem key={template.id} button onClick={(e: React.MouseEvent) => () => setSelectedTemplate(template)}>
                         <ListItemIcon>{template.icon}</ListItemIcon>
                         <ListItemText
                           primary={template.name}
@@ -679,7 +678,7 @@ export default function Reports() {
                           <Button 
                             size="small" 
                             variant="outlined"
-                            onClick={() => handleUseTemplate(template.id)}
+                            onClick={(e: React.MouseEvent) => () => handleUseTemplate(template.id)}
                           >
                             Use
                           </Button>
@@ -691,7 +690,7 @@ export default function Reports() {
                     fullWidth 
                     variant="outlined" 
                     sx={{ mt: 2 }}
-                    onClick={handleViewAllTemplates}
+                    onClick={(e: React.MouseEvent) => handleViewAllTemplates}
                     disabled={loading}
                   >
                     View All Templates
@@ -753,27 +752,27 @@ export default function Reports() {
                                 <IconButton 
                                   size="small" 
                                   disabled={report.status !== "ready"}
-                                  onClick={() => handleDownloadReport(report.id)}
+                                  onClick={(e: React.MouseEvent) => () => handleDownloadReport(report.id)}
                                 >
                                   <FileDownloadIcon />
                                 </IconButton>
                                 <IconButton 
                                   size="small"
-                                  onClick={() => handleEmailReport(report.id)}
+                                  onClick={(e: React.MouseEvent) => () => handleEmailReport(report.id)}
                                   title="Email Report"
                                 >
                                   <EmailIcon />
                                 </IconButton>
                                 <IconButton 
                                   size="small"
-                                  onClick={() => handlePrintReport(report.id)}
+                                  onClick={(e: React.MouseEvent) => () => handlePrintReport(report.id)}
                                   title="Print Report"
                                 >
                                   <PrintIcon />
                                 </IconButton>
                                 <IconButton 
                                   size="small"
-                                  onClick={() => handleReportActions(report.id, 'share')}
+                                  onClick={(e: React.MouseEvent) => () => handleReportActions(report.id, 'share')}
                                   title="Share Report"
                                 >
                                   <MoreVertIcon />
@@ -849,7 +848,7 @@ export default function Reports() {
                   </div>
                 </Stack>
                 <Stack direction="row" gap={2}>
-                  <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchReportData}>
+                  <Button variant="outlined" startIcon={<RefreshIcon />} onClick={(e: React.MouseEvent) => fetchReportData}>
                     Refresh
                   </Button>
                   <Button variant="contained" startIcon={<FileDownloadIcon />}>

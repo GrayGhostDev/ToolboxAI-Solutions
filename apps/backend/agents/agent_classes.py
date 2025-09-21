@@ -18,7 +18,10 @@ class ContentGenerationAgent:
     def __init__(self, llm=None, *args, **kwargs):
         """Initialize content generation agent"""
         self.chat_history = InMemoryChatMessageHistory()
-        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+        if llm is None:
+            self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+        else:
+            self.llm = llm
         self.content_templates = {
             "lesson": "Create an engaging lesson about {topic} for grade {grade}",
             "activity": "Design an interactive activity for {topic} suitable for {age} year olds",

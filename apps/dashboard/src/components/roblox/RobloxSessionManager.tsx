@@ -6,55 +6,54 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  CardActions,
-  Typography,
-  Grid,
-  Button,
-  IconButton,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  FormControlLabel,
-  Checkbox,
-  Switch,
-  Slider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemSecondaryAction,
-  Avatar,
-  AvatarGroup,
-  Tooltip,
-  Alert,
-  AlertTitle,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
-  Paper,
-  Divider,
-  Stack,
-  Badge,
-  useTheme,
-  alpha,
-  FormGroup,
-  FormLabel,
-  RadioGroup,
-  Radio,
-  Autocomplete
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardActions from '@mui/material/CardActions';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Chip from '@mui/material/Chip';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+import Switch from '@mui/material/Switch';
+import Slider from '@mui/material/Slider';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import Avatar from '@mui/material/Avatar';
+import AvatarGroup from '@mui/material/AvatarGroup';
+import Tooltip from '@mui/material/Tooltip';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import StepContent from '@mui/material/StepContent';
+import Paper from '@mui/material/Paper';
+import Divider from '@mui/material/Divider';
+import Stack from '@mui/material/Stack';
+import Badge from '@mui/material/Badge';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import FormGroup from '@mui/material/FormGroup';
+import FormLabel from '@mui/material/FormLabel';
+import RadioGroup from '@mui/material/RadioGroup';
+import Radio from '@mui/material/Radio';
+import Autocomplete from '@mui/material/Autocomplete';
+import Autocomplete from '@mui/material/Autocomplete';
 import {
   PlayArrow,
   Pause,
@@ -607,7 +606,7 @@ const SESSION_TEMPLATES: SessionTemplate[] = [
   }
 ];
 
-export const RobloxSessionManager: React.FC = () => {
+export const RobloxSessionManager: React.FunctionComponent<Record<string, any>> = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const { sendMessage, on, isConnected } = useWebSocketContext();
@@ -878,7 +877,7 @@ export const RobloxSessionManager: React.FC = () => {
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={() => setCreateDialogOpen(true)}
+              onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
             >
               New Session
             </Button>
@@ -991,7 +990,7 @@ export const RobloxSessionManager: React.FC = () => {
                     <Button
                       size="small"
                       startIcon={<Edit />}
-                      onClick={() => {
+                      onClick={(e: React.MouseEvent) => () => {
                         setSelectedSession(session);
                         setSettingsDialogOpen(true);
                       }}
@@ -1002,7 +1001,7 @@ export const RobloxSessionManager: React.FC = () => {
                       size="small"
                       color="success"
                       startIcon={<PlayArrow />}
-                      onClick={() => handleStartSession(session.id)}
+                      onClick={(e: React.MouseEvent) => () => handleStartSession(session.id)}
                     >
                       Start
                     </Button>
@@ -1015,7 +1014,7 @@ export const RobloxSessionManager: React.FC = () => {
                       size="small"
                       color="warning"
                       startIcon={<Pause />}
-                      onClick={() => handlePauseSession(session.id)}
+                      onClick={(e: React.MouseEvent) => () => handlePauseSession(session.id)}
                     >
                       Pause
                     </Button>
@@ -1023,7 +1022,7 @@ export const RobloxSessionManager: React.FC = () => {
                       size="small"
                       color="error"
                       startIcon={<Stop />}
-                      onClick={() => handleStopSession(session.id)}
+                      onClick={(e: React.MouseEvent) => () => handleStopSession(session.id)}
                     >
                       Stop
                     </Button>
@@ -1035,7 +1034,7 @@ export const RobloxSessionManager: React.FC = () => {
                     size="small"
                     color="success"
                     startIcon={<PlayArrow />}
-                    onClick={() => handleStartSession(session.id)}
+                    onClick={(e: React.MouseEvent) => () => handleStartSession(session.id)}
                   >
                     Resume
                   </Button>
@@ -1043,14 +1042,14 @@ export const RobloxSessionManager: React.FC = () => {
 
                 <IconButton
                   size="small"
-                  onClick={() => handleDuplicateSession(session)}
+                  onClick={(e: React.MouseEvent) => () => handleDuplicateSession(session)}
                 >
                   <ContentCopy fontSize="small" />
                 </IconButton>
                 
                 <IconButton
                   size="small"
-                  onClick={() => {
+                  onClick={(e: React.MouseEvent) => () => {
                     setSelectedSession(session);
                     setInviteDialogOpen(true);
                   }}
@@ -1062,7 +1061,7 @@ export const RobloxSessionManager: React.FC = () => {
                   <IconButton
                     size="small"
                     color="error"
-                    onClick={() => handleDeleteSession(session.id)}
+                    onClick={(e: React.MouseEvent) => () => handleDeleteSession(session.id)}
                   >
                     <Delete fontSize="small" />
                   </IconButton>
@@ -1112,7 +1111,7 @@ export const RobloxSessionManager: React.FC = () => {
                       <Chip
                         key={template.id}
                         label={template.name}
-                        onClick={() => handleApplyTemplate(template)}
+                        onClick={(e: React.MouseEvent) => () => handleApplyTemplate(template)}
                         clickable
                         color={selectedTemplateId === template.id ? 'primary' : 'default'}
                         variant={selectedTemplateId === template.id ? 'filled' : 'outlined'}
@@ -1234,7 +1233,7 @@ export const RobloxSessionManager: React.FC = () => {
                         })}
                         InputProps={{
                           endAdornment: (
-                            <Button size="small" onClick={generateAccessCode}>
+                            <Button size="small" onClick={(e: React.MouseEvent) => generateAccessCode}>
                               Generate
                             </Button>
                           )
@@ -1347,20 +1346,20 @@ export const RobloxSessionManager: React.FC = () => {
           </Stepper>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => {
+          <Button onClick={(e: React.MouseEvent) => () => {
             setCreateDialogOpen(false);
             resetNewSession();
           }}>
             Cancel
           </Button>
           {activeStep > 0 && (
-            <Button onClick={() => setActiveStep(prev => prev - 1)}>
+            <Button onClick={(e: React.MouseEvent) => () => setActiveStep(prev => prev - 1)}>
               Back
             </Button>
           )}
           <Button
             variant="contained"
-            onClick={handleCreateSession}
+            onClick={(e: React.MouseEvent) => handleCreateSession}
           >
             {activeStep < 3 ? 'Next' : 'Create Session'}
           </Button>
@@ -1389,7 +1388,7 @@ export const RobloxSessionManager: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<Add />}
-            onClick={() => setCreateDialogOpen(true)}
+            onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
           >
             Create Session
           </Button>

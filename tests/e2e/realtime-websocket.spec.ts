@@ -1,3 +1,5 @@
+jest.setTimeout(10000);
+
 import { test, expect, Page } from '@playwright/test';
 
 test.describe('Real-time WebSocket & Pusher Tests', () => {

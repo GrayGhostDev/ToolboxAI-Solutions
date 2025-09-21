@@ -1,3 +1,4 @@
+import pytest_asyncio
 """
 API Performance Tests
 Specific tests for API endpoint response times and throughput
@@ -20,7 +21,8 @@ class TestAPIPerformanceSpecific:
     """Specific API performance tests"""
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_health_endpoint_performance(self):
+    @pytest.mark.asyncio
+async def test_health_endpoint_performance(self):
         """Test health endpoint response time under load"""
         url = "http://localhost:8008/health"
         num_requests = 1000
@@ -67,7 +69,8 @@ class TestAPIPerformanceSpecific:
         print(f"  Max: {max(response_times)*1000:.2f}ms")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_content_generation_performance(self):
+    @pytest.mark.asyncio
+async def test_content_generation_performance(self):
         """Test content generation endpoint performance"""
         url = "http://localhost:8008/generate_content"
         
@@ -117,7 +120,8 @@ class TestAPIPerformanceSpecific:
             pytest.fail("No successful content generation requests")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_database_query_performance(self):
+    @pytest.mark.asyncio
+async def test_database_query_performance(self):
         """Test database query performance"""
         endpoints = [
             ("http://localhost:8008/courses", "GET"),
@@ -162,7 +166,8 @@ class TestAPIPerformanceSpecific:
             print(f"  Max: {stats['max']*1000:.2f}ms")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_rate_limiting_performance(self):
+    @pytest.mark.asyncio
+async def test_rate_limiting_performance(self):
         """Test API rate limiting behavior"""
         url = "http://localhost:8008/health"
         

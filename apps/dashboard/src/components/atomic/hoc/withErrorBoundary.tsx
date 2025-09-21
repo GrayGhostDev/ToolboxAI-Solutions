@@ -28,7 +28,7 @@ interface ErrorBoundaryState {
 }
 
 // Default fallback component
-const DefaultErrorFallback: React.FC<ErrorBoundaryFallbackProps> = ({
+const DefaultErrorFallback: React.FunctionComponent<ErrorBoundaryFallbackProps> = ({
   error,
   resetError,
   componentStack
@@ -65,7 +65,7 @@ const DefaultErrorFallback: React.FC<ErrorBoundaryFallbackProps> = ({
     <AtomicButton
       variant="outlined"
       color="error"
-      onClick={resetError}
+      onClick={(e: React.MouseEvent) => resetError}
       mt={3}
     >
       Try Again
@@ -188,7 +188,7 @@ const withErrorBoundary = <P extends object>(
   WrappedComponent: React.ComponentType<P>,
   options: WithErrorBoundaryProps = {}
 ) => {
-  const ComponentWithErrorBoundary = React.forwardRef<any, P>((props, ref) => {
+  const ComponentWithErrorBoundary = ({ ...props, ref }) => {
     return (
       <ErrorBoundary {...options}>
         <WrappedComponent {...props} ref={ref} />

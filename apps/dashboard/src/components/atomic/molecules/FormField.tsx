@@ -6,7 +6,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { styled } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { AtomicLabel, AtomicInput, AtomicText, AtomicBox } from '../atoms';
 import type { InputProps } from '../atoms/Input';
 import type { LabelProps } from '../atoms/Label';

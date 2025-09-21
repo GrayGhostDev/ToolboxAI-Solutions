@@ -6,7 +6,9 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Box as MuiBox, BoxProps as MuiBoxProps, styled } from '@mui/material';
+import { Box as MuiBox } from '@mui/material';
+import { BoxProps as MuiBoxProps } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { designTokens } from '../../../theme/designTokens';
 
 // Polymorphic component types
