@@ -1,6 +1,6 @@
 {
   "name": "toolboxai-solutions-workspace",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "description": "ToolBoxAI Solutions - Educational Technology Platform",
@@ -19,11 +19,13 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:report": "playwright show-report",
-    "test:e2e:install": "playwright install"
+    "test:e2e:install": "playwright install",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "engines": {
-    "node": ">=20 <23",
-    "npm": ">=9"
+    "node": ">=22",
+    "npm": ">=10"
   },
   "repository": {
     "type": "git",
