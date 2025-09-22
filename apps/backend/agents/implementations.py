@@ -21,7 +21,7 @@ class QuizGenerationAgent:
     
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize quiz generation agent"
-        self.llm = llm or from langchain_openai import ChatOpenAI(model="gpt-3.5-turbo", temperature=0.5)
+        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.5)
         
         # Question templates by type
         self.question_templates = {
@@ -163,7 +163,7 @@ class TerrainGenerationAgent:
     
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize terrain generation agent"
-        self.llm = llm or from langchain_openai import ChatOpenAI(model="gpt-3.5-turbo", temperature=0.6)
+        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.6)
         
         # Terrain templates by biome
         self.terrain_templates = {
@@ -368,7 +368,7 @@ class ScriptGenerationAgent:
     
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize script generation agent"
-        self.llm = llm or from langchain_openai import ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3)
+        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3)
         
         # Lua code templates
         self.script_templates = {
@@ -639,7 +639,7 @@ class CodeReviewAgent:
     
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize code review agent"
-        self.llm = llm or from langchain_openai import ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2)
+        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2)
         
         # Security checkers
         self.security_checks = [
@@ -1261,7 +1261,7 @@ def get_llm():
     from langchain_openai import ChatOpenAI
     import os
 
-    return from langchain_openai import ChatOpenAI(
+    return ChatOpenAI(
         model="gpt-4-turbo-preview",
         temperature=0.7,
         api_key=os.getenv("OPENAI_API_KEY", "dummy-key-for-testing")

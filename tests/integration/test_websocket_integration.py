@@ -15,8 +15,16 @@ def mock_db_connection():
 
 #!/usr/bin/env python3
 """
-WebSocket Integration Test Suite
-Tests real-time communication across all services
+[LEGACY] WebSocket Integration Test Suite - DEPRECATED
+
+⚠️ DEPRECATION NOTICE:
+This test file has been migrated to use Pusher Channels.
+Please use test_pusher_integration.py instead.
+
+This file is kept for reference only and will be removed in a future release.
+All new real-time tests should use Pusher patterns.
+
+See: test_pusher_integration.py
 """
 
 import asyncio
@@ -37,7 +45,7 @@ import json
 import time
 import logging
 from typing import Dict, Any, List
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 import aiohttp
 import pytest
 from datetime import datetime, timezone
@@ -56,12 +64,12 @@ logger = logging.getLogger(__name__)
 # Configuration
 SERVICES = {
     "fastapi": {
-        "ws_url": "ws://127.0.0.1:8008/ws",
+        "ws_url": "pusher://app_key@cluster",
         "http_url": "http://127.0.0.1:8008",
         "health_endpoint": "/health"
     },
     "dashboard": {
-        "ws_url": "ws://127.0.0.1:8001/ws",
+        "ws_url": "pusher://app_key@cluster",
         "http_url": "http://127.0.0.1:8001",
         "health_endpoint": "/api/v1/health"
     },
@@ -111,12 +119,13 @@ async def test_websocket_connection(self, service_name: str) -> Dict[str, Any]:
         try:
             logger.info(f"Testing WebSocket connection to {service_name}...")
             
-            async with websockets.connect(config["ws_url"], timeout=5) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherconfig["ws_url"], timeout=5) as websocket:
                 result["connection"] = True
                 logger.info(f"✅ Connected to {service_name} WebSocket")
                 
                 # Test ping-pong
-                await websocket.send(json.dumps({"type": "ping"}, default=make_json_serializable))
+                await pusher.trigger(json.dumps({"type": "ping"}, default=make_json_serializable))
                 
                 try:
                     response = await asyncio.wait_for(websocket.recv(), timeout=3)
@@ -221,10 +230,10 @@ async def test_cross_service_communication(self) -> Dict[str, Any]:
                     "data": {"test": "value"}
                 }
             }
-            await mcp_ws.send(json.dumps(context_update, default=make_json_serializable))
+            await mcp_pusher.trigger(json.dumps(context_update, default=make_json_serializable))
             
             # Request context
-            await mcp_ws.send(json.dumps({"type": "get_context"}, default=make_json_serializable))
+            await mcp_pusher.trigger(json.dumps({"type": "get_context"}, default=make_json_serializable))
             
             response = await asyncio.wait_for(mcp_ws.recv(), timeout=3)
             data = json.loads(response)
@@ -264,7 +273,7 @@ async def test_authentication_over_websocket(self) -> Dict[str, Any]:
             )
             
             # Send authenticated message
-            await ws.send(json.dumps({
+            await pusher.trigger(json.dumps({
                 "type": "authenticated_action",
                 "action": "get_user_data"
             }, default=make_json_serializable))
@@ -299,7 +308,7 @@ async def test_realtime_updates(self) -> Dict[str, Any]:
             ws = await websockets.connect(SERVICES["dashboard"]["ws_url"])
             
             # Subscribe to updates
-            await ws.send(json.dumps({
+            await pusher.trigger(json.dumps({
                 "type": "subscribe",
                 "channel": "dashboard_updates"
             }, default=make_json_serializable))
@@ -316,7 +325,7 @@ async def test_realtime_updates(self) -> Dict[str, Any]:
             }
             
             # In real scenario, this would be triggered by API
-            await ws.send(json.dumps(update_message, default=make_json_serializable))
+            await pusher.trigger(json.dumps(update_message, default=make_json_serializable))
             
             # Check if update is received
             response = await asyncio.wait_for(ws.recv(), timeout=3)
@@ -350,7 +359,7 @@ async def test_connection_resilience(self) -> Dict[str, Any]:
             ws = await websockets.connect(SERVICES["dashboard"]["ws_url"])
             
             # Send keepalive
-            await ws.send(json.dumps({"type": "keepalive"}, default=make_json_serializable))
+            await pusher.trigger(json.dumps({"type": "keepalive"}, default=make_json_serializable))
             
             # Close and reconnect
             await ws.close()
@@ -358,7 +367,7 @@ async def test_connection_resilience(self) -> Dict[str, Any]:
             
             # Reconnect
             ws = await websockets.connect(SERVICES["dashboard"]["ws_url"])
-            await ws.send(json.dumps({"type": "ping"}, default=make_json_serializable))
+            await pusher.trigger(json.dumps({"type": "ping"}, default=make_json_serializable))
             
             try:
                 response = await asyncio.wait_for(ws.recv(), timeout=3)
@@ -404,7 +413,7 @@ async def test_performance(self) -> Dict[str, Any]:
                     "id": i,
                     "timestamp": datetime.now(timezone.utc).isoformat()
                 }
-                await ws.send(json.dumps(message, default=make_json_serializable))
+                await pusher.trigger(json.dumps(message, default=make_json_serializable))
                 
                 try:
                     response = await asyncio.wait_for(ws.recv(), timeout=1)

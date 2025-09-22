@@ -233,3 +233,5 @@ export const ThreeProvider: React.FunctionComponent<ThreeProviderProps> = ({ chi
     </ThreeContext.Provider>
   );
 };
+
+export default ThreeProvider;

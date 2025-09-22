@@ -58,7 +58,7 @@ const useCPUAware = () => {
   return { ...cpuInfo, isLowEndDevice };
 };
 
-export const ProgressiveEnhancement: React.FC<ProgressiveEnhancementProps> = ({
+export const ProgressiveEnhancement = ({
   children,
   fallback,
   threshold = 0.1,
@@ -67,7 +67,7 @@ export const ProgressiveEnhancement: React.FC<ProgressiveEnhancementProps> = ({
   priority = 'medium',
   skeletonVariant = 'card',
   enableIntersectionObserver = true
-}) => {
+}: ProgressiveEnhancementProps) => {
   const [shouldRender, setShouldRender] = useState(priority === 'high');
   const [isVisible, setIsVisible] = useState(false);
   const networkInfo = useNetworkAware();

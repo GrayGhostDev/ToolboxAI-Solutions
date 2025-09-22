@@ -1,0 +1,55 @@
+{
+  "timestamp": "2025-09-21T07:30:00.252054",
+  "overall_score": 1.3970846908237253,
+  "target_score": 95.0,
+  "trend": "stable",
+  "bundle_metrics": {
+    "total_size_kb": 14315.5244140625,
+    "gzipped_size_kb": 4294.65732421875,
+    "js_size_kb": 7.1826171875,
+    "css_size_kb": 0,
+    "assets_size_kb": 14308.341796875,
+    "chunks_count": 1,
+    "largest_chunk_kb": 7.1826171875,
+    "tree_shaking_savings": 0
+  },
+  "api_metrics": {
+    "avg_response_time_ms": 5000.0,
+    "p95_response_time_ms": 5000,
+    "error_rate": 1.0,
+    "requests_per_second": 607.7160140544065,
+    "active_connections": 0
+  },
+  "system_metrics": {
+    "memory_usage_mb": 43638.609375,
+    "cpu_usage_percent": 14.0,
+    "disk_io_read_mb": 235273.97509765625,
+    "disk_io_write_mb": 96172.3828125,
+    "network_io_recv_mb": 4121.1435546875,
+    "network_io_sent_mb": 2907.9775390625
+  },
+  "optimization_opportunities": [
+    {
+      "category": "bundle_size",
+      "priority": "high",
+      "description": "Bundle size 13816KB over target",
+      "potential_savings_kb": 13815.5244140625,
+      "effort_hours": 138.155244140625
+    },
+    {
+      "category": "tree_shaking",
+      "priority": "medium",
+      "description": "Limited tree shaking detected",
+      "potential_savings_kb": 50,
+      "effort_hours": 1
+    }
+  ],
+  "progress": {
+    "baseline_size_kb": 950.0,
+    "target_size_kb": 500.0,
+    "current_size_kb": 14315.5244140625,
+    "size_reduction_kb": -13365.5244140625,
+    "size_reduction_percent": -1406.897306743421,
+    "remaining_kb": 13815.5244140625
+  }
+}

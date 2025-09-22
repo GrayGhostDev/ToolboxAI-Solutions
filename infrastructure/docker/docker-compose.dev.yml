@@ -16,7 +16,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-educational_platform_dev}
       POSTGRES_USER: ${POSTGRES_USER:-eduplatform}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eduplatform2024}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_MULTIPLE_DATABASES: educational_platform,ghost_backend,roblox_data,mcp_memory
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -52,16 +52,16 @@ services:
   fastapi-main:
     build:
       context: ../..
-      dockerfile: infrastructure/docker/backend.Dockerfile
+      dockerfile: infrastructure/docker/Dockerfile.backend
     container_name: toolboxai-fastapi
     environment:
       <<: *common-variables
       ENVIRONMENT: ${ENVIRONMENT:-development}
       DEBUG: ${DEBUG:-false}
       # Use Docker service names for database connections
-      DATABASE_URL: postgresql://eduplatform:eduplatform2024@postgres:5432/educational_platform_dev
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-educational_platform_dev}
       REDIS_URL: redis://redis:6379/0
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-generate-secure-key-for-production}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY:-}
@@ -69,13 +69,18 @@ services:
       LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-true}
       LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT:-toolboxai-production}
       SENTRY_DSN: ${SENTRY_DSN:-}
-      # Pusher Configuration
+      # Pusher Configuration (Active - Using for all realtime features)
       PUSHER_ENABLED: ${PUSHER_ENABLED:-true}
-      PUSHER_APP_ID: ${PUSHER_APP_ID:-}
-      PUSHER_KEY: ${PUSHER_KEY:-}
-      PUSHER_SECRET: ${PUSHER_SECRET:-}
+      PUSHER_APP_ID: ${PUSHER_APP_ID}
+      PUSHER_KEY: ${PUSHER_KEY}
+      PUSHER_SECRET: ${PUSHER_SECRET}
       PUSHER_CLUSTER: ${PUSHER_CLUSTER:-us2}
       PUSHER_SSL: ${PUSHER_SSL:-true}
+      # Clerk Authentication (2025)
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:-}
+      CLERK_WEBHOOK_SIGNING_SECRET: ${CLERK_WEBHOOK_SIGNING_SECRET:-}
+      CLERK_JWKS_URL: ${CLERK_JWKS_URL:-}
+      CLERK_FRONTEND_API_URL: ${CLERK_FRONTEND_API_URL:-}
       # Server configuration
       HOST: 0.0.0.0
       PORT: 8009
@@ -94,6 +99,11 @@ services:
     healthcheck:
       <<: *healthcheck-defaults
       test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
 
   # MCP Server
   mcp-server:
@@ -108,7 +118,7 @@ services:
       MCP_PORT: 9877
       # Use Docker service names
       REDIS_URL: redis://redis:6379/0
-      DATABASE_URL: postgresql://eduplatform:eduplatform2024@postgres:5432/mcp_memory
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD}@postgres:5432/mcp_memory
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-generate-secure-key-for-production}
       MAX_TOKENS: ${MAX_TOKENS:-4096}
       AGENT_DISCOVERY_ENABLED: ${AGENT_DISCOVERY_ENABLED:-true}
@@ -145,7 +155,7 @@ services:
       MCP_SERVER_URL: ws://mcp-server:9877
       # Use Docker service names
       REDIS_URL: redis://redis:6379/0
-      DATABASE_URL: postgresql://eduplatform:eduplatform2024@postgres:5432/educational_platform_dev
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-educational_platform_dev}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-generate-secure-key-for-production}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       MAX_CONCURRENT_AGENTS: ${MAX_CONCURRENT_AGENTS:-5}
@@ -185,7 +195,7 @@ services:
       COORDINATOR_URL: http://agent-coordinator:8888
       # Use Docker service names
       REDIS_URL: redis://redis:6379/0
-      DATABASE_URL: postgresql://eduplatform:eduplatform2024@postgres:5432/educational_platform_dev
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-educational_platform_dev}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       REGISTRATION_INTERVAL: ${REGISTRATION_INTERVAL:-60}
       TASK_BATCH_SIZE: ${TASK_BATCH_SIZE:-10}
@@ -215,7 +225,7 @@ services:
       <<: *common-variables
       FLASK_ENV: ${ENVIRONMENT:-development}
       # Use Docker service names
-      DATABASE_URL: postgresql://eduplatform:eduplatform2024@postgres:5432/roblox_data
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD}@postgres:5432/roblox_data
       REDIS_URL: redis://redis:6379/0
       FASTAPI_URL: http://fastapi-main:8009
       JWT_SECRET: ${JWT_SECRET_KEY:-generate-secure-key-for-production}
@@ -261,10 +271,20 @@ services:
       VITE_FASTAPI_URL: http://fastapi-main:8009
       VITE_WS_URL: ws://fastapi-main:8009
       VITE_PROXY_TARGET: http://fastapi-main:8009
-      # Pusher Configuration
-      VITE_PUSHER_KEY: ${PUSHER_KEY:-}
+      # Pusher Configuration (Active - Replacing WebSocket for realtime)
+      VITE_PUSHER_KEY: ${PUSHER_KEY}
       VITE_PUSHER_CLUSTER: ${PUSHER_CLUSTER:-us2}
       VITE_PUSHER_AUTH_ENDPOINT: http://fastapi-main:8009/api/v1/pusher/auth
+      # Clerk Authentication (2025) - Enhanced Configuration
+      VITE_CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY:-pk_test_Y2FzdWFsLWZpcmVmbHktMzkuY2xlcmsuYWNjb3VudHMuZGV2JA}
+      VITE_CLERK_SIGN_IN_URL: ${CLERK_SIGN_IN_URL:-}
+      VITE_CLERK_SIGN_UP_URL: ${CLERK_SIGN_UP_URL:-}
+      VITE_CLERK_AFTER_SIGN_IN_URL: ${CLERK_AFTER_SIGN_IN_URL:-/dashboard}
+      VITE_CLERK_AFTER_SIGN_UP_URL: ${CLERK_AFTER_SIGN_UP_URL:-/dashboard}
+      VITE_CLERK_FRONTEND_API_URL: ${CLERK_FRONTEND_API_URL:-}
+      VITE_ENABLE_CLERK_AUTH: ${ENABLE_CLERK_AUTH:-true}
+      # Clerk CORS domains - include Docker network access
+      VITE_CLERK_ALLOWED_ORIGINS: ${CLERK_ALLOWED_ORIGINS:-http://localhost:5179,http://127.0.0.1:5179,http://172.18.0.5:5179}
       # Feature Flags
       VITE_ENABLE_WEBSOCKET: ${ENABLE_WEBSOCKET:-true}
       VITE_ENABLE_GAMIFICATION: ${ENABLE_GAMIFICATION:-true}
@@ -272,11 +292,25 @@ services:
       # Development flags
       VITE_DEBUG_MODE: true
       VITE_MOCK_API: false
+      # Docker environment flag and WebSocket HMR configuration
+      DOCKER_ENV: "true"
+      VITE_HMR_HOST: localhost
+      # Set to "true" to use alternative Docker config (disables HMR)
+      # Disabled - using Pusher.io for realtime instead of WebSocket
+      VITE_USE_DOCKER_CONFIG: "false"
     ports:
       - '5179:5179'
-    # Enable volume mounts for hot-reload development
+    # Enable selective volume mounts for better development experience
     volumes:
-      - ../../apps/dashboard:/app
+      - ../../apps/dashboard/src:/app/src
+      - ../../apps/dashboard/public:/app/public
+      - ../../apps/dashboard/index.html:/app/index.html
+      - ../../apps/dashboard/vite.config.ts:/app/vite.config.ts
+      - ../../apps/dashboard/vite.config.docker.ts:/app/vite.config.docker.ts
+      - ../../apps/dashboard/package.json:/app/package.json
+      # Ensure polyfills are available
+      - ../../apps/dashboard/public/polyfills.js:/app/public/polyfills.js
+      # Exclude node_modules to prevent conflicts
       - /app/node_modules
     depends_on:
       fastapi-main:
@@ -285,7 +319,7 @@ services:
       - toolboxai_network
     healthcheck:
       <<: *healthcheck-defaults
-      test: ["CMD", "curl", "-f", "http://localhost:5179"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5179"]
 
   # Ghost Backend CMS
   ghost-backend:
@@ -299,7 +333,7 @@ services:
       database__connection__port: 5432
       database__connection__database: ghost_backend
       database__connection__user: ${POSTGRES_USER:-eduplatform}
-      database__connection__password: ${POSTGRES_PASSWORD:-eduplatform2024}
+      database__connection__password: ${POSTGRES_PASSWORD}
       database__connection__pool__min: 2
       database__connection__pool__max: 10
       url: http://localhost:8000

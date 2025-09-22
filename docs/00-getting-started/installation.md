@@ -284,6 +284,12 @@ REDIS_URL=redis://localhost:6379
 OPENAI_API_KEY=your_openai_api_key
 ANTHROPIC_API_KEY=your_anthropic_api_key
 
+# Supabase (for agent system and real-time)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_key
+SUPABASE_JWT_SECRET=your_supabase_jwt_secret
+
 # Pusher (for real-time features)
 PUSHER_APP_ID=your_pusher_app_id
 PUSHER_KEY=your_pusher_key
@@ -312,9 +318,17 @@ nano .env.local
 
 Required frontend variables:
 ```bash
+# API Configuration
 VITE_API_BASE_URL=http://127.0.0.1:8009
 VITE_WS_URL=http://127.0.0.1:8009
 VITE_ENABLE_WEBSOCKET=true
+
+# Supabase Configuration (for agent system)
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_ENABLE_SUPABASE_REALTIME=true
+
+# Pusher Configuration (for real-time features)
 VITE_PUSHER_KEY=your_pusher_key
 VITE_PUSHER_CLUSTER=us2
 VITE_PUSHER_AUTH_ENDPOINT=/pusher/auth
@@ -326,13 +340,25 @@ VITE_PUSHER_AUTH_ENDPOINT=/pusher/auth
 # Activate virtual environment if not already active
 source venv/bin/activate
 
-# Run database migrations
+# Run PostgreSQL migrations
 cd apps/backend
 alembic upgrade head
 
-# Verify migration
+# Verify PostgreSQL migration
 alembic current
 cd ../..
+
+# Run Supabase migrations (if using Supabase)
+python scripts/supabase_migration_automation.py
+
+# Verify Supabase integration
+python -c "
+from apps.backend.services.supabase_service import get_supabase_service
+import asyncio
+service = get_supabase_service()
+health = asyncio.run(service.health_check())
+print('Supabase Health:', health)
+"
 ```
 
 ### Step 7: Start Development Servers

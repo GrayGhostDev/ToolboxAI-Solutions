@@ -378,7 +378,7 @@ class IntegrationTester:
             
             # Send test message
             test_message = json.dumps({"type": "ping", "data": "test"}, default=make_json_serializable)
-            ws.send(test_message)
+            pusher.trigger(test_message)
             
             # Try to receive response (may timeout if no response)
             try:
@@ -403,7 +403,7 @@ class IntegrationTester:
                 "type": "hello",
                 "client": "integration_test"
             }, default=make_json_serializable)
-            ws.send(hello_msg)
+            pusher.trigger(hello_msg)
             
             # Try to receive response
             try:

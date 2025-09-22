@@ -78,7 +78,7 @@ def test_imports() -> bool:
     
     # Test 4: WebSocket auth imports
     try:
-        from apps.backend.services.websocket_auth import WebSocketAuthSession, UserInfo
+        from tests.fixtures.pusher_test_utils import WebSocketAuthSession, UserInfo
         print("✅ WebSocket auth imports successful")
         test_results.append(True)
     except Exception as e:

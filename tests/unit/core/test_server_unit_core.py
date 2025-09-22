@@ -69,7 +69,7 @@ from apps.backend.api.auth.auth import (
     get_current_user
 )
 from apps.backend.core.config import settings
-from apps.backend.services.websocket_handler import WebSocketManager
+from tests.fixtures.pusher_test_utils import WebSocketManager
 from apps.backend.agents.agent import AgentManager
 
 # Additional imports for real auth and testing

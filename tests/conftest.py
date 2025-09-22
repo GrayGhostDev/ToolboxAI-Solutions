@@ -12,6 +12,13 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
+# Apply LangChain compatibility patches early
+try:
+    from core.agents.langchain_compat import apply_compatibility_patches
+    apply_compatibility_patches()
+except Exception as e:
+    print(f"Warning: Could not apply LangChain compatibility patches: {e}")
+
 
 
 import asyncio
@@ -413,7 +420,7 @@ def pytest_sessionfinish(session, exitstatus):
 
 # Missing fixtures for Roblox integration tests
 @pytest.fixture
-def mock_websocket():
+def mock_pusher_as_websocket():
     """Mock WebSocket for testing real-time communication"""
     class MockWebSocket:
         def __init__(self):
@@ -450,7 +457,56 @@ def mock_websocket():
     return MockWebSocket()
 
 
-@pytest.fixture 
+# Pusher fixtures for WebSocket migration
+@pytest.fixture
+def mock_pusher_as_websocket():
+    """Mock Pusher with WebSocket-compatible interface for gradual migration"""
+    from tests.fixtures.pusher_test_utils import WebSocketToPusherAdapter
+    from tests.fixtures.pusher_mocks import MockPusherConnection
+
+    pusher_conn = MockPusherConnection()
+    adapter = WebSocketToPusherAdapter(pusher_conn)
+
+    # Add helper for test migration
+    adapter.pusher_helper = type('PusherHelper', (), {
+        'received_events': [],
+        'simulate_websocket_to_pusher_event': lambda self, msg: {
+            'event': msg.get('type', 'message'),
+            'data': msg.get('data', {}),
+            'channel': msg.get('channel', 'public-general')
+        }
+    })()
+
+    return adapter
+
+
+@pytest.fixture
+def pusher_service():
+    """Mock Pusher service for testing"""
+    from tests.fixtures.pusher_mocks import MockPusherService
+    return MockPusherService()
+
+
+@pytest.fixture
+def pusher_client():
+    """Mock Pusher client for testing"""
+    from tests.fixtures.pusher_mocks import MockPusherClient
+    return MockPusherClient()
+
+
+@pytest.fixture
+def pusher_test_app(pusher_service):
+    """FastAPI test client with Pusher mocking"""
+    from tests.fixtures.pusher_test_utils import create_pusher_test_client
+    from unittest.mock import patch
+
+    with patch('apps.backend.services.pusher_realtime.pusher_client', pusher_service.client):
+        client = create_pusher_test_client()
+        client.pusher_service = pusher_service
+        yield client
+
+
+@pytest.fixture
 def http_client():
     """Mock HTTP client for testing API requests"""
     from unittest.mock import AsyncMock, MagicMock
@@ -678,7 +734,7 @@ def mock_external_connections(monkeypatch):
         return mock
     
     # Mock WebSocket connections
-    async def mock_websocket_connect(*args, **kwargs):
+    async def mock_pusher_as_websocket_connect(*args, **kwargs):
         mock = AsyncMock()
         mock.send = AsyncMock()
         mock.recv = AsyncMock(return_value='{"type": "pong"}')
@@ -726,8 +782,8 @@ def mock_external_connections(monkeypatch):
         
         if "websocket" not in markers:
             try:
-                import websockets
-                monkeypatch.setattr(websockets, "connect", mock_websocket_connect)
+                from tests.fixtures.pusher_mocks import MockPusherService
+                monkeypatch.setattr(websockets, "connect", mock_pusher_as_websocket_connect)
             except ImportError:
                 pass
         

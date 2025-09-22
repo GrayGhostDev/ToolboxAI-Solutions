@@ -20,7 +20,9 @@ from .endpoints import analytics
 from .endpoints import compliance
 from .endpoints import reports
 from .endpoints import roblox_ai
+# Re-enabled for agent connectivity implementation
 from .endpoints import roblox_agents
+from .endpoints import direct_agents
 from .endpoints import orchestrator
 from .endpoints import admin
 
@@ -41,7 +43,9 @@ api_router.include_router(analytics.router, prefix="/analytics", tags=["analytic
 api_router.include_router(compliance.router, prefix="/compliance", tags=["compliance"])
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
 api_router.include_router(roblox_ai.router, tags=["roblox-ai"])
+# Re-enabled for agent connectivity implementation
 api_router.include_router(roblox_agents.router, tags=["roblox-agents"])
+api_router.include_router(direct_agents.router, tags=["direct-agents"])
 api_router.include_router(orchestrator.router, prefix="/orchestrator", tags=["orchestrator"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 

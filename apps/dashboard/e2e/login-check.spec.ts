@@ -1,4 +1,4 @@
-jest.setTimeout(10000);
+
 
 import { test, expect } from '@playwright/test';
 
@@ -35,12 +35,12 @@ test('check login page content', async ({ page }) => {
 
   // Check for inputs
   console.log('\n=== Input Search ===');
-  const emailInputCount = await page.locator('input[name="email"]').count();
+  const emailInputCount = await page.locator('input[name="identifier"]').count();
   const passwordInputCount = await page.locator('input[name="password"]').count();
   const emailTestId = await page.locator('[data-testid="email-input"]').count();
   const passwordTestId = await page.locator('[data-testid="password-input"]').count();
 
-  console.log(`input[name="email"]: ${emailInputCount}`);
+  console.log(`input[name="identifier"]: ${emailInputCount}`);
   console.log(`input[name="password"]: ${passwordInputCount}`);
   console.log(`[data-testid="email-input"]: ${emailTestId}`);
   console.log(`[data-testid="password-input"]: ${passwordTestId}`);

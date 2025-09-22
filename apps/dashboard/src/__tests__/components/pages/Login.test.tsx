@@ -1,5 +1,3 @@
-jest.setTimeout(10000);
-
 /**
  * Login Component Test Suite
  *
@@ -7,12 +5,54 @@ jest.setTimeout(10000);
  * Testing real behaviors and interactions
  */
 
+import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Login from '../../../components/pages/Login';
-import * as apiService from '@/services/api';
-import { TestWrapper } from '@/test/utils/test-wrapper';
+import { login } from '../../../services/api';
+
+// Simple store for testing
+const createTestStore = () => {
+  return configureStore({
+    reducer: {
+      user: (state = { isAuthenticated: false, role: 'student' }, action) => state,
+      ui: (state = {}, action) => state,
+    },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        serializableCheck: false,
+      }),
+  });
+};
+
+// Simple render wrapper
+const renderWithProviders = (ui: React.ReactElement) => {
+  const store = createTestStore();
+  const theme = createTheme();
+
+  return render(
+    <Provider store={store}>
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          {ui}
+        </ThemeProvider>
+      </MemoryRouter>
+    </Provider>
+  );
+};
+
+// Mock API service
+vi.mock('../../../services/api', () => ({
+  login: vi.fn(),
+}));
+
+// Get the mocked function
+const mockLogin = vi.mocked(login);
 
 // Mock react-router-dom navigation
 const mockNavigate = vi.fn();
@@ -25,7 +65,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 // Mock the connectWebSocket function
-vi.mock('@/services/websocket', () => ({
+vi.mock('../../services/pusher', () => ({
   connectWebSocket: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -41,11 +81,7 @@ describe('Login Component', () => {
 
   describe('Component Rendering', () => {
     it('✅ should render the login form with all required elements', () => {
-      render(
-        <TestWrapper>
-          <Login />
-        </TestWrapper>
-      );
+      renderWithProviders(<Login />);
 
       // Check for the main heading
       expect(screen.getByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
@@ -66,20 +102,12 @@ describe('Login Component', () => {
     });
 
     it('✅ should display the platform name', () => {
-      render(
-        <TestWrapper>
-          <Login />
-        </TestWrapper>
-      );
+      renderWithProviders(<Login />);
       expect(screen.getByText(/toolboxai educational platform/i)).toBeInTheDocument();
     });
 
     it('✅ should show demo credentials for different roles', () => {
-      render(
-        <TestWrapper>
-          <Login />
-        </TestWrapper>
-      );
+      renderWithProviders(<Login />);
       expect(screen.getByText(/admin@toolboxai.com/i)).toBeInTheDocument();
       expect(screen.getByText(/jane.smith@school.edu/i)).toBeInTheDocument();
       expect(screen.getByText(/alex.johnson@student.edu/i)).toBeInTheDocument();
@@ -89,11 +117,7 @@ describe('Login Component', () => {
   describe('Form Interactions', () => {
     it('✅ should update input values when user types', async () => {
       const user = userEvent.setup();
-      render(
-        <TestWrapper>
-          <Login />
-        </TestWrapper>
-      );
+      renderWithProviders(<Login />);
 
       const emailInput = screen.getByLabelText(/username or email/i);
       const passwordInput = screen.getByLabelText(/password/i);
@@ -107,11 +131,7 @@ describe('Login Component', () => {
 
     it('✅ should toggle password visibility', async () => {
       const user = userEvent.setup();
-      render(
-        <TestWrapper>
-          <Login />
-        </TestWrapper>
-      );
+      renderWithProviders(<Login />);
 
       const passwordInput = screen.getByLabelText(/password/i);
       const toggleButton = screen.getByRole('button', { name: /toggle password visibility/i });
@@ -132,14 +152,9 @@ describe('Login Component', () => {
       const user = userEvent.setup();
 
       // Mock the login function to return a promise that never resolves
-      const loginSpy = vi.spyOn(apiService, 'login');
-      loginSpy.mockImplementation(() => new Promise(() => {})); // Never resolves
+      mockLogin.mockImplementation(() => new Promise(() => {})); // Never resolves
 
-      render(
-        <TestWrapper>
-          <Login />
-        </TestWrapper>
-      );
+      renderWithProviders(<Login />);
 
       const emailInput = screen.getByLabelText(/username or email/i);
       const passwordInput = screen.getByLabelText(/password/i);
@@ -167,8 +182,7 @@ describe('Login Component', () => {
       const user = userEvent.setup();
 
       // Mock successful login
-      const loginSpy = vi.spyOn(apiService, 'login');
-      loginSpy.mockResolvedValueOnce({
+      mockLogin.mockResolvedValueOnce({
         accessToken: 'mock-jwt-token',
         refreshToken: 'mock-refresh-token',
         user: {
@@ -183,11 +197,7 @@ describe('Login Component', () => {
         }
       });
 
-      render(
-        <TestWrapper>
-          <Login />
-        </TestWrapper>
-      );
+      renderWithProviders(<Login />);
 
       // Fill and submit form
       await user.type(screen.getByLabelText(/username or email/i), 'test@example.com');
@@ -196,7 +206,7 @@ describe('Login Component', () => {
 
       // Verify login was called with correct credentials
       await waitFor(() => {
-        expect(loginSpy).toHaveBeenCalledWith('test@example.com', 'password123');
+        expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
       });
 
       // Verify tokens are stored
@@ -215,14 +225,10 @@ describe('Login Component', () => {
       const user = userEvent.setup();
 
       // Mock failed login
-      const loginSpy = vi.spyOn(apiService, 'login');
-      loginSpy.mockRejectedValueOnce(new Error('Invalid credentials'));
+      // Mock login function
+      mockLogin.mockRejectedValueOnce(new Error('Invalid credentials'));
 
-      render(
-        <TestWrapper>
-          <Login />
-        </TestWrapper>
-      );
+      renderWithProviders(<Login />);
 
       // Fill and submit form
       await user.type(screen.getByLabelText(/username or email/i), 'wrong@example.com');
@@ -246,14 +252,10 @@ describe('Login Component', () => {
       const user = userEvent.setup();
 
       // Mock failed login
-      const loginSpy = vi.spyOn(apiService, 'login');
-      loginSpy.mockRejectedValueOnce(new Error('Invalid credentials'));
+      // Mock login function
+      mockLogin.mockRejectedValueOnce(new Error('Invalid credentials'));
 
-      render(
-        <TestWrapper>
-          <Login />
-        </TestWrapper>
-      );
+      renderWithProviders(<Login />);
 
       // Submit with wrong credentials
       await user.type(screen.getByLabelText(/username or email/i), 'wrong@example.com');
@@ -279,22 +281,14 @@ describe('Login Component', () => {
 
   describe('Navigation', () => {
     it('✅ should navigate to password reset page', () => {
-      render(
-        <TestWrapper>
-          <Login />
-        </TestWrapper>
-      );
+      renderWithProviders(<Login />);
 
       const forgotPasswordLink = screen.getByText(/forgot your password\?/i);
       expect(forgotPasswordLink).toHaveAttribute('href', '/password-reset');
     });
 
     it('✅ should navigate to registration page', () => {
-      render(
-        <TestWrapper>
-          <Login />
-        </TestWrapper>
-      );
+      renderWithProviders(<Login />);
 
       const signUpLink = screen.getByText(/sign up here/i);
       expect(signUpLink).toHaveAttribute('href', '/register');
@@ -304,8 +298,8 @@ describe('Login Component', () => {
       const user = userEvent.setup();
 
       // Mock admin login
-      const loginSpy = vi.spyOn(apiService, 'login');
-      loginSpy.mockResolvedValueOnce({
+      // Mock login function
+      mockLogin.mockResolvedValueOnce({
         accessToken: 'mock-jwt-token',
         refreshToken: 'mock-refresh-token',
         user: {
@@ -320,11 +314,7 @@ describe('Login Component', () => {
         }
       });
 
-      render(
-        <TestWrapper>
-          <Login />
-        </TestWrapper>
-      );
+      renderWithProviders(<Login />);
 
       await user.type(screen.getByLabelText(/username or email/i), 'admin@toolboxai.com');
       await user.type(screen.getByLabelText(/password/i), 'Admin123!');

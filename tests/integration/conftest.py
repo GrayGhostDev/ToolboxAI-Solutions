@@ -16,7 +16,7 @@ from unittest.mock import Mock, AsyncMock, MagicMock
 import pytest
 import pytest_asyncio
 import aiohttp
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
@@ -45,7 +45,7 @@ SERVICE_CONFIG = {
         "host": "127.0.0.1",
         "port": 8008,
         "http_url": "http://127.0.0.1:8008",
-        "ws_url": "ws://127.0.0.1:8008/ws",
+        "ws_url": "pusher://app_key@cluster",
         "health_endpoint": "/health"
     },
     "flask": {
@@ -77,7 +77,8 @@ async def wait_for_service(url: str, timeout: int = 30, service_name: str = "") 
         try:
             if url.startswith("ws://"):
                 # WebSocket check
-                async with websockets.connect(url, close_timeout=1) as ws:
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherurl, close_timeout=1) as ws:
                     await ws.close()
                     logger.info(f"✓ {service_name} WebSocket service is ready at {url}")
                     return True
@@ -275,7 +276,7 @@ async def check_services():
     return results
 
 @pytest_asyncio.fixture
-async def mock_websocket():
+async def mock_pusher_as_websocket():
     """Provide mock WebSocket connection"""
     return MockWebSocketConnection()
 
@@ -510,7 +511,7 @@ __all__ = [
     "wait_for_service",
     "check_all_services",
     "check_services",
-    "mock_websocket",
+    "mock_pusher_as_websocket",
     "mock_ws_manager",
     "mock_db_session",
     "test_db",

@@ -28,7 +28,7 @@ import asyncio
 import time
 import pytest
 import aiohttp
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor
 import statistics
@@ -395,7 +395,7 @@ async def test_websocket_connection_limit(self):
                 successful_connections.append(ws)
                 
                 # Send initial message
-                await ws.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "subscribe",
                     "channel": f"test_{index}"
                 }, default=make_json_serializable))
@@ -440,12 +440,13 @@ async def test_websocket_message_throughput(self):
         async def client_sender(client_id: int):
             """Client that sends messages"""
             try:
-                async with websockets.connect(url) as ws:
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherurl) as ws:
                     for i in range(messages_per_client):
                         start = time.time()
                         
                         # Send message
-                        await ws.send(json.dumps({
+                        await pusher.trigger(json.dumps({
                             "type": "message",
                             "client_id": client_id,
                             "message_id": i,

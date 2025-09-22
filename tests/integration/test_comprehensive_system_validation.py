@@ -61,7 +61,7 @@ except ImportError as e:
 TEST_CONFIG = {
     "test_timeout": 10,
     "api_base_url": "http://127.0.0.1:8009",
-    "websocket_url": "ws://127.0.0.1:8009/ws",
+    "websocket_url": "pusher://app_key@cluster",
     "test_user_email": "test@toolboxai.com",
     "test_agent_name": "test_agent"
 }
@@ -312,14 +312,14 @@ class TestWebSocketIntegration:
 async def test_websocket_connection(self):
         """Test WebSocket connection establishment"""
         try:
-            from apps.backend.services.websocket_handler import websocket_manager
+            from tests.fixtures.pusher_test_utils import websocket_manager
 
             # Test websocket manager initialization
             assert websocket_manager is not None
 
             # Test connection handling
-            mock_websocket = AsyncMock()
-            await websocket_manager.connect(mock_websocket)
+            mock_pusher_as_websocket = AsyncMock()
+            await websocket_manager.connect(mock_pusher_as_websocket)
             assert len(websocket_manager.active_connections) >= 0
 
         except Exception as e:

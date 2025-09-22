@@ -37,7 +37,7 @@ import json
 import time
 from typing import Dict, Any, List
 import aiohttp
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 import logging
 import psycopg2
 import redis
@@ -221,9 +221,10 @@ async def test_websocket_connections(self):
         
         # Test FastAPI WebSocket
         try:
-            async with websockets.connect(f"ws://127.0.0.1:8008/ws") as ws:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherf"pusher://app_key@cluster") as ws:
                 # Send ping
-                await ws.send(json.dumps({"type": "ping"}, default=make_json_serializable))
+                await pusher.trigger(json.dumps({"type": "ping"}, default=make_json_serializable))
                 # Wait for pong
                 response = await asyncio.wait_for(ws.recv(), timeout=5)
                 data = json.loads(response)

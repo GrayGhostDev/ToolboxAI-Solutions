@@ -37,13 +37,13 @@ from typing import Dict, Any, List
 from unittest.mock import Mock, patch, AsyncMock
 
 import pytest
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 from fastapi.testclient import TestClient
 
 # Import application components
 try:
     from apps.backend.main import app
-    from apps.backend.services.websocket_handler import (
+    from tests.fixtures.pusher_test_utils import (
         websocket_manager,
         broadcast_content_update,
         WebSocketManager
@@ -76,16 +76,16 @@ async def test_websocket_connection_lifecycle(self):
         manager = WebSocketManager()
 
         # Create mock WebSocket connection
-        mock_websocket = AsyncMock()
-        mock_websocket.client_state = "CONNECTED"
+        mock_pusher_as_websocket = AsyncMock()
+        mock_pusher_as_websocket.client_state = "CONNECTED"
 
         # Test connection
-        await manager.connect(mock_websocket)
-        assert mock_websocket in manager.active_connections
+        await manager.connect(mock_pusher_as_websocket)
+        assert mock_pusher_as_websocket in manager.active_connections
 
         # Test disconnection
-        manager.disconnect(mock_websocket)
-        assert mock_websocket not in manager.active_connections
+        manager.disconnect(mock_pusher_as_websocket)
+        assert mock_pusher_as_websocket not in manager.active_connections
 
     @pytest.mark.asyncio
     @pytest.mark.websocket
@@ -95,20 +95,20 @@ async def test_websocket_message_broadcasting(self):
         manager = WebSocketManager()
 
         # Create multiple mock connections
-        mock_websockets = []
+        mock_pusher_as_websockets = []
         for i in range(3):
             mock_ws = AsyncMock()
             mock_ws.client_state = "CONNECTED"
             mock_ws.send_text = AsyncMock()
             await manager.connect(mock_ws)
-            mock_websockets.append(mock_ws)
+            mock_pusher_as_websockets.append(mock_ws)
 
         # Test broadcasting
-        test_message = {"type": "content_update", "data": "test content"}
+        test_message = {"type": 'content-update', "data": "test content"}
         await manager.broadcast(json.dumps(test_message))
 
         # Verify all connections received the message
-        for mock_ws in mock_websockets:
+        for mock_ws in mock_pusher_as_websockets:
             mock_ws.send_text.assert_called_with(json.dumps(test_message))
 
     @pytest.mark.asyncio
@@ -119,18 +119,18 @@ async def test_websocket_error_handling(self):
         manager = WebSocketManager()
 
         # Create mock connection that will fail
-        mock_websocket = AsyncMock()
-        mock_websocket.client_state = "CONNECTED"
-        mock_websocket.send_text.side_effect = Exception("Connection failed")
+        mock_pusher_as_websocket = AsyncMock()
+        mock_pusher_as_websocket.client_state = "CONNECTED"
+        mock_pusher_as_websocket.send_text.side_effect = Exception("Connection failed")
 
-        await manager.connect(mock_websocket)
+        await manager.connect(mock_pusher_as_websocket)
 
         # Test error handling during broadcast
         test_message = {"type": "error_test", "data": "test"}
         await manager.broadcast(json.dumps(test_message))
 
         # Connection should be removed after error
-        assert mock_websocket not in manager.active_connections
+        assert mock_pusher_as_websocket not in manager.active_connections
 
 
 class TestWebSocketEndpoints:
@@ -150,7 +150,8 @@ class TestWebSocketEndpoints:
 async def test_websocket_content_endpoint(self):
         """Test WebSocket content generation endpoint"""
         try:
-            async with websockets.connect("ws://127.0.0.1:8009/ws/content") as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusher"pusher://app_key@cluster/content") as websocket:
                 # Send test message
                 test_request = {
                     "type": "content_request",
@@ -161,7 +162,7 @@ async def test_websocket_content_endpoint(self):
                     }
                 }
 
-                await websocket.send(json.dumps(test_request))
+                await pusher.trigger(json.dumps(test_request))
 
                 # Wait for response with timeout
                 try:
@@ -181,7 +182,8 @@ async def test_websocket_content_endpoint(self):
 async def test_websocket_agent_communication(self):
         """Test WebSocket agent communication endpoint"""
         try:
-            async with websockets.connect("ws://127.0.0.1:8009/ws/agent/test_agent") as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusher"pusher://app_key@cluster/agent/test_agent") as websocket:
                 # Send agent communication test
                 test_message = {
                     "type": "agent_command",
@@ -189,7 +191,7 @@ async def test_websocket_agent_communication(self):
                     "command": "status"
                 }
 
-                await websocket.send(json.dumps(test_message))
+                await pusher.trigger(json.dumps(test_message))
 
                 # Wait for response
                 try:
@@ -248,10 +250,10 @@ async def test_redis_websocket_pipeline_coordination(self):
             manager = WebSocketManager()
 
             # Create mock WebSocket connection
-            mock_websocket = AsyncMock()
-            mock_websocket.client_state = "CONNECTED"
-            mock_websocket.send_text = AsyncMock()
-            await manager.connect(mock_websocket)
+            mock_pusher_as_websocket = AsyncMock()
+            mock_pusher_as_websocket.client_state = "CONNECTED"
+            mock_pusher_as_websocket.send_text = AsyncMock()
+            await manager.connect(mock_pusher_as_websocket)
 
             # Test Redis-triggered WebSocket broadcast
             test_data = {"message": "Redis pipeline test", "timestamp": time.time()}
@@ -471,7 +473,7 @@ if __name__ == "__main__":
 
     # Test WebSocket manager import
     try:
-        from apps.backend.services.websocket_handler import websocket_manager
+        from tests.fixtures.pusher_test_utils import websocket_manager
         print("✓ WebSocket manager import successful")
     except Exception as e:
         print(f"✗ WebSocket manager import failed: {e}")

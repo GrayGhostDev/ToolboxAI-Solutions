@@ -21,8 +21,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
 import pytest
-import websockets
-from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
+from tests.fixtures.pusher_mocks import MockPusherService
+from tests.fixtures.pusher_test_utils import ConnectionClosedError, ConnectionClosedOK
 
 # Set environment for testing
 os.environ["TESTING"] = "true"
@@ -99,15 +99,16 @@ async def test_websocket_connection_establishment(self, realtime_client, auth_he
         """Test basic WebSocket connection establishment"""
         try:
             # Test WebSocket endpoint availability
-            ws_url = "ws://127.0.0.1:8009/ws"
+            ws_url = "pusher://app_key@cluster"
 
-            async with websockets.connect(ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherws_url) as websocket:
                 # Send authentication message
                 auth_message = {
                     "type": "auth",
                     "token": auth_headers["Authorization"].replace("Bearer ", "")
                 }
-                await websocket.send(json.dumps(auth_message))
+                await pusher.trigger(json.dumps(auth_message))
 
                 # Wait for response
                 try:
@@ -129,15 +130,16 @@ async def test_websocket_connection_establishment(self, realtime_client, auth_he
 async def test_websocket_message_echo(self, realtime_client, auth_headers):
         """Test WebSocket message sending and receiving"""
         try:
-            ws_url = "ws://127.0.0.1:8009/ws/echo"  # Echo endpoint for testing
+            ws_url = "pusher://app_key@cluster/echo"  # Echo endpoint for testing
 
-            async with websockets.connect(ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherws_url) as websocket:
                 # Send test message
                 test_message = {
                     "type": "ping",
                     "data": {"message": "Hello WebSocket", "timestamp": time.time()}
                 }
-                await websocket.send(json.dumps(test_message))
+                await pusher.trigger(json.dumps(test_message))
 
                 # Wait for echo response
                 response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
@@ -156,12 +158,13 @@ async def test_websocket_message_echo(self, realtime_client, auth_headers):
 async def test_websocket_authentication_required(self):
         """Test that WebSocket connections require proper authentication"""
         try:
-            ws_url = "ws://127.0.0.1:8009/ws/protected"
+            ws_url = "pusher://app_key@cluster/protected"
 
-            async with websockets.connect(ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherws_url) as websocket:
                 # Send message without authentication
                 test_message = {"type": "test", "data": "unauthorized"}
-                await websocket.send(json.dumps(test_message))
+                await pusher.trigger(json.dumps(test_message))
 
                 # Should receive authentication error
                 response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
@@ -179,7 +182,7 @@ async def test_websocket_connection_limits(self):
         """Test WebSocket connection limits and handling"""
         connections = []
         try:
-            ws_url = "ws://127.0.0.1:8009/ws"
+            ws_url = "pusher://app_key@cluster"
 
             # Try to establish multiple connections
             for i in range(10):
@@ -207,15 +210,17 @@ async def test_websocket_connection_limits(self):
 async def test_websocket_reconnection_handling(self):
         """Test WebSocket reconnection after disconnect"""
         try:
-            ws_url = "ws://127.0.0.1:8009/ws"
+            ws_url = "pusher://app_key@cluster"
 
             # First connection
-            async with websockets.connect(ws_url) as websocket1:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherws_url) as websocket1:
                 test_message = {"type": "ping"}
                 await websocket1.send(json.dumps(test_message))
 
             # Reconnection after disconnect
-            async with websockets.connect(ws_url) as websocket2:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherws_url) as websocket2:
                 test_message = {"type": "ping"}
                 await websocket2.send(json.dumps(test_message))
 
@@ -544,10 +549,11 @@ class TestCrossCompatibilityWebSocketPusher:
 async def test_websocket_to_pusher_bridge(self, realtime_client, auth_headers, mock_pusher_client):
         """Test bridging WebSocket messages to Pusher channels"""
         try:
-            ws_url = "ws://127.0.0.1:8009/ws/bridge"
+            ws_url = "pusher://app_key@cluster/bridge"
 
             with patch("apps.backend.services.pusher.pusher_client", mock_pusher_client):
-                async with websockets.connect(ws_url) as websocket:
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherws_url) as websocket:
                     # Send message via WebSocket that should be bridged to Pusher
                     bridge_message = {
                         "type": "broadcast",
@@ -558,7 +564,7 @@ async def test_websocket_to_pusher_bridge(self, realtime_client, auth_headers, m
                             "timestamp": time.time()
                         }
                     }
-                    await websocket.send(json.dumps(bridge_message))
+                    await pusher.trigger(json.dumps(bridge_message))
 
                     # Give time for processing
                     await asyncio.sleep(1)
@@ -577,15 +583,16 @@ async def test_pusher_to_websocket_relay(self, realtime_client, auth_headers):
         # Implementation depends on the specific architecture
 
         try:
-            ws_url = "ws://127.0.0.1:8009/ws/relay"
+            ws_url = "pusher://app_key@cluster/relay"
 
-            async with websockets.connect(ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherws_url) as websocket:
                 # Subscribe to relay channel
                 subscribe_message = {
                     "type": "subscribe",
                     "channel": "pusher-relay"
                 }
-                await websocket.send(json.dumps(subscribe_message))
+                await pusher.trigger(json.dumps(subscribe_message))
 
                 # Trigger Pusher event that should be relayed
                 pusher_data = {
@@ -624,16 +631,17 @@ async def test_dual_client_consistency(self, realtime_client, auth_headers, mock
         messages_received = {"websocket": [], "pusher": []}
 
         try:
-            ws_url = "ws://127.0.0.1:8009/ws"
+            ws_url = "pusher://app_key@cluster"
 
             with patch("apps.backend.services.pusher.pusher_client", mock_pusher_client):
-                async with websockets.connect(ws_url) as websocket:
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherws_url) as websocket:
                     # Subscribe WebSocket to test channel
                     subscribe_message = {
                         "type": "subscribe",
                         "channel": "dual-test"
                     }
-                    await websocket.send(json.dumps(subscribe_message))
+                    await pusher.trigger(json.dumps(subscribe_message))
 
                     # Send test message through API (should reach both clients)
                     test_data = {
@@ -710,7 +718,7 @@ async def test_connection_stability_under_load(self):
         """Test WebSocket connection stability under load"""
         connections = []
         try:
-            ws_url = "ws://127.0.0.1:8009/ws"
+            ws_url = "pusher://app_key@cluster"
 
             # Create multiple concurrent connections
             for i in range(20):
@@ -720,7 +728,7 @@ async def test_connection_stability_under_load(self):
 
                     # Send test message
                     test_message = {"type": "load_test", "connection_id": i}
-                    await websocket.send(json.dumps(test_message))
+                    await pusher.trigger(json.dumps(test_message))
 
                 except Exception as e:
                     print(f"Connection {i} failed: {e}")
@@ -733,7 +741,7 @@ async def test_connection_stability_under_load(self):
             for i, ws in enumerate(connections):
                 try:
                     message = {"type": "concurrent_test", "id": i, "timestamp": time.time()}
-                    message_tasks.append(ws.send(json.dumps(message)))
+                    message_tasks.append(pusher.trigger(json.dumps(message)))
                 except Exception:
                     pass
 

@@ -46,7 +46,7 @@ from core.agents.multi_modal_generator import (
     GeneratedContent,
     ContentModality
 )
-from apps.backend.services.websocket_pipeline_manager import (
+from tests.fixtures.pusher_test_utils import (
     WebSocketPipelineManager
 )
 from database.models import (

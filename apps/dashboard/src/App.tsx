@@ -9,10 +9,14 @@ import { logger } from "./utils/logger";
 import RealtimeToast from "./components/notifications/RealtimeToast";
 import { LoadingOverlay } from "./components/common/LoadingOverlay";
 import { COPPA_COMPLIANCE } from "./config";
+// Clerk Auth Components (2025)
+import ClerkLogin from "./components/auth/ClerkLogin";
+import ClerkSignUp from "./components/auth/ClerkSignUp";
+import { useAuth } from "./contexts/ClerkAuthContext";
+// Legacy auth components (will be archived)
 import Login from "./components/pages/Login";
 import Register from "./components/pages/Register";
 import PasswordReset from "./components/pages/PasswordReset";
-import { useAuth } from "./hooks/useAuth";
 import ErrorBoundary from "./components/ErrorBoundary";
 // WebSocket removed - using Pusher for real-time features
 import { pusherService } from "./services/pusher";
@@ -124,17 +128,23 @@ export default function App() {
     setShowConsent(false);
   };
 
+  // Check if Clerk auth is enabled
+  const useClerkAuth = import.meta.env.VITE_ENABLE_CLERK_AUTH === 'true';
+
   // If not authenticated, show auth routes
   if (!isAuthenticated) {
     return (
       <ErrorBoundary>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          {/* Use Clerk components if enabled, otherwise use legacy */}
+          <Route path="/login" element={useClerkAuth ? <ClerkLogin /> : <Login />} />
+          <Route path="/sign-in" element={<ClerkLogin />} />
+          <Route path="/register" element={useClerkAuth ? <ClerkSignUp /> : <Register />} />
+          <Route path="/sign-up" element={<ClerkSignUp />} />
           <Route path="/password-reset" element={<PasswordReset />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to={useClerkAuth ? "/sign-in" : "/login"} replace />} />
         </Routes>
-        
+
         {/* Global Components */}
         <NotificationToast />
         {loading && <LoadingOverlay />}

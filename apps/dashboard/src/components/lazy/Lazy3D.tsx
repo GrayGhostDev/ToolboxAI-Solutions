@@ -19,10 +19,10 @@ interface Lazy3DProps {
 }
 
 // 3D fallback for unsupported browsers
-const WebGL3DFallback: React.FC<{ height: number; message?: string }> = ({
+const WebGL3DFallback = ({
   height,
   message = "3D content not available"
-}) => (
+}: { height: number; message?: string }) => (
   <Box
     sx={{
       height,
@@ -45,7 +45,7 @@ const WebGL3DFallback: React.FC<{ height: number; message?: string }> = ({
 );
 
 // Enhanced loading skeleton for 3D content
-const ThreeDSkeleton: React.FC<{ height: number }> = ({ height }) => (
+const ThreeDSkeleton = ({ height }: { height: number }) => (
   <Box
     sx={{
       height,
@@ -115,14 +115,14 @@ class ThreeDErrorBoundary extends React.Component<
   }
 }
 
-export const Lazy3D: React.FC<Lazy3DProps> = ({
+export const Lazy3D = ({
   type,
   children,
   style,
   className,
   fallbackHeight = 400,
   onError
-}) => {
+}: Lazy3DProps) => {
   const [webglSupported] = React.useState(() => checkWebGLSupport());
 
   const errorFallback = (

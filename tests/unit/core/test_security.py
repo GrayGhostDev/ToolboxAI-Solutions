@@ -29,7 +29,7 @@ os.environ["JWT_SECRET_KEY"] = "test-secret-key-for-testing-only-32-chars-minimu
 
 from apps.backend.main import app
 from apps.backend.api.auth.auth_secure import SecureAuth, RateLimiter, CSRFProtection
-from apps.backend.services.websocket_handler import WebSocketManager, WebSocketHandler
+from tests.fixtures.pusher_test_utils import WebSocketManager, WebSocketHandler
 
 class TestAuthentication:
     """Test authentication security"""
@@ -206,14 +206,14 @@ async def test_websocket_rate_limiting(self, connection_manager):
         client_id = "test_client"
         
         # Mock connection
-        mock_websocket = Mock()
-        mock_websocket.client_state = 1  # Connected
-        mock_websocket.send_text = AsyncMock()
-        mock_websocket.accept = AsyncMock()
+        mock_pusher_as_websocket = Mock()
+        mock_pusher_as_websocket.client_state = 1  # Connected
+        mock_pusher_as_websocket.send_text = AsyncMock()
+        mock_pusher_as_websocket.accept = AsyncMock()
         
         # Create connection
         connection = await connection_manager.connect(
-            mock_websocket,
+            mock_pusher_as_websocket,
             client_id,
             user_id="user123"
         )

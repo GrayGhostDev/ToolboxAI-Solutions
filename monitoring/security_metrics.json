@@ -1,0 +1,20 @@
+{
+  "timestamp": "2025-09-21T07:29:59.228529",
+  "security_score": 0,
+  "target_score": 95.0,
+  "baseline_score": 85.0,
+  "improvement": -85.0,
+  "remaining_gap": 95.0,
+  "total_issues": 531,
+  "critical_issues": 0,
+  "high_issues": 476,
+  "medium_issues": 55,
+  "low_issues": 0,
+  "fixed_issues": 0,
+  "trend": "stable",
+  "vulnerabilities_by_category": {
+    "secret": 475,
+    "code": 42,
+    "config": 14
+  }
+}

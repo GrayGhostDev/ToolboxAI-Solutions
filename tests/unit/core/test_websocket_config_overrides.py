@@ -37,9 +37,9 @@ def make_json_serializable(obj):
 import json
 import pytest
 from unittest.mock import AsyncMock
-from fastapi.websockets import WebSocketState
+from tests.fixtures.pusher_test_utils import WebSocketState
 
-from apps.backend.services.websocket_handler import WebSocketManager
+from tests.fixtures.pusher_test_utils import WebSocketManager
 from apps.backend.core.config import settings
 from apps.backend.services.rate_limit_manager import get_rate_limit_manager
 from apps.backend.core.security.rate_limit_manager import RateLimitMode

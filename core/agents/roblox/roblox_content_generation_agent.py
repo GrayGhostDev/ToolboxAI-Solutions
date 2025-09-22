@@ -11,9 +11,26 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from langchain_core.prompts import PromptTemplate
-from langchain.chains import LLMChain
-from langchain_core.messages import Document
 from langchain.tools import Tool
+
+# Handle Document import with fallback
+try:
+    from langchain_core.documents import Document
+except ImportError:
+    try:
+        from langchain_core.messages import Document
+    except ImportError:
+        # Create mock Document class
+        class Document:
+            def __init__(self, page_content: str, metadata: dict = None):
+                self.page_content = page_content
+                self.metadata = metadata or {}
+
+# Use compatibility layer for LLMChain
+try:
+    from core.langchain_pydantic_v2_compat import CompatibleLLMChain as LLMChain
+except ImportError:
+    from langchain.chains import LLMChain
 
 from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
 from core.agents.github_agents.base_github_agent import BaseGitHubAgent

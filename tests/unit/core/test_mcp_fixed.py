@@ -21,7 +21,7 @@ import json
 import tempfile
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from datetime import datetime, timezone
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 import sqlite3
 import aiosqlite
 import sys

@@ -189,18 +189,20 @@ export default defineConfig({
       reuseExistingServer: true,  // Use already running server
       env: {
         VITE_API_BASE_URL: apiURL,
-        VITE_WS_URL: `ws://localhost:8009`,
-        VITE_ENABLE_WEBSOCKET: 'true',
+        VITE_ENABLE_CLERK_AUTH: 'false',  // Disable Clerk for tests - use custom Login
+        VITE_ENABLE_WEBSOCKET: 'false',   // Disable WebSocket - use Pusher
         VITE_PUSHER_KEY: process.env.VITE_PUSHER_KEY || 'test-key',
         VITE_PUSHER_CLUSTER: process.env.VITE_PUSHER_CLUSTER || 'us2',
+        VITE_PUSHER_AUTH_ENDPOINT: '/pusher/auth',
         VITE_E2E_TESTING: 'true',  // Disable auto-authentication for tests
       },
     },
   ],
 
   // Global setup and teardown
-  globalSetup: path.join(__dirname, 'e2e', 'setup', 'global-setup.ts'),
-  globalTeardown: path.join(__dirname, 'e2e', 'setup', 'global-teardown.ts'),
+  // Temporarily disabled for debugging
+  // globalSetup: path.join(__dirname, 'e2e', 'setup', 'global-setup.ts'),
+  // globalTeardown: path.join(__dirname, 'e2e', 'setup', 'global-teardown.ts'),
 
   // Timeout for each test
   timeout: 30 * 1000,

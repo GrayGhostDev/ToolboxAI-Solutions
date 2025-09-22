@@ -308,6 +308,10 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
             ])
 
             # Create agent executor
+            # Apply compatibility patches before LangChain imports
+            from core.agents.langchain_compat import apply_compatibility_patches
+            apply_compatibility_patches()
+
             from langchain.agents import create_openai_tools_agent
             agent = create_openai_tools_agent(self.llm, tools, prompt)
 

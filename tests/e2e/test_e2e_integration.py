@@ -39,7 +39,7 @@ import requests
 import aiohttp
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 import subprocess
 import os
 import pytest
@@ -100,7 +100,7 @@ class E2EIntegrationTester:
     
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio
-async def test_authentication_flow(self) -> Dict[str, Any]:
+    async def test_authentication_flow(self) -> Dict[str, Any]:
         """Test 1: Complete authentication flow across services"""
         result = {
             "test": "Authentication Flow",
@@ -158,7 +158,7 @@ async def test_authentication_flow(self) -> Dict[str, Any]:
     
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio
-async def test_content_generation_pipeline(self) -> Dict[str, Any]:
+    async def test_content_generation_pipeline(self) -> Dict[str, Any]:
         """Test 2: Complete content generation pipeline"""
         result = {
             "test": "Content Generation Pipeline",
@@ -207,8 +207,9 @@ async def test_content_generation_pipeline(self) -> Dict[str, Any]:
             
             # Step 2: Verify MCP context update
             try:
-                async with websockets.connect(SERVICES["mcp_server"]["ws_url"]) as ws:
-                    await ws.send(json.dumps({"type": "get_context"}, default=make_json_serializable))
+                async with async_mock_pusher_context() as pusher:
+        # Connect using PusherSERVICES["mcp_server"]["ws_url"]) as ws:
+                    await pusher.trigger(json.dumps({"type": "get_context"}, default=make_json_serializable))
                     response = await asyncio.wait_for(ws.recv(), timeout=2)
                     context_data = json.loads(response)
                     

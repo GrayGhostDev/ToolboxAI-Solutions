@@ -13,20 +13,39 @@ from datetime import datetime
 from abc import ABC, abstractmethod
 from enum import Enum
 
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-
-# Check if we should use mock LLM
-USE_MOCK_LLM = not os.getenv("OPENAI_API_KEY") or os.getenv("USE_MOCK_LLM") == "true"
-
-if USE_MOCK_LLM:
-    # Use mock LLM for testing
-    from core.agents.mock_llm import MockChatModel as ChatOpenAI
-    logger = logging.getLogger(__name__)
-    logger.info("Using Mock LLM for testing (no OpenAI API key required)")
-else:
-    # Use real OpenAI
-    from langchain_openai import ChatOpenAI
+# Import enhanced LangChain compatibility layer
+try:
+    from core.langchain_enhanced_compat import (
+        get_chat_model, 
+        ChatPromptTemplate, 
+        MessagesPlaceholder,
+        BaseMessage, 
+        HumanMessage, 
+        AIMessage, 
+        SystemMessage,
+        StrOutputParser,
+        LangChainConfig,
+        LangChainMode,
+        validate_langchain_environment
+    )
+    ENHANCED_COMPAT_AVAILABLE = True
+except ImportError:
+    # Fallback to original imports
+    from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
+    from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+    ENHANCED_COMPAT_AVAILABLE = False
+    
+    # Check if we should use mock LLM
+    USE_MOCK_LLM = not os.getenv("OPENAI_API_KEY") or os.getenv("USE_MOCK_LLM") == "true"
+    
+    if USE_MOCK_LLM:
+        # Use mock LLM for testing
+        from core.agents.mock_llm import MockChatModel as ChatOpenAI
+        logger = logging.getLogger(__name__)
+        logger.info("Using Mock LLM for testing (no OpenAI API key required)")
+    else:
+        # Use real OpenAI
+        from langchain_openai import ChatOpenAI
 
 from langchain_core.agents import AgentAction, AgentFinish
 from pydantic import BaseModel, Field
@@ -155,17 +174,31 @@ class BaseAgent(ABC):
         # Initialize prompt template
         self.prompt = self._create_prompt_template()
 
-        logger.info(f"Initialized {self.name} agent")
+        # Validate LangChain environment if enhanced compatibility is available
+        if ENHANCED_COMPAT_AVAILABLE:
+            self._validate_environment()
+        
+        logger.info(f"Initialized {self.name} agent with {'enhanced' if ENHANCED_COMPAT_AVAILABLE else 'legacy'} LangChain support")
 
-    def _initialize_llm(self) -> ChatOpenAI:
-        """Initialize the language model"""
-        return ChatOpenAI(
-            model=self.config.model,
-            temperature=self.config.temperature,
-            max_tokens=None,
-            timeout=self.config.timeout,
-            max_retries=self.config.max_retries,
-        )
+    def _initialize_llm(self):
+        """Initialize the language model using enhanced compatibility layer"""
+        if ENHANCED_COMPAT_AVAILABLE:
+            # Use enhanced compatibility layer
+            return get_chat_model(
+                model_name=self.config.model,
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens,
+                timeout=self.config.timeout,
+            )
+        else:
+            # Fallback to direct initialization
+            return ChatOpenAI(
+                model=self.config.model,
+                temperature=self.config.temperature,
+                max_tokens=None,
+                timeout=self.config.timeout,
+                max_retries=self.config.max_retries,
+            )
 
     def _create_prompt_template(self) -> ChatPromptTemplate:
         """Create the base prompt template"""
@@ -459,5 +492,37 @@ Always structure your responses clearly and provide Lua code when applicable.
 
         return {"reflection": response.content, "metrics": self.metrics, "timestamp": datetime.now().isoformat()}
 
+    def _validate_environment(self):
+        """Validate LangChain environment and log any issues"""
+        if ENHANCED_COMPAT_AVAILABLE:
+            try:
+                validation_results = validate_langchain_environment()
+                if validation_results["issues"]:
+                    logger.warning(f"LangChain environment issues detected for {self.name}: {validation_results['issues']}")
+                else:
+                    logger.debug(f"LangChain environment validated successfully for {self.name}")
+            except Exception as e:
+                logger.warning(f"Failed to validate LangChain environment for {self.name}: {e}")
+    
+    def get_environment_status(self) -> Dict[str, Any]:
+        """Get detailed environment status for this agent"""
+        status = {
+            "agent_name": self.name,
+            "enhanced_compat_available": ENHANCED_COMPAT_AVAILABLE,
+            "model_config": {
+                "model": self.config.model,
+                "temperature": self.config.temperature,
+                "max_tokens": self.config.max_tokens
+            }
+        }
+        
+        if ENHANCED_COMPAT_AVAILABLE:
+            try:
+                status["langchain_validation"] = validate_langchain_environment()
+            except Exception as e:
+                status["langchain_validation"] = {"error": str(e)}
+        
+        return status
+    
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}(name='{self.name}', status={self.status.value})>"
+        return f"<{self.__class__.__name__}(name='{self.name}', status={self.status.value}, enhanced_compat={ENHANCED_COMPAT_AVAILABLE})>"

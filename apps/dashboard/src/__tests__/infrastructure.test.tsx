@@ -8,7 +8,7 @@ import { render, screen } from '@test/utils/render';
 import React from 'react';
 
 // Simple test component
-const TestComponent: React.FC<{ message?: string }> = ({ message = 'Hello Test' }) => {
+const TestComponent= ({ message = 'Hello Test' }: { message?: string }) => {
   return (
     <div data-testid="test-component">
       <h1>{message}</h1>

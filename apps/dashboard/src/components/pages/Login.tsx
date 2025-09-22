@@ -18,8 +18,7 @@ import { login } from "../../services/api";
 import { useAppDispatch } from "../../store";
 import { signInSuccess } from "../../store/slices/userSlice";
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from "../../config";
-// import { wsService } from "../../services/ws";
-import { connectWebSocket } from "../../services/websocket";
+import { pusherService } from "../../services/pusher";
 import { logger } from "../../utils/logger";
 
 export default function Login() {
@@ -54,9 +53,9 @@ export default function Login() {
 
     // Basic email format validation - check if it's not a username (contains _)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isUsername = formData.email.includes("_") || formData.email.includes(".");
+    const isUsername = formData.email.includes("_") || !formData.email.includes("@");
     if (!isUsername && !emailRegex.test(formData.email)) {
-      setError("Please enter a valid email address");
+      setError("Please enter a valid email address or username");
       setLoading(false);
       return;
     }
@@ -77,14 +76,13 @@ export default function Login() {
       localStorage.setItem(AUTH_TOKEN_KEY, accessToken);
       localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
 
-      // Try to connect WebSocket after successful login via Pusher
-      // Don't let WebSocket errors prevent login
+      // Connect to Pusher for realtime features after successful login
+      // Don't let Pusher errors prevent login
       try {
-        if (import.meta.env.VITE_ENABLE_WEBSOCKET === 'true') {
-          await connectWebSocket(accessToken);
-        }
-      } catch (wsError) {
-        logger.warn('WebSocket connection failed, continuing without realtime features', wsError);
+        pusherService.connect();
+        logger.info('Connected to Pusher for realtime features');
+      } catch (pusherError) {
+        logger.warn('Pusher connection failed, continuing without realtime features', pusherError);
       }
 
       // Get role from either user object or top-level
@@ -160,6 +158,7 @@ export default function Login() {
 
               <TextField
                 fullWidth
+                id="email-field"
                 name="email"
                 label="Username or Email"
                 type="email"
@@ -188,6 +187,7 @@ export default function Login() {
 
               <TextField
                 fullWidth
+                id="password-field"
                 name="password"
                 label="Password"
                 type={showPassword ? "text" : "password"}

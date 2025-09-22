@@ -204,9 +204,10 @@ class IntegrationTestRunner:
 
         # Check WebSocket
         try:
-            import websockets
+            from tests.fixtures.pusher_mocks import MockPusherService
             uri = f"{self.config['websocket']['base_url']}/ws"
-            async with websockets.connect(uri, timeout=5) as ws:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusheruri, timeout=5) as ws:
                 await ws.close()
             services["websocket"] = True
         except Exception:

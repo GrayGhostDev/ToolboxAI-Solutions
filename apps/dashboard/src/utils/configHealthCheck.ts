@@ -83,8 +83,8 @@ class ConfigurationHealthCheck {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      // Use relative URL to go through Vite proxy instead of direct cross-origin request
-      const response = await fetch('/health', {
+      // Use backend API URL for health check
+      const response = await fetch(`${this.apiBaseUrl}/health`, {
         signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',

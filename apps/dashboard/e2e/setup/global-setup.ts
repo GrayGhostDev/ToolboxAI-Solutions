@@ -57,10 +57,10 @@ async function globalSetup(config: FullConfig) {
 
     // Try to log in as admin
     try {
-      // Use flexible selectors for better reliability
-      await page.locator('input[name="email"], [data-testid="email-input"]').first().fill(adminEmail);
-      await page.locator('input[name="password"], [data-testid="password-input"]').first().fill(adminPassword);
-      await page.locator('button[type="submit"], [data-testid="login-submit"]').first().click();
+      // Use Clerk-specific selectors - Clerk uses "identifier" instead of "email"
+      await page.locator('input[name="identifier"], input[id="identifier-field"], [data-testid="email-input"]').first().fill(adminEmail);
+      await page.locator('input[name="password"], input[id="password-field"], [data-testid="password-input"]').first().fill(adminPassword);
+      await page.locator('button[type="submit"], button:has-text("Continue"), [data-testid="login-submit"]').first().click();
 
       // Wait for successful login
       await page.waitForURL(/\/dashboard/, { timeout: 5000 });

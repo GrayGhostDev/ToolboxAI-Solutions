@@ -23,8 +23,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
 import pytest
-import websockets
-from websockets.exceptions import ConnectionClosedError
+from tests.fixtures.pusher_mocks import MockPusherService
+from tests.fixtures.pusher_test_utils import ConnectionClosedError
 
 # Set environment for testing
 os.environ["TESTING"] = "true"
@@ -714,8 +714,9 @@ async def test_realtime_progress_updates(self, e2e_client, authenticated_users, 
 
             # Try to connect to WebSocket for progress updates
             try:
-                ws_url = f"ws://127.0.0.1:8009/ws/progress/{task_id}"
-                async with websockets.connect(ws_url) as websocket:
+                ws_url = f"pusher://app_key@cluster/progress/{task_id}"
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherws_url) as websocket:
                     # Wait for progress updates
                     for _ in range(10):
                         try:

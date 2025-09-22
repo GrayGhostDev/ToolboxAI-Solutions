@@ -16,7 +16,7 @@ interface LazyChartProps {
 }
 
 // Enhanced loading skeleton for charts
-const ChartSkeleton: React.FC<{ height: number }> = ({ height }) => (
+const ChartSkeleton = ({ height }: { height: number }) => (
   <Box sx={{ p: 2 }}>
     <Skeleton variant="text" width={200} height={32} sx={{ mb: 2 }} />
     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -54,13 +54,13 @@ class ChartErrorBoundary extends React.Component<
   }
 }
 
-export const LazyChart: React.FC<LazyChartProps> = ({
+export const LazyChart = ({
   type,
   height = 350,
   timeRange,
   autoRefresh,
   fallbackHeight = 350
-}) => {
+}: LazyChartProps) => {
   const errorFallback = (
     <Alert severity="warning" sx={{ height: fallbackHeight, display: 'flex', alignItems: 'center' }}>
       Chart temporarily unavailable. Please refresh the page.

@@ -49,7 +49,7 @@ import logging
 import os
 import sys
 import time
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 import uuid
@@ -434,7 +434,8 @@ async def test_websocket_authentication(self) -> bool:
             # Connect to WebSocket with authentication
             ws_url = f"{self.ws_url}/ws?token={self.auth_token}"
             
-            async with websockets.connect(ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherws_url) as websocket:
                 # Wait for welcome message
                 welcome_msg = await asyncio.wait_for(websocket.recv(), timeout=5)
                 welcome_data = json.loads(welcome_msg)
@@ -445,7 +446,7 @@ async def test_websocket_authentication(self) -> bool:
                         "type": "ping",
                         "timestamp": datetime.now().isoformat()
                     }
-                    await websocket.send(json.dumps(ping_msg, default=make_json_serializable))
+                    await pusher.trigger(json.dumps(ping_msg, default=make_json_serializable))
                     
                     # Wait for pong response
                     response_msg = await asyncio.wait_for(websocket.recv(), timeout=5)

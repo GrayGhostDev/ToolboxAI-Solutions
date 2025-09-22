@@ -193,13 +193,13 @@ class DashboardIntegrationTest:
             
             # Send authentication
             if self.auth_token:
-                ws.send(json.dumps({
+                pusher.trigger(json.dumps({
                     "type": "auth",
                     "token": self.auth_token
                 }, default=make_json_serializable))
                 
             # Send a ping
-            ws.send(json.dumps({"type": "ping"}, default=make_json_serializable))
+            pusher.trigger(json.dumps({"type": "ping"}, default=make_json_serializable))
             
             # Wait for response
             response = ws.recv()

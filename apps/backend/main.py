@@ -67,6 +67,16 @@ from apps.backend.agents.agent import (
     initialize_agents,
     shutdown_agents,
 )
+
+# Import new agent connectivity services
+try:
+    from apps.backend.services.agent_service import get_agent_service, shutdown_agent_service
+    from apps.backend.services.agent_queue import get_agent_queue, shutdown_agent_queue
+    from apps.backend.core.supabase_config import initialize_supabase_for_agents, health_check_supabase
+    AGENT_CONNECTIVITY_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Agent connectivity services not available: {e}")
+    AGENT_CONNECTIVITY_AVAILABLE = False
 from apps.backend.api.auth.auth import (
     AuthenticationError,
     AuthorizationError,
@@ -269,6 +279,14 @@ async def lifespan(app: FastAPI):
         }
     )
 
+    # Initialize Supabase real-time integration
+    try:
+        from apps.backend.services.realtime_integration import start_realtime_integration
+        await start_realtime_integration()
+        logger.info("Supabase real-time integration started")
+    except Exception as e:
+        logger.warning(f"Failed to start real-time integration: {e}")
+
     # Notify Sentry that startup is complete
     if sentry_manager.initialized:
         sentry_manager.add_breadcrumb(
@@ -281,6 +299,14 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("Shutting down application...")
+
+    # Stop Supabase real-time integration
+    try:
+        from apps.backend.services.realtime_integration import stop_realtime_integration
+        await stop_realtime_integration()
+        logger.info("Supabase real-time integration stopped")
+    except Exception as e:
+        logger.warning(f"Error stopping real-time integration: {e}")
 
     # Cancel and await background tasks for proper cleanup
     if hasattr(app.state, "cleanup_task"):
@@ -1325,6 +1351,16 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load dashboard endpoints: {e}")
 
+# Import and include health check routers
+try:
+    from apps.backend.api.health.health_checks import router as health_checks_router
+    from apps.backend.api.health.integrations import router as integrations_router
+    app.include_router(health_checks_router, prefix="/api/v1")
+    app.include_router(integrations_router, prefix="/api/v1")
+    logger.info("Health check endpoints loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not load health check endpoints: {e}")
+
 # Import and include classes router
 try:
     from apps.backend.api.v1.endpoints.classes import classes_router
@@ -1380,6 +1416,14 @@ try:
     logger.info("Auth endpoints loaded successfully")
 except ImportError as e:
     logger.warning(f"Could not load auth endpoints: {e}")
+
+# Import and include Clerk webhook router (2025)
+try:
+    from apps.backend.api.webhooks.clerk_webhooks import router as clerk_webhook_router
+    app.include_router(clerk_webhook_router)
+    logger.info("Clerk webhook endpoints loaded successfully")
+except ImportError as e:
+    logger.warning(f"Could not load Clerk webhook endpoints: {e}")
 
 # Import and include roblox router
 try:
@@ -1559,11 +1603,12 @@ try:
 except ImportError as e:
     logger.warning(f"Could not load Database Swarm endpoints: {e}")
 
-# Error Handling Swarm endpoints
+# Error Handling Swarm endpoints - TEMPORARILY DISABLED FOR PHASE 1.5
+# TODO Phase 2: Re-enable after LangChain compatibility issues resolved
 try:
-    from apps.backend.routers.error_handling_api import router as error_handling_router
-    app.include_router(error_handling_router)
-    logger.info("Error Handling Swarm endpoints loaded successfully - Comprehensive error management enabled")
+    # from apps.backend.routers.error_handling_api import router as error_handling_router
+    # app.include_router(error_handling_router)
+    logger.info("Error Handling Swarm endpoints temporarily disabled - Phase 1.5 compatibility mode")
 except ImportError as e:
     logger.warning(f"Error Handling Swarm endpoints not loaded: {e}")
 

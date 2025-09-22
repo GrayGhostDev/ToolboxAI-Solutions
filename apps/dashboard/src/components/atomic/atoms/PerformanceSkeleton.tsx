@@ -20,12 +20,12 @@ interface PerformanceSkeletonProps {
   animate?: boolean;
 }
 
-export const PerformanceSkeleton: React.FC<PerformanceSkeletonProps> = ({
+export const PerformanceSkeleton = ({
   variant,
   height = 200,
   count = 1,
   animate = true
-}) => {
+}: PerformanceSkeletonProps) => {
   const SkeletonComponent = animate ? OptimizedSkeleton : Skeleton;
   const animationProps = animate ? {} : { animation: false as const };
 

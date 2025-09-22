@@ -36,7 +36,7 @@ import aiohttp
 from typing import Dict, Any, List
 from unittest.mock import Mock, AsyncMock, patch
 
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 from datetime import datetime, timezone
 from fastapi.testclient import TestClient
 
@@ -354,19 +354,19 @@ class TestRealTimeSync:
     
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio
-async def test_websocket_connection(self, mock_websocket):
+async def test_websocket_connection(self, mock_pusher_as_websocket):
         """Test WebSocket connection for real-time updates"""
         # Always use mock but test real WebSocket logic
-        websocket = mock_websocket
+        websocket = mock_pusher_as_websocket
         
         # Send test message
-        await websocket.send(json.dumps({
+        await pusher.trigger(json.dumps({
             "type": "subscribe",
             "channel": "roblox_updates"
         }, default=make_json_serializable))
         
         # Receive confirmation
-        response = await websocket.recv()
+        response = await pusher.wait_for_event()
         data = json.loads(response)
         
         assert data["type"] == "subscribed"
@@ -374,25 +374,25 @@ async def test_websocket_connection(self, mock_websocket):
     
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio
-async def test_content_update_sync(self, mock_websocket):
+async def test_content_update_sync(self, mock_pusher_as_websocket):
         """Test content update synchronization"""
-        websocket = mock_websocket
+        websocket = mock_pusher_as_websocket
         
         # Subscribe to content updates
-        await websocket.send(json.dumps({
+        await pusher.trigger(json.dumps({
             "type": "subscribe",
             "channel": "content_updates"
         }, default=make_json_serializable))
         
         # Verify subscription
-        response = await websocket.recv()
+        response = await pusher.wait_for_event()
         data = json.loads(response)
         assert data["type"] == "subscribed"
         assert data["channel"] == "content_updates"
         
         # Simulate content update (this would normally come from a different source)
         update_message = {
-            "type": "content_update",
+            "type": 'content-update',
             "data": {
                 "lesson_id": "123",
                 "content_type": "quiz",
@@ -401,11 +401,11 @@ async def test_content_update_sync(self, mock_websocket):
         }
         
         # Send content update
-        await websocket.send(json.dumps(update_message, default=make_json_serializable))
+        await pusher.trigger(json.dumps(update_message, default=make_json_serializable))
         
         # In a real scenario, this would be broadcast to subscribers
         # For testing, we validate the message structure
-        assert update_message["type"] == "content_update"
+        assert update_message["type"] == 'content-update'
         assert update_message["data"]["lesson_id"] == "123"
     
     @pytest.mark.asyncio(loop_scope="function")
@@ -461,10 +461,10 @@ async def test_progress_sync(self):
     
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio
-async def test_multiplayer_sync(self, mock_websocket):
+async def test_multiplayer_sync(self, mock_pusher_as_websocket):
         """Test multiplayer synchronization in educational games"""
         # Simulate WebSocket connection for multiplayer sync
-        ws1 = mock_websocket
+        ws1 = mock_pusher_as_websocket
         
         # User 1 joins lesson
         await ws1.send(json.dumps({
@@ -669,7 +669,7 @@ async def test_partial_sync_recovery(self):
         for i in range(5):
             sync_queue.append({
                 "id": i,
-                "type": "progress_update",
+                "type": 'progress-update',
                 "data": {"progress": i * 20}
             })
         

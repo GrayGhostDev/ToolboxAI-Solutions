@@ -1,5 +1,6 @@
 """
 Health check endpoints for monitoring and deployment verification.
+Updated 2025-09-21 to include comprehensive health monitoring for all system components.
 """
 
 from datetime import datetime
@@ -14,7 +15,45 @@ import redis.asyncio as redis
 from database.connection import get_async_session
 from toolboxai_settings import settings
 
+# Import new health check routers
+try:
+    from apps.backend.api.health.agent_health import router as agent_health_router
+    AGENT_HEALTH_AVAILABLE = True
+except ImportError:
+    AGENT_HEALTH_AVAILABLE = False
+
+try:
+    from apps.backend.api.health.mcp_health import router as mcp_health_router
+    MCP_HEALTH_AVAILABLE = True
+except ImportError:
+    MCP_HEALTH_AVAILABLE = False
+
+try:
+    from apps.backend.api.health.queue_health import router as queue_health_router
+    QUEUE_HEALTH_AVAILABLE = True
+except ImportError:
+    QUEUE_HEALTH_AVAILABLE = False
+
+try:
+    from apps.backend.api.health.supabase_health import router as supabase_health_router
+    SUPABASE_HEALTH_AVAILABLE = True
+except ImportError:
+    SUPABASE_HEALTH_AVAILABLE = False
+
 router = APIRouter(tags=["Health"])
+
+# Include specialized health routers
+if AGENT_HEALTH_AVAILABLE:
+    router.include_router(agent_health_router)
+
+if MCP_HEALTH_AVAILABLE:
+    router.include_router(mcp_health_router)
+
+if QUEUE_HEALTH_AVAILABLE:
+    router.include_router(queue_health_router)
+
+if SUPABASE_HEALTH_AVAILABLE:
+    router.include_router(supabase_health_router)
 
 
 async def check_database_connection(session: AsyncSession) -> Dict[str, Any]:

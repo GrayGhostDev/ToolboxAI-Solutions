@@ -212,7 +212,7 @@ class AdvancedSupervisorAgent:
         )
 
         # LLM setup
-        self.llm = from langchain_openai import ChatOpenAI(
+        self.llm = ChatOpenAI(
             model=self.config.model,
             temperature=self.config.temperature,
             max_tokens=self.config.max_tokens,

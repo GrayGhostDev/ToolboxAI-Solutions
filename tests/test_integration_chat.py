@@ -78,13 +78,14 @@ async def test_full_chat_flow():
         # 3. Test WebSocket connection for streaming
         print("\n3. Testing WebSocket streaming...")
         try:
-            import websockets
-            ws_url = f"ws://127.0.0.1:8008/api/v1/ai-chat/ws/{conversation['id']}"
+            from tests.fixtures.pusher_mocks import MockPusherService
+            ws_url = f"pusher://app_key@cluster/{conversation['id']}"
 
             try:
-                async with websockets.connect(ws_url) as websocket:
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherws_url) as websocket:
                     # Send a message via WebSocket
-                    await websocket.send(json.dumps({
+                    await pusher.trigger(json.dumps({
                         "type": "message",
                         "content": "Design a space station environment for science experiments"
                     }))

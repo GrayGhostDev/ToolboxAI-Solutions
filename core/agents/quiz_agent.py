@@ -631,16 +631,19 @@ local QUIZ_DATA = {{
 
         # Add questions
         for i, question in enumerate(quiz.questions, 1):
+            escaped_question = question.question.replace('"', '\\"')
             script += f"""        {{
-            question = "{question.question.replace('"', '\\"')}",
+            question = "{escaped_question}",
             options = {{
 """
             for option in question.options:
-                script += f'                "{option.replace('"', '\\"')}",\n'
+                escaped_option = option.replace('"', '\\"')
+                script += f'                "{escaped_option}",\n'
 
+            escaped_explanation = question.explanation.replace('"', '\\"')
             script += f"""            }},
             correctAnswer = {question.correct_answer + 1},  -- Lua arrays start at 1
-            explanation = "{question.explanation.replace('"', '\\"')}",
+            explanation = "{escaped_explanation}",
             points = {question.points},
             difficulty = "{question.difficulty}",
             hint = "{question.hint or 'No hint available'}"

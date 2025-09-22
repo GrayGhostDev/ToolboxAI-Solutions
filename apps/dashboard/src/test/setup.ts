@@ -9,8 +9,34 @@
 
 import React from 'react';
 import '@testing-library/jest-dom';
-import './utils/react18-compat'; // Import React 18 compatibility fixes
+import './utils/react19-compat'; // Import React 19 compatibility fixes
 import './utils/router-mocks'; // Import router mocks BEFORE any component imports
+
+// CRITICAL: Ensure React is available globally to fix hooks issues
+globalThis.React = React;
+if (typeof window !== 'undefined') {
+  (window as any).React = React;
+}
+
+// Additional React setup for test environment
+// Ensure React hooks are properly initialized
+import { act } from '@testing-library/react';
+import ReactDOM from 'react-dom/client';
+
+// Set up React for testing with proper globals
+if (typeof globalThis.__REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
+  globalThis.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+    isDisabled: true,
+    supportsFiber: true,
+    renderers: new Map(),
+    onScheduleFiberRoot: () => {},
+    onCommitFiberRoot: () => {},
+    onCommitFiberUnmount: () => {},
+  };
+}
+
+// Ensure IS_REACT_ACT_ENVIRONMENT is set for React 19
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 import { beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
@@ -20,6 +46,72 @@ import { server } from './utils/msw-handlers';
 
 // 2025 Best Practice: Use proper Emotion cache configuration instead of mocking
 // See emotion-test-setup.tsx for the proper configuration
+
+// ============================================================================
+// CLERK AUTHENTICATION MOCKING
+// ============================================================================
+
+// Mock Clerk authentication completely for tests
+vi.mock('@clerk/clerk-react', () => {
+  return {
+    useAuth: vi.fn(() => ({
+      isLoaded: true,
+      isSignedIn: true,
+      userId: 'mock-user-id',
+      sessionId: 'mock-session-id',
+      getToken: vi.fn(() => Promise.resolve('mock-jwt-token')),
+      signOut: vi.fn(() => Promise.resolve())
+    })),
+    useUser: vi.fn(() => ({
+      isLoaded: true,
+      isSignedIn: true,
+      user: {
+        id: 'mock-user-id',
+        username: 'test-user',
+        firstName: 'Test',
+        lastName: 'User',
+        imageUrl: 'https://example.com/avatar.png',
+        primaryEmailAddress: {
+          emailAddress: 'test@example.com',
+          verification: { status: 'verified' }
+        },
+        publicMetadata: { role: 'student' },
+        unsafeMetadata: {},
+        createdAt: Date.now(),
+        update: vi.fn(() => Promise.resolve())
+      }
+    })),
+    useSession: vi.fn(() => ({
+      isLoaded: true,
+      isSignedIn: true,
+      session: {
+        id: 'mock-session-id',
+        status: 'active',
+        user: {
+          id: 'mock-user-id',
+          username: 'test-user',
+          firstName: 'Test',
+          lastName: 'User'
+        }
+      }
+    })),
+    SignIn: vi.fn(({ children, ...props }) =>
+      React.createElement('div', { 'data-testid': 'clerk-sign-in', ...props }, children)
+    ),
+    SignUp: vi.fn(({ children, ...props }) =>
+      React.createElement('div', { 'data-testid': 'clerk-sign-up', ...props }, children)
+    ),
+    UserButton: vi.fn(({ children, ...props }) =>
+      React.createElement('div', { 'data-testid': 'clerk-user-button', ...props }, children)
+    ),
+    SignOutButton: vi.fn(({ children, ...props }) =>
+      React.createElement('button', { 'data-testid': 'clerk-sign-out-button', ...props }, children || 'Sign Out')
+    ),
+    ClerkProvider: vi.fn(({ children }) => children),
+    withClerk: vi.fn((component) => component),
+    __esModule: true,
+  };
+});
 
 // Mock specific MUI transitions that cause DOM issues in happy-dom
 vi.mock('@mui/material/Fade', () => ({
@@ -178,6 +270,70 @@ vi.mock('@/config/routes', () => ({
     SETTINGS: '/settings',
   },
   getClassDetailsRoute: vi.fn().mockImplementation((id) => `/classes/${id}`),
+  __esModule: true,
+}));
+
+// Mock config/index with proper ES module exports
+vi.mock('@/config/index', () => ({
+  API_BASE_URL: 'http://localhost:8008',
+  WS_URL: 'http://localhost:8008',
+  PUSHER_KEY: 'test-pusher-key',
+  PUSHER_CLUSTER: 'us2',
+  PUSHER_AUTH_ENDPOINT: '/api/v1/pusher/auth',
+  AUTH_TOKEN_KEY: 'toolboxai_auth_token',
+  AUTH_REFRESH_TOKEN_KEY: 'toolboxai_refresh_token',
+  ROBLOX_API_URL: 'https://api.roblox.com',
+  ROBLOX_UNIVERSE_ID: 'test-universe-id',
+  GOOGLE_CLASSROOM_CLIENT_ID: 'test-google-client-id',
+  CANVAS_API_TOKEN: 'test-canvas-token',
+  ENABLE_WEBSOCKET: true,
+  ENABLE_GAMIFICATION: true,
+  ENABLE_ANALYTICS: true,
+  COPPA_COMPLIANCE: true,
+  FERPA_COMPLIANCE: true,
+  GDPR_COMPLIANCE: true,
+  DEBUG_MODE: false,
+  MOCK_API: false,
+  XP_CONFIG: {
+    levelMultiplier: 100,
+    maxLevel: 100,
+    bonusXPMultiplier: 1.5,
+    streakBonus: 10,
+  },
+  PAGINATION: {
+    defaultPageSize: 20,
+    maxPageSize: 100,
+  },
+  WS_CONFIG: {
+    reconnectInterval: 3000,
+    maxReconnectAttempts: 5,
+    heartbeatInterval: 30000,
+  },
+  API_TIMEOUT: 30000,
+  LANGUAGES: [
+    { code: "en", name: "English" },
+    { code: "es", name: "Español" },
+    { code: "fr", name: "Français" },
+  ],
+  DEFAULT_LANGUAGE: "en",
+  __esModule: true,
+}));
+
+// Mock relative config import path too
+vi.mock('../../config', () => ({
+  API_BASE_URL: 'http://localhost:8008',
+  WS_URL: 'http://localhost:8008',
+  PUSHER_KEY: 'test-pusher-key',
+  PUSHER_CLUSTER: 'us2',
+  PUSHER_AUTH_ENDPOINT: '/api/v1/pusher/auth',
+  AUTH_TOKEN_KEY: 'toolboxai_auth_token',
+  AUTH_REFRESH_TOKEN_KEY: 'toolboxai_refresh_token',
+  ROBLOX_API_URL: 'https://api.roblox.com',
+  ROBLOX_UNIVERSE_ID: 'test-universe-id',
+  ENABLE_WEBSOCKET: true,
+  ENABLE_GAMIFICATION: true,
+  ENABLE_ANALYTICS: true,
+  API_TIMEOUT: 30000,
   __esModule: true,
 }));
 

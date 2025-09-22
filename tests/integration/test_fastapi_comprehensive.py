@@ -415,14 +415,15 @@ async def test_websocket_connection(self, mock_llm):
         logger.info("\n🔌 Testing WebSocket Connection...")
         
         try:
-            import websockets
+            from tests.fixtures.pusher_mocks import MockPusherService
             
-            ws_url = f"ws://{TEST_CONFIG['api_host']}:{TEST_CONFIG['api_port']}/ws"
+            ws_url = f"pusher://app_key@cluster"
             
             try:
-                async with websockets.connect(ws_url) as websocket:
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherws_url) as websocket:
                     # Send test message
-                    await websocket.send(json.dumps({"type": "ping"}, default=make_json_serializable))
+                    await pusher.trigger(json.dumps({"type": "ping"}, default=make_json_serializable))
                     
                     # Wait for response with timeout
                     try:
@@ -487,14 +488,15 @@ async def test_mcp_integration(self, mock_llm):
         logger.info("\n🧠 Testing MCP Integration...")
         
         try:
-            import websockets
+            from tests.fixtures.pusher_mocks import MockPusherService
             
             mcp_url = f"ws://{TEST_CONFIG['api_host']}:{TEST_CONFIG['mcp_port']}"
             
             try:
-                async with websockets.connect(mcp_url) as websocket:
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pushermcp_url) as websocket:
                     # Test context update
-                    await websocket.send(json.dumps({
+                    await pusher.trigger(json.dumps({
                         "type": "update_context",
                         "context": {"test": "data"}
                     }, default=make_json_serializable))

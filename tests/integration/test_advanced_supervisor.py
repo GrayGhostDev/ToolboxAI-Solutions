@@ -60,8 +60,8 @@ from core.agents.supervisor_advanced import (
 )
 from core.agents.base_agent import AgentConfig, TaskResult
 
-# Create mock from langchain_openai import ChatOpenAI at module level
-class Mockfrom langchain_openai import ChatOpenAI:
+# Create mock ChatOpenAI at module level
+class MockChatOpenAI:
     """Mock from langchain_openai import ChatOpenAI for testing"""
     def __init__(self, **kwargs):
         self.model = kwargs.get('model', 'gpt-4')

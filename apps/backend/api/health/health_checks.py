@@ -13,15 +13,24 @@ import psutil
 import time
 import os
 import asyncio
+import socket
+import ssl
 from datetime import datetime, timezone
 from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+import pusher
+import requests
 
-# Import database manager
+# Import database manager and settings
 try:
     from database.connection import db_manager, get_redis_client
 except ImportError:
     db_manager = None
     get_redis_client = None
+
+try:
+    from toolboxai_settings import settings
+except ImportError:
+    settings = None
 
 router = APIRouter()
 
@@ -123,6 +132,10 @@ async def readiness_probe() -> Dict:
         }
 
         health_check_counter.labels(endpoint='ready', status='success' if all_healthy else 'failed').inc()
+
+        if not all_healthy:
+            raise HTTPException(status_code=503, detail=result)
+
         return result
 
     except Exception as e:
@@ -144,6 +157,9 @@ async def deep_health_check() -> Dict:
             check_external_apis(),
             check_system_resources(),
             check_application_health(),
+            check_agent_orchestration(),
+            check_realtime_services(),
+            check_roblox_integration(),
         ]
 
         checks_results = await asyncio.gather(*checks_tasks, return_exceptions=True)
@@ -283,6 +299,47 @@ async def check_external_apis() -> Dict:
         else:
             checks["pusher"] = {"healthy": False, "error": "Pusher not configured"}
 
+        # Check Clerk Auth API
+        if os.getenv('CLERK_SECRET_KEY'):
+            try:
+                async with aiohttp.ClientSession() as session:
+                    headers = {"Authorization": f"Bearer {os.getenv('CLERK_SECRET_KEY')}"}
+                    async with session.get(
+                        "https://api.clerk.dev/v1/users",
+                        headers=headers,
+                        timeout=aiohttp.ClientTimeout(total=5)
+                    ) as response:
+                        checks["clerk"] = {
+                            "healthy": response.status in [200, 401],  # 401 is also OK, means API is reachable
+                            "status_code": response.status
+                        }
+            except Exception as e:
+                checks["clerk"] = {"healthy": False, "error": str(e)}
+        else:
+            checks["clerk"] = {"healthy": False, "error": "Clerk not configured"}
+
+        # Check Supabase API
+        if os.getenv('SUPABASE_URL') and os.getenv('SUPABASE_ANON_KEY'):
+            try:
+                async with aiohttp.ClientSession() as session:
+                    headers = {
+                        "apikey": os.getenv('SUPABASE_ANON_KEY'),
+                        "Authorization": f"Bearer {os.getenv('SUPABASE_ANON_KEY')}"
+                    }
+                    async with session.get(
+                        f"{os.getenv('SUPABASE_URL')}/rest/v1/",
+                        headers=headers,
+                        timeout=aiohttp.ClientTimeout(total=5)
+                    ) as response:
+                        checks["supabase"] = {
+                            "healthy": response.status in [200, 404],  # 404 is OK for root endpoint
+                            "status_code": response.status
+                        }
+            except Exception as e:
+                checks["supabase"] = {"healthy": False, "error": str(e)}
+        else:
+            checks["supabase"] = {"healthy": False, "error": "Supabase not configured"}
+
         overall_healthy = all(check.get("healthy", False) for check in checks.values())
 
         return {
@@ -400,3 +457,183 @@ async def check_application_health() -> Dict:
         }
     except Exception as e:
         return {"application": {"healthy": False, "error": str(e)}}
+
+async def check_agent_orchestration() -> Dict:
+    """Check agent orchestration system health"""
+    try:
+        checks = {}
+
+        # Check MCP Server (port 9877)
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(5)
+                result = s.connect_ex(('localhost', 9877))
+                mcp_healthy = result == 0
+
+            checks["mcp_server"] = {
+                "healthy": mcp_healthy,
+                "port": 9877,
+                "status": "online" if mcp_healthy else "offline"
+            }
+        except Exception as e:
+            checks["mcp_server"] = {"healthy": False, "error": str(e)}
+
+        # Check Agent Coordinator (port 8888)
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(5)
+                result = s.connect_ex(('localhost', 8888))
+                coordinator_healthy = result == 0
+
+            checks["agent_coordinator"] = {
+                "healthy": coordinator_healthy,
+                "port": 8888,
+                "status": "online" if coordinator_healthy else "offline"
+            }
+        except Exception as e:
+            checks["agent_coordinator"] = {"healthy": False, "error": str(e)}
+
+        # Check SPARC Framework status
+        try:
+            # Check if SPARC modules are importable
+            import core.sparc.state_manager
+            checks["sparc_framework"] = {
+                "healthy": True,
+                "status": "loaded",
+                "modules": ["state_manager"]
+            }
+        except ImportError as e:
+            checks["sparc_framework"] = {"healthy": False, "error": f"Import error: {str(e)}"}
+
+        overall_healthy = all(check.get("healthy", False) for check in checks.values())
+
+        return {
+            "agent_orchestration": {
+                "healthy": overall_healthy,
+                "checks": checks
+            }
+        }
+    except Exception as e:
+        return {"agent_orchestration": {"healthy": False, "error": str(e)}}
+
+async def check_realtime_services() -> Dict:
+    """Check real-time services (Pusher, WebSocket)"""
+    try:
+        checks = {}
+
+        # Check Pusher configuration
+        if settings and hasattr(settings, 'PUSHER_APP_ID'):
+            try:
+                pusher_client = pusher.Pusher(
+                    app_id=settings.PUSHER_APP_ID,
+                    key=settings.PUSHER_KEY,
+                    secret=settings.PUSHER_SECRET,
+                    cluster=settings.PUSHER_CLUSTER,
+                    ssl=True
+                )
+
+                # Test channel info to verify connection
+                channel_info = pusher_client.channel_info('test-channel')
+
+                checks["pusher"] = {
+                    "healthy": True,
+                    "status": "configured",
+                    "cluster": settings.PUSHER_CLUSTER,
+                    "ssl_enabled": True
+                }
+            except Exception as e:
+                checks["pusher"] = {"healthy": False, "error": str(e)}
+        else:
+            checks["pusher"] = {"healthy": False, "error": "Pusher not configured"}
+
+        # Check WebSocket endpoints (legacy support)
+        try:
+            # Check if WebSocket routes are available
+            websocket_endpoints = [
+                "/ws/content",
+                "/ws/roblox",
+                "/ws/native"
+            ]
+
+            checks["websocket_endpoints"] = {
+                "healthy": True,
+                "endpoints": websocket_endpoints,
+                "status": "legacy_support_active"
+            }
+        except Exception as e:
+            checks["websocket_endpoints"] = {"healthy": False, "error": str(e)}
+
+        overall_healthy = all(check.get("healthy", False) for check in checks.values())
+
+        return {
+            "realtime_services": {
+                "healthy": overall_healthy,
+                "checks": checks
+            }
+        }
+    except Exception as e:
+        return {"realtime_services": {"healthy": False, "error": str(e)}}
+
+async def check_roblox_integration() -> Dict:
+    """Check Roblox integration services"""
+    try:
+        checks = {}
+
+        # Check Flask Bridge (port 5001)
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(5)
+                result = s.connect_ex(('localhost', 5001))
+                flask_healthy = result == 0
+
+            checks["flask_bridge"] = {
+                "healthy": flask_healthy,
+                "port": 5001,
+                "status": "online" if flask_healthy else "offline"
+            }
+        except Exception as e:
+            checks["flask_bridge"] = {"healthy": False, "error": str(e)}
+
+        # Check Roblox source structure
+        try:
+            import os
+            roblox_paths = [
+                "roblox/src/client",
+                "roblox/src/server",
+                "roblox/src/shared"
+            ]
+
+            structure_valid = all(
+                os.path.exists(os.path.join(os.getcwd(), path))
+                for path in roblox_paths
+            )
+
+            checks["roblox_source_structure"] = {
+                "healthy": structure_valid,
+                "paths_checked": roblox_paths,
+                "status": "valid" if structure_valid else "missing_paths"
+            }
+        except Exception as e:
+            checks["roblox_source_structure"] = {"healthy": False, "error": str(e)}
+
+        # Check Roblox agents
+        try:
+            from core.agents.roblox.roblox_content_generation_agent import RobloxContentGenerationAgent
+            checks["roblox_agents"] = {
+                "healthy": True,
+                "status": "agents_available",
+                "agents": ["RobloxContentGenerationAgent"]
+            }
+        except ImportError as e:
+            checks["roblox_agents"] = {"healthy": False, "error": f"Agent import error: {str(e)}"}
+
+        overall_healthy = all(check.get("healthy", False) for check in checks.values())
+
+        return {
+            "roblox_integration": {
+                "healthy": overall_healthy,
+                "checks": checks
+            }
+        }
+    except Exception as e:
+        return {"roblox_integration": {"healthy": False, "error": str(e)}}

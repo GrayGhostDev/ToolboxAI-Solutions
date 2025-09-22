@@ -270,7 +270,7 @@ def patch_langchain_for_testing():
         
         # Create mock module
         mock_openai = MagicMock()
-        mock_openai.from langchain_openai import ChatOpenAI = MockChatModel
+        mock_openai.ChatOpenAI = MockChatModel
         
         # Inject into sys.modules
         sys.modules["langchain_openai"] = mock_openai

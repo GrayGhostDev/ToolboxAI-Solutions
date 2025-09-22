@@ -33,7 +33,7 @@ vi.mock('react-markdown', () => ({
 vi.mock('react-syntax-highlighter', () => ({
   Prism: ({ children }: { children: string }) => <pre>{children}</pre>,
 }));
-vi.mock('react-syntax-highlighter/dist/esm/styles/prism', () => ({
+vi.mock('react-syntax-highlighter/dist/cjs/styles/prism', () => ({
   vscDarkPlus: {}
 }));
 

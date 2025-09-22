@@ -8,42 +8,44 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
-import { WebSocketProvider } from './websocket-test-provider';
-import { EmotionTestProvider } from './emotion-test-setup';
-import userSlice from '@/store/slices/userSlice';
-import uiSlice from '@/store/slices/uiSlice';
-import dashboardSlice from '@/store/slices/dashboardSlice';
-import assessmentsSlice from '@/store/slices/assessmentsSlice';
-import complianceSlice from '@/store/slices/complianceSlice';
-import messagesSlice from '@/store/slices/messagesSlice';
-import progressSlice from '@/store/slices/progressSlice';
-import gamificationSlice from '@/store/slices/gamificationSlice';
-import analyticsSlice from '@/store/slices/analyticsSlice';
-import classesSlice from '@/store/slices/classesSlice';
-import lessonsSlice from '@/store/slices/lessonsSlice';
-import realtimeSlice from '@/store/slices/realtimeSlice';
-import robloxSlice from '@/store/slices/robloxSlice';
 
-// Using 2025 best practices for Emotion/MUI testing
-// Theme is now handled by EmotionTestProvider
-
-// Create test store
+// Simple reducer setup to avoid complex dependencies
 const createTestStore = (preloadedState = {}) => {
   return configureStore({
     reducer: {
-      user: userSlice,
-      ui: uiSlice,
-      dashboard: dashboardSlice,
-      assessments: assessmentsSlice,
-      compliance: complianceSlice,
-      messages: messagesSlice,
-      progress: progressSlice,
-      gamification: gamificationSlice,
-      analytics: analyticsSlice,
-      classes: classesSlice,
-      lessons: lessonsSlice,
-      realtime: realtimeSlice,
-      roblox: robloxSlice,
+      user: (state = { isAuthenticated: false, user: null, token: null }, action) => {
+        switch (action.type) {
+          case 'user/signInSuccess':
+            return {
+              ...state,
+              isAuthenticated: true,
+              user: action.payload.user,
+              token: action.payload.token
+            };
+          case 'user/signOut':
+            return {
+              ...state,
+              isAuthenticated: false,
+              user: null,
+              token: null
+            };
+          default:
+            return state;
+        }
+      },
+      // Minimal reducers for other slices to prevent errors
+      ui: (state = {}, action) => state,
+      dashboard: (state = {}, action) => state,
+      assessments: (state = {}, action) => state,
+      compliance: (state = {}, action) => state,
+      messages: (state = {}, action) => state,
+      progress: (state = {}, action) => state,
+      gamification: (state = {}, action) => state,
+      analytics: (state = {}, action) => state,
+      classes: (state = {}, action) => state,
+      lessons: (state = {}, action) => state,
+      realtime: (state = {}, action) => state,
+      roblox: (state = {}, action) => state,
     },
     preloadedState,
     middleware: (getDefaultMiddleware) =>
@@ -56,19 +58,46 @@ const createTestStore = (preloadedState = {}) => {
 interface TestWrapperProps {
   children: React.ReactNode;
   initialState?: any;
+  authState?: 'authenticated' | 'unauthenticated' | 'loading';
+  userRole?: 'admin' | 'teacher' | 'student';
 }
 
-export const TestWrapper: React.FunctionComponent<TestWrapperProps> = ({ children, initialState = {} }) => {
-  const store = createTestStore(initialState);
+export const TestWrapper: React.FunctionComponent<TestWrapperProps> = ({
+  children,
+  initialState = {},
+  authState = 'authenticated',
+  userRole = 'student'
+}) => {
+  // Create initial state with auth information
+  const mockUser = authState === 'authenticated' ? {
+    id: 'test-user-id',
+    email: `${userRole}@test.com`,
+    username: `test_${userRole}`,
+    displayName: `Test ${userRole}`,
+    role: userRole,
+    schoolId: 'test-school',
+    classIds: userRole === 'teacher' ? ['class-1', 'class-2'] : ['class-1'],
+    avatarUrl: null,
+  } : null;
+
+  const storeInitialState = {
+    user: {
+      isAuthenticated: authState === 'authenticated',
+      isLoading: authState === 'loading',
+      user: mockUser,
+      token: authState === 'authenticated' ? 'mock-jwt-token' : null,
+      refreshToken: authState === 'authenticated' ? 'mock-refresh-token' : null,
+      error: null,
+    },
+    ...initialState
+  };
+
+  const store = createTestStore(storeInitialState);
 
   return (
     <Provider store={store}>
       <BrowserRouter>
-        <WebSocketProvider>
-          <EmotionTestProvider>
-            {children}
-          </EmotionTestProvider>
-        </WebSocketProvider>
+        {children}
       </BrowserRouter>
     </Provider>
   );

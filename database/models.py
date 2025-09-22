@@ -25,6 +25,23 @@ from sqlalchemy.sql import func
 
 Base = declarative_base()
 
+# Import agent models to ensure they're registered with Base
+try:
+    from database.models.agent_models import (
+        AgentInstance, AgentExecution, AgentMetrics, AgentTaskQueue, 
+        SystemHealth, AgentConfiguration, AgentType, AgentStatus, 
+        TaskStatus, TaskPriority
+    )
+    # Re-export for backward compatibility
+    __all__ = [
+        'AgentInstance', 'AgentExecution', 'AgentMetrics', 'AgentTaskQueue',
+        'SystemHealth', 'AgentConfiguration', 'AgentType', 'AgentStatus',
+        'TaskStatus', 'TaskPriority'
+    ]
+except ImportError as e:
+    # Agent models not available
+    pass
+
 
 # Enum Types
 class UserRole(PyEnum):

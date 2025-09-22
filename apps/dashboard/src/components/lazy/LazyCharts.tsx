@@ -14,10 +14,10 @@ const PerformanceIndicator = lazy(() => import('../analytics/PerformanceIndicato
 const ContentMetrics = lazy(() => import('../analytics/ContentMetrics'));
 
 // Chart skeleton component for better UX
-const ChartSkeleton: React.FC<{ height?: number; variant?: 'line' | 'bar' | 'pie' }> = ({
+const ChartSkeleton = ({
   height = 300,
   variant = 'line'
-}) => (
+}: { height?: number; variant?: 'line' | 'bar' | 'pie' }) => (
   <Box
     display="flex"
     flexDirection="column"
@@ -71,14 +71,14 @@ const ChartSkeleton: React.FC<{ height?: number; variant?: 'line' | 'bar' | 'pie
 );
 
 // Loading fallback component
-const ChartLoadingFallback: React.FC<{
-  message?: string;
-  height?: number;
-  variant?: 'line' | 'bar' | 'pie';
-}> = ({
+const ChartLoadingFallback = ({
   message = "Loading chart...",
   height = 300,
   variant = 'line'
+}: {
+  message?: string;
+  height?: number;
+  variant?: 'line' | 'bar' | 'pie';
 }) => (
   <Box position="relative">
     <ChartSkeleton height={height} variant={variant} />
@@ -105,7 +105,7 @@ const ChartLoadingFallback: React.FC<{
 );
 
 // Error fallback component
-const ChartErrorFallback: React.FC<{ error?: Error }> = ({ error }) => (
+const ChartErrorFallback = ({ error }: { error?: Error }) => (
   <Box
     display="flex"
     flexDirection="column"
@@ -179,14 +179,14 @@ interface LazyContentMetricsProps extends LazyChartProps {
 }
 
 // Lazy UserActivityChart component
-export const LazyUserActivityChart: React.FC<LazyUserActivityChartProps> = ({
+export const LazyUserActivityChart = ({
   data,
   timeRange,
   fallback,
   loadingMessage = "Loading activity chart...",
   height = 300,
   variant = 'line'
-}) => {
+}: LazyUserActivityChartProps) => {
   return (
     <ChartErrorBoundary fallback={fallback}>
       <Suspense fallback={<ChartLoadingFallback message={loadingMessage} height={height} variant={variant} />}>
@@ -197,13 +197,13 @@ export const LazyUserActivityChart: React.FC<LazyUserActivityChartProps> = ({
 };
 
 // Lazy PerformanceIndicator component
-export const LazyPerformanceIndicator: React.FC<LazyPerformanceIndicatorProps> = ({
+export const LazyPerformanceIndicator = ({
   metrics,
   fallback,
   loadingMessage = "Loading performance metrics...",
   height = 300,
   variant = 'bar'
-}) => {
+}: LazyPerformanceIndicatorProps) => {
   return (
     <ChartErrorBoundary fallback={fallback}>
       <Suspense fallback={<ChartLoadingFallback message={loadingMessage} height={height} variant={variant} />}>
@@ -214,14 +214,14 @@ export const LazyPerformanceIndicator: React.FC<LazyPerformanceIndicatorProps> =
 };
 
 // Lazy ContentMetrics component
-export const LazyContentMetrics: React.FC<LazyContentMetricsProps> = ({
+export const LazyContentMetrics = ({
   contentType,
   dateRange,
   fallback,
   loadingMessage = "Loading content metrics...",
   height = 300,
   variant = 'pie'
-}) => {
+}: LazyContentMetricsProps) => {
   return (
     <ChartErrorBoundary fallback={fallback}>
       <Suspense fallback={<ChartLoadingFallback message={loadingMessage} height={height} variant={variant} />}>
@@ -251,18 +251,18 @@ export const useChartsPreloader = (shouldPreload: boolean = false) => {
 };
 
 // Generic lazy chart wrapper for custom charts
-export const LazyChart: React.FC<{
-  children: React.ReactNode;
-  fallback?: React.ComponentType;
-  loadingMessage?: string;
-  height?: number;
-  variant?: 'line' | 'bar' | 'pie';
-}> = ({
+export const LazyChart = ({
   children,
   fallback,
   loadingMessage = "Loading chart...",
   height = 300,
   variant = 'line'
+}: {
+  children: React.ReactNode;
+  fallback?: React.ComponentType;
+  loadingMessage?: string;
+  height?: number;
+  variant?: 'line' | 'bar' | 'pie';
 }) => {
   return (
     <ChartErrorBoundary fallback={fallback}>

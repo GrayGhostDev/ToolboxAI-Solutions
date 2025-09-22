@@ -105,8 +105,7 @@ class TestRobloxIntegrationE2E:
     """End-to-end tests for complete Roblox integration flow"""
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_complete_conversation_flow(self, conversation_manager):
+    async def test_complete_conversation_flow(self, conversation_manager):
         """Test all 8 stages of conversation flow"""
         session_id = "test-session-123"
         user_id = "test-user-123"
@@ -143,8 +142,7 @@ async def test_complete_conversation_flow(self, conversation_manager):
                 assert stage_index == expected_index, f"Expected stage index {expected_index}, got {stage_index}"
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_environment_generation(self, conversation_manager, mock_rojo_manager):
+    async def test_environment_generation(self, conversation_manager, mock_rojo_manager):
         """Test environment generation at final stage"""
         session_id = "test-session-123"
         user_id = "test-user-123"
@@ -172,8 +170,7 @@ async def test_environment_generation(self, conversation_manager, mock_rojo_mana
         mock_rojo_manager.start_project.assert_called_once()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_oauth2_flow(self, mock_oauth_service):
+    async def test_oauth2_flow(self, mock_oauth_service):
         """Test OAuth2 authentication flow"""
         user_id = "test-user-123"
 
@@ -191,8 +188,7 @@ async def test_oauth2_flow(self, mock_oauth_service):
         assert token.refresh_token == "test-refresh-token"
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_asset_upload_flow(self, mock_open_cloud_client):
+    async def test_asset_upload_flow(self, mock_open_cloud_client):
         """Test asset upload to Roblox"""
         asset = AssetDescription(
             assetType="Model",
@@ -207,8 +203,7 @@ async def test_asset_upload_flow(self, mock_open_cloud_client):
         assert "assetUrl" in result
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_rojo_sync_flow(self, mock_rojo_manager):
+    async def test_rojo_sync_flow(self, mock_rojo_manager):
         """Test Rojo project synchronization"""
         project_config = RojoProjectConfig(
             name="TestEducationalProject",

@@ -2,6 +2,58 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs'
+import { muiInteropFix } from './vite-plugin-mui-fix.js'
+
+// Enhanced interop helper for MUI compatibility (2025)
+// This is a more robust approach that ensures interop functions are available globally
+const interopHelper = `
+  // Critical: Define interop functions globally BEFORE any modules load
+  (function() {
+    'use strict';
+
+    // Make interop functions available globally for MUI
+    if (typeof window !== 'undefined') {
+      // Primary interop function - MUI needs this
+      window._interopRequireDefault = function(obj) {
+        return obj && obj.__esModule ? obj : { default: obj };
+      };
+
+      // Make it available on globalThis too for better compatibility
+      globalThis._interopRequireDefault = window._interopRequireDefault;
+
+      // Additional interop helpers
+      window._interopRequireWildcard = function(obj) {
+        if (obj && obj.__esModule) return obj;
+        if (obj === null || (typeof obj !== "object" && typeof obj !== "function")) {
+          return { default: obj };
+        }
+        var cache = {};
+        if (obj != null) {
+          for (var key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+              cache[key] = obj[key];
+            }
+          }
+        }
+        cache.default = obj;
+        return cache;
+      };
+
+      // Make sure modules can find these functions
+      window.__createBinding = window.__createBinding || function(o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+      };
+
+      // Webpack compatibility shim for some modules
+      window.__webpack_require__ = window.__webpack_require__ || function(id) {
+        return window[id] || {};
+      };
+
+      console.log('[Vite] MUI interop helpers injected successfully');
+    }
+  })();
+`
 
 // Check for local node_modules first, then workspace
 const muiIconsPath = fs.existsSync(path.resolve(__dirname, 'node_modules/@mui/icons-material'))
@@ -10,13 +62,72 @@ const muiIconsPath = fs.existsSync(path.resolve(__dirname, 'node_modules/@mui/ic
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    muiInteropFix(), // Add the MUI fix plugin first
+    react(),
+    {
+      name: 'inject-interop-helper',
+      transformIndexHtml(html) {
+        return html.replace(
+          '</head>',
+          `<script>${interopHelper}</script></head>`
+        )
+      }
+    }
+  ],
 
-  // Module optimization for faster dev server startup
+  // Enhanced module optimization for 2025 best practices
   optimizeDeps: {
+    // Force esbuild to treat MUI as ESM
+    esbuildOptions: {
+      target: 'es2020',
+      define: {
+        'global': 'globalThis'
+      },
+      // Inject interop helpers at build time for each module
+      banner: {
+        js: `
+          // Critical: Define interop functions before any imports
+          if (typeof globalThis !== 'undefined' && !globalThis._interopRequireDefault) {
+            globalThis._interopRequireDefault = function(obj) {
+              return obj && obj.__esModule ? obj : { default: obj };
+            };
+            globalThis._interopRequireWildcard = function(obj) {
+              if (obj && obj.__esModule) return obj;
+              if (obj === null || (typeof obj !== "object" && typeof obj !== "function")) return { default: obj };
+              var cache = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) cache[key] = obj[key]; } } cache.default = obj; return cache;
+            };
+          }
+          if (typeof window !== 'undefined') {
+            window._interopRequireDefault = window._interopRequireDefault || globalThis._interopRequireDefault;
+            window._interopRequireWildcard = window._interopRequireWildcard || globalThis._interopRequireWildcard;
+          }
+        `
+      },
+      // Enable tree shaking for better performance
+      treeShaking: true,
+      // Handle JSX transform
+      jsx: 'automatic',
+      // More conservative approach to dropping statements
+      drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : []
+    },
     include: [
-      // Core dependencies that should be pre-bundled
+      // Core React ecosystem
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+      'react-dom/client',
+      'prop-types',
+
+      // UI Framework - MUI optimizations with specific modules
       '@mui/material',
+      '@mui/material/styles',
+      '@mui/material/styles/createTheme',
+      '@mui/material/styles/createPalette',
+      '@mui/system',
+      '@mui/system/createStyled',
+      '@mui/system/styled',
+      '@mui/system/colorManipulator',
+      '@mui/utils',
       '@mui/material/Unstable_Grid2',
       '@mui/material/Grid',
       '@mui/material/Box',
@@ -27,61 +138,106 @@ export default defineConfig({
       '@mui/icons-material/Add',
       '@mui/icons-material/Search',
       '@mui/icons-material/Refresh',
+      // Don't include bare @babel/runtime as it has no main export
+      '@babel/runtime/helpers/interopRequireDefault',
+      '@babel/runtime/helpers/interopRequireWildcard',
+      '@babel/runtime/helpers/extends',
+      '@babel/runtime/helpers/objectWithoutPropertiesLoose',
       '@emotion/styled',
       '@emotion/react',
+      '@emotion/cache',
+
+      // Mantine UI Framework
+      '@mantine/core',
+      '@mantine/hooks',
+      '@mantine/form',
+      '@mantine/notifications',
+      '@tabler/icons-react',
+      
+      // State management
       'react-redux',
       '@reduxjs/toolkit',
       '@reduxjs/toolkit/query',
+      
+      // Communication libraries
       'pusher-js',
       'axios',
+      
+      // Utilities
       'date-fns',
       'zod',
+
+      // Clerk Authentication - Fixed optimization paths
+      '@clerk/clerk-react',
+      '@clerk/types',
+
       // Performance libraries
       'react-window',
       'web-vitals',
+      
       // Three.js libraries - pre-bundle to avoid reconciler issues
       'three',
       '@react-three/fiber',
       '@react-three/drei',
-      'react-reconciler',
+      
       // Charts and their dependencies
       'recharts',
-      'lodash',
-      'lodash/get',
-      'lodash/isNil',
-      'lodash/isFunction',
       'chart.js',
-      'react-chartjs-2'
+      'react-chartjs-2',
+      
+      // Syntax highlighting - fix ESM/CJS issues
+      'react-syntax-highlighter',
+      'react-syntax-highlighter/dist/cjs/styles/prism',
+      
+      // Markdown rendering
+      'react-markdown'
     ],
     exclude: [
       '@vite/client',
-      '@vite/env'
+      '@vite/env',
+      // Exclude problematic packages that should be externalized
+      'fsevents'
     ],
-    esbuildOptions: {
-      target: 'es2020',
-      // Enable tree shaking for better performance
-      treeShaking: true,
-      // Minify deps in dev for smaller bundle
-      minify: false,
-      // Use more aggressive optimization
-      drop: ['console', 'debugger']
-    },
+    // Add entries to ensure they're pre-bundled with interop support
+    entries: [
+      'src/main.tsx',
+      '@mui/material/styles/colorManipulator',
+      '@mui/system/colorManipulator'
+    ],
     force: true // Force re-optimization to clear cached issues
   },
 
   // Path resolution
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@components': path.resolve(__dirname, './src/components'),
-      '@store': path.resolve(__dirname, './src/store'),
-      '@services': path.resolve(__dirname, './src/services'),
-      '@hooks': path.resolve(__dirname, './src/hooks'),
-      '@types': path.resolve(__dirname, './src/types'),
-      '@utils': path.resolve(__dirname, './src/utils'),
-      '@test': path.resolve(__dirname, './src/test'),
+  alias: {
+  '@': path.resolve(__dirname, './src'),
+  '@components': path.resolve(__dirname, './src/components'),
+  '@store': path.resolve(__dirname, './src/store'),
+  '@services': path.resolve(__dirname, './src/services'),
+  '@hooks': path.resolve(__dirname, './src/hooks'),
+  '@types': path.resolve(__dirname, './src/types'),
+  '@utils': path.resolve(__dirname, './src/utils'),
+  '@test': path.resolve(__dirname, './src/test'),
+    // Enhanced aliases for 2025
+    '@assets': path.resolve(__dirname, './src/assets'),
+      '@styles': path.resolve(__dirname, './src/styles'),
+      '@config': path.resolve(__dirname, './src/config')
     },
-    dedupe: ['@mui/icons-material', '@mui/material', 'react', 'react-dom', 'react-reconciler'],
+    dedupe: [
+      '@mui/icons-material', 
+      '@mui/material', 
+      'react', 
+      'react-dom', 
+      'react-reconciler',
+      // Additional dedupe for common conflicts
+      '@emotion/react',
+      '@emotion/styled',
+      'react-redux'
+    ],
+    // Enhanced conditions for better module resolution
+    conditions: ['import', 'module', 'browser', 'default'],
+    mainFields: ['browser', 'module', 'main'],
+    extensions: ['.tsx', '.ts', '.jsx', '.js', '.json', '.mjs']
   },
 
   // Development server configuration
@@ -91,9 +247,13 @@ export default defineConfig({
     strictPort: true,
     open: false,
     cors: true,
-    hmr: {
+    // Disable HMR in Docker, use Pusher for realtime instead
+    hmr: process.env.DOCKER_ENV === 'true' ? false : {
       overlay: true,
-      clientPort: 5179
+      clientPort: 5179,
+      host: 'localhost',
+      port: 5179,
+      protocol: 'ws'
     },
     proxy: {
       // Use environment variable for proxy target, fallback to localhost for non-Docker development
@@ -164,195 +324,103 @@ export default defineConfig({
     }
   },
 
-  // Build configuration
+  // Enhanced build configuration for 2025
   build: {
     outDir: 'dist',
     sourcemap: true,
     minify: 'terser',
-    target: 'es2020',
-    chunkSizeWarningLimit: 500, // Reduced from 800 to enforce smaller chunks
+    target: 'es2022', // Updated for 2025 - better browser support
+    chunkSizeWarningLimit: 500, // Enforce smaller chunks for better caching
 
-    // Enhanced Terser options for better minification
+    // Terser options for better minification
     terserOptions: {
       compress: {
         drop_console: true,
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.warn'],
-        passes: 3, // Increased passes for better compression
-        unsafe: true,
-        unsafe_comps: true,
-        unsafe_math: true,
-        unsafe_proto: true,
-        dead_code: true,
-        keep_infinity: true,
-        reduce_vars: true,
-        sequences: true,
-        conditionals: true,
-        comparisons: true,
-        evaluate: true,
-        booleans: true,
-        loops: true,
-        unused: true,
-        hoist_funs: true,
-        hoist_props: true,
-        hoist_vars: true,
-        if_return: true,
-        inline: true,
-        join_vars: true,
-        cascade: true,
-        collapse_vars: true,
-        reduce_funcs: true,
-        warnings: false,
-        negate_iife: true,
-        pure_getters: true,
-        pure_new: true,
-        keep_fargs: false,
-        keep_fnames: false
+        pure_funcs: ['console.log', 'console.info'],
+        passes: 2
       },
       mangle: {
-        safari10: true,
-        properties: {
-          regex: /^_/
-        }
+        safari10: true
       },
       format: {
-        comments: false,
-        ascii_only: true
+        comments: false
       }
     },
 
-    // Rollup configuration
+    // Enhanced Rollup configuration for 2025
     rollupOptions: {
-      output: {
-        // Enhanced manual chunks for optimal code splitting
-        manualChunks: (id) => {
-          // Core React ecosystem - split for better caching
-          if (id.includes('react/') && !id.includes('react-router') && !id.includes('react-redux')) {
-            return 'vendor-react-core';
+      // Handle problematic module resolution
+      external: [
+        // Uncomment to load from CDN in production
+        // 'react',
+        // 'react-dom'
+      ],
+      
+      // Enhanced module resolution
+      plugins: [
+        // Custom plugin to handle react-syntax-highlighter ESM/CJS issues
+        {
+          name: 'resolve-syntax-highlighter',
+          resolveId(id) {
+            // Redirect problematic ESM imports to CJS versions
+            if (id.includes('react-syntax-highlighter/dist/esm')) {
+              return id.replace('/dist/esm/', '/dist/cjs/')
+            }
+            return null
           }
-          if (id.includes('react-dom')) {
-            return 'vendor-react-dom';
+        }
+      ],
+      
+      output: {
+        // Simplified manual chunks for actual dependencies
+        manualChunks: (id) => {
+          // Core React ecosystem
+          if (id.includes('react') && !id.includes('react-router') && !id.includes('react-redux')) {
+            return 'vendor-react';
           }
           if (id.includes('react-router')) {
             return 'vendor-react-router';
           }
 
-          // State management - separate from React
+          // State management
           if (id.includes('@reduxjs/toolkit') || id.includes('react-redux')) {
             return 'vendor-redux';
           }
 
-          // UI Framework - granular chunks for better caching
-          if (id.includes('@mui/material/styles') || id.includes('@mui/system')) {
-            return 'vendor-mui-system';
-          }
-          if (id.includes('@mui/material') && (id.includes('Button') || id.includes('TextField') || id.includes('Typography') || id.includes('Box') || id.includes('Stack'))) {
-            return 'vendor-mui-core';
-          }
-          if (id.includes('@mui/material') && (id.includes('Table') || id.includes('Grid') || id.includes('Card') || id.includes('Paper'))) {
-            return 'vendor-mui-layout';
-          }
-          if (id.includes('@mui/material') && (id.includes('Dialog') || id.includes('Drawer') || id.includes('Menu') || id.includes('Popover'))) {
-            return 'vendor-mui-navigation';
-          }
-          if (id.includes('@mui/material')) {
-            return 'vendor-mui-components';
-          }
-          if (id.includes('@mui/icons-material')) {
-            return 'vendor-mui-icons';
-          }
-          if (id.includes('@emotion')) {
-            return 'vendor-emotion';
+          // UI Framework - combine MUI packages
+          if (id.includes('@mui/') || id.includes('@emotion/')) {
+            return 'vendor-mui';
           }
 
-          // Charts and visualization - separate by library type
-          if (id.includes('recharts')) {
-            return 'vendor-charts-recharts';
-          }
-          if (id.includes('chart.js') || id.includes('react-chartjs-2')) {
-            return 'vendor-charts-chartjs';
+          // Mantine UI Framework
+          if (id.includes('@mantine/') || id.includes('@tabler/icons-react')) {
+            return 'vendor-mantine';
           }
 
-          // 3D and Three.js - split by functionality for lazy loading
-          if (id.includes('three/build/three.module.js')) {
-            return 'vendor-3d-core';
-          }
-          if (id.includes('three/') && id.includes('loaders')) {
-            return 'vendor-3d-loaders';
-          }
-          if (id.includes('@react-three/fiber')) {
-            return 'vendor-3d-fiber';
-          }
-          if (id.includes('@react-three/drei')) {
-            return 'vendor-3d-drei';
-          }
-          if (id.includes('three')) {
-            return 'vendor-3d-utils';
+          // Charts and visualization
+          if (id.includes('recharts') || id.includes('chart.js') || id.includes('react-chartjs-2')) {
+            return 'vendor-charts';
           }
 
-          // Communication and real-time
-          if (id.includes('pusher-js')) {
-            return 'vendor-realtime-pusher';
-          }
-          if (id.includes('axios')) {
-            return 'vendor-http';
+          // 3D libraries - only if actually used
+          if (id.includes('three') || id.includes('@react-three/')) {
+            return 'vendor-3d';
           }
 
-          // Utilities - split by usage frequency
-          if (id.includes('date-fns')) {
-            return 'vendor-date';
-          }
-          if (id.includes('zod')) {
-            return 'vendor-validation';
-          }
-          if (id.includes('lodash')) {
-            return 'vendor-lodash';
+          // HTTP and realtime
+          if (id.includes('axios') || id.includes('pusher-js')) {
+            return 'vendor-communication';
           }
 
-          // Internationalization
-          if (id.includes('i18next') || id.includes('react-i18next')) {
-            return 'vendor-i18n';
+          // Utilities
+          if (id.includes('date-fns') || id.includes('lodash') || id.includes('zod')) {
+            return 'vendor-utils';
           }
 
-          // Chat and markdown - feature-specific
-          if (id.includes('react-chat-elements')) {
-            return 'vendor-chat';
-          }
-          if (id.includes('react-markdown') || id.includes('react-syntax-highlighter')) {
-            return 'vendor-markdown';
-          }
-
-          // Animation libraries
-          if (id.includes('framer-motion')) {
-            return 'vendor-animation';
-          }
-
-          // Performance monitoring
-          if (id.includes('react-window') || id.includes('web-vitals')) {
-            return 'vendor-performance';
-          }
-
-          // GraphQL
-          if (id.includes('@apollo/client') || id.includes('graphql')) {
-            return 'vendor-graphql';
-          }
-
-          // Small utilities that can be grouped
-          if (id.includes('node_modules') && (
-            id.includes('classnames') ||
-            id.includes('clsx') ||
-            id.includes('prop-types') ||
-            id.includes('react-is') ||
-            id.includes('scheduler') ||
-            id.includes('object-assign') ||
-            id.includes('loose-envify')
-          )) {
-            return 'vendor-utils-small';
-          }
-
-          // Everything else from node_modules
+          // Large vendor packages
           if (id.includes('node_modules')) {
-            return 'vendor-misc';
+            return 'vendor';
           }
         },
 
@@ -388,18 +456,17 @@ export default defineConfig({
         }
       },
 
-      // External dependencies for CDN optimization (optional)
-      external: [
-        // Uncomment to load from CDN in production
-        // 'react',
-        // 'react-dom'
-      ],
+      // Note: External dependencies moved to top-level external config
 
-      // Tree shaking configuration
+      // Enhanced tree shaking configuration for 2025
       treeshake: {
-        moduleSideEffects: false,
+        moduleSideEffects: (id) => {
+          // Preserve side effects for certain modules
+          return id.includes('polyfill') || id.includes('global.css') || id.includes('reset.css')
+        },
         propertyReadSideEffects: false,
-        tryCatchDeoptimization: false
+        tryCatchDeoptimization: false,
+        preset: 'recommended'
       },
 
       // Input configuration
@@ -429,9 +496,7 @@ export default defineConfig({
     reportCompressedSize: true,
 
     // Module preload for better performance
-    modulePreload: {
-      polyfill: true
-    }
+    modulePreload: true
   },
 
   // Test configuration (consolidated from vitest.config.ts)

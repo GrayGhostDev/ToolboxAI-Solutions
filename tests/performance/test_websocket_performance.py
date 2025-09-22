@@ -21,7 +21,7 @@ Comprehensive WebSocket connection and message throughput tests
 import asyncio
 import time
 import pytest
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
@@ -91,9 +91,10 @@ async def test_websocket_message_latency(self):
         
         latencies = []
         
-        async with websockets.connect(url) as ws:
+        async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherurl) as ws:
             # Warmup
-            await ws.send(json.dumps({"type": "ping"}, default=make_json_serializable))
+            await pusher.trigger(json.dumps({"type": "ping"}, default=make_json_serializable))
             await ws.recv()
             
             # Actual test
@@ -106,7 +107,7 @@ async def test_websocket_message_latency(self):
                     "timestamp": start
                 }
                 
-                await ws.send(json.dumps(message, default=make_json_serializable))
+                await pusher.trigger(json.dumps(message, default=make_json_serializable))
                 
                 try:
                     response = await asyncio.wait_for(ws.recv(), timeout=1.0)
@@ -144,7 +145,8 @@ async def test_websocket_concurrent_connections(self):
         async def maintain_connection(connection_id: int):
             """Maintain a WebSocket connection with periodic messages"""
             try:
-                async with websockets.connect(url) as ws:
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherurl) as ws:
                     active_connections.append(connection_id)
                     
                     # Send periodic messages for 10 seconds
@@ -154,7 +156,7 @@ async def test_websocket_concurrent_connections(self):
                             "connection_id": connection_id,
                             "sequence": i
                         }
-                        await ws.send(json.dumps(message, default=make_json_serializable))
+                        await pusher.trigger(json.dumps(message, default=make_json_serializable))
                         await asyncio.sleep(1)
                     
                     return True
@@ -198,7 +200,8 @@ async def test_websocket_message_throughput(self):
             messages_received = 0
             
             try:
-                async with websockets.connect(url) as ws:
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherurl) as ws:
                     if start_time is None:
                         start_time = time.time()
                     
@@ -211,7 +214,7 @@ async def test_websocket_message_throughput(self):
                             "timestamp": time.time()
                         }
                         
-                        await ws.send(json.dumps(message, default=make_json_serializable))
+                        await pusher.trigger(json.dumps(message, default=make_json_serializable))
                         messages_sent += 1
                         
                         # Try to receive response (non-blocking)
@@ -273,7 +276,7 @@ async def test_websocket_memory_usage(self):
                 connections.append(ws)
                 
                 # Send initial message
-                await ws.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "memory_test",
                     "connection_id": i
                 }, default=make_json_serializable))
@@ -285,7 +288,7 @@ async def test_websocket_memory_usage(self):
             for i in range(10):
                 for j, ws in enumerate(connections):
                     try:
-                        await ws.send(json.dumps({
+                        await pusher.trigger(json.dumps({
                             "type": "sustained_test",
                             "round": i,
                             "connection": j

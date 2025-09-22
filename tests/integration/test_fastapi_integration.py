@@ -38,7 +38,7 @@ import time
 from typing import Dict, Any
 
 import httpx
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 from datetime import datetime, timezone, timedelta
 import jwt
 import pytest
@@ -55,7 +55,7 @@ class FastAPIIntegrationTest:
     
     def __init__(self):
         self.base_url = "http://127.0.0.1:8008"
-        self.ws_url = "ws://127.0.0.1:8008/ws"
+        self.ws_url = "pusher://app_key@cluster"
         self.jwt_secret = "your-secret-key-change-in-production"  # From auth.py default
         self.test_results = []
         
@@ -182,13 +182,14 @@ async def test_websocket_connection(self):
         """Test WebSocket connection"""
         print("\n🔍 Testing WebSocket Connection...")
         try:
-            async with websockets.connect(self.ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.ws_url) as websocket:
                 # Send test message
                 test_message = json.dumps({
                     "type": "subscribe",
                     "channel": "content_updates"
                 }, default=make_json_serializable)
-                await websocket.send(test_message)
+                await pusher.trigger(test_message)
                 
                 # Wait for response
                 response = await asyncio.wait_for(websocket.recv(), timeout=5.0)

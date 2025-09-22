@@ -83,4 +83,4 @@ export const Scene3D: React.FunctionComponent<Scene3DProps> = ({
       </Suspense>
     </Box>
   );
-};
+};export default Scene3D;

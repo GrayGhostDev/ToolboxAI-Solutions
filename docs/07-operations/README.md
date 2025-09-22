@@ -34,6 +34,12 @@ This section contains operations, security, compliance, and maintenance document
 - **debugpy-2025-integration.md** - Debugpy integration
 - Issue resolution and debugging
 
+### 🗄️ **Database Operations**
+- **database-migrations.md** - Database migration automation
+- **supabase-deployment.md** - Complete Supabase deployment guide
+- **supabase-troubleshooting.md** - Supabase troubleshooting and diagnostics
+- Database management, migrations, and Supabase integration
+
 ### 🛠️ [maintenance/](./maintenance/)
 - **cleanup-execution-guide.md** - Cleanup procedures
 - **cleanup-plan.md** - Cleanup planning
@@ -45,6 +51,9 @@ This section contains operations, security, compliance, and maintenance document
 - **Security** → [security/owasp-compliance.md](./security/owasp-compliance.md)
 - **Compliance** → [compliance/compliance-overview.md](./compliance/compliance-overview.md)
 - **Monitoring** → [monitoring/infrastructure-monitoring.md](./monitoring/infrastructure-monitoring.md)
+- **Database Operations** → [database-migrations.md](./database-migrations.md)
+- **Supabase Deployment** → [supabase-deployment.md](./supabase-deployment.md)
+- **Supabase Troubleshooting** → [supabase-troubleshooting.md](./supabase-troubleshooting.md)
 - **Troubleshooting** → [troubleshooting/troubleshooting-complete.md](./troubleshooting/troubleshooting-complete.md)
 - **Maintenance** → [maintenance/cleanup-execution-guide.md](./maintenance/cleanup-execution-guide.md)
 

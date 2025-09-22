@@ -19,7 +19,6 @@ import Stack from '@mui/material/Stack';
 import { useTheme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 import CircularProgress from '@mui/material/CircularProgress';
-import CircularProgress from '@mui/material/CircularProgress';
 import {
   RocketLaunch,
   Star,

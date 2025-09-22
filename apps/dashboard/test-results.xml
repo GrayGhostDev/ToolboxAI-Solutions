@@ -1,2 +1,110 @@
-<testsuites id="" name="" tests="0" failures="0" skipped="0" errors="0" time="6.748817">
+<testsuites id="" name="" tests="15" failures="1" skipped="14" errors="0" time="41.371050000000004">
+<testsuite name="tests/auth/authentication.spec.ts" timestamp="2025-09-21T21:41:10.213Z" hostname="chromium" tests="15" failures="1" skipped="14" time="122.173" errors="0">
+<testcase name="Authentication › should display login form" classname="tests/auth/authentication.spec.ts" time="8.478">
+<failure message="authentication.spec.ts:35:3 should display login form" type="FAILURE">
+<![CDATA[  [chromium] › tests/auth/authentication.spec.ts:35:3 › Authentication › should display login form ─
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('h1, h2, h3, h4, h5').filter({ hasText: /welcome/i }).first()
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('h1, h2, h3, h4, h5').filter({ hasText: /welcome/i }).first()
+
+
+      37 |     // Try to find any heading with "Welcome" text
+      38 |     const heading = page.locator('h1, h2, h3, h4, h5').filter({ hasText: /welcome/i }).first();
+    > 39 |     await expect(heading).toBeVisible();
+         |                           ^
+      40 |
+      41 |     // Wait for form elements to be visible - Clerk uses "identifier" field
+      42 |     await page.waitForSelector('input[name="identifier"], input[id="identifier-field"]', { state: 'visible', timeout: 5000 });
+        at /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e/tests/auth/authentication.spec.ts:39:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/tests-auth-authentication--b773e-n-should-display-login-form-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/tests-auth-authentication--b773e-n-should-display-login-form-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/tests-auth-authentication--b773e-n-should-display-login-form-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/tests-auth-authentication--b773e-n-should-display-login-form-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/tests-auth-authentication--b773e-n-should-display-login-form-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/tests-auth-authentication--b773e-n-should-display-login-form-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication › should show validation errors for empty form" classname="tests/auth/authentication.spec.ts" time="8.84">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication › should show error for invalid email format" classname="tests/auth/authentication.spec.ts" time="8.662">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication › should show error for incorrect credentials" classname="tests/auth/authentication.spec.ts" time="8.71">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication › should successfully login as admin" classname="tests/auth/authentication.spec.ts" time="8.718">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication › should successfully login as teacher" classname="tests/auth/authentication.spec.ts" time="8.774">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication › should successfully login as student" classname="tests/auth/authentication.spec.ts" time="8.759">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication › should logout successfully" classname="tests/auth/authentication.spec.ts" time="8.803">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication › should persist authentication on page refresh" classname="tests/auth/authentication.spec.ts" time="8.66">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication › should redirect to login when accessing protected route without auth" classname="tests/auth/authentication.spec.ts" time="8.741">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication › should handle password visibility toggle" classname="tests/auth/authentication.spec.ts" time="8.721">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Authentication › should handle remember me functionality" classname="tests/auth/authentication.spec.ts" time="3.704">
+<properties>
+<property name="skip" value="">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Role-Based Access Control › admin should access all sections" classname="tests/auth/authentication.spec.ts" time="8.836">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Role-Based Access Control › teacher should not access admin sections" classname="tests/auth/authentication.spec.ts" time="8.736">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Role-Based Access Control › student should have limited access" classname="tests/auth/authentication.spec.ts" time="5.031">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
 </testsuites>

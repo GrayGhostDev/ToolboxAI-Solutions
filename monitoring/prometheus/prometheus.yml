@@ -1,61 +1,36 @@
-# Prometheus Configuration - ToolBoxAI Production
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
-  external_labels:
-    monitor: 'toolboxai-production'
-    environment: 'production'
 
-# Alerting configuration
-alerting:
-  alertmanagers:
-    - static_configs:
-        - targets:
-            - alertmanager:9093
-
-# Load rules
-rule_files:
-  - "alerts/*.yml"
-
-# Scrape configurations
 scrape_configs:
-  # Application metrics
-  - job_name: 'toolboxai-api'
+  - job_name: 'prometheus'
     static_configs:
-      - targets:
-          - 'api.toolboxai.com:9090'
+      - targets: ['localhost:9090']
+
+  - job_name: 'dashboard'
+    static_configs:
+      - targets: ['dashboard:5179']
     metrics_path: '/metrics'
-    scrape_interval: 10s
 
-  # GPT-4.1 metrics
-  - job_name: 'gpt41-metrics'
+  - job_name: 'backend'
     static_configs:
-      - targets:
-          - 'api.toolboxai.com:9091'
-    metrics_path: '/ai/metrics'
+      - targets: ['backend:8009']
+    metrics_path: '/metrics'
 
-  # Database metrics
-  - job_name: 'postgresql'
+  - job_name: 'mcp-server'
     static_configs:
-      - targets:
-          - 'postgres-exporter:9187'
+      - targets: ['mcp-server:9877']
+    metrics_path: '/metrics'
+
+  - job_name: 'agent-coordinator'
+    static_configs:
+      - targets: ['agent-coordinator:8888']
+    metrics_path: '/metrics'
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
 
   - job_name: 'redis'
     static_configs:
-      - targets:
-          - 'redis-exporter:9121'
-
-  # Node exporter for system metrics
-  - job_name: 'node'
-    static_configs:
-      - targets:
-          - 'node-exporter:9100'
-
-  # Kubernetes metrics
-  - job_name: 'kubernetes-pods'
-    kubernetes_sd_configs:
-      - role: pod
-    relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-        action: keep
-        regex: true
+      - targets: ['redis-exporter:9121']

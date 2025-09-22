@@ -27,7 +27,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 // Mock websocket
-vi.mock('@/services/websocket', () => ({
+vi.mock('../../services/pusher', () => ({
   connectWebSocket: vi.fn().mockResolvedValue(undefined),
 }));
 

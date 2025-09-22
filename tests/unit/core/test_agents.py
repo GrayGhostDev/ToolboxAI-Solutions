@@ -34,6 +34,7 @@ def make_json_serializable(obj):
         return str(obj)
 
 import json
+import os
 from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, Mock, patch, mock_open
 
@@ -78,14 +79,19 @@ class TestBaseAgent:
     @pytest_asyncio.fixture(loop_scope="function")
     async def base_agent(self, mock_llm):
         """Create a base agent instance with proper cleanup."""
-        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI', return_value=mock_llm):
+        # Use mock LLM flag to avoid real API calls
+        os.environ["USE_MOCK_LLM"] = "true"
+        try:
             config = AgentConfig(name="TestAgent")
             agent = ConcreteTestAgent(config)
+            # Mock the LLM after initialization
             agent.llm = mock_llm
             yield agent
             # Cleanup agent resources if available
             if hasattr(agent, 'cleanup'):
                 await agent.cleanup()
+        finally:
+            os.environ.pop("USE_MOCK_LLM", None)
     
     def test_base_agent_initialization(self, base_agent):
         """Test base agent initializes correctly."""
@@ -136,7 +142,7 @@ class TestContentAgent:
     @pytest_asyncio.fixture(loop_scope="function")
     async def content_agent(self, mock_llm):
         """Create a content agent instance with proper cleanup."""
-        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI', return_value=mock_llm):
+        with patch('langchain_openai.ChatOpenAI', return_value=mock_llm):
             config = AgentConfig(name="ContentAgent", system_prompt="Educational content generator")
             agent = ContentAgent(config)
             agent.llm = mock_llm
@@ -218,7 +224,7 @@ class TestQuizAgent:
     @pytest_asyncio.fixture(loop_scope="function")
     async def quiz_agent(self, mock_llm):
         """Create a quiz agent instance with proper cleanup."""
-        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI', return_value=mock_llm):
+        with patch('langchain_openai.ChatOpenAI', return_value=mock_llm):
             config = AgentConfig(name="QuizAgent", system_prompt="Quiz generator")
             agent = QuizAgent(config)
             agent.llm = mock_llm
@@ -300,7 +306,7 @@ class TestTerrainAgent:
     @pytest.fixture
     def terrain_agent(self, mock_llm):
         """Create a terrain agent instance."""
-        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI', return_value=mock_llm):
+        with patch('langchain_openai.ChatOpenAI', return_value=mock_llm):
             agent = TerrainAgent()
             agent.llm = mock_llm
             return agent
@@ -368,7 +374,7 @@ class TestScriptAgent:
     @pytest.fixture
     def script_agent(self, mock_llm):
         """Create a script agent instance."""
-        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI', return_value=mock_llm):
+        with patch('langchain_openai.ChatOpenAI', return_value=mock_llm):
             agent = ScriptAgent()
             agent.llm = mock_llm
             return agent
@@ -439,7 +445,7 @@ class TestReviewAgent:
     @pytest.fixture
     def review_agent(self, mock_llm):
         """Create a review agent instance."""
-        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI', return_value=mock_llm):
+        with patch('langchain_openai.ChatOpenAI', return_value=mock_llm):
             agent = ReviewAgent()
             agent.llm = mock_llm
             return agent
@@ -840,7 +846,7 @@ class TestTestingAgent:
     @pytest.fixture
     def testing_agent(self, mock_llm):
         """Create a testing agent instance"""
-        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI', return_value=mock_llm):
+        with patch('langchain_openai.ChatOpenAI', return_value=mock_llm):
             agent = TestingAgent()
             agent.llm = mock_llm
             return agent

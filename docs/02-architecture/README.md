@@ -24,6 +24,11 @@ This section contains comprehensive architecture and design documentation for th
 - **roblox-integration-plan.md** - Integration planning
 - External system integrations
 
+### 🗄️ [Database Integration](./supabase-integration.md)
+- **supabase-integration.md** - Complete Supabase integration guide
+- **langchain-integration.md** - LangChain 0.3.26+ LCEL compatibility
+- Database architecture and real-time features
+
 ## 🎯 Quick Navigation
 
 - **System Design** → [system-architecture/core-system-architecture-2025.md](./system-architecture/core-system-architecture-2025.md)

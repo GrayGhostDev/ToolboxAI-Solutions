@@ -13,9 +13,9 @@ const Scene3D = lazy(() => import('../three/Scene3D'));
 const ThreeProvider = lazy(() => import('../three/ThreeProvider'));
 
 // Loading fallback component
-const ThreeLoadingFallback: React.FC<{ message?: string }> = ({
+const ThreeLoadingFallback = ({
   message = "Loading 3D environment..."
-}) => (
+}: { message?: string }) => (
   <Box
     display="flex"
     flexDirection="column"
@@ -36,7 +36,7 @@ const ThreeLoadingFallback: React.FC<{ message?: string }> = ({
 );
 
 // Error fallback component
-const ThreeErrorFallback: React.FC<{ error?: Error }> = ({ error }) => (
+const ThreeErrorFallback = ({ error }: { error?: Error }) => (
   <Box
     display="flex"
     flexDirection="column"
@@ -101,13 +101,13 @@ interface LazyThreeProviderProps {
 }
 
 // Lazy Scene3D component with error handling
-export const LazyScene3D: React.FC<LazyScene3DProps> = ({
+export const LazyScene3D = ({
   width = "100%",
   height = 400,
   children,
   fallback,
   loadingMessage = "Loading 3D scene..."
-}) => {
+}: LazyScene3DProps) => {
   return (
     <ThreeErrorBoundary fallback={fallback}>
       <Suspense fallback={<ThreeLoadingFallback message={loadingMessage} />}>
@@ -120,11 +120,11 @@ export const LazyScene3D: React.FC<LazyScene3DProps> = ({
 };
 
 // Lazy ThreeProvider component with error handling
-export const LazyThreeProvider: React.FC<LazyThreeProviderProps> = ({
+export const LazyThreeProvider = ({
   children,
   fallback,
   loadingMessage = "Initializing 3D environment..."
-}) => {
+}: LazyThreeProviderProps) => {
   return (
     <ThreeErrorBoundary fallback={fallback}>
       <Suspense fallback={<ThreeLoadingFallback message={loadingMessage} />}>

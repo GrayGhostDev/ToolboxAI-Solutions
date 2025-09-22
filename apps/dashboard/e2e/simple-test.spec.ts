@@ -1,4 +1,4 @@
-jest.setTimeout(10000);
+
 
 import { test, expect } from '@playwright/test';
 

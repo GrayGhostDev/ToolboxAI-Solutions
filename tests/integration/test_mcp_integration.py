@@ -36,7 +36,7 @@ def make_json_serializable(obj):
 import json
 import time
 from datetime import datetime
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 import httpx
 import requests
 from typing import Dict, List, Optional
@@ -65,9 +65,10 @@ async def test_websocket_connection(self):
         print("\n🔍 Testing WebSocket Connection...")
         
         try:
-            async with websockets.connect(self.mcp_ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.mcp_ws_url) as websocket:
                 # Test initial connection
-                await websocket.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "get_context"
                 }, default=make_json_serializable))
                 
@@ -118,7 +119,8 @@ async def test_context_management(self):
         print("\n🔍 Testing Context Management...")
         
         try:
-            async with websockets.connect(self.mcp_ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.mcp_ws_url) as websocket:
                 # Add context
                 test_context = {
                     "type": "update_context",
@@ -132,7 +134,7 @@ async def test_context_management(self):
                     "priority": 2
                 }
                 
-                await websocket.send(json.dumps(test_context, default=make_json_serializable))
+                await pusher.trigger(json.dumps(test_context, default=make_json_serializable))
                 
                 # Wait for broadcast update
                 response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
@@ -143,7 +145,7 @@ async def test_context_management(self):
                     print(f"     Entry count: {data.get('metadata', {}).get('entry_count', 0)}")
                     
                     # Query the context
-                    await websocket.send(json.dumps({
+                    await pusher.trigger(json.dumps({
                         "type": "query_context",
                         "query": {
                             "source": "test_suite",
@@ -190,9 +192,10 @@ async def test_priority_pruning(self):
         print("\n🔍 Testing Priority-Based Pruning...")
         
         try:
-            async with websockets.connect(self.mcp_ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.mcp_ws_url) as websocket:
                 # Clear existing context first
-                await websocket.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "clear_context"
                 }, default=make_json_serializable))
                 
@@ -207,7 +210,7 @@ async def test_priority_pruning(self):
                 ]
                 
                 for ctx in contexts:
-                    await websocket.send(json.dumps({
+                    await pusher.trigger(json.dumps({
                         "type": "update_context",
                         "context": {"content": ctx["content"]},
                         "source": "priority_test",
@@ -217,7 +220,7 @@ async def test_priority_pruning(self):
                     await asyncio.wait_for(websocket.recv(), timeout=5.0)
                 
                 # Query high priority context
-                await websocket.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "query_context",
                     "query": {
                         "source": "priority_test",
@@ -257,7 +260,8 @@ async def test_multi_client_sync(self):
         
         try:
             # Connect two clients
-            async with websockets.connect(self.mcp_ws_url) as client1, \
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.mcp_ws_url) as client1, \
                        websockets.connect(self.mcp_ws_url) as client2:
                 
                 client2_ws = await client2
@@ -317,9 +321,10 @@ async def test_token_limit_enforcement(self):
         print("\n🔍 Testing Token Limit Enforcement...")
         
         try:
-            async with websockets.connect(self.mcp_ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.mcp_ws_url) as websocket:
                 # Clear context first
-                await websocket.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "clear_context"
                 }, default=make_json_serializable))
                 await asyncio.wait_for(websocket.recv(), timeout=5.0)
@@ -327,7 +332,7 @@ async def test_token_limit_enforcement(self):
                 # Add large context
                 large_content = "Educational content " * 1000  # Large text
                 
-                await websocket.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "update_context",
                     "context": {"content": large_content},
                     "source": "token_test",
@@ -378,7 +383,8 @@ async def test_agent_integration(self):
                 health_data = response.json()
                 
                 # Try to connect as an agent
-                async with websockets.connect(self.mcp_ws_url) as websocket:
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.mcp_ws_url) as websocket:
                     # Send agent-specific context
                     agent_context = {
                         "type": "update_context",
@@ -392,7 +398,7 @@ async def test_agent_integration(self):
                         "priority": 4
                     }
                     
-                    await websocket.send(json.dumps(agent_context, default=make_json_serializable))
+                    await pusher.trigger(json.dumps(agent_context, default=make_json_serializable))
                     response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
                     data = json.loads(response)
                     
@@ -400,7 +406,7 @@ async def test_agent_integration(self):
                         print(f"  ✅ Agent can update MCP context")
                         
                         # Query agent context
-                        await websocket.send(json.dumps({
+                        await pusher.trigger(json.dumps({
                             "type": "query_context",
                             "query": {"source": "supervisor_agent"}
                         }, default=make_json_serializable))
@@ -442,9 +448,10 @@ async def test_error_handling(self):
         print("\n🔍 Testing Error Handling...")
         
         try:
-            async with websockets.connect(self.mcp_ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.mcp_ws_url) as websocket:
                 # Send invalid JSON
-                await websocket.send("invalid json {")
+                await pusher.trigger("invalid json {")
                 response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
                 data = json.loads(response)
                 
@@ -455,7 +462,7 @@ async def test_error_handling(self):
                     print(f"  ⚠️  Unexpected response to invalid JSON")
                 
                 # Send unknown message type
-                await websocket.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "unknown_type",
                     "data": "test"
                 }, default=make_json_serializable))

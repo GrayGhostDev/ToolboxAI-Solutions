@@ -116,11 +116,15 @@ const LoadingFallback = ({ variant = 'dashboard' }: { variant?: 'dashboard' | 'c
 );
 
 // Performance-aware route wrapper
-const PerformanceRoute: React.FC<{
+const PerformanceRoute = ({
+  children,
+  priority = 'medium',
+  skeletonVariant = 'dashboard'
+}: {
   children: React.ReactNode;
   priority?: 'high' | 'medium' | 'low';
   skeletonVariant?: 'dashboard' | 'card' | 'list' | 'chart' | 'navigation' | 'form';
-}> = ({ children, priority = 'medium', skeletonVariant = 'dashboard' }) => (
+}) => (
   <ProgressiveEnhancement
     priority={priority}
     skeletonVariant={skeletonVariant}
@@ -136,6 +140,9 @@ export default function AppRoutes() {
   return (
     <Suspense fallback={<LoadingFallback variant="dashboard" />}>
       <Routes>
+      {/* Redirect from /dashboard to / for Clerk compatibility */}
+      <Route path="/dashboard" element={<Navigate to="/" replace />} />
+
       <Route path="/" element={
         <PerformanceRoute priority="high" skeletonVariant="dashboard">
           <DashboardHome role={role} />

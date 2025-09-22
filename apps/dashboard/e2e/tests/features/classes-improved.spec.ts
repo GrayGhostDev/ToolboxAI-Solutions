@@ -1,4 +1,4 @@
-jest.setTimeout(10000);
+
 
 import { test, expect } from '@playwright/test';
 import { Page } from '@playwright/test';
@@ -13,14 +13,14 @@ async function loginAsTeacher(page: Page) {
   await page.goto('/login');
 
   // Wait for login form to be ready
-  await page.waitForSelector('input[name="email"]', { state: 'visible' });
+  await page.waitForSelector('input[name="identifier"], input[id="identifier-field"]', { state: 'visible' });
   await page.waitForTimeout(500); // Let form initialize
 
-  await page.locator('input[name="email"]').fill('jane.smith@school.edu');
-  await page.locator('input[name="password"]').fill('Teacher123!');
+  await page.locator('input[name="identifier"], input[id="identifier-field"]').fill('jane.smith@school.edu');
+  await page.locator('input[name="password"], input[id="password-field"]').fill('Teacher123!');
 
   // Click login button
-  const submitButton = page.locator('button[type="submit"]:has-text("Sign In")');
+  const submitButton = page.locator('button[type="submit"], button:has-text("Continue"):has-text("Sign In")');
   await submitButton.click();
 
   // Wait for navigation away from login or for error message
@@ -294,9 +294,9 @@ test.describe('Classes Management - Student View', () => {
   test('student should not see create button', async ({ page }) => {
     // Login as student
     await page.goto('/login');
-    await page.locator('input[name="email"]').fill('alex.johnson@student.edu');
-    await page.locator('input[name="password"]').fill('Student123!');
-    await page.locator('button[type="submit"]').click();
+    await page.locator('input[name="identifier"], input[id="identifier-field"]').fill('alex.johnson@student.edu');
+    await page.locator('input[name="password"], input[id="password-field"]').fill('Student123!');
+    await page.locator('button[type="submit"], button:has-text("Continue")').click();
     await page.waitForURL(url => !url.pathname.includes('/login'), {
       timeout: 10000,
       waitUntil: 'networkidle'

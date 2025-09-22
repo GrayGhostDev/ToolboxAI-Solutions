@@ -19,12 +19,13 @@ Welcome to the ToolBoxAI Solutions developer documentation. This guide provides 
 
 ### Prerequisites
 
-- **Node.js**: 18+ (for frontend development)
-- **Python**: 3.11+ (for backend development)
-- **PostgreSQL**: 14+ (database)
-- **Redis**: 7+ (caching and sessions)
+- **Node.js**: 22+ (for React 19 frontend development)
+- **Python**: 3.12+ (for backend development with LangChain 0.3.26+)
+- **PostgreSQL**: 16+ (primary database)
+- **Redis**: 7+ (caching and task queues)
+- **Supabase**: Account and project (for agent system and real-time features)
 - **Git**: Latest version
-- **Docker**: Optional but recommended
+- **Docker**: Recommended for full stack development
 
 ### 5-Minute Setup
 
@@ -43,10 +44,27 @@ npm install
 cd apps/dashboard && npm install && cd ../..
 
 # 4. Configure environment
-cp .env.example .env
-cp apps/dashboard/.env.example apps/dashboard/.env.local
+cp config/env-templates/env.supabase.template .env
+cp apps/dashboard/env.example apps/dashboard/.env.local
 
-# 5. Start development servers
+# Edit environment files with your configuration
+nano .env
+nano apps/dashboard/.env.local
+
+# 5. Set up databases
+# Option A: Use Docker (recommended)
+docker-compose up postgres redis supabase-db supabase-kong -d
+
+# Option B: Use local PostgreSQL and Redis
+# Ensure PostgreSQL and Redis are running locally
+
+# 6. Run database migrations
+cd apps/backend && alembic upgrade head && cd ../..
+
+# Optional: Set up Supabase integration
+python scripts/supabase_migration_automation.py
+
+# 7. Start development servers
 # Terminal 1: Backend
 cd apps/backend && uvicorn main:app --host 127.0.0.1 --port 8009 --reload
 

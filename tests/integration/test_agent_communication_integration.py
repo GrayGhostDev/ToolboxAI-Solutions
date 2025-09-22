@@ -138,7 +138,7 @@ class AgentCommunicationTester:
 
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio
-async def test_agent_initialization(self) -> bool:
+    async def test_agent_initialization(self) -> bool:
         """Test that all agents initialize properly"""
         try:
             # Test individual agent initialization
@@ -168,7 +168,7 @@ async def test_agent_initialization(self) -> bool:
 
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio
-async def test_agent_to_agent_communication(self) -> bool:
+    async def test_agent_to_agent_communication(self) -> bool:
         """Test agent-to-agent communication and collaboration"""
         try:
             # Test supervisor delegating to content agent
@@ -208,7 +208,7 @@ async def test_agent_to_agent_communication(self) -> bool:
 
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio
-async def test_sparc_framework_integration(self) -> bool:
+    async def test_sparc_framework_integration(self) -> bool:
         """Test SPARC framework integration"""
         if not FRAMEWORKS_AVAILABLE:
             logger.warning("SPARC framework not available, skipping test")
@@ -248,7 +248,7 @@ async def test_sparc_framework_integration(self) -> bool:
 
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio
-async def test_swarm_controller_coordination(self) -> bool:
+    async def test_swarm_controller_coordination(self) -> bool:
         """Test Swarm controller coordination"""
         if not FRAMEWORKS_AVAILABLE:
             logger.warning("Swarm framework not available, skipping test")

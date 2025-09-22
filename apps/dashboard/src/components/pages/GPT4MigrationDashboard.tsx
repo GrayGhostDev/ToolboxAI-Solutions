@@ -136,7 +136,7 @@ interface DashboardData {
   };
 }
 
-const GPT4MigrationDashboard: React.FC = () => {
+const GPT4MigrationDashboard= () => {
   const theme = useTheme();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);

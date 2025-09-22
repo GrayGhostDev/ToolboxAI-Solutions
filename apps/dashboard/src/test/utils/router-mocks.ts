@@ -27,7 +27,7 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    // React Router v7 hooks
+    // React Router v7 hooks - only override navigation hooks, keep router context
     useNavigate: () => mockNavigate,
     useLocation: () => mockLocation,
     useParams: () => mockParams,
@@ -61,11 +61,9 @@ vi.mock('react-router-dom', async () => {
       listen: vi.fn(),
     }),
 
-    // Router components
-    MemoryRouter: ({ children }: { children: React.ReactNode }) => children,
-    Router: ({ children }: { children: React.ReactNode }) => children,
-    Routes: ({ children }: { children: React.ReactNode }) => children,
-    Route: ({ children }: { children: React.ReactNode }) => children,
+    // Keep actual router components for proper context - DON'T override these!
+    // MemoryRouter, Router, Routes, Route need to be actual implementations
+    // Only override navigation components
     Navigate: () => null,
     Outlet: () => null,
     Link: ({ children, to, ...props }: any) =>
