@@ -31,7 +31,7 @@ jobs:
           config-path: .gitsecrets
 
       - name: Run Trivy Security Scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.30.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -39,7 +39,7 @@ jobs:
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
@@ -133,7 +133,7 @@ jobs:
             -m "not slow"
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           flags: backend
@@ -141,7 +141,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: backend-test-results
           path: test-results/
@@ -196,7 +196,7 @@ jobs:
           fi
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           directory: apps/dashboard/coverage
           flags: frontend
@@ -275,7 +275,7 @@ jobs:
 
       - name: Upload E2E test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
           path: test-results/e2e/
@@ -315,7 +315,7 @@ jobs:
           python scripts/check_performance_thresholds.py test-results/k6-results.json
 
       - name: Upload performance results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: performance-test-results
           path: test-results/k6-results.json
@@ -351,7 +351,7 @@ jobs:
             --enableExperimental
 
       - name: Upload OWASP results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: owasp-security-results
           path: |
@@ -371,7 +371,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Download all test results
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Check Quality Gates
         run: |

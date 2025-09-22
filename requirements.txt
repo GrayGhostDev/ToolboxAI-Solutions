@@ -118,11 +118,12 @@ gunicorn==23.0.0
 supervisor==4.2.5
 
 # Documentation
-mkdocs==1.5.3
-mkdocs-material==9.5.2
+mkdocs==1.6.0
+mkdocs-material==9.6.20
 
 # Security
 urllib3==2.5.0
+cryptography>=42.0.0  # Replaces vulnerable ecdsa
 
 # GraphQL Dependencies
 ariadne[asgi]==0.23.0          # GraphQL server with FastAPI support
