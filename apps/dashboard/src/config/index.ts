@@ -4,6 +4,7 @@ const isDevelopment = import.meta.env.DEV;
 const rawApi = (import.meta.env.VITE_API_BASE_URL as string) || `http://127.0.0.1:8009`;
 
 // Use empty string in development so axios uses relative URLs that go through Vite proxy
+// In production, ensure we have a clean base URL without trailing slashes or api paths
 export const API_BASE_URL = isDevelopment
   ? ''
   : rawApi.replace(/\/+$/, '').replace(/\/api\/v1$/, '');
@@ -14,6 +15,9 @@ export const WS_URL = rawWs.replace(/\/+$/, '');
 // Pusher configuration (Channels)
 export const PUSHER_KEY = (import.meta.env.VITE_PUSHER_KEY as string) || '';
 export const PUSHER_CLUSTER = (import.meta.env.VITE_PUSHER_CLUSTER as string) || 'us2';
+export const PUSHER_ENABLED = import.meta.env.VITE_PUSHER_ENABLED === 'true' || !!PUSHER_KEY;
+export const PUSHER_FORCE_TLS = import.meta.env.VITE_PUSHER_FORCE_TLS !== 'false';
+export const PUSHER_DEBUG = import.meta.env.VITE_PUSHER_DEBUG === 'true';
 // In development, use relative URL for auth endpoint to go through proxy
 export const PUSHER_AUTH_ENDPOINT = (import.meta.env.VITE_PUSHER_AUTH_ENDPOINT as string) ||
   (isDevelopment ? '/api/v1/pusher/auth' : `${rawApi}/api/v1/pusher/auth`);

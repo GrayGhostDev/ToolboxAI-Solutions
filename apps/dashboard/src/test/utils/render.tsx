@@ -87,17 +87,8 @@ vi.mock('pusher-js', () => ({
     },
   })),
 }));
-// Mock Socket.io for all tests
-vi.mock('socket.io-client', () => ({
-  io: vi.fn(() => ({
-    on: vi.fn(),
-    off: vi.fn(),
-    emit: vi.fn(),
-    connect: vi.fn(),
-    disconnect: vi.fn(),
-    connected: true,
-  })),
-}));
+// Note: Socket.IO mocks removed - now using Pusher for realtime
+// Pusher is mocked in the main test setup file
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   preloadedState?: any
   store?: Store

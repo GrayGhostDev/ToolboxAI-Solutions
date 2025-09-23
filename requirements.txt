@@ -53,7 +53,7 @@ websocket-client==1.8.0
 python-socketio>=5.10,<6
 flask-socketio==5.3.6
 pusher==3.3.2
-aiohttp==3.11.11
+aiohttp==3.12.14
 aiofiles==24.1.0
 
 # HTTP Clients

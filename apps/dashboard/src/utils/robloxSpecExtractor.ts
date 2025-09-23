@@ -78,8 +78,10 @@ function extractMapType(text: string): RobloxSpec['map_type'] {
  */
 function extractTheme(text: string): string | undefined {
   const patterns = [
-    /(?:theme|style)\s*:?\s*([^\n.!?]{3,50})/i,
-    /(?:set in|takes place in|located in)\s+([^\n.!?]{3,50})/i,
+    /(?:theme|style)\s*:?\s*([^
+.!?]{3,50})/i,
+    /(?:set in|takes place in|located in)\s+([^
+.!?]{3,50})/i,
     /(?:medieval|space|jungle|underwater|desert|arctic|fantasy|sci-fi|historical)/i
   ];
 
@@ -131,9 +133,12 @@ function extractNpcCount(text: string): number | undefined {
  */
 function extractLearningObjectives(text: string): string[] | undefined {
   const patterns = [
-    /(?:objective|learning objective|goal)s?\s*:?\s*([^\n]+)/i,
-    /(?:teach|learn|practice|study)\s+([^\n.!?]+)/i,
-    /(?:about|covering|focusing on)\s+([^\n.!?]+)/i
+    /(?:objective|learning objective|goal)s?\s*:?\s*([^
+]+)/i,
+    /(?:teach|learn|practice|study)\s+([^
+.!?]+)/i,
+    /(?:about|covering|focusing on)\s+([^
+.!?]+)/i
   ];
 
   for (const pattern of patterns) {

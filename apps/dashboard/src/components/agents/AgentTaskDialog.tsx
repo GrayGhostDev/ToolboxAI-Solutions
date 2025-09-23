@@ -26,9 +26,10 @@ import {
   LinearProgress,
   Chip,
   Grid,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  Card,
+  CardContent,
+  CardHeader,
+  Collapse,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -176,6 +177,7 @@ export const AgentTaskDialog = ({
   const [executing, setExecuting] = useState(false);
   const [result, setResult] = useState<TaskResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showResult, setShowResult] = useState(false);
 
   // Get available task types for the agent
   const availableTaskTypes = agent ? TASK_CONFIGURATIONS[agent.agent_type] || {} : {};
@@ -425,27 +427,37 @@ export const AgentTaskDialog = ({
                 )}
 
                 {result.result && (
-                  <Accordion>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Typography>Task Result</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Box
-                        component="pre"
-                        sx={{
-                          backgroundColor: 'grey.100',
-                          p: 2,
-                          borderRadius: 1,
-                          overflow: 'auto',
-                          maxHeight: 300,
-                          fontSize: '0.875rem',
-                          fontFamily: 'monospace'
-                        }}
-                      >
-                        {JSON.stringify(result.result, null, 2)}
-                      </Box>
-                    </AccordionDetails>
-                  </Accordion>
+                  <Card>
+                    <CardHeader
+                      title="Task Result"
+                      action={
+                        <Button
+                          onClick={() => setShowResult(!showResult)}
+                          endIcon={<ExpandMoreIcon />}
+                        >
+                          {showResult ? 'Hide' : 'Show'}
+                        </Button>
+                      }
+                    />
+                    <Collapse in={showResult}>
+                      <CardContent>
+                        <Box
+                          component="pre"
+                          sx={{
+                            backgroundColor: 'grey.100',
+                            p: 2,
+                            borderRadius: 1,
+                            overflow: 'auto',
+                            maxHeight: 300,
+                            fontSize: '0.875rem',
+                            fontFamily: 'monospace'
+                          }}
+                        >
+                          {JSON.stringify(result.result, null, 2)}
+                        </Box>
+                      </CardContent>
+                    </Collapse>
+                  </Card>
                 )}
               </Box>
             )}

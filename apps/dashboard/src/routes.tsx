@@ -68,9 +68,7 @@ const Analytics = lazy(() =>
 
 // 3D and Roblox components (heaviest)
 const TeacherRobloxDashboard = lazy(() =>
-  import("./components/pages/TeacherRobloxDashboard").then(module => ({
-    default: module.default
-  }))
+  import("./components/pages/TeacherRobloxDashboard")
 );
 const EnvironmentCreator = lazy(() =>
   import("./components/roblox/EnvironmentCreator").then(module => ({

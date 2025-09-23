@@ -1,0 +1,2504 @@
+{
+  "timestamp": "2025-09-23T14:24:16.942926",
+  "root_path": "tests",
+  "statistics": {
+    "files_scanned": 216,
+    "files_with_legacy_code": 62,
+    "total_legacy_patterns": 415,
+    "files_cleaned": 0,
+    "lines_removed": 0
+  },
+  "findings": [
+    {
+      "file": "tests/test_database_pool_2025.py",
+      "line": 181,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_database_pool_2025.py",
+      "line": 230,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_password_security.py",
+      "line": 187,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/conftest.py",
+      "line": 457,
+      "pattern": "WebSocket constructor",
+      "content": "return MockWebSocket()"
+    },
+    {
+      "file": "tests/conftest.py",
+      "line": 1033,
+      "pattern": "websocket_handler module",
+      "content": "patch('apps.backend.services.websocket_handler.decode_access_token', side_effect=mock_decode),"
+    },
+    {
+      "file": "tests/conftest.py",
+      "line": 1034,
+      "pattern": "websocket_handler module",
+      "content": "patch('apps.backend.services.websocket_handler.increment_metric', side_effect=increment_metric),"
+    },
+    {
+      "file": "tests/conftest.py",
+      "line": 425,
+      "pattern": "MockWebSocket class",
+      "content": "class MockWebSocket:"
+    },
+    {
+      "file": "tests/conftest.py",
+      "line": 457,
+      "pattern": "MockWebSocket class",
+      "content": "return MockWebSocket()"
+    },
+    {
+      "file": "tests/test_ai_chat.py",
+      "line": 19,
+      "pattern": "Direct websockets import",
+      "content": "import websocket"
+    },
+    {
+      "file": "tests/test_error_handling.py",
+      "line": 76,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_error_handling.py",
+      "line": 88,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_error_handling.py",
+      "line": 89,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_error_handling.py",
+      "line": 100,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_error_handling.py",
+      "line": 101,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_error_handling.py",
+      "line": 112,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_error_handling.py",
+      "line": 113,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_error_handling.py",
+      "line": 124,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_error_handling.py",
+      "line": 125,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_error_handling.py",
+      "line": 136,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_error_handling.py",
+      "line": 137,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_error_handling.py",
+      "line": 302,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_error_handling.py",
+      "line": 336,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_logging_system.py",
+      "line": 212,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_logging_system.py",
+      "line": 220,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_logging_system.py",
+      "line": 237,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_logging_system.py",
+      "line": 245,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_logging_system.py",
+      "line": 262,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_logging_system.py",
+      "line": 294,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_logging_system.py",
+      "line": 311,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_logging_system.py",
+      "line": 400,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_query_optimization.py",
+      "line": 199,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_query_optimization.py",
+      "line": 200,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_query_optimization.py",
+      "line": 228,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_query_optimization.py",
+      "line": 254,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_query_optimization.py",
+      "line": 338,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_query_optimization.py",
+      "line": 360,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_query_optimization.py",
+      "line": 388,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_query_optimization.py",
+      "line": 412,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/test_query_optimization.py",
+      "line": 448,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 60,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 81,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 99,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 118,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 138,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 179,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 209,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 252,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 328,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 369,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 407,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 458,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 500,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 539,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 572,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 600,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_workflows.py",
+      "line": 628,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/conftest.py",
+      "line": 121,
+      "pattern": "MockWebSocket class",
+      "content": "class MockWebSocketConnection:"
+    },
+    {
+      "file": "tests/integration/conftest.py",
+      "line": 178,
+      "pattern": "MockWebSocket class",
+      "content": "class MockWebSocketManager:"
+    },
+    {
+      "file": "tests/integration/conftest.py",
+      "line": 281,
+      "pattern": "MockWebSocket class",
+      "content": "return MockWebSocketConnection()"
+    },
+    {
+      "file": "tests/integration/conftest.py",
+      "line": 286,
+      "pattern": "MockWebSocket class",
+      "content": "return MockWebSocketManager()"
+    },
+    {
+      "file": "tests/integration/conftest.py",
+      "line": 522,
+      "pattern": "MockWebSocket class",
+      "content": "\"MockWebSocketConnection\","
+    },
+    {
+      "file": "tests/integration/conftest.py",
+      "line": 523,
+      "pattern": "MockWebSocket class",
+      "content": "\"MockWebSocketManager\","
+    },
+    {
+      "file": "tests/integration/test_auth_system.py",
+      "line": 35,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_auth_system.py",
+      "line": 148,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_communication_integration.py",
+      "line": 139,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_communication_integration.py",
+      "line": 169,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_communication_integration.py",
+      "line": 209,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_communication_integration.py",
+      "line": 249,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_communication_integration.py",
+      "line": 301,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_communication_integration.py",
+      "line": 340,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_communication_integration.py",
+      "line": 386,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_communication_integration.py",
+      "line": 438,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_communication_integration.py",
+      "line": 467,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_plugin.py",
+      "line": 24,
+      "pattern": "Direct websockets import",
+      "content": "import websocket"
+    },
+    {
+      "file": "tests/integration/test_comprehensive_verification.py",
+      "line": 111,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_comprehensive_verification.py",
+      "line": 171,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_comprehensive_verification.py",
+      "line": 207,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_comprehensive_verification.py",
+      "line": 297,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_comprehensive_verification.py",
+      "line": 349,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_comprehensive_verification.py",
+      "line": 418,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_comprehensive_verification.py",
+      "line": 489,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_comprehensive_verification.py",
+      "line": 535,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_mcp_integration.py",
+      "line": 61,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_mcp_integration.py",
+      "line": 115,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_mcp_integration.py",
+      "line": 188,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_mcp_integration.py",
+      "line": 255,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_mcp_integration.py",
+      "line": 317,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_mcp_integration.py",
+      "line": 373,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_mcp_integration.py",
+      "line": 444,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_enhanced_content_agent.py",
+      "line": 40,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_enhanced_content_agent.py",
+      "line": 250,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_api_v1_endpoints_integration.py",
+      "line": 337,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_socketio_integration.py",
+      "line": 73,
+      "pattern": "Socket.IO reference",
+      "content": "socketio_path='socket.io',"
+    },
+    {
+      "file": "tests/integration/test_socketio_integration.py",
+      "line": 98,
+      "pattern": "Socket.IO reference",
+      "content": "socketio_path='socket.io',"
+    },
+    {
+      "file": "tests/integration/test_socketio_integration.py",
+      "line": 130,
+      "pattern": "Socket.IO reference",
+      "content": "socketio_path='socket.io',"
+    },
+    {
+      "file": "tests/integration/test_socketio_integration.py",
+      "line": 66,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_socketio_integration.py",
+      "line": 91,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_socketio_integration.py",
+      "line": 122,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_socketio_integration.py",
+      "line": 20,
+      "pattern": "socketio module",
+      "content": "import socketio"
+    },
+    {
+      "file": "tests/integration/test_socketio_integration.py",
+      "line": 32,
+      "pattern": "socketio module",
+      "content": "sio = socketio.AsyncClient()"
+    },
+    {
+      "file": "tests/integration/test_socketio_integration.py",
+      "line": 73,
+      "pattern": "socketio module",
+      "content": "socketio_path='socket.io',"
+    },
+    {
+      "file": "tests/integration/test_socketio_integration.py",
+      "line": 98,
+      "pattern": "socketio module",
+      "content": "socketio_path='socket.io',"
+    },
+    {
+      "file": "tests/integration/test_socketio_integration.py",
+      "line": 119,
+      "pattern": "socketio module",
+      "content": "print(\"python test_socketio.py YOUR_JWT_TOKEN\")"
+    },
+    {
+      "file": "tests/integration/test_socketio_integration.py",
+      "line": 124,
+      "pattern": "socketio module",
+      "content": "async def test_socketio_message_ack():"
+    },
+    {
+      "file": "tests/integration/test_socketio_integration.py",
+      "line": 126,
+      "pattern": "socketio module",
+      "content": "client = socketio.AsyncClient(reconnection=False)"
+    },
+    {
+      "file": "tests/integration/test_socketio_integration.py",
+      "line": 130,
+      "pattern": "socketio module",
+      "content": "socketio_path='socket.io',"
+    },
+    {
+      "file": "tests/integration/test_core_agent_communication.py",
+      "line": 116,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_core_agent_communication.py",
+      "line": 144,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_core_agent_communication.py",
+      "line": 185,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_core_agent_communication.py",
+      "line": 232,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_core_agent_communication.py",
+      "line": 268,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_rate_limiting_fix.py",
+      "line": 131,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_rate_limiting_fix.py",
+      "line": 148,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_rate_limiting_fix.py",
+      "line": 182,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_integration.py",
+      "line": 73,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_integration.py",
+      "line": 97,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_integration.py",
+      "line": 136,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_integration.py",
+      "line": 179,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_integration.py",
+      "line": 223,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_integration.py",
+      "line": 256,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_dashboard_integration.py",
+      "line": 38,
+      "pattern": "Direct websockets import",
+      "content": "import websocket"
+    },
+    {
+      "file": "tests/integration/test_dashboard_integration.py",
+      "line": 314,
+      "pattern": "Socket.IO client",
+      "content": "def test_multi_user_scenario(self):"
+    },
+    {
+      "file": "tests/integration/test_dashboard_integration.py",
+      "line": 407,
+      "pattern": "Socket.IO client",
+      "content": "self.test_multi_user_scenario()"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 93,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 131,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 175,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 216,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 251,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 303,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 339,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 381,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 431,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 477,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 514,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 556,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 44,
+      "pattern": "socketio module",
+      "content": "import socketio"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 433,
+      "pattern": "socketio module",
+      "content": "async def test_socketio_connection(self):"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 439,
+      "pattern": "socketio module",
+      "content": "sio_client = socketio.AsyncClient()"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 456,
+      "pattern": "socketio module",
+      "content": "self.results[\"tests\"][\"socketio\"] = {"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 462,
+      "pattern": "socketio module",
+      "content": "self.results[\"tests\"][\"socketio\"] = {"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 471,
+      "pattern": "socketio module",
+      "content": "self.results[\"tests\"][\"socketio\"] = {"
+    },
+    {
+      "file": "tests/integration/test_full_integration.py",
+      "line": 599,
+      "pattern": "socketio module",
+      "content": "await self.test_socketio_connection()"
+    },
+    {
+      "file": "tests/integration/test_databases.py",
+      "line": 28,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_socketio_status.py",
+      "line": 24,
+      "pattern": "Socket.IO reference",
+      "content": "assert data.get(\"path\") == \"/socket.io\""
+    },
+    {
+      "file": "tests/integration/test_socketio_status.py",
+      "line": 14,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_socketio_status.py",
+      "line": 16,
+      "pattern": "socketio module",
+      "content": "async def test_socketio_status_endpoint_acks_and_path():"
+    },
+    {
+      "file": "tests/integration/test_socketio_status.py",
+      "line": 17,
+      "pattern": "socketio module",
+      "content": "url = f\"{FASTAPI_BASE}/socketio/status\""
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 146,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 174,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 213,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 235,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 264,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 305,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 341,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 377,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 411,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 447,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 484,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 513,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 537,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 562,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 585,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_fastapi_comprehensive.py",
+      "line": 620,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_complete_integration.py",
+      "line": 42,
+      "pattern": "Direct websockets import",
+      "content": "import websocket"
+    },
+    {
+      "file": "tests/integration/test_complete_integration.py",
+      "line": 41,
+      "pattern": "socketio module",
+      "content": "import socketio"
+    },
+    {
+      "file": "tests/integration/test_complete_integration.py",
+      "line": 84,
+      "pattern": "socketio module",
+      "content": "self.socketio_client = None"
+    },
+    {
+      "file": "tests/integration/test_complete_integration.py",
+      "line": 328,
+      "pattern": "socketio module",
+      "content": "def test_socketio_connection(self) -> bool:"
+    },
+    {
+      "file": "tests/integration/test_complete_integration.py",
+      "line": 332,
+      "pattern": "socketio module",
+      "content": "sio = socketio.Client()"
+    },
+    {
+      "file": "tests/integration/test_complete_integration.py",
+      "line": 627,
+      "pattern": "socketio module",
+      "content": "self.test_socketio_connection()"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 129,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 202,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 226,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 257,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 284,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 324,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 352,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 386,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 408,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 467,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 490,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 553,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 580,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 616,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_agent_integration.py",
+      "line": 648,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_simple_rate_limit.py",
+      "line": 34,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 103,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 116,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 159,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 192,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 222,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 253,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 281,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 315,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 335,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 365,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 389,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 409,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 446,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 476,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 497,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 532,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 567,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 588,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 612,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 649,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 685,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_advanced_supervisor.py",
+      "line": 748,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 70,
+      "pattern": "Socket.IO client",
+      "content": "def mock_roblox_studio():"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 102,
+      "pattern": "Socket.IO client",
+      "content": "return MockRobloxStudio()"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 192,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 230,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 267,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 316,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 355,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 375,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 411,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 462,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 500,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 545,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 588,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 635,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 662,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 700,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 736,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/integration/test_roblox_integration.py",
+      "line": 768,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/fixtures/api.py",
+      "line": 202,
+      "pattern": "Old mock_websocket (not migrated)",
+      "content": "def mock_websocket():"
+    },
+    {
+      "file": "tests/fixtures/websocket.py",
+      "line": 5,
+      "pattern": "WebSocket constructor",
+      "content": "def create_websocket(): return MockWebSocket()"
+    },
+    {
+      "file": "tests/fixtures/websocket.py",
+      "line": 1,
+      "pattern": "MockWebSocket class",
+      "content": "class MockWebSocket:"
+    },
+    {
+      "file": "tests/fixtures/websocket.py",
+      "line": 5,
+      "pattern": "MockWebSocket class",
+      "content": "def create_websocket(): return MockWebSocket()"
+    },
+    {
+      "file": "tests/performance/test_api_performance.py",
+      "line": 23,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_api_performance.py",
+      "line": 71,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_api_performance.py",
+      "line": 122,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_api_performance.py",
+      "line": 168,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_websocket_performance.py",
+      "line": 50,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_websocket_performance.py",
+      "line": 85,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_websocket_performance.py",
+      "line": 135,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_websocket_performance.py",
+      "line": 183,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_websocket_performance.py",
+      "line": 258,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_agent_performance.py",
+      "line": 33,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_agent_performance.py",
+      "line": 89,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_agent_performance.py",
+      "line": 158,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_agent_performance.py",
+      "line": 211,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_agent_performance.py",
+      "line": 272,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_agent_performance.py",
+      "line": 332,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_database_performance.py",
+      "line": 46,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_database_performance.py",
+      "line": 87,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_database_performance.py",
+      "line": 147,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_database_performance.py",
+      "line": 217,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_database_performance.py",
+      "line": 260,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_database_performance.py",
+      "line": 321,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_load.py",
+      "line": 116,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_load.py",
+      "line": 172,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_load.py",
+      "line": 216,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_load.py",
+      "line": 268,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_load.py",
+      "line": 325,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_load.py",
+      "line": 382,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_load.py",
+      "line": 430,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_load.py",
+      "line": 493,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_load.py",
+      "line": 567,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/performance/test_load.py",
+      "line": 621,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/e2e/test_comprehensive_end_to_end.py",
+      "line": 456,
+      "pattern": "WebSocket constructor",
+      "content": "const ws = new originalWebSocket(url, protocols);"
+    },
+    {
+      "file": "tests/e2e/test_e2e_integration.py",
+      "line": 101,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/e2e/test_e2e_integration.py",
+      "line": 159,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/e2e/test_e2e_integration.py",
+      "line": 252,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/e2e/test_e2e_integration.py",
+      "line": 327,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/e2e/test_e2e_integration.py",
+      "line": 407,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/e2e/test_e2e_integration.py",
+      "line": 462,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/accessibility/a11y_test_runner.py",
+      "line": 427,
+      "pattern": "Socket.IO client",
+      "content": "function getContrastRatio(l1, l2) {"
+    },
+    {
+      "file": "tests/accessibility/a11y_test_runner.py",
+      "line": 452,
+      "pattern": "Socket.IO client",
+      "content": "const ratio = getContrastRatio(bgLuminance, textLuminance);"
+    },
+    {
+      "file": "tests/disaster_recovery/dr_test_runner.py",
+      "line": 122,
+      "pattern": "Socket.IO client",
+      "content": "async def run_scenario(self, scenario_name: str) -> Dict[str, Any]:"
+    },
+    {
+      "file": "tests/disaster_recovery/dr_test_runner.py",
+      "line": 864,
+      "pattern": "Socket.IO client",
+      "content": "result = await self.run_scenario(scenario[\"name\"])"
+    },
+    {
+      "file": "tests/disaster_recovery/dr_test_runner.py",
+      "line": 945,
+      "pattern": "Socket.IO client",
+      "content": "asyncio.run(tester.run_scenario(args.scenario))"
+    },
+    {
+      "file": "tests/unit/core/test_models_unit_core.py",
+      "line": 413,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_socketio_rbac_and_rate_limit.py",
+      "line": 42,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_socketio_rbac_and_rate_limit.py",
+      "line": 82,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_socketio_rbac_and_rate_limit.py",
+      "line": 33,
+      "pattern": "socketio module",
+      "content": "from apps.backend.services.socketio import sio as sio_srv, connected_clients, content_request, ping"
+    },
+    {
+      "file": "tests/unit/core/test_socketio_rbac_and_rate_limit.py",
+      "line": 44,
+      "pattern": "socketio module",
+      "content": "async def test_socketio_rbac_blocks_teacher_event_for_student(monkeypatch):"
+    },
+    {
+      "file": "tests/unit/core/test_socketio_rbac_and_rate_limit.py",
+      "line": 84,
+      "pattern": "socketio module",
+      "content": "async def test_socketio_rate_limit_enforced_for_ping(monkeypatch):"
+    },
+    {
+      "file": "tests/unit/core/test_security.py",
+      "line": 231,
+      "pattern": "websocket_handler module",
+      "content": "with patch('apps.backend.services.websocket_handler.settings') as mock_settings:"
+    },
+    {
+      "file": "tests/unit/core/test_security.py",
+      "line": 32,
+      "pattern": "WebSocketHandler class",
+      "content": "from tests.fixtures.pusher_test_utils import WebSocketManager, WebSocketHandler"
+    },
+    {
+      "file": "tests/unit/core/test_security.py",
+      "line": 165,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_security.py",
+      "line": 202,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_fixes.py",
+      "line": 60,
+      "pattern": "websocket_handler module",
+      "content": "with patch('apps.backend.services.websocket_handler.decode_access_token', side_effect=mock_decode_to"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_fixes.py",
+      "line": 123,
+      "pattern": "websocket_handler module",
+      "content": "with patch('apps.backend.services.websocket_handler.increment_metric', side_effect=increment_metric)"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_fixes.py",
+      "line": 124,
+      "pattern": "websocket_handler module",
+      "content": "with patch('apps.backend.services.websocket_handler.get_metric', side_effect=get_metric):"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_fixes.py",
+      "line": 166,
+      "pattern": "websocket_handler module",
+      "content": "with patch('apps.backend.services.websocket_handler.websocket_manager', mock_manager):"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_fixes.py",
+      "line": 145,
+      "pattern": "MockWebSocket class",
+      "content": "class MockWebSocketManager:"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_fixes.py",
+      "line": 164,
+      "pattern": "MockWebSocket class",
+      "content": "mock_manager = MockWebSocketManager()"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_fixes.py",
+      "line": 129,
+      "pattern": "socketio module",
+      "content": "def fix_socketio_status():"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_fixes.py",
+      "line": 137,
+      "pattern": "socketio module",
+      "content": "with patch('apps.backend.socketio_server.connected_clients', mock_connected_clients):"
+    },
+    {
+      "file": "tests/unit/core/test_ws_rbac_runtime_update.py",
+      "line": 16,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_rbac_and_rate_limit.py",
+      "line": 56,
+      "pattern": "MockWebSocket class",
+      "content": "class MockWebSocketManager:"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_rbac_and_rate_limit.py",
+      "line": 125,
+      "pattern": "MockWebSocket class",
+      "content": "manager = MockWebSocketManager()"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_rbac_and_rate_limit.py",
+      "line": 151,
+      "pattern": "MockWebSocket class",
+      "content": "manager = MockWebSocketManager()"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_rbac_and_rate_limit.py",
+      "line": 116,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_rbac_and_rate_limit.py",
+      "line": 142,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_metrics_token_expired.py",
+      "line": 54,
+      "pattern": "MockWebSocket class",
+      "content": "class MockWebSocketAuthSession:"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_metrics_token_expired.py",
+      "line": 77,
+      "pattern": "MockWebSocket class",
+      "content": "class MockWebSocketManager:"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_metrics_token_expired.py",
+      "line": 87,
+      "pattern": "MockWebSocket class",
+      "content": "mock_pusher_as_websocket_manager = MockWebSocketManager()"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_metrics_token_expired.py",
+      "line": 118,
+      "pattern": "MockWebSocket class",
+      "content": "session = MockWebSocketAuthSession(ws, user, expired_payload, connected_at=datetime.now(timezone.utc"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_metrics_token_expired.py",
+      "line": 145,
+      "pattern": "MockWebSocket class",
+      "content": "session = MockWebSocketAuthSession(ws, user, future_payload, connected_at=datetime.now(timezone.utc)"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_metrics_token_expired.py",
+      "line": 102,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_metrics_token_expired.py",
+      "line": 130,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_mcp_fixed.py",
+      "line": 96,
+      "pattern": "WebSocket constructor",
+      "content": "websocket = MockWebSocket()"
+    },
+    {
+      "file": "tests/unit/core/test_mcp_fixed.py",
+      "line": 59,
+      "pattern": "MockWebSocket class",
+      "content": "class MockWebSocket:"
+    },
+    {
+      "file": "tests/unit/core/test_mcp_fixed.py",
+      "line": 96,
+      "pattern": "MockWebSocket class",
+      "content": "websocket = MockWebSocket()"
+    },
+    {
+      "file": "tests/unit/core/test_mcp_fixed.py",
+      "line": 83,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_mcp_fixed.py",
+      "line": 92,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 67,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 79,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 111,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 148,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 183,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 216,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 249,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 279,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 299,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 326,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 379,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 406,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 426,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 535,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 572,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 620,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 671,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 710,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_plugin_pipeline.py",
+      "line": 779,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 733,
+      "pattern": "websocket_handler module",
+      "content": "with patch('apps.backend.services.websocket_handler.broadcast_update') as mock_broadcast:"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 101,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 279,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 335,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 386,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 413,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 419,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 445,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 482,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 493,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 874,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 925,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 1035,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 1052,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_server_unit_core.py",
+      "line": 1071,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_state_manager_unit_core.py",
+      "line": 18,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_state_manager_unit_core.py",
+      "line": 39,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_state_manager_unit_core.py",
+      "line": 56,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_channel_rbac_and_capacity.py",
+      "line": 46,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_channel_rbac_and_capacity.py",
+      "line": 72,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_ws_rbac_reset_endpoint.py",
+      "line": 16,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_message_auth.py",
+      "line": 33,
+      "pattern": "MockWebSocket class",
+      "content": "class MockWebSocketAuthSession:"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_message_auth.py",
+      "line": 75,
+      "pattern": "MockWebSocket class",
+      "content": "session = MockWebSocketAuthSession("
+    },
+    {
+      "file": "tests/unit/core/test_websocket_message_auth.py",
+      "line": 67,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_fixes.py",
+      "line": 41,
+      "pattern": "websocket_handler module",
+      "content": "with patch('apps.backend.services.websocket_handler.decode_access_token', return_value=mock_user):"
+    },
+    {
+      "file": "tests/unit/core/test_fixes.py",
+      "line": 81,
+      "pattern": "socketio module",
+      "content": "def fix_socketio_tests():"
+    },
+    {
+      "file": "tests/unit/core/test_fixes.py",
+      "line": 88,
+      "pattern": "socketio module",
+      "content": "with patch('apps.backend.services.socketio.sio', mock_sio):"
+    },
+    {
+      "file": "tests/unit/core/test_fixes.py",
+      "line": 110,
+      "pattern": "socketio module",
+      "content": "with fix_socketio_tests():"
+    },
+    {
+      "file": "tests/unit/core/test_socketio_status_endpoint.py",
+      "line": 40,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_socketio_status_endpoint.py",
+      "line": 27,
+      "pattern": "socketio module",
+      "content": "# socketio_status function no longer exists in main.py"
+    },
+    {
+      "file": "tests/unit/core/test_socketio_status_endpoint.py",
+      "line": 28,
+      "pattern": "socketio module",
+      "content": "# from apps.backend.main import socketio_status"
+    },
+    {
+      "file": "tests/unit/core/test_socketio_status_endpoint.py",
+      "line": 31,
+      "pattern": "socketio module",
+      "content": "async def socketio_status():"
+    },
+    {
+      "file": "tests/unit/core/test_socketio_status_endpoint.py",
+      "line": 32,
+      "pattern": "socketio module",
+      "content": "\"\"\"Mock socketio status for testing\"\"\""
+    },
+    {
+      "file": "tests/unit/core/test_socketio_status_endpoint.py",
+      "line": 42,
+      "pattern": "socketio module",
+      "content": "async def test_socketio_status_endpoint_runs():"
+    },
+    {
+      "file": "tests/unit/core/test_socketio_status_endpoint.py",
+      "line": 43,
+      "pattern": "socketio module",
+      "content": "result = await socketio_status()"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 110,
+      "pattern": "WebSocket constructor",
+      "content": "websocket = MockWebSocket()"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 170,
+      "pattern": "WebSocket constructor",
+      "content": "websocket = MockWebSocket()"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 199,
+      "pattern": "WebSocket constructor",
+      "content": "websocket1 = MockWebSocket()"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 200,
+      "pattern": "WebSocket constructor",
+      "content": "websocket2 = MockWebSocket()"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 522,
+      "pattern": "WebSocket constructor",
+      "content": "websocket = MockWebSocket()"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 73,
+      "pattern": "MockWebSocket class",
+      "content": "class MockWebSocket:"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 110,
+      "pattern": "MockWebSocket class",
+      "content": "websocket = MockWebSocket()"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 170,
+      "pattern": "MockWebSocket class",
+      "content": "websocket = MockWebSocket()"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 199,
+      "pattern": "MockWebSocket class",
+      "content": "websocket1 = MockWebSocket()"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 200,
+      "pattern": "MockWebSocket class",
+      "content": "websocket2 = MockWebSocket()"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 522,
+      "pattern": "MockWebSocket class",
+      "content": "websocket = MockWebSocket()"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 97,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 106,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 166,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 195,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_mcp.py",
+      "line": 518,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_config_overrides.py",
+      "line": 48,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_websocket_config_overrides.py",
+      "line": 74,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 103,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 154,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 174,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 236,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 260,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 314,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 329,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 382,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 397,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 407,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 453,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 470,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 529,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 557,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 648,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 677,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 723,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 725,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 751,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 753,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 765,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 767,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 799,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 801,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 817,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 819,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 873,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 887,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 900,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 915,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 957,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 978,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_agents.py",
+      "line": 1008,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/core/test_ws_status_endpoint.py",
+      "line": 15,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    },
+    {
+      "file": "tests/unit/security/test_cors_unit_security.py",
+      "line": 163,
+      "pattern": "Socket.IO client",
+      "content": "@pytest.mark.asyncio(loop_scope=\"function\")"
+    }
+  ],
+  "dry_run": true
+}

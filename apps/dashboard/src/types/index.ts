@@ -42,6 +42,8 @@ export * from './discriminated-unions';
 export * from './utility-types';
 export * from './routes';
 export * from './events';
+export * from './websocket';
+export * from './pusher';
 
 // Schema exports - only export schemas, not types (to avoid conflicts with api.ts)
 export {

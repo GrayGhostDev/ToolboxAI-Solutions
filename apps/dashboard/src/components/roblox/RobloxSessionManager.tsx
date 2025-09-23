@@ -53,7 +53,6 @@ import FormLabel from '@mui/material/FormLabel';
 import RadioGroup from '@mui/material/RadioGroup';
 import Radio from '@mui/material/Radio';
 import Autocomplete from '@mui/material/Autocomplete';
-import Autocomplete from '@mui/material/Autocomplete';
 import {
   PlayArrow,
   Pause,

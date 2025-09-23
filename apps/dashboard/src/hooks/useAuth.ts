@@ -7,6 +7,9 @@ import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from "../config";
 import { authSync } from "../services/auth-sync";
 import { tokenRefreshManager } from "../utils/tokenRefreshManager";
 import { logger } from "../utils/logger";
+
+// This is the legacy auth hook that works with Redux store
+// For new components, use useUnifiedAuth from ./useUnifiedAuth
 export const useAuth = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();

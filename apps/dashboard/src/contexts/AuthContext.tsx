@@ -59,11 +59,28 @@ export const AuthProvider: React.FunctionComponent<{ children: React.ReactNode }
             setUser(response);
             const config = getUserConfig(response.role as UserRole);
             setUserConfig(config);
+            logger.info('Authentication restored successfully');
           }
-        } catch (error) {
-          logger.error('Failed to restore authentication', error);
-          localStorage.removeItem(AUTH_TOKEN_KEY);
-          localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
+        } catch (error: any) {
+          logger.warn('Failed to restore authentication - token may be expired or backend unavailable', error);
+
+          // Only clear tokens if it's a 401 (unauthorized) or 403 (forbidden) error
+          // For network errors or 500 errors, keep the token for retry
+          if (error.response?.status === 401 || error.response?.status === 403) {
+            localStorage.removeItem(AUTH_TOKEN_KEY);
+            localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
+            logger.info('Cleared expired authentication tokens');
+          } else {
+            // For other errors (network, 500, etc.), keep tokens and show warning
+            logger.warn('Keeping tokens for retry - backend may be temporarily unavailable');
+
+            // Show a non-intrusive notification
+            store.dispatch(addNotification({
+              type: 'warning',
+              message: 'Unable to verify authentication. Some features may be limited until connection is restored.',
+              autoHide: true,
+            }));
+          }
         }
       }
       setIsLoading(false);

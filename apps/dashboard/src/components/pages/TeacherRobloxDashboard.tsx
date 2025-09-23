@@ -21,9 +21,7 @@ import IconButton from '@mui/material/IconButton';
 import Badge from '@mui/material/Badge';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
+import { useTheme, alpha } from '@mui/material/styles';
 import {
   Dashboard,
   Psychology,

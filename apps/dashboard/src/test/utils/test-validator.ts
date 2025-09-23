@@ -62,9 +62,12 @@ export class TestValidator {
     // Validate pass rate
     if (passRate < this.REQUIRED_PASS_RATE) {
       console.error(
-        `❌ ${filename} failed validation:\n` +
-        `   Pass rate: ${passRate.toFixed(1)}% (${results.passed}/${results.total} passed)\n` +
-        `   Required: >${this.REQUIRED_PASS_RATE}%\n` +
+        `❌ ${filename} failed validation:
+` +
+        `   Pass rate: ${passRate.toFixed(1)}% (${results.passed}/${results.total} passed)
+` +
+        `   Required: >${this.REQUIRED_PASS_RATE}%
+` +
         `   Failing tests: ${results.failingTests.join(', ')}`
       );
       return false;
@@ -130,7 +133,8 @@ export class TestValidator {
     const statusEmoji = passed ? '✅' : '❌';
     const statusText = passed ? 'ALL PASSED' : 'FAILED';
 
-    console.log('\n' + '='.repeat(60));
+    console.log('
+' + '='.repeat(60));
     console.log('TEST EXECUTION REPORT');
     console.log('='.repeat(60));
     console.log(`Timestamp: ${report.timestamp}`);
@@ -140,7 +144,8 @@ export class TestValidator {
     );
 
     if (report.failedFiles.length > 0) {
-      console.log('\nFailed Files:');
+      console.log('
+Failed Files:');
       console.log('-'.repeat(40));
       report.failedFiles.forEach(file => {
         console.log(`❌ ${file.filename}`);
@@ -151,7 +156,8 @@ export class TestValidator {
       });
     }
 
-    console.log('\nOverall Statistics:');
+    console.log('
+Overall Statistics:');
     console.log('-'.repeat(40));
     console.log(`Total Tests: ${report.overallTests}`);
     console.log(`Passed Tests: ${report.overallPassed}`);
@@ -162,14 +168,16 @@ export class TestValidator {
       }`
     );
 
-    console.log('\nPerformance:');
+    console.log('
+Performance:');
     console.log('-'.repeat(40));
     console.log(`Total Execution Time: ${(report.executionTime / 1000).toFixed(2)}s`);
     console.log(
       `Average Time per File: ${(report.executionTime / report.totalFiles / 1000).toFixed(2)}s`
     );
 
-    console.log('\nQuality Gates:');
+    console.log('
+Quality Gates:');
     console.log('-'.repeat(40));
     const gates = [
       {
@@ -191,8 +199,10 @@ export class TestValidator {
     });
 
     const allGatesPassed = gates.every(g => g.passed);
-    console.log(`\nFinal Status: ${allGatesPassed ? '✅ ALL PASSED' : '❌ FAILED'}`);
-    console.log('='.repeat(60) + '\n');
+    console.log(`
+Final Status: ${allGatesPassed ? '✅ ALL PASSED' : '❌ FAILED'}`);
+    console.log('='.repeat(60) + '
+');
   }
 
   /**
@@ -202,38 +212,71 @@ export class TestValidator {
     const passed = report.failedFiles.length === 0;
     const statusEmoji = passed ? '✅' : '❌';
 
-    let markdown = `# Test Execution Report ${statusEmoji}\n\n`;
-    markdown += `**Generated:** ${report.timestamp}\n\n`;
-    markdown += `## Summary\n\n`;
-    markdown += `- **Total Test Files:** ${report.totalFiles}\n`;
-    markdown += `- **Files Meeting >85% Requirement:** ${report.passedFiles}/${report.totalFiles}\n`;
-    markdown += `- **Overall Pass Rate:** ${report.overallPassRate.toFixed(1)}%\n`;
-    markdown += `- **Execution Time:** ${(report.executionTime / 1000).toFixed(2)}s\n\n`;
+    let markdown = `# Test Execution Report ${statusEmoji}
+
+`;
+    markdown += `**Generated:** ${report.timestamp}
+
+`;
+    markdown += `## Summary
+
+`;
+    markdown += `- **Total Test Files:** ${report.totalFiles}
+`;
+    markdown += `- **Files Meeting >85% Requirement:** ${report.passedFiles}/${report.totalFiles}
+`;
+    markdown += `- **Overall Pass Rate:** ${report.overallPassRate.toFixed(1)}%
+`;
+    markdown += `- **Execution Time:** ${(report.executionTime / 1000).toFixed(2)}s
+
+`;
 
     if (report.failedFiles.length > 0) {
-      markdown += `## Failed Files\n\n`;
-      markdown += `| File | Pass Rate | Tests Passed | Status |\n`;
-      markdown += `|------|-----------|--------------|--------|\n`;
+      markdown += `## Failed Files
+
+`;
+      markdown += `| File | Pass Rate | Tests Passed | Status |
+`;
+      markdown += `|------|-----------|--------------|--------|
+`;
       report.failedFiles.forEach(file => {
-        markdown += `| ${file.filename} | ${file.passRate}% | ${file.passed}/${file.total} | ❌ |\n`;
+        markdown += `| ${file.filename} | ${file.passRate}% | ${file.passed}/${file.total} | ❌ |
+`;
       });
-      markdown += '\n';
+      markdown += '
+';
     }
 
-    markdown += `## Test Statistics\n\n`;
-    markdown += `| Metric | Value |\n`;
-    markdown += `|--------|-------|\n`;
-    markdown += `| Total Tests | ${report.overallTests} |\n`;
-    markdown += `| Passed Tests | ${report.overallPassed} |\n`;
-    markdown += `| Failed Tests | ${report.overallFailed} |\n`;
-    markdown += `| Overall Pass Rate | ${report.overallPassRate.toFixed(1)}% |\n\n`;
+    markdown += `## Test Statistics
 
-    markdown += `## Quality Gates\n\n`;
-    markdown += `| Gate | Status |\n`;
-    markdown += `|------|--------|\n`;
-    markdown += `| All files >85% pass rate | ${report.failedFiles.length === 0 ? '✅ Passed' : '❌ Failed'} |\n`;
-    markdown += `| Overall >85% pass rate | ${report.overallPassRate >= 85 ? '✅ Passed' : '❌ Failed'} |\n`;
-    markdown += `| Execution time <60s | ${report.executionTime < 60000 ? '✅ Passed' : '❌ Failed'} |\n`;
+`;
+    markdown += `| Metric | Value |
+`;
+    markdown += `|--------|-------|
+`;
+    markdown += `| Total Tests | ${report.overallTests} |
+`;
+    markdown += `| Passed Tests | ${report.overallPassed} |
+`;
+    markdown += `| Failed Tests | ${report.overallFailed} |
+`;
+    markdown += `| Overall Pass Rate | ${report.overallPassRate.toFixed(1)}% |
+
+`;
+
+    markdown += `## Quality Gates
+
+`;
+    markdown += `| Gate | Status |
+`;
+    markdown += `|------|--------|
+`;
+    markdown += `| All files >85% pass rate | ${report.failedFiles.length === 0 ? '✅ Passed' : '❌ Failed'} |
+`;
+    markdown += `| Overall >85% pass rate | ${report.overallPassRate >= 85 ? '✅ Passed' : '❌ Failed'} |
+`;
+    markdown += `| Execution time <60s | ${report.executionTime < 60000 ? '✅ Passed' : '❌ Failed'} |
+`;
 
     return markdown;
   }
@@ -307,9 +350,12 @@ export class TestValidator {
   static assertAllTestsPass(report: TestReport): void {
     if (report.failedFiles.length > 0) {
       const message =
-        `Test validation failed!\n` +
-        `${report.failedFiles.length} file(s) have <85% pass rate:\n` +
-        report.failedFiles.map(f => `  - ${f.filename}: ${f.passRate}%`).join('\n');
+        `Test validation failed!
+` +
+        `${report.failedFiles.length} file(s) have <85% pass rate:
+` +
+        report.failedFiles.map(f => `  - ${f.filename}: ${f.passRate}%`).join('
+');
 
       throw new Error(message);
     }

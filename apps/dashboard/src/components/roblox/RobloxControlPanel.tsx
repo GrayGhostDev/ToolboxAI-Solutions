@@ -39,7 +39,6 @@ import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import StepContent from '@mui/material/StepContent';
 import Fab from '@mui/material/Fab';
-import Fab from '@mui/material/Fab';
 import {
   PlayArrow as PlayIcon,
   Stop as StopIcon,

@@ -121,7 +121,7 @@ export const AgentDashboard= () => {
   const [autoRefresh, setAutoRefresh] = useState(true);
 
   // Hooks
-  const { isConnected, subscribe, unsubscribe } = usePusher();
+  const { service: pusher, isConnected } = usePusher();
   const {
     getAgentsStatus,
     getSystemMetrics,
@@ -320,34 +320,36 @@ export const AgentDashboard= () => {
   useEffect(() => {
     if (!isConnected) return;
 
+    const subscriptionIds: string[] = [];
+
     // Subscribe to agent updates
-    subscribe('agent-updates', 'agent.idle', handleAgentUpdate);
-    subscribe('agent-updates', 'agent.busy', handleAgentUpdate);
-    subscribe('agent-updates', 'agent.error', handleAgentUpdate);
-    subscribe('agent-updates', 'task.started', handleAgentUpdate);
-    subscribe('agent-updates', 'task.completed', handleAgentUpdate);
-    subscribe('agent-updates', 'task.failed', handleAgentUpdate);
+    subscriptionIds.push(pusher.subscribe('agent-updates', (message) => {
+      if (message.type?.includes('agent.') || message.type?.includes('task.')) {
+        handleAgentUpdate(message.payload);
+      }
+    }));
 
     // Subscribe to metrics updates
-    subscribe('agent-metrics', 'metrics.updated', handleMetricsUpdate);
-    subscribe('system-health', 'health.updated', handleHealthUpdate);
+    subscriptionIds.push(pusher.subscribe('agent-metrics', (message) => {
+      if (message.type === 'metrics.updated') {
+        handleMetricsUpdate(message.payload);
+      }
+    }));
+
+    subscriptionIds.push(pusher.subscribe('system-health', (message) => {
+      if (message.type === 'health.updated') {
+        handleHealthUpdate(message.payload);
+      }
+    }));
 
     return () => {
-      unsubscribe('agent-updates', 'agent.idle');
-      unsubscribe('agent-updates', 'agent.busy');
-      unsubscribe('agent-updates', 'agent.error');
-      unsubscribe('agent-updates', 'task.started');
-      unsubscribe('agent-updates', 'task.completed');
-      unsubscribe('agent-updates', 'task.failed');
-      unsubscribe('agent-metrics', 'metrics.updated');
-      unsubscribe('system-health', 'health.updated');
+      subscriptionIds.forEach(id => pusher.unsubscribe(id));
     };
   }, [
-    isConnected, 
-    subscribe, 
-    unsubscribe, 
-    handleAgentUpdate, 
-    handleMetricsUpdate, 
+    isConnected,
+    pusher,
+    handleAgentUpdate,
+    handleMetricsUpdate,
     handleHealthUpdate
   ]);
 

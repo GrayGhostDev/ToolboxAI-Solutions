@@ -35,9 +35,7 @@ import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
+import { useTheme, alpha } from '@mui/material/styles';
 import { useLocation } from 'react-router-dom';
 import {
   Terrain,
