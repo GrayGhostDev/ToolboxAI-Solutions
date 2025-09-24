@@ -7,6 +7,7 @@ FastAPI application instances with proper separation of concerns.
 
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -146,6 +147,9 @@ def create_app(
     app.state.testing_mode = testing_mode
     app.state.skip_sentry = skip_sentry
     app.state.skip_lifespan = skip_lifespan
+
+    # Track application start time for uptime calculations
+    app.state.start_time = time.time()
 
     # Register middleware and routers if factory components are available
     if FACTORY_COMPONENTS_AVAILABLE:

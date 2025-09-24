@@ -111,7 +111,7 @@ export const LazyScene3D = ({
   return (
     <ThreeErrorBoundary fallback={fallback}>
       <Suspense fallback={<ThreeLoadingFallback message={loadingMessage} />}>
-        <Scene3D width={width} height={height}>
+        <Scene3D {...({ width, height } as any)}>
           {children}
         </Scene3D>
       </Suspense>

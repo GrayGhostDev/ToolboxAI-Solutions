@@ -130,7 +130,7 @@ make backend    # FastAPI on 127.0.0.1:8009
 make dashboard  # React on localhost:5179
 
 # Alternative direct commands:
-cd apps/backend && uvicorn main:app --host 127.0.0.1 --port 8009 --reload
+uvicorn apps.backend.main:app --host 127.0.0.1 --port 8009 --reload
 cd apps/dashboard && npm run dev
 ```
 

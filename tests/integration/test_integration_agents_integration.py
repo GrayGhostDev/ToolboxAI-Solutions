@@ -341,7 +341,7 @@ async def main():
     else:
         print("   ⚠️  Server not running - skipping HTTP tests")
         print("   💡 To test HTTP endpoints, start the server with:")
-        print("      cd apps/backend && uvicorn main:app --host 127.0.0.1 --port 8009 --reload")
+        print("      uvicorn apps.backend.main:app --host 127.0.0.1 --port 8009 --reload")
 
     # Summary
     print("\n" + "=" * 60)

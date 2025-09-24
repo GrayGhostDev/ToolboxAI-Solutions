@@ -47,7 +47,7 @@ except ImportError:
     def require_role(role): return lambda: None
     def require_any_role(roles): return lambda: None
     def get_db(): return None
-    def rate_limit(requests=60): 
+    def rate_limit(requests=60, max_requests=None, **kwargs):
         def decorator(func):
             return func
         return decorator
@@ -339,7 +339,7 @@ async def get_system_metrics(
 # Content Generation Agent Endpoints
 
 @router.post("/content/generate", response_model=AgentTaskResponse)
-@rate_limit(requests=30)  # 30 requests per minute
+#@rate_limit(requests=30)  # 30 requests per minute
 async def generate_content(
     request: ContentGenerationRequest,
     background_tasks: BackgroundTasks,
@@ -403,7 +403,7 @@ async def generate_content(
 
 
 @router.post("/quiz/generate", response_model=AgentTaskResponse)
-@rate_limit(requests=20)  # 20 requests per minute
+#@rate_limit(requests=20)  # 20 requests per minute
 async def generate_quiz(
     request: QuizGenerationRequest,
     background_tasks: BackgroundTasks,
@@ -468,7 +468,7 @@ async def generate_quiz(
 
 
 @router.post("/terrain/generate", response_model=AgentTaskResponse)
-@rate_limit(requests=15)  # 15 requests per minute
+#@rate_limit(requests=15)  # 15 requests per minute
 async def generate_terrain(
     request: TerrainGenerationRequest,
     background_tasks: BackgroundTasks,
@@ -533,7 +533,7 @@ async def generate_terrain(
 
 
 @router.post("/script/generate", response_model=AgentTaskResponse)
-@rate_limit(requests=20)  # 20 requests per minute
+#@rate_limit(requests=20)  # 20 requests per minute
 async def generate_script(
     request: ScriptGenerationRequest,
     background_tasks: BackgroundTasks,
@@ -597,7 +597,7 @@ async def generate_script(
 
 
 @router.post("/code/review", response_model=AgentTaskResponse)
-@rate_limit(requests=25)  # 25 requests per minute
+#@rate_limit(requests=25)  # 25 requests per minute
 async def review_code(
     request: CodeReviewRequest,
     background_tasks: BackgroundTasks,
@@ -663,7 +663,7 @@ async def review_code(
 # Roblox Agent Endpoints
 
 @router.post("/roblox/asset", response_model=AgentTaskResponse)
-@rate_limit(requests=10)  # 10 requests per minute
+#@rate_limit(requests=10)  # 10 requests per minute
 async def manage_roblox_asset(
     request: RobloxAssetRequest,
     background_tasks: BackgroundTasks,
@@ -714,7 +714,7 @@ async def manage_roblox_asset(
 
 
 @router.post("/roblox/test", response_model=AgentTaskResponse)
-@rate_limit(requests=5)  # 5 requests per minute
+#@rate_limit(requests=5)  # 5 requests per minute
 async def run_roblox_tests(
     request: RobloxTestingRequest,
     background_tasks: BackgroundTasks,
@@ -764,7 +764,7 @@ async def run_roblox_tests(
 
 
 @router.post("/roblox/analytics", response_model=AgentTaskResponse)
-@rate_limit(requests=10)  # 10 requests per minute
+#@rate_limit(requests=10)  # 10 requests per minute
 async def analyze_roblox_data(
     request: RobloxAnalyticsRequest,
     background_tasks: BackgroundTasks,

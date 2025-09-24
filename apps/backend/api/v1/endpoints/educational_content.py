@@ -31,7 +31,10 @@ except ImportError:
     def require_role(role): return lambda: None
     def require_any_role(roles): return lambda: None
     def get_db(): return None
-    def rate_limit(requests=60): return lambda: None
+    def rate_limit(requests=60, max_requests=None, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
 
 # Import models and services
 try:
@@ -288,7 +291,7 @@ async def notify_content_update(content_id: str, action: str, user_id: str):
 # Endpoints
 
 @router.post("/create", response_model=ContentResponse, status_code=status.HTTP_201_CREATED)
-@rate_limit(requests=10)  # 10 requests per minute for content creation
+#@rate_limit(requests=10)  # 10 requests per minute for content creation
 async def create_content(
     request: CreateContentRequest,
     background_tasks: BackgroundTasks,
@@ -553,7 +556,7 @@ async def get_content(
         )
 
 @router.put("/{content_id}", response_model=ContentResponse)
-@rate_limit(requests=20)  # 20 updates per minute
+#@rate_limit(requests=20)  # 20 updates per minute
 async def update_content(
     content_id: str,
     request: UpdateContentRequest,
@@ -663,7 +666,7 @@ async def delete_content(
         )
 
 @router.post("/generate", response_model=ContentGenerationResponse, status_code=status.HTTP_202_ACCEPTED)
-@rate_limit(requests=5)  # 5 generations per minute
+#@rate_limit(requests=5)  # 5 generations per minute
 async def generate_content(
     request: ContentGenerationRequest,
     background_tasks: BackgroundTasks,

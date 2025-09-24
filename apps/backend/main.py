@@ -105,12 +105,20 @@ async def get_migration_status():
 
 if __name__ == "__main__":
     import uvicorn
+    import os
 
-    # Development server configuration
+    # Get configuration from environment variables or settings
+    host = os.getenv("HOST", "0.0.0.0")  # Docker-friendly default
+    port = int(os.getenv("PORT", 8009))
+    workers = int(os.getenv("WORKERS", 1))
+    reload = os.getenv("ENVIRONMENT", "development") == "development"
+
+    # Development server configuration with Docker support
     uvicorn.run(
-        "main:app",
-        host="127.0.0.1",
-        port=8009,
-        reload=True,
-        log_level="info"
+        "apps.backend.main:app",
+        host=host,
+        port=port,
+        reload=reload,
+        log_level="info",
+        workers=workers if not reload else 1  # Reload mode requires single worker
     )

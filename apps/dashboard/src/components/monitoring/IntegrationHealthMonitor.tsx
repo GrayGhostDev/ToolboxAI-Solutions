@@ -41,7 +41,7 @@ import {
   Warning as WarningIcon,
   Refresh as RefreshIcon,
   ExpandMore as ExpandIcon,
-  Database as DatabaseIcon,
+  Storage as DatabaseIcon,
   Api as APIIcon,
   Hub as AgentIcon,
   Games as RobloxIcon,
@@ -104,7 +104,7 @@ export const IntegrationHealthMonitor = memo<IntegrationHealthMonitorProps>(({
   const [detailedHealth, setDetailedHealth] = useState<Record<string, IntegrationHealth>>({});
 
   // Setup Pusher for real-time updates
-  const { subscribe, unsubscribe } = usePusher();
+  const { service: pusherService, isConnected } = usePusher();
 
   useEffect(() => {
     const channel = 'system-health';
@@ -121,14 +121,22 @@ export const IntegrationHealthMonitor = memo<IntegrationHealthMonitorProps>(({
       }));
     };
 
-    subscribe(channel, 'health-overview', handleHealthUpdate);
-    subscribe(channel, 'integration-update', handleIntegrationUpdate);
+    if (!isConnected) return;
+
+    const subscriptions = [
+      pusherService.subscribe(channel, (message) => {
+        if (message.type === 'health-overview') {
+          handleHealthUpdate(message.payload);
+        } else if (message.type === 'integration-update') {
+          handleIntegrationUpdate(message.payload);
+        }
+      })
+    ];
 
     return () => {
-      unsubscribe(channel, 'health-overview', handleHealthUpdate);
-      unsubscribe(channel, 'integration-update', handleIntegrationUpdate);
+      subscriptions.forEach(id => pusherService.unsubscribe(id));
     };
-  }, [subscribe, unsubscribe]);
+  }, [pusherService, isConnected]);
 
   // Auto-refresh
   useEffect(() => {

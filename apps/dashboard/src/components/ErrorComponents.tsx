@@ -387,7 +387,7 @@ export function EmptyState({
       }}
     >
       <Box sx={{ mb: 3, opacity: 0.5 }}>
-        {React./* TODO: React 19 - Review usage of cloneElement */ cloneElement(icon as React.ReactElement, {
+        {React./* TODO: React 19 - Review usage of cloneElement */ cloneElement(icon as React.ReactElement<any>, {
           sx: { fontSize: 80 },
         })}
       </Box>

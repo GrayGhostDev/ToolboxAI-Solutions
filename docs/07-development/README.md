@@ -66,7 +66,7 @@ python scripts/supabase_migration_automation.py
 
 # 7. Start development servers
 # Terminal 1: Backend
-cd apps/backend && uvicorn main:app --host 127.0.0.1 --port 8009 --reload
+uvicorn apps.backend.main:app --host 127.0.0.1 --port 8009 --reload
 
 # Terminal 2: Frontend
 cd apps/dashboard && npm run dev

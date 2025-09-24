@@ -12,7 +12,7 @@ cd /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions
 source venv/bin/activate
 
 # Start backend (now using factory pattern)
-cd apps/backend && uvicorn main:app --host 127.0.0.1 --port 8009 --reload
+uvicorn apps.backend.main:app --host 127.0.0.1 --port 8009 --reload
 
 # Alternative: Use make command
 make backend
@@ -325,7 +325,7 @@ pkill -f uvicorn
 cp apps/backend/main_original.py apps/backend/main.py
 
 # 3. Restart
-cd apps/backend && uvicorn main:app --port 8009
+uvicorn apps.backend.main:app --port 8009
 
 # Note: This loses all refactoring benefits
 # Better to fix specific issues in the modular code

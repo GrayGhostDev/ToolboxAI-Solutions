@@ -31,6 +31,8 @@ import { Canvas2D } from "./components/three/fallbacks/Canvas2D";
 import { PerformanceMonitor } from "./components/common/PerformanceMonitor";
 // Import WebSocketProvider for context
 import { WebSocketProvider } from "./contexts/WebSocketContext";
+// Import Migration Control Panel for development
+import { MigrationControlPanel } from "./components/migration/MigrationWrapper";
 
 // Keep old FloatingCharacters as fallback
 const FloatingCharacters = React.lazy(() => import("./components/roblox/FloatingCharacters").then(module => ({ default: module.FloatingCharacters })));
@@ -203,6 +205,7 @@ export default function App() {
             onClose={handleConsentClose}
           />
         )}
+        <MigrationControlPanel />
       </WebSocketProvider>
     </ErrorBoundary>
   );

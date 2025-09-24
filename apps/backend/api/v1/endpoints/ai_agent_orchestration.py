@@ -34,7 +34,10 @@ except ImportError:
     def require_role(role): return lambda: None
     def require_any_role(roles): return lambda: None
     def get_db(): return None
-    def rate_limit(requests=60): return lambda: None
+    def rate_limit(requests=60, max_requests=None, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
     
     class MockWebSocketManager:
         async def connect(self, websocket, client_id): pass
@@ -435,7 +438,7 @@ initialize_mock_agents()
 # Endpoints
 
 @router.post("/tasks", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
-@rate_limit(requests=30)  # 30 task submissions per minute
+#@rate_limit(requests=30)  # 30 task submissions per minute
 async def create_task(
     request: TaskRequest,
     background_tasks: BackgroundTasks,
@@ -617,7 +620,7 @@ async def get_agent(
         )
 
 @router.post("/workflows", response_model=WorkflowResponse, status_code=status.HTTP_201_CREATED)
-@rate_limit(requests=10)  # 10 workflow creations per minute
+#@rate_limit(requests=10)  # 10 workflow creations per minute
 async def create_workflow(
     request: WorkflowRequest,
     background_tasks: BackgroundTasks,
@@ -720,7 +723,7 @@ async def start_workflow(
         )
 
 @router.post("/sparc", response_model=SPARCResponse, status_code=status.HTTP_201_CREATED)
-@rate_limit(requests=5)  # 5 SPARC processes per minute
+#@rate_limit(requests=5)  # 5 SPARC processes per minute
 async def process_sparc(
     request: SPARCRequest,
     background_tasks: BackgroundTasks,
@@ -809,7 +812,7 @@ async def get_sparc_status(
         )
 
 @router.post("/swarms", response_model=SwarmStatus, status_code=status.HTTP_201_CREATED)
-@rate_limit(requests=3)  # 3 swarm creations per minute
+#@rate_limit(requests=3)  # 3 swarm creations per minute
 async def create_swarm(
     request: SwarmConfigurationRequest,
     background_tasks: BackgroundTasks,

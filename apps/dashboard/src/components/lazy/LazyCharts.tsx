@@ -165,22 +165,22 @@ interface LazyChartProps {
 }
 
 interface LazyUserActivityChartProps extends LazyChartProps {
-  data?: any[];
-  timeRange?: string;
+  timeRange?: "30d" | "24h" | "7d" | "90d";
 }
 
 interface LazyPerformanceIndicatorProps extends LazyChartProps {
-  metrics?: any;
+  showSystemHealth?: boolean;
+  autoRefresh?: boolean;
+  refreshInterval?: number;
 }
 
 interface LazyContentMetricsProps extends LazyChartProps {
-  contentType?: string;
-  dateRange?: { start: Date; end: Date };
+  timeRange?: "24h" | "7d" | "30d" | "90d";
+  autoRefresh?: boolean;
 }
 
 // Lazy UserActivityChart component
 export const LazyUserActivityChart = ({
-  data,
   timeRange,
   fallback,
   loadingMessage = "Loading activity chart...",
@@ -190,7 +190,7 @@ export const LazyUserActivityChart = ({
   return (
     <ChartErrorBoundary fallback={fallback}>
       <Suspense fallback={<ChartLoadingFallback message={loadingMessage} height={height} variant={variant} />}>
-        <UserActivityChart data={data} timeRange={timeRange} />
+        <UserActivityChart timeRange={timeRange as "30d" | "24h" | "7d" | "90d"} />
       </Suspense>
     </ChartErrorBoundary>
   );
@@ -198,7 +198,9 @@ export const LazyUserActivityChart = ({
 
 // Lazy PerformanceIndicator component
 export const LazyPerformanceIndicator = ({
-  metrics,
+  showSystemHealth,
+  autoRefresh,
+  refreshInterval,
   fallback,
   loadingMessage = "Loading performance metrics...",
   height = 300,
@@ -207,7 +209,11 @@ export const LazyPerformanceIndicator = ({
   return (
     <ChartErrorBoundary fallback={fallback}>
       <Suspense fallback={<ChartLoadingFallback message={loadingMessage} height={height} variant={variant} />}>
-        <PerformanceIndicator metrics={metrics} />
+        <PerformanceIndicator
+          showSystemHealth={showSystemHealth}
+          autoRefresh={autoRefresh}
+          refreshInterval={refreshInterval}
+        />
       </Suspense>
     </ChartErrorBoundary>
   );
@@ -215,8 +221,8 @@ export const LazyPerformanceIndicator = ({
 
 // Lazy ContentMetrics component
 export const LazyContentMetrics = ({
-  contentType,
-  dateRange,
+  timeRange,
+  autoRefresh,
   fallback,
   loadingMessage = "Loading content metrics...",
   height = 300,
@@ -225,7 +231,10 @@ export const LazyContentMetrics = ({
   return (
     <ChartErrorBoundary fallback={fallback}>
       <Suspense fallback={<ChartLoadingFallback message={loadingMessage} height={height} variant={variant} />}>
-        <ContentMetrics contentType={contentType} dateRange={dateRange} />
+        <ContentMetrics
+          timeRange={timeRange}
+          autoRefresh={autoRefresh}
+        />
       </Suspense>
     </ChartErrorBoundary>
   );

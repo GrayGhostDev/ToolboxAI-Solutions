@@ -24,6 +24,9 @@ WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'toolboxai_prod')\gexe
 SELECT 'CREATE DATABASE ghost_cms'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'ghost_cms')\gexec
 
+SELECT 'CREATE DATABASE roblox_data'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'roblox_data')\gexec
+
 SELECT 'CREATE DATABASE mcp_memory'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mcp_memory')\gexec
 
@@ -40,3 +43,5 @@ GRANT ALL PRIVILEGES ON DATABASE ghost_cms TO toolboxai;
 GRANT ALL PRIVILEGES ON DATABASE mcp_memory TO toolboxai;
 GRANT ALL PRIVILEGES ON DATABASE analytics TO toolboxai;
 GRANT ALL PRIVILEGES ON DATABASE educational_platform_test TO eduplatform;
+GRANT ALL PRIVILEGES ON DATABASE roblox_data TO eduplatform;
+GRANT ALL PRIVILEGES ON DATABASE ghost_cms TO eduplatform;

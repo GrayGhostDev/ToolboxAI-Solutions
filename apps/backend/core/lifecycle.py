@@ -79,7 +79,7 @@ async def _initialize_auth_system(app: FastAPI) -> None:
     """Initialize authentication and authorization system"""
     try:
         from apps.backend.api.auth.auth import initialize_auth
-        await initialize_auth()
+        initialize_auth()  # This is a synchronous function
         logger.info("Authentication system initialized")
     except ImportError as e:
         logger.warning(f"Could not initialize auth system: {e}")

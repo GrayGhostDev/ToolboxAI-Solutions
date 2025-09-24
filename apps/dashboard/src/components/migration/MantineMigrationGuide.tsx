@@ -208,7 +208,7 @@ export function MantineMigrationGuide() {
                           <Code>{comparison.mantine}</Code>
                         </Table.Td>
                         <Table.Td>
-                          <Code size="xs">{comparison.example}</Code>
+                          <Code>{comparison.example}</Code>
                         </Table.Td>
                       </Table.Tr>
                     ))}

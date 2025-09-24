@@ -29,8 +29,8 @@ import {
   Card,
   CardContent,
   CardHeader,
-  Collapse,
 } from '@mui/material';
+import Collapse from '@mui/material/Collapse';
 import {
   ExpandMore as ExpandMoreIcon,
   PlayArrow as PlayIcon,

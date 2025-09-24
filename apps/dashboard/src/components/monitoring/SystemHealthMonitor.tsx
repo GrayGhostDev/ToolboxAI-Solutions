@@ -28,7 +28,7 @@ import {
   Memory as MemoryIcon,
   Storage as StorageIcon,
   CloudQueue as NetworkIcon,
-  DataUsage as DatabaseIcon,
+  Dataset as DatabaseIcon,
   Api as APIIcon,
   CheckCircle as HealthyIcon,
   Warning as WarningIcon,
@@ -169,7 +169,7 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
     },
   ]);
   // Setup Pusher for real-time updates
-  const { subscribe, unsubscribe } = usePusher();
+  const { service: pusherService, isConnected } = usePusher();
   useEffect(() => {
     const channel = 'system-health';
     const handleMetricUpdate = (data: { metric: string; value: SystemMetric }) => {
@@ -181,13 +181,22 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
     const handleServiceUpdate = (data: ServiceStatus[]) => {
       setServices(data);
     };
-    subscribe(channel, 'metric-update', handleMetricUpdate);
-    subscribe(channel, 'service-status', handleServiceUpdate);
+    if (!isConnected) return;
+
+    const subscriptions = [
+      pusherService.subscribe(channel, (message) => {
+        if (message.type === 'metric-update') {
+          handleMetricUpdate(message.payload);
+        } else if (message.type === 'service-status') {
+          handleServiceUpdate(message.payload);
+        }
+      })
+    ];
+
     return () => {
-      unsubscribe(channel, 'metric-update', handleMetricUpdate);
-      unsubscribe(channel, 'service-status', handleServiceUpdate);
+      subscriptions.forEach(id => pusherService.unsubscribe(id));
     };
-  }, [subscribe, unsubscribe]);
+  }, [pusherService, isConnected]);
   // Auto-refresh
   useEffect(() => {
     if (autoRefresh) {
@@ -264,7 +273,7 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
       case 'network':
         return <NetworkIcon />;
       default:
-        return <DataUsage Icon />;
+        return <DatabaseIcon />;
     }
   };
   const handleRefresh = async () => {
@@ -404,8 +413,8 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
             {services.map(service => (
               <ListItem
                 key={service.name}
-                button={!!onServiceClick}
-                onClick={(e: React.MouseEvent) => () => onServiceClick?.(service)}
+                {...(onServiceClick ? { component: 'div', role: 'button', tabIndex: 0 } : {})}
+                onClick={() => onServiceClick?.(service)}
                 sx={{
                   mb: 1,
                   border: 1,

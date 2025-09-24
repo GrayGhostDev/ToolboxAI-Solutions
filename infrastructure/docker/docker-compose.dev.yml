@@ -16,8 +16,8 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-educational_platform_dev}
       POSTGRES_USER: ${POSTGRES_USER:-eduplatform}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_MULTIPLE_DATABASES: educational_platform,ghost_backend,roblox_data,mcp_memory
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eduplatform2024}
+      POSTGRES_MULTIPLE_DATABASES: educational_platform,ghost_cms,roblox_data,mcp_memory
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d:ro
@@ -59,7 +59,7 @@ services:
       ENVIRONMENT: ${ENVIRONMENT:-development}
       DEBUG: ${DEBUG:-false}
       # Use Docker service names for database connections
-      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-educational_platform_dev}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD:-eduplatform2024}@postgres:5432/${POSTGRES_DB:-educational_platform_dev}
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -118,7 +118,7 @@ services:
       MCP_PORT: 9877
       # Use Docker service names
       REDIS_URL: redis://redis:6379/0
-      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD}@postgres:5432/mcp_memory
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD:-eduplatform2024}@postgres:5432/mcp_memory
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-generate-secure-key-for-production}
       MAX_TOKENS: ${MAX_TOKENS:-4096}
       AGENT_DISCOVERY_ENABLED: ${AGENT_DISCOVERY_ENABLED:-true}
@@ -155,7 +155,7 @@ services:
       MCP_SERVER_URL: ws://mcp-server:9877
       # Use Docker service names
       REDIS_URL: redis://redis:6379/0
-      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-educational_platform_dev}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD:-eduplatform2024}@postgres:5432/${POSTGRES_DB:-educational_platform_dev}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-generate-secure-key-for-production}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       MAX_CONCURRENT_AGENTS: ${MAX_CONCURRENT_AGENTS:-5}
@@ -195,7 +195,7 @@ services:
       COORDINATOR_URL: http://agent-coordinator:8888
       # Use Docker service names
       REDIS_URL: redis://redis:6379/0
-      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-educational_platform_dev}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD:-eduplatform2024}@postgres:5432/${POSTGRES_DB:-educational_platform_dev}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       REGISTRATION_INTERVAL: ${REGISTRATION_INTERVAL:-60}
       TASK_BATCH_SIZE: ${TASK_BATCH_SIZE:-10}
@@ -213,7 +213,7 @@ services:
       - mcp_network
     healthcheck:
       <<: *healthcheck-defaults
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
 
   # Flask Bridge for Roblox Integration
   flask-bridge:
@@ -225,7 +225,7 @@ services:
       <<: *common-variables
       FLASK_ENV: ${ENVIRONMENT:-development}
       # Use Docker service names
-      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD}@postgres:5432/roblox_data
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD:-eduplatform2024}@postgres:5432/${POSTGRES_DB:-educational_platform_dev}
       REDIS_URL: redis://redis:6379/0
       FASTAPI_URL: http://fastapi-main:8009
       JWT_SECRET: ${JWT_SECRET_KEY:-generate-secure-key-for-production}
@@ -266,15 +266,16 @@ services:
     environment:
       <<: *common-variables
       NODE_ENV: development
-      # Use Docker service names for internal communication
-      VITE_API_BASE_URL: http://fastapi-main:8009
+      # Backend service URLs - Use Docker service names for internal communication
+      VITE_API_BASE_URL: http://fastapi-main:8009/api/v1
       VITE_FASTAPI_URL: http://fastapi-main:8009
       VITE_WS_URL: ws://fastapi-main:8009
       VITE_PROXY_TARGET: http://fastapi-main:8009
       # Pusher Configuration (Active - Replacing WebSocket for realtime)
-      VITE_PUSHER_KEY: ${PUSHER_KEY}
+      VITE_PUSHER_KEY: ${PUSHER_KEY:-}
       VITE_PUSHER_CLUSTER: ${PUSHER_CLUSTER:-us2}
       VITE_PUSHER_AUTH_ENDPOINT: http://fastapi-main:8009/api/v1/pusher/auth
+      VITE_PUSHER_SSL: ${PUSHER_SSL:-true}
       # Clerk Authentication (2025) - Enhanced Configuration
       VITE_CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY:-pk_test_Y2FzdWFsLWZpcmVmbHktMzkuY2xlcmsuYWNjb3VudHMuZGV2JA}
       VITE_CLERK_SIGN_IN_URL: ${CLERK_SIGN_IN_URL:-}
@@ -290,36 +291,63 @@ services:
       VITE_ENABLE_GAMIFICATION: ${ENABLE_GAMIFICATION:-true}
       VITE_ENABLE_ANALYTICS: ${ENABLE_ANALYTICS:-true}
       # Development flags
-      VITE_DEBUG_MODE: true
+      VITE_DEBUG_MODE: ${DEBUG:-true}
       VITE_MOCK_API: false
-      # Docker environment flag and WebSocket HMR configuration
+      # Docker environment configuration
       DOCKER_ENV: "true"
       VITE_HMR_HOST: localhost
-      # Set to "true" to use alternative Docker config (disables HMR)
-      # Disabled - using Pusher.io for realtime instead of WebSocket
-      VITE_USE_DOCKER_CONFIG: "false"
+      # Docker-specific startup configuration
+      VITE_USE_DOCKER_CONFIG: ${VITE_USE_DOCKER_CONFIG:-false}
+      BACKEND_WAIT_TIMEOUT: ${BACKEND_WAIT_TIMEOUT:-300}
+      BACKEND_CHECK_INTERVAL: ${BACKEND_CHECK_INTERVAL:-5}
+      STARTUP_RETRY_COUNT: ${STARTUP_RETRY_COUNT:-3}
+      CLEAR_CACHE_ON_START: ${CLEAR_CACHE_ON_START:-false}
+      # Logging configuration
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     ports:
       - '5179:5179'
-    # Enable selective volume mounts for better development experience
+    # Enhanced volume mounts for better development experience
     volumes:
-      - ../../apps/dashboard/src:/app/src
-      - ../../apps/dashboard/public:/app/public
-      - ../../apps/dashboard/index.html:/app/index.html
-      - ../../apps/dashboard/vite.config.ts:/app/vite.config.ts
-      - ../../apps/dashboard/vite.config.docker.ts:/app/vite.config.docker.ts
-      - ../../apps/dashboard/package.json:/app/package.json
-      # Ensure polyfills are available
-      - ../../apps/dashboard/public/polyfills.js:/app/public/polyfills.js
-      # Exclude node_modules to prevent conflicts
+      # Source code for hot reloading
+      - ../../apps/dashboard/src:/app/src:cached
+      - ../../apps/dashboard/public:/app/public:cached
+      - ../../apps/dashboard/index.html:/app/index.html:cached
+      # Configuration files
+      - ../../apps/dashboard/vite.config.ts:/app/vite.config.ts:ro
+      - ../../apps/dashboard/vite.config.docker.ts:/app/vite.config.docker.ts:ro
+      - ../../apps/dashboard/package.json:/app/package.json:ro
+      - ../../apps/dashboard/tsconfig.json:/app/tsconfig.json:ro
+      # Ensure polyfills and static assets are available
+      - ../../apps/dashboard/public/polyfills.js:/app/public/polyfills.js:ro
+      # Logs directory for debugging
+      - dashboard-logs:/app/logs
+      # Exclude node_modules to prevent conflicts with container installation
       - /app/node_modules
     depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       fastapi-main:
         condition: service_healthy
     networks:
       - toolboxai_network
     healthcheck:
       <<: *healthcheck-defaults
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5179"]
+      test: |
+        curl -f http://localhost:5179/ || \
+        wget --quiet --tries=1 --spider http://localhost:5179/ || \
+        exit 1
+      start_period: 60s
+      retries: 5
+    restart: unless-stopped
+    # Resource limits to prevent container from consuming too much memory during build
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
 
   # Ghost Backend CMS
   ghost-backend:
@@ -331,9 +359,9 @@ services:
       database__client: postgres
       database__connection__host: postgres
       database__connection__port: 5432
-      database__connection__database: ghost_backend
+      database__connection__database: ghost_cms
       database__connection__user: ${POSTGRES_USER:-eduplatform}
-      database__connection__password: ${POSTGRES_PASSWORD}
+      database__connection__password: ${POSTGRES_PASSWORD:-eduplatform2024}
       database__connection__pool__min: 2
       database__connection__pool__max: 10
       url: http://localhost:8000
@@ -368,6 +396,8 @@ volumes:
   mcp_contexts:
     driver: local
   educational_content:
+    driver: local
+  dashboard-logs:
     driver: local
 
 networks:

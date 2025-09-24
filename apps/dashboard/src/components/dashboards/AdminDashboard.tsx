@@ -94,7 +94,7 @@ const TabPanel: React.FunctionComponent<TabPanelProps> = ({ children, value, ind
 
 export default function AdminDashboard({ section = 'overview' }: AdminDashboardProps) {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, ...user } = useAppSelector((state) => state.user);
   const [activeTab, setActiveTab] = useState(0);
   const [metrics, setMetrics] = useState<SystemMetrics>({
     totalUsers: 0,
@@ -179,19 +179,19 @@ export default function AdminDashboard({ section = 'overview' }: AdminDashboardP
     fetchAlerts();
 
     // Subscribe to Pusher channels for real-time updates
-    const channel = pusherService.subscribe('admin-updates');
-    channel.bind('metrics-update', (data: SystemMetrics) => {
-      setMetrics(data);
-    });
-    channel.bind('alert-new', (alert: SystemAlert) => {
-      setAlerts((prev) => [alert, ...prev]);
+    const subscriptionId = pusherService.subscribe('admin-updates', (message) => {
+      if (message.type === 'metrics-update') {
+        setMetrics(message.payload);
+      } else if (message.type === 'alert-new') {
+        setAlerts((prev) => [message.payload, ...prev]);
+      }
     });
 
     // Refresh metrics every 30 seconds
     const interval = setInterval(fetchMetrics, 30000);
 
     return () => {
-      pusherService.unsubscribe('admin-updates');
+      pusherService.unsubscribe(subscriptionId);
       clearInterval(interval);
     };
   }, [fetchMetrics, fetchAlerts]);
@@ -333,7 +333,7 @@ export default function AdminDashboard({ section = 'overview' }: AdminDashboardP
           </Tabs>
           <Box sx={{ position: 'absolute', right: 16, top: 8 }}>
             <Tooltip title="Refresh">
-              <IconButton onClick={(e: React.MouseEvent) => handleRefresh} disabled={refreshing}>
+              <IconButton onClick={handleRefresh} disabled={refreshing}>
                 <RefreshIcon />
               </IconButton>
             </Tooltip>
@@ -436,7 +436,7 @@ export default function AdminDashboard({ section = 'overview' }: AdminDashboardP
                             <IconButton
                               edge="end"
                               aria-label="resolve"
-                              onClick={(e: React.MouseEvent) => () => handleResolveAlert(alert.id)}
+                              onClick={() => handleResolveAlert(alert.id)}
                             >
                               <CheckCircleIcon />
                             </IconButton>
@@ -521,7 +521,7 @@ export default function AdminDashboard({ section = 'overview' }: AdminDashboardP
           <Button
             variant="contained"
             startIcon={<DownloadIcon />}
-            onClick={(e: React.MouseEvent) => () => console.log('Export logs')}
+            onClick={() => console.log('Export logs')}
           >
             Export Logs
           </Button>
@@ -530,7 +530,7 @@ export default function AdminDashboard({ section = 'overview' }: AdminDashboardP
           <Button
             variant="outlined"
             startIcon={<UploadIcon />}
-            onClick={(e: React.MouseEvent) => () => console.log('Backup system')}
+            onClick={() => console.log('Backup system')}
           >
             Backup System
           </Button>
@@ -540,7 +540,7 @@ export default function AdminDashboard({ section = 'overview' }: AdminDashboardP
             variant="outlined"
             color="error"
             startIcon={<WarningIcon />}
-            onClick={(e: React.MouseEvent) => () => console.log('Clear cache')}
+            onClick={() => console.log('Clear cache')}
           >
             Clear Cache
           </Button>

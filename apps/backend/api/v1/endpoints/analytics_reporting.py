@@ -33,7 +33,10 @@ except ImportError:
     def require_role(role): return lambda: None
     def require_any_role(roles): return lambda: None
     def get_db(): return None
-    def rate_limit(requests=60): return lambda: None
+    def rate_limit(requests=60, max_requests=None, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
 
 # Import models and services
 try:
@@ -463,7 +466,7 @@ initialize_mock_dashboards()
 # Endpoints
 
 @router.post("/query", response_model=AnalyticsResponse, status_code=status.HTTP_200_OK)
-@rate_limit(requests=30)  # 30 analytics queries per minute
+#@rate_limit(requests=30)  # 30 analytics queries per minute
 async def query_analytics(
     request: AnalyticsQuery,
     background_tasks: BackgroundTasks,
@@ -567,7 +570,7 @@ async def query_analytics(
         )
 
 @router.post("/reports", response_model=ReportResponse, status_code=status.HTTP_201_CREATED)
-@rate_limit(requests=10)  # 10 report generations per minute
+#@rate_limit(requests=10)  # 10 report generations per minute
 async def generate_report(
     request: ReportRequest,
     background_tasks: BackgroundTasks,
@@ -707,7 +710,7 @@ async def get_report(
         )
 
 @router.post("/dashboards", response_model=DashboardResponse, status_code=status.HTTP_201_CREATED)
-@rate_limit(requests=5)  # 5 dashboard creations per minute
+#@rate_limit(requests=5)  # 5 dashboard creations per minute
 async def create_dashboard(
     request: DashboardConfigRequest,
     background_tasks: BackgroundTasks,
@@ -866,7 +869,7 @@ async def get_dashboard(
         )
 
 @router.post("/learning-analytics", response_model=LearningAnalyticsResponse)
-@rate_limit(requests=20)  # 20 learning analytics requests per minute
+#@rate_limit(requests=20)  # 20 learning analytics requests per minute
 async def analyze_learning_data(
     request: LearningAnalyticsRequest,
     background_tasks: BackgroundTasks,

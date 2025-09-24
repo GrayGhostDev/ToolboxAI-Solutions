@@ -18,6 +18,12 @@ This is a monorepo that underwent significant restructuring in September 2025. T
 - **Source Directory Cleanup**: Removed `/src` directory - Roblox code moved to `roblox/src/`
 - **Duplicate Code Eliminated**: Removed duplicate Python packages (settings, types, utils)
 
+### Recent Updates (2025-09-24)
+- **User Profile Endpoint Fixed**: Resolved 404 error for `/api/v1/users/me/profile`
+  - Created new user_profile.py endpoint with GET/PATCH profile methods
+  - Successfully registered router in backend system
+  - Backend now operational with authentication working (401 for invalid tokens)
+
 ### Recent Updates (2025-09-23)
 - **🎉 MAJOR BACKEND REFACTORING COMPLETED**: Complete architectural transformation achieved
   - **91.8% Code Reduction**: From 4,430-line monolith to 60-line factory-based main.py

@@ -260,7 +260,7 @@ async def main():
         print(f"❌ Server not responding at http://127.0.0.1:8008")
         print(f"   Error: {e}")
         print("\nPlease start the server with:")
-        print("   cd apps/backend && uvicorn main:app --host 127.0.0.1 --port 8008 --reload")
+        print("   uvicorn apps.backend.main:app --host 127.0.0.1 --port 8008 --reload")
         return
 
     # Run tests

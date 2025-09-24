@@ -1,5 +1,5 @@
 # Backend API Dockerfile - Multi-stage build for production
-FROM python:3.12-slim as builder
+FROM python:3.12-slim AS builder
 
 # Set working directory
 WORKDIR /app
@@ -47,7 +47,7 @@ COPY --chown=appuser:appuser database database
 COPY --chown=appuser:appuser toolboxai_settings toolboxai_settings
 
 # Set Python path
-ENV PYTHONPATH=/app:$PYTHONPATH \
+ENV PYTHONPATH=/app \
     PATH=/home/appuser/.local/bin:$PATH \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
@@ -64,7 +64,7 @@ EXPOSE 8009 9090
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8009/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8009}/health || exit 1
 
-# Start command
-CMD ["uvicorn", "apps.backend.main:app", "--host", "0.0.0.0", "--port", "8009", "--workers", "4", "--loop", "uvloop", "--access-log"]
+# Start command - Use environment variables or defaults
+CMD ["sh", "-c", "uvicorn apps.backend.main:app --host ${HOST:-0.0.0.0} --port ${PORT:-8009} --workers ${WORKERS:-4} --loop uvloop --access-log"]

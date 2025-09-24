@@ -17,7 +17,6 @@ from core.agents.monitoring.migration_integration import GPT4MigrationSystem
 from core.agents.monitoring.gpt4_migration_monitor import MigrationPhase
 from core.agents.monitoring.cost_tracker import CostCategory
 from core.agents.monitoring.alert_manager import AlertSeverity, AlertCategory
-from apps.backend.core.security.jwt.jwt_manager import jwt_manager
 
 logger = logging.getLogger(__name__)
 

@@ -1,0 +1,468 @@
+# ============================================
+# TOOLBOXAI DOCKER COMPOSE - BASE CONFIGURATION
+# ============================================
+# Docker Engine 25.x optimized configuration
+# Security-first approach with modern best practices
+# Updated: 2025-09-24
+# ============================================
+
+# Docker Compose Version (v2 specification)
+version: '3.9'
+
+# ============================================
+# SHARED CONFIGURATIONS (YAML Anchors)
+# ============================================
+x-common-variables: &common-variables
+  TZ: UTC
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  NODE_ENV: ${NODE_ENV:-production}
+  PYTHONUNBUFFERED: 1
+  PYTHONDONTWRITEBYTECODE: 1
+
+x-security-opts: &security-opts
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  read_only: true
+  tmpfs:
+    - /tmp
+    - /var/run
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+    tag: "{{.Name}}/{{.ID}}"
+
+x-restart-policy: &restart-policy
+  restart: unless-stopped
+
+x-resource-limits: &resource-limits
+  deploy:
+    resources:
+      limits:
+        cpus: '2.0'
+        memory: 2G
+      reservations:
+        cpus: '0.5'
+        memory: 512M
+
+# ============================================
+# SERVICES
+# ============================================
+services:
+  # ----------------------------------------
+  # PostgreSQL Database (Primary)
+  # ----------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: toolboxai-postgres
+    <<: *restart-policy
+    environment:
+      <<: *common-variables
+      POSTGRES_DB: ${POSTGRES_DB:-toolboxai}
+      POSTGRES_USER: ${POSTGRES_USER:-toolboxai}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --data-checksums --auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      # Performance tuning
+      POSTGRES_MAX_CONNECTIONS: 200
+      POSTGRES_SHARED_BUFFERS: 256MB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 1GB
+      POSTGRES_WORK_MEM: 4MB
+    secrets:
+      - db_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data:Z
+      - ./config/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres_backup:/backup
+    networks:
+      database:
+        aliases:
+          - db
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # ----------------------------------------
+  # Redis Cache & Queue
+  # ----------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: toolboxai-redis
+    <<: [*restart-policy, *security-opts]
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --requirepass-file /run/secrets/redis_password
+      --bind 0.0.0.0
+      --protected-mode yes
+      --tcp-backlog 511
+      --tcp-keepalive 300
+      --timeout 0
+    secrets:
+      - redis_password
+    volumes:
+      - redis_data:/data:Z
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      cache:
+        aliases:
+          - cache
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "$$(cat /run/secrets/redis_password)", "ping"]
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # ----------------------------------------
+  # FastAPI Backend
+  # ----------------------------------------
+  backend:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/backend.Dockerfile
+      cache_from:
+        - type=registry,ref=toolboxai/backend:buildcache
+      cache_to:
+        - type=registry,ref=toolboxai/backend:buildcache,mode=max
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    image: toolboxai/backend:${DOCKER_TAG:-latest}
+    container_name: toolboxai-backend
+    <<: *restart-policy
+    environment:
+      <<: *common-variables
+      HOST: 0.0.0.0
+      PORT: 8009
+      WORKERS: ${WORKERS:-4}
+      DATABASE_URL_FILE: /run/secrets/database_url
+      REDIS_URL_FILE: /run/secrets/redis_url
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret
+      # API Keys from secrets
+      OPENAI_API_KEY_FILE: /run/secrets/openai_api_key
+      ANTHROPIC_API_KEY_FILE: /run/secrets/anthropic_api_key
+      # Feature flags
+      RATE_LIMIT_ENABLED: true
+      RATE_LIMIT_PER_MINUTE: 60
+    secrets:
+      - database_url
+      - redis_url
+      - jwt_secret
+      - openai_api_key
+      - anthropic_api_key
+    volumes:
+      - /tmp
+      - /var/run
+      - backend_logs:/app/logs:Z
+      - agent_data:/app/agent_data:Z
+    networks:
+      - backend
+      - database
+      - cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    read_only: true
+    user: "1001:1001"
+    <<: *resource-limits
+
+  # ----------------------------------------
+  # React Dashboard
+  # ----------------------------------------
+  dashboard:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/dashboard.Dockerfile
+      cache_from:
+        - type=registry,ref=toolboxai/dashboard:buildcache
+      cache_to:
+        - type=registry,ref=toolboxai/dashboard:buildcache,mode=max
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+        NODE_ENV: production
+    image: toolboxai/dashboard:${DOCKER_TAG:-latest}
+    container_name: toolboxai-dashboard
+    <<: *restart-policy
+    environment:
+      <<: *common-variables
+      NODE_ENV: production
+      NGINX_ENVSUBST_TEMPLATE_DIR: /etc/nginx/templates
+      NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx/conf.d
+    volumes:
+      - /tmp
+      - /var/run
+      - /var/cache/nginx
+      - nginx_logs:/var/log/nginx:Z
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - CHOWN
+    read_only: true
+    user: "101:101"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ----------------------------------------
+  # MCP Server
+  # ----------------------------------------
+  mcp-server:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/mcp.Dockerfile
+      cache_from:
+        - type=registry,ref=toolboxai/mcp:buildcache
+      cache_to:
+        - type=registry,ref=toolboxai/mcp:buildcache,mode=max
+    image: toolboxai/mcp:${DOCKER_TAG:-latest}
+    container_name: toolboxai-mcp
+    <<: [*restart-policy, *security-opts]
+    environment:
+      <<: *common-variables
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 9877
+      DATABASE_URL_FILE: /run/secrets/database_url
+      REDIS_URL_FILE: /run/secrets/redis_url
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret
+      MAX_TOKENS: ${MAX_TOKENS:-8192}
+      AGENT_DISCOVERY_ENABLED: true
+    secrets:
+      - database_url
+      - redis_url
+      - jwt_secret
+    volumes:
+      - /tmp
+      - mcp_contexts:/data/contexts:Z
+      - agent_data:/data/agents:Z
+    networks:
+      - mcp
+      - database
+      - cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:9877/health"]
+    logging: *default-logging
+    user: "1002:1002"
+
+  # ----------------------------------------
+  # Agent Coordinator
+  # ----------------------------------------
+  agent-coordinator:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/agents.Dockerfile
+      cache_from:
+        - type=registry,ref=toolboxai/agents:buildcache
+      cache_to:
+        - type=registry,ref=toolboxai/agents:buildcache,mode=max
+    image: toolboxai/agents:${DOCKER_TAG:-latest}
+    container_name: toolboxai-agents
+    <<: [*restart-policy, *security-opts]
+    environment:
+      <<: *common-variables
+      COORDINATOR_PORT: 8888
+      MCP_SERVER_URL: ws://mcp-server:9877
+      DATABASE_URL_FILE: /run/secrets/database_url
+      REDIS_URL_FILE: /run/secrets/redis_url
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret
+      OPENAI_API_KEY_FILE: /run/secrets/openai_api_key
+      MAX_CONCURRENT_AGENTS: ${MAX_CONCURRENT_AGENTS:-10}
+      TASK_TIMEOUT: ${TASK_TIMEOUT:-300}
+    secrets:
+      - database_url
+      - redis_url
+      - jwt_secret
+      - openai_api_key
+    volumes:
+      - /tmp
+      - agent_data:/data/agents:Z
+      - agent_logs:/app/logs:Z
+    networks:
+      - mcp
+      - database
+      - cache
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
+    logging: *default-logging
+    user: "1003:1003"
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  frontend:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-frontend
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+  backend:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-backend
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+
+  database:
+    driver: bridge
+    internal: true  # No external access
+    driver_opts:
+      com.docker.network.bridge.name: br-database
+    ipam:
+      config:
+        - subnet: 172.22.0.0/24
+
+  cache:
+    driver: bridge
+    internal: true  # No external access
+    driver_opts:
+      com.docker.network.bridge.name: br-cache
+    ipam:
+      config:
+        - subnet: 172.23.0.0/24
+
+  mcp:
+    driver: bridge
+    internal: true  # No external access
+    driver_opts:
+      com.docker.network.bridge.name: br-mcp
+    ipam:
+      config:
+        - subnet: 172.24.0.0/24
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-./data}/postgres
+
+  postgres_backup:
+    driver: local
+
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-./data}/redis
+
+  backend_logs:
+    driver: local
+
+  nginx_logs:
+    driver: local
+
+  agent_data:
+    driver: local
+
+  agent_logs:
+    driver: local
+
+  mcp_contexts:
+    driver: local
+
+# ============================================
+# SECRETS (External - must be created separately)
+# ============================================
+secrets:
+  db_password:
+    external: true
+  redis_password:
+    external: true
+  database_url:
+    external: true
+  redis_url:
+    external: true
+  jwt_secret:
+    external: true
+  openai_api_key:
+    external: true
+  anthropic_api_key:
+    external: true

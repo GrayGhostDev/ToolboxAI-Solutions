@@ -1,0 +1,277 @@
+# ============================================
+# TOOLBOXAI DOCKER COMPOSE - DEVELOPMENT OVERRIDE
+# ============================================
+# Development-specific overrides for local development
+# Use with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Updated: 2025-09-24
+# ============================================
+
+version: '3.9'
+
+services:
+  # ----------------------------------------
+  # PostgreSQL Database (Development)
+  # ----------------------------------------
+  postgres:
+    ports:
+      - "5434:5432"
+    environment:
+      # Use simple password for dev (override secrets)
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpass2024}
+      # Enable query logging for development
+      POSTGRES_LOG_STATEMENT: all
+      POSTGRES_LOG_CONNECTIONS: "on"
+      POSTGRES_LOG_DISCONNECTIONS: "on"
+    # No secrets in dev, use env directly
+    secrets: []
+    # Remove security restrictions for development
+    security_opt: []
+    cap_drop: []
+    cap_add:
+      - ALL
+
+  # ----------------------------------------
+  # Redis Cache (Development)
+  # ----------------------------------------
+  redis:
+    ports:
+      - "6381:6379"
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    # No password in development
+    secrets: []
+    # Remove security restrictions for development
+    security_opt: []
+    cap_drop: []
+    read_only: false
+
+  # ----------------------------------------
+  # FastAPI Backend (Development)
+  # ----------------------------------------
+  backend:
+    build:
+      target: development  # Use development stage in Dockerfile
+    ports:
+      - "8009:8009"
+      - "5678:5678"  # Python debugger port
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      RELOAD: "true"
+      WORKERS: 1  # Single worker for debugging
+      # Direct database connection (no secrets)
+      DATABASE_URL: postgresql://${POSTGRES_USER:-toolboxai}:${POSTGRES_PASSWORD:-devpass2024}@postgres:5432/${POSTGRES_DB:-toolboxai}
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
+      # Mock API keys for development
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-test-key}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-sk-test-key}
+      # Disable rate limiting in dev
+      RATE_LIMIT_ENABLED: false
+      # Enable detailed logging
+      LOG_LEVEL: DEBUG
+      PYTHONDEBUG: 1
+    secrets: []
+    volumes:
+      # Mount source code for hot reload
+      - ../../../apps/backend:/app/apps/backend:cached
+      - ../../../core:/app/core:cached
+      - ../../../database:/app/database:cached
+      - ../../../toolboxai_settings:/app/toolboxai_settings:cached
+      - ../../../toolboxai_utils:/app/toolboxai_utils:cached
+      - backend_logs:/app/logs
+      # Allow pip install in development
+      - pip_cache:/root/.cache/pip
+    # Remove security restrictions for development
+    security_opt: []
+    cap_drop: []
+    read_only: false
+    user: root  # Run as root in development for easier debugging
+    command: >
+      python -m uvicorn
+      apps.backend.main:app
+      --host 0.0.0.0
+      --port 8009
+      --reload
+      --reload-dir /app
+      --log-level debug
+
+  # ----------------------------------------
+  # React Dashboard (Development)
+  # ----------------------------------------
+  dashboard:
+    build:
+      target: development  # Use development stage in Dockerfile
+      args:
+        NODE_ENV: development
+    ports:
+      - "5179:5179"
+      - "9229:9229"  # Node debugger port
+    environment:
+      NODE_ENV: development
+      # Vite dev server configuration
+      VITE_HOST: 0.0.0.0
+      VITE_PORT: 5179
+      VITE_HMR_HOST: localhost
+      VITE_HMR_PORT: 5179
+      # API configuration for development
+      VITE_API_BASE_URL: http://localhost:8009
+      VITE_WS_URL: ws://localhost:8009
+      # Enable all features in development
+      VITE_ENABLE_WEBSOCKET: "true"
+      VITE_ENABLE_GAMIFICATION: "true"
+      VITE_ENABLE_ANALYTICS: "true"
+      VITE_ENABLE_AI_CHAT: "true"
+      VITE_DEBUG_MODE: "true"
+      VITE_MOCK_API: "false"
+      # Disable Clerk in local dev by default
+      VITE_ENABLE_CLERK_AUTH: "false"
+    volumes:
+      # Mount source code for hot reload
+      - ../../../apps/dashboard/src:/app/src:cached
+      - ../../../apps/dashboard/public:/app/public:cached
+      - ../../../apps/dashboard/index.html:/app/index.html:cached
+      - ../../../apps/dashboard/vite.config.ts:/app/vite.config.ts:cached
+      - ../../../apps/dashboard/tsconfig.json:/app/tsconfig.json:cached
+      - ../../../apps/dashboard/package.json:/app/package.json:cached
+      # Exclude node_modules to prevent conflicts
+      - /app/node_modules
+      - /app/dist
+    # Remove security restrictions for development
+    security_opt: []
+    cap_drop: []
+    read_only: false
+    user: root
+    command: npm run dev
+
+  # ----------------------------------------
+  # MCP Server (Development)
+  # ----------------------------------------
+  mcp-server:
+    ports:
+      - "9877:9877"
+      - "9878:9878"  # Debug port
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      LOG_LEVEL: DEBUG
+      DATABASE_URL: postgresql://${POSTGRES_USER:-toolboxai}:${POSTGRES_PASSWORD:-devpass2024}@postgres:5432/${POSTGRES_DB:-toolboxai}
+      REDIS_URL: redis://redis:6379/1
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key}
+      AGENT_DISCOVERY_ENABLED: true
+      AGENT_REGISTRY_TTL: 60  # Shorter TTL for dev
+    secrets: []
+    volumes:
+      # Mount source code for development
+      - ../../../core/mcp:/app/core/mcp:cached
+      - mcp_contexts:/data/contexts
+      - agent_data:/data/agents
+    security_opt: []
+    cap_drop: []
+    read_only: false
+    user: root
+
+  # ----------------------------------------
+  # Agent Coordinator (Development)
+  # ----------------------------------------
+  agent-coordinator:
+    ports:
+      - "8888:8888"
+      - "8889:8889"  # Debug port
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      LOG_LEVEL: DEBUG
+      MCP_SERVER_URL: ws://mcp-server:9877
+      DATABASE_URL: postgresql://${POSTGRES_USER:-toolboxai}:${POSTGRES_PASSWORD:-devpass2024}@postgres:5432/${POSTGRES_DB:-toolboxai}
+      REDIS_URL: redis://redis:6379/2
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-test-key}
+      MAX_CONCURRENT_AGENTS: 3  # Lower for dev
+      TASK_TIMEOUT: 60  # Shorter timeout for dev
+      HEALTH_CHECK_INTERVAL: 10  # More frequent checks in dev
+    secrets: []
+    volumes:
+      # Mount source code for development
+      - ../../../core/agents:/app/core/agents:cached
+      - agent_data:/data/agents
+      - agent_logs:/app/logs
+    security_opt: []
+    cap_drop: []
+    read_only: false
+    user: root
+
+# ============================================
+# ADDITIONAL DEVELOPMENT SERVICES
+# ============================================
+  # Adminer for database management
+  adminer:
+    image: adminer:latest
+    container_name: toolboxai-adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: pepa-linha-dark
+    networks:
+      - database
+    depends_on:
+      - postgres
+
+  # Redis Commander for Redis management
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: toolboxai-redis-commander
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379
+      HTTP_USER: admin
+      HTTP_PASSWORD: admin
+    networks:
+      - cache
+    depends_on:
+      - redis
+
+  # Mailhog for email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: toolboxai-mailhog
+    restart: always
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - backend
+
+# ============================================
+# DEVELOPMENT VOLUMES
+# ============================================
+volumes:
+  pip_cache:
+    driver: local
+  node_modules:
+    driver: local
+
+# ============================================
+# NETWORKS (using base configuration)
+# ============================================
+networks:
+  frontend:
+    external: false
+  backend:
+    external: false
+  database:
+    external: false
+    internal: false  # Allow external access in dev
+  cache:
+    external: false
+    internal: false  # Allow external access in dev
+  mcp:
+    external: false
+    internal: false  # Allow external access in dev

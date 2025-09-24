@@ -8,7 +8,7 @@ GPT-4.1 migration monitoring system in your application.
 import asyncio
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from .gpt4_migration_monitor import GPT4MigrationMonitor, MigrationPhase
 from .cost_tracker import CostTracker, CostCategory

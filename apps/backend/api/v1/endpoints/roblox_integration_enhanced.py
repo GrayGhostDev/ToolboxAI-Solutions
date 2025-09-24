@@ -35,7 +35,10 @@ except ImportError:
     def require_role(role): return lambda: None
     def require_any_role(roles): return lambda: None
     def get_db(): return None
-    def rate_limit(requests=60): return lambda: None
+    def rate_limit(requests=60, max_requests=None, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
     
     class MockWebSocketManager:
         async def connect(self, websocket, client_id): pass
@@ -356,7 +359,7 @@ def analyze_script_performance(script_content: str) -> Dict[str, Any]:
 # Endpoints
 
 @router.post("/scripts/generate", response_model=ScriptGenerationResponse, status_code=status.HTTP_201_CREATED)
-@rate_limit(requests=10)  # 10 script generations per minute
+#@rate_limit(requests=10)  # 10 script generations per minute
 async def generate_script(
     request: ScriptGenerationRequest,
     background_tasks: BackgroundTasks,
@@ -444,7 +447,7 @@ educationalFunction()
         )
 
 @router.post("/scripts/validate", response_model=ScriptValidationResponse)
-@rate_limit(requests=20)  # 20 validations per minute
+#@rate_limit(requests=20)  # 20 validations per minute
 async def validate_script(
     request: ScriptValidationRequest,
     current_user: Dict = Depends(get_current_user)
@@ -516,7 +519,7 @@ async def validate_script(
         )
 
 @router.post("/assets/upload", response_model=AssetResponse, status_code=status.HTTP_201_CREATED)
-@rate_limit(requests=5)  # 5 asset uploads per minute
+#@rate_limit(requests=5)  # 5 asset uploads per minute
 async def upload_asset(
     request: AssetUploadRequest,
     background_tasks: BackgroundTasks,
@@ -645,7 +648,7 @@ async def list_assets(
         )
 
 @router.post("/environments/deploy", response_model=EnvironmentDeploymentResponse, status_code=status.HTTP_202_ACCEPTED)
-@rate_limit(requests=3)  # 3 deployments per minute
+#@rate_limit(requests=3)  # 3 deployments per minute
 async def deploy_environment(
     request: EnvironmentDeploymentRequest,
     background_tasks: BackgroundTasks,
@@ -730,7 +733,7 @@ async def get_deployment_status(
         )
 
 @router.post("/studio/sync", response_model=StudioSyncResponse, status_code=status.HTTP_202_ACCEPTED)
-@rate_limit(requests=5)  # 5 sync operations per minute
+#@rate_limit(requests=5)  # 5 sync operations per minute
 async def sync_with_studio(
     request: StudioSyncRequest,
     background_tasks: BackgroundTasks,

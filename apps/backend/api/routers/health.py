@@ -5,6 +5,7 @@ Handles health checks, system status, and monitoring endpoints.
 """
 
 import logging
+import time
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
@@ -21,7 +22,7 @@ router = APIRouter(tags=["System"])
 
 
 @router.get("/health", response_model=HealthCheck)
-async def health_check() -> HealthCheck:
+async def health_check(request: Request) -> HealthCheck:
     """
     Comprehensive health check endpoint
 
@@ -29,34 +30,55 @@ async def health_check() -> HealthCheck:
         HealthCheck: System health status
     """
     try:
-        health_data = {
-            "status": "healthy",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "version": settings.APP_VERSION,
-            "environment": settings.ENVIRONMENT,
-            "services": await _check_all_services()
-        }
+        # Calculate uptime
+        app = request.app
+        current_time = time.time()
+        start_time = getattr(app.state, 'start_time', current_time)
+        uptime_seconds = current_time - start_time
+
+        # Check all services
+        services = await _check_all_services()
 
         # Determine overall status based on service checks
         unhealthy_services = [
-            name for name, status in health_data["services"].items()
+            name for name, status in services.items()
             if status.get("status") != "healthy"
         ]
 
-        if unhealthy_services:
-            health_data["status"] = "degraded"
-            health_data["issues"] = unhealthy_services
+        overall_status = "degraded" if unhealthy_services else "healthy"
+
+        # Create checks dictionary for the model
+        checks = {
+            name: status.get("status") == "healthy"
+            for name, status in services.items()
+        }
+
+        health_data = {
+            "status": overall_status,
+            "version": settings.APP_VERSION,
+            "uptime": uptime_seconds,
+            "checks": checks
+        }
 
         return HealthCheck(**health_data)
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
+
+        # Calculate uptime even in error case
+        try:
+            app = request.app
+            current_time = time.time()
+            start_time = getattr(app.state, 'start_time', current_time)
+            uptime_seconds = current_time - start_time
+        except:
+            uptime_seconds = 0.0
+
         return HealthCheck(
             status="unhealthy",
-            timestamp=datetime.now(timezone.utc).isoformat(),
             version=settings.APP_VERSION,
-            environment=settings.ENVIRONMENT,
-            error=str(e)
+            uptime=uptime_seconds,
+            checks={}
         )
 
 
@@ -131,7 +153,7 @@ async def get_pusher_status() -> JSONResponse:
 
 
 @router.get("/resilience/status")
-async def get_resilience_status() -> JSONResponse:
+async def get_resilience_endpoint_status() -> JSONResponse:
     """
     Get resilience features status
 
@@ -140,7 +162,7 @@ async def get_resilience_status() -> JSONResponse:
     """
     try:
         from apps.backend.api.middleware.resilience import get_resilience_status
-        status = get_resilience_status()
+        status = await get_resilience_status()
 
         return JSONResponse(content={
             "status": "success",
@@ -164,7 +186,7 @@ async def get_resilience_status() -> JSONResponse:
 
 
 @router.get("/circuit-breakers/status")
-async def get_circuit_breakers_status() -> JSONResponse:
+async def get_circuit_breakers_endpoint_status() -> JSONResponse:
     """
     Get circuit breakers status
 
@@ -173,7 +195,7 @@ async def get_circuit_breakers_status() -> JSONResponse:
     """
     try:
         from apps.backend.core.circuit_breaker import get_all_circuit_breakers_status
-        status = get_all_circuit_breakers_status()
+        status = await get_all_circuit_breakers_status()
 
         return JSONResponse(content={
             "status": "success",
@@ -274,7 +296,7 @@ async def get_sentry_status() -> JSONResponse:
         from apps.backend.core.monitoring import sentry_manager
 
         status_data = {
-            "enabled": sentry_manager.is_enabled(),
+            "enabled": sentry_manager.initialized,
             "environment": settings.ENVIRONMENT,
             "dsn_configured": bool(getattr(settings, 'SENTRY_DSN', None)),
             "sample_rate": getattr(settings, 'SENTRY_SAMPLE_RATE', 1.0)

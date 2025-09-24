@@ -97,6 +97,11 @@ const WebSocketDemo = lazy(() =>
     default: module.default
   }))
 );
+const MigrationDemo = lazy(() =>
+  import("./components/pages/MigrationDemo").then(module => ({
+    default: module.default
+  }))
+);
 const AgentDashboard = lazy(() =>
   import("./pages/AgentDashboard").then(module => ({
     default: module.default
@@ -104,6 +109,13 @@ const AgentDashboard = lazy(() =>
 );
 const GPT4MigrationDashboard = lazy(() =>
   import("./components/pages/GPT4MigrationDashboard").then(module => ({
+    default: module.default
+  }))
+);
+
+// Observability components (admin-only)
+const ObservabilityDashboard = lazy(() =>
+  import("./components/observability/ObservabilityDashboard").then(module => ({
     default: module.default
   }))
 );
@@ -312,6 +324,16 @@ export default function AppRoutes() {
           </RoleGuard>
         }
       />
+      <Route
+        path="/observability"
+        element={
+          <RoleGuard allow={["admin"]}>
+            <PerformanceRoute priority="low" skeletonVariant="dashboard">
+              <ObservabilityDashboard />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
 
       {/* Parent Routes */}
       <Route
@@ -347,6 +369,7 @@ export default function AppRoutes() {
       {/* Development Test Routes */}
       <Route path="/websocket-test" element={<WebSocketTest />} />
       <Route path="/websocket-demo" element={<WebSocketDemo />} />
+      <Route path="/migration-demo" element={<MigrationDemo />} />
 
       {/* Roblox Environment Creation */}
       <Route

@@ -25,8 +25,8 @@ def register_routers(app: FastAPI) -> None:
         # Register core routers
         _register_core_routers(app)
 
-        # Register API v1 routers (temporarily disabled due to rate_limit decorator issue)
-        # _register_v1_routers(app)
+        # Register API v1 routers
+        _register_v1_routers(app)
 
         # Register webhook routers
         _register_webhook_routers(app)
@@ -106,6 +106,7 @@ def _register_v1_routers(app: FastAPI) -> None:
         # User management routers
         ("apps.backend.api.v1.endpoints.auth", "auth_router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.users", "router", "/api/v1"),
+        ("apps.backend.api.v1.endpoints.user_profile", "router", ""),  # User profile endpoints
 
         # Content and AI routers
         ("apps.backend.api.v1.endpoints.ai_chat", "router", "/api/v1"),

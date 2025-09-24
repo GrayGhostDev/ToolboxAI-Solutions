@@ -25,6 +25,7 @@ from .endpoints import roblox_agents
 from .endpoints import direct_agents
 from .endpoints import orchestrator
 from .endpoints import admin
+from .endpoints import observability
 
 # Create main API v1 router
 api_router = APIRouter()
@@ -48,6 +49,7 @@ api_router.include_router(roblox_agents.router, tags=["roblox-agents"])
 api_router.include_router(direct_agents.router, tags=["direct-agents"])
 api_router.include_router(orchestrator.router, prefix="/orchestrator", tags=["orchestrator"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
+api_router.include_router(observability.router, prefix="/observability", tags=["observability"])
 
 # Health check endpoint
 @api_router.get("/health")
