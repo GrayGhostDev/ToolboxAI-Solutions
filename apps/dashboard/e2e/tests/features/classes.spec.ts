@@ -1,5 +1,7 @@
+
+
 import { test, expect } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import { Page } from '@playwright/test';
 
 /**
  * Classes Management E2E Tests
@@ -10,9 +12,9 @@ import type { Page } from '@playwright/test';
 // Helper function to login as teacher
 async function loginAsTeacher(page: Page) {
   await page.goto('/login');
-  await page.locator('input[name="email"], [data-testid="email-input"]').first().fill('jane.smith@school.edu');
-  await page.locator('input[name="password"], [data-testid="password-input"]').first().fill('Teacher123!');
-  await page.locator('button[type="submit"], [data-testid="login-submit"]').first().click();
+  await page.locator('input[name="identifier"], input[id="identifier-field"], [data-testid="email-input"]').first().fill('jane.smith@school.edu');
+  await page.locator('input[name="password"], input[id="password-field"], [data-testid="password-input"]').first().fill('Teacher123!');
+  await page.locator('button[type="submit"], button:has-text("Continue"), [data-testid="login-submit"]').first().click();
 
   // Wait for navigation with error handling for mocked environments
   await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 10000 }).catch(() => {
@@ -189,9 +191,9 @@ test.describe('Classes Management - Student', () => {
   test.beforeEach(async ({ page }) => {
     // Login as student
     await page.goto('/login');
-    await page.locator('input[name="email"], [data-testid="email-input"]').first().fill('alex.johnson@student.edu');
-    await page.locator('input[name="password"], [data-testid="password-input"]').first().fill('Student123!');
-    await page.locator('button[type="submit"], [data-testid="login-submit"]').first().click();
+    await page.locator('input[name="identifier"], input[id="identifier-field"], [data-testid="email-input"]').first().fill('alex.johnson@student.edu');
+    await page.locator('input[name="password"], input[id="password-field"], [data-testid="password-input"]').first().fill('Student123!');
+    await page.locator('button[type="submit"], button:has-text("Continue"), [data-testid="login-submit"]').first().click();
     await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 10000 }).catch(() => {
       // Continue even if navigation doesn't happen (might be mocked)
     });
@@ -257,9 +259,9 @@ test.describe('Classes Management - Admin', () => {
   test.beforeEach(async ({ page }) => {
     // Login as admin
     await page.goto('/login');
-    await page.locator('input[name="email"], [data-testid="email-input"]').first().fill('admin@toolboxai.com');
-    await page.locator('input[name="password"], [data-testid="password-input"]').first().fill('Admin123!');
-    await page.locator('button[type="submit"], [data-testid="login-submit"]').first().click();
+    await page.locator('input[name="identifier"], input[id="identifier-field"], [data-testid="email-input"]').first().fill('admin@toolboxai.com');
+    await page.locator('input[name="password"], input[id="password-field"], [data-testid="password-input"]').first().fill('Admin123!');
+    await page.locator('button[type="submit"], button:has-text("Continue"), [data-testid="login-submit"]').first().click();
     await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 10000 }).catch(() => {
       // Continue even if navigation doesn't happen (might be mocked)
     });

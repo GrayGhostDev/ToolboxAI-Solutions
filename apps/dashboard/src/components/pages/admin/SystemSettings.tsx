@@ -1,24 +1,23 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  CardHeader,
-  Typography,
-  Switch,
-  FormControlLabel,
-  TextField,
-  Button,
-  Divider,
-  Grid,
-  Alert,
-  Stack,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Chip,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
+import Typography from '@mui/material/Typography';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
+import Grid from '@mui/material/Grid';
+import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Chip from '@mui/material/Chip';
+
 import { Save, RestartAlt } from '@mui/icons-material';
 import { useAppDispatch } from '../../../store';
 import { addNotification } from '../../../store/slices/uiSlice';
@@ -64,7 +63,7 @@ interface Settings {
   };
 }
 
-const SystemSettings: React.FC = () => {
+const SystemSettings: React.FunctionComponent<Record<string, any>> = () => {
   const dispatch = useAppDispatch();
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -207,7 +206,7 @@ const SystemSettings: React.FC = () => {
           <Button
             variant="outlined"
             startIcon={<RestartAlt />}
-            onClick={handleReset}
+            onClick={(e: React.MouseEvent) => handleReset}
             disabled={!hasChanges || saving}
           >
             Reset
@@ -215,7 +214,7 @@ const SystemSettings: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<Save />}
-            onClick={handleSave}
+            onClick={(e: React.MouseEvent) => handleSave}
             disabled={!hasChanges || saving}
           >
             {saving ? 'Saving...' : 'Save Changes'}

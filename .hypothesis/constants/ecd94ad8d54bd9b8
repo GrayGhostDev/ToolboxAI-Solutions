@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/security/compression.py
+# hypothesis_version: 6.139.2
+
+[0.001, 0.01, 1.0, 1.1, 100, 1024, '*', ',', '/health', '/metrics', '/ws', ';', 'MSIE 6.0', 'Mozilla/4.0', 'accept-encoding', 'application/atom+xml', 'application/json', 'application/rss+xml', 'application/xml', 'body', 'body_iterator', 'br', 'content-encoding', 'content-length', 'content-type', 'deflate', 'gzip', 'http', 'http.response.body', 'http.response.start', 'identity', 'image/svg+xml', 'image/x-icon', 'more_body', 'q=', 'text/css', 'text/html', 'text/javascript', 'text/plain', 'text/xml', 'type', 'user-agent', 'wb', 'x-compression-ratio']

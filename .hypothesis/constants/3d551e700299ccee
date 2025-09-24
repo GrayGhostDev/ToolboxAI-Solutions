@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/security/session_manager.py
+# hypothesis_version: 6.139.2
+
+[900, 1800, 43200, 86400, 'SessionInfo', 'True', '_at', 'all', 'details', 'event', 'ip_address', 'is_active', 'last_activity', 'last_password_change', 'logout', 'manual', 'old_session_id', 'password_change', 'password_changed', 'reason', 'session:', 'session_created', 'session_events:', 'session_expired', 'session_fp:', 'session_id', 'session_invalidated', 'session_refreshed', 'session_version:', 'sessions_invalidated', 'suspicious_activity', 'timestamp', 'user_id', 'user_sessions:', 'version']

@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/security/middleware.py
+# hypothesis_version: 6.139.2
+
+[100, 200, 1024, '***REDACTED***', ',', '/generate_content', '/health', '/metrics', '1; mode=block', 'DENY', 'OPTIONS', 'Rate limit exceeded', 'Retry-After', 'X-API-Key', 'X-Forwarded-For', 'X-Frame-Options', 'X-Process-Time', 'X-Request-ID', 'X-XSS-Protection', 'api[_-]?key', 'api_', 'auth', 'authorization', 'bearer ', 'closed', 'content-length', 'cookie', 'credential', 'detail', 'failures', 'half_open', 'health', 'key_', 'last_failure', 'last_success', 'metrics', 'middleware', 'nosniff', 'open', 'password', 'pk_', 'private[_-]?key', 'request_id', 'secret', 'set-cookie', 'sk_', 'state', 'token', 'token_', 'unknown', 'user_id', 'x-api-key', 'x-auth-token', 'x-csrf-token']

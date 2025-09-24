@@ -2,46 +2,43 @@
  * Roblox Control Panel Component
  * Main control interface for teachers to manage Roblox educational content
  */
-
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  CardHeader,
-  Grid,
-  Button,
-  Typography,
-  Chip,
-  IconButton,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Alert,
-  CircularProgress,
-  Tooltip,
-  Divider,
-  Switch,
-  FormControlLabel,
-  Badge,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemSecondaryAction,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
-  Fab
-} from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
+import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import TextField from '@mui/material/TextField';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
+import Tooltip from '@mui/material/Tooltip';
+import Divider from '@mui/material/Divider';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Badge from '@mui/material/Badge';
+import Paper from '@mui/material/Paper';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import StepContent from '@mui/material/StepContent';
+import Fab from '@mui/material/Fab';
 import {
   PlayArrow as PlayIcon,
   Stop as StopIcon,
@@ -68,20 +65,17 @@ import {
   FiberManualRecord as RecordIcon
 } from '@mui/icons-material';
 import { useWebSocket } from '../../hooks/websocket';
-import { useAppDispatch, useAppSelector } from '../../store';
+import { useAppDispatch } from '../../store';
 import { WebSocketMessageType, ContentGenerationRequest } from '../../types/websocket';
-
 interface RobloxControlPanelProps {
   className?: string;
 }
-
 interface PluginStatus {
   connected: boolean;
   version: string;
   lastHeartbeat: Date | null;
   capabilities: string[];
 }
-
 interface ActiveSession {
   id: string;
   name: string;
@@ -91,7 +85,6 @@ interface ActiveSession {
   startTime: Date;
   duration: number;
 }
-
 interface ContentPreset {
   id: string;
   name: string;
@@ -101,7 +94,6 @@ interface ContentPreset {
   environment: string;
   includeQuiz: boolean;
 }
-
 const CONTENT_PRESETS: ContentPreset[] = [
   {
     id: 'math-fractions',
@@ -140,7 +132,6 @@ const CONTENT_PRESETS: ContentPreset[] = [
     includeQuiz: true
   }
 ];
-
 const ENVIRONMENT_TYPES = [
   'classroom',
   'outdoor',
@@ -153,11 +144,9 @@ const ENVIRONMENT_TYPES = [
   'restaurant',
   'museum'
 ];
-
-export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ className }) => {
+export const RobloxControlPanel: React.FunctionComponent<RobloxControlPanelProps> = ({ className }) => {
   const dispatch = useAppDispatch();
   const { sendMessage, isConnected, state: wsState } = useWebSocket();
-  
   // Local state
   const [pluginStatus, setPluginStatus] = useState<PluginStatus>({
     connected: false,
@@ -165,14 +154,12 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
     lastHeartbeat: null,
     capabilities: []
   });
-  
   const [activeSessions, setActiveSessions] = useState<ActiveSession[]>([]);
   const [selectedPreset, setSelectedPreset] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [showContentWizard, setShowContentWizard] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
-  
   // Content generation form state
   const [contentForm, setContentForm] = useState<Partial<ContentGenerationRequest> & { duration?: number; maxStudents?: number; difficulty?: string }>({
     requestId: '',
@@ -185,9 +172,7 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
     duration: 30,
     maxStudents: 30
   });
-  
   const [objectivesInput, setObjectivesInput] = useState('');
-  
   // Check plugin connection status
   useEffect(() => {
     const checkPluginStatus = async () => {
@@ -208,13 +193,10 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
         }
       }
     };
-    
     checkPluginStatus();
     const interval = setInterval(checkPluginStatus, 30000); // Check every 30 seconds
-    
     return () => clearInterval(interval);
   }, [isConnected, sendMessage]);
-  
   // Fetch active sessions
   useEffect(() => {
     const fetchSessions = async () => {
@@ -229,13 +211,10 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
         }
       }
     };
-    
     fetchSessions();
     const interval = setInterval(fetchSessions, 10000); // Update every 10 seconds
-    
     return () => clearInterval(interval);
   }, [isConnected, sendMessage]);
-  
   // Handle preset selection
   const handlePresetSelect = (presetId: string) => {
     const preset = CONTENT_PRESETS.find(p => p.id === presetId);
@@ -250,19 +229,16 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
       setSelectedPreset(presetId);
     }
   };
-  
   // Handle content generation
   const handleGenerateContent = async () => {
     setIsGenerating(true);
     setGenerationProgress(0);
-    
     try {
       // Parse learning objectives
       const objectives = objectivesInput
         .split(',')
         .map(obj => obj.trim())
         .filter(obj => obj.length > 0);
-      
       const request: ContentGenerationRequest = {
         subject: contentForm.subject || 'Mathematics',
         gradeLevel: contentForm.gradeLevel || 5,
@@ -273,10 +249,8 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
         requestId: `req_${Date.now()}`,
         userId: (typeof window !== 'undefined' && localStorage.getItem('current_user_id')) || 'unknown'
       };
-      
       // Send generation request
       await sendMessage(WebSocketMessageType.CONTENT_GENERATION_REQUEST, request);
-      
       // Simulate progress (real progress would come from WebSocket events)
       const progressInterval = setInterval(() => {
         setGenerationProgress(prev => {
@@ -288,13 +262,11 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
           return prev + 10;
         });
       }, 1000);
-      
     } catch (error) {
       console.error('Failed to generate content:', error);
       setIsGenerating(false);
     }
   };
-  
   // Handle session control
   const handleSessionControl = async (sessionId: string, action: 'start' | 'pause' | 'stop') => {
     try {
@@ -302,7 +274,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
         sessionId,
         action
       });
-      
       // Update local state
       setActiveSessions(prev => prev.map(session => {
         if (session.id === sessionId) {
@@ -323,7 +294,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
       console.error(`Failed to ${action} session:`, error);
     }
   };
-  
   // Wizard steps
   const wizardSteps = [
     'Select Subject & Grade',
@@ -332,26 +302,21 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
     'Configure Settings',
     'Review & Generate'
   ];
-  
   const handleNext = () => {
     setActiveStep(prev => prev + 1);
   };
-  
   const handleBack = () => {
     setActiveStep(prev => prev - 1);
   };
-  
   const handleWizardComplete = () => {
     handleGenerateContent();
     setShowContentWizard(false);
     setActiveStep(0);
   };
-  
   // Get connection status color
   const getStatusColor = (connected: boolean) => {
     return connected ? 'success' : 'error';
   };
-  
   return (
     <Box className={className}>
       <Grid container spacing={3}>
@@ -407,7 +372,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
                   />
                 </ListItem>
               </List>
-              
               <Box mt={2}>
                 <Button
                   fullWidth
@@ -421,7 +385,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
             </CardContent>
           </Card>
         </Grid>
-        
         {/* Quick Actions Card */}
         <Grid item xs={12} md={8}>
           <Card>
@@ -450,20 +413,18 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
                     </Select>
                   </FormControl>
                 </Grid>
-                
                 <Grid item xs={12} sm={6}>
                   <Button
                     fullWidth
                     variant="contained"
                     color="primary"
                     startIcon={isGenerating ? <CircularProgress size={20} /> : <CloudIcon />}
-                    onClick={() => setShowContentWizard(true)}
+                    onClick={(e: React.MouseEvent) => () => setShowContentWizard(true)}
                     disabled={!isConnected || !pluginStatus.connected || isGenerating}
                   >
                     {isGenerating ? 'Generating...' : 'Generate Content'}
                   </Button>
                 </Grid>
-                
                 <Grid item xs={12}>
                   {selectedPreset && (
                     <Alert severity="info" icon={<InfoIcon />}>
@@ -471,7 +432,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
                     </Alert>
                   )}
                 </Grid>
-                
                 {isGenerating && (
                   <Grid item xs={12}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -494,7 +454,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
             </CardContent>
           </Card>
         </Grid>
-        
         {/* Active Sessions Card */}
         <Grid item xs={12}>
           <Card>
@@ -542,13 +501,13 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
                           <>
                             <IconButton 
                               edge="end" 
-                              onClick={() => handleSessionControl(session.id, 'pause')}
+                              onClick={(e: React.MouseEvent) => () => handleSessionControl(session.id, 'pause')}
                             >
                               <PauseIcon />
                             </IconButton>
                             <IconButton 
                               edge="end" 
-                              onClick={() => handleSessionControl(session.id, 'stop')}
+                              onClick={(e: React.MouseEvent) => () => handleSessionControl(session.id, 'stop')}
                             >
                               <StopIcon />
                             </IconButton>
@@ -556,7 +515,7 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
                         ) : session.status === 'paused' ? (
                           <IconButton 
                             edge="end" 
-                            onClick={() => handleSessionControl(session.id, 'start')}
+                            onClick={(e: React.MouseEvent) => () => handleSessionControl(session.id, 'start')}
                           >
                             <PlayIcon />
                           </IconButton>
@@ -569,7 +528,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
             </CardContent>
           </Card>
         </Grid>
-        
         {/* Statistics Cards */}
         <Grid item xs={12} sm={6} md={3}>
           <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -581,7 +539,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
             </Typography>
           </Paper>
         </Grid>
-        
         <Grid item xs={12} sm={6} md={3}>
           <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Typography variant="h4" color="secondary">
@@ -592,7 +549,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
             </Typography>
           </Paper>
         </Grid>
-        
         <Grid item xs={12} sm={6} md={3}>
           <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Typography variant="h4" color="success.main">
@@ -603,7 +559,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
             </Typography>
           </Paper>
         </Grid>
-        
         <Grid item xs={12} sm={6} md={3}>
           <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Typography variant="h4" color="info.main">
@@ -615,7 +570,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
           </Paper>
         </Grid>
       </Grid>
-      
       {/* Content Generation Wizard Dialog */}
       <Dialog 
         open={showContentWizard} 
@@ -656,7 +610,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
                       </Grid>
                     </Grid>
                   )}
-                  
                   {index === 1 && (
                     <TextField
                       fullWidth
@@ -669,7 +622,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
                       margin="normal"
                     />
                   )}
-                  
                   {index === 2 && (
                     <FormControl fullWidth margin="normal">
                       <InputLabel>Environment Type</InputLabel>
@@ -686,7 +638,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
                       </Select>
                     </FormControl>
                   )}
-                  
                   {index === 3 && (
                     <Grid container spacing={2}>
                       <Grid item xs={12}>
@@ -722,7 +673,6 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
                       </Grid>
                     </Grid>
                   )}
-                  
                   {index === 4 && (
                     <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
                       <Typography variant="h6" gutterBottom>Review Your Configuration</Typography>
@@ -758,18 +708,17 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
                       </Grid>
                     </Paper>
                   )}
-                  
                   <Box sx={{ mb: 2, mt: 2 }}>
                     <Button
                       variant="contained"
-                      onClick={index === wizardSteps.length - 1 ? handleWizardComplete : handleNext}
+                      onClick={(e: React.MouseEvent) => index === wizardSteps.length - 1 ? handleWizardComplete : handleNext}
                       sx={{ mt: 1, mr: 1 }}
                     >
                       {index === wizardSteps.length - 1 ? 'Generate' : 'Continue'}
                     </Button>
                     <Button
                       disabled={index === 0}
-                      onClick={handleBack}
+                      onClick={(e: React.MouseEvent) => handleBack}
                       sx={{ mt: 1, mr: 1 }}
                     >
                       Back
@@ -781,10 +730,9 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
           </Stepper>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowContentWizard(false)}>Cancel</Button>
+          <Button onClick={(e: React.MouseEvent) => () => setShowContentWizard(false)}>Cancel</Button>
         </DialogActions>
       </Dialog>
-      
       {/* Floating Action Button for Quick Generate */}
       <Fab
         color="primary"
@@ -794,7 +742,7 @@ export const RobloxControlPanel: React.FC<RobloxControlPanelProps> = ({ classNam
           bottom: 16,
           right: 16
         }}
-        onClick={() => setShowContentWizard(true)}
+        onClick={(e: React.MouseEvent) => () => setShowContentWizard(true)}
         disabled={!isConnected || !pluginStatus.connected}
       >
         <AddIcon />

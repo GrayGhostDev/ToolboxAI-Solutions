@@ -1,26 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Tab,
-  Tabs,
-  Avatar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Chip,
-  LinearProgress,
-  Alert,
-  IconButton,
-  Tooltip,
-  Paper,
-  Divider,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Avatar from '@mui/material/Avatar';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import Alert from '@mui/material/Alert';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Paper from '@mui/material/Paper';
+import Divider from '@mui/material/Divider';
+
 import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
@@ -79,7 +78,7 @@ interface TabPanelProps {
   value: number;
 }
 
-const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
+const TabPanel: React.FunctionComponent<TabPanelProps> = ({ children, value, index, ...other }) => {
   return (
     <div
       role="tabpanel"
@@ -95,7 +94,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 
 export default function AdminDashboard({ section = 'overview' }: AdminDashboardProps) {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, ...user } = useAppSelector((state) => state.user);
   const [activeTab, setActiveTab] = useState(0);
   const [metrics, setMetrics] = useState<SystemMetrics>({
     totalUsers: 0,
@@ -180,19 +179,19 @@ export default function AdminDashboard({ section = 'overview' }: AdminDashboardP
     fetchAlerts();
 
     // Subscribe to Pusher channels for real-time updates
-    const channel = pusherService.subscribe('admin-updates');
-    channel.bind('metrics-update', (data: SystemMetrics) => {
-      setMetrics(data);
-    });
-    channel.bind('alert-new', (alert: SystemAlert) => {
-      setAlerts((prev) => [alert, ...prev]);
+    const subscriptionId = pusherService.subscribe('admin-updates', (message) => {
+      if (message.type === 'metrics-update') {
+        setMetrics(message.payload);
+      } else if (message.type === 'alert-new') {
+        setAlerts((prev) => [message.payload, ...prev]);
+      }
     });
 
     // Refresh metrics every 30 seconds
     const interval = setInterval(fetchMetrics, 30000);
 
     return () => {
-      pusherService.unsubscribe('admin-updates');
+      pusherService.unsubscribe(subscriptionId);
       clearInterval(interval);
     };
   }, [fetchMetrics, fetchAlerts]);

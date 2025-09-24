@@ -9,7 +9,7 @@ export interface SearchBarProps {
   onSearch?: (query: string) => void;
 }
 
-const SearchBar = React.forwardRef<HTMLDivElement, SearchBarProps>((props, ref) => (
+const SearchBar = (({ ...props, ref }: HTMLDivElement, SearchBarProps & { ref?: React.Ref<any> }) => (
   <div ref={ref} {...props}>SearchBar Component</div>
 ));
 

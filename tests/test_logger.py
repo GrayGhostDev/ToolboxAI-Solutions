@@ -298,8 +298,9 @@ def configure_test_logging():
     logging.getLogger("asyncio").setLevel(logging.WARNING)
     logging.getLogger("multipart").setLevel(logging.WARNING)
 
-# Auto-configure on import
-configure_test_logging()
+# Auto-configure on import - disabled to prevent pytest conflicts
+# configure_test_logging()
+# Note: Call configure_test_logging() explicitly in tests that need it
 
 # Export main components
 __all__ = ['TestLogger', 'log_test_execution', 'test_logger', 'TEST_LOG_DIR']

@@ -1,21 +1,20 @@
 import * as React from "react";
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
+import InputAdornment from '@mui/material/InputAdornment';
+import Paper from '@mui/material/Paper';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import {
-  Box,
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  Stack,
-  InputAdornment,
-  Paper,
-  Stepper,
-  Step,
-  StepLabel,
-} from "@mui/material";
 import { Email, Lock, CheckCircle } from "@mui/icons-material";
 import { useAppDispatch } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
@@ -335,7 +334,7 @@ export default function PasswordReset() {
                 <Button
                   fullWidth
                   variant="contained"
-                  onClick={() => navigate("/login")}
+                  onClick={(e: React.MouseEvent) => () => navigate("/login")}
                   sx={{
                     borderRadius: 2,
                     py: 1.5,

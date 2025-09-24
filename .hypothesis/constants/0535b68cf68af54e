@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/swarm/message_bus/agent_message.py
+# hypothesis_version: 6.139.2
+
+[0.1, 30.0, '1.0', 'AgentMessage', 'MessageBuilder', 'acknowledged', 'attachments', 'broadcast', 'cancelled', 'checksum', 'completed', 'completed_at', 'compressed', 'consensus', 'correlation_id', 'created', 'created_at', 'data', 'delivered', 'delivered_at', 'encoding', 'error', 'event_type', 'expired', 'failed', 'from_agent', 'header', 'json', 'max_retries', 'message_id', 'metadata', 'mime_type', 'multicast', 'name', 'pattern', 'payload', 'priority', 'processing', 'publish_subscribe', 'queued', 'request_response', 'retry_count', 'sent', 'sent_at', 'size', 'source_agent', 'status', 'streaming', 'system', 'target_agent', 'timestamp', 'to_agent', 'ttl', 'unicast', 'workflow']

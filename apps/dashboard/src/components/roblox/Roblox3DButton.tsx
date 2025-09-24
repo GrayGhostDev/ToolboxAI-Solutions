@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Button, useTheme, alpha, keyframes, styled } from '@mui/material';
-import { Box, Typography, Tooltip } from '@mui/material';
+import Button from '@mui/material/Button';
+import { useTheme, alpha, styled, keyframes } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Tooltip from '@mui/material/Tooltip';
 
 interface Roblox3DButtonProps {
   iconName: string;
@@ -171,7 +174,7 @@ const iconImageMap: { [key: string]: string } = {
   'TROPHY': '/images/png/3d_icon_TROPHY_1.png',
 };
 
-export const Roblox3DButton: React.FC<Roblox3DButtonProps> = ({
+export const Roblox3DButton: React.FunctionComponent<Roblox3DButtonProps> = ({
   iconName,
   label,
   onClick,
@@ -193,7 +196,7 @@ export const Roblox3DButton: React.FC<Roblox3DButtonProps> = ({
       variant={variant}
       size={size}
       disabled={disabled || loading}
-      onClick={onClick}
+      onClick={(e: React.MouseEvent) => onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       sx={{ width: fullWidth ? '100%' : 'auto' }}

@@ -1,31 +1,30 @@
 import * as React from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Stack,
-  Chip,
-  Switch,
-  IconButton,
-  Alert,
-  AlertTitle,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemSecondaryAction,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Box,
-  LinearProgress,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
-} from "@mui/material";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import Switch from '@mui/material/Switch';
+import IconButton from '@mui/material/IconButton';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Box from '@mui/material/Box';
+import LinearProgress from '@mui/material/LinearProgress';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+
 import Grid2 from "@mui/material/Unstable_Grid2";
 import IntegrationInstructionsIcon from "@mui/icons-material/IntegrationInstructions";
 import FileDownload from "@mui/icons-material/FileDownload";
@@ -232,7 +231,7 @@ export default function Integrations() {
                 </div>
               </Stack>
               <Stack direction="row" gap={2}>
-                <Button variant="outlined" startIcon={<ApiIcon />} onClick={() => setApiDialogOpen(true)}>
+                <Button variant="outlined" startIcon={<ApiIcon />} onClick={(e: React.MouseEvent) => () => setApiDialogOpen(true)}>
                   API Docs
                 </Button>
                 <Button variant="contained" startIcon={<AddIcon />}>
@@ -325,7 +324,7 @@ export default function Integrations() {
           <Button 
             size="small" 
             sx={{ ml: 2 }}
-            onClick={() => {
+            onClick={(e: React.MouseEvent) => () => {
               const robloxIntegration = integrations.find(i => i.id === "roblox");
               if (robloxIntegration) {
                 setSelectedIntegration(robloxIntegration);
@@ -408,7 +407,7 @@ export default function Integrations() {
                         <Button
                           variant="contained"
                           fullWidth
-                          onClick={() => handleConnect(integration)}
+                          onClick={(e: React.MouseEvent) => () => handleConnect(integration)}
                         >
                           Connect
                         </Button>
@@ -418,14 +417,14 @@ export default function Integrations() {
                             variant="outlined"
                             startIcon={<SettingsIcon />}
                             sx={{ flex: 1 }}
-                            onClick={() => handleConnect(integration)}
+                            onClick={(e: React.MouseEvent) => () => handleConnect(integration)}
                           >
                             Configure
                           </Button>
                           <Button
                             variant="outlined"
                             color="error"
-                            onClick={() => handleDisconnect(integration)}
+                            onClick={(e: React.MouseEvent) => () => handleDisconnect(integration)}
                           >
                             Disconnect
                           </Button>
@@ -536,8 +535,8 @@ export default function Integrations() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfigDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={() => setConfigDialogOpen(false)}>
+          <Button onClick={(e: React.MouseEvent) => () => setConfigDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={(e: React.MouseEvent) => () => setConfigDialogOpen(false)}>
             Save Configuration
           </Button>
         </DialogActions>
@@ -561,7 +560,7 @@ export default function Integrations() {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setApiDialogOpen(false)}>Close</Button>
+          <Button onClick={(e: React.MouseEvent) => () => setApiDialogOpen(false)}>Close</Button>
           <Button variant="contained" startIcon={<FileDownload />}>
             Download Full Documentation
           </Button>

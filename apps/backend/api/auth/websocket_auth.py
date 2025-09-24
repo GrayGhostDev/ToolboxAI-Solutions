@@ -485,3 +485,26 @@ __all__ = [
     'authenticate_websocket_message',
     'require_websocket_role',
 ]
+
+def decode_token(token: str) -> dict:
+    """Decode a JWT token"""
+    try:
+        # Simplified implementation for testing
+        import json
+        import base64
+
+        # Basic JWT structure: header.payload.signature
+        parts = token.split('.')
+        if len(parts) != 3:
+            return {"error": "Invalid token format"}
+
+        # Decode payload (add padding if needed)
+        payload = parts[1]
+        padding = 4 - len(payload) % 4
+        if padding != 4:
+            payload += '=' * padding
+
+        decoded = base64.urlsafe_b64decode(payload)
+        return json.loads(decoded)
+    except Exception as e:
+        return {"error": str(e)}

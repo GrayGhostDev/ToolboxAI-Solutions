@@ -1,0 +1,43 @@
+{
+  "name": "ToolBoxAI Dashboard",
+  "short_name": "ToolBoxAI",
+  "description": "Educational Training Platform - Gamified learning dashboard for schools",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#1976d2",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["education", "productivity"],
+  "icons": [],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "description": "Main dashboard",
+      "url": "/",
+      "icons": []
+    },
+    {
+      "name": "Classes",
+      "short_name": "Classes",
+      "description": "Manage classes",
+      "url": "/classes",
+      "icons": []
+    },
+    {
+      "name": "Lessons",
+      "short_name": "Lessons",
+      "description": "View lessons",
+      "url": "/lessons",
+      "icons": []
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  }
+}

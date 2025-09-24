@@ -5,7 +5,10 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Badge as MuiBadge, BadgeProps as MuiBadgeProps, styled, alpha } from '@mui/material';
+import { Badge as MuiBadge } from '@mui/material';
+import { BadgeProps as MuiBadgeProps } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import { designTokens } from '../../../theme/designTokens';
 
 // Custom props for our Badge component

@@ -1,35 +1,34 @@
 import * as React from "react";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Skeleton from '@mui/material/Skeleton';
+import Alert from '@mui/material/Alert';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import LinearProgress from '@mui/material/LinearProgress';
+import Avatar from '@mui/material/Avatar';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Divider from '@mui/material/Divider';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Stack,
-  Chip,
-  IconButton,
-  Skeleton,
-  Alert,
-  Grid,
-  Paper,
-  LinearProgress,
-  Avatar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-} from "@mui/material";
 import {
   SmartToy,
   Psychology,
@@ -560,7 +559,7 @@ export function MCPAgentDashboard({
                   <Chip label="MCP Offline" color="default" size="small" />
                 )}
                 <IconButton 
-                  onClick={() => {
+                  onClick={(e: React.MouseEvent) => () => {
                     setReconnectAttempts(0);
                     connectToMCP();
                   }}
@@ -650,7 +649,7 @@ export function MCPAgentDashboard({
                   </Stack>
                   <IconButton 
                     size="small"
-                    onClick={() => {
+                    onClick={(e: React.MouseEvent) => () => {
                       setSelectedAgent(agent);
                       setIsTaskDialogOpen(true);
                     }}
@@ -808,8 +807,8 @@ export function MCPAgentDashboard({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsTaskDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleSendTask} variant="contained">Assign Task</Button>
+          <Button onClick={(e: React.MouseEvent) => () => setIsTaskDialogOpen(false)}>Cancel</Button>
+          <Button onClick={(e: React.MouseEvent) => handleSendTask} variant="contained">Assign Task</Button>
         </DialogActions>
       </Dialog>
     </Grid>

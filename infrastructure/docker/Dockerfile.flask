@@ -9,13 +9,15 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
-COPY ToolboxAI-Roblox-Environment/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY ToolboxAI-Roblox-Environment/ .
-COPY database/ ./database/
-COPY .env .env
+COPY apps/backend ./apps/backend
+COPY core ./core
+COPY database ./database
+COPY toolboxai_settings ./toolboxai_settings
+COPY toolboxai_utils ./toolboxai_utils
 
 # Create logs directory
 RUN mkdir -p logs
@@ -28,4 +30,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5001/status || exit 1
 
 # Start command
-CMD ["python", "server/roblox_server.py"]
+CMD ["python", "-m", "apps.backend.flask_bridge"]

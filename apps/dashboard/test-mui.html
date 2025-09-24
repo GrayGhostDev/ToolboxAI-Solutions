@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MUI Test</title>
+    <script type="module">
+        // Test MUI component loading
+        import('./src/components/common/VirtualizedList.tsx')
+            .then(() => console.log('✅ VirtualizedList loaded successfully'))
+            .catch(err => console.error('❌ VirtualizedList failed:', err));
+        
+        import('./src/components/monitoring/IntegrationHealthMonitor.tsx')
+            .then(() => console.log('✅ IntegrationHealthMonitor loaded successfully'))
+            .catch(err => console.error('❌ IntegrationHealthMonitor failed:', err));
+            
+        import('./src/components/dialogs/CreateClassDialog.tsx')
+            .then(() => console.log('✅ CreateClassDialog loaded successfully'))
+            .catch(err => console.error('❌ CreateClassDialog failed:', err));
+    </script>
+</head>
+<body>
+    <h1>MUI Component Test</h1>
+    <p>Check console for results</p>
+</body>
+</html>

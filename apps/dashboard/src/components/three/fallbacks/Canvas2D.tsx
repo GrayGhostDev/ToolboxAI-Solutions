@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Box } from '@mui/material';
+import Box from '@mui/material/Box';
 
 interface Canvas2DProps {
   width?: number;
@@ -8,7 +8,7 @@ interface Canvas2DProps {
   particleCount?: number;
 }
 
-export const Canvas2D: React.FC<Canvas2DProps> = ({
+export const Canvas2D: React.FunctionComponent<Canvas2DProps> = ({
   width = window.innerWidth,
   height = window.innerHeight,
   animate = true,
@@ -133,7 +133,7 @@ export const Canvas2D: React.FC<Canvas2DProps> = ({
       canvas.height = window.innerHeight;
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize as EventListener);
 
     return () => {
       window.removeEventListener('resize', handleResize);

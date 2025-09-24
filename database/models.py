@@ -25,6 +25,23 @@ from sqlalchemy.sql import func
 
 Base = declarative_base()
 
+# Import agent models to ensure they're registered with Base
+try:
+    from database.models.agent_models import (
+        AgentInstance, AgentExecution, AgentMetrics, AgentTaskQueue, 
+        SystemHealth, AgentConfiguration, AgentType, AgentStatus, 
+        TaskStatus, TaskPriority
+    )
+    # Re-export for backward compatibility
+    __all__ = [
+        'AgentInstance', 'AgentExecution', 'AgentMetrics', 'AgentTaskQueue',
+        'SystemHealth', 'AgentConfiguration', 'AgentType', 'AgentStatus',
+        'TaskStatus', 'TaskPriority'
+    ]
+except ImportError as e:
+    # Agent models not available
+    pass
+
 
 # Enum Types
 class UserRole(PyEnum):
@@ -1340,3 +1357,64 @@ class QuizTemplate(Base):
 # Backward compatibility alias
 # Some older code expects EducationalContent instead of Content
 EducationalContent = Content
+
+
+class EnhancedContentGeneration(Base):
+    """Model for tracking enhanced content generation requests and results"""
+    __tablename__ = 'enhanced_content_generations'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
+
+    # Request details
+    original_request = Column(JSONB, nullable=False)
+    content_type = Column(String(50), nullable=False)  # lesson, quiz, activity, scenario
+    subject = Column(String(100))
+    grade_level = Column(String(50))
+    difficulty_level = Column(String(20))  # beginner, intermediate, advanced
+
+    # Generated content
+    generated_content = Column(JSONB)
+    roblox_script = Column(Text)
+    lesson_plan = Column(Text)
+
+    # Status and timing
+    status = Column(String(20), default='pending')  # pending, processing, completed, failed
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    completed_at = Column(DateTime(timezone=True))
+
+    # Quality metrics
+    quality_score = Column(Float)
+    user_rating = Column(Float)
+
+    # Relationships
+    user = relationship("User", backref="enhanced_content_generations")
+
+
+class ContentGenerationBatch(Base):
+    """Batch processing for multiple content generations"""
+    __tablename__ = 'content_generation_batches'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    batch_name = Column(String(200))
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
+
+    # Batch configuration
+    batch_config = Column(JSONB)  # common parameters for all items
+    total_items = Column(Integer)
+    completed_items = Column(Integer, default=0)
+    failed_items = Column(Integer, default=0)
+
+    # Status tracking
+    status = Column(String(50), default='pending')  # pending, processing, completed, failed
+
+    # Performance
+    estimated_completion_time = Column(DateTime(timezone=True))
+    actual_completion_time = Column(DateTime(timezone=True))
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    started_at = Column(DateTime(timezone=True))
+    completed_at = Column(DateTime(timezone=True))
+
+    # Relationships
+    user = relationship("User", backref="content_generation_batches")

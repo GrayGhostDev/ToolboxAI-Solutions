@@ -1,3 +1,5 @@
+jest.setTimeout(10000);
+
 /**
  * Simplified Login Component Test
  * Using React 18 compatible testing approach
@@ -25,7 +27,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 // Mock websocket
-vi.mock('@/services/websocket', () => ({
+vi.mock('../../services/pusher', () => ({
   connectWebSocket: vi.fn().mockResolvedValue(undefined),
 }));
 

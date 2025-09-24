@@ -1,18 +1,16 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Box, Card, Typography, IconButton } from '@mui/material';
+import React, { useRef, useState } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import Typography from '@mui/material/Typography';
 import { styled, keyframes } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
 import { OrbitControls, Text, Float, Cloud, Stars, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-
 const float = keyframes`
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-20px); }
 `;
-
 const StyledContainer = styled(Card)(({ theme }) => ({
   background: 'linear-gradient(180deg, #87CEEB 0%, #FFB6C1 50%, #FFD700 100%)',
   borderRadius: '24px',
@@ -31,19 +29,16 @@ const StyledContainer = styled(Card)(({ theme }) => ({
     pointerEvents: 'none',
   },
 }));
-
 // 3D Island Component
 function Island({ position, color, label, onClick, isHovered, scale = 1 }) {
   const meshRef = useRef();
   const [hovered, setHovered] = useState(false);
-
   useFrame((state) => {
     if (meshRef.current) {
       meshRef.current.rotation.y += 0.002;
       meshRef.current.position.y = Math.sin(state.clock.elapsedTime + position[0]) * 0.1;
     }
   });
-
   return (
     <Float
       speed={2}
@@ -54,7 +49,7 @@ function Island({ position, color, label, onClick, isHovered, scale = 1 }) {
       <group
         position={position}
         scale={hovered ? scale * 1.2 : scale}
-        onClick={onClick}
+        onClick={(e: React.MouseEvent) => onClick}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
@@ -63,13 +58,11 @@ function Island({ position, color, label, onClick, isHovered, scale = 1 }) {
           <cylinderGeometry args={[1.5, 2, 0.5, 8]} />
           <meshStandardMaterial color={color} roughness={0.8} />
         </mesh>
-
         {/* Grass on top */}
         <mesh position={[0, 0.3, 0]} castShadow>
           <cylinderGeometry args={[1.4, 1.4, 0.2, 8]} />
           <meshStandardMaterial color="#32CD32" roughness={0.9} />
         </mesh>
-
         {/* Trees */}
         <mesh position={[0.5, 0.8, 0.3]} castShadow>
           <coneGeometry args={[0.3, 0.8, 6]} />
@@ -79,7 +72,6 @@ function Island({ position, color, label, onClick, isHovered, scale = 1 }) {
           <cylinderGeometry args={[0.1, 0.1, 0.3]} />
           <meshStandardMaterial color="#8B4513" />
         </mesh>
-
         {/* House/Building */}
         <mesh position={[-0.3, 0.6, -0.2]} castShadow>
           <boxGeometry args={[0.5, 0.5, 0.5]} />
@@ -89,7 +81,6 @@ function Island({ position, color, label, onClick, isHovered, scale = 1 }) {
           <coneGeometry args={[0.4, 0.3, 4]} />
           <meshStandardMaterial color="#8B4513" />
         </mesh>
-
         {/* Label */}
         <Text
           position={[0, -1, 0]}
@@ -102,7 +93,6 @@ function Island({ position, color, label, onClick, isHovered, scale = 1 }) {
         >
           {label}
         </Text>
-
         {/* Sparkles when hovered */}
         {hovered && (
           <Sparkles
@@ -117,23 +107,19 @@ function Island({ position, color, label, onClick, isHovered, scale = 1 }) {
     </Float>
   );
 }
-
 // Bridge Component
 function Bridge({ start, end, visible }) {
   const bridgeRef = useRef();
-
   // Calculate bridge position and rotation
   const startVec = new THREE.Vector3(...start);
   const endVec = new THREE.Vector3(...end);
   const midpoint = startVec.clone().add(endVec).multiplyScalar(0.5);
   const distance = startVec.distanceTo(endVec);
-
   useFrame((state) => {
     if (bridgeRef.current) {
       bridgeRef.current.material.opacity = visible ? 1 : 0;
     }
   });
-
   return (
     <mesh
       ref={bridgeRef}
@@ -149,24 +135,20 @@ function Bridge({ start, end, visible }) {
     </mesh>
   );
 }
-
 // Character that moves between islands
 function FlyingCharacter({ targetPosition }) {
   const meshRef = useRef();
   const [currentPos, setCurrentPos] = useState([0, 2, 0]);
-
   useFrame((state) => {
     if (meshRef.current && targetPosition) {
       // Smooth movement to target
       meshRef.current.position.x += (targetPosition[0] - meshRef.current.position.x) * 0.05;
       meshRef.current.position.y = 2 + Math.sin(state.clock.elapsedTime * 2) * 0.3;
       meshRef.current.position.z += (targetPosition[2] - meshRef.current.position.z) * 0.05;
-
       // Rotation
       meshRef.current.rotation.y = state.clock.elapsedTime;
     }
   });
-
   return (
     <group ref={meshRef} position={currentPos}>
       {/* Body */}
@@ -174,7 +156,6 @@ function FlyingCharacter({ targetPosition }) {
         <sphereGeometry args={[0.3, 16, 16]} />
         <meshStandardMaterial color="#FFD700" emissive="#FFD700" emissiveIntensity={0.2} />
       </mesh>
-
       {/* Wings */}
       <mesh position={[0.3, 0, 0]} rotation={[0, 0, Math.PI / 6]}>
         <planeGeometry args={[0.3, 0.2]} />
@@ -184,7 +165,6 @@ function FlyingCharacter({ targetPosition }) {
         <planeGeometry args={[0.3, 0.2]} />
         <meshStandardMaterial color="#FFFFFF" side={THREE.DoubleSide} transparent opacity={0.8} />
       </mesh>
-
       <Sparkles
         count={20}
         scale={1}
@@ -195,16 +175,13 @@ function FlyingCharacter({ targetPosition }) {
     </group>
   );
 }
-
 interface FloatingIslandNavProps {
   onNavigate?: (route: string) => void;
 }
-
-export const FloatingIslandNav: React.FC<FloatingIslandNavProps> = ({ onNavigate }) => {
+export const FloatingIslandNav: React.FunctionComponent<FloatingIslandNavProps> = ({ onNavigate }) => {
   const navigate = useNavigate();
   const [hoveredIsland, setHoveredIsland] = useState<number | null>(null);
   const [selectedIsland, setSelectedIsland] = useState<number>(0);
-
   const islands = [
     { position: [-3, 0, 0], color: '#FF6B6B', label: 'Dashboard', route: '/dashboard' },
     { position: [0, 0.5, -2], color: '#4ECDC4', label: 'Classes', route: '/classes' },
@@ -213,7 +190,6 @@ export const FloatingIslandNav: React.FC<FloatingIslandNavProps> = ({ onNavigate
     { position: [-2, -0.3, 2], color: '#A8E6CF', label: 'Progress', route: '/progress' },
     { position: [2, 0.3, 2], color: '#FFB6C1', label: 'Rewards', route: '/rewards' },
   ];
-
   const handleIslandClick = (index: number, route: string) => {
     setSelectedIsland(index);
     setTimeout(() => {
@@ -224,7 +200,6 @@ export const FloatingIslandNav: React.FC<FloatingIslandNavProps> = ({ onNavigate
       }
     }, 500);
   };
-
   return (
     <StyledContainer>
       <Box sx={{ position: 'absolute', top: 16, left: 16, zIndex: 1 }}>
@@ -240,7 +215,6 @@ export const FloatingIslandNav: React.FC<FloatingIslandNavProps> = ({ onNavigate
           Choose Your Adventure! 🏝️
         </Typography>
       </Box>
-
       <Canvas
         shadows
         camera={{ position: [0, 5, 8], fov: 60 }}
@@ -254,13 +228,11 @@ export const FloatingIslandNav: React.FC<FloatingIslandNavProps> = ({ onNavigate
           shadow-mapSize={[2048, 2048]}
         />
         <pointLight position={[-10, -10, -10]} intensity={0.3} color="#FFD700" />
-
         {/* Sky and environment */}
         <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
         <Cloud position={[-4, 3, -2]} speed={0.2} opacity={0.5} />
         <Cloud position={[4, 4, -1]} speed={0.1} opacity={0.4} />
         <Cloud position={[0, 3.5, 1]} speed={0.15} opacity={0.3} />
-
         {/* Islands */}
         {islands.map((island, index) => (
           <Island
@@ -268,12 +240,11 @@ export const FloatingIslandNav: React.FC<FloatingIslandNavProps> = ({ onNavigate
             position={island.position}
             color={island.color}
             label={island.label}
-            onClick={() => handleIslandClick(index, island.route)}
+            onClick={(e: React.MouseEvent) => () => handleIslandClick(index, island.route)}
             isHovered={hoveredIsland === index}
             scale={selectedIsland === index ? 1.3 : 1}
           />
         ))}
-
         {/* Bridges between islands */}
         <Bridge
           start={islands[0].position}
@@ -295,12 +266,10 @@ export const FloatingIslandNav: React.FC<FloatingIslandNavProps> = ({ onNavigate
           end={islands[5].position}
           visible={hoveredIsland === 2 || hoveredIsland === 5}
         />
-
         {/* Flying character */}
         <FlyingCharacter
           targetPosition={selectedIsland !== null ? islands[selectedIsland].position : [0, 2, 0]}
         />
-
         {/* Camera controls */}
         <OrbitControls
           enablePan={false}
@@ -311,7 +280,6 @@ export const FloatingIslandNav: React.FC<FloatingIslandNavProps> = ({ onNavigate
           autoRotateSpeed={0.5}
         />
       </Canvas>
-
       {/* Particle effects overlay */}
       <Box
         sx={{
@@ -327,5 +295,4 @@ export const FloatingIslandNav: React.FC<FloatingIslandNavProps> = ({ onNavigate
     </StyledContainer>
   );
 };
-
 export default FloatingIslandNav;

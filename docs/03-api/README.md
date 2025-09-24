@@ -6,21 +6,26 @@ This directory contains comprehensive API documentation for the ToolBoxAI educat
 
 ## Quick Start
 
-### Base URL
+### Base URLs
 ```
-http://127.0.0.1:8008
+# Main API
+http://127.0.0.1:8009
+
+# Supabase API (when using Supabase integration)
+https://your-project.supabase.co/rest/v1
 ```
 
 ### Authentication
 All API requests require authentication via JWT Bearer tokens:
 ```bash
-curl -H "Authorization: Bearer YOUR_TOKEN" http://127.0.0.1:8008/api/endpoint
+curl -H "Authorization: Bearer YOUR_TOKEN" http://127.0.0.1:8009/api/endpoint
 ```
 
 ### Interactive Documentation
-- **Swagger UI:** http://127.0.0.1:8008/docs
-- **ReDoc:** http://127.0.0.1:8008/redoc
-- **OpenAPI Spec:** http://127.0.0.1:8008/openapi.json
+- **Swagger UI:** http://127.0.0.1:8009/docs
+- **ReDoc:** http://127.0.0.1:8009/redoc
+- **OpenAPI Spec:** http://127.0.0.1:8009/openapi.json
+- **Health Endpoints:** http://127.0.0.1:8009/health
 
 ## API Documentation Structure
 
@@ -32,6 +37,8 @@ Comprehensive endpoint documentation organized by feature area:
 - **[Dashboard](./endpoints/dashboard.md)** - Role-based dashboard data and analytics
 - **[Roblox Integration](./endpoints/roblox-integration.md)** - Roblox Studio plugin and deployment
 - **[Realtime Communication](./endpoints/realtime-pusher.md)** - Pusher Channels for live updates
+- **[Supabase Integration](./supabase-api.md)** - Supabase database operations and real-time features
+- **[Health Monitoring](./health-endpoints.md)** - System health and monitoring endpoints
 
 ### 🔧 [API Specification](./api-specification/)
 Technical specifications and schemas:

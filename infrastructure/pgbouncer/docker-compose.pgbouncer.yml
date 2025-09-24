@@ -1,0 +1,144 @@
+version: '3.8'
+
+services:
+  pgbouncer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: toolboxai-pgbouncer
+    restart: unless-stopped
+    ports:
+      - "6432:6432"
+    environment:
+      # PostgreSQL connection details
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:-toolboxai_production}
+      POSTGRES_USER: ${POSTGRES_USER:-toolboxai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+      # Service-specific passwords
+      API_DB_PASSWORD: ${API_DB_PASSWORD:-${POSTGRES_PASSWORD}}
+      AGENT_DB_PASSWORD: ${AGENT_DB_PASSWORD:-${POSTGRES_PASSWORD}}
+      WEBSOCKET_DB_PASSWORD: ${WEBSOCKET_DB_PASSWORD:-${POSTGRES_PASSWORD}}
+
+      # PgBouncer configuration
+      PGBOUNCER_POOL_MODE: ${PGBOUNCER_POOL_MODE:-transaction}
+      PGBOUNCER_POOL_SIZE: ${PGBOUNCER_POOL_SIZE:-25}
+      PGBOUNCER_MAX_CLIENT_CONN: ${PGBOUNCER_MAX_CLIENT_CONN:-2000}
+      PGBOUNCER_MAX_DB_CONNECTIONS: ${PGBOUNCER_MAX_DB_CONNECTIONS:-100}
+
+      # Environment
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      WAIT_FOR_POSTGRES: "true"
+
+    volumes:
+      - pgbouncer-logs:/var/log/pgbouncer
+      - ./pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./userlist.txt:/etc/pgbouncer/userlist.txt:ro
+
+    networks:
+      - toolboxai-network
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432", "-U", "pgbouncer_stats", "-d", "pgbouncer"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # PostgreSQL database (if not already defined)
+  postgres:
+    image: postgres:16-alpine
+    container_name: toolboxai-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-toolboxai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-toolboxai_production}
+      POSTGRES_MAX_CONNECTIONS: 200
+      POSTGRES_SHARED_BUFFERS: 256MB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 1GB
+      POSTGRES_MAINTENANCE_WORK_MEM: 128MB
+      POSTGRES_WORK_MEM: 4MB
+      POSTGRES_WAL_BUFFERS: 16MB
+      POSTGRES_DEFAULT_STATISTICS_TARGET: 100
+      POSTGRES_RANDOM_PAGE_COST: 1.1
+      POSTGRES_EFFECTIVE_IO_CONCURRENCY: 200
+      POSTGRES_MIN_WAL_SIZE: 1GB
+      POSTGRES_MAX_WAL_SIZE: 4GB
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+    networks:
+      - toolboxai-network
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-toolboxai} -d ${POSTGRES_DB:-toolboxai_production}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # PgBouncer monitoring with pgbouncer_exporter (for Prometheus)
+  pgbouncer-exporter:
+    image: prometheuscommunity/pgbouncer-exporter:latest
+    container_name: toolboxai-pgbouncer-exporter
+    restart: unless-stopped
+    ports:
+      - "9127:9127"
+    environment:
+      DATA_SOURCE_URI: "pgbouncer:6432/pgbouncer?sslmode=disable"
+      DATA_SOURCE_USER: pgbouncer_stats
+      DATA_SOURCE_PASS: ${POSTGRES_PASSWORD}
+
+    networks:
+      - toolboxai-network
+
+    depends_on:
+      - pgbouncer
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+
+volumes:
+  postgres-data:
+    driver: local
+  pgbouncer-logs:
+    driver: local
+
+networks:
+  toolboxai-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

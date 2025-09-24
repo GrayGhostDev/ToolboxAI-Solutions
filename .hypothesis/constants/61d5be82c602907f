@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/github_agents/orchestrator.py
+# hypothesis_version: 6.139.2
+
+['actions', 'auto_fix', 'blocker', 'complete', 'coordinator', 'critical', 'current_agent', 'deployment', 'deployment_prep', 'deployment_readiness', 'deployment_ready', 'detection', 'detection_agent', 'error', 'errors', 'file', 'files_migrated', 'files_to_process', 'full_scan', 'health_check', 'health_monitor', 'health_monitor_agent', 'health_status', 'issues', 'large_files', 'large_files_detected', 'large_files_found', 'lfs_initialized', 'lfs_migration', 'lfs_migration_agent', 'lfs_migrations', 'metrics', 'operation', 'operation_type', 'optimization', 'overall_status', 'path', 'pre_commit', 'pre_push', 'ready', 'recommendations', 'severity', 'state', 'success', 'summary', 'timestamp', 'unknown']

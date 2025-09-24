@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, Suspense } from 'react';
 import { useThree } from './useThree';
-import { Box, CircularProgress } from '@mui/material';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
 
 interface Scene3DProps {
   children?: React.ReactNode;
@@ -10,7 +11,7 @@ interface Scene3DProps {
   onError?: (error: Error) => void;
 }
 
-export const Scene3D: React.FC<Scene3DProps> = ({
+export const Scene3D: React.FunctionComponent<Scene3DProps> = ({
   children,
   style,
   className,
@@ -82,4 +83,4 @@ export const Scene3D: React.FC<Scene3DProps> = ({
       </Suspense>
     </Box>
   );
-};
+};export default Scene3D;

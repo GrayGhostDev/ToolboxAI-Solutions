@@ -1,3 +1,8 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import pytest_asyncio
 """
 Unit tests for Pusher service
 """
@@ -202,7 +207,8 @@ class TestPusherService:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_async_trigger(self, pusher_service):
+    @pytest.mark.asyncio
+async def test_async_trigger(self, pusher_service):
         """Test async event triggering"""
         channel = 'async-channel'
         event = 'async-event'

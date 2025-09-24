@@ -1,3 +1,5 @@
+
+
 import { test } from '@playwright/test';
 
 test('debug login page', async ({ page }) => {
@@ -35,7 +37,7 @@ test('debug login page', async ({ page }) => {
   console.log('By label:', await page.getByLabel(/username or email/i).count());
   console.log('By label (exact):', await page.getByLabel('Username or Email').count());
   console.log('By type=email:', await page.locator('input[type="email"]').count());
-  console.log('By name=email:', await page.locator('input[name="email"]').count());
+  console.log('By name=email:', await page.locator('input[name="identifier"]').count());
   console.log('By data-testid:', await page.locator('[data-testid="email-input"]').count());
   console.log('All inputs:', await page.locator('input').count());
 

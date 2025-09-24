@@ -1,24 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  Typography,
-  Avatar,
-  Chip,
-  LinearProgress,
-  IconButton,
-  Tooltip,
-  Badge,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import Typography from '@mui/material/Typography';
+import Avatar from '@mui/material/Avatar';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Badge from '@mui/material/Badge';
+
 import { styled, keyframes } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import StarIcon from '@mui/icons-material/Star';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import { robloxColors } from '../../theme/robloxTheme';
+import { robloxColors } from '../..//robloxTheme';
 import { motion, AnimatePresence } from 'framer-motion';
-
 const slideIn = keyframes`
   from {
     opacity: 0;
@@ -29,12 +27,10 @@ const slideIn = keyframes`
     transform: translateX(0);
   }
 `;
-
 const glow = keyframes`
   0%, 100% { box-shadow: 0 0 20px ${alpha(robloxColors.gold, 0.5)}; }
   50% { box-shadow: 0 0 40px ${alpha(robloxColors.gold, 0.8)}; }
 `;
-
 const StyledCard = styled(Card)(({ theme }) => ({
   background: `linear-gradient(135deg, ${robloxColors.dark} 0%, ${alpha(robloxColors.darkGray, 0.95)} 100%)`,
   border: `2px solid ${alpha(robloxColors.primary, 0.3)}`,
@@ -53,7 +49,6 @@ const StyledCard = styled(Card)(({ theme }) => ({
     animation: 'shimmer 3s linear infinite',
   },
 }));
-
 const LeaderItem = styled(Box)<{ rank: number }>(({ theme, rank }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -79,7 +74,6 @@ const LeaderItem = styled(Box)<{ rank: number }>(({ theme, rank }) => ({
     animation: `${slideIn} 0.5s ease-out 0.1s both, ${glow} 2s ease-in-out infinite`,
   }),
 }));
-
 const RankBadge = styled(Box)<{ rank: number }>(({ rank }) => ({
   width: 40,
   height: 40,
@@ -114,7 +108,6 @@ const RankBadge = styled(Box)<{ rank: number }>(({ rank }) => ({
     },
   }),
 }));
-
 const XPBar = styled(LinearProgress)(({ theme }) => ({
   height: 8,
   borderRadius: 4,
@@ -124,7 +117,6 @@ const XPBar = styled(LinearProgress)(({ theme }) => ({
     background: `linear-gradient(90deg, ${robloxColors.primary} 0%, ${robloxColors.secondary} 100%)`,
   },
 }));
-
 const StreakBadge = styled(Badge)(({ theme }) => ({
   '& .MuiBadge-badge': {
     backgroundColor: robloxColors.error,
@@ -137,7 +129,6 @@ const StreakBadge = styled(Badge)(({ theme }) => ({
     animation: 'pulse 2s infinite',
   },
 }));
-
 interface LeaderboardPlayer {
   id: string;
   name: string;
@@ -150,15 +141,13 @@ interface LeaderboardPlayer {
   changeValue?: number;
   isOnline?: boolean;
 }
-
 interface AnimatedLeaderboardProps {
   players: LeaderboardPlayer[];
   title?: string;
   showTopOnly?: number;
   onPlayerClick?: (player: LeaderboardPlayer) => void;
 }
-
-export const AnimatedLeaderboard: React.FC<AnimatedLeaderboardProps> = ({
+export const AnimatedLeaderboard: React.FunctionComponent<AnimatedLeaderboardProps> = ({
   players,
   title = 'Leaderboard',
   showTopOnly = 10,
@@ -166,7 +155,6 @@ export const AnimatedLeaderboard: React.FC<AnimatedLeaderboardProps> = ({
 }) => {
   const [displayPlayers, setDisplayPlayers] = useState<LeaderboardPlayer[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
-
   useEffect(() => {
     // Sort players by XP and limit display
     const sorted = [...players]
@@ -174,19 +162,16 @@ export const AnimatedLeaderboard: React.FC<AnimatedLeaderboardProps> = ({
       .slice(0, showTopOnly);
     setDisplayPlayers(sorted);
   }, [players, showTopOnly]);
-
   const getTrophyIcon = (rank: number) => {
     if (rank === 1) return <EmojiEventsIcon sx={{ color: robloxColors.gold }} />;
     if (rank === 2) return <EmojiEventsIcon sx={{ color: '#C0C0C0' }} />;
     if (rank === 3) return <EmojiEventsIcon sx={{ color: '#CD7F32' }} />;
     return null;
   };
-
   const handlePlayerClick = (player: LeaderboardPlayer) => {
     setSelectedPlayer(player.id);
     onPlayerClick?.(player);
   };
-
   return (
     <StyledCard>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
@@ -217,12 +202,10 @@ export const AnimatedLeaderboard: React.FC<AnimatedLeaderboardProps> = ({
           }}
         />
       </Box>
-
       <AnimatePresence>
         {displayPlayers.map((player, index) => {
           const rank = index + 1;
           const xpProgress = (player.xp % 1000) / 10; // XP progress to next level
-
           return (
             <motion.div
               key={player.id}
@@ -233,7 +216,7 @@ export const AnimatedLeaderboard: React.FC<AnimatedLeaderboardProps> = ({
             >
               <LeaderItem
                 rank={rank}
-                onClick={() => handlePlayerClick(player)}
+                onClick={(e: React.MouseEvent) => () => handlePlayerClick(player)}
                 sx={{
                   border: selectedPlayer === player.id
                     ? `2px solid ${robloxColors.primary}`
@@ -243,7 +226,6 @@ export const AnimatedLeaderboard: React.FC<AnimatedLeaderboardProps> = ({
                 <RankBadge rank={rank}>
                   {rank <= 3 ? getTrophyIcon(rank) : rank}
                 </RankBadge>
-
                 <Box sx={{ ml: 2, position: 'relative' }}>
                   <Badge
                     overlap="circular"
@@ -270,7 +252,6 @@ export const AnimatedLeaderboard: React.FC<AnimatedLeaderboardProps> = ({
                     </Avatar>
                   </Badge>
                 </Box>
-
                 <Box sx={{ flex: 1, ml: 2 }}>
                   <Box display="flex" alignItems="center" gap={1}>
                     <Typography
@@ -309,7 +290,6 @@ export const AnimatedLeaderboard: React.FC<AnimatedLeaderboardProps> = ({
                     </Typography>
                   </Box>
                 </Box>
-
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   {player.badges > 0 && (
                     <Chip
@@ -345,5 +325,4 @@ export const AnimatedLeaderboard: React.FC<AnimatedLeaderboardProps> = ({
     </StyledCard>
   );
 };
-
 export default AnimatedLeaderboard;

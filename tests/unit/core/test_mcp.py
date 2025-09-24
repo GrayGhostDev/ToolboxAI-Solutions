@@ -1,3 +1,4 @@
+import pytest_asyncio
 """
 Unit tests for MCP (Model Context Protocol) components.
 """
@@ -20,7 +21,7 @@ import json
 import tempfile
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from datetime import datetime, timezone
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 import sqlite3
 import aiosqlite
 import sys
@@ -94,7 +95,8 @@ class TestMCPServer:
     """Test MCP Server functionality"""
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_server_initialization(self, mcp_server):
+    @pytest.mark.asyncio
+async def test_server_initialization(self, mcp_server):
         """Test server initializes correctly"""
         assert mcp_server.port == 9877
         assert mcp_server.authenticated_clients == {}  # Fixed: use authenticated_clients instead of clients
@@ -102,7 +104,8 @@ class TestMCPServer:
         assert mcp_server.max_tokens == 128000
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_client_registration(self, mcp_server):
+    @pytest.mark.asyncio
+async def test_client_registration(self, mcp_server):
         """Test client registration with authentication"""
         websocket = MockWebSocket()
         
@@ -161,7 +164,8 @@ class TestMCPServer:
         assert total_tokens <= mcp_server.max_tokens
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_message_handling(self, mcp_server):
+    @pytest.mark.asyncio
+async def test_message_handling(self, mcp_server):
         """Test WebSocket message handling"""
         websocket = MockWebSocket()
         
@@ -189,7 +193,8 @@ class TestMCPServer:
         mcp_server.handle_message.assert_called_once()
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_broadcast_context(self, mcp_server):
+    @pytest.mark.asyncio
+async def test_broadcast_context(self, mcp_server):
         """Test broadcasting context to all clients"""
         websocket1 = MockWebSocket()
         websocket2 = MockWebSocket()
@@ -511,7 +516,8 @@ class TestMCPIntegration:
     """Test MCP component integration"""
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_full_context_flow(self, mcp_server, context_manager):
+    @pytest.mark.asyncio
+async def test_full_context_flow(self, mcp_server, context_manager):
         """Test full context flow from creation to broadcast"""
         websocket = MockWebSocket()
         

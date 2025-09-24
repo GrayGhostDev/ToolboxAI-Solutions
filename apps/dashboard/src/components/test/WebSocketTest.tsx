@@ -3,29 +3,27 @@
  * 
  * Comprehensive testing interface for WebSocket functionality
  */
-
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  TextField,
-  List,
-  ListItem,
-  ListItemText,
-  Chip,
-  Grid,
-  Alert,
-  CircularProgress,
-  Divider,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  IconButton,
-  Tooltip
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import Chip from '@mui/material/Chip';
+import Grid from '@mui/material/Grid';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
+import Divider from '@mui/material/Divider';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Tooltip from '@mui/material/Tooltip';
 import {
   Send as SendIcon,
   Refresh as RefreshIcon,
@@ -35,15 +33,14 @@ import {
   Error as ErrorIcon,
   CheckCircle as SuccessIcon
 } from '@mui/icons-material';
-import { useWebSocketContext, useWebSocketState } from '../../contexts/WebSocketContext';
+import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import {
   WebSocketState,
   WebSocketMessageType,
   WebSocketChannel,
   ContentGenerationRequest
 } from '../../types/websocket';
-
-export const WebSocketTest: React.FC = () => {
+export const WebSocketTest: React.FunctionComponent<Record<string, any>> = () => {
   const {
     state,
     isConnected,
@@ -59,7 +56,6 @@ export const WebSocketTest: React.FC = () => {
     requestContent,
     onContentProgress
   } = useWebSocketContext();
-
   // Local state
   const [messageLog, setMessageLog] = useState<Array<{
     id: string;
@@ -72,7 +68,6 @@ export const WebSocketTest: React.FC = () => {
   const [activeSubscriptions, setActiveSubscriptions] = useState<string[]>([]);
   const [contentRequestId, setContentRequestId] = useState<string>('');
   const [contentProgress, setContentProgress] = useState<any>(null);
-
   // Add message to log
   const addToLog = useCallback((type: 'sent' | 'received' | 'error' | 'system', message: any) => {
     setMessageLog(prev => [{
@@ -82,52 +77,44 @@ export const WebSocketTest: React.FC = () => {
       message
     }, ...prev].slice(0, 50)); // Keep last 50 messages
   }, []);
-
   // Setup message handlers
   useEffect(() => {
     // Subscribe to all message types for testing
     const handlers: Array<() => void> = [];
-
     // System notifications
     handlers.push(
       on(WebSocketMessageType.SYSTEM_NOTIFICATION, (data) => {
         addToLog('received', { type: 'SYSTEM_NOTIFICATION', data });
       })
     );
-
     // Connection events
     handlers.push(
       on(WebSocketMessageType.CONNECT, () => {
         addToLog('system', 'Connected to WebSocket server');
       })
     );
-
     handlers.push(
       on(WebSocketMessageType.DISCONNECT, () => {
         addToLog('system', 'Disconnected from WebSocket server');
       })
     );
-
     // Ping/Pong
     handlers.push(
       on(WebSocketMessageType.PONG, (data) => {
         addToLog('received', { type: 'PONG', data });
       })
     );
-
     // Content progress
     const unsubscribeProgress = onContentProgress((progress) => {
       setContentProgress(progress);
       addToLog('received', { type: 'CONTENT_PROGRESS', progress });
     });
     handlers.push(unsubscribeProgress);
-
     // Cleanup
     return () => {
       handlers.forEach(unsubscribe => unsubscribe());
     };
   }, [on, onContentProgress, addToLog]);
-
   // Handle connection
   const handleConnect = async () => {
     try {
@@ -137,12 +124,10 @@ export const WebSocketTest: React.FC = () => {
       addToLog('error', `Connection failed: ${error}`);
     }
   };
-
   const handleDisconnect = () => {
     disconnect('Manual disconnect');
     addToLog('system', 'Disconnected manually');
   };
-
   const handleReconnect = async () => {
     try {
       await reconnect();
@@ -151,31 +136,26 @@ export const WebSocketTest: React.FC = () => {
       addToLog('error', `Reconnection failed: ${error}`);
     }
   };
-
   // Send test message
   const handleSendMessage = async () => {
     if (!testMessage.trim()) return;
-
     try {
       const result = await sendMessage(
         WebSocketMessageType.USER_MESSAGE,
         { text: testMessage, timestamp: new Date().toISOString() },
         { channel: selectedChannel, awaitAcknowledgment: true, timeout: 5000 }
       );
-      
       addToLog('sent', {
         type: 'USER_MESSAGE',
         channel: selectedChannel,
         payload: { text: testMessage },
         result
       });
-      
       setTestMessage('');
     } catch (error) {
       addToLog('error', `Send failed: ${error}`);
     }
   };
-
   // Send ping
   const handleSendPing = async () => {
     try {
@@ -185,24 +165,20 @@ export const WebSocketTest: React.FC = () => {
       addToLog('error', `Ping failed: ${error}`);
     }
   };
-
   // Subscribe to channel
   const handleSubscribeChannel = () => {
     const subscriptionId = subscribe(selectedChannel, (message) => {
       addToLog('received', { channel: selectedChannel, message });
     });
-    
     setActiveSubscriptions(prev => [...prev, subscriptionId]);
     addToLog('system', `Subscribed to channel: ${selectedChannel} (ID: ${subscriptionId})`);
   };
-
   // Unsubscribe from channel
   const handleUnsubscribeChannel = (subscriptionId: string) => {
     unsubscribe(subscriptionId);
     setActiveSubscriptions(prev => prev.filter(id => id !== subscriptionId));
     addToLog('system', `Unsubscribed: ${subscriptionId}`);
   };
-
   // Request content generation
   const handleContentRequest = async () => {
     const request: ContentGenerationRequest = {
@@ -215,7 +191,6 @@ export const WebSocketTest: React.FC = () => {
       requestId: `test_${Date.now()}`,
       userId: 'test_user'
     };
-
     try {
       await requestContent(request);
       setContentRequestId(request.requestId);
@@ -224,13 +199,11 @@ export const WebSocketTest: React.FC = () => {
       addToLog('error', `Content request failed: ${error}`);
     }
   };
-
   // Clear log
   const handleClearLog = () => {
     setMessageLog([]);
     addToLog('system', 'Log cleared');
   };
-
   // Get connection status color
   const getStatusColor = () => {
     switch (state) {
@@ -245,7 +218,6 @@ export const WebSocketTest: React.FC = () => {
         return 'default';
     }
   };
-
   // Get connection icon
   const getStatusIcon = () => {
     switch (state) {
@@ -259,13 +231,11 @@ export const WebSocketTest: React.FC = () => {
         return <CircularProgress size={20} />;
     }
   };
-
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
         WebSocket Test Interface
       </Typography>
-
       {/* Connection Status */}
       <Paper sx={{ p: 2, mb: 2 }}>
         <Grid container spacing={2} alignItems="center">
@@ -295,7 +265,7 @@ export const WebSocketTest: React.FC = () => {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={handleConnect}
+                onClick={(e: React.MouseEvent) => handleConnect}
                 disabled={isConnected}
                 startIcon={<ConnectedIcon />}
               >
@@ -304,34 +274,31 @@ export const WebSocketTest: React.FC = () => {
               <Button
                 variant="outlined"
                 color="secondary"
-                onClick={handleDisconnect}
+                onClick={(e: React.MouseEvent) => handleDisconnect}
                 disabled={!isConnected}
                 startIcon={<DisconnectedIcon />}
               >
                 Disconnect
               </Button>
               <Tooltip title="Reconnect">
-                <IconButton onClick={handleReconnect} color="primary">
+                <IconButton onClick={(e: React.MouseEvent) => handleReconnect} color="primary">
                   <RefreshIcon />
                 </IconButton>
               </Tooltip>
             </Box>
           </Grid>
         </Grid>
-        
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {error.message} ({error.code})
           </Alert>
         )}
       </Paper>
-
       {/* Message Controls */}
       <Paper sx={{ p: 2, mb: 2 }}>
         <Typography variant="h6" gutterBottom>
           Message Testing
         </Typography>
-        
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <TextField
@@ -365,7 +332,7 @@ export const WebSocketTest: React.FC = () => {
               <Button
                 fullWidth
                 variant="contained"
-                onClick={handleSendMessage}
+                onClick={(e: React.MouseEvent) => handleSendMessage}
                 disabled={!isConnected || !testMessage}
                 startIcon={<SendIcon />}
               >
@@ -373,7 +340,7 @@ export const WebSocketTest: React.FC = () => {
               </Button>
               <Button
                 variant="outlined"
-                onClick={handleSendPing}
+                onClick={(e: React.MouseEvent) => handleSendPing}
                 disabled={!isConnected}
               >
                 Ping
@@ -381,11 +348,10 @@ export const WebSocketTest: React.FC = () => {
             </Box>
           </Grid>
         </Grid>
-
         <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
           <Button
             variant="outlined"
-            onClick={handleSubscribeChannel}
+            onClick={(e: React.MouseEvent) => handleSubscribeChannel}
             disabled={!isConnected}
           >
             Subscribe to {selectedChannel}
@@ -393,14 +359,13 @@ export const WebSocketTest: React.FC = () => {
           <Button
             variant="outlined"
             color="warning"
-            onClick={handleContentRequest}
+            onClick={(e: React.MouseEvent) => handleContentRequest}
             disabled={!isConnected}
           >
             Test Content Generation
           </Button>
         </Box>
       </Paper>
-
       {/* Active Subscriptions */}
       {activeSubscriptions.length > 0 && (
         <Paper sx={{ p: 2, mb: 2 }}>
@@ -420,7 +385,6 @@ export const WebSocketTest: React.FC = () => {
           </Box>
         </Paper>
       )}
-
       {/* Content Generation Progress */}
       {contentProgress && (
         <Paper sx={{ p: 2, mb: 2 }}>
@@ -440,18 +404,16 @@ export const WebSocketTest: React.FC = () => {
           </Box>
         </Paper>
       )}
-
       {/* Message Log */}
       <Paper sx={{ p: 2 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h6">
             Message Log ({messageLog.length})
           </Typography>
-          <IconButton onClick={handleClearLog} size="small">
+          <IconButton onClick={(e: React.MouseEvent) => handleClearLog} size="small">
             <ClearIcon />
           </IconButton>
         </Box>
-        
         <List sx={{ maxHeight: 400, overflow: 'auto', bgcolor: 'background.default' }}>
           {messageLog.map((entry) => (
             <React.Fragment key={entry.id}>

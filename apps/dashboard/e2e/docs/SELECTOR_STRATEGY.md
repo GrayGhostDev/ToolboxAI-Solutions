@@ -157,7 +157,7 @@ test.describe('Feature Name', () => {
 ### Role-based Testing
 
 ```typescript
-// Helper for role-based login
+// Helper for role-based login with Clerk authentication
 async function loginAs(page: Page, role: 'teacher' | 'student' | 'admin') {
   const credentials = {
     teacher: { email: 'jane.smith@school.edu', password: 'Teacher123!' },
@@ -166,9 +166,10 @@ async function loginAs(page: Page, role: 'teacher' | 'student' | 'admin') {
   };
 
   await page.goto('/login');
-  await page.locator('input[name="email"]').fill(credentials[role].email);
-  await page.locator('input[name="password"]').fill(credentials[role].password);
-  await page.locator('button[type="submit"]').click();
+  // Use Clerk-specific selectors - Clerk uses "identifier" instead of "email"
+  await page.locator('input[name="identifier"], input[id="identifier-field"]').fill(credentials[role].email);
+  await page.locator('input[name="password"], input[id="password-field"]').fill(credentials[role].password);
+  await page.locator('button[type="submit"], button:has-text("Continue")').click();
   await page.waitForURL(url => !url.pathname.includes('/login'));
 }
 ```

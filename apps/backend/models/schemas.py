@@ -76,6 +76,19 @@ class QuizType(str, Enum):
     ORDERING = "ordering"
 
 
+class ActivityType(str, Enum):
+    """Types of educational activities"""
+
+    LESSON = "lesson"
+    QUIZ = "quiz"
+    EXPERIMENT = "experiment"
+    EXPLORATION = "exploration"
+    INTERACTIVE = "interactive"
+    GAME = "game"
+    SIMULATION = "simulation"
+    ASSESSMENT = "assessment"
+
+
 # Base Models
 class BaseResponse(BaseModel):
     """Base response model for all API endpoints"""
@@ -515,6 +528,7 @@ __all__ = [
     "EnvironmentType",
     "TerrainSize",
     "QuizType",
+    "ActivityType",
     # Base Models
     "BaseResponse",
     "PaginationModel",

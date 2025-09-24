@@ -1,32 +1,31 @@
 import * as React from "react";
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import IconButton from '@mui/material/IconButton';
+import LinearProgress from '@mui/material/LinearProgress';
+import Chip from '@mui/material/Chip';
+import Alert from '@mui/material/Alert';
+import Slider from '@mui/material/Slider';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Paper from '@mui/material/Paper';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemButton from '@mui/material/ListItemButton';
+import Divider from '@mui/material/Divider';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Avatar from '@mui/material/Avatar';
+
 import { useState, useEffect } from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Stack,
-  IconButton,
-  LinearProgress,
-  Chip,
-  Alert,
-  Slider,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Paper,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  ListItemButton,
-  Divider,
-  Tab,
-  Tabs,
-  Avatar,
-} from "@mui/material";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import {
   PlayArrow,
@@ -433,7 +432,7 @@ export default function GameplayReplay() {
                         transform: "scale(1.3)",
                       },
                     }}
-                    onClick={() => jumpToHighlight(highlight.timestamp)}
+                    onClick={(e: React.MouseEvent) => () => jumpToHighlight(highlight.timestamp)}
                   />
                 ))}
               </Box>
@@ -449,11 +448,11 @@ export default function GameplayReplay() {
                   sx={{ width: "100%" }}
                 />
                 <Stack direction="row" alignItems="center" justifyContent="center" spacing={2}>
-                  <IconButton onClick={() => handleSeek(Math.max(0, currentTime - 30))}>
+                  <IconButton onClick={(e: React.MouseEvent) => () => handleSeek(Math.max(0, currentTime - 30))}>
                     <SkipPrevious />
                   </IconButton>
                   <IconButton
-                    onClick={handlePlayPause}
+                    onClick={(e: React.MouseEvent) => handlePlayPause}
                     sx={{
                       bgcolor: "primary.main",
                       color: "white",
@@ -463,11 +462,11 @@ export default function GameplayReplay() {
                     {isPlaying ? <Pause /> : <PlayArrow />}
                   </IconButton>
                   <IconButton
-                    onClick={() => handleSeek(Math.min(currentSession.duration, currentTime + 30))}
+                    onClick={(e: React.MouseEvent) => () => handleSeek(Math.min(currentSession.duration, currentTime + 30))}
                   >
                     <SkipNext />
                   </IconButton>
-                  <IconButton onClick={() => handleSeek(0)}>
+                  <IconButton onClick={(e: React.MouseEvent) => () => handleSeek(0)}>
                     <Replay />
                   </IconButton>
                   <FormControl size="small" sx={{ ml: 2, minWidth: 80 }}>
@@ -511,7 +510,7 @@ export default function GameplayReplay() {
                     <React.Fragment key={highlight.id}>
                       <ListItemButton
                         selected={selectedHighlight === highlight.id}
-                        onClick={() => {
+                        onClick={(e: React.MouseEvent) => () => {
                           setSelectedHighlight(highlight.id);
                           jumpToHighlight(highlight.timestamp);
                         }}
@@ -729,7 +728,7 @@ export default function GameplayReplay() {
                   <ListItemButton
                     key={session.id}
                     selected={session.id === currentSession.id}
-                    onClick={() => setCurrentSession(session)}
+                    onClick={(e: React.MouseEvent) => () => setCurrentSession(session)}
                   >
                     <ListItemIcon>
                       <SportsEsports />

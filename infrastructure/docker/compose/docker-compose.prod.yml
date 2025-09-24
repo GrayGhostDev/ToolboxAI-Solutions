@@ -1,0 +1,392 @@
+# ============================================
+# TOOLBOXAI DOCKER COMPOSE - PRODUCTION OVERRIDE
+# ============================================
+# Production-specific overrides with enhanced security
+# Use with: docker compose -f docker-compose.yml -f docker-compose.prod.yml up
+# Updated: 2025-09-24
+# ============================================
+
+version: '3.9'
+
+services:
+  # ----------------------------------------
+  # PostgreSQL Database (Production)
+  # ----------------------------------------
+  postgres:
+    # No ports exposed in production - access only via internal network
+    ports: []
+    environment:
+      # Additional security settings
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      # Enhanced performance tuning for production
+      POSTGRES_MAX_CONNECTIONS: 500
+      POSTGRES_SHARED_BUFFERS: 1GB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 4GB
+      POSTGRES_MAINTENANCE_WORK_MEM: 256MB
+      POSTGRES_CHECKPOINT_COMPLETION_TARGET: 0.9
+      POSTGRES_WAL_BUFFERS: 64MB
+      POSTGRES_DEFAULT_STATISTICS_TARGET: 100
+      POSTGRES_RANDOM_PAGE_COST: 1.1
+      POSTGRES_EFFECTIVE_IO_CONCURRENCY: 200
+      POSTGRES_WORK_MEM: 16MB
+      POSTGRES_MIN_WAL_SIZE: 2GB
+      POSTGRES_MAX_WAL_SIZE: 8GB
+      # Disable query logging in production
+      POSTGRES_LOG_STATEMENT: "none"
+      POSTGRES_LOG_CONNECTIONS: "off"
+      POSTGRES_LOG_DISCONNECTIONS: "off"
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+
+  # ----------------------------------------
+  # Redis Cache (Production)
+  # ----------------------------------------
+  redis:
+    # No ports exposed in production
+    ports: []
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+      --requirepass-file /run/secrets/redis_password
+      --bind 0.0.0.0
+      --protected-mode yes
+      --tcp-backlog 511
+      --tcp-keepalive 300
+      --timeout 0
+      --databases 16
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --rdbcompression yes
+      --rdbchecksum yes
+      --dir /data
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # ----------------------------------------
+  # FastAPI Backend (Production)
+  # ----------------------------------------
+  backend:
+    # No ports exposed - access via nginx reverse proxy
+    ports: []
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+      RELOAD: "false"
+      WORKERS: 8  # Multiple workers for production
+      # Enhanced security settings
+      SECURE_SSL_REDIRECT: true
+      SESSION_COOKIE_SECURE: true
+      CSRF_COOKIE_SECURE: true
+      SECURE_HSTS_SECONDS: 31536000
+      SECURE_HSTS_INCLUDE_SUBDOMAINS: true
+      SECURE_HSTS_PRELOAD: true
+      SECURE_CONTENT_TYPE_NOSNIFF: true
+      SECURE_BROWSER_XSS_FILTER: true
+      # Production logging
+      LOG_LEVEL: WARNING
+      SENTRY_DSN: ${SENTRY_DSN}
+      # Performance settings
+      CONNECTION_POOL_SIZE: 20
+      CONNECTION_MAX_OVERFLOW: 40
+    deploy:
+      replicas: 3  # Multiple replicas for high availability
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first  # Zero downtime deployment
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    labels:
+      - "com.toolboxai.service=backend"
+      - "com.toolboxai.environment=production"
+
+  # ----------------------------------------
+  # React Dashboard (Production)
+  # ----------------------------------------
+  dashboard:
+    # No ports exposed - access via nginx reverse proxy
+    ports: []
+    environment:
+      NODE_ENV: production
+      # Security headers are set in nginx config
+    deploy:
+      replicas: 2  # Multiple replicas for high availability
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first  # Zero downtime deployment
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    labels:
+      - "com.toolboxai.service=dashboard"
+      - "com.toolboxai.environment=production"
+
+  # ----------------------------------------
+  # Nginx Reverse Proxy (Production Only)
+  # ----------------------------------------
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: toolboxai-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/sites-enabled:/etc/nginx/sites-enabled:ro
+      - ./config/nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_cache:/var/cache/nginx:Z
+      - nginx_logs:/var/log/nginx:Z
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      - backend
+      - dashboard
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - CHOWN
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    labels:
+      - "com.toolboxai.service=nginx"
+      - "com.toolboxai.environment=production"
+
+  # ----------------------------------------
+  # MCP Server (Production)
+  # ----------------------------------------
+  mcp-server:
+    # No ports exposed in production
+    ports: []
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+      LOG_LEVEL: WARNING
+      # Performance settings
+      MAX_TOKENS: 16384
+      CACHE_TTL: 3600
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # ----------------------------------------
+  # Agent Coordinator (Production)
+  # ----------------------------------------
+  agent-coordinator:
+    # No ports exposed in production
+    ports: []
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+      LOG_LEVEL: WARNING
+      MAX_CONCURRENT_AGENTS: 20
+      TASK_TIMEOUT: 600
+      HEALTH_CHECK_INTERVAL: 60
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # ----------------------------------------
+  # Prometheus Monitoring (Production Only)
+  # ----------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: toolboxai-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--storage.tsdb.retention.time=30d'
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus:Z
+    networks:
+      - monitoring
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    labels:
+      - "com.toolboxai.service=prometheus"
+      - "com.toolboxai.environment=production"
+
+  # ----------------------------------------
+  # Grafana Dashboard (Production Only)
+  # ----------------------------------------
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: toolboxai-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER_FILE: /run/secrets/grafana_user
+      GF_SECURITY_ADMIN_PASSWORD_FILE: /run/secrets/grafana_password
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,redis-datasource
+      GF_SERVER_ROOT_URL: https://metrics.toolboxai.com
+      GF_ANALYTICS_REPORTING_ENABLED: false
+      GF_SECURITY_DISABLE_GRAVATAR: true
+      GF_USERS_ALLOW_SIGN_UP: false
+    secrets:
+      - grafana_user
+      - grafana_password
+    volumes:
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - grafana_data:/var/lib/grafana:Z
+    networks:
+      - monitoring
+      - backend
+    depends_on:
+      - prometheus
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    labels:
+      - "com.toolboxai.service=grafana"
+      - "com.toolboxai.environment=production"
+
+  # ----------------------------------------
+  # Log Aggregation - Loki (Production Only)
+  # ----------------------------------------
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: toolboxai-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./config/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki:Z
+    networks:
+      - monitoring
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  # ----------------------------------------
+  # Log Shipper - Promtail (Production Only)
+  # ----------------------------------------
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: toolboxai-promtail
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./config/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - nginx_logs:/var/log/nginx:ro
+      - backend_logs:/app/logs:ro
+    networks:
+      - monitoring
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+# ============================================
+# PRODUCTION VOLUMES
+# ============================================
+volumes:
+  nginx_cache:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local
+
+# ============================================
+# PRODUCTION NETWORKS
+# ============================================
+networks:
+  monitoring:
+    driver: bridge
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.name: br-monitoring
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24
+
+# ============================================
+# PRODUCTION SECRETS
+# ============================================
+secrets:
+  grafana_user:
+    external: true
+  grafana_password:
+    external: true

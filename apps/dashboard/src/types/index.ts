@@ -23,7 +23,7 @@ export {
   type Notification,
   type Message,
   type DashboardMetrics,
-  type Achievement,
+  // Note: Achievement and ApiError are not exported from api.ts, they may be internal
   type Mission,
   type MissionProgress,
   type MissionRequirement,
@@ -31,7 +31,6 @@ export {
   type RewardRedemption,
   type Event,
   type RobloxWorld,
-  type ApiError,
   type ApiResponse,
   type ComplianceCheck,
   type ComplianceStatus as ApiComplianceStatus,
@@ -43,6 +42,8 @@ export * from './discriminated-unions';
 export * from './utility-types';
 export * from './routes';
 export * from './events';
+export * from './websocket';
+export * from './pusher';
 
 // Schema exports - only export schemas, not types (to avoid conflicts with api.ts)
 export {
@@ -157,14 +158,8 @@ export const exhaustiveSwitch = (value: never): never => {
 // Re-export commonly used types for convenience
 export type {
   // Schema types (from Zod) - includes runtime validation
-  User,
-  Badge,
-  Student,
-  Assessment,
-  Lesson,
-  ClassSummary,
-  ClassDetails,
-  StudentProgress,
+  // Note: User, Badge, Student, Assessment, Lesson, ClassSummary, ClassDetails, StudentProgress
+  // are already exported from './api' above to avoid conflicts
   DashboardOverview,
 } from './schemas';
 
@@ -189,7 +184,7 @@ export type {
   WithChildren,
   WithClassName,
   WithStyle,
-  ApiResponse,
+  // Note: ApiResponse is already exported from './api' above
   PaginatedResponse,
   ErrorResponse,
   SuccessResponse,

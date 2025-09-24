@@ -1,24 +1,23 @@
 import * as React from "react";
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import Divider from '@mui/material/Divider';
+import Paper from '@mui/material/Paper';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  Box,
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  Stack,
-  InputAdornment,
-  IconButton,
-  Divider,
-  Paper,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-} from "@mui/material";
 import { Visibility, VisibilityOff, Email, Lock, Person, School } from "@mui/icons-material";
 import { register } from "../../services/api";
 import { useAppDispatch } from "../../store";
@@ -245,7 +244,7 @@ export default function Register() {
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
+                        onClick={(e: React.MouseEvent) => () => setShowPassword(!showPassword)}
                         edge="end"
                         disabled={loading}
                       >
@@ -279,7 +278,7 @@ export default function Register() {
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onClick={(e: React.MouseEvent) => () => setShowConfirmPassword(!showConfirmPassword)}
                         edge="end"
                         disabled={loading}
                       >

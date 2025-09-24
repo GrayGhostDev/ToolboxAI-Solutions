@@ -77,7 +77,7 @@ class TestAgentSystemIntegration:
         components: Dict[str, Any] = {}
 
         # Mock LLM responses
-        with patch('core.agents.base_agent.ChatOpenAI') as MockLLM:
+        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI') as MockLLM:
             mock_llm = MockLLM.return_value
             mock_llm.invoke = AsyncMock(return_value=MagicMock(content="Test response"))
 

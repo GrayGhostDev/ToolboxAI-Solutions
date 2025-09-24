@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 #!/usr/bin/env python3
 """
 Full End-to-End Integration Test for ToolboxAI Roblox Environment
@@ -22,7 +37,7 @@ import json
 import time
 from typing import Dict, Any, List
 import aiohttp
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 import logging
 import psycopg2
 import redis
@@ -76,7 +91,8 @@ class IntegrationTester:
         self.auth_token = None
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_service_health(self) -> Dict[str, bool]:
+    @pytest.mark.asyncio
+async def test_service_health(self) -> Dict[str, bool]:
         """Test if all services are healthy"""
         services = {
             "FastAPI Backend": f"{FASTAPI_URL}/health",
@@ -113,7 +129,8 @@ class IntegrationTester:
         return self.results["services"]
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_content_generation_flow(self):
+    @pytest.mark.asyncio
+async def test_content_generation_flow(self):
         """Test the complete content generation flow"""
         logger.info("\n📝 Testing Content Generation Flow...")
         
@@ -156,7 +173,8 @@ class IntegrationTester:
                 logger.error(f"❌ Content generation error: {e}")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_roblox_bridge_flow(self):
+    @pytest.mark.asyncio
+async def test_roblox_bridge_flow(self):
         """Test Flask bridge for Roblox communication"""
         logger.info("\n🌉 Testing Roblox Bridge Flow...")
         
@@ -196,15 +214,17 @@ class IntegrationTester:
                 logger.error(f"❌ Roblox bridge error: {e}")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_connections(self):
+    @pytest.mark.asyncio
+async def test_websocket_connections(self):
         """Test WebSocket connections"""
         logger.info("\n🔌 Testing WebSocket Connections...")
         
         # Test FastAPI WebSocket
         try:
-            async with websockets.connect(f"ws://127.0.0.1:8008/ws") as ws:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherf"pusher://app_key@cluster") as ws:
                 # Send ping
-                await ws.send(json.dumps({"type": "ping"}, default=make_json_serializable))
+                await pusher.trigger(json.dumps({"type": "ping"}, default=make_json_serializable))
                 # Wait for pong
                 response = await asyncio.wait_for(ws.recv(), timeout=5)
                 data = json.loads(response)
@@ -229,7 +249,8 @@ class IntegrationTester:
             logger.warning(f"⚠️ WebSocket connection issue: {e}")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_dashboard_integration(self):
+    @pytest.mark.asyncio
+async def test_dashboard_integration(self):
         """Test Dashboard backend integration"""
         logger.info("\n📊 Testing Dashboard Integration...")
         
@@ -280,7 +301,8 @@ class IntegrationTester:
                 logger.error(f"❌ Dashboard integration error: {e}")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_cross_service_communication(self):
+    @pytest.mark.asyncio
+async def test_cross_service_communication(self):
         """Test communication between services"""
         logger.info("\n🔄 Testing Cross-Service Communication...")
         
@@ -315,7 +337,8 @@ class IntegrationTester:
                 logger.error(f"❌ Cross-service error: {e}")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_database_connections(self):
+    @pytest.mark.asyncio
+async def test_database_connections(self):
         """Test database connectivity"""
         logger.info("\n🗄️ Testing Database Connections...")
         
@@ -356,7 +379,8 @@ class IntegrationTester:
             logger.error(f"❌ Redis error: {e}")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_authentication_flow(self):
+    @pytest.mark.asyncio
+async def test_authentication_flow(self):
         """Test authentication with real credentials"""
         logger.info("\n🔐 Testing Authentication Flow...")
         
@@ -405,7 +429,8 @@ class IntegrationTester:
                 logger.error(f"❌ Authentication error: {e}")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_socketio_connection(self):
+    @pytest.mark.asyncio
+async def test_socketio_connection(self):
         """Test Socket.io connection"""
         logger.info("\n🔌 Testing Socket.io Connection...")
         
@@ -450,7 +475,8 @@ class IntegrationTester:
             logger.error(f"❌ Socket.io error: {e}")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_agent_systems(self):
+    @pytest.mark.asyncio
+async def test_agent_systems(self):
         """Test agent system health"""
         logger.info("\n🤖 Testing Agent Systems...")
         
@@ -486,7 +512,8 @@ class IntegrationTester:
                 logger.error(f"❌ Agent systems error: {e}")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_api_endpoints(self):
+    @pytest.mark.asyncio
+async def test_api_endpoints(self):
         """Test various API endpoints with authentication"""
         logger.info("\n📡 Testing API Endpoints...")
         
@@ -527,7 +554,8 @@ class IntegrationTester:
             }
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_concurrent_load(self):
+    @pytest.mark.asyncio
+async def test_concurrent_load(self):
         """Test system under concurrent load"""
         logger.info("\n⚡ Testing Concurrent Load...")
         

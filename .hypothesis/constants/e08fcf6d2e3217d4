@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/security/rate_limiter.py
+# hypothesis_version: 6.139.2
+
+[100, 200, 300, '/health', '/metrics', 'RateLimitConfig', 'RateLimitManager', 'RateLimitMode', 'RateLimitTestContext', '_initialized', 'auth', 'bypass', 'bypass_enabled', 'bypass_rate_limits', 'current_requests', 'default', 'details', 'flask', 'identifier', 'keys', 'limits', 'local', 'middleware', 'mode', 'production', 'rate_limit:*', 'redis_fallback', 'set_testing_mode', 'testing', 'window_seconds']

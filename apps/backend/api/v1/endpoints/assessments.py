@@ -432,7 +432,60 @@ async def submit_assessment(
     submission_data: Dict[str, Any],
     current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
-    """Submit an assessment (students only)."""
+    """
+    Submit student assessment responses with automatic scoring.
+
+    Processes student answers, calculates scores, tracks attempts, and provides
+    immediate feedback. Supports multiple question types and attempt limits.
+
+    Args:
+        assessment_id (int): Unique assessment identifier
+        submission_data (Dict[str, Any]): Submission containing:
+            - answers (dict): Question ID to answer mapping
+            - score (float, optional): Pre-calculated score
+            - time_spent (int): Time spent in minutes
+
+    Returns:
+        dict: Submission result containing:
+            - submission_id (str): Unique submission identifier
+            - score (float): Calculated score
+            - percentage (float): Score as percentage
+            - feedback (dict): Detailed feedback
+            - attempts_used (int): Number of attempts used
+            - status (str): Submission status
+
+    Authentication:
+        Required: JWT token with student role
+
+    Permissions:
+        Students can only submit their own assessments
+
+    Business Rules:
+        - Respects max_attempts limit per assessment
+        - Automatic scoring for objective questions
+        - Manual grading queued for subjective questions
+        - Progress tracking and XP rewards calculated
+        - Prevents duplicate submissions per attempt
+
+    Raises:
+        HTTPException: 400 if maximum attempts exceeded
+        HTTPException: 403 if non-student attempts submission
+        HTTPException: 404 if assessment not found or not accessible
+        HTTPException: 422 if submission data is invalid
+
+    Example:
+        ```python
+        result = await submit_assessment(123, {
+            "answers": {
+                "1": "Mercury",
+                "2": "24 hours",
+                "3": ["Mars", "Jupiter"]
+            },
+            "time_spent": 25
+        })
+        print(f"Score: {result['percentage']}%")
+        ```
+    """
     
     if current_user.role.lower() != "student":
         raise HTTPException(status_code=403, detail="Only students can submit assessments")

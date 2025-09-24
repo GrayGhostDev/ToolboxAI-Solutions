@@ -1,32 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  Grid,
-  Typography,
-  Box,
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  TextField,
-  Chip,
-  LinearProgress,
-  Alert,
-  Stack,
-  Divider,
-  IconButton,
-  Tooltip,
-  Paper,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  ListItemSecondaryAction,
-  CircularProgress,
-} from '@mui/material';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import TextField from '@mui/material/TextField';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
+import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Paper from '@mui/material/Paper';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import CircularProgress from '@mui/material/CircularProgress';
+
 import {
   Download,
   PictureAsPdf,
@@ -112,7 +111,7 @@ const reportTypes: ReportConfig[] = [
   },
 ];
 
-const ReportGenerator: React.FC = () => {
+const ReportGenerator: React.FunctionComponent<Record<string, any>> = () => {
   const userRole = useAppSelector((state) => state.user.role);
   const [selectedReport, setSelectedReport] = useState<ReportConfig | null>(null);
   const [exportFormat, setExportFormat] = useState<string>('pdf');
@@ -331,7 +330,7 @@ setExportFormat('pdf');
                             bgcolor: 'action.hover',
                           },
                         }}
-                        onClick={() => setSelectedReport(report)}
+                        onClick={(e: React.MouseEvent) => () => setSelectedReport(report)}
                       >
                         <Stack direction="row" spacing={2} alignItems="center">
                           {report.icon}
@@ -460,7 +459,7 @@ setExportFormat('pdf');
                               <Chip
                                 key={subject}
                                 label={subject}
-                                onClick={() => {
+                                onClick={(e: React.MouseEvent) => () => {
                                   if (selectedSubjects.includes(subject)) {
                                     setSelectedSubjects(selectedSubjects.filter((s) => s !== subject));
                                   } else {
@@ -517,7 +516,7 @@ setExportFormat('pdf');
                         <Box display="flex" justifyContent="flex-end" gap={2}>
                           <Button
                             variant="outlined"
-                            onClick={() => {
+                            onClick={(e: React.MouseEvent) => () => {
                               setSelectedReport(null);
                               setExportFormat('pdf');
                               setSelectedStudent('all');
@@ -530,7 +529,7 @@ setExportFormat('pdf');
                           <Button
                             variant="contained"
                             startIcon={<Download />}
-                            onClick={handleGenerateReport}
+                            onClick={(e: React.MouseEvent) => handleGenerateReport}
                             disabled={generating}
                           >
                             {generating ? 'Generating...' : 'Generate Report'}
@@ -557,7 +556,7 @@ setExportFormat('pdf');
               <CardHeader
                 title="Recent Reports"
                 action={
-                  <IconButton onClick={loadRecentReports}>
+                  <IconButton onClick={(e: React.MouseEvent) => loadRecentReports}>
                     <Refresh />
                   </IconButton>
                 }
@@ -588,7 +587,7 @@ setExportFormat('pdf');
                       <ListItemSecondaryAction>
                         {report.status === 'ready' && (
                           <Tooltip title="Download">
-                            <IconButton onClick={() => handleDownloadReport(report)}>
+                            <IconButton onClick={(e: React.MouseEvent) => () => handleDownloadReport(report)}>
                               <Download />
                             </IconButton>
                           </Tooltip>

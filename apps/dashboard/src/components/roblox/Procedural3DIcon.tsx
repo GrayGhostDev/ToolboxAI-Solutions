@@ -1,11 +1,11 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Box as ThreeBox, Sphere, Cone, Cylinder, Torus, Octahedron } from '@react-three/drei';
-import { Box } from '@mui/material';
+import Box from '@mui/material/Box';
 import * as THREE from 'three';
 
 // Icon type to 3D shape mapping
-const iconShapes: Record<string, React.FC<any>> = {
+const iconShapes: Record<string, React.FunctionComponent<any>> = {
   ROCKET: ({ color, ...props }) => (
     <group {...props}>
       <Cone args={[0.3, 1, 8]} position={[0, 0.2, 0]}>
@@ -184,7 +184,7 @@ const iconShapes: Record<string, React.FC<any>> = {
 };
 
 // Animated 3D icon component
-const AnimatedIcon: React.FC<{ iconName: string; color?: string }> = ({ iconName, color }) => {
+const AnimatedIcon: React.FunctionComponent<{ iconName: string; color?: string }> = ({ iconName, color }) => {
   const meshRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
@@ -213,7 +213,7 @@ interface Procedural3DIconProps {
   style?: React.CSSProperties;
 }
 
-export const Procedural3DIcon: React.FC<Procedural3DIconProps> = ({
+export const Procedural3DIcon: React.FunctionComponent<Procedural3DIconProps> = ({
   iconName,
   size = 'medium',
   color,

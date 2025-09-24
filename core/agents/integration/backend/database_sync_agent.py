@@ -86,6 +86,16 @@ class MigrationTask:
     applied_at: Optional[datetime] = None
     status: str = "pending"
 
+    async def connect_platform(self, platform: str) -> bool:
+        """Connect to a specific platform"""
+        try:
+            # Placeholder implementation
+            self.connected_platforms = getattr(self, 'connected_platforms', set())
+            self.connected_platforms.add(platform)
+            return True
+        except Exception:
+            return False
+
 
 class DatabaseSyncAgent(BaseIntegrationAgent):
     """
@@ -615,3 +625,18 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
             return await self.optimize_cache_performance()
         else:
             return await super().execute_task(task, context)
+    async def sync_to_cache(self, key: str, value: Any) -> bool:
+        """Sync data to cache"""
+        if not hasattr(self, 'cache'):
+            self.cache = {}
+        if not hasattr(self, 'sync_strategy'):
+            from core.agents.integration.models import SyncStrategy
+            self.sync_strategy = SyncStrategy.WRITE_THROUGH
+
+        if self.sync_strategy == SyncStrategy.WRITE_THROUGH:
+            self.cache[key] = value
+        return True
+
+    def set_sync_strategy(self, strategy):
+        """Set the synchronization strategy"""
+        self.sync_strategy = strategy

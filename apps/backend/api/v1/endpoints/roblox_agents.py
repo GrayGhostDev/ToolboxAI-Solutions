@@ -17,12 +17,13 @@ import logging
 from apps.backend.core.deps import get_current_user
 from database.models import User
 
+# Import types from correct location
+from apps.backend.models.schemas import SubjectType, ActivityType
+
 # Import Roblox agents
 try:
     from core.agents.roblox.roblox_content_generation_agent import (
-        RobloxContentGenerationAgent,
-        SubjectType,
-        ActivityType
+        RobloxContentGenerationAgent
     )
     from core.agents.roblox.roblox_script_optimization_agent import (
         RobloxScriptOptimizationAgent,

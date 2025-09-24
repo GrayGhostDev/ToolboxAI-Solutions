@@ -28,6 +28,30 @@ class PusherUnavailable(Exception):
     pass
 
 
+# Agent-specific Pusher channels and events
+AGENT_CHANNELS = {
+    'agent_status': 'agent-status',
+    'agent_tasks': 'agent-tasks',
+    'agent_metrics': 'agent-metrics',
+    'system_health': 'system-health',
+    'agent_updates': 'agent-updates'
+}
+
+AGENT_EVENTS = {
+    'agent_started': 'agent.started',
+    'agent_stopped': 'agent.stopped',
+    'agent_idle': 'agent.idle',
+    'agent_busy': 'agent.busy',
+    'agent_error': 'agent.error',
+    'task_created': 'task.created',
+    'task_started': 'task.started',
+    'task_completed': 'task.completed',
+    'task_failed': 'task.failed',
+    'metrics_updated': 'metrics.updated',
+    'health_updated': 'health.updated'
+}
+
+
 def _ensure_pusher_available():
     if pusher is None:
         raise PusherUnavailable("The 'pusher' package is not installed. Run: pip install pusher")
@@ -239,6 +263,191 @@ def verify_webhook(headers: Dict[str, str], body: bytes) -> Optional[Dict[str, A
     except Exception as e:
         logger.warning(f"Invalid Pusher webhook: {e}")
         return None
+
+
+# Agent-specific Pusher helper functions
+
+async def trigger_agent_event(event_type: str, agent_id: str, data: Dict[str, Any], user_id: Optional[str] = None) -> None:
+    """
+    Trigger an agent-specific event via Pusher.
+    
+    Args:
+        event_type: Type of event (from AGENT_EVENTS)
+        agent_id: ID of the agent
+        data: Event data
+        user_id: Optional user ID for user-specific events
+    """
+    try:
+        event_name = AGENT_EVENTS.get(event_type, event_type)
+        
+        # Prepare event data
+        event_data = {
+            "agent_id": agent_id,
+            "event_type": event_type,
+            "timestamp": datetime.now().isoformat(),
+            "data": data
+        }
+        
+        if user_id:
+            event_data["user_id"] = user_id
+        
+        # Trigger on agent-updates channel
+        trigger_event(AGENT_CHANNELS['agent_updates'], event_name, event_data)
+        
+        # Also trigger on agent-specific channel
+        agent_channel = f"agent-{agent_id}"
+        trigger_event(agent_channel, event_name, event_data)
+        
+        logger.debug(f"Triggered agent event: {event_name} for agent {agent_id}")
+        
+    except Exception as e:
+        logger.error(f"Error triggering agent event: {e}")
+
+
+async def trigger_task_event(event_type: str, task_id: str, agent_id: str, data: Dict[str, Any], user_id: Optional[str] = None) -> None:
+    """
+    Trigger a task-specific event via Pusher.
+    
+    Args:
+        event_type: Type of event (task_created, task_started, task_completed, task_failed)
+        task_id: ID of the task
+        agent_id: ID of the agent handling the task
+        data: Event data
+        user_id: Optional user ID for user-specific events
+    """
+    try:
+        event_name = AGENT_EVENTS.get(event_type, event_type)
+        
+        # Prepare event data
+        event_data = {
+            "task_id": task_id,
+            "agent_id": agent_id,
+            "event_type": event_type,
+            "timestamp": datetime.now().isoformat(),
+            "data": data
+        }
+        
+        if user_id:
+            event_data["user_id"] = user_id
+        
+        # Trigger on agent-tasks channel
+        trigger_event(AGENT_CHANNELS['agent_tasks'], event_name, event_data)
+        
+        # Also trigger on agent-specific channel
+        agent_channel = f"agent-{agent_id}"
+        trigger_event(agent_channel, event_name, event_data)
+        
+        # If user-specific, also trigger on user channel
+        if user_id:
+            user_channel = f"user-{user_id}"
+            trigger_event(user_channel, event_name, event_data)
+        
+        logger.debug(f"Triggered task event: {event_name} for task {task_id}")
+        
+    except Exception as e:
+        logger.error(f"Error triggering task event: {e}")
+
+
+async def trigger_metrics_update(metrics_data: Dict[str, Any], agent_id: Optional[str] = None) -> None:
+    """
+    Trigger metrics update event via Pusher.
+    
+    Args:
+        metrics_data: Metrics data to broadcast
+        agent_id: Optional specific agent ID
+    """
+    try:
+        event_data = {
+            "timestamp": datetime.now().isoformat(),
+            "metrics": metrics_data
+        }
+        
+        if agent_id:
+            event_data["agent_id"] = agent_id
+        
+        # Trigger on agent-metrics channel
+        trigger_event(AGENT_CHANNELS['agent_metrics'], AGENT_EVENTS['metrics_updated'], event_data)
+        
+        # If agent-specific, also trigger on agent channel
+        if agent_id:
+            agent_channel = f"agent-{agent_id}"
+            trigger_event(agent_channel, AGENT_EVENTS['metrics_updated'], event_data)
+        
+        logger.debug(f"Triggered metrics update for agent {agent_id or 'system'}")
+        
+    except Exception as e:
+        logger.error(f"Error triggering metrics update: {e}")
+
+
+async def trigger_health_update(health_data: Dict[str, Any]) -> None:
+    """
+    Trigger system health update event via Pusher.
+    
+    Args:
+        health_data: System health data to broadcast
+    """
+    try:
+        event_data = {
+            "timestamp": datetime.now().isoformat(),
+            "health": health_data
+        }
+        
+        # Trigger on system-health channel
+        trigger_event(AGENT_CHANNELS['system_health'], AGENT_EVENTS['health_updated'], event_data)
+        
+        logger.debug("Triggered system health update")
+        
+    except Exception as e:
+        logger.error(f"Error triggering health update: {e}")
+
+
+async def trigger_agent_status_change(agent_id: str, old_status: str, new_status: str, 
+                                    additional_data: Optional[Dict[str, Any]] = None) -> None:
+    """
+    Trigger agent status change event via Pusher.
+    
+    Args:
+        agent_id: ID of the agent
+        old_status: Previous status
+        new_status: New status
+        additional_data: Additional data to include
+    """
+    try:
+        event_data = {
+            "agent_id": agent_id,
+            "old_status": old_status,
+            "new_status": new_status,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        if additional_data:
+            event_data.update(additional_data)
+        
+        # Map status to event type
+        status_event_map = {
+            'idle': 'agent_idle',
+            'busy': 'agent_busy',
+            'error': 'agent_error',
+            'offline': 'agent_stopped'
+        }
+        
+        event_type = status_event_map.get(new_status, 'agent_idle')
+        await trigger_agent_event(event_type, agent_id, event_data)
+        
+        logger.debug(f"Triggered status change for agent {agent_id}: {old_status} -> {new_status}")
+        
+    except Exception as e:
+        logger.error(f"Error triggering agent status change: {e}")
+
+
+def get_agent_channels() -> Dict[str, str]:
+    """Get available agent channels."""
+    return AGENT_CHANNELS.copy()
+
+
+def get_agent_events() -> Dict[str, str]:
+    """Get available agent events."""
+    return AGENT_EVENTS.copy()
 
 
 # Export for compatibility with legacy code expecting pusher_service

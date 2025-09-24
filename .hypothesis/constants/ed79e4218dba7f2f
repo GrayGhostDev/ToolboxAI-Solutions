@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/security/jwt/jwt_manager.py
+# hypothesis_version: 6.139.2
+
+[3.0, 4.0, 384, '123', 'ENVIRONMENT', 'ENV_NAME', 'JWT_SECRET_KEY', 'Manual rotation', '_current_secret_id', 'abc', 'actions_taken', 'auto_generated', 'critical', 'demo', 'development', 'entropy_score', 'environment_valid', 'error', 'example', 'high', 'instructions_file', 'issues', 'last_validation', 'low', 'medium', 'new_secret_id', 'old_secret_id', 'password', 'production', 'recommendations', 'rotation_reason', 'secret_configured', 'secret_source', 'secret_valid', 'security_level', 'success', 'test', 'unknown', 'valid', 'validation_details', 'validation_passed', 'vulnerable', 'w', 'warnings', 'weak']

@@ -1,31 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  CardHeader,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Typography,
-  Chip,
-  TextField,
-  InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Stack,
-  IconButton,
-  Tooltip,
-  Paper,
-  Avatar,
-  Button,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TablePagination from '@mui/material/TablePagination';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Stack from '@mui/material/Stack';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Paper from '@mui/material/Paper';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+
 import {
   Search,
   FilterList,
@@ -62,7 +61,7 @@ interface ActivityLog {
   userAgent?: string;
 }
 
-const ActivityLogs: React.FC = () => {
+const ActivityLogs: React.FunctionComponent<Record<string, any>> = () => {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -365,14 +364,14 @@ const ActivityLogs: React.FC = () => {
               <Button
                 variant={autoRefresh ? 'contained' : 'outlined'}
                 size="small"
-                onClick={() => setAutoRefresh(!autoRefresh)}
+                onClick={(e: React.MouseEvent) => () => setAutoRefresh(!autoRefresh)}
               >
                 {autoRefresh ? 'Auto-Refresh ON' : 'Auto-Refresh OFF'}
               </Button>
-              <Button variant="outlined" startIcon={<Download />} size="small" onClick={handleExportLogs}>
+              <Button variant="outlined" startIcon={<Download />} size="small" onClick={(e: React.MouseEvent) => handleExportLogs}>
                 Export
               </Button>
-              <IconButton onClick={loadLogs}>
+              <IconButton onClick={(e: React.MouseEvent) => loadLogs}>
                 <Refresh />
               </IconButton>
             </Stack>

@@ -1,6 +1,6 @@
 /**
  * Dashboard Component Test
- * 
+ *
  * Example test file demonstrating how to test components using the
  * test infrastructure with all necessary mocks and utilities.
  */
@@ -29,25 +29,39 @@ vi.mock('../../services/api', () => ({
   }
 }));
 
-// Mock the WebSocket service
-vi.mock('../../services/websocket', () => ({
-  WebSocketService: {
+// Mock the Pusher service (migrated from WebSocket)
+vi.mock('../../services/pusher', () => ({
+  PusherService: {
     getInstance: vi.fn(() => ({
       connect: vi.fn(),
       disconnect: vi.fn(),
-      send: vi.fn(),
-      subscribe: vi.fn(() => vi.fn()),
+      subscribe: vi.fn(() => ({
+        bind: vi.fn(),
+        unbind: vi.fn(),
+        unsubscribe: vi.fn(),
+      })),
       unsubscribe: vi.fn(),
+      trigger: vi.fn(),
       isConnected: vi.fn(() => true),
+      getSocketId: vi.fn(() => 'mock-socket-id'),
+      getChannel: vi.fn(() => null),
     }))
   },
-  sendWebSocketMessage: vi.fn(),
-  subscribeToChannel: vi.fn(() => 'subscription-id'),
+  triggerPusherEvent: vi.fn(),
+  subscribeToChannel: vi.fn(() => ({
+    bind: vi.fn(),
+    unbind: vi.fn(),
+  })),
   unsubscribeFromChannel: vi.fn(),
-  WebSocketMessageType: {
-    CONTENT_UPDATE: 'content_update',
-    QUIZ_UPDATE: 'quiz_update',
-    PROGRESS_UPDATE: 'progress_update',
+  PusherEventType: {
+    CONTENT_UPDATE: 'content-update',
+    QUIZ_UPDATE: 'quiz-update',
+    PROGRESS_UPDATE: 'progress-update',
+  },
+  PusherChannels: {
+    DASHBOARD_UPDATES: 'dashboard-updates',
+    CONTENT_GENERATION: 'content-generation',
+    AGENT_STATUS: 'agent-status',
   }
 }));
 
@@ -207,7 +221,7 @@ describe('Dashboard Component', () => {
 
   describe('Real-time Updates', () => {
     it('should subscribe to WebSocket channels on mount', async () => {
-      const { subscribeToChannel } = await import('../../services/websocket');
+      const { subscribeToChannel } = await import { PusherService } from '../../services/pusher');
 
       render(<DashboardHome role="teacher" />);
 
@@ -217,7 +231,7 @@ describe('Dashboard Component', () => {
     });
 
     it('should unsubscribe from channels on unmount', async () => {
-      const { unsubscribeFromChannel } = await import('../../services/websocket');
+      const { unsubscribeFromChannel } = await import { PusherService } from '../../services/pusher');
       
       const { unmount } = render(<DashboardHome role="teacher" />);
       

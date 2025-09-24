@@ -6,18 +6,17 @@
  */
 
 import React, { useState } from 'react';
-import {
-  Box,
-  Tooltip,
-  IconButton,
-  Typography,
-  Chip,
-  Stack,
-  useTheme,
-  alpha,
-  Zoom,
-  Fade
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Tooltip from '@mui/material/Tooltip';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import Zoom from '@mui/material/Zoom';
+import Fade from '@mui/material/Fade';
+import Fade from '@mui/material/Fade';
 import {
   School,
   SportsEsports,
@@ -87,7 +86,7 @@ const ICON_MAPPINGS = {
   'TROPHY': { icon: AutoAwesome, color: '#ffc107' }
 };
 
-export const Roblox3DIcon: React.FC<Roblox3DIconProps> = ({
+export const Roblox3DIcon: React.FunctionComponent<Roblox3DIconProps> = ({
   icon,
   size = 'medium',
   showTooltip = true,
@@ -128,7 +127,7 @@ export const Roblox3DIcon: React.FC<Roblox3DIconProps> = ({
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={handleClick}
+      onClick={(e: React.MouseEvent) => handleClick}
     >
       <Box
         sx={{

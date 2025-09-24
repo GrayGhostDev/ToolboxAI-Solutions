@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 """
 Comprehensive Test Suite for Enhanced Content Pipeline
 Tests all components of the Week 2 implementation
@@ -42,7 +46,7 @@ from core.agents.multi_modal_generator import (
     GeneratedContent,
     ContentModality
 )
-from apps.backend.services.websocket_pipeline_manager import (
+from tests.fixtures.pusher_test_utils import (
     WebSocketPipelineManager
 )
 from database.models import (

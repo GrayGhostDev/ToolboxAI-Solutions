@@ -1,22 +1,21 @@
 import { useState } from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Grid,
-  Stack,
-  Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  IconButton,
-  Button,
-  Tabs,
-  Tab,
-  Alert,
-} from "@mui/material";
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Alert from '@mui/material/Alert';
+
 import {
   Refresh,
   Download,
@@ -260,13 +259,13 @@ export function EnhancedAnalytics({
           </FormControl>
           
           {/* Action Buttons */}
-          <IconButton onClick={handleRefresh} title="Refresh Data">
+          <IconButton onClick={(e: React.MouseEvent) => handleRefresh} title="Refresh Data">
             <Refresh />
           </IconButton>
           <Button 
             variant="outlined" 
             startIcon={<Download />} 
-            onClick={handleExport}
+            onClick={(e: React.MouseEvent) => handleExport}
           >
             Export
           </Button>

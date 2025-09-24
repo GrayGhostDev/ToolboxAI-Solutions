@@ -6,10 +6,11 @@ Provides comprehensive data models for the enhanced content generation system
 from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey, JSON, Text, Integer, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 import uuid
 
+# Create a shared base - this will be the same as the one in models.py
+from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 

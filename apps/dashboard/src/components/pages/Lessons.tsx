@@ -25,12 +25,11 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { listLessons, deleteLesson, pushLessonToRoblox } from "../../services/api";
+import { listLessons, deleteLesson } from "../../services/api";
 import { useAppDispatch } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
 import CreateLessonDialog from "../dialogs/CreateLessonDialog";
 import { Lesson } from "../../types/api";
-
 export default function Lessons() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -40,7 +39,6 @@ export default function Lessons() {
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [selectedLesson, setSelectedLesson] = React.useState<Lesson | null>(null);
-
   const fetchLessons = React.useCallback(async () => {
     setLoading(true);
     try {
@@ -50,7 +48,6 @@ export default function Lessons() {
       console.error("Failed to fetch lessons:", error);
       const errorDetail = error.response?.data?.detail;
       let errorMessage = "Failed to load lessons. Please try again.";
-      
       if (typeof errorDetail === 'string') {
         errorMessage = errorDetail;
       } else if (Array.isArray(errorDetail)) {
@@ -59,7 +56,6 @@ export default function Lessons() {
           err.msg || err.message || 'Validation error'
         ).join(', ');
       }
-      
       dispatch(
         addNotification({
           type: "error",
@@ -71,21 +67,17 @@ export default function Lessons() {
       setLoading(false);
     }
   }, [dispatch]);
-
   React.useEffect(() => {
     fetchLessons();
   }, [fetchLessons]);
-
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, lesson: Lesson) => {
     setAnchorEl(event.currentTarget);
     setSelectedLesson(lesson);
   };
-
   const handleMenuClose = () => {
     setAnchorEl(null);
     setSelectedLesson(null);
   };
-
   const handlePushToRoblox = async (lesson: Lesson) => {
     dispatch(
       addNotification({
@@ -93,7 +85,6 @@ export default function Lessons() {
         message: `Preparing Roblox environment for "${lesson.title}"...`,
       })
     );
-    
     // Simulate push process then navigate to Roblox dashboard
     setTimeout(() => {
       dispatch(
@@ -105,15 +96,12 @@ export default function Lessons() {
       // Navigate to Roblox dashboard with lesson context
       navigate(`/roblox?lessonId=${lesson.id}&lessonTitle=${encodeURIComponent(lesson.title)}`);
     }, 1500);
-    
     handleMenuClose();
   };
-
   const handleDelete = async (lesson: Lesson) => {
     if (!window.confirm(`Are you sure you want to delete "${lesson.title}"?`)) {
       return;
     }
-
     try {
       await deleteLesson(lesson.id);
       dispatch(
@@ -133,12 +121,10 @@ export default function Lessons() {
     }
     handleMenuClose();
   };
-
   const filteredLessons = lessons.filter((lesson) =>
     lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lesson.subject.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
   return (
     <Grid2 container spacing={3}>
       <Grid2 xs={12}>
@@ -171,7 +157,7 @@ export default function Lessons() {
                 <Button
                   variant="contained"
                   startIcon={<AddIcon />}
-                  onClick={() => setCreateDialogOpen(true)}
+                  onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
                 >
                   New Lesson
                 </Button>
@@ -180,7 +166,6 @@ export default function Lessons() {
           </CardContent>
         </Card>
       </Grid2>
-
       <Grid2 xs={12}>
         <Card>
           <CardContent sx={{ p: 0 }}>
@@ -249,7 +234,7 @@ export default function Lessons() {
                           <Button
                             size="small"
                             startIcon={<RocketLaunchIcon />}
-                            onClick={() => handlePushToRoblox(lesson)}
+                            onClick={(e: React.MouseEvent) => () => handlePushToRoblox(lesson)}
                           >
                             Push
                           </Button>
@@ -258,7 +243,7 @@ export default function Lessons() {
                       <TableCell align="right">
                         <IconButton
                           size="small"
-                          onClick={(e) => handleMenuOpen(e, lesson)}
+                          onClick={(e: React.MouseEvent) => (e) => handleMenuOpen(e, lesson)}
                         >
                           <MoreVertIcon />
                         </IconButton>
@@ -268,13 +253,12 @@ export default function Lessons() {
                 )}
               </TableBody>
             </Table>
-
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
             >
-              <MenuItem onClick={() => {
+              <MenuItem onClick={(e: React.MouseEvent) => () => {
                 if (selectedLesson) {
                   navigate(`/lessons/${selectedLesson.id}`);
                 }
@@ -312,12 +296,12 @@ export default function Lessons() {
                 Duplicate
               </MenuItem>
               {selectedLesson && !selectedLesson.robloxWorldId && (
-                <MenuItem onClick={() => selectedLesson && handlePushToRoblox(selectedLesson)}>
+                <MenuItem onClick={(e: React.MouseEvent) => () => selectedLesson && handlePushToRoblox(selectedLesson)}>
                   <RocketLaunchIcon fontSize="small" sx={{ mr: 1 }} />
                   Push to Roblox
                 </MenuItem>
               )}
-              <MenuItem onClick={() => selectedLesson && handleDelete(selectedLesson)}>
+              <MenuItem onClick={(e: React.MouseEvent) => () => selectedLesson && handleDelete(selectedLesson)}>
                 <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
                 Delete
               </MenuItem>
@@ -325,7 +309,6 @@ export default function Lessons() {
           </CardContent>
         </Card>
       </Grid2>
-
       <CreateLessonDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}

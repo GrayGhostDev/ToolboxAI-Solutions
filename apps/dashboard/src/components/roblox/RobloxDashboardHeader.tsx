@@ -6,26 +6,25 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Box,
-  IconButton,
-  Badge,
-  Stack,
-  Avatar,
-  Chip,
-  Button,
-  Menu,
-  MenuItem,
-  Divider,
-  useTheme,
-  alpha,
-  Fade,
-  Slide,
-  Zoom
-} from '@mui/material';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import Badge from '@mui/material/Badge';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import Chip from '@mui/material/Chip';
+import Button from '@mui/material/Button';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Divider from '@mui/material/Divider';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import Fade from '@mui/material/Fade';
+import Slide from '@mui/material/Slide';
+import Zoom from '@mui/material/Zoom';
+import Zoom from '@mui/material/Zoom';
 import {
   Notifications,
   Settings,
@@ -107,7 +106,7 @@ const SAMPLE_NOTIFICATIONS: Notification[] = [
   }
 ];
 
-export const RobloxDashboardHeader: React.FC<RobloxDashboardHeaderProps> = ({
+export const RobloxDashboardHeader: React.FunctionComponent<RobloxDashboardHeaderProps> = ({
   title = 'ToolBoxAI Space Station',
   subtitle = 'Your Learning Adventure Awaits!',
   onMenuClick,
@@ -164,7 +163,7 @@ export const RobloxDashboardHeader: React.FC<RobloxDashboardHeaderProps> = ({
           <IconButton
             edge="start"
             color="inherit"
-            onClick={onMenuClick}
+            onClick={(e: React.MouseEvent) => onMenuClick}
             sx={{
               mr: 2,
               p: 1,
@@ -227,7 +226,7 @@ export const RobloxDashboardHeader: React.FC<RobloxDashboardHeaderProps> = ({
                     character={character}
                     size="medium"
                     animated={true}
-                    onClick={() => console.log(`Selected ${character.name}`)}
+                    onClick={(e: React.MouseEvent) => () => console.log(`Selected ${character.name}`)}
                   />
                 </Box>
               </Zoom>
@@ -240,7 +239,7 @@ export const RobloxDashboardHeader: React.FC<RobloxDashboardHeaderProps> = ({
           {/* Notifications */}
           <IconButton
             color="inherit"
-            onClick={(e) => setNotificationMenuAnchor(e.currentTarget)}
+            onClick={(e: React.MouseEvent) => (e) => setNotificationMenuAnchor(e.currentTarget)}
             sx={{
               p: 1,
               background: alpha('#fff', 0.1),
@@ -259,7 +258,7 @@ export const RobloxDashboardHeader: React.FC<RobloxDashboardHeaderProps> = ({
           {/* Settings */}
           <IconButton
             color="inherit"
-            onClick={onSettingsClick}
+            onClick={(e: React.MouseEvent) => onSettingsClick}
             sx={{
               p: 1,
               background: alpha('#fff', 0.1),
@@ -276,7 +275,7 @@ export const RobloxDashboardHeader: React.FC<RobloxDashboardHeaderProps> = ({
           {/* Help */}
           <IconButton
             color="inherit"
-            onClick={onHelpClick}
+            onClick={(e: React.MouseEvent) => onHelpClick}
             sx={{
               p: 1,
               background: alpha('#fff', 0.1),
@@ -293,7 +292,7 @@ export const RobloxDashboardHeader: React.FC<RobloxDashboardHeaderProps> = ({
           {/* Profile */}
           <IconButton
             color="inherit"
-            onClick={(e) => setProfileMenuAnchor(e.currentTarget)}
+            onClick={(e: React.MouseEvent) => (e) => setProfileMenuAnchor(e.currentTarget)}
             sx={{
               p: 1,
               background: alpha('#fff', 0.1),
@@ -334,7 +333,7 @@ export const RobloxDashboardHeader: React.FC<RobloxDashboardHeaderProps> = ({
         {notifications.map((notification) => (
           <MenuItem
             key={notification.id}
-            onClick={() => handleNotificationClick(notification)}
+            onClick={(e: React.MouseEvent) => () => handleNotificationClick(notification)}
             sx={{
               py: 2,
               px: 2,
@@ -386,16 +385,16 @@ export const RobloxDashboardHeader: React.FC<RobloxDashboardHeaderProps> = ({
           }
         }}
       >
-        <MenuItem onClick={handleProfileClick}>
+        <MenuItem onClick={(e: React.MouseEvent) => handleProfileClick}>
           <AccountCircle sx={{ mr: 2 }} />
           Profile
         </MenuItem>
-        <MenuItem onClick={onSettingsClick}>
+        <MenuItem onClick={(e: React.MouseEvent) => onSettingsClick}>
           <Settings sx={{ mr: 2 }} />
           Settings
         </MenuItem>
         <Divider />
-        <MenuItem onClick={onHelpClick}>
+        <MenuItem onClick={(e: React.MouseEvent) => onHelpClick}>
           <Help sx={{ mr: 2 }} />
           Help & Support
         </MenuItem>

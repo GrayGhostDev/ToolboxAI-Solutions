@@ -1,33 +1,32 @@
 import * as React from "react";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import LinearProgress from '@mui/material/LinearProgress';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Skeleton from '@mui/material/Skeleton';
+import Alert from '@mui/material/Alert';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+import Grid from '@mui/material/Grid';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import AvatarGroup from '@mui/material/AvatarGroup';
+import Tooltip from '@mui/material/Tooltip';
+import Badge from '@mui/material/Badge';
+
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Stack,
-  Avatar,
-  LinearProgress,
-  Chip,
-  IconButton,
-  Skeleton,
-  Alert,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Grid,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  AvatarGroup,
-  Tooltip,
-  Badge,
-} from "@mui/material";
 import {
   Group,
   TrendingUp,
@@ -417,7 +416,7 @@ export function ClassOverview({
                 {isConnected && autoRefresh && (
                   <Chip label="Live" color="success" size="small" />
                 )}
-                <IconButton size="small" onClick={fetchData}>
+                <IconButton size="small" onClick={(e: React.MouseEvent) => fetchData}>
                   <Refresh />
                 </IconButton>
               </Stack>

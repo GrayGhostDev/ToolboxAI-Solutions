@@ -1,0 +1,461 @@
+============================================================
+Legacy WebSocket Code Cleanup Report
+============================================================
+Generated: 2025-09-23T14:24:16.854303
+
+Statistics:
+----------------------------------------
+Files scanned: 216
+Files with legacy code: 62
+Total legacy patterns found: 415
+
+Files with Legacy Code:
+----------------------------------------
+
+📄 tests/accessibility/a11y_test_runner.py
+  ⚠️  Socket.IO client: 2 occurrence(s)
+     Line 427: function getContrastRatio(l1, l2) {
+     Line 452: const ratio = getContrastRatio(bgLuminance, textLuminance);
+
+📄 tests/conftest.py
+  ⚠️  WebSocket constructor: 1 occurrence(s)
+     Line 457: return MockWebSocket()
+  ⚠️  websocket_handler module: 2 occurrence(s)
+     Line 1033: patch('apps.backend.services.websocket_handler.decode_access_token', side_effect=mock_decode),
+     Line 1034: patch('apps.backend.services.websocket_handler.increment_metric', side_effect=increment_metric),
+  ⚠️  MockWebSocket class: 2 occurrence(s)
+     Line 425: class MockWebSocket:
+     Line 457: return MockWebSocket()
+
+📄 tests/disaster_recovery/dr_test_runner.py
+  ⚠️  Socket.IO client: 3 occurrence(s)
+     Line 122: async def run_scenario(self, scenario_name: str) -> Dict[str, Any]:
+     Line 864: result = await self.run_scenario(scenario["name"])
+     Line 945: asyncio.run(tester.run_scenario(args.scenario))
+
+📄 tests/e2e/test_comprehensive_end_to_end.py
+  ⚠️  WebSocket constructor: 1 occurrence(s)
+     Line 456: const ws = new originalWebSocket(url, protocols);
+
+📄 tests/e2e/test_e2e_integration.py
+  ⚠️  Socket.IO client: 6 occurrence(s)
+     Line 101: @pytest.mark.asyncio(loop_scope="function")
+     Line 159: @pytest.mark.asyncio(loop_scope="function")
+     Line 252: @pytest.mark.asyncio(loop_scope="function")
+     ... and 3 more
+
+📄 tests/fixtures/api.py
+  ⚠️  Old mock_websocket (not migrated): 1 occurrence(s)
+     Line 202: def mock_websocket():
+
+📄 tests/fixtures/websocket.py
+  ⚠️  WebSocket constructor: 1 occurrence(s)
+     Line 5: def create_websocket(): return MockWebSocket()
+  ⚠️  MockWebSocket class: 2 occurrence(s)
+     Line 1: class MockWebSocket:
+     Line 5: def create_websocket(): return MockWebSocket()
+
+📄 tests/integration/conftest.py
+  ⚠️  MockWebSocket class: 6 occurrence(s)
+     Line 121: class MockWebSocketConnection:
+     Line 178: class MockWebSocketManager:
+     Line 281: return MockWebSocketConnection()
+     ... and 3 more
+
+📄 tests/integration/test_advanced_supervisor.py
+  ⚠️  Socket.IO client: 22 occurrence(s)
+     Line 103: @pytest.mark.asyncio(loop_scope="function")
+     Line 116: @pytest.mark.asyncio(loop_scope="function")
+     Line 159: @pytest.mark.asyncio(loop_scope="function")
+     ... and 19 more
+
+📄 tests/integration/test_agent_communication_integration.py
+  ⚠️  Socket.IO client: 9 occurrence(s)
+     Line 139: @pytest.mark.asyncio(loop_scope="function")
+     Line 169: @pytest.mark.asyncio(loop_scope="function")
+     Line 209: @pytest.mark.asyncio(loop_scope="function")
+     ... and 6 more
+
+📄 tests/integration/test_agent_integration.py
+  ⚠️  Socket.IO client: 15 occurrence(s)
+     Line 129: @pytest.mark.asyncio(loop_scope="function")
+     Line 202: @pytest.mark.asyncio(loop_scope="function")
+     Line 226: @pytest.mark.asyncio(loop_scope="function")
+     ... and 12 more
+
+📄 tests/integration/test_api_v1_endpoints_integration.py
+  ⚠️  Socket.IO client: 1 occurrence(s)
+     Line 337: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/integration/test_auth_system.py
+  ⚠️  Socket.IO client: 2 occurrence(s)
+     Line 35: @pytest.mark.asyncio(loop_scope="function")
+     Line 148: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/integration/test_complete_integration.py
+  ⚠️  Direct websockets import: 1 occurrence(s)
+     Line 42: import websocket
+  ⚠️  socketio module: 5 occurrence(s)
+     Line 41: import socketio
+     Line 84: self.socketio_client = None
+     Line 328: def test_socketio_connection(self) -> bool:
+     ... and 2 more
+
+📄 tests/integration/test_comprehensive_verification.py
+  ⚠️  Socket.IO client: 8 occurrence(s)
+     Line 111: @pytest.mark.asyncio(loop_scope="function")
+     Line 171: @pytest.mark.asyncio(loop_scope="function")
+     Line 207: @pytest.mark.asyncio(loop_scope="function")
+     ... and 5 more
+
+📄 tests/integration/test_core_agent_communication.py
+  ⚠️  Socket.IO client: 5 occurrence(s)
+     Line 116: @pytest.mark.asyncio(loop_scope="function")
+     Line 144: @pytest.mark.asyncio(loop_scope="function")
+     Line 185: @pytest.mark.asyncio(loop_scope="function")
+     ... and 2 more
+
+📄 tests/integration/test_dashboard_integration.py
+  ⚠️  Direct websockets import: 1 occurrence(s)
+     Line 38: import websocket
+  ⚠️  Socket.IO client: 2 occurrence(s)
+     Line 314: def test_multi_user_scenario(self):
+     Line 407: self.test_multi_user_scenario()
+
+📄 tests/integration/test_databases.py
+  ⚠️  Socket.IO client: 1 occurrence(s)
+     Line 28: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/integration/test_enhanced_content_agent.py
+  ⚠️  Socket.IO client: 2 occurrence(s)
+     Line 40: @pytest.mark.asyncio(loop_scope="function")
+     Line 250: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/integration/test_fastapi_comprehensive.py
+  ⚠️  Socket.IO client: 16 occurrence(s)
+     Line 146: @pytest.mark.asyncio(loop_scope="function")
+     Line 174: @pytest.mark.asyncio(loop_scope="function")
+     Line 213: @pytest.mark.asyncio(loop_scope="function")
+     ... and 13 more
+
+📄 tests/integration/test_fastapi_integration.py
+  ⚠️  Socket.IO client: 6 occurrence(s)
+     Line 73: @pytest.mark.asyncio(loop_scope="function")
+     Line 97: @pytest.mark.asyncio(loop_scope="function")
+     Line 136: @pytest.mark.asyncio(loop_scope="function")
+     ... and 3 more
+
+📄 tests/integration/test_full_integration.py
+  ⚠️  Socket.IO client: 12 occurrence(s)
+     Line 93: @pytest.mark.asyncio(loop_scope="function")
+     Line 131: @pytest.mark.asyncio(loop_scope="function")
+     Line 175: @pytest.mark.asyncio(loop_scope="function")
+     ... and 9 more
+  ⚠️  socketio module: 7 occurrence(s)
+     Line 44: import socketio
+     Line 433: async def test_socketio_connection(self):
+     Line 439: sio_client = socketio.AsyncClient()
+     ... and 4 more
+
+📄 tests/integration/test_mcp_integration.py
+  ⚠️  Socket.IO client: 7 occurrence(s)
+     Line 61: @pytest.mark.asyncio(loop_scope="function")
+     Line 115: @pytest.mark.asyncio(loop_scope="function")
+     Line 188: @pytest.mark.asyncio(loop_scope="function")
+     ... and 4 more
+
+📄 tests/integration/test_rate_limiting_fix.py
+  ⚠️  Socket.IO client: 3 occurrence(s)
+     Line 131: @pytest.mark.asyncio(loop_scope="function")
+     Line 148: @pytest.mark.asyncio(loop_scope="function")
+     Line 182: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/integration/test_roblox_integration.py
+  ⚠️  Socket.IO client: 18 occurrence(s)
+     Line 70: def mock_roblox_studio():
+     Line 102: return MockRobloxStudio()
+     Line 192: @pytest.mark.asyncio(loop_scope="function")
+     ... and 15 more
+
+📄 tests/integration/test_roblox_plugin.py
+  ⚠️  Direct websockets import: 1 occurrence(s)
+     Line 24: import websocket
+
+📄 tests/integration/test_simple_rate_limit.py
+  ⚠️  Socket.IO client: 1 occurrence(s)
+     Line 34: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/integration/test_socketio_integration.py
+  ⚠️  Socket.IO reference: 3 occurrence(s)
+     Line 73: socketio_path='socket.io',
+     Line 98: socketio_path='socket.io',
+     Line 130: socketio_path='socket.io',
+  ⚠️  Socket.IO client: 3 occurrence(s)
+     Line 66: @pytest.mark.asyncio(loop_scope="function")
+     Line 91: @pytest.mark.asyncio(loop_scope="function")
+     Line 122: @pytest.mark.asyncio(loop_scope="function")
+  ⚠️  socketio module: 8 occurrence(s)
+     Line 20: import socketio
+     Line 32: sio = socketio.AsyncClient()
+     Line 73: socketio_path='socket.io',
+     ... and 5 more
+
+📄 tests/integration/test_socketio_status.py
+  ⚠️  Socket.IO reference: 1 occurrence(s)
+     Line 24: assert data.get("path") == "/socket.io"
+  ⚠️  Socket.IO client: 1 occurrence(s)
+     Line 14: @pytest.mark.asyncio(loop_scope="function")
+  ⚠️  socketio module: 2 occurrence(s)
+     Line 16: async def test_socketio_status_endpoint_acks_and_path():
+     Line 17: url = f"{FASTAPI_BASE}/socketio/status"
+
+📄 tests/integration/test_workflows.py
+  ⚠️  Socket.IO client: 17 occurrence(s)
+     Line 60: @pytest.mark.asyncio(loop_scope="function")
+     Line 81: @pytest.mark.asyncio(loop_scope="function")
+     Line 99: @pytest.mark.asyncio(loop_scope="function")
+     ... and 14 more
+
+📄 tests/performance/test_agent_performance.py
+  ⚠️  Socket.IO client: 6 occurrence(s)
+     Line 33: @pytest.mark.asyncio(loop_scope="function")
+     Line 89: @pytest.mark.asyncio(loop_scope="function")
+     Line 158: @pytest.mark.asyncio(loop_scope="function")
+     ... and 3 more
+
+📄 tests/performance/test_api_performance.py
+  ⚠️  Socket.IO client: 4 occurrence(s)
+     Line 23: @pytest.mark.asyncio(loop_scope="function")
+     Line 71: @pytest.mark.asyncio(loop_scope="function")
+     Line 122: @pytest.mark.asyncio(loop_scope="function")
+     ... and 1 more
+
+📄 tests/performance/test_database_performance.py
+  ⚠️  Socket.IO client: 6 occurrence(s)
+     Line 46: @pytest.mark.asyncio(loop_scope="function")
+     Line 87: @pytest.mark.asyncio(loop_scope="function")
+     Line 147: @pytest.mark.asyncio(loop_scope="function")
+     ... and 3 more
+
+📄 tests/performance/test_load.py
+  ⚠️  Socket.IO client: 10 occurrence(s)
+     Line 116: @pytest.mark.asyncio(loop_scope="function")
+     Line 172: @pytest.mark.asyncio(loop_scope="function")
+     Line 216: @pytest.mark.asyncio(loop_scope="function")
+     ... and 7 more
+
+📄 tests/performance/test_websocket_performance.py
+  ⚠️  Socket.IO client: 5 occurrence(s)
+     Line 50: @pytest.mark.asyncio(loop_scope="function")
+     Line 85: @pytest.mark.asyncio(loop_scope="function")
+     Line 135: @pytest.mark.asyncio(loop_scope="function")
+     ... and 2 more
+
+📄 tests/test_ai_chat.py
+  ⚠️  Direct websockets import: 1 occurrence(s)
+     Line 19: import websocket
+
+📄 tests/test_database_pool_2025.py
+  ⚠️  Socket.IO client: 2 occurrence(s)
+     Line 181: @pytest.mark.asyncio(loop_scope="function")
+     Line 230: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/test_error_handling.py
+  ⚠️  Socket.IO client: 13 occurrence(s)
+     Line 76: @pytest.mark.asyncio(loop_scope="function")
+     Line 88: @pytest.mark.asyncio(loop_scope="function")
+     Line 89: @pytest.mark.asyncio(loop_scope="function")
+     ... and 10 more
+
+📄 tests/test_logging_system.py
+  ⚠️  Socket.IO client: 8 occurrence(s)
+     Line 212: @pytest.mark.asyncio(loop_scope="function")
+     Line 220: @pytest.mark.asyncio(loop_scope="function")
+     Line 237: @pytest.mark.asyncio(loop_scope="function")
+     ... and 5 more
+
+📄 tests/test_password_security.py
+  ⚠️  Socket.IO client: 1 occurrence(s)
+     Line 187: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/test_query_optimization.py
+  ⚠️  Socket.IO client: 9 occurrence(s)
+     Line 199: @pytest.mark.asyncio(loop_scope="function")
+     Line 200: @pytest.mark.asyncio(loop_scope="function")
+     Line 228: @pytest.mark.asyncio(loop_scope="function")
+     ... and 6 more
+
+📄 tests/unit/core/test_agents.py
+  ⚠️  Socket.IO client: 33 occurrence(s)
+     Line 103: @pytest.mark.asyncio(loop_scope="function")
+     Line 154: @pytest.mark.asyncio(loop_scope="function")
+     Line 174: @pytest.mark.asyncio(loop_scope="function")
+     ... and 30 more
+
+📄 tests/unit/core/test_fixes.py
+  ⚠️  websocket_handler module: 1 occurrence(s)
+     Line 41: with patch('apps.backend.services.websocket_handler.decode_access_token', return_value=mock_user):
+  ⚠️  socketio module: 3 occurrence(s)
+     Line 81: def fix_socketio_tests():
+     Line 88: with patch('apps.backend.services.socketio.sio', mock_sio):
+     Line 110: with fix_socketio_tests():
+
+📄 tests/unit/core/test_mcp.py
+  ⚠️  WebSocket constructor: 5 occurrence(s)
+     Line 110: websocket = MockWebSocket()
+     Line 170: websocket = MockWebSocket()
+     Line 199: websocket1 = MockWebSocket()
+     ... and 2 more
+  ⚠️  MockWebSocket class: 6 occurrence(s)
+     Line 73: class MockWebSocket:
+     Line 110: websocket = MockWebSocket()
+     Line 170: websocket = MockWebSocket()
+     ... and 3 more
+  ⚠️  Socket.IO client: 5 occurrence(s)
+     Line 97: @pytest.mark.asyncio(loop_scope="function")
+     Line 106: @pytest.mark.asyncio(loop_scope="function")
+     Line 166: @pytest.mark.asyncio(loop_scope="function")
+     ... and 2 more
+
+📄 tests/unit/core/test_mcp_fixed.py
+  ⚠️  WebSocket constructor: 1 occurrence(s)
+     Line 96: websocket = MockWebSocket()
+  ⚠️  MockWebSocket class: 2 occurrence(s)
+     Line 59: class MockWebSocket:
+     Line 96: websocket = MockWebSocket()
+  ⚠️  Socket.IO client: 2 occurrence(s)
+     Line 83: @pytest.mark.asyncio(loop_scope="function")
+     Line 92: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/unit/core/test_models_unit_core.py
+  ⚠️  Socket.IO client: 1 occurrence(s)
+     Line 413: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/unit/core/test_plugin_pipeline.py
+  ⚠️  Socket.IO client: 19 occurrence(s)
+     Line 67: @pytest.mark.asyncio(loop_scope="function")
+     Line 79: @pytest.mark.asyncio(loop_scope="function")
+     Line 111: @pytest.mark.asyncio(loop_scope="function")
+     ... and 16 more
+
+📄 tests/unit/core/test_security.py
+  ⚠️  websocket_handler module: 1 occurrence(s)
+     Line 231: with patch('apps.backend.services.websocket_handler.settings') as mock_settings:
+  ⚠️  WebSocketHandler class: 1 occurrence(s)
+     Line 32: from tests.fixtures.pusher_test_utils import WebSocketManager, WebSocketHandler
+  ⚠️  Socket.IO client: 2 occurrence(s)
+     Line 165: @pytest.mark.asyncio(loop_scope="function")
+     Line 202: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/unit/core/test_server_unit_core.py
+  ⚠️  websocket_handler module: 1 occurrence(s)
+     Line 733: with patch('apps.backend.services.websocket_handler.broadcast_update') as mock_broadcast:
+  ⚠️  Socket.IO client: 14 occurrence(s)
+     Line 101: @pytest.mark.asyncio(loop_scope="function")
+     Line 279: @pytest.mark.asyncio(loop_scope="function")
+     Line 335: @pytest.mark.asyncio(loop_scope="function")
+     ... and 11 more
+
+📄 tests/unit/core/test_socketio_rbac_and_rate_limit.py
+  ⚠️  Socket.IO client: 2 occurrence(s)
+     Line 42: @pytest.mark.asyncio(loop_scope="function")
+     Line 82: @pytest.mark.asyncio(loop_scope="function")
+  ⚠️  socketio module: 3 occurrence(s)
+     Line 33: from apps.backend.services.socketio import sio as sio_srv, connected_clients, content_request, ping
+     Line 44: async def test_socketio_rbac_blocks_teacher_event_for_student(monkeypatch):
+     Line 84: async def test_socketio_rate_limit_enforced_for_ping(monkeypatch):
+
+📄 tests/unit/core/test_socketio_status_endpoint.py
+  ⚠️  Socket.IO client: 1 occurrence(s)
+     Line 40: @pytest.mark.asyncio(loop_scope="function")
+  ⚠️  socketio module: 6 occurrence(s)
+     Line 27: # socketio_status function no longer exists in main.py
+     Line 28: # from apps.backend.main import socketio_status
+     Line 31: async def socketio_status():
+     ... and 3 more
+
+📄 tests/unit/core/test_state_manager_unit_core.py
+  ⚠️  Socket.IO client: 3 occurrence(s)
+     Line 18: @pytest.mark.asyncio(loop_scope="function")
+     Line 39: @pytest.mark.asyncio(loop_scope="function")
+     Line 56: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/unit/core/test_websocket_channel_rbac_and_capacity.py
+  ⚠️  Socket.IO client: 2 occurrence(s)
+     Line 46: @pytest.mark.asyncio(loop_scope="function")
+     Line 72: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/unit/core/test_websocket_config_overrides.py
+  ⚠️  Socket.IO client: 2 occurrence(s)
+     Line 48: @pytest.mark.asyncio(loop_scope="function")
+     Line 74: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/unit/core/test_websocket_fixes.py
+  ⚠️  websocket_handler module: 4 occurrence(s)
+     Line 60: with patch('apps.backend.services.websocket_handler.decode_access_token', side_effect=mock_decode_to
+     Line 123: with patch('apps.backend.services.websocket_handler.increment_metric', side_effect=increment_metric)
+     Line 124: with patch('apps.backend.services.websocket_handler.get_metric', side_effect=get_metric):
+     ... and 1 more
+  ⚠️  MockWebSocket class: 2 occurrence(s)
+     Line 145: class MockWebSocketManager:
+     Line 164: mock_manager = MockWebSocketManager()
+  ⚠️  socketio module: 2 occurrence(s)
+     Line 129: def fix_socketio_status():
+     Line 137: with patch('apps.backend.socketio_server.connected_clients', mock_connected_clients):
+
+📄 tests/unit/core/test_websocket_message_auth.py
+  ⚠️  MockWebSocket class: 2 occurrence(s)
+     Line 33: class MockWebSocketAuthSession:
+     Line 75: session = MockWebSocketAuthSession(
+  ⚠️  Socket.IO client: 1 occurrence(s)
+     Line 67: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/unit/core/test_websocket_metrics_token_expired.py
+  ⚠️  MockWebSocket class: 5 occurrence(s)
+     Line 54: class MockWebSocketAuthSession:
+     Line 77: class MockWebSocketManager:
+     Line 87: mock_pusher_as_websocket_manager = MockWebSocketManager()
+     ... and 2 more
+  ⚠️  Socket.IO client: 2 occurrence(s)
+     Line 102: @pytest.mark.asyncio(loop_scope="function")
+     Line 130: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/unit/core/test_websocket_rbac_and_rate_limit.py
+  ⚠️  MockWebSocket class: 3 occurrence(s)
+     Line 56: class MockWebSocketManager:
+     Line 125: manager = MockWebSocketManager()
+     Line 151: manager = MockWebSocketManager()
+  ⚠️  Socket.IO client: 2 occurrence(s)
+     Line 116: @pytest.mark.asyncio(loop_scope="function")
+     Line 142: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/unit/core/test_ws_rbac_reset_endpoint.py
+  ⚠️  Socket.IO client: 1 occurrence(s)
+     Line 16: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/unit/core/test_ws_rbac_runtime_update.py
+  ⚠️  Socket.IO client: 1 occurrence(s)
+     Line 16: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/unit/core/test_ws_status_endpoint.py
+  ⚠️  Socket.IO client: 1 occurrence(s)
+     Line 15: @pytest.mark.asyncio(loop_scope="function")
+
+📄 tests/unit/security/test_cors_unit_security.py
+  ⚠️  Socket.IO client: 1 occurrence(s)
+     Line 163: @pytest.mark.asyncio(loop_scope="function")
+
+Recommendations:
+----------------------------------------
+1. Run the migration script on remaining files:
+   python scripts/migrate_websocket_tests_to_pusher.py
+
+2. For files that can't be auto-migrated, manually update using:
+   docs/PUSHER_TESTING_GUIDE.md
+
+3. After migration, run this script with --clean to remove legacy code:
+   python scripts/cleanup_legacy_websocket_tests.py --clean
+
+⚠️  This was a DRY RUN - no files were modified
+Run with --clean to remove legacy code
+Run with --comment to add migration TODOs

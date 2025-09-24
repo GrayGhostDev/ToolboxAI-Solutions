@@ -1,27 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
-  Button,
-  Paper,
-  Typography,
-  TextField,
-  CircularProgress,
-  Alert,
-  Chip,
-  LinearProgress,
-  Card,
-  CardContent,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import StepContent from '@mui/material/StepContent';
+import Button from '@mui/material/Button';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Grid from '@mui/material/Grid';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Divider from '@mui/material/Divider';
+import Divider from '@mui/material/Divider';
 import {
   CheckCircle,
   RadioButtonUnchecked,
@@ -119,7 +118,7 @@ const CONVERSATION_STAGES: ConversationStage[] = [
   }
 ];
 
-const RobloxConversationFlow: React.FC = () => {
+const RobloxConversationFlow: React.FunctionComponent<Record<string, any>> = () => {
   const [stages, setStages] = useState<ConversationStage[]>(CONVERSATION_STAGES);
   const [activeStep, setActiveStep] = useState(0);
   const [context, setContext] = useState<ConversationContext | null>(null);
@@ -395,7 +394,7 @@ const RobloxConversationFlow: React.FC = () => {
                         <Box sx={{ mt: 2 }}>
                           <Button
                             variant="contained"
-                            onClick={processUserInput}
+                            onClick={(e: React.MouseEvent) => processUserInput}
                             disabled={loading || !userInput.trim()}
                             sx={{ mr: 1 }}
                           >
@@ -403,7 +402,7 @@ const RobloxConversationFlow: React.FC = () => {
                           </Button>
                           <Button
                             variant="outlined"
-                            onClick={advanceStage}
+                            onClick={(e: React.MouseEvent) => advanceStage}
                             disabled={loading}
                           >
                             Skip to Next
@@ -418,7 +417,7 @@ const RobloxConversationFlow: React.FC = () => {
                         <Button
                           variant="contained"
                           color="primary"
-                          onClick={generateEnvironment}
+                          onClick={(e: React.MouseEvent) => generateEnvironment}
                           disabled={loading}
                           startIcon={<CloudUpload />}
                           sx={{ mb: 2 }}

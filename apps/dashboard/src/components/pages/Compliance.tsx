@@ -1,42 +1,41 @@
 import * as React from "react";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import IconButton from '@mui/material/IconButton';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Box from '@mui/material/Box';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Paper from '@mui/material/Paper';
+import Skeleton from '@mui/material/Skeleton';
+import CircularProgress from '@mui/material/CircularProgress';
+
 import { useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Stack,
-  Chip,
-  LinearProgress,
-  Alert,
-  AlertTitle,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Tab,
-  Tabs,
-  Paper,
-  Skeleton,
-  CircularProgress,
-} from "@mui/material";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningIcon from "@mui/icons-material/Warning";
@@ -231,7 +230,7 @@ export default function Compliance() {
                 <Button
                   variant="outlined"
                   startIcon={<RefreshIcon />}
-                  onClick={handleRefresh}
+                  onClick={(e: React.MouseEvent) => handleRefresh}
                   disabled={loading}
                 >
                   Refresh
@@ -241,14 +240,14 @@ export default function Compliance() {
                     <Button
                       variant="outlined"
                       startIcon={<AssignmentTurnedInIcon />}
-                      onClick={() => setAuditDialogOpen(true)}
+                      onClick={(e: React.MouseEvent) => () => setAuditDialogOpen(true)}
                     >
                       Run Audit
                     </Button>
                     <Button
                       variant="contained"
                       startIcon={<FileDownloadIcon />}
-                      onClick={() => handleExportReport("pdf")}
+                      onClick={(e: React.MouseEvent) => () => handleExportReport("pdf")}
                     >
                       Export Report
                     </Button>
@@ -318,7 +317,7 @@ export default function Compliance() {
                     secondary={`${pendingConsents} pending`}
                   />
                   {pendingConsents > 0 && (
-                    <Button size="small" onClick={() => setConsentDialogOpen(true)}>
+                    <Button size="small" onClick={(e: React.MouseEvent) => () => setConsentDialogOpen(true)}>
                       Review
                     </Button>
                   )}
@@ -360,7 +359,7 @@ export default function Compliance() {
                   fullWidth
                   variant="outlined"
                   startIcon={<PersonIcon />}
-                  onClick={() => setConsentDialogOpen(true)}
+                  onClick={(e: React.MouseEvent) => () => setConsentDialogOpen(true)}
                 >
                   Record Consent
                 </Button>
@@ -368,7 +367,7 @@ export default function Compliance() {
                   fullWidth
                   variant="outlined"
                   startIcon={<FileDownloadIcon />}
-                  onClick={() => handleExportReport("csv")}
+                  onClick={(e: React.MouseEvent) => () => handleExportReport("csv")}
                 >
                   Download Data
                 </Button>
@@ -376,7 +375,7 @@ export default function Compliance() {
                   fullWidth
                   variant="outlined"
                   startIcon={<SettingsIcon />}
-                  onClick={() => setActiveTab(3)}
+                  onClick={(e: React.MouseEvent) => () => setActiveTab(3)}
                 >
                   Settings
                 </Button>
@@ -552,7 +551,7 @@ export default function Compliance() {
                           {consent.status === "active" && (
                             <IconButton
                               size="small"
-                              onClick={() => handleRevokeConsent(consent.id)}
+                              onClick={(e: React.MouseEvent) => () => handleRevokeConsent(consent.id)}
                             >
                               <ErrorIcon fontSize="small" />
                             </IconButton>
@@ -694,8 +693,8 @@ export default function Compliance() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConsentDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleRecordConsent}>
+          <Button onClick={(e: React.MouseEvent) => () => setConsentDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={(e: React.MouseEvent) => handleRecordConsent}>
             Record Consent
           </Button>
         </DialogActions>
@@ -725,8 +724,8 @@ export default function Compliance() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAuditDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleRunAudit} startIcon={<AssignmentTurnedInIcon />}>
+          <Button onClick={(e: React.MouseEvent) => () => setAuditDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={(e: React.MouseEvent) => handleRunAudit} startIcon={<AssignmentTurnedInIcon />}>
             Run Audit
           </Button>
         </DialogActions>

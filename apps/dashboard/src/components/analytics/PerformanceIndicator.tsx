@@ -1,21 +1,20 @@
 import * as React from "react";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Skeleton from '@mui/material/Skeleton';
+import Alert from '@mui/material/Alert';
+import Tooltip from '@mui/material/Tooltip';
+import Paper from '@mui/material/Paper';
+import LinearProgress from '@mui/material/LinearProgress';
+import Avatar from '@mui/material/Avatar';
+import Badge from '@mui/material/Badge';
+
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Stack,
-  Chip,
-  IconButton,
-  Skeleton,
-  Alert,
-  Tooltip,
-  Paper,
-  LinearProgress,
-  Avatar,
-  Badge,
-} from "@mui/material";
 import {
   TrendingUp,
   TrendingDown,
@@ -422,7 +421,7 @@ export function PerformanceIndicator({
                   color={systemHealth.overall === "healthy" ? "success" : "warning"}
                   size="small"
                 />
-                <IconButton size="small" onClick={fetchData}>
+                <IconButton size="small" onClick={(e: React.MouseEvent) => fetchData}>
                   <Refresh />
                 </IconButton>
               </Stack>

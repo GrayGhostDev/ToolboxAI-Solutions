@@ -1,3 +1,4 @@
+import pytest_asyncio
 import pytest
 import os
 import aiohttp
@@ -11,6 +12,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_socketio_status_endpoint_acks_and_path():
     url = f"{FASTAPI_BASE}/socketio/status"
     async with aiohttp.ClientSession() as session:

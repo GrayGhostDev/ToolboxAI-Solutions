@@ -1,3 +1,8 @@
+import { vi } from 'vitest';
+
+// Configure test timeout for Vitest
+vi.setConfig({ testTimeout: 10000 });
+
 /**
  * Auth Sync Service Tests
  */

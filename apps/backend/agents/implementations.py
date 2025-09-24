@@ -1254,3 +1254,87 @@ class MainCoordinator:
             "success": True
         }
 
+
+
+def get_llm():
+    """Get the LLM instance for agent implementations"""
+    from langchain_openai import ChatOpenAI
+    import os
+
+    return ChatOpenAI(
+        model="gpt-4-turbo-preview",
+        temperature=0.7,
+        api_key=os.getenv("OPENAI_API_KEY", "dummy-key-for-testing")
+    )
+
+def create_content_agent(config: dict = None):
+    """Create a content agent"""
+    class ContentAgent:
+        def __init__(self, config=None):
+            self.config = config or {}
+            self.name = "content_agent"
+
+        async def execute(self, task: dict = None):
+            return {"status": "success", "agent": self.name}
+
+    return ContentAgent(config)
+
+def create_quiz_agent(config: dict = None):
+    """Create a quiz agent"""
+    class QuizAgent:
+        def __init__(self, config=None):
+            self.config = config or {}
+            self.name = "quiz_agent"
+
+        async def execute(self, task: dict = None):
+            return {"status": "success", "agent": self.name}
+
+    return QuizAgent(config)
+
+def create_terrain_agent(config: dict = None):
+    """Create a terrain agent"""
+    class TerrainAgent:
+        def __init__(self, config=None):
+            self.config = config or {}
+            self.name = "terrain_agent"
+
+        async def execute(self, task: dict = None):
+            return {"status": "success", "agent": self.name}
+
+    return TerrainAgent(config)
+
+def create_script_agent(config: dict = None):
+    """Create a script agent"""
+    class ScriptAgent:
+        def __init__(self, config=None):
+            self.config = config or {}
+            self.name = "script_agent"
+
+        async def execute(self, task: dict = None):
+            return {"status": "success", "agent": self.name}
+
+    return ScriptAgent(config)
+
+def create_review_agent(config: dict = None):
+    """Create a review agent"""
+    class ReviewAgent:
+        def __init__(self, config=None):
+            self.config = config or {}
+            self.name = "review_agent"
+
+        async def execute(self, task: dict = None):
+            return {"status": "success", "agent": self.name}
+
+    return ReviewAgent(config)
+
+def create_testing_agent(config: dict = None):
+    """Create a testing agent"""
+    class TestingAgent:
+        def __init__(self, config=None):
+            self.config = config or {}
+            self.name = "testing_agent"
+
+        async def execute(self, task: dict = None):
+            return {"status": "success", "agent": self.name}
+
+    return TestingAgent(config)

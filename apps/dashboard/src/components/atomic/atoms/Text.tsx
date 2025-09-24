@@ -6,7 +6,9 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Typography, TypographyProps, styled } from '@mui/material';
+import Typography from '@mui/material/Typography';
+import TypographyProps from '@mui/material/TypographyProps';
+import { styled } from '@mui/material/styles';
 import { designTokens } from '../../../theme/designTokens';
 
 // Polymorphic component types

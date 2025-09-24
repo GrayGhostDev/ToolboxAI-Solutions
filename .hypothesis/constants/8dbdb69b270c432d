@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/v1/endpoints/privacy.py
+# hypothesis_version: 6.139.2
+
+[400, 404, 500, '***REDACTED***', '/api/v1/privacy', '/consents', '/export/{ticket}', '/request-deletion', '/request-export', 'Export not ready', 'Privacy & DSAR', 'accepted', 'active', 'code', 'consents', 'coppa', 'download_url', 'erasure', 'export', 'gdpr_processing', 'granted_at', 'id', 'message', 'requested_at', 'status', 'ticket', 'timestamp', 'type', 'unknown', 'user_id', 'verified']

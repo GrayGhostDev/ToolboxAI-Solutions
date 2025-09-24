@@ -1,3 +1,4 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """
 Test script to verify MCP setup
@@ -47,6 +48,7 @@ def test_imports():
     return True
 
 
+@pytest.mark.asyncio
 async def test_mcp_server():
     """Test MCP server functionality"""
     print("🔍 Testing MCP server...")

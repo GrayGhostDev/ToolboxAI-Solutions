@@ -1,36 +1,35 @@
 import * as React from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Stack,
-  Switch,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  FormControlLabel,
-  FormGroup,
-  Checkbox,
-  Radio,
-  RadioGroup,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
-  Alert,
-  AlertTitle,
-  Box,
-  Tabs,
-  Tab,
-  Avatar,
-  Badge,
-  Chip,
-} from "@mui/material";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Switch from '@mui/material/Switch';
+import TextField from '@mui/material/TextField';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormGroup from '@mui/material/FormGroup';
+import Checkbox from '@mui/material/Checkbox';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import Divider from '@mui/material/Divider';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import IconButton from '@mui/material/IconButton';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Box from '@mui/material/Box';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Avatar from '@mui/material/Avatar';
+import Badge from '@mui/material/Badge';
+import Chip from '@mui/material/Chip';
+
 import Grid2 from "@mui/material/Unstable_Grid2";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import NotificationsIcon from "@mui/icons-material/Notifications";
@@ -186,7 +185,7 @@ export default function Settings() {
                         <Button
                           variant="outlined"
                           startIcon={<EditIcon />}
-                          onClick={() => setEditMode(true)}
+                          onClick={(e: React.MouseEvent) => () => setEditMode(true)}
                         >
                           Edit Profile
                         </Button>
@@ -195,14 +194,14 @@ export default function Settings() {
                           <Button
                             variant="contained"
                             startIcon={<SaveIcon />}
-                            onClick={handleSaveProfile}
+                            onClick={(e: React.MouseEvent) => handleSaveProfile}
                           >
                             Save
                           </Button>
                           <Button
                             variant="outlined"
                             startIcon={<CancelIcon />}
-                            onClick={() => setEditMode(false)}
+                            onClick={(e: React.MouseEvent) => () => setEditMode(false)}
                           >
                             Cancel
                           </Button>
@@ -868,14 +867,14 @@ export default function Settings() {
                   </Card>
 
                   <Stack direction="row" gap={2} justifyContent="flex-end">
-                    <Button variant="outlined" onClick={() => window.location.reload()}>
+                    <Button variant="outlined" onClick={(e: React.MouseEvent) => () => window.location.reload()}>
                       Reset to Defaults
                     </Button>
                     <Button
                       variant="contained"
                       color="primary"
                       startIcon={<SaveIcon />}
-                      onClick={() => {
+                      onClick={(e: React.MouseEvent) => () => {
                         // Save admin settings to backend
                         console.log("Saving admin settings:", adminSettings);
                         // TODO: Call API to save settings

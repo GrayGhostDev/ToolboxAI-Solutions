@@ -44,7 +44,7 @@ jobs:
         if: matrix.terminal == 'frontend'
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22'
       
       - name: Run Tests
         run: |
@@ -157,7 +157,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22'
       
       - name: Coordinate Deployment
         run: |

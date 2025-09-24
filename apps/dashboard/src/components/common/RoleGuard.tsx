@@ -24,7 +24,7 @@ export default function RoleGuard({ allow, children, fallback }: Props) {
         <Alert severity="warning" sx={{ mb: 2 }}>
           You must be logged in to access this page.
         </Alert>
-        <Button variant="contained" onClick={() => navigate("/login")}>
+        <Button variant="contained" onClick={(e: React.MouseEvent) => () => navigate("/login")}>
           Sign In
         </Button>
       </Box>
@@ -47,7 +47,7 @@ export default function RoleGuard({ allow, children, fallback }: Props) {
             {allow.join(", ")}.
           </Typography>
         </Alert>
-        <Button variant="contained" onClick={() => navigate("/")}>
+        <Button variant="contained" onClick={(e: React.MouseEvent) => () => navigate("/")}>
           Go to Dashboard
         </Button>
       </Box>

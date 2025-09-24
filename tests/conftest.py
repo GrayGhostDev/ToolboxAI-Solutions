@@ -12,6 +12,13 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
+# Apply LangChain compatibility patches early
+try:
+    from core.agents.langchain_compat import apply_compatibility_patches
+    apply_compatibility_patches()
+except Exception as e:
+    print(f"Warning: Could not apply LangChain compatibility patches: {e}")
+
 
 
 import asyncio
@@ -32,6 +39,12 @@ from unittest.mock import Mock, patch, AsyncMock
 from tests.test_logger import TestLogger, configure_test_logging, TEST_LOG_DIR
 from tests.test_cleanup import TestCleanupManager
 
+# Import async database components
+import asyncpg
+import redis.asyncio as redis_async
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.pool import NullPool
+
 # Import rate limiting components
 from apps.backend.core.security.rate_limit_manager import (
     RateLimitManager, 
@@ -51,8 +64,19 @@ from tests.fixtures.pusher_mocks import (
     mock_pusher_with_channels
 )
 
-# Configure test logging
-configure_test_logging()
+# Import database fixtures
+from tests.fixtures.database import (
+    mock_async_db_session,
+    mock_db_session
+)
+
+# Import common fixtures
+from tests.fixtures.common import (
+    mock_env_vars
+)
+
+# Configure test logging - disabled to prevent pytest conflicts
+# configure_test_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -145,6 +169,13 @@ def test_environment():
     os.environ["BYPASS_RATE_LIMIT_IN_TESTS"] = "true"
     os.environ["DEBUG"] = "true"
     os.environ["USE_MOCK_LLM"] = "true"  # Force mock LLM for all tests to avoid OpenAI API calls
+
+    # Phase 2: Database configuration for tests
+    os.environ["TEST_DATABASE_URL"] = os.getenv(
+        "TEST_DATABASE_URL",
+        "postgresql+asyncpg://test_user:test_password@localhost:5432/toolboxai_test"
+    )
+    os.environ["TEST_REDIS_URL"] = os.getenv("TEST_REDIS_URL", "redis://localhost:6380/0")
     
     # Setup debugpy for test debugging if not already connected
     try:
@@ -341,12 +372,12 @@ def pytest_runtest_teardown(item):
 
 def pytest_sessionstart(session):
     """Called after the Session object has been created"""
-    logger.info("Starting test session with rate limit isolation")
-    
+    # logger.info("Starting test session with rate limit isolation")  # Disabled to prevent conflicts
+
     # Ensure clean start
     RateLimitManager.reset_instance()
     clear_all_rate_limits()
-    
+
     # Initialize test cleanup manager
     cleanup_manager = TestCleanupManager(
         test_log_dir=TEST_LOG_DIR,
@@ -355,29 +386,30 @@ def pytest_sessionstart(session):
         auto_cleanup=True
     )
     session.cleanup_manager = cleanup_manager
-    
-    # Initialize test logger
-    test_logger = TestLogger("test_session", "session")
-    test_logger.start_test("Test Session", f"session_{session.nodeid}")
-    session.test_logger = test_logger
+
+    # Initialize test logger - disabled to prevent pytest stdout conflicts
+    # test_logger = TestLogger("test_session", "session")
+    # test_logger.start_test("Test Session", f"session_{session.nodeid}")
+    # session.test_logger = test_logger
 
 
 def pytest_sessionfinish(session, exitstatus):
     """Called after whole test run finished"""
-    logger.info("Test session finished, cleaning up rate limit state")
-    
+    # logger.info("Test session finished, cleaning up rate limit state")  # Disabled to prevent conflicts
+
     # Final cleanup
     try:
         clear_all_rate_limits()
         RateLimitManager.reset_instance()
     except Exception as e:
-        logger.warning(f"Final cleanup error: {e}")
-    
-    # Complete test logging
-    if hasattr(session, 'test_logger'):
-        status = "passed" if exitstatus == 0 else "failed"
-        session.test_logger.end_test("Test Session", status)
-        session.test_logger.generate_report()
+        pass  # Silently handle cleanup errors
+        # logger.warning(f"Final cleanup error: {e}")
+
+    # Complete test logging - disabled to prevent pytest stdout conflicts
+    # if hasattr(session, 'test_logger'):
+    #     status = "passed" if exitstatus == 0 else "failed"
+    #     session.test_logger.end_test("Test Session", status)
+    #     session.test_logger.generate_report()
     
     # Perform test file cleanup
     if hasattr(session, 'cleanup_manager'):
@@ -388,7 +420,7 @@ def pytest_sessionfinish(session, exitstatus):
 
 # Missing fixtures for Roblox integration tests
 @pytest.fixture
-def mock_websocket():
+def mock_pusher_as_websocket():
     """Mock WebSocket for testing real-time communication"""
     class MockWebSocket:
         def __init__(self):
@@ -425,7 +457,56 @@ def mock_websocket():
     return MockWebSocket()
 
 
-@pytest.fixture 
+# Pusher fixtures for WebSocket migration
+@pytest.fixture
+def mock_pusher_as_websocket():
+    """Mock Pusher with WebSocket-compatible interface for gradual migration"""
+    from tests.fixtures.pusher_test_utils import WebSocketToPusherAdapter
+    from tests.fixtures.pusher_mocks import MockPusherConnection
+
+    pusher_conn = MockPusherConnection()
+    adapter = WebSocketToPusherAdapter(pusher_conn)
+
+    # Add helper for test migration
+    adapter.pusher_helper = type('PusherHelper', (), {
+        'received_events': [],
+        'simulate_websocket_to_pusher_event': lambda self, msg: {
+            'event': msg.get('type', 'message'),
+            'data': msg.get('data', {}),
+            'channel': msg.get('channel', 'public-general')
+        }
+    })()
+
+    return adapter
+
+
+@pytest.fixture
+def pusher_service():
+    """Mock Pusher service for testing"""
+    from tests.fixtures.pusher_mocks import MockPusherService
+    return MockPusherService()
+
+
+@pytest.fixture
+def pusher_client():
+    """Mock Pusher client for testing"""
+    from tests.fixtures.pusher_mocks import MockPusherClient
+    return MockPusherClient()
+
+
+@pytest.fixture
+def pusher_test_app(pusher_service):
+    """FastAPI test client with Pusher mocking"""
+    from tests.fixtures.pusher_test_utils import create_pusher_test_client
+    from unittest.mock import patch
+
+    with patch('apps.backend.services.pusher_realtime.pusher_client', pusher_service.client):
+        client = create_pusher_test_client()
+        client.pusher_service = pusher_service
+        yield client
+
+
+@pytest.fixture
 def http_client():
     """Mock HTTP client for testing API requests"""
     from unittest.mock import AsyncMock, MagicMock
@@ -470,6 +551,74 @@ def http_client():
             pass
     
     return MockSession()
+
+
+# ===========================
+# Phase 2: Database Connection Pooling Fixtures
+# ===========================
+
+@pytest_asyncio.fixture(scope="session")
+async def test_db_engine():
+    """Create async database engine with NullPool to prevent connection exhaustion"""
+    TEST_DATABASE_URL = os.getenv(
+        "TEST_DATABASE_URL",
+        "postgresql+asyncpg://test_user:test_password@localhost:5432/toolboxai_test"
+    )
+
+    # Use NullPool to prevent connection exhaustion in tests
+    engine = create_async_engine(
+        TEST_DATABASE_URL,
+        poolclass=NullPool,  # Disable connection pooling for tests
+        echo=False,
+        future=True,
+        pool_pre_ping=True,  # Verify connections before using
+    )
+
+    yield engine
+    await engine.dispose()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def db_session(test_db_engine):
+    """Create database session for each test with proper isolation"""
+    async_session = async_sessionmaker(
+        test_db_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autoflush=False,
+        autocommit=False
+    )
+
+    async with async_session() as session:
+        yield session
+        await session.rollback()  # Rollback any changes after test
+
+
+@pytest_asyncio.fixture(scope="function")
+async def isolated_redis():
+    """Create isolated Redis client for tests"""
+    TEST_REDIS_URL = os.getenv("TEST_REDIS_URL", "redis://localhost:6380/0")
+
+    client = await redis_async.from_url(
+        TEST_REDIS_URL,
+        decode_responses=True,
+        max_connections=10
+    )
+
+    try:
+        await client.ping()
+        # Clear test namespace
+        test_keys = await client.keys("test:*")
+        if test_keys:
+            await client.delete(*test_keys)
+
+        yield client
+    finally:
+        # Cleanup after test
+        test_keys = await client.keys("test:*")
+        if test_keys:
+            await client.delete(*test_keys)
+        await client.close()
 
 
 @pytest.fixture
@@ -585,7 +734,7 @@ def mock_external_connections(monkeypatch):
         return mock
     
     # Mock WebSocket connections
-    async def mock_websocket_connect(*args, **kwargs):
+    async def mock_pusher_as_websocket_connect(*args, **kwargs):
         mock = AsyncMock()
         mock.send = AsyncMock()
         mock.recv = AsyncMock(return_value='{"type": "pong"}')
@@ -633,8 +782,8 @@ def mock_external_connections(monkeypatch):
         
         if "websocket" not in markers:
             try:
-                import websockets
-                monkeypatch.setattr(websockets, "connect", mock_websocket_connect)
+                from tests.fixtures.pusher_mocks import MockPusherService
+                monkeypatch.setattr(websockets, "connect", mock_pusher_as_websocket_connect)
             except ImportError:
                 pass
         

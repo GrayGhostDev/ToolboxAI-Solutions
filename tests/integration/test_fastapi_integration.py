@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 #!/usr/bin/env python3
 """
 FastAPI Integration Test Suite
@@ -23,7 +38,7 @@ import time
 from typing import Dict, Any
 
 import httpx
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 from datetime import datetime, timezone, timedelta
 import jwt
 import pytest
@@ -40,7 +55,7 @@ class FastAPIIntegrationTest:
     
     def __init__(self):
         self.base_url = "http://127.0.0.1:8008"
-        self.ws_url = "ws://127.0.0.1:8008/ws"
+        self.ws_url = "pusher://app_key@cluster"
         self.jwt_secret = "your-secret-key-change-in-production"  # From auth.py default
         self.test_results = []
         
@@ -56,7 +71,8 @@ class FastAPIIntegrationTest:
         return jwt.encode(payload, self.jwt_secret, algorithm="HS256")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_health_endpoint(self):
+    @pytest.mark.asyncio
+async def test_health_endpoint(self):
         """Test health check endpoint"""
         print("\n🔍 Testing Health Endpoint...")
         async with httpx.AsyncClient() as client:
@@ -79,7 +95,8 @@ class FastAPIIntegrationTest:
             return result["success"]
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_authentication(self):
+    @pytest.mark.asyncio
+async def test_authentication(self):
         """Test authentication endpoints"""
         print("\n🔍 Testing Authentication...")
         async with httpx.AsyncClient() as client:
@@ -117,7 +134,8 @@ class FastAPIIntegrationTest:
                 return test_token
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_content_generation(self, token: str):
+    @pytest.mark.asyncio
+async def test_content_generation(self, token: str):
         """Test content generation endpoint"""
         print("\n🔍 Testing Content Generation...")
         async with httpx.AsyncClient() as client:
@@ -159,17 +177,19 @@ class FastAPIIntegrationTest:
             return result["success"]
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_connection(self):
+    @pytest.mark.asyncio
+async def test_websocket_connection(self):
         """Test WebSocket connection"""
         print("\n🔍 Testing WebSocket Connection...")
         try:
-            async with websockets.connect(self.ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.ws_url) as websocket:
                 # Send test message
                 test_message = json.dumps({
                     "type": "subscribe",
                     "channel": "content_updates"
                 }, default=make_json_serializable)
-                await websocket.send(test_message)
+                await pusher.trigger(test_message)
                 
                 # Wait for response
                 response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
@@ -201,7 +221,8 @@ class FastAPIIntegrationTest:
             return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_api_documentation(self):
+    @pytest.mark.asyncio
+async def test_api_documentation(self):
         """Test API documentation endpoints"""
         print("\n🔍 Testing API Documentation...")
         async with httpx.AsyncClient() as client:
@@ -233,7 +254,8 @@ class FastAPIIntegrationTest:
             return result["success"]
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_rate_limiting(self, token: str):
+    @pytest.mark.asyncio
+async def test_rate_limiting(self, token: str):
         """Test rate limiting functionality"""
         print("\n🔍 Testing Rate Limiting...")
         async with httpx.AsyncClient() as client:

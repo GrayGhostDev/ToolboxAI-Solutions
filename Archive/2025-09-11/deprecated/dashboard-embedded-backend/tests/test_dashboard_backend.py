@@ -1,3 +1,4 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """
 Dashboard Backend Test Suite
@@ -73,7 +74,8 @@ class TestDashboardBackend:
 
     # === Authentication Tests ===
     
-    async def test_login_success(self, async_client: AsyncClient):
+    @pytest.mark.asyncio
+async def test_login_success(self, async_client: AsyncClient):
         """Test successful login"""
         response = await async_client.post(
             "/api/v1/auth/login",
@@ -86,7 +88,8 @@ class TestDashboardBackend:
         assert "refresh_token" in data
         assert data["user"]["email"] == "teacher@example.com"
     
-    async def test_login_invalid_credentials(self, async_client: AsyncClient):
+    @pytest.mark.asyncio
+async def test_login_invalid_credentials(self, async_client: AsyncClient):
         """Test login with invalid credentials"""
         response = await async_client.post(
             "/api/v1/auth/login",
@@ -96,7 +99,8 @@ class TestDashboardBackend:
         assert response.status_code == 401
         assert "Invalid credentials" in response.json()["detail"]
     
-    async def test_token_refresh(self, async_client: AsyncClient):
+    @pytest.mark.asyncio
+async def test_token_refresh(self, async_client: AsyncClient):
         """Test JWT token refresh"""
         # First login
         login_response = await async_client.post(
@@ -115,7 +119,8 @@ class TestDashboardBackend:
         assert "token" in response.json()
         assert "refresh_token" in response.json()
     
-    async def test_logout(self, async_client: AsyncClient, auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_logout(self, async_client: AsyncClient, auth_headers: Dict):
         """Test logout functionality"""
         response = await async_client.post(
             "/api/v1/auth/logout",
@@ -127,7 +132,8 @@ class TestDashboardBackend:
     
     # === Class Management Tests ===
     
-    async def test_create_class(self, async_client: AsyncClient, auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_create_class(self, async_client: AsyncClient, auth_headers: Dict):
         """Test class creation"""
         class_data = {
             "name": "Mathematics 101",
@@ -149,7 +155,8 @@ class TestDashboardBackend:
         assert "id" in data
         assert data["teacher_id"] == "test-user-123"
     
-    async def test_get_classes(self, async_client: AsyncClient, auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_get_classes(self, async_client: AsyncClient, auth_headers: Dict):
         """Test fetching class list"""
         response = await async_client.get(
             "/api/v1/classes",
@@ -160,7 +167,8 @@ class TestDashboardBackend:
         data = response.json()
         assert isinstance(data, list)
     
-    async def test_get_class_details(self, async_client: AsyncClient, auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_get_class_details(self, async_client: AsyncClient, auth_headers: Dict):
         """Test fetching specific class details"""
         # Create a class first
         create_response = await async_client.post(
@@ -179,7 +187,8 @@ class TestDashboardBackend:
         assert response.status_code == 200
         assert response.json()["id"] == class_id
     
-    async def test_update_class(self, async_client: AsyncClient, auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_update_class(self, async_client: AsyncClient, auth_headers: Dict):
         """Test updating class information"""
         # Create a class
         create_response = await async_client.post(
@@ -199,7 +208,8 @@ class TestDashboardBackend:
         assert response.status_code == 200
         assert response.json()["name"] == "Updated Name"
     
-    async def test_delete_class(self, async_client: AsyncClient, auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_delete_class(self, async_client: AsyncClient, auth_headers: Dict):
         """Test class deletion"""
         # Create a class
         create_response = await async_client.post(
@@ -226,7 +236,8 @@ class TestDashboardBackend:
     
     # === Assessment Tests ===
     
-    async def test_create_assessment(self, async_client: AsyncClient, auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_create_assessment(self, async_client: AsyncClient, auth_headers: Dict):
         """Test assessment creation"""
         assessment_data = {
             "title": "Math Quiz 1",
@@ -253,7 +264,8 @@ class TestDashboardBackend:
         assert data["title"] == "Math Quiz 1"
         assert len(data["questions"]) == 1
     
-    async def test_submit_assessment(self, async_client: AsyncClient, student_auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_submit_assessment(self, async_client: AsyncClient, student_auth_headers: Dict):
         """Test assessment submission by student"""
         submission_data = {
             "assessment_id": "assessment-123",
@@ -336,7 +348,8 @@ class TestDashboardBackend:
     
     # === Roblox Integration Tests ===
     
-    async def test_roblox_content_generation(self, async_client: AsyncClient, auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_roblox_content_generation(self, async_client: AsyncClient, auth_headers: Dict):
         """Test Roblox content generation request"""
         request_data = {
             "class_id": "class-123",
@@ -364,7 +377,8 @@ class TestDashboardBackend:
             data = response.json()
             assert data["world_id"] == "world-123"
     
-    async def test_roblox_progress_sync(self, async_client: AsyncClient, student_auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_roblox_progress_sync(self, async_client: AsyncClient, student_auth_headers: Dict):
         """Test Roblox progress synchronization"""
         progress_data = {
             "world_id": "world-123",
@@ -384,7 +398,8 @@ class TestDashboardBackend:
     
     # === Dashboard Overview Tests ===
     
-    async def test_dashboard_overview(self, async_client: AsyncClient, auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_dashboard_overview(self, async_client: AsyncClient, auth_headers: Dict):
         """Test dashboard overview endpoint"""
         response = await async_client.get(
             "/api/v1/dashboard/overview",
@@ -398,7 +413,8 @@ class TestDashboardBackend:
         assert "active_assessments" in data
         assert "recent_activity" in data
     
-    async def test_student_progress(self, async_client: AsyncClient, auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_student_progress(self, async_client: AsyncClient, auth_headers: Dict):
         """Test student progress tracking"""
         response = await async_client.get(
             "/api/v1/students/student-123/progress",
@@ -413,18 +429,21 @@ class TestDashboardBackend:
     
     # === Error Handling Tests ===
     
-    async def test_unauthorized_access(self, async_client: AsyncClient):
+    @pytest.mark.asyncio
+async def test_unauthorized_access(self, async_client: AsyncClient):
         """Test accessing protected endpoint without auth"""
         response = await async_client.get("/api/v1/classes")
         assert response.status_code == 401
     
-    async def test_invalid_token(self, async_client: AsyncClient):
+    @pytest.mark.asyncio
+async def test_invalid_token(self, async_client: AsyncClient):
         """Test with invalid JWT token"""
         headers = {"Authorization": "Bearer invalid-token"}
         response = await async_client.get("/api/v1/classes", headers=headers)
         assert response.status_code == 401
     
-    async def test_expired_token(self, async_client: AsyncClient):
+    @pytest.mark.asyncio
+async def test_expired_token(self, async_client: AsyncClient):
         """Test with expired JWT token"""
         expired_token = jwt.encode(
             {
@@ -438,7 +457,8 @@ class TestDashboardBackend:
         response = await async_client.get("/api/v1/classes", headers=headers)
         assert response.status_code == 401
     
-    async def test_role_based_access(self, async_client: AsyncClient, student_auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_role_based_access(self, async_client: AsyncClient, student_auth_headers: Dict):
         """Test role-based access control"""
         # Student trying to create a class (teacher-only)
         response = await async_client.post(
@@ -450,7 +470,8 @@ class TestDashboardBackend:
     
     # === Performance Tests ===
     
-    async def test_concurrent_requests(self, async_client: AsyncClient, auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_concurrent_requests(self, async_client: AsyncClient, auth_headers: Dict):
         """Test handling concurrent requests"""
         tasks = []
         for i in range(10):
@@ -465,7 +486,8 @@ class TestDashboardBackend:
         for response in responses:
             assert response.status_code == 200
     
-    async def test_rate_limiting(self, async_client: AsyncClient, auth_headers: Dict):
+    @pytest.mark.asyncio
+async def test_rate_limiting(self, async_client: AsyncClient, auth_headers: Dict):
         """Test rate limiting"""
         # Send many requests quickly
         for i in range(100):
@@ -487,7 +509,8 @@ class TestDashboardBackend:
 class TestIntegration:
     """Integration tests with main FastAPI backend"""
     
-    async def test_cross_service_auth(self):
+    @pytest.mark.asyncio
+async def test_cross_service_auth(self):
         """Test authentication across Dashboard and Main API"""
         # Login via Dashboard
         async with AsyncClient(base_url=TEST_CONFIG["API_URL"]) as client:
@@ -503,7 +526,8 @@ class TestIntegration:
             response = await client.get("/health", headers=headers)
             assert response.status_code == 200
     
-    async def test_content_generation_flow(self):
+    @pytest.mark.asyncio
+async def test_content_generation_flow(self):
         """Test complete content generation flow"""
         async with AsyncClient(base_url=TEST_CONFIG["API_URL"]) as dashboard_client:
             # Login

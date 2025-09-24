@@ -1,29 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Card, CardContent, Typography, IconButton, Tooltip } from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import { styled, keyframes } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { robloxColors } from '../../theme/robloxTheme';
+import { robloxColors } from '../..//robloxTheme';
 import { motion } from 'framer-motion';
-
 const float = keyframes`
   0%, 100% { transform: translateY(0px) rotateX(0deg); }
   50% { transform: translateY(-10px) rotateX(5deg); }
 `;
-
 const pulse = keyframes`
   0% { box-shadow: 0 0 0 0 ${alpha(robloxColors.primary, 0.7)}; }
   70% { box-shadow: 0 0 0 10px ${alpha(robloxColors.primary, 0)}; }
   100% { box-shadow: 0 0 0 0 ${alpha(robloxColors.primary, 0)}; }
 `;
-
 const shine = keyframes`
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
 `;
-
 const StyledCard = styled(Card)<{ glowcolor?: string; isHovered?: boolean }>(({ theme, glowcolor, isHovered }) => ({
   background: `linear-gradient(135deg, ${robloxColors.dark} 0%, ${robloxColors.darkGray} 100%)`,
   border: `2px solid ${glowcolor || robloxColors.primary}`,
@@ -65,7 +66,6 @@ const StyledCard = styled(Card)<{ glowcolor?: string; isHovered?: boolean }>(({ 
     ? `0 20px 40px ${alpha(glowcolor || robloxColors.primary, 0.4)}, inset 0 1px 0 ${alpha('#fff', 0.1)}`
     : `0 4px 12px ${alpha('#000', 0.2)}, inset 0 1px 0 ${alpha('#fff', 0.05)}`,
 }));
-
 const IconContainer = styled(Box)<{ bgcolor?: string }>(({ bgcolor }) => ({
   width: 64,
   height: 64,
@@ -94,7 +94,6 @@ const IconContainer = styled(Box)<{ bgcolor?: string }>(({ bgcolor }) => ({
     animation: `${pulse} 2s infinite`,
   },
 }));
-
 const ValueDisplay = styled(Typography)(({ theme }) => ({
   fontSize: '2.5rem',
   fontWeight: 800,
@@ -106,7 +105,6 @@ const ValueDisplay = styled(Typography)(({ theme }) => ({
   letterSpacing: '-0.02em',
   lineHeight: 1,
 }));
-
 const TrendIndicator = styled(Box)<{ trend: 'up' | 'down' | 'neutral' }>(({ trend }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -127,7 +125,6 @@ const TrendIndicator = styled(Box)<{ trend: 'up' | 'down' | 'neutral' }>(({ tren
       : robloxColors.gray,
   },
 }));
-
 interface Roblox3DMetricCardProps {
   title: string;
   value: number | string;
@@ -142,8 +139,7 @@ interface Roblox3DMetricCardProps {
   tooltip?: string;
   format?: 'number' | 'percentage' | 'currency' | 'time';
 }
-
-export const Roblox3DMetricCard: React.FC<Roblox3DMetricCardProps> = ({
+export const Roblox3DMetricCard: React.FunctionComponent<Roblox3DMetricCardProps> = ({
   title,
   value,
   icon,
@@ -157,7 +153,6 @@ export const Roblox3DMetricCard: React.FC<Roblox3DMetricCardProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [displayValue, setDisplayValue] = useState<string>('0');
   const [animatedValue, setAnimatedValue] = useState(0);
-
   useEffect(() => {
     // Animate number counting
     if (typeof value === 'number') {
@@ -166,7 +161,6 @@ export const Roblox3DMetricCard: React.FC<Roblox3DMetricCardProps> = ({
       const stepDuration = duration / steps;
       const increment = value / steps;
       let current = 0;
-
       const timer = setInterval(() => {
         current += increment;
         if (current >= value) {
@@ -175,13 +169,11 @@ export const Roblox3DMetricCard: React.FC<Roblox3DMetricCardProps> = ({
         }
         setAnimatedValue(current);
       }, stepDuration);
-
       return () => clearInterval(timer);
     } else {
       setDisplayValue(value);
     }
   }, [value]);
-
   useEffect(() => {
     // Format the animated value
     let formatted = '';
@@ -200,7 +192,6 @@ export const Roblox3DMetricCard: React.FC<Roblox3DMetricCardProps> = ({
     }
     setDisplayValue(formatted);
   }, [animatedValue, format]);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -212,7 +203,7 @@ export const Roblox3DMetricCard: React.FC<Roblox3DMetricCardProps> = ({
         isHovered={isHovered}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onClick={onClick}
+        onClick={(e: React.MouseEvent) => onClick}
       >
         <CardContent sx={{ p: 3 }}>
           <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
@@ -256,7 +247,6 @@ export const Roblox3DMetricCard: React.FC<Roblox3DMetricCardProps> = ({
               {icon}
             </IconContainer>
           </Box>
-
           {trend && (
             <TrendIndicator trend={trend.direction}>
               {trend.direction === 'up' ? (
@@ -293,5 +283,4 @@ export const Roblox3DMetricCard: React.FC<Roblox3DMetricCardProps> = ({
     </motion.div>
   );
 };
-
 export default Roblox3DMetricCard;

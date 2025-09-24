@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/services/design_folder_scanner.py
+# hypothesis_version: 6.139.2
+
+[1024, '*', '.', '.avi', '.blend', '.fig', '.gif', '.jpeg', '.jpg', '.md', '.mov', '.mp4', '.obj', '.png', '.sketch', '.svg', '.txt', '.webp', '.xd', '3d_files', 'by_category', 'by_folder', 'categories', 'category', 'content', 'contents', 'design_files', 'design_root', 'error', 'errors', 'extension', 'external', 'file', 'file_contents', 'file_count', 'file_info', 'filename', 'files', 'folder', 'folder_count', 'folder_path', 'folder_structure', 'folders', 'full_path', 'images', 'match_type', 'name', 'other', 'path', 'processed', 'processed_files', 'root', 'size', 'success', 'summary', 'text_files', 'total_files', 'type', 'videos']

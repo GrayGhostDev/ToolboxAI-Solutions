@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Fade, FadeProps } from '@mui/material';
+import Fade from '@mui/material/Fade';
+import FadeProps from '@mui/material/FadeProps';
 
 interface SafeFadeProps extends Omit<FadeProps, 'in'> {
   in?: boolean;
@@ -8,7 +9,7 @@ interface SafeFadeProps extends Omit<FadeProps, 'in'> {
   children: React.ReactElement;
 }
 
-export const SafeFade: React.FC<SafeFadeProps> = ({ 
+export const SafeFade: React.FunctionComponent<SafeFadeProps> = ({ 
   in: inProp = true, 
   timeout = 300, 
   appear = false,

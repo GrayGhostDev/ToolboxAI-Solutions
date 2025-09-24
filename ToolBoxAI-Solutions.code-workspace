@@ -2,11 +2,19 @@
     "folders": [
         {
             "path": ".",
-            "name": "ToolBoxAI-Solutions"
+            "name": "Root"
         },
         {
             "path": "apps/dashboard",
-            "name": "Dashboard"
+            "name": "Dashboard (React 19)"
+        },
+        {
+            "path": "apps/backend",
+            "name": "Backend (FastAPI)"
+        },
+        {
+            "path": "core",
+            "name": "Core (AI Agents)"
         },
         {
             "path": "docs",
@@ -15,23 +23,80 @@
         {
             "path": "roblox",
             "name": "Roblox Environment"
+        },
+        {
+            "path": "tests",
+            "name": "Tests"
         }
     ],
     "settings": {
+        // Python Configuration - 2025 Best Practices
         "python.defaultInterpreterPath": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/venv/bin/python",
         "python.terminal.activateEnvironment": true,
+        "python.analysis.typeCheckingMode": "standard",
+        "python.analysis.autoImportCompletions": true,
+        "python.analysis.diagnosticMode": "workspace",
+        "python.linting.enabled": true,
+        "python.formatting.provider": "black",
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": ["tests/", "-v"],
+
+        // TypeScript/JavaScript Configuration
+        "typescript.preferences.includePackageJsonAutoImports": "on",
+        "typescript.suggest.autoImports": true,
+        "typescript.updateImportsOnFileMove.enabled": "always",
+        "javascript.suggest.autoImports": true,
+        "javascript.updateImportsOnFileMove.enabled": "always",
+
+        // Editor Configuration
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll.eslint": "explicit",
+            "source.organizeImports": "explicit"
+        },
+        "editor.rulers": [100, 120],
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+
+        // File Configuration
+        "files.autoSave": "afterDelay",
+        "files.autoSaveDelay": 1000,
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        "files.associations": {
+            "*.tsx": "typescriptreact",
+            "*.ts": "typescript",
+            "*.py": "python",
+            "*.lua": "lua",
+            "*.toml": "toml",
+            "*.env.*": "dotenv"
+        },
+        "files.exclude": {
+            "**/node_modules": true,
+            "**/__pycache__": true,
+            "**/venv": true,
+            "**/dist": true,
+            "**/coverage": true,
+            "**/test-results": true
+        },
+
+        // Terminal Configuration
         "terminal.integrated.cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
-        "workbench.commandPalette.experimental.suggestCommands": true,
-        "workbench.commandPalette.history": 50,
-        "workbench.quickOpen.includeHistory": true,
-        "workbench.quickOpen.includeSymbols": true,
-        "workbench.quickOpen.includeWorkspaceSymbols": true,
+        "terminal.integrated.defaultProfile.osx": "zsh",
+        "terminal.integrated.fontSize": 14,
+
+        // Git Configuration
+        "git.enableSmartCommit": true,
+        "git.autofetch": true,
+        "git.autoStash": true,
+
+        // Workbench Configuration
         "workbench.colorTheme": "Cybermoon",
         "workbench.iconTheme": "vs-seti",
-        "workbench.productIconTheme": "Default",
-        "workbench.settings.editor": "ui",
-        "workbench.settings.openDefaultSettings": true,
-        "workbench.settings.useSplitJSON": true,
+        "workbench.startupEditor": "welcomePage",
+        "workbench.editor.enablePreview": true,
+
+        // Cursor AI Configuration
         "cursor.general.enableCommandPalette": true,
         "cursor.general.enableAllCommands": true,
         "cursor.general.enableWorkspaceFeatures": true,
@@ -39,72 +104,282 @@
         "cursor.general.enableAI": true,
         "cursor.general.enableCodeCompletion": true,
         "cursor.general.enableChat": true,
+
+        // Security Configuration
         "security.workspace.trust.enabled": true,
         "security.workspace.trust.untrustedFiles": "open",
-        "security.workspace.trust.startupPrompt": "once",
-        "editor.accessibilitySupport": "auto",
-        "editor.minimap.enabled": true,
-        "editor.wordWrap": "on",
-        "editor.lineNumbers": "on",
-        "files.autoSave": "afterDelay",
-        "files.autoSaveDelay": 1000,
-        "files.trimTrailingWhitespace": true,
-        "files.insertFinalNewline": true,
-        "files.trimFinalNewlines": true,
-        "explorer.confirmDelete": false,
-        "explorer.confirmDragAndDrop": false,
-        "git.enableSmartCommit": true,
-        "git.confirmSync": false,
-        "git.autofetch": true,
+
+        // Extensions Configuration
         "extensions.autoUpdate": true,
         "extensions.autoCheckUpdates": true,
-        "telemetry.telemetryLevel": "off",
-        "update.mode": "start",
-        "update.showReleaseNotes": "onUpdate",
-        "vim.enabled": false
+        "telemetry.telemetryLevel": "off"
     },
     "extensions": {
         "recommendations": [
+            // Python Development
             "ms-python.python",
             "ms-python.vscode-pylance",
             "ms-python.black-formatter",
+            "ms-python.isort",
+            "ms-python.flake8",
+            "ms-python.mypy-type-checker",
+
+            // TypeScript/JavaScript Development
             "dbaeumer.vscode-eslint",
             "esbenp.prettier-vscode",
-            "ms-vscode.vscode-typescript-tslint-plugin",
+            "bradlc.vscode-tailwindcss",
+            "ms-vscode.vscode-typescript-next",
+
+            // React Development
+            "dsznajder.es7-react-js-snippets",
+            "formulahendry.auto-rename-tag",
+            "christian-kohler.path-intellisense",
+            "ms-vscode.vscode-json",
+
+            // Testing
+            "ms-playwright.playwright",
+            "vitest.explorer",
+            "ms-python.pytest",
+
+            // Git and Version Control
+            "eamodio.gitlens",
+            "mhutchie.git-graph",
+            "donjayamanne.githistory",
+
+            // Code Quality and Productivity
             "usernamehw.errorlens",
-            "gruntfuggly.todo-tree"
+            "gruntfuggly.todo-tree",
+            "ms-vscode.vscode-json",
+            "redhat.vscode-yaml",
+            "ms-vscode.hexeditor",
+
+            // Lua (Roblox)
+            "sumneko.lua",
+            "actboy168.lua-debug",
+
+            // Markdown and Documentation
+            "yzhang.markdown-all-in-one",
+            "davidanson.vscode-markdownlint",
+
+            // Docker and DevOps
+            "ms-azuretools.vscode-docker",
+            "ms-kubernetes-tools.vscode-kubernetes-tools",
+
+            // Database
+            "ms-mssql.mssql",
+            "cweijan.vscode-postgresql-client2",
+
+            // AI and Productivity
+            "github.copilot",
+            "github.copilot-chat",
+            "tabnine.tabnine-vscode",
+
+            // Theme and UI
+            "pkief.material-icon-theme",
+            "github.github-vscode-theme",
+            "dracula-theme.theme-dracula"
+        ]
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Start Frontend (Dashboard)",
+                "type": "shell",
+                "command": "npm run dashboard:dev",
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "new"
+                },
+                "isBackground": true,
+                "problemMatcher": {
+                    "owner": "vite",
+                    "pattern": {
+                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3,
+                        "severity": 4,
+                        "message": 5
+                    },
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": ".*Local:.*",
+                        "endsPattern": ".*ready in.*"
+                    }
+                }
+            },
+            {
+                "label": "Start Backend (FastAPI)",
+                "type": "shell",
+                "command": "uvicorn apps.backend.main:app --reload --host 127.0.0.1 --port 8009",
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "new"
+                },
+                "isBackground": true,
+                "problemMatcher": {
+                    "owner": "fastapi",
+                    "pattern": {
+                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3,
+                        "severity": 4,
+                        "message": 5
+                    },
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": ".*Uvicorn running.*",
+                        "endsPattern": ".*Application startup complete.*"
+                    }
+                }
+            },
+            {
+                "label": "Run Tests (Python)",
+                "type": "shell",
+                "command": "pytest tests/ -v --tb=short",
+                "group": "test",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": true,
+                    "panel": "new"
+                },
+                "problemMatcher": {
+                    "owner": "pytest",
+                    "pattern": {
+                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(FAILED|ERROR):\\s+(.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3,
+                        "severity": 4,
+                        "message": 5
+                    }
+                }
+            },
+            {
+                "label": "Run Tests (Frontend)",
+                "type": "shell",
+                "command": "npm run test",
+                "group": "test",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": true,
+                    "panel": "new"
+                },
+                "problemMatcher": {
+                    "owner": "jest",
+                    "pattern": {
+                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warn|error):\\s+(.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3,
+                        "severity": 4,
+                        "message": 5
+                    }
+                }
+            },
+            {
+                "label": "Run E2E Tests",
+                "type": "shell",
+                "command": "npm run test:e2e",
+                "group": "test",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": true,
+                    "panel": "new"
+                },
+                "problemMatcher": {
+                    "owner": "playwright",
+                    "pattern": {
+                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(error):\\s+(.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3,
+                        "severity": 4,
+                        "message": 5
+                    }
+                }
+            },
+            {
+                "label": "Build Frontend",
+                "type": "shell",
+                "command": "npm run dashboard:build",
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "new"
+                },
+                "problemMatcher": {
+                    "owner": "vite",
+                    "pattern": {
+                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3,
+                        "severity": 4,
+                        "message": 5
+                    }
+                }
+            },
+            {
+                "label": "Lint Code",
+                "type": "shell",
+                "command": "npm run lint && python -m flake8 .",
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": true,
+                    "panel": "new"
+                },
+                "problemMatcher": {
+                    "owner": "linting",
+                    "pattern": {
+                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3,
+                        "severity": 4,
+                        "message": 5
+                    }
+                }
+            }
         ]
     },
     "launch": {
         "version": "0.2.0",
         "configurations": [
             {
-                "name": "Python: FastAPI",
+                "name": "Python: FastAPI Backend",
                 "type": "python",
                 "request": "launch",
                 "module": "uvicorn",
                 "args": [
-                    "server.main:app",
+                    "apps.backend.main:app",
                     "--reload",
                     "--host",
                     "127.0.0.1",
                     "--port",
-                    "8008"
+                    "8009"
                 ],
                 "cwd": "${workspaceFolder}",
                 "env": {
-                    "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src/shared"
-                }
-            },
-            {
-                "name": "Python: Flask Bridge",
-                "type": "python",
-                "request": "launch",
-                "program": "${workspaceFolder}/apps/backend/main.py",
-                "cwd": "${workspaceFolder}",
-                "env": {
-                    "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src/shared"
-                }
+                    "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/core:${workspaceFolder}/apps/backend"
+                },
+                "console": "integratedTerminal",
+                "justMyCode": false
             },
             {
                 "name": "Python: MCP Server",
@@ -113,8 +388,37 @@
                 "program": "${workspaceFolder}/core/mcp/server.py",
                 "cwd": "${workspaceFolder}",
                 "env": {
-                    "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src/shared"
-                }
+                    "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/core:${workspaceFolder}/apps/backend"
+                },
+                "console": "integratedTerminal",
+                "justMyCode": false
+            },
+            {
+                "name": "Debug Python Tests",
+                "type": "python",
+                "request": "launch",
+                "module": "pytest",
+                "args": [
+                    "tests/",
+                    "-v",
+                    "--tb=short"
+                ],
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/core:${workspaceFolder}/apps/backend"
+                },
+                "console": "integratedTerminal",
+                "justMyCode": false
+            }
+        ],
+        "compounds": [
+            {
+                "name": "Launch Full Stack",
+                "configurations": [
+                    "Python: FastAPI Backend"
+                ],
+                "preLaunchTask": "Start Frontend (Dashboard)",
+                "stopAll": true
             }
         ]
     }

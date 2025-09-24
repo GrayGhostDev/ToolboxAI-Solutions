@@ -62,9 +62,12 @@ export class TestValidator {
     // Validate pass rate
     if (passRate < this.REQUIRED_PASS_RATE) {
       console.error(
-        `❌ ${filename} failed validation:\n` +
-        `   Pass rate: ${passRate.toFixed(1)}% (${results.passed}/${results.total} passed)\n` +
-        `   Required: >${this.REQUIRED_PASS_RATE}%\n` +
+        `❌ ${filename} failed validation:
+` +
+        `   Pass rate: ${passRate.toFixed(1)}% (${results.passed}/${results.total} passed)
+` +
+        `   Required: >${this.REQUIRED_PASS_RATE}%
+` +
         `   Failing tests: ${results.failingTests.join(', ')}`
       );
       return false;
@@ -222,7 +225,7 @@ export class TestValidator {
 
     markdown += `## Test Statistics\n\n`;
     markdown += `| Metric | Value |\n`;
-    markdown += `|--------|-------|\n`;
+    markdown += `|--------|\-------|\n`;
     markdown += `| Total Tests | ${report.overallTests} |\n`;
     markdown += `| Passed Tests | ${report.overallPassed} |\n`;
     markdown += `| Failed Tests | ${report.overallFailed} |\n`;

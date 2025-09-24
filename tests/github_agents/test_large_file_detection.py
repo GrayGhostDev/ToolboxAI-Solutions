@@ -1,3 +1,4 @@
+import pytest_asyncio
 """
 Tests for Large File Detection Agent.
 """
@@ -41,6 +42,7 @@ def create_test_file(path: Path, size_mb: int) -> Path:
 
 
 @pytest.mark.asyncio
+@pytest.mark.asyncio
 async def test_detection_agent_initialization():
     """Test agent initialization."""
     agent = LargeFileDetectionAgent()
@@ -50,6 +52,7 @@ async def test_detection_agent_initialization():
     assert agent.size_thresholds['github_limit_mb'] == 100
 
 
+@pytest.mark.asyncio
 @pytest.mark.asyncio
 async def test_analyze_file_size_categories(detection_agent):
     """Test file size categorization."""
@@ -78,6 +81,7 @@ async def test_analyze_file_size_categories(detection_agent):
 
 
 @pytest.mark.asyncio
+@pytest.mark.asyncio
 async def test_format_size(detection_agent):
     """Test size formatting."""
     assert detection_agent.format_size(1024) == "1.00 KB"
@@ -85,6 +89,7 @@ async def test_format_size(detection_agent):
     assert detection_agent.format_size(1024 * 1024 * 1024) == "1.00 GB"
 
 
+@pytest.mark.asyncio
 @pytest.mark.asyncio
 async def test_generate_recommendations(detection_agent):
     """Test recommendation generation."""
@@ -104,6 +109,7 @@ async def test_generate_recommendations(detection_agent):
     assert any("design file" in r for r in recommendations)
 
 
+@pytest.mark.asyncio
 @pytest.mark.asyncio
 async def test_pre_commit_check(detection_agent):
     """Test pre-commit check functionality."""
@@ -125,6 +131,7 @@ async def test_pre_commit_check(detection_agent):
                 assert result['large_files'][0]['severity'] == 'blocker'
 
 
+@pytest.mark.asyncio
 @pytest.mark.asyncio
 async def test_generate_report_json(detection_agent):
     """Test JSON report generation."""
@@ -149,6 +156,7 @@ async def test_generate_report_json(detection_agent):
         assert '"test.dat"' in report
 
 
+@pytest.mark.asyncio
 @pytest.mark.asyncio
 async def test_generate_report_markdown(detection_agent):
     """Test Markdown report generation."""
@@ -177,6 +185,7 @@ async def test_generate_report_markdown(detection_agent):
 
 
 @pytest.mark.asyncio
+@pytest.mark.asyncio
 async def test_exempt_patterns(detection_agent):
     """Test that exempt patterns are properly ignored."""
     assert detection_agent._is_exempt(Path("node_modules/package.json"))
@@ -185,6 +194,7 @@ async def test_exempt_patterns(detection_agent):
     assert not detection_agent._is_exempt(Path("src/large_file.dat"))
 
 
+@pytest.mark.asyncio
 @pytest.mark.asyncio
 async def test_metrics_tracking(detection_agent):
     """Test that metrics are properly tracked."""

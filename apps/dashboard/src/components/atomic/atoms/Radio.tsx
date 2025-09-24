@@ -6,7 +6,7 @@ export interface RadioProps {
   value?: string;
 }
 
-const AtomicRadio = React.forwardRef<HTMLInputElement, RadioProps>((props, ref) => (
+const AtomicRadio = (({ ...props, ref }: HTMLInputElement, RadioProps & { ref?: React.Ref<any> }) => (
   <input ref={ref} type="radio" {...props} />
 ));
 

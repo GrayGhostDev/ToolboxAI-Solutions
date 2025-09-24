@@ -1,6 +1,8 @@
 import React from 'react';
-import { CssBaseline, GlobalStyles } from '@mui/material';
+import CssBaseline from '@mui/material/CssBaseline';
+import GlobalStyles from '@mui/material/GlobalStyles';
 import { RobloxThemeProvider } from '../contexts/ThemeContext';
+import { MantineProvider } from '../providers/MantineProvider';
 import { designTokens } from '../theme/designTokens';
 
 interface ThemeWrapperProps {
@@ -82,12 +84,14 @@ const globalStyles = {
   }
 };
 
-export const ThemeWrapper: React.FC<ThemeWrapperProps> = ({ children }) => {
+export const ThemeWrapper: React.FunctionComponent<ThemeWrapperProps> = ({ children }) => {
   return (
     <RobloxThemeProvider>
-      <CssBaseline />
-      <GlobalStyles styles={globalStyles} />
-      {children}
+      <MantineProvider>
+        <CssBaseline />
+        <GlobalStyles styles={globalStyles} />
+        {children}
+      </MantineProvider>
     </RobloxThemeProvider>
   );
 };

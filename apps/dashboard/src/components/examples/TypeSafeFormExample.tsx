@@ -66,7 +66,7 @@ interface UserRegistrationFormProps {
   onError: (error: string) => void;
 }
 
-export const UserRegistrationForm: React.FC<UserRegistrationFormProps> = ({
+export const UserRegistrationForm: React.FunctionComponent<UserRegistrationFormProps> = ({
   onSuccess,
   onError,
 }) => {
@@ -270,7 +270,7 @@ export function AsyncDataComponent<T>({
     return (
       <div>
         Data loaded successfully at {data.lastUpdated}
-        {onRetry && <button onClick={onRetry}>Refresh</button>}
+        {onRetry && <button onClick={(e: React.MouseEvent) => onRetry}>Refresh</button>}
       </div>
     );
   }
@@ -281,7 +281,7 @@ export function AsyncDataComponent<T>({
         Error: {data.error}
         <br />
         Last attempt: {data.lastAttempt}
-        {onRetry && <button onClick={onRetry}>Retry</button>}
+        {onRetry && <button onClick={(e: React.MouseEvent) => onRetry}>Retry</button>}
       </div>
     );
   }
@@ -295,7 +295,7 @@ interface ClassManagementProps {
   teacherId: UserId;
 }
 
-export const ClassManagement: React.FC<ClassManagementProps> = ({ teacherId }) => {
+export const ClassManagement: React.FunctionComponent<ClassManagementProps> = ({ teacherId }) => {
   const [createClass, { isLoading: isCreating, error: createError }] = useCreateClassMutation();
   const [updateUser] = useUpdateUserMutation();
 
@@ -409,7 +409,7 @@ interface StudentProgressProps {
   classId: ClassId;
 }
 
-export const StudentProgress: React.FC<StudentProgressProps> = ({
+export const StudentProgress: React.FunctionComponent<StudentProgressProps> = ({
   studentId,
   classId,
 }) => {
@@ -457,7 +457,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({
     switch (progressState.status) {
       case 'idle':
         return (
-          <button onClick={handleLoadProgress}>
+          <button onClick={(e: React.MouseEvent) => handleLoadProgress}>
             Load Student Progress
           </button>
         );
@@ -471,7 +471,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({
             Progress loaded successfully!
             <br />
             Last updated: {progressState.lastUpdated}
-            <button onClick={handleLoadProgress}>Refresh</button>
+            <button onClick={(e: React.MouseEvent) => handleLoadProgress}>Refresh</button>
           </div>
         );
 
@@ -480,7 +480,7 @@ export const StudentProgress: React.FC<StudentProgressProps> = ({
           <div>
             Failed to load progress: {progressState.error}
             <br />
-            <button onClick={handleLoadProgress}>Try Again</button>
+            <button onClick={(e: React.MouseEvent) => handleLoadProgress}>Try Again</button>
           </div>
         );
 

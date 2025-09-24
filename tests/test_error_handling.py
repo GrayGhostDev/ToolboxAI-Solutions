@@ -1,3 +1,4 @@
+import pytest_asyncio
 """
 Test Comprehensive Error Handling
 
@@ -73,58 +74,69 @@ def create_test_app():
     # Test endpoints
     @app.post("/test/validation")
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_validation(data: TestRequest):
+    @pytest.mark.asyncio
+async def test_validation(data: TestRequest):
         return {"message": "Valid data", "data": data.model_dump()}
     
     @app.get("/test/auth")
     @pytest.mark.asyncio
-    async def test_auth():
+    @pytest.mark.asyncio
+async def test_auth():
         raise AuthenticationError("Invalid token")
     
     @app.get("/test/authz")
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_authz():
+    @pytest.mark.asyncio
+async def test_authz():
         raise AuthorizationError("Admin access required")
     
     @app.get("/test/not-found/{item_id}")
-    async def test_not_found(item_id: str):
+    @pytest.mark.asyncio
+async def test_not_found(item_id: str):
         raise NotFoundError("Item", item_id)
     
     @app.get("/test/conflict")
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_conflict():
+    @pytest.mark.asyncio
+async def test_conflict():
         raise ConflictError("Resource already exists")
     
     @app.get("/test/rate-limit")
-    async def test_rate_limit():
+    @pytest.mark.asyncio
+async def test_rate_limit():
         raise RateLimitError("Too many requests", retry_after=60)
     
     @app.get("/test/database")
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_database():
+    @pytest.mark.asyncio
+async def test_database():
         raise DatabaseError("Connection failed", operation="SELECT")
     
     @app.get("/test/external")
-    async def test_external():
+    @pytest.mark.asyncio
+async def test_external():
         raise ExternalServiceError("PaymentAPI", "Timeout")
     
     @app.get("/test/http-exception")
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_http_exception():
+    @pytest.mark.asyncio
+async def test_http_exception():
         raise HTTPException(status_code=400, detail="Bad request")
     
     @app.get("/test/value-error")
-    async def test_value_error():
+    @pytest.mark.asyncio
+async def test_value_error():
         raise ValueError("Invalid value provided")
     
     @app.get("/test/generic-error")
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_generic_error():
+    @pytest.mark.asyncio
+async def test_generic_error():
         raise RuntimeError("Unexpected runtime error")
     
     return app
@@ -288,7 +300,8 @@ class TestErrorHandler:
         assert handler.debug is True
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_error_response_format(self):
+    @pytest.mark.asyncio
+async def test_error_response_format(self):
         """Test error response format"""
         handler = ErrorHandler(debug=False)
         
@@ -321,7 +334,8 @@ class TestErrorHandler:
         assert data["method"] == "GET"
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_correlation_id_propagation(self):
+    @pytest.mark.asyncio
+async def test_correlation_id_propagation(self):
         """Test correlation ID propagation"""
         handler = ErrorHandler(debug=False)
         

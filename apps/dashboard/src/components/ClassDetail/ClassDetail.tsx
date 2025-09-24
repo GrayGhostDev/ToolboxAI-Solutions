@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import Breadcrumbs from '@mui/material/Breadcrumbs';
+import Link from '@mui/material/Link';
+import Chip from '@mui/material/Chip';
+
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Container,
-  Paper,
-  Typography,
-  Tabs,
-  Tab,
-  Button,
-  CircularProgress,
-  Alert,
-  Breadcrumbs,
-  Link,
-  Chip,
-} from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   School as SchoolIcon,
@@ -76,7 +75,7 @@ interface ClassData {
   status: 'active' | 'inactive' | 'archived';
 }
 
-export const ClassDetail: React.FC = () => {
+export const ClassDetail: React.FunctionComponent<Record<string, any>> = () => {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -150,7 +149,7 @@ export const ClassDetail: React.FC = () => {
           <Link
             color="inherit"
             href="#"
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent) => (e) => {
               e.preventDefault();
               navigate('/dashboard');
             }}
@@ -160,7 +159,7 @@ export const ClassDetail: React.FC = () => {
           <Link
             color="inherit"
             href="#"
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent) => (e) => {
               e.preventDefault();
               navigate('/classes');
             }}
@@ -178,7 +177,7 @@ export const ClassDetail: React.FC = () => {
             <Box display="flex" alignItems="center" gap={1} mb={2}>
               <Button
                 startIcon={<ArrowBackIcon />}
-                onClick={() => navigate('/classes')}
+                onClick={(e: React.MouseEvent) => () => navigate('/classes')}
                 variant="text"
               >
                 Back to Classes
@@ -224,7 +223,7 @@ export const ClassDetail: React.FC = () => {
               <Button
                 variant="contained"
                 startIcon={<SettingsIcon />}
-                onClick={() => navigate(`/classes/${classId}/settings`)}
+                onClick={(e: React.MouseEvent) => () => navigate(`/classes/${classId}/settings`)}
               >
                 Settings
               </Button>

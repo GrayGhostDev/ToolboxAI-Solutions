@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Box, LinearProgress, Typography, useTheme, alpha } from '@mui/material';
+import Box from '@mui/material/Box';
+import LinearProgress from '@mui/material/LinearProgress';
+import Typography from '@mui/material/Typography';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import { styled, keyframes } from '@mui/material/styles';
 
 interface RobloxProgressBarProps {
@@ -116,7 +120,7 @@ const CircularProgressContainer = styled(Box)(({ theme }) => ({
   }
 }));
 
-export const RobloxProgressBar: React.FC<RobloxProgressBarProps> = ({
+export const RobloxProgressBar: React.FunctionComponent<RobloxProgressBarProps> = ({
   current,
   max,
   label,

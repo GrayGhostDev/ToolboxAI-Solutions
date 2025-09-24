@@ -1,27 +1,25 @@
 import * as React from "react";
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import Divider from '@mui/material/Divider';
+import Paper from '@mui/material/Paper';
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  Box,
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  Stack,
-  InputAdornment,
-  IconButton,
-  Divider,
-  Paper,
-} from "@mui/material";
 import { Visibility, VisibilityOff, Email, Lock } from "@mui/icons-material";
 import { login } from "../../services/api";
 import { useAppDispatch } from "../../store";
 import { signInSuccess } from "../../store/slices/userSlice";
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from "../../config";
-// import { wsService } from "../../services/ws";
-import { connectWebSocket } from "../../services/websocket";
+import { pusherService } from "../../services/pusher";
+import { logger } from "../../utils/logger";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -55,9 +53,9 @@ export default function Login() {
 
     // Basic email format validation - check if it's not a username (contains _)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isUsername = formData.email.includes("_") || formData.email.includes(".");
+    const isUsername = formData.email.includes("_") || !formData.email.includes("@");
     if (!isUsername && !emailRegex.test(formData.email)) {
-      setError("Please enter a valid email address");
+      setError("Please enter a valid email address or username");
       setLoading(false);
       return;
     }
@@ -68,7 +66,7 @@ export default function Login() {
       const response = await login(formData.email, formData.password);
 
       // Debug logging to see response structure
-      console.log('Login response structure:', response);
+      logger.debug('Login response structure', response);
 
       // Map backend response to expected format (backend uses snake_case)
       const accessToken = response.accessToken || (response as any).access_token;
@@ -78,19 +76,18 @@ export default function Login() {
       localStorage.setItem(AUTH_TOKEN_KEY, accessToken);
       localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
 
-      // Try to connect WebSocket after successful login via Pusher
-      // Don't let WebSocket errors prevent login
+      // Connect to Pusher for realtime features after successful login
+      // Don't let Pusher errors prevent login
       try {
-        if (import.meta.env.VITE_ENABLE_WEBSOCKET === 'true') {
-          await connectWebSocket(accessToken);
-        }
-      } catch (wsError) {
-        console.warn('WebSocket connection failed, continuing without realtime features:', wsError);
+        pusherService.connect();
+        logger.info('Connected to Pusher for realtime features');
+      } catch (pusherError) {
+        logger.warn('Pusher connection failed, continuing without realtime features', pusherError);
       }
 
       // Get role from either user object or top-level
       const userRole = response.user?.role || response.role || 'student';
-      console.log('Setting user role:', userRole);
+      logger.debug('Setting user role', { role: userRole });
 
       // Update Redux state
       dispatch(signInSuccess({
@@ -161,6 +158,7 @@ export default function Login() {
 
               <TextField
                 fullWidth
+                id="email-field"
                 name="email"
                 label="Username or Email"
                 type="email"
@@ -189,6 +187,7 @@ export default function Login() {
 
               <TextField
                 fullWidth
+                id="password-field"
                 name="password"
                 label="Password"
                 type={showPassword ? "text" : "password"}

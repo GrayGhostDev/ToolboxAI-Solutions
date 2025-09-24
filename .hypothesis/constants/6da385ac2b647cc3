@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/v1/endpoints/auth.py
+# hypothesis_version: 6.139.2
+
+['/auth', '/login', '/logout', '/refresh', '30', 'Admin123!', 'Authentication', 'Bearer', 'Student123!', 'StudentPass123!', 'Teacher123!', 'TestPass123!', 'WWW-Authenticate', 'access_token', 'admin', 'admin@toolboxai.com', 'alex_johnson', 'auto', 'bcrypt', 'bearer', 'displayName', 'email', 'expires_in', 'hashed_password', 'id', 'jane_smith', 'message', 'role', 'student', 'sub', 'teacher', 'test_student', 'test_teacher', 'token_type', 'user', 'user_id', 'username']

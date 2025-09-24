@@ -1,3 +1,5 @@
+jest.setTimeout(10000);
+
 import { test, expect, Page } from '@playwright/test';
 
 test.describe('Real-time WebSocket & Pusher Tests', () => {
@@ -67,7 +69,7 @@ test.describe('Real-time WebSocket & Pusher Tests', () => {
 
       // Listen for WebSocket messages
       await page.evaluateOnNewDocument(() => {
-        window.addEventListener('message', (event) => {
+        window.channel.bind('message', (event) => {
           if (event.data && event.data.type === 'websocket') {
             (window as any).wsMessages = (window as any).wsMessages || [];
             (window as any).wsMessages.push(event.data);
@@ -384,7 +386,7 @@ test.describe('Real-time WebSocket & Pusher Tests', () => {
           // Override WebSocket to count connection attempts
           (window as any).WebSocket = function(...args: any[]) {
             attempts++;
-            return new originalWebSocket(...args);
+            return new originalPusherConnection(...args);
           };
 
           setTimeout(() => {
@@ -442,7 +444,7 @@ test.describe('Real-time WebSocket & Pusher Tests', () => {
       // Create and destroy multiple WebSocket connections
       for (let i = 0; i < 5; i++) {
         await page.evaluate(() => {
-          const ws = new WebSocket('ws://localhost:8008/ws/test');
+          const ws = new PusherService('pusher://app_key@cluster/test');
           setTimeout(() => ws.close(), 100);
         });
         await page.waitForTimeout(200);

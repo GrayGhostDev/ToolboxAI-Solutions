@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 #!/usr/bin/env python3
 """
 End-to-End Integration Test Suite
@@ -24,7 +39,7 @@ import requests
 import aiohttp
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 import subprocess
 import os
 import pytest
@@ -84,6 +99,7 @@ class E2EIntegrationTester:
         return False
     
     @pytest.mark.asyncio(loop_scope="function")
+    @pytest.mark.asyncio
     async def test_authentication_flow(self) -> Dict[str, Any]:
         """Test 1: Complete authentication flow across services"""
         result = {
@@ -141,6 +157,7 @@ class E2EIntegrationTester:
         return result
     
     @pytest.mark.asyncio(loop_scope="function")
+    @pytest.mark.asyncio
     async def test_content_generation_pipeline(self) -> Dict[str, Any]:
         """Test 2: Complete content generation pipeline"""
         result = {
@@ -190,8 +207,9 @@ class E2EIntegrationTester:
             
             # Step 2: Verify MCP context update
             try:
-                async with websockets.connect(SERVICES["mcp_server"]["ws_url"]) as ws:
-                    await ws.send(json.dumps({"type": "get_context"}, default=make_json_serializable))
+                async with async_mock_pusher_context() as pusher:
+        # Connect using PusherSERVICES["mcp_server"]["ws_url"]) as ws:
+                    await pusher.trigger(json.dumps({"type": "get_context"}, default=make_json_serializable))
                     response = await asyncio.wait_for(ws.recv(), timeout=2)
                     context_data = json.loads(response)
                     
@@ -232,7 +250,8 @@ class E2EIntegrationTester:
         return result
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_data_synchronization(self) -> Dict[str, Any]:
+    @pytest.mark.asyncio
+async def test_data_synchronization(self) -> Dict[str, Any]:
         """Test 3: Data synchronization across services"""
         result = {
             "test": "Data Synchronization",
@@ -306,7 +325,8 @@ class E2EIntegrationTester:
         return result
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_roblox_plugin_communication(self) -> Dict[str, Any]:
+    @pytest.mark.asyncio
+async def test_roblox_plugin_communication(self) -> Dict[str, Any]:
         """Test 4: Roblox plugin communication simulation"""
         result = {
             "test": "Roblox Plugin Communication",
@@ -385,7 +405,8 @@ class E2EIntegrationTester:
         return result
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_error_handling_recovery(self) -> Dict[str, Any]:
+    @pytest.mark.asyncio
+async def test_error_handling_recovery(self) -> Dict[str, Any]:
         """Test 5: Error handling and recovery"""
         result = {
             "test": "Error Handling & Recovery",
@@ -439,7 +460,8 @@ class E2EIntegrationTester:
         return result
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_performance_load(self) -> Dict[str, Any]:
+    @pytest.mark.asyncio
+async def test_performance_load(self) -> Dict[str, Any]:
         """Test 6: Performance under load"""
         result = {
             "test": "Performance & Load Testing",

@@ -123,16 +123,19 @@ export function ConsentModal({ open, onClose }: Props) {
         </Stack>
 
         <Typography variant="caption" color="text.secondary" sx={{ mt: 3, display: "block" }}>
-          By accepting, you confirm that you have read and understood our Privacy Policy and Terms
-          of Service. You can withdraw consent at any time through your account settings.
+          By accepting, you confirm that you have read and understood our
+          <a href="/privacy.html" target="_blank" rel="noopener noreferrer"> Privacy Policy</a>
+          &nbsp;and
+          <a href="/terms.html" target="_blank" rel="noopener noreferrer"> Terms of Service</a>.
+          You can withdraw consent at any time through your account settings.
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => onClose(false)}>Cancel</Button>
+        <Button onClick={(e: React.MouseEvent) => () => onClose(false)}>Cancel</Button>
         <Button
           disabled={!allChecked || loading}
           variant="contained"
-          onClick={handleAccept}
+          onClick={(e: React.MouseEvent) => handleAccept}
         >
           {loading ? "Processing..." : "Accept & Continue"}
         </Button>

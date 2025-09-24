@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Box, Typography, useTheme, alpha, keyframes, styled } from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { useTheme, alpha, keyframes, styled } from '@mui/material/styles';
 import { Procedural3DIcon } from './Procedural3DIcon';
 
 interface Real3DIconProps {
@@ -335,7 +337,7 @@ const iconMap: { [key: string]: {
   },
 };
 
-export const Real3DIcon: React.FC<Real3DIconProps> = ({
+export const Real3DIcon: React.FunctionComponent<Real3DIconProps> = ({
   iconName,
   size = 'medium',
   animated = true,
@@ -370,7 +372,7 @@ export const Real3DIcon: React.FC<Real3DIconProps> = ({
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={handleClick}
+      onClick={(e: React.MouseEvent) => handleClick}
     >
       {/* Use Procedural 3D Icon */}
       <Procedural3DIcon

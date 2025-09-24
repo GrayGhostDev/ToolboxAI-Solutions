@@ -1,5 +1,30 @@
-import * as React from "react";
 import { useState, useEffect } from "react";
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import Avatar from '@mui/material/Avatar';
+import InputAdornment from '@mui/material/InputAdornment';
+
 import {
   listUsers,
   createUser,
@@ -8,35 +33,7 @@ import {
   suspendUser,
 } from "../../../services/api";
 import type { User as UserType, UserCreate, UserUpdate } from "@/types/api";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  IconButton,
-  Stack,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Select,
-  Avatar,
-  InputAdornment,
-} from "@mui/material";
 import { Add, Edit, Delete, Search, Email } from "@mui/icons-material";
-
 interface UserFormData {
   email: string;
   username: string;
@@ -47,12 +44,10 @@ interface UserFormData {
   role: string;
   schoolId?: string;
 }
-
 export default function Users() {
   const [users, setUsers] = useState<UserType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [openDialog, setOpenDialog] = useState(false);
@@ -67,12 +62,10 @@ export default function Users() {
     role: "student", // Default role to prevent validation error
     schoolId: "",
   });
-
   // Fetch users on component mount and when filters change
   useEffect(() => {
     fetchUsers();
   }, [searchTerm, roleFilter]);
-
   const fetchUsers = async () => {
     setLoading(true);
     setError(null);
@@ -107,7 +100,6 @@ export default function Users() {
       setLoading(false);
     }
   };
-
   const handleAdd = () => {
     setEditingUser(null);
     setFormData({
@@ -122,7 +114,6 @@ export default function Users() {
     });
     setOpenDialog(true);
   };
-
   const handleEdit = (user: UserType) => {
     setEditingUser(user);
     setFormData({
@@ -137,11 +128,9 @@ export default function Users() {
     });
     setOpenDialog(true);
   };
-
   const handleSave = async () => {
     setError(null);
     setLoading(true);
-    
     // Validate required fields
     if (!formData.email || !formData.username || !formData.firstName || 
         !formData.lastName || !formData.role) {
@@ -149,7 +138,6 @@ export default function Users() {
       setLoading(false);
       return;
     }
-    
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
@@ -157,14 +145,12 @@ export default function Users() {
       setLoading(false);
       return;
     }
-    
     // Validate password for new users
     if (!editingUser && (!formData.password || formData.password.length < 8)) {
       setError("Password must be at least 8 characters long.");
       setLoading(false);
       return;
     }
-    
     try {
       let savedUser: any;
       if (editingUser) {
@@ -217,7 +203,6 @@ export default function Users() {
         };
         setUsers(prev => [newUser, ...prev]);
       }
-      
       setOpenDialog(false);
       // Also refresh from server to ensure consistency
       await fetchUsers();
@@ -228,12 +213,10 @@ export default function Users() {
       setLoading(false);
     }
   };
-
   const handleDelete = async (userId: string) => {
     if (!window.confirm("Are you sure you want to delete this user?")) {
       return;
     }
-    
     setError(null);
     setLoading(true);
     try {
@@ -249,7 +232,6 @@ export default function Users() {
       setLoading(false);
     }
   };
-
   const handleSuspend = async (userId: string) => {
     setError(null);
     try {
@@ -260,7 +242,6 @@ export default function Users() {
       console.error("Error suspending user:", err);
     }
   };
-
   const getRoleColor = (role: string) => {
     switch (role) {
       case "Admin": return "error";
@@ -270,7 +251,6 @@ export default function Users() {
       default: return "default";
     }
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active": return "success";
@@ -279,7 +259,6 @@ export default function Users() {
       default: return "default";
     }
   };
-
   return (
     <Box>
       {error && (
@@ -294,12 +273,11 @@ export default function Users() {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={handleAdd}
+          onClick={(e: React.MouseEvent) => handleAdd}
         >
           Add User
         </Button>
       </Stack>
-
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Stack direction="row" spacing={2} alignItems="center">
@@ -333,7 +311,6 @@ export default function Users() {
           </Stack>
         </CardContent>
       </Card>
-
       <Card>
         <CardContent>
           <TableContainer>
@@ -392,7 +369,7 @@ export default function Users() {
                       </TableCell>
                       <TableCell>
                         <IconButton 
-                          onClick={() => handleEdit(user)} 
+                          onClick={(e: React.MouseEvent) => () => handleEdit(user)} 
                           size="small"
                           disabled={loading}
                         >
@@ -400,14 +377,14 @@ export default function Users() {
                         </IconButton>
                         <Button
                           size="small"
-                          onClick={() => handleSuspend(user.id)}
+                          onClick={(e: React.MouseEvent) => () => handleSuspend(user.id)}
                           color={user.status === "suspended" ? "success" : "warning"}
                           disabled={loading}
                         >
                           {user.status === "suspended" ? "Activate" : "Suspend"}
                         </Button>
                         <IconButton 
-                          onClick={() => handleDelete(user.id)} 
+                          onClick={(e: React.MouseEvent) => () => handleDelete(user.id)} 
                           size="small"
                           color="error"
                           disabled={loading}
@@ -423,7 +400,6 @@ export default function Users() {
           </TableContainer>
         </CardContent>
       </Card>
-
       <Dialog 
         open={openDialog} 
         onClose={() => setOpenDialog(false)} 
@@ -529,8 +505,8 @@ export default function Users() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave}>
+          <Button onClick={(e: React.MouseEvent) => () => setOpenDialog(false)}>Cancel</Button>
+          <Button variant="contained" onClick={(e: React.MouseEvent) => handleSave}>
             {editingUser ? "Update" : "Create"}
           </Button>
         </DialogActions>

@@ -25,7 +25,7 @@ from langgraph.graph.graph import CompiledGraph
 
 from core.agents.base_agent import BaseAgent, AgentConfig, AgentCapability, TaskResult
 from core.agents.master_orchestrator import MasterOrchestrator, AgentSystemType
-from core.sparc import SPARCOrchestrator
+from core.sparc import SPARCFramework as SPARCOrchestrator
 from database.content_pipeline_models import (
     EnhancedContentGeneration,
     ContentQualityMetrics,

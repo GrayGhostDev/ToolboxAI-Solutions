@@ -14,10 +14,10 @@ services:
     image: postgres:15-alpine
     container_name: toolboxai-postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_MULTIPLE_DATABASES: educational_platform,ghost_backend,roblox_data,mcp_memory
+      POSTGRES_DB: ${POSTGRES_DB:-educational_platform_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-eduplatform}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eduplatform2024}
+      POSTGRES_MULTIPLE_DATABASES: educational_platform,ghost_cms,roblox_data,mcp_memory
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d:ro
@@ -27,7 +27,7 @@ services:
       - toolboxai_network
     healthcheck:
       <<: *healthcheck-defaults
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-eduplatform}", "-d", "${POSTGRES_DB:-educational_platform_dev}"]
 
   # Redis Cache
   redis:
@@ -36,7 +36,6 @@ services:
     command: >
       redis-server
       --appendonly yes
-      --requirepass ${REDIS_PASSWORD}
       --maxmemory 512mb
       --maxmemory-policy allkeys-lru
     volumes:
@@ -47,42 +46,47 @@ services:
       - toolboxai_network
     healthcheck:
       <<: *healthcheck-defaults
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD", "redis-cli", "ping"]
 
   # FastAPI Main Backend Server
   fastapi-main:
-    image: ghcr.io/toolboxai-solutions/backend:${VERSION:-latest}
     build:
       context: ../..
-      dockerfile: infrastructure/docker/backend.Dockerfile
+      dockerfile: infrastructure/docker/Dockerfile.backend
     container_name: toolboxai-fastapi
     environment:
       <<: *common-variables
-      ENVIRONMENT: ${ENVIRONMENT}
-      DEBUG: ${DEBUG}
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEBUG: ${DEBUG:-false}
+      # Use Docker service names for database connections
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD:-eduplatform2024}@postgres:5432/${POSTGRES_DB:-educational_platform_dev}
+      REDIS_URL: redis://redis:6379/0
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
-      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY}
-      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2}
-      LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT}
-      SENTRY_DSN: ${SENTRY_DSN}
-      # Pusher Configuration
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY:-}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
+      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-true}
+      LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT:-toolboxai-production}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      # Pusher Configuration (Active - Using for all realtime features)
       PUSHER_ENABLED: ${PUSHER_ENABLED:-true}
       PUSHER_APP_ID: ${PUSHER_APP_ID}
       PUSHER_KEY: ${PUSHER_KEY}
       PUSHER_SECRET: ${PUSHER_SECRET}
       PUSHER_CLUSTER: ${PUSHER_CLUSTER:-us2}
       PUSHER_SSL: ${PUSHER_SSL:-true}
-      MCP_HOST: 0.0.0.0
-      MCP_PORT: 9876
+      # Clerk Authentication (2025)
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:-}
+      CLERK_WEBHOOK_SIGNING_SECRET: ${CLERK_WEBHOOK_SIGNING_SECRET:-}
+      CLERK_JWKS_URL: ${CLERK_JWKS_URL:-}
+      CLERK_FRONTEND_API_URL: ${CLERK_FRONTEND_API_URL:-}
+      # Server configuration
+      HOST: 0.0.0.0
+      PORT: 8009
       WORKERS: 2
     ports:
       - '8009:8009'
-      - '9876:9876'
     volumes:
       - ../../:/app
     depends_on:
@@ -95,25 +99,30 @@ services:
     healthcheck:
       <<: *healthcheck-defaults
       test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
 
   # MCP Server
   mcp-server:
-    image: ghcr.io/toolboxai-solutions/mcp-server:${VERSION:-latest}
     build:
       context: ../..
       dockerfile: infrastructure/docker/mcp-server.Dockerfile
     container_name: toolboxai-mcp-server
     environment:
       <<: *common-variables
-      ENVIRONMENT: ${ENVIRONMENT}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
       MCP_HOST: 0.0.0.0
       MCP_PORT: 9877
-      REDIS_URL: ${REDIS_URL}
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/mcp_memory
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      MAX_TOKENS: ${MAX_TOKENS}
-      AGENT_DISCOVERY_ENABLED: ${AGENT_DISCOVERY_ENABLED}
-      AGENT_REGISTRY_TTL: ${AGENT_REGISTRY_TTL}
+      # Use Docker service names
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD:-eduplatform2024}@postgres:5432/mcp_memory
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-generate-secure-key-for-production}
+      MAX_TOKENS: ${MAX_TOKENS:-4096}
+      AGENT_DISCOVERY_ENABLED: ${AGENT_DISCOVERY_ENABLED:-true}
+      AGENT_REGISTRY_TTL: ${AGENT_REGISTRY_TTL:-3600}
     ports:
       - '9877:9877'
       - '9090:9090'
@@ -131,27 +140,27 @@ services:
       - mcp_network
     healthcheck:
       <<: *healthcheck-defaults
-      test: ["CMD", "python", "-c", "import asyncio, websockets; asyncio.run(websockets.connect('ws://localhost:9877/health'))"]
+      test: ["CMD", "curl", "-f", "http://localhost:9877/health"]
 
   # Agent Coordinator
   agent-coordinator:
-    image: ghcr.io/toolboxai-solutions/agent-coordinator:${VERSION:-latest}
     build:
       context: ../..
       dockerfile: infrastructure/docker/agent-coordinator.Dockerfile
     container_name: toolboxai-agent-coordinator
     environment:
       <<: *common-variables
-      ENVIRONMENT: ${ENVIRONMENT}
-      COORDINATOR_PORT: ${COORDINATOR_PORT}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      COORDINATOR_PORT: ${COORDINATOR_PORT:-8888}
       MCP_SERVER_URL: ws://mcp-server:9877
-      REDIS_URL: ${REDIS_URL}
-      DATABASE_URL: ${DATABASE_URL}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      MAX_CONCURRENT_AGENTS: ${MAX_CONCURRENT_AGENTS}
-      TASK_TIMEOUT: ${TASK_TIMEOUT}
-      HEALTH_CHECK_INTERVAL: ${HEALTH_CHECK_INTERVAL}
+      # Use Docker service names
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD:-eduplatform2024}@postgres:5432/${POSTGRES_DB:-educational_platform_dev}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-generate-secure-key-for-production}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      MAX_CONCURRENT_AGENTS: ${MAX_CONCURRENT_AGENTS:-5}
+      TASK_TIMEOUT: ${TASK_TIMEOUT:-300}
+      HEALTH_CHECK_INTERVAL: ${HEALTH_CHECK_INTERVAL:-30}
     ports:
       - '8888:8888'
     volumes:
@@ -174,7 +183,6 @@ services:
 
   # Educational Content Agent Workers
   educational-agents:
-    image: ghcr.io/toolboxai-solutions/educational-agents:${VERSION:-latest}
     build:
       context: ../..
       dockerfile: infrastructure/docker/educational-agents.Dockerfile
@@ -182,14 +190,15 @@ services:
     environment:
       <<: *common-variables
       AGENT_TYPE: educational
-      AGENT_POOL_SIZE: ${AGENT_POOL_SIZE}
+      AGENT_POOL_SIZE: ${AGENT_POOL_SIZE:-5}
       MCP_SERVER_URL: ws://mcp-server:9877
       COORDINATOR_URL: http://agent-coordinator:8888
-      REDIS_URL: ${REDIS_URL}
-      DATABASE_URL: ${DATABASE_URL}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      REGISTRATION_INTERVAL: ${REGISTRATION_INTERVAL}
-      TASK_BATCH_SIZE: ${TASK_BATCH_SIZE}
+      # Use Docker service names
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD:-eduplatform2024}@postgres:5432/${POSTGRES_DB:-educational_platform_dev}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      REGISTRATION_INTERVAL: ${REGISTRATION_INTERVAL:-60}
+      TASK_BATCH_SIZE: ${TASK_BATCH_SIZE:-10}
     volumes:
       - ../../tmp/agent_data:/data/agents
       - ../../tmp/educational_content:/data/content
@@ -204,30 +213,31 @@ services:
       - mcp_network
     healthcheck:
       <<: *healthcheck-defaults
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8080/health')"]
+      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
 
   # Flask Bridge for Roblox Integration
   flask-bridge:
-    image: ghcr.io/toolboxai-solutions/flask-bridge:${VERSION:-latest}
     build:
       context: ../..
       dockerfile: infrastructure/docker/flask-bridge.Dockerfile
     container_name: toolboxai-flask-bridge
     environment:
       <<: *common-variables
-      FLASK_ENV: ${ENVIRONMENT}
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/roblox_data
-      REDIS_URL: ${REDIS_URL}
+      FLASK_ENV: ${ENVIRONMENT:-development}
+      # Use Docker service names
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eduplatform}:${POSTGRES_PASSWORD:-eduplatform2024}@postgres:5432/${POSTGRES_DB:-educational_platform_dev}
+      REDIS_URL: redis://redis:6379/0
       FASTAPI_URL: http://fastapi-main:8009
-      JWT_SECRET: ${JWT_SECRET_KEY}
-      ROBLOX_API_KEY: ${ROBLOX_API_KEY}
-      ROBLOX_CLIENT_ID: ${ROBLOX_CLIENT_ID}
-      ROBLOX_CLIENT_SECRET: ${ROBLOX_CLIENT_SECRET}
+      JWT_SECRET: ${JWT_SECRET_KEY:-generate-secure-key-for-production}
+      FLASK_PORT: 5001
+      ROBLOX_API_KEY: ${ROBLOX_API_KEY:-}
+      ROBLOX_CLIENT_ID: ${ROBLOX_CLIENT_ID:-}
+      ROBLOX_CLIENT_SECRET: ${ROBLOX_CLIENT_SECRET:-}
       # Add Pusher if Flask Bridge needs it
       PUSHER_ENABLED: ${PUSHER_ENABLED:-true}
-      PUSHER_APP_ID: ${PUSHER_APP_ID}
-      PUSHER_KEY: ${PUSHER_KEY}
-      PUSHER_SECRET: ${PUSHER_SECRET}
+      PUSHER_APP_ID: ${PUSHER_APP_ID:-}
+      PUSHER_KEY: ${PUSHER_KEY:-}
+      PUSHER_SECRET: ${PUSHER_SECRET:-}
       PUSHER_CLUSTER: ${PUSHER_CLUSTER:-us2}
       WORKERS: 2
     ports:
@@ -247,41 +257,8 @@ services:
       <<: *healthcheck-defaults
       test: ["CMD", "curl", "-f", "http://localhost:5001/status"]
 
-  # Dashboard Backend Service - COMMENTED OUT: Not needed, using fastapi-main instead
-  # dashboard-backend:
-  #   image: ghcr.io/toolboxai-solutions/dashboard-backend:${VERSION:-latest}
-  #   build:
-  #     context: ../..
-  #     dockerfile: infrastructure/docker/dashboard-backend.Dockerfile
-  #   container_name: toolboxai-dashboard-backend
-  #   environment:
-  #     <<: *common-variables
-  #     NODE_ENV: ${ENVIRONMENT}
-  #     API_BASE_URL: http://fastapi-main:8009
-  #     DATABASE_URL: ${DATABASE_URL}
-  #     REDIS_URL: ${REDIS_URL}
-  #     JWT_SECRET: ${JWT_SECRET_KEY}
-  #     CORS_ORIGINS: ${CORS_ORIGINS}
-  #   ports:
-  #     - '8001:8001'
-  #   volumes:
-  #     - ../../apps/backend:/app:ro
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #     fastapi-main:
-  #       condition: service_healthy
-  #   networks:
-  #     - toolboxai_network
-  #   healthcheck:
-  #     <<: *healthcheck-defaults
-  #     test: ["CMD", "curl", "-f", "http://localhost:8001/api/health"]
-
   # Dashboard Frontend (Development)
   dashboard-frontend:
-    image: ghcr.io/toolboxai-solutions/frontend-dev:${VERSION:-latest}
     build:
       context: ../..
       dockerfile: infrastructure/docker/dashboard.dev.Dockerfile
@@ -289,30 +266,88 @@ services:
     environment:
       <<: *common-variables
       NODE_ENV: development
-      VITE_API_BASE_URL: http://localhost:8009
-      VITE_FASTAPI_URL: http://localhost:8009
-      VITE_WS_URL: ws://localhost:8009
-      # Pusher Configuration
-      VITE_PUSHER_KEY: ${PUSHER_KEY}
+      # Backend service URLs - Use Docker service names for internal communication
+      VITE_API_BASE_URL: http://fastapi-main:8009/api/v1
+      VITE_FASTAPI_URL: http://fastapi-main:8009
+      VITE_WS_URL: ws://fastapi-main:8009
+      VITE_PROXY_TARGET: http://fastapi-main:8009
+      # Pusher Configuration (Active - Replacing WebSocket for realtime)
+      VITE_PUSHER_KEY: ${PUSHER_KEY:-}
       VITE_PUSHER_CLUSTER: ${PUSHER_CLUSTER:-us2}
-      VITE_PUSHER_AUTH_ENDPOINT: /api/v1/pusher/auth
-      VITE_ENABLE_GAMIFICATION: ${ENABLE_GAMIFICATION}
-      VITE_ENABLE_ANALYTICS: ${ENABLE_ANALYTICS}
+      VITE_PUSHER_AUTH_ENDPOINT: http://fastapi-main:8009/api/v1/pusher/auth
+      VITE_PUSHER_SSL: ${PUSHER_SSL:-true}
+      # Clerk Authentication (2025) - Enhanced Configuration
+      VITE_CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY:-pk_test_Y2FzdWFsLWZpcmVmbHktMzkuY2xlcmsuYWNjb3VudHMuZGV2JA}
+      VITE_CLERK_SIGN_IN_URL: ${CLERK_SIGN_IN_URL:-}
+      VITE_CLERK_SIGN_UP_URL: ${CLERK_SIGN_UP_URL:-}
+      VITE_CLERK_AFTER_SIGN_IN_URL: ${CLERK_AFTER_SIGN_IN_URL:-/dashboard}
+      VITE_CLERK_AFTER_SIGN_UP_URL: ${CLERK_AFTER_SIGN_UP_URL:-/dashboard}
+      VITE_CLERK_FRONTEND_API_URL: ${CLERK_FRONTEND_API_URL:-}
+      VITE_ENABLE_CLERK_AUTH: ${ENABLE_CLERK_AUTH:-true}
+      # Clerk CORS domains - include Docker network access
+      VITE_CLERK_ALLOWED_ORIGINS: ${CLERK_ALLOWED_ORIGINS:-http://localhost:5179,http://127.0.0.1:5179,http://172.18.0.5:5179}
+      # Feature Flags
+      VITE_ENABLE_WEBSOCKET: ${ENABLE_WEBSOCKET:-true}
+      VITE_ENABLE_GAMIFICATION: ${ENABLE_GAMIFICATION:-true}
+      VITE_ENABLE_ANALYTICS: ${ENABLE_ANALYTICS:-true}
+      # Development flags
+      VITE_DEBUG_MODE: ${DEBUG:-true}
+      VITE_MOCK_API: false
+      # Docker environment configuration
+      DOCKER_ENV: "true"
+      VITE_HMR_HOST: localhost
+      # Docker-specific startup configuration
+      VITE_USE_DOCKER_CONFIG: ${VITE_USE_DOCKER_CONFIG:-false}
+      BACKEND_WAIT_TIMEOUT: ${BACKEND_WAIT_TIMEOUT:-300}
+      BACKEND_CHECK_INTERVAL: ${BACKEND_CHECK_INTERVAL:-5}
+      STARTUP_RETRY_COUNT: ${STARTUP_RETRY_COUNT:-3}
+      CLEAR_CACHE_ON_START: ${CLEAR_CACHE_ON_START:-false}
+      # Logging configuration
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     ports:
       - '5179:5179'
-    # Remove volume mounts for now to avoid node_modules conflicts
-    # In development, rebuild the container when code changes
-    # volumes:
-    #   - ../../apps/dashboard:/app
-    #   - /app/node_modules
+    # Enhanced volume mounts for better development experience
+    volumes:
+      # Source code for hot reloading
+      - ../../apps/dashboard/src:/app/src:cached
+      - ../../apps/dashboard/public:/app/public:cached
+      - ../../apps/dashboard/index.html:/app/index.html:cached
+      # Configuration files
+      - ../../apps/dashboard/vite.config.ts:/app/vite.config.ts:ro
+      - ../../apps/dashboard/vite.config.docker.ts:/app/vite.config.docker.ts:ro
+      - ../../apps/dashboard/package.json:/app/package.json:ro
+      - ../../apps/dashboard/tsconfig.json:/app/tsconfig.json:ro
+      # Ensure polyfills and static assets are available
+      - ../../apps/dashboard/public/polyfills.js:/app/public/polyfills.js:ro
+      # Logs directory for debugging
+      - dashboard-logs:/app/logs
+      # Exclude node_modules to prevent conflicts with container installation
+      - /app/node_modules
     depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       fastapi-main:
         condition: service_healthy
     networks:
       - toolboxai_network
     healthcheck:
       <<: *healthcheck-defaults
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5179', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => { process.exit(1); });"]
+      test: |
+        curl -f http://localhost:5179/ || \
+        wget --quiet --tries=1 --spider http://localhost:5179/ || \
+        exit 1
+      start_period: 60s
+      retries: 5
+    restart: unless-stopped
+    # Resource limits to prevent container from consuming too much memory during build
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
 
   # Ghost Backend CMS
   ghost-backend:
@@ -320,13 +355,13 @@ services:
     container_name: toolboxai-ghost
     environment:
       <<: *common-variables
-      NODE_ENV: ${ENVIRONMENT}
+      NODE_ENV: ${ENVIRONMENT:-development}
       database__client: postgres
       database__connection__host: postgres
       database__connection__port: 5432
-      database__connection__database: ghost_backend
-      database__connection__user: ${POSTGRES_USER}
-      database__connection__password: ${POSTGRES_PASSWORD}
+      database__connection__database: ghost_cms
+      database__connection__user: ${POSTGRES_USER:-eduplatform}
+      database__connection__password: ${POSTGRES_PASSWORD:-eduplatform2024}
       database__connection__pool__min: 2
       database__connection__pool__max: 10
       url: http://localhost:8000
@@ -341,7 +376,7 @@ services:
       - toolboxai_network
     healthcheck:
       <<: *healthcheck-defaults
-      test: ["CMD", "curl", "-f", "http://localhost:2368/ghost/api/admin/site/"]
+      test: ["CMD", "curl", "-f", "http://localhost:2368/ghost/api/v4/admin/site/"]
 
 volumes:
   postgres_data:
@@ -361,6 +396,8 @@ volumes:
   mcp_contexts:
     driver: local
   educational_content:
+    driver: local
+  dashboard-logs:
     driver: local
 
 networks:

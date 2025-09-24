@@ -1,0 +1,36 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'dashboard'
+    static_configs:
+      - targets: ['dashboard:5179']
+    metrics_path: '/metrics'
+
+  - job_name: 'backend'
+    static_configs:
+      - targets: ['backend:8009']
+    metrics_path: '/metrics'
+
+  - job_name: 'mcp-server'
+    static_configs:
+      - targets: ['mcp-server:9877']
+    metrics_path: '/metrics'
+
+  - job_name: 'agent-coordinator'
+    static_configs:
+      - targets: ['agent-coordinator:8888']
+    metrics_path: '/metrics'
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']

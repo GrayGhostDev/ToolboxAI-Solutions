@@ -6,10 +6,10 @@
  */
 
 import React from 'react';
-import { Box } from '@mui/material';
+import Box from '@mui/material/Box';
 import RobloxStudioIntegration from '../roblox/RobloxStudioIntegration';
 
-const RobloxStudioPage: React.FC = () => {
+const RobloxStudioPage: React.FunctionComponent<Record<string, any>> = () => {
   // Simple, stable container without any complex positioning or scroll prevention
   return (
     <Box

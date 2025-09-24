@@ -17,23 +17,25 @@ WORKDIR /app
 # Copy requirements
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir \
-    flask \
-    flask-cors \
-    flask-jwt-extended \
-    flask-socketio \
-    python-socketio \
-    requests \
-    redis \
-    psycopg2-binary \
-    gunicorn
+# Install Python dependencies (install requirements.txt for all dependencies)
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir flask-socketio==5.3.6 && \
+    pip install --no-cache-dir gunicorn
 
-# Copy application code
-COPY apps/backend/ .
+# Copy application code with correct structure
+COPY --chown=appuser:appuser apps/backend apps/backend
+COPY --chown=appuser:appuser core core
+COPY --chown=appuser:appuser database database
+COPY --chown=appuser:appuser toolboxai_settings toolboxai_settings
 
-# Change ownership
-RUN chown -R appuser:appuser /app
+# Set Python path
+ENV PYTHONPATH=/app:$PYTHONPATH \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/tmp && \
+    chown -R appuser:appuser /app/logs /app/tmp
 
 # Switch to non-root user
 USER appuser
@@ -46,4 +48,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:5001/status || exit 1
 
 # Start Flask with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "2", "--timeout", "120", "flask_bridge:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "2", "--timeout", "120", "apps.backend.flask_bridge:app"]

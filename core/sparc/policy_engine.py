@@ -271,9 +271,16 @@ class PolicyEngine:
         self.adaptation_log: List[Dict[str, Any]] = []
         self.decision_count = 0
 
-        # Persistence
-        self.persistence_path = Path("data/policy_engine")
-        self.persistence_path.mkdir(parents=True, exist_ok=True)
+        # Persistence - use environment-aware path for Docker compatibility
+        import os
+        data_dir = os.environ.get('DATA_DIR', '/tmp' if os.path.exists('/tmp') else 'data')
+        self.persistence_path = Path(data_dir) / "policy_engine"
+        try:
+            self.persistence_path.mkdir(parents=True, exist_ok=True)
+        except PermissionError:
+            # Fallback to temp directory if permission denied
+            self.persistence_path = Path("/tmp/policy_engine")
+            self.persistence_path.mkdir(parents=True, exist_ok=True)
 
         # Initialize default policies
         self._initialize_default_policies()

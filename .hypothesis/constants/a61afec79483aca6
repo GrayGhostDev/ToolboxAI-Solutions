@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/deps.py
+# hypothesis_version: 6.139.2
+
+['Bearer', 'Token has expired', 'User not found', 'WWW-Authenticate', 'admin', 'email', 'role', 'student', 'sub', 'teacher', 'test@example.com', 'test_user', 'username']

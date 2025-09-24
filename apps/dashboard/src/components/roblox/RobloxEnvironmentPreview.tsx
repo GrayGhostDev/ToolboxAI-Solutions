@@ -4,43 +4,39 @@
  * 3D preview of Roblox educational environments
  * Displays generated terrain, assets, and interactive elements
  */
-
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import Slider from '@mui/material/Slider';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import Paper from '@mui/material/Paper';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
+import Tooltip from '@mui/material/Tooltip';
+import CircularProgress from '@mui/material/CircularProgress';
+import LinearProgress from '@mui/material/LinearProgress';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Divider from '@mui/material/Divider';
+import Grid from '@mui/material/Grid';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Collapse from '@mui/material/Collapse';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import { useTheme, alpha } from '@mui/material/styles';
 import { useLocation } from 'react-router-dom';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  IconButton,
-  Button,
-  ButtonGroup,
-  Slider,
-  Stack,
-  Chip,
-  Paper,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  ListItemSecondaryAction,
-  Tooltip,
-  CircularProgress,
-  LinearProgress,
-  Alert,
-  AlertTitle,
-  Divider,
-  Grid,
-  ToggleButton,
-  ToggleButtonGroup,
-  Collapse,
-  Switch,
-  FormControlLabel,
-  Menu,
-  MenuItem,
-  useTheme,
-  alpha
-} from '@mui/material';
 import {
   Terrain,
   ThreeDRotation,
@@ -80,7 +76,6 @@ import {
 } from '@mui/icons-material';
 import { useWebSocketContext } from '../../contexts/WebSocketContext';
 import { WebSocketMessageType } from '../../types/websocket';
-
 interface EnvironmentData {
   id: string;
   name: string;
@@ -104,7 +99,6 @@ interface EnvironmentData {
     memoryUsage: number;
   };
 }
-
 interface TerrainData {
   type: string;
   heightMap?: string;
@@ -116,7 +110,6 @@ interface TerrainData {
     buildings?: number;
   };
 }
-
 interface AssetData {
   id: string;
   name: string;
@@ -128,7 +121,6 @@ interface AssetData {
   interactive: boolean;
   properties?: Record<string, any>;
 }
-
 interface LightingData {
   timeOfDay: 'morning' | 'noon' | 'evening' | 'night';
   ambient: string;
@@ -140,24 +132,20 @@ interface LightingData {
   };
   skybox: string;
 }
-
 type ViewMode = 'preview' | 'editor' | 'stats';
 type CameraMode = 'orbit' | 'fly' | 'first-person';
-
 const ASSET_ICONS: Record<string, React.ReactNode> = {
   model: <House />,
   npc: <DirectionsRun />,
   interactive: <Quiz />,
   decoration: <LocalFlorist />
 };
-
-export const RobloxEnvironmentPreview: React.FC = () => {
+export const RobloxEnvironmentPreview: React.FunctionComponent<Record<string, any>> = () => {
   const theme = useTheme();
   const location = useLocation();
   const { on, sendMessage, isConnected } = useWebSocketContext();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
   const [environment, setEnvironment] = useState<EnvironmentData | null>(null);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('preview');
@@ -176,7 +164,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
   });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [sessionData, setSessionData] = useState<any>(null);
-
   // Load session data from navigation state
   useEffect(() => {
     if (location.state) {
@@ -222,7 +209,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
           }
         };
         setEnvironment(mockEnvironment);
-        
         // Auto-start if in live mode
         if (mode === 'live') {
           setIsPlaying(true);
@@ -230,66 +216,52 @@ export const RobloxEnvironmentPreview: React.FC = () => {
       }
     }
   }, [location.state]);
-
   // WebSocket subscriptions
   useEffect(() => {
     if (!isConnected) return;
-
     const unsubscribeEnvironment = on(WebSocketMessageType.ENVIRONMENT_UPDATE, (data: any) => {
       handleEnvironmentUpdate(data);
     });
-
     const unsubscribeAsset = on(WebSocketMessageType.ASSET_UPDATE, (data: any) => {
       handleAssetUpdate(data);
     });
-
     const unsubscribePreview = on(WebSocketMessageType.PREVIEW_READY, (data: any) => {
       setPreviewUrl(data.url);
       setLoading(false);
     });
-
     return () => {
       unsubscribeEnvironment();
       unsubscribeAsset();
       unsubscribePreview();
     };
   }, [isConnected]);
-
   const handleEnvironmentUpdate = (data: Partial<EnvironmentData>) => {
     setEnvironment(prev => prev ? { ...prev, ...data } : null);
   };
-
   const handleAssetUpdate = (data: any) => {
     setEnvironment(prev => {
       if (!prev) return null;
-      
       const updatedAssets = prev.assets.map(asset => 
         asset.id === data.assetId ? { ...asset, ...data.updates } : asset
       );
-      
       return { ...prev, assets: updatedAssets };
     });
   };
-
   const loadEnvironment = (environmentId: string) => {
     setLoading(true);
     sendMessage(WebSocketMessageType.LOAD_ENVIRONMENT, { environmentId });
   };
-
   const handleZoom = (delta: number) => {
     const newZoom = Math.max(25, Math.min(200, zoom + delta));
     setZoom(newZoom);
     sendPreviewCommand('zoom', { level: newZoom });
   };
-
   const handleCameraReset = () => {
     setZoom(100);
     sendPreviewCommand('camera.reset');
   };
-
   const toggleFullscreen = async () => {
     if (!containerRef.current) return;
-
     if (!isFullscreen) {
       await containerRef.current.requestFullscreen();
     } else {
@@ -297,12 +269,10 @@ export const RobloxEnvironmentPreview: React.FC = () => {
     }
     setIsFullscreen(!isFullscreen);
   };
-
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
     sendPreviewCommand(isPlaying ? 'pause' : 'play');
   };
-
   const sendPreviewCommand = (command: string, params?: any) => {
     if (iframeRef.current && iframeRef.current.contentWindow) {
       iframeRef.current.contentWindow.postMessage({
@@ -312,10 +282,8 @@ export const RobloxEnvironmentPreview: React.FC = () => {
       }, '*');
     }
   };
-
   const handleAssetToggle = (assetId: string) => {
     if (!environment) return;
-
     const asset = environment.assets.find(a => a.id === assetId);
     if (asset) {
       const newVisibility = !asset.visible;
@@ -323,7 +291,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
         assetId,
         visible: newVisibility
       });
-      
       // Optimistic update
       handleAssetUpdate({
         assetId,
@@ -331,37 +298,30 @@ export const RobloxEnvironmentPreview: React.FC = () => {
       });
     }
   };
-
   const handleLayerToggle = (layer: keyof typeof layersVisible) => {
     const newState = !layersVisible[layer];
     setLayersVisible(prev => ({ ...prev, [layer]: newState }));
     sendPreviewCommand(`layer.${layer}`, { visible: newState });
   };
-
   const exportEnvironment = () => {
     if (!environment) return;
-    
     sendMessage(WebSocketMessageType.EXPORT_ENVIRONMENT, {
       environmentId: environment.id,
       format: 'rbxl'
     });
   };
-
   const shareEnvironment = () => {
     if (!environment) return;
-    
     sendMessage(WebSocketMessageType.SHARE_ENVIRONMENT, {
       environmentId: environment.id
     });
   };
-
   // Calculate performance color
   const getPerformanceColor = (fps: number) => {
     if (fps >= 55) return 'success';
     if (fps >= 30) return 'warning';
     return 'error';
   };
-
   return (
     <Box 
       ref={containerRef}
@@ -391,7 +351,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                   </Typography>
                 </Box>
               </Box>
-              
               <Stack direction="row" spacing={1}>
                 {environment && (
                   <>
@@ -413,7 +372,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
           </CardContent>
         </Card>
       )}
-
       {/* Main Content */}
       <Box sx={{ flex: 1, display: 'flex', gap: 2 }}>
         {/* Preview Area */}
@@ -446,25 +404,21 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                   <Speed />
                 </ToggleButton>
               </ToggleButtonGroup>
-
               <Divider orientation="vertical" flexItem />
-
               <ButtonGroup size="small">
-                <Button onClick={() => handleZoom(-10)}>
+                <Button onClick={(e: React.MouseEvent) => () => handleZoom(-10)}>
                   <ZoomOut />
                 </Button>
                 <Button disabled>
                   {zoom}%
                 </Button>
-                <Button onClick={() => handleZoom(10)}>
+                <Button onClick={(e: React.MouseEvent) => () => handleZoom(10)}>
                   <ZoomIn />
                 </Button>
               </ButtonGroup>
-
-              <IconButton size="small" onClick={handleCameraReset}>
+              <IconButton size="small" onClick={(e: React.MouseEvent) => handleCameraReset}>
                 <CenterFocusStrong />
               </IconButton>
-
               <ToggleButtonGroup
                 value={cameraMode}
                 exclusive
@@ -479,30 +433,24 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                 </ToggleButton>
               </ToggleButtonGroup>
             </Stack>
-
             <Stack direction="row" spacing={1}>
-              <IconButton size="small" onClick={togglePlay}>
+              <IconButton size="small" onClick={(e: React.MouseEvent) => togglePlay}>
                 {isPlaying ? <Pause /> : <PlayArrow />}
               </IconButton>
-              
-              <IconButton size="small" onClick={() => loadEnvironment('current')}>
+              <IconButton size="small" onClick={(e: React.MouseEvent) => () => loadEnvironment('current')}>
                 <Refresh />
               </IconButton>
-              
-              <IconButton size="small" onClick={exportEnvironment}>
+              <IconButton size="small" onClick={(e: React.MouseEvent) => exportEnvironment}>
                 <Download />
               </IconButton>
-              
-              <IconButton size="small" onClick={shareEnvironment}>
+              <IconButton size="small" onClick={(e: React.MouseEvent) => shareEnvironment}>
                 <Share />
               </IconButton>
-              
-              <IconButton size="small" onClick={toggleFullscreen}>
+              <IconButton size="small" onClick={(e: React.MouseEvent) => toggleFullscreen}>
                 {isFullscreen ? <FullscreenExit /> : <Fullscreen />}
               </IconButton>
             </Stack>
           </Box>
-
           {/* Preview Content */}
           <Box sx={{ flex: 1, position: 'relative', bgcolor: '#1a1a1a' }}>
             {loading && (
@@ -522,7 +470,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                 </Typography>
               </Box>
             )}
-
             {previewUrl && (
               <iframe
                 ref={iframeRef}
@@ -537,7 +484,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                 sandbox="allow-scripts allow-same-origin"
               />
             )}
-
             {!previewUrl && !loading && (
               <Box
                 sx={{
@@ -588,13 +534,12 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                 <Button
                   variant="contained"
                   sx={{ mt: 2 }}
-                  onClick={() => loadEnvironment(sessionData?.id || 'demo')}
+                  onClick={(e: React.MouseEvent) => () => loadEnvironment(sessionData?.id || 'demo')}
                 >
                   {sessionData ? 'Initialize Environment' : 'Load Demo Environment'}
                 </Button>
               </Box>
             )}
-
             {/* Overlay Stats */}
             {showStats && environment && (
               <Paper
@@ -622,7 +567,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                 </Stack>
               </Paper>
             )}
-
             {/* Grid Toggle */}
             <FormControlLabel
               control={
@@ -647,7 +591,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
             />
           </Box>
         </Card>
-
         {/* Side Panel */}
         {viewMode !== 'preview' && (
           <Card sx={{ width: 320, overflow: 'auto' }}>
@@ -657,7 +600,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                   <Typography variant="h6" gutterBottom>
                     Environment Settings
                   </Typography>
-                  
                   {/* Environment Info */}
                   <Box sx={{ mb: 3 }}>
                     <Typography variant="subtitle2" gutterBottom>
@@ -698,9 +640,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                       </Box>
                     </Stack>
                   </Box>
-
                   <Divider sx={{ my: 2 }} />
-
                   {/* Layers */}
                   <Box sx={{ mb: 3 }}>
                     <Typography variant="subtitle2" gutterBottom>
@@ -724,7 +664,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                           </Box>
                           <IconButton
                             size="small"
-                            onClick={() => handleLayerToggle(layer as keyof typeof layersVisible)}
+                            onClick={(e: React.MouseEvent) => () => handleLayerToggle(layer as keyof typeof layersVisible)}
                           >
                             {visible ? <Visibility /> : <VisibilityOff />}
                           </IconButton>
@@ -732,9 +672,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                       ))}
                     </Stack>
                   </Box>
-
                   <Divider sx={{ my: 2 }} />
-
                   {/* Lighting */}
                   <Box sx={{ mb: 3 }}>
                     <Typography variant="subtitle2" gutterBottom>
@@ -773,9 +711,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                       </ToggleButton>
                     </ToggleButtonGroup>
                   </Box>
-
                   <Divider sx={{ my: 2 }} />
-
                   {/* Assets */}
                   <Box>
                     <Typography variant="subtitle2" gutterBottom>
@@ -787,7 +723,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                           key={asset.id}
                           button
                           selected={selectedAsset === asset.id}
-                          onClick={() => setSelectedAsset(asset.id)}
+                          onClick={(e: React.MouseEvent) => () => setSelectedAsset(asset.id)}
                         >
                           <ListItemIcon>
                             {ASSET_ICONS[asset.type] || <House />}
@@ -800,7 +736,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                             <IconButton
                               edge="end"
                               size="small"
-                              onClick={() => handleAssetToggle(asset.id)}
+                              onClick={(e: React.MouseEvent) => () => handleAssetToggle(asset.id)}
                             >
                               {asset.visible ? <Visibility /> : <VisibilityOff />}
                             </IconButton>
@@ -811,13 +747,11 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                   </Box>
                 </>
               )}
-
               {viewMode === 'stats' && environment && (
                 <>
                   <Typography variant="h6" gutterBottom>
                     Performance Stats
                   </Typography>
-                  
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
                       <Paper sx={{ p: 2, textAlign: 'center' }}>
@@ -828,7 +762,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                         <Typography variant="caption">FPS</Typography>
                       </Paper>
                     </Grid>
-                    
                     <Grid item xs={6}>
                       <Paper sx={{ p: 2, textAlign: 'center' }}>
                         <Memory color="warning" />
@@ -838,7 +771,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                         <Typography variant="caption">MB Used</Typography>
                       </Paper>
                     </Grid>
-                    
                     <Grid item xs={6}>
                       <Paper sx={{ p: 2, textAlign: 'center' }}>
 {/* Timer icon temporarily removed to satisfy typecheck */}
@@ -848,7 +780,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                         <Typography variant="caption">ms Render</Typography>
                       </Paper>
                     </Grid>
-                    
                     <Grid item xs={6}>
                       <Paper sx={{ p: 2, textAlign: 'center' }}>
                         <Storage color="success" />
@@ -859,12 +790,10 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                       </Paper>
                     </Grid>
                   </Grid>
-
                   <Box sx={{ mt: 3 }}>
                     <Typography variant="subtitle2" gutterBottom>
                       Resource Usage
                     </Typography>
-                    
                     <Box sx={{ mb: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                         <Typography variant="caption">Polygon Count</Typography>
@@ -879,7 +808,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                                environment.metadata.polyCount > 60000 ? 'warning' : 'success'}
                       />
                     </Box>
-
                     <Box sx={{ mb: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                         <Typography variant="caption">Texture Memory</Typography>
@@ -895,7 +823,6 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                       />
                     </Box>
                   </Box>
-
                   <Alert severity={
                     environment.performance.fps < 30 ? 'error' :
                     environment.performance.fps < 55 ? 'warning' : 'success'

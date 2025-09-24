@@ -1,3 +1,8 @@
+import { vi } from 'vitest';
+
+// Configure test timeout for Vitest
+vi.setConfig({ testTimeout: 10000 });
+
 /**
  * Test Suite for RobloxAIAssistant Component
  *
@@ -9,20 +14,26 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { RobloxAIAssistant } from './RobloxAIAssistant';
 import { api } from '../../services/api';
-import WS from 'jest-websocket-mock';
+
+// Mock jest-websocket-mock functionality
+const WS = {
+  clean: vi.fn(),
+  close: vi.fn(),
+};
 
 // Mock dependencies
-jest.mock('../../services/api');
-jest.mock('react-markdown', () => ({
+vi.mock('../../services/api');
+vi.mock('react-markdown', () => ({
   __esModule: true,
   default: ({ children }: { children: string }) => <div>{children}</div>
 }));
-jest.mock('react-syntax-highlighter', () => ({
+vi.mock('react-syntax-highlighter', () => ({
   Prism: ({ children }: { children: string }) => <pre>{children}</pre>,
 }));
-jest.mock('react-syntax-highlighter/dist/esm/styles/prism', () => ({
+vi.mock('react-syntax-highlighter/dist/cjs/styles/prism', () => ({
   vscDarkPlus: {}
 }));
 

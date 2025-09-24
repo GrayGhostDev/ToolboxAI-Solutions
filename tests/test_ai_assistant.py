@@ -1,3 +1,4 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """Test AI Assistant with OpenAI fallback for Roblox educational content generation"""
 
@@ -10,6 +11,7 @@ from typing import AsyncGenerator
 API_BASE_URL = "http://127.0.0.1:8009"
 AUTH_TOKEN = "dev-token"
 
+@pytest.mark.asyncio
 async def test_conversation_flow():
     """Test full conversation flow with AI Assistant"""
 
@@ -84,6 +86,7 @@ async def test_conversation_flow():
         else:
             print(f"   Could not retrieve conversation: {response.status_code}")
 
+@pytest.mark.asyncio
 async def test_streaming_response():
     """Test streaming response capability"""
     print("\n5. Testing streaming response...")
@@ -131,6 +134,7 @@ async def test_streaming_response():
             else:
                 print(f"   Streaming failed: {response.status_code}")
 
+@pytest.mark.asyncio
 async def test_roblox_content_generation():
     """Test Roblox-specific content generation"""
     print("\n6. Testing Roblox content generation...")

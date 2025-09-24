@@ -158,16 +158,16 @@ export default function Assessments() {
                   Assessments
                 </Typography>
                 <Stack direction="row" spacing={1}>
-                  <IconButton onClick={handleRefresh} disabled={loading}>
+                  <IconButton onClick={(e: React.MouseEvent) => handleRefresh} disabled={loading}>
                     <RefreshIcon />
                   </IconButton>
-                  <IconButton onClick={handleFilterMenuOpen}>
+                  <IconButton onClick={(e: React.MouseEvent) => handleFilterMenuOpen}>
                     <FilterListIcon />
                   </IconButton>
                   <Button
                     variant="contained"
                     startIcon={<AddIcon />}
-                    onClick={() => setCreateDialogOpen(true)}
+                    onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
                   >
                     Create Assessment
                   </Button>
@@ -179,7 +179,7 @@ export default function Assessments() {
                 onClose={handleFilterMenuClose}
               >
                 <MenuItem
-                  onClick={() => {
+                  onClick={(e: React.MouseEvent) => () => {
                     handleFilterChange('status', 'active');
                     handleFilterMenuClose();
                   }}
@@ -187,7 +187,7 @@ export default function Assessments() {
                   Active Only
                 </MenuItem>
                 <MenuItem
-                  onClick={() => {
+                  onClick={(e: React.MouseEvent) => () => {
                     handleFilterChange('status', 'draft');
                     handleFilterMenuClose();
                   }}
@@ -195,7 +195,7 @@ export default function Assessments() {
                   Drafts
                 </MenuItem>
                 <MenuItem
-                  onClick={() => {
+                  onClick={(e: React.MouseEvent) => () => {
                     handleFilterChange('type', 'quiz');
                     handleFilterMenuClose();
                   }}
@@ -203,7 +203,7 @@ export default function Assessments() {
                   Quizzes
                 </MenuItem>
                 <MenuItem
-                  onClick={() => {
+                  onClick={(e: React.MouseEvent) => () => {
                     handleFilterChange('type', 'test');
                     handleFilterMenuClose();
                   }}
@@ -211,7 +211,7 @@ export default function Assessments() {
                   Tests
                 </MenuItem>
                 <MenuItem
-                  onClick={() => {
+                  onClick={(e: React.MouseEvent) => () => {
                     handleFilterChange('type', undefined);
                     handleFilterMenuClose();
                   }}
@@ -333,7 +333,7 @@ export default function Assessments() {
                           bgcolor: 'action.hover',
                         },
                       }}
-                      onClick={() => navigate(`/assessments/${assessment.id}`)}
+                      onClick={(e: React.MouseEvent) => () => navigate(`/assessments/${assessment.id}`)}
                     >
                       <Stack direction="row" spacing={2} alignItems="center">
                         <AssessmentIcon color="primary" />
@@ -377,7 +377,7 @@ export default function Assessments() {
                           </Typography>
                           <IconButton
                             size="small"
-                            onClick={(e) => handleMenuOpen(e, assessment)}
+                            onClick={(e: React.MouseEvent) => (e) => handleMenuOpen(e, assessment)}
                           >
                             <MoreVertIcon fontSize="small" />
                           </IconButton>
@@ -403,16 +403,16 @@ export default function Assessments() {
         open={Boolean(menuAnchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={() => menuAssessment && handleViewAssessment(menuAssessment.id)}>
+        <MenuItem onClick={(e: React.MouseEvent) => () => menuAssessment && handleViewAssessment(menuAssessment.id)}>
           View Details
         </MenuItem>
-        <MenuItem onClick={() => menuAssessment && handleGradeAssessment(menuAssessment.id)}>
+        <MenuItem onClick={(e: React.MouseEvent) => () => menuAssessment && handleGradeAssessment(menuAssessment.id)}>
           Grade Submissions
         </MenuItem>
-        <MenuItem onClick={() => menuAssessment && handleEditAssessment(menuAssessment.id)}>
+        <MenuItem onClick={(e: React.MouseEvent) => () => menuAssessment && handleEditAssessment(menuAssessment.id)}>
           Edit Assessment
         </MenuItem>
-        <MenuItem onClick={() => menuAssessment && handleDeleteAssessment(menuAssessment)}>
+        <MenuItem onClick={(e: React.MouseEvent) => () => menuAssessment && handleDeleteAssessment(menuAssessment)}>
           Delete Assessment
         </MenuItem>
       </Menu>

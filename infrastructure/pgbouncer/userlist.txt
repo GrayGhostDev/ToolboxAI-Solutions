@@ -1,0 +1,26 @@
+# PgBouncer user authentication file
+# Format: "username" "password_hash"
+#
+# To generate MD5 hash: echo -n "passwordusername" | md5sum
+# Note: For md5 auth, the hash format is: md5 + md5(password + username)
+#
+# Example users (replace with actual hashes in production):
+
+"toolboxai" "md5a1b2c3d4e5f6789012345678901234567"
+"eduplatform" "md5b2c3d4e5f6789012345678901234568"
+"postgres" "md5c3d4e5f6789012345678901234569"
+"pgbouncer_admin" "md5d4e5f6789012345678901234570"
+"pgbouncer_stats" "md5e5f6789012345678901234571"
+"monitoring" "md5f6789012345678901234572"
+"agent_service" "md5789012345678901234573"
+"websocket_service" "md5012345678901234574"
+"analytics_service" "md5345678901234575"
+"worker_service" "md5678901234576"
+
+# Service accounts for different components
+"api_service" "md5901234577"
+"dashboard_service" "md5234578"
+"background_worker" "md5567879"
+
+# Read-only monitoring user
+"readonly_monitor" "md5890180"

@@ -1,3 +1,4 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """
 Database Migration Tests
@@ -59,7 +60,8 @@ class TestDatabaseMigrations:
             os.environ["DATABASE_URL"] = self.original_db_url
     
     @pytest.mark.asyncio
-    async def test_migration_current_status(self):
+    @pytest.mark.asyncio
+async def test_migration_current_status(self):
         """Test getting current migration status"""
         result = subprocess.run(
             ["alembic", "-c", "core/database/alembic.ini", "current"],
@@ -72,7 +74,8 @@ class TestDatabaseMigrations:
         assert "head" in result.stdout or "Rev:" in result.stdout
     
     @pytest.mark.asyncio
-    async def test_migration_upgrade_head(self):
+    @pytest.mark.asyncio
+async def test_migration_upgrade_head(self):
         """Test upgrading to the latest migration"""
         # First downgrade to base
         subprocess.run(
@@ -115,7 +118,8 @@ class TestDatabaseMigrations:
                 assert result, f"Table '{table}' does not exist after migration"
     
     @pytest.mark.asyncio
-    async def test_migration_rollback(self):
+    @pytest.mark.asyncio
+async def test_migration_rollback(self):
         """Test rolling back migrations"""
         # Get current revision
         current_result = subprocess.run(
@@ -154,7 +158,8 @@ class TestDatabaseMigrations:
         assert result.returncode == 0, f"Failed to upgrade after downgrade: {result.stderr}"
     
     @pytest.mark.asyncio
-    async def test_schema_consistency(self):
+    @pytest.mark.asyncio
+async def test_schema_consistency(self):
         """Test that the schema matches the SQLAlchemy models"""
         # Ensure migrations are at head
         subprocess.run(
@@ -214,7 +219,8 @@ class TestDatabaseMigrations:
                         assert not missing_columns, f"Missing columns in table '{table_name}': {missing_columns}"
     
     @pytest.mark.asyncio
-    async def test_data_integrity_during_migration(self):
+    @pytest.mark.asyncio
+async def test_data_integrity_during_migration(self):
         """Test that data is preserved during migrations"""
         # Ensure we're at head
         subprocess.run(
@@ -292,7 +298,8 @@ class TestDatabaseMigrations:
             await conn.execute("DELETE FROM users WHERE username = 'test_migration_user'")
     
     @pytest.mark.asyncio
-    async def test_migration_history(self):
+    @pytest.mark.asyncio
+async def test_migration_history(self):
         """Test viewing migration history"""
         result = subprocess.run(
             ["alembic", "-c", "core/database/alembic.ini", "history"],
@@ -305,7 +312,8 @@ class TestDatabaseMigrations:
         assert "Rev:" in result.stdout or "->" in result.stdout
     
     @pytest.mark.asyncio
-    async def test_migration_autogenerate(self):
+    @pytest.mark.asyncio
+async def test_migration_autogenerate(self):
         """Test that autogenerate detects model changes correctly"""
         # This test would require modifying models temporarily
         # For now, we just test that autogenerate runs without error
@@ -321,7 +329,8 @@ class TestDatabaseMigrations:
         assert result.returncode == 0 or "No changes in schema detected" in result.stdout
     
     @pytest.mark.asyncio
-    async def test_indexes_and_constraints(self):
+    @pytest.mark.asyncio
+async def test_indexes_and_constraints(self):
         """Test that indexes and constraints are properly created"""
         # Ensure migrations are at head
         subprocess.run(
@@ -382,7 +391,8 @@ class TestMigrationIntegration:
     """Integration tests for migrations with real database operations"""
     
     @pytest.mark.asyncio
-    async def test_full_migration_workflow(self):
+    @pytest.mark.asyncio
+async def test_full_migration_workflow(self):
         """Test complete migration workflow from base to head with seed data"""
         # 1. Downgrade to base
         subprocess.run(

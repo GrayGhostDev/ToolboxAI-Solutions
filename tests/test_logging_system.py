@@ -1,3 +1,4 @@
+import pytest_asyncio
 """
 import pytest
 Test Comprehensive Logging System with Correlation IDs
@@ -209,14 +210,16 @@ class TestCorrelationIDMiddleware:
     """Test the correlation ID middleware"""
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_middleware_sets_correlation_id(self):
+    @pytest.mark.asyncio
+async def test_middleware_sets_correlation_id(self):
         """Test that middleware sets correlation ID"""
         app = FastAPI()
         app.add_middleware(CorrelationIDMiddleware)
         
         @app.get("/test")
         @pytest.mark.asyncio(loop_scope="function")
-        async def test_endpoint(request: Request):
+        @pytest.mark.asyncio
+async def test_endpoint(request: Request):
             return {
                 "correlation_id": request.state.correlation_id,
                 "context_id": logging_manager.get_correlation_id()
@@ -232,14 +235,16 @@ class TestCorrelationIDMiddleware:
         assert "X-Correlation-ID" in response.headers
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_middleware_uses_existing_correlation_id(self):
+    @pytest.mark.asyncio
+async def test_middleware_uses_existing_correlation_id(self):
         """Test that middleware uses existing correlation ID from headers"""
         app = FastAPI()
         app.add_middleware(CorrelationIDMiddleware)
         
         @app.get("/test")
         @pytest.mark.asyncio(loop_scope="function")
-        async def test_endpoint(request: Request):
+        @pytest.mark.asyncio
+async def test_endpoint(request: Request):
             return {"correlation_id": request.state.correlation_id}
         
         client = TestClient(app)
@@ -255,7 +260,8 @@ class TestLoggingDecorators:
     """Test logging decorators"""
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_execution_time_decorator_async(self, initialized_logging, caplog):
+    @pytest.mark.asyncio
+async def test_execution_time_decorator_async(self, initialized_logging, caplog):
         """Test execution time decorator for async functions"""
         
         @log_execution_time(threshold_ms=50)
@@ -286,7 +292,8 @@ class TestLoggingDecorators:
         assert any("Operation completed" in record.message for record in caplog.records)
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_database_operation_decorator(self, initialized_logging, caplog):
+    @pytest.mark.asyncio
+async def test_database_operation_decorator(self, initialized_logging, caplog):
         """Test database operation logging decorator"""
         
         @log_database_operation("SELECT")
@@ -302,7 +309,8 @@ class TestLoggingDecorators:
         assert any("Database operation completed: SELECT" in record.message for record in caplog.records)
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_external_api_call_decorator(self, initialized_logging, caplog):
+    @pytest.mark.asyncio
+async def test_external_api_call_decorator(self, initialized_logging, caplog):
         """Test external API call logging decorator"""
         
         @log_external_api_call("PaymentService")
@@ -390,7 +398,8 @@ class TestIntegrationWithErrorHandling:
     """Test integration with error handling system"""
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_error_handler_uses_correlation_id(self):
+    @pytest.mark.asyncio
+async def test_error_handler_uses_correlation_id(self):
         """Test that error handler includes correlation ID in logs"""
         from apps.backend.core.errors.error_handler import ApplicationError, ErrorHandler
         

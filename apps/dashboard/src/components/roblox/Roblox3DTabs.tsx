@@ -1,16 +1,14 @@
-import React, { useState } from 'react';
-import { 
-  Box, 
-  Tabs, 
-  Tab, 
-  useTheme, 
-  alpha, 
-  keyframes, 
-  styled,
-  Typography,
-  Badge
-} from '@mui/material';
-
+import React from 'react';
+import Box from '@mui/material/Box';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import { keyframes } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
+import Badge from '@mui/material/Badge';
+import Badge from '@mui/material/Badge';
 interface TabItem {
   id: string;
   label: string;
@@ -19,7 +17,6 @@ interface TabItem {
   disabled?: boolean;
   tooltip?: string;
 }
-
 interface Roblox3DTabsProps {
   tabs: TabItem[];
   value: number;
@@ -30,30 +27,25 @@ interface Roblox3DTabsProps {
   animated?: boolean;
   glowEffect?: boolean;
 }
-
 // Animations
 const floatAnimation = keyframes`
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(-2px) rotate(1deg); }
 `;
-
 const pulseAnimation = keyframes`
   0% { transform: scale(1); }
   50% { transform: scale(1.05); }
   100% { transform: scale(1); }
 `;
-
 const glowAnimation = keyframes`
   0% { box-shadow: 0 0 5px currentColor; }
   50% { box-shadow: 0 0 15px currentColor, 0 0 25px currentColor; }
   100% { box-shadow: 0 0 5px currentColor; }
 `;
-
 const shimmerAnimation = keyframes`
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 `;
-
 const StyledTabs = styled(Tabs)(({ theme, orientation, animated }: any) => ({
   '& .MuiTabs-indicator': {
     background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
@@ -67,7 +59,6 @@ const StyledTabs = styled(Tabs)(({ theme, orientation, animated }: any) => ({
       right: 'auto',
     }),
   },
-  
   '& .MuiTabs-flexContainer': {
     gap: 8,
     ...(orientation === 'vertical' && {
@@ -76,14 +67,12 @@ const StyledTabs = styled(Tabs)(({ theme, orientation, animated }: any) => ({
     }),
   },
 }));
-
 const StyledTab = styled(Tab)(({ theme, size, animated, glowEffect }: any) => {
   const sizeStyles = {
     small: { minHeight: 40, padding: '8px 16px', fontSize: '0.875rem' },
     medium: { minHeight: 48, padding: '12px 20px', fontSize: '1rem' },
     large: { minHeight: 56, padding: '16px 24px', fontSize: '1.125rem' }
   };
-
   return {
     position: 'relative',
     background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.05)})`,
@@ -97,7 +86,6 @@ const StyledTab = styled(Tab)(({ theme, size, animated, glowEffect }: any) => {
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.1)}`,
     ...sizeStyles[size],
-    
     '&:hover': {
       transform: 'translateY(-2px) scale(1.02)',
       background: `linear-gradient(145deg, ${alpha(theme.palette.primary.main, 0.1)}, ${alpha(theme.palette.secondary.main, 0.05)})`,
@@ -105,7 +93,6 @@ const StyledTab = styled(Tab)(({ theme, size, animated, glowEffect }: any) => {
       boxShadow: `0 4px 15px ${alpha(theme.palette.primary.main, 0.3)}`,
       color: theme.palette.primary.main,
     },
-    
     '&.Mui-selected': {
       background: `linear-gradient(145deg, ${theme.palette.primary.main}, ${alpha(theme.palette.primary.main, 0.8)})`,
       color: 'white',
@@ -113,7 +100,6 @@ const StyledTab = styled(Tab)(({ theme, size, animated, glowEffect }: any) => {
       boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
       transform: 'translateY(-1px)',
     },
-    
     '&.Mui-disabled': {
       background: `linear-gradient(145deg, ${theme.palette.grey[800]}, ${theme.palette.grey[900]})`,
       borderColor: theme.palette.grey[600],
@@ -121,11 +107,9 @@ const StyledTab = styled(Tab)(({ theme, size, animated, glowEffect }: any) => {
       boxShadow: 'none',
       transform: 'none',
     },
-    
     ...(animated && {
       animation: `${floatAnimation} 4s ease-in-out infinite`,
     }),
-    
     ...(glowEffect && {
       '&::before': {
         content: '""',
@@ -142,7 +126,6 @@ const StyledTab = styled(Tab)(({ theme, size, animated, glowEffect }: any) => {
         transform: 'translateX(100%)',
       },
     }),
-    
     '&::after': {
       content: '""',
       position: 'absolute',
@@ -155,20 +138,17 @@ const StyledTab = styled(Tab)(({ theme, size, animated, glowEffect }: any) => {
       opacity: 0,
       transition: 'opacity 0.3s ease',
     },
-    
     '&:hover::after': {
       opacity: 1,
     },
   };
 });
-
 const IconContainer = styled(Box)(({ theme, size, isSelected }: any) => {
   const sizeStyles = {
     small: { width: 16, height: 16 },
     medium: { width: 20, height: 20 },
     large: { width: 24, height: 24 }
   };
-
   return {
     display: 'flex',
     alignItems: 'center',
@@ -180,7 +160,6 @@ const IconContainer = styled(Box)(({ theme, size, isSelected }: any) => {
     transition: 'all 0.3s ease',
   };
 });
-
 // Map icon names to their image paths
 const iconImageMap: { [key: string]: string } = {
   'ABC_CUBE': '/images/png/3d_icon_ABC_CUBE_1.png',
@@ -204,8 +183,7 @@ const iconImageMap: { [key: string]: string } = {
   'TRIANGLE_RULER': '/images/png/3d_icon_TRIANGLE_RULER_1.png',
   'TROPHY': '/images/png/3d_icon_TROPHY_1.png',
 };
-
-export const Roblox3DTabs: React.FC<Roblox3DTabsProps> = ({
+export const Roblox3DTabs: React.FunctionComponent<Roblox3DTabsProps> = ({
   tabs,
   value,
   onChange,
@@ -216,7 +194,6 @@ export const Roblox3DTabs: React.FC<Roblox3DTabsProps> = ({
   glowEffect = true,
 }) => {
   const theme = useTheme();
-
   return (
     <StyledTabs
       value={value}
@@ -236,7 +213,6 @@ export const Roblox3DTabs: React.FC<Roblox3DTabsProps> = ({
       {tabs.map((tab, index) => {
         const isSelected = value === index;
         const iconPath = iconImageMap[tab.iconName] || iconImageMap['TROPHY'];
-        
         return (
           <StyledTab
             key={tab.id}
@@ -253,7 +229,6 @@ export const Roblox3DTabs: React.FC<Roblox3DTabsProps> = ({
                     }}
                   />
                 </IconContainer>
-                
                 <Typography
                   variant="button"
                   sx={{
@@ -264,7 +239,6 @@ export const Roblox3DTabs: React.FC<Roblox3DTabsProps> = ({
                 >
                   {tab.label}
                 </Typography>
-                
                 {tab.badge && tab.badge > 0 && (
                   <Badge
                     badgeContent={tab.badge}

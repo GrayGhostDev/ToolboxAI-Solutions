@@ -61,10 +61,6 @@ class RateLimitManager:
             cls._instance = cls()
         return cls._instance
 
-    def set_mode(self, mode: RateLimitMode) -> None:
-        """Set the rate limiting mode (2025 best practice)."""
-        self.mode = mode
-        logger.debug(f"Rate limiting mode set to: {mode.value}")
 
     async def check_rate_limit(
         self,
@@ -130,11 +126,7 @@ class RateLimitManager:
 
     def set_mode(self, mode: RateLimitMode) -> None:
         """Set the rate limit mode."""
-        global _testing_mode
-        if mode == RateLimitMode.TESTING:
-            _testing_mode = True
-        else:
-            _testing_mode = False
+        self.mode = mode
         logger.info(f"Rate limit mode set to: {mode.value}")
 
     def clear_all_limits(self) -> None:
@@ -257,3 +249,74 @@ def get_rate_limit_manager() -> RateLimitManager:
 
 # Export for convenience
 rate_limit_manager = get_rate_limit_manager()
+
+
+# Rate limit decorator for FastAPI endpoints
+from functools import wraps
+from fastapi import Request, HTTPException, status
+from typing import Callable, Optional
+
+
+def rate_limit(
+    max_requests: int = 100,
+    window_seconds: int = 60,
+    identifier_func: Optional[Callable] = None
+):
+    """
+    Rate limiting decorator for FastAPI endpoints.
+
+    Args:
+        max_requests: Maximum requests allowed in the window
+        window_seconds: Time window in seconds
+        identifier_func: Optional function to extract identifier from request
+    """
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            # Skip rate limiting in testing mode
+            global _testing_mode
+            if _testing_mode:
+                return await func(*args, **kwargs)
+
+            # Find the Request object in args or kwargs
+            request = None
+            for arg in args:
+                if isinstance(arg, Request):
+                    request = arg
+                    break
+            if not request:
+                request = kwargs.get('request')
+
+            if not request:
+                # If no request found, proceed without rate limiting
+                logger.warning(f"No Request object found for rate limiting in {func.__name__}")
+                return await func(*args, **kwargs)
+
+            # Determine identifier
+            if identifier_func:
+                identifier = identifier_func(request)
+            else:
+                # Use client IP as default identifier
+                identifier = request.client.host if request.client else "unknown"
+
+            # Check rate limit
+            manager = get_rate_limit_manager()
+            allowed, retry_after = await manager.check_rate_limit(
+                identifier=identifier,
+                max_requests=max_requests,
+                window_seconds=window_seconds,
+                source=f"endpoint:{func.__name__}"
+            )
+
+            if not allowed:
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="Rate limit exceeded",
+                    headers={"Retry-After": str(retry_after)} if retry_after else None
+                )
+
+            # Proceed with the original function
+            return await func(*args, **kwargs)
+
+        return wrapper
+    return decorator

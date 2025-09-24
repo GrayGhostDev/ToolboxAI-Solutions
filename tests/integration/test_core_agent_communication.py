@@ -1,3 +1,4 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """
 Core Agent Communication Test
@@ -113,7 +114,8 @@ class CoreAgentCommunicationTester:
         return self._generate_test_report()
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_agent_initialization(self) -> bool:
+    @pytest.mark.asyncio
+async def test_agent_initialization(self) -> bool:
         """Test that all agents initialize properly"""
         try:
             if not self.agents:
@@ -140,7 +142,8 @@ class CoreAgentCommunicationTester:
             return False
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_agent_execution(self) -> bool:
+    @pytest.mark.asyncio
+async def test_agent_execution(self) -> bool:
         """Test individual agent execution"""
         try:
             if not self.agents:
@@ -180,7 +183,8 @@ class CoreAgentCommunicationTester:
             return False
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_agent_collaboration(self) -> bool:
+    @pytest.mark.asyncio
+async def test_agent_collaboration(self) -> bool:
         """Test agent-to-agent collaboration"""
         try:
             if not self.agents:
@@ -226,7 +230,8 @@ class CoreAgentCommunicationTester:
             return False
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_task_result_structure(self) -> bool:
+    @pytest.mark.asyncio
+async def test_task_result_structure(self) -> bool:
         """Test TaskResult structure and methods"""
         try:
             from core.agents.base_agent import TaskResult
@@ -261,7 +266,8 @@ class CoreAgentCommunicationTester:
             return False
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_error_handling(self) -> bool:
+    @pytest.mark.asyncio
+async def test_error_handling(self) -> bool:
         """Test error handling in agents"""
         try:
             if not self.agents:

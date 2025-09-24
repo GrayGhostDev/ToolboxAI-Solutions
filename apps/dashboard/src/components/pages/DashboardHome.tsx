@@ -41,7 +41,11 @@ import { RobloxAchievementBadge } from "../roblox/RobloxAchievementBadge";
 import { Simple3DIcon } from "../roblox/Simple3DIcon";
 import { Real3DIcon } from "../roblox/Real3DIcon";
 import { robloxColors } from "../../theme/robloxTheme";
-import { useTheme, alpha, Fade, Zoom, Slide } from "@mui/material";
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import Fade from '@mui/material/Fade';
+import Zoom from '@mui/material/Zoom';
+import Slide from '@mui/material/Slide';
 
 export function DashboardHome({ role }: { role?: UserRole }) {
   const theme = useTheme();
@@ -180,7 +184,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
         <Typography variant="body2" sx={{ mb: 2 }}>{error}</Typography>
         <Stack direction="row" spacing={2}>
           <Button
-            onClick={() => loadDashboardData()}
+            onClick={(e: React.MouseEvent) => () => loadDashboardData()}
             variant="contained"
             disabled={loading}
             startIcon={loading ? <CircularProgress size={16} /> : <RefreshIcon />}
@@ -188,7 +192,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
             {loading ? 'Retrying...' : 'Retry'}
           </Button>
           <Button
-            onClick={() => window.location.reload()}
+            onClick={(e: React.MouseEvent) => () => window.location.reload()}
             variant="outlined"
           >
             Refresh Page
@@ -312,7 +316,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="ROCKET"
                       label="Roblox Studio"
-                      onClick={() => navigate('/roblox-studio')}
+                      onClick={(e: React.MouseEvent) => () => navigate('/roblox-studio')}
                       variant="primary"
                       size="medium"
                       animated={true}
@@ -322,7 +326,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="OPEN_BOOK"
                       label="Create Lesson"
-                      onClick={() => setCreateLessonOpen(true)}
+                      onClick={(e: React.MouseEvent) => () => setCreateLessonOpen(true)}
                       variant="secondary"
                       size="medium"
                       animated={true}
@@ -331,7 +335,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="ASSESSMENT"
                       label="View Assessments"
-                      onClick={() => navigate(ROUTES.ASSESSMENTS)}
+                      onClick={(e: React.MouseEvent) => () => navigate(ROUTES.ASSESSMENTS)}
                       variant="secondary"
                       size="medium"
                       animated={true}
@@ -344,7 +348,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="LIGHT_BULB"
                       label="Analytics"
-                      onClick={() => navigate(ROUTES.ANALYTICS)}
+                      onClick={(e: React.MouseEvent) => () => navigate(ROUTES.ANALYTICS)}
                       variant="primary"
                       size="medium"
                       animated={true}
@@ -353,7 +357,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="SETTINGS"
                       label="Manage LMS"
-                      onClick={() => navigate(ROUTES.INTEGRATIONS)}
+                      onClick={(e: React.MouseEvent) => () => navigate(ROUTES.INTEGRATIONS)}
                       variant="secondary"
                       size="medium"
                       animated={true}
@@ -366,7 +370,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="ROCKET"
                       label="Enter Roblox World"
-                      onClick={handleCompleteTask}
+                      onClick={(e: React.MouseEvent) => handleCompleteTask}
                       variant="primary"
                       size="medium"
                       animated={true}
@@ -375,7 +379,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="TROPHY"
                       label="View Rewards"
-                      onClick={() => navigate(ROUTES.REWARDS)}
+                      onClick={(e: React.MouseEvent) => () => navigate(ROUTES.REWARDS)}
                       variant="secondary"
                       size="medium"
                       animated={true}
@@ -388,7 +392,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="SPORTS_ESPORTS"
                       label="Watch Gameplay"
-                      onClick={() => navigate('/gameplay-replay')}
+                      onClick={(e: React.MouseEvent) => () => navigate('/gameplay-replay')}
                       variant="primary"
                       size="medium"
                       animated={true}
@@ -397,7 +401,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="ASSESSMENT"
                       label="View Reports"
-                      onClick={() => navigate(ROUTES.REPORTS)}
+                      onClick={(e: React.MouseEvent) => () => navigate(ROUTES.REPORTS)}
                       variant="secondary"
                       size="medium"
                       animated={true}
@@ -408,7 +412,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                 <Roblox3DButton
                   iconName="REFRESH"
                   label="Refresh"
-                  onClick={() => void loadDashboardData()}
+                  onClick={(e: React.MouseEvent) => () => void loadDashboardData()}
                   variant="info"
                   size="medium"
                   animated={true}
@@ -485,7 +489,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                             borderColor: theme.palette.primary.main,
                           }
                         }}
-                        onClick={() => console.log(`Clicked ${tool.name}`)}
+                        onClick={(e: React.MouseEvent) => () => console.log(`Clicked ${tool.name}`)}
                       >
                           <Real3DIcon
                             iconName={tool.name}
@@ -549,7 +553,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       glowColor={item.iconColor}
                     />
                   }
-                  onClick={() => navigate(item.path)}
+                  onClick={(e: React.MouseEvent) => () => navigate(item.path)}
                   sx={{
                     background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                     borderRadius: 2,
@@ -748,7 +752,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                             boxShadow: `0 5px 15px ${alpha(theme.palette.secondary.main, 0.3)}`,
                           }
                         }}
-                        onClick={() => console.log('Achievement clicked:', achievement.description)}
+                        onClick={(e: React.MouseEvent) => () => console.log('Achievement clicked:', achievement.description)}
                       >
                           <Real3DIcon
                             iconName={achievement.name}

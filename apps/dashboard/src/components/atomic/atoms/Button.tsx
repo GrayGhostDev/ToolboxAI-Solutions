@@ -6,13 +6,10 @@
  */
 
 import React, { forwardRef } from 'react';
-import {
-  Button as MuiButton,
-  ButtonProps as MuiButtonProps,
-  CircularProgress,
-  styled,
-  alpha
-} from '@mui/material';
+import { Button as MuiButton } from '@mui/material';
+import { ButtonProps as MuiButtonProps } from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
+import { styled, alpha } from '@mui/material/styles';
 import { designTokens } from '../../../theme/designTokens';
 
 // Polymorphic component types
@@ -256,7 +253,7 @@ const AtomicButton = forwardRef<HTMLButtonElement, ButtonProps & PolymorphicProp
       if (icon) {
         return iconPosition === 'left' ? (
           <>
-            {React.cloneElement(icon as React.ReactElement, {
+            {React./* TODO: React 19 - Review usage of cloneElement */ cloneElement(icon as React.ReactElement, {
               sx: { mr: 1, fontSize: 'inherit' }
             })}
             {children}

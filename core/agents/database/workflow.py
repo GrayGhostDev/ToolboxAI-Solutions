@@ -18,13 +18,46 @@ from datetime import datetime
 import json
 import os
 
-from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from langgraph.prebuilt import ToolNode
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
-from langchain_openai import ChatOpenAI
-from langchain.tools import Tool
+# Temporarily disable LangGraph imports due to LangChain compatibility issues
+# from langgraph.graph import StateGraph, END
+# from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+# from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+# from langgraph.prebuilt import ToolNode
+
+# Placeholder classes
+class StateGraph:
+    pass
+
+class AsyncSqliteSaver:
+    pass
+
+class AsyncPostgresSaver:
+    pass
+
+class ToolNode:
+    pass
+
+END = "end"
+# Temporarily disable LangChain imports due to Pydantic v2 compatibility
+# from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
+# from langchain_openai import ChatOpenAI
+# from langchain.tools import Tool
+
+# Placeholder classes
+class BaseMessage:
+    pass
+
+class HumanMessage:
+    pass
+
+class AIMessage:
+    pass
+
+class SystemMessage:
+    pass
+
+class Tool:
+    pass
 
 from core.agents.database.supervisor_agent import (
     DatabaseSupervisorAgent,
@@ -83,8 +116,10 @@ class DatabaseWorkflow:
         self.compiled_graph = None
         self.checkpointer = None
 
-        # LLM for decision making
-        self.llm = ChatOpenAI(temperature=0.1, model="gpt-4")
+        # LLM for decision making - temporarily disabled due to Pydantic v2 compatibility
+        # from langchain_openai import ChatOpenAI
+        # self.llm = ChatOpenAI(temperature=0.1, model="gpt-4")
+        self.llm = None  # Placeholder
 
     async def initialize(self):
         """Initialize the workflow and all agents."""

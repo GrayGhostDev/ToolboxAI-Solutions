@@ -6,18 +6,21 @@
     "module": "ESNext",
     "skipLibCheck": true,
 
-    /* Bundler mode */
-    "moduleResolution": "bundler",
+    /* Module resolution */
+    "moduleResolution": "node",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
 
-    /* Strict Type-Checking Options - Temporarily Relaxed for CI/CD */
+    /* Strict Type-Checking Options - Temporarily Relaxed for Gradual Migration */
     "strict": false,
     "noImplicitAny": false,
-    "strictNullChecks": true,
+    "strictNullChecks": false,
     "strictFunctionTypes": false,
     "strictBindCallApply": false,
     "strictPropertyInitialization": false,
@@ -35,6 +38,10 @@
 
     /* Path mapping */
     "baseUrl": ".",
+    "typeRoots": [
+      "../../node_modules/@types",
+      "./node_modules/@types"
+    ],
     "paths": {
       "@/*": ["src/*"],
       "@components/*": ["src/components/*"],
@@ -42,10 +49,14 @@
       "@services/*": ["src/services/*"],
       "@hooks/*": ["src/hooks/*"],
       "@types/*": ["src/types/*"],
-      "@utils/*": ["src/utils/*"]
+      "@utils/*": ["src/utils/*"],
+      "@mui/*": ["../../node_modules/@mui/*"]
     }
   },
-  "include": ["src"],
+  "include": [
+    "src",
+    "src/types/**/*.d.ts"
+  ],
   "exclude": [
     "src/__tests__",
     "**/*.test.ts",

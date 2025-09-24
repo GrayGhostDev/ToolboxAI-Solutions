@@ -193,3 +193,9 @@ class LRUCache:
                 logger.debug("Saved cache to %s", self.persist_file)
         except Exception as e:
             logger.error("Failed to save cache: %s", e)
+def get_cache_stats() -> dict:
+    """Get cache statistics"""
+    return {
+        'size': len(_cache),
+        'keys': list(_cache.keys())
+    }

@@ -7,7 +7,7 @@
 import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Points, PointMaterial } from '@react-three/drei';
-import { Box } from '@mui/material';
+import Box from '@mui/material/Box';
 import * as THREE from 'three';
 import { robloxColors } from '../../theme/robloxTheme';
 
@@ -19,7 +19,7 @@ interface ParticlesProps {
   speed?: number;
 }
 
-const Particles: React.FC<ParticlesProps> = ({
+const Particles: React.FunctionComponent<ParticlesProps> = ({
   count = 500,
   color = robloxColors.neon.electricBlue,
   size = 0.05,
@@ -112,7 +112,7 @@ interface MagicOrbsProps {
   colors?: string[];
 }
 
-const MagicOrbs: React.FC<MagicOrbsProps> = ({
+const MagicOrbs: React.FunctionComponent<MagicOrbsProps> = ({
   count = 10,
   colors = [
     robloxColors.neon.electricBlue,
@@ -196,7 +196,7 @@ interface ParticleEffectsProps {
   zIndex?: number;
 }
 
-export const ParticleEffects: React.FC<ParticleEffectsProps> = ({
+export const ParticleEffects: React.FunctionComponent<ParticleEffectsProps> = ({
   variant = 'mixed',
   intensity = 'medium',
   position = 'fixed',

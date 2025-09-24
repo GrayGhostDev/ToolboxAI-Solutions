@@ -5,19 +5,100 @@ import * as path from 'path';
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'happy-dom', // 2025 best practice: 40-60% faster than jsdom
-    globals: true,
-    setupFiles: './src/test/setup.ts',
-    testTimeout: 5000, // Reduced timeout since happy-dom is faster
+    // Test environment optimized for 2025 standards
+    environment: 'happy-dom', // 40-60% faster than jsdom with React 19 support
+    globals: true, // Enable Vitest globals for jest-like experience
+
+    // Setup and configuration
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/cypress/**',
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/e2e/**', // Exclude Playwright e2e tests
+    ],
+
+    // Timeouts optimized for happy-dom performance
+    testTimeout: 5000,
     hookTimeout: 5000,
-    reporters: ['default'],
-    // Disable isolation to avoid serialization issues with axios
-    isolate: false,
-    // Use single thread to avoid cross-thread serialization
-    threads: false,
-    maxThreads: 1,
-    minThreads: 1,
+    teardownTimeout: 1000,
+
+    // Reporters and output
+    reporters: ['default', 'verbose'],
+    outputFile: {
+      junit: './test-results/junit.xml',
+      json: './test-results/results.json',
+    },
+
+    // Performance optimizations for 2025
+    isolate: false, // Disable isolation for better performance
+    pool: 'forks', // Use forks for better worker management
+    poolOptions: {
+      forks: {
+        singleFork: true, // Single fork for consistency
+      },
+    },
+
+    // Coverage configuration with v8 (fastest)
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'coverage/**',
+        'dist/**',
+        '**/[.]**',
+        'packages/*/test{,s}/**',
+        '**/*.d.ts',
+        '**/virtual:*',
+        '**/__x00__*',
+        '**/\x00*',
+        'cypress/**',
+        'test{,s}/**',
+        'test{,-*}.{js,cjs,mjs,ts,tsx,jsx}',
+        '**/*{.,-}test.{js,cjs,mjs,ts,tsx,jsx}',
+        '**/*{.,-}spec.{js,cjs,mjs,ts,tsx,jsx}',
+        '**/tests/**',
+        '**/__tests__/**',
+        '**/*.config.*',
+        '**/vite.config.*',
+        '**/vitest.config.*',
+        '**/playwright.config.*',
+        '**/.storybook/**',
+        '**/storybook-static/**',
+        '**/e2e/**',
+        '**/src/test/**', // Exclude test utilities
+      ],
+      thresholds: {
+        global: {
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80,
+        },
+      },
+      all: true,
+      clean: true,
+    },
+
+    // Watch mode configuration
+    watch: {
+      ignore: ['**/node_modules/**', '**/dist/**', '**/coverage/**'],
+    },
+
+    // Silent mode for cleaner output
+    silent: false,
+    passWithNoTests: true,
+
+    // Mock handling
+    clearMocks: true,
+    restoreMocks: true,
+    unstubEnvs: true,
+    unstubGlobals: true,
   },
+
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -27,6 +108,17 @@ export default defineConfig({
       '@hooks': path.resolve(__dirname, './src/hooks'),
       '@types': path.resolve(__dirname, './src/types'),
       '@utils': path.resolve(__dirname, './src/utils'),
+      '@test': path.resolve(__dirname, './src/test'),
     },
+  },
+
+  // Optimize dependency scanning for faster startup
+  optimizeDeps: {
+    include: [
+      '@testing-library/react',
+      '@testing-library/jest-dom',
+      '@testing-library/user-event',
+      'vitest',
+    ],
   },
 });

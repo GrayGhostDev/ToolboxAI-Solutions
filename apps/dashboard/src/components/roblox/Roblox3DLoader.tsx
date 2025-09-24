@@ -7,7 +7,8 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Text, RoundedBox, Float } from '@react-three/drei';
-import { Box, Typography } from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 import * as THREE from 'three';
 import { robloxColors } from '../../theme/robloxTheme';
 
@@ -17,7 +18,7 @@ interface SpinningCubeProps {
   delay: number;
 }
 
-const SpinningCube: React.FC<SpinningCubeProps> = ({ position, color, delay }) => {
+const SpinningCube: React.FunctionComponent<SpinningCubeProps> = ({ position, color, delay }) => {
   const meshRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
@@ -54,7 +55,7 @@ interface LoadingRocketProps {
   scale?: number;
 }
 
-const LoadingRocket: React.FC<LoadingRocketProps> = ({ scale = 1 }) => {
+const LoadingRocket: React.FunctionComponent<LoadingRocketProps> = ({ scale = 1 }) => {
   const rocketRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
@@ -128,7 +129,7 @@ interface Roblox3DLoaderProps {
   showBackground?: boolean;
 }
 
-export const Roblox3DLoader: React.FC<Roblox3DLoaderProps> = ({
+export const Roblox3DLoader: React.FunctionComponent<Roblox3DLoaderProps> = ({
   message = 'Loading...',
   variant = 'both',
   size = 'medium',

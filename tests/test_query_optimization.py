@@ -1,3 +1,4 @@
+import pytest_asyncio
 """
 Test Database Query Optimization
 
@@ -197,7 +198,8 @@ class TestDataLoader:
     
     @pytest.mark.asyncio(loop_scope="function")
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_load_single_entity(self, mock_session, test_model_class):
+    @pytest.mark.asyncio
+async def test_load_single_entity(self, mock_session, test_model_class):
         """Test loading single entity"""
         loader = DataLoader(mock_session)
         
@@ -224,7 +226,8 @@ class TestDataLoader:
         mock_session.execute.assert_not_called()
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_load_many_entities(self, mock_session, test_model_class):
+    @pytest.mark.asyncio
+async def test_load_many_entities(self, mock_session, test_model_class):
         """Test loading multiple entities"""
         loader = DataLoader(mock_session)
         
@@ -249,7 +252,8 @@ class TestDataLoader:
             assert cache_key in loader.cache
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_load_with_relationships(self, mock_session, test_model_class):
+    @pytest.mark.asyncio
+async def test_load_with_relationships(self, mock_session, test_model_class):
         """Test loading with eager relationships"""
         loader = DataLoader(mock_session)
         
@@ -332,7 +336,8 @@ class TestOptimizeDecorator:
     """Test the optimize_query decorator"""
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_decorator_with_caching(self):
+    @pytest.mark.asyncio
+async def test_decorator_with_caching(self):
         """Test optimize_query decorator with caching"""
         call_count = 0
         
@@ -353,7 +358,8 @@ class TestOptimizeDecorator:
         assert result1 == result2
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_decorator_performance_tracking(self):
+    @pytest.mark.asyncio
+async def test_decorator_performance_tracking(self):
         """Test performance tracking in decorator"""
         from apps.backend.core.database.query_optimizer import optimizer
         
@@ -380,7 +386,8 @@ class TestRepositoryOptimization:
         return session
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_user_repository_optimized_queries(self, mock_session, mock_llm):
+    @pytest.mark.asyncio
+async def test_user_repository_optimized_queries(self, mock_session, mock_llm):
         """Test UserRepository prevents N+1 queries"""
         repo = UserRepository(mock_session)
         
@@ -403,7 +410,8 @@ class TestRepositoryOptimization:
         assert mock_session.execute.call_count == 1
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_course_repository_enrollment_count(self, mock_session, mock_llm):
+    @pytest.mark.asyncio
+async def test_course_repository_enrollment_count(self, mock_session, mock_llm):
         """Test CourseRepository gets enrollment count efficiently"""
         repo = CourseRepository(mock_session)
         
@@ -438,7 +446,8 @@ class TestN1QueryPrevention:
         return session
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_prevents_n_plus_one_in_dashboard(self, mock_session, mock_llm):
+    @pytest.mark.asyncio
+async def test_prevents_n_plus_one_in_dashboard(self, mock_session, mock_llm):
         """Test that dashboard data loading prevents N+1"""
         repo = UserRepository(mock_session)
         

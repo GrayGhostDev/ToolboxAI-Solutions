@@ -4,13 +4,11 @@
  * Adds floating 3D characters throughout the dashboard
  * for a playful, game-like atmosphere
  */
-
-import React, { useRef, useMemo } from 'react';
+import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Float, Stars, Cloud } from '@react-three/drei';
-import { Box } from '@mui/material';
+import Box from '@mui/material/Box';
 import * as THREE from 'three';
-
 interface FloatingCharacterProps {
   position: [number, number, number];
   characterType: 'astronaut' | 'robot' | 'wizard' | 'pirate' | 'ninja';
@@ -18,8 +16,7 @@ interface FloatingCharacterProps {
   rotationSpeed?: number;
   scale?: number;
 }
-
-const FloatingCharacter: React.FC<FloatingCharacterProps> = ({
+const FloatingCharacter: React.FunctionComponent<FloatingCharacterProps> = ({
   position,
   characterType,
   floatSpeed = 1,
@@ -27,14 +24,12 @@ const FloatingCharacter: React.FC<FloatingCharacterProps> = ({
   scale = 1
 }) => {
   const meshRef = useRef<THREE.Group>(null);
-
   useFrame((state) => {
     if (meshRef.current) {
       meshRef.current.rotation.y += rotationSpeed * 0.01;
       meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * floatSpeed) * 0.2;
     }
   });
-
   const characterColors = {
     astronaut: { primary: '#ffffff', secondary: '#00ffff', accent: '#ff00ff' },
     robot: { primary: '#c0c0c0', secondary: '#00ff00', accent: '#ffff00' },
@@ -42,9 +37,7 @@ const FloatingCharacter: React.FC<FloatingCharacterProps> = ({
     pirate: { primary: '#8b4513', secondary: '#ffd700', accent: '#ff0000' },
     ninja: { primary: '#1a1a1a', secondary: '#ff0000', accent: '#ffffff' }
   };
-
   const colors = characterColors[characterType];
-
   return (
     <Float speed={floatSpeed} rotationIntensity={0.5} floatIntensity={0.5}>
       <group ref={meshRef} position={position} scale={scale}>
@@ -88,7 +81,6 @@ const FloatingCharacter: React.FC<FloatingCharacterProps> = ({
             </mesh>
           </>
         )}
-
         {characterType === 'robot' && (
           <>
             {/* Head */}
@@ -141,7 +133,6 @@ const FloatingCharacter: React.FC<FloatingCharacterProps> = ({
             </mesh>
           </>
         )}
-
         {characterType === 'wizard' && (
           <>
             {/* Hat */}
@@ -200,7 +191,6 @@ const FloatingCharacter: React.FC<FloatingCharacterProps> = ({
             </mesh>
           </>
         )}
-
         {characterType === 'pirate' && (
           <>
             {/* Hat */}
@@ -244,7 +234,6 @@ const FloatingCharacter: React.FC<FloatingCharacterProps> = ({
             </mesh>
           </>
         )}
-
         {characterType === 'ninja' && (
           <>
             {/* Head/Mask */}
@@ -278,7 +267,6 @@ const FloatingCharacter: React.FC<FloatingCharacterProps> = ({
             </mesh>
           </>
         )}
-
         {/* Shadow */}
         <mesh position={[0, -0.8, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[1, 1]} />
@@ -292,7 +280,6 @@ const FloatingCharacter: React.FC<FloatingCharacterProps> = ({
     </Float>
   );
 };
-
 interface FloatingCharactersProps {
   characters?: Array<{
     type: 'astronaut' | 'robot' | 'wizard' | 'pirate' | 'ninja';
@@ -301,8 +288,7 @@ interface FloatingCharactersProps {
   showStars?: boolean;
   showClouds?: boolean;
 }
-
-export const FloatingCharacters: React.FC<FloatingCharactersProps> = ({
+export const FloatingCharacters: React.FunctionComponent<FloatingCharactersProps> = ({
   characters = [
     { type: 'astronaut', position: [-3, 1, -2] },
     { type: 'robot', position: [3, 0, -2] },
@@ -332,16 +318,13 @@ export const FloatingCharacters: React.FC<FloatingCharactersProps> = ({
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={0.8} />
         <pointLight position={[-10, -10, -10]} intensity={0.5} color="#ff00ff" />
-
         {showStars && <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />}
-
         {showClouds && (
           <>
             <Cloud position={[-4, 2, -5]} speed={0.2} opacity={0.3} />
             <Cloud position={[4, -2, -5]} speed={0.3} opacity={0.2} />
           </>
         )}
-
         {characters.map((char, index) => (
           <FloatingCharacter
             key={index}
@@ -352,7 +335,6 @@ export const FloatingCharacters: React.FC<FloatingCharactersProps> = ({
             scale={0.8 + (index % 2) * 0.2}
           />
         ))}
-
         <OrbitControls
           enableZoom={false}
           enablePan={false}
@@ -362,5 +344,4 @@ export const FloatingCharacters: React.FC<FloatingCharactersProps> = ({
     </Box>
   );
 };
-
 export default FloatingCharacters;

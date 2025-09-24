@@ -1,19 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Grid from '@mui/material/Grid';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import LinearProgress from '@mui/material/LinearProgress';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Grid,
-  Chip,
-  IconButton,
-  LinearProgress,
-  List,
-  ListItem,
-  ListItemText,
-} from '@mui/material';
 import {
   ArrowBack,
   Edit,
@@ -45,7 +44,7 @@ interface ClassDetailsData {
   resources?: Array<{ name: string; url: string }>;
 }
 
-const ClassDetails: React.FC = () => {
+const ClassDetails: React.FunctionComponent<Record<string, any>> = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -144,7 +143,7 @@ const ClassDetails: React.FC = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Typography>Class not found</Typography>
-        <Button onClick={() => navigate('/classes')} startIcon={<ArrowBack />}>
+        <Button onClick={(e: React.MouseEvent) => () => navigate('/classes')} startIcon={<ArrowBack />}>
           Back to Classes
         </Button>
       </Box>
@@ -156,7 +155,7 @@ const ClassDetails: React.FC = () => {
       {/* Header */}
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton onClick={() => navigate('/classes')}>
+          <IconButton onClick={(e: React.MouseEvent) => () => navigate('/classes')}>
             <ArrowBack />
           </IconButton>
           <Typography variant="h4">{classData.name}</Typography>
@@ -171,14 +170,14 @@ const ClassDetails: React.FC = () => {
             variant="contained"
             color="primary"
             startIcon={<RocketLaunch />}
-            onClick={handlePushToRoblox}
+            onClick={(e: React.MouseEvent) => handlePushToRoblox}
           >
             Push to Roblox
           </Button>
-          <IconButton onClick={handleEdit}>
+          <IconButton onClick={(e: React.MouseEvent) => handleEdit}>
             <Edit />
           </IconButton>
-          <IconButton onClick={handleDelete} color="error">
+          <IconButton onClick={(e: React.MouseEvent) => handleDelete} color="error">
             <Delete />
           </IconButton>
         </Box>

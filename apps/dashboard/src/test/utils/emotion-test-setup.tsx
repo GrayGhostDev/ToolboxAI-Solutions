@@ -75,7 +75,7 @@ interface EmotionTestProviderProps {
  * );
  * ```
  */
-export const EmotionTestProvider: React.FC<EmotionTestProviderProps> = ({
+export const EmotionTestProvider: React.FunctionComponent<EmotionTestProviderProps> = ({
   children,
   cache = createTestEmotionCache(),
   theme = createTestTheme(),

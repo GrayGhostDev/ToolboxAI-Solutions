@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/security/cors.py
+# hypothesis_version: 6.139.2
+
+[600, '*', ', ', 'Accept', 'Accept-Language', 'Authorization', 'Content-Language', 'Content-Length', 'Content-Type', 'DELETE', 'GET', 'OPTIONS', 'Origin', 'PATCH', 'POST', 'PUT', 'SecureCORSConfig', 'User-Agent', 'X-Process-Time', 'X-Request-ID', 'X-Requested-With', 'X-Session-ID', 'development', 'http', 'https', 'method', 'origin', 'path', 'production', 'true', 'type']

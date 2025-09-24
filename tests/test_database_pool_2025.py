@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 """
 Test Database Connection Pool Configuration
 Tests SQLAlchemy 2.0 and PostgreSQL 16+ optimizations (2025 best practices)
@@ -164,7 +179,8 @@ class TestDatabasePool2025:
         logger.logger.info("✅ Database initialization successful with pool monitoring")
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_connection_pool_monitoring(self):
+    @pytest.mark.asyncio
+async def test_connection_pool_monitoring(self):
         """Test that pool monitoring events are working"""
         logger.logger.info("Testing connection pool monitoring")
 
@@ -212,7 +228,8 @@ class TestDatabasePool2025:
         logger.logger.info(f"✅ Pool optimization calculator working: recommended size {recommendations['pool_size']}")
 
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_async_connection_pool(self):
+    @pytest.mark.asyncio
+async def test_async_connection_pool(self):
         """Test async connection pool with asyncpg"""
         logger.logger.info("Testing async connection pool")
 

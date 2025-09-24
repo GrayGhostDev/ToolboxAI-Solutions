@@ -1,0 +1,232 @@
+{
+  "version": "1.0.0",
+  "name": "playwright-mcp-server",
+  "description": "MCP server for Playwright testing automation",
+  "protocol": "mcp",
+  "servers": {
+    "playwright": {
+      "command": "python",
+      "args": ["-m", "core.mcp.playwright_server"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "MCP_MODE": "playwright",
+        "PLAYWRIGHT_BROWSERS_PATH": "${workspaceFolder}/.playwright"
+      },
+      "capabilities": {
+        "tools": true,
+        "resources": true,
+        "context": true,
+        "streaming": true
+      },
+      "tools": [
+        {
+          "name": "run_test",
+          "description": "Execute Playwright test",
+          "parameters": {
+            "test_file": "string",
+            "test_name": "string?",
+            "browser": "chromium|firefox|webkit",
+            "headless": "boolean"
+          }
+        },
+        {
+          "name": "generate_test",
+          "description": "Generate test from user story",
+          "parameters": {
+            "story": "object",
+            "test_type": "e2e|integration|unit"
+          }
+        },
+        {
+          "name": "analyze_coverage",
+          "description": "Analyze test coverage",
+          "parameters": {
+            "project_path": "string",
+            "include_branches": "boolean"
+          }
+        },
+        {
+          "name": "heal_test",
+          "description": "Auto-heal broken test",
+          "parameters": {
+            "failure": "object",
+            "auto_apply": "boolean"
+          }
+        },
+        {
+          "name": "record_session",
+          "description": "Record browser session for test generation",
+          "parameters": {
+            "url": "string",
+            "duration": "number?",
+            "output_format": "playwright|puppeteer"
+          }
+        },
+        {
+          "name": "visual_regression",
+          "description": "Perform visual regression testing",
+          "parameters": {
+            "baseline": "string",
+            "current": "string",
+            "threshold": "number?"
+          }
+        },
+        {
+          "name": "performance_test",
+          "description": "Run performance tests",
+          "parameters": {
+            "url": "string",
+            "metrics": "array"
+          }
+        },
+        {
+          "name": "accessibility_audit",
+          "description": "Run accessibility tests",
+          "parameters": {
+            "url": "string",
+            "standards": "wcag2a|wcag2aa|wcag2aaa|section508"
+          }
+        }
+      ],
+      "resources": [
+        {
+          "type": "test-results",
+          "path": "test-results/**/*.{json,xml,html}"
+        },
+        {
+          "type": "coverage-reports",
+          "path": "coverage/**/*.{json,html}"
+        },
+        {
+          "type": "screenshots",
+          "path": "screenshots/**/*.{png,jpg}"
+        },
+        {
+          "type": "videos",
+          "path": "videos/**/*.{webm,mp4}"
+        },
+        {
+          "type": "traces",
+          "path": "traces/**/*.zip"
+        }
+      ],
+      "context": {
+        "project_root": "${workspaceFolder}",
+        "test_directory": "${workspaceFolder}/tests",
+        "page_objects": "${workspaceFolder}/tests/page-objects",
+        "fixtures": "${workspaceFolder}/tests/fixtures",
+        "reports": "${workspaceFolder}/test-results"
+      }
+    }
+  },
+  "integrations": {
+    "agents": [
+      "PlaywrightTestingAgent",
+      "TestGenerationAgent",
+      "CoverageAnalysisAgent",
+      "SelfHealingTestAgent"
+    ],
+    "coordinators": [
+      "TestCoordinator",
+      "ErrorCoordinator"
+    ],
+    "frameworks": {
+      "sparc": {
+        "enabled": true,
+        "state_management": true,
+        "policy_engine": true
+      },
+      "langchain": {
+        "enabled": true,
+        "memory": true,
+        "tools": true
+      }
+    }
+  },
+  "configuration": {
+    "browsers": {
+      "chromium": {
+        "channel": "chrome",
+        "args": ["--no-sandbox", "--disable-setuid-sandbox"],
+        "viewport": { "width": 1920, "height": 1080 }
+      },
+      "firefox": {
+        "viewport": { "width": 1920, "height": 1080 }
+      },
+      "webkit": {
+        "viewport": { "width": 1920, "height": 1080 }
+      }
+    },
+    "timeouts": {
+      "default": 30000,
+      "navigation": 60000,
+      "action": 10000,
+      "assertion": 5000
+    },
+    "retries": {
+      "enabled": true,
+      "count": 2,
+      "backoff": "exponential"
+    },
+    "parallel": {
+      "enabled": true,
+      "workers": 4,
+      "maxFailures": 10
+    },
+    "reporting": {
+      "formats": ["html", "json", "junit", "allure"],
+      "screenshots": "on-failure",
+      "videos": "retain-on-failure",
+      "traces": "on-first-retry"
+    },
+    "coverage": {
+      "enabled": true,
+      "threshold": {
+        "lines": 90,
+        "branches": 85,
+        "functions": 90,
+        "statements": 90
+      }
+    }
+  },
+  "hooks": {
+    "beforeAll": "core.mcp.hooks.playwright_setup",
+    "afterAll": "core.mcp.hooks.playwright_teardown",
+    "beforeEach": "core.mcp.hooks.test_setup",
+    "afterEach": "core.mcp.hooks.test_cleanup",
+    "onFailure": "core.mcp.hooks.capture_failure_context"
+  },
+  "plugins": [
+    {
+      "name": "playwright-lighthouse",
+      "enabled": true,
+      "config": {
+        "thresholds": {
+          "performance": 90,
+          "accessibility": 95,
+          "best-practices": 90,
+          "seo": 85
+        }
+      }
+    },
+    {
+      "name": "playwright-axe",
+      "enabled": true,
+      "config": {
+        "rules": {
+          "color-contrast": { "enabled": true },
+          "heading-order": { "enabled": true },
+          "label": { "enabled": true }
+        }
+      }
+    },
+    {
+      "name": "allure-playwright",
+      "enabled": true,
+      "config": {
+        "outputFolder": "allure-results",
+        "categories": ["passed", "failed", "broken", "skipped"]
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import { FixedSizeList as List } from 'react-window';
-import { Box, BoxProps } from '@mui/material';
+import Box, { BoxProps } from '@mui/material/Box';
 
 export interface VirtualizedListItem {
   id: string | number;

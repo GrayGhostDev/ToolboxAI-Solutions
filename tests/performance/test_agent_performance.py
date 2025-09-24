@@ -1,3 +1,4 @@
+import pytest_asyncio
 """
 Agent System Performance Tests
 Tests for AI agent execution times, memory usage, and scaling
@@ -30,7 +31,8 @@ class TestAgentPerformance:
     """Agent system performance tests"""
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_supervisor_agent_performance(self):
+    @pytest.mark.asyncio
+async def test_supervisor_agent_performance(self):
         """Test SupervisorAgent performance under load"""
         try:
             from core.agents.supervisor import SupervisorAgent
@@ -85,7 +87,8 @@ class TestAgentPerformance:
             pytest.skip("SupervisorAgent not available")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_orchestrator_scaling(self):
+    @pytest.mark.asyncio
+async def test_orchestrator_scaling(self):
         """Test Orchestrator scaling with increasing load"""
         try:
             from core.agents.orchestrator import Orchestrator
@@ -153,7 +156,8 @@ class TestAgentPerformance:
             pytest.skip("Orchestrator not available")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_content_agent_performance(self):
+    @pytest.mark.asyncio
+async def test_content_agent_performance(self):
         """Test ContentAgent content generation performance"""
         try:
             from core.agents.content_agent import ContentAgent
@@ -205,7 +209,8 @@ class TestAgentPerformance:
             pytest.skip("ContentAgent not available")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_agent_memory_usage(self):
+    @pytest.mark.asyncio
+async def test_agent_memory_usage(self):
         """Test agent memory usage during sustained operation"""
         try:
             from core.agents.supervisor import SupervisorAgent
@@ -265,7 +270,8 @@ class TestAgentPerformance:
             pytest.skip("SupervisorAgent not available")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_agent_parallel_processing(self):
+    @pytest.mark.asyncio
+async def test_agent_parallel_processing(self):
         """Test agent parallel processing capabilities"""
         try:
             from core.agents.supervisor import SupervisorAgent
@@ -324,7 +330,8 @@ class TestAgentPerformance:
             pytest.skip("SupervisorAgent not available")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_agent_error_handling_performance(self):
+    @pytest.mark.asyncio
+async def test_agent_error_handling_performance(self):
         """Test agent performance under error conditions"""
         try:
             from core.agents.supervisor import SupervisorAgent

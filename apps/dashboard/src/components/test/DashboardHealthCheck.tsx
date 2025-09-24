@@ -4,7 +4,16 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Box, Paper, Typography, Chip, List, ListItem, ListItemIcon, ListItemText, CircularProgress, Button } from '@mui/material';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import CircularProgress from '@mui/material/CircularProgress';
+import Button from '@mui/material/Button';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import WarningIcon from '@mui/icons-material/Warning';
@@ -22,7 +31,7 @@ interface HealthCheckItem {
   details?: any;
 }
 
-export const DashboardHealthCheck: React.FC = () => {
+export const DashboardHealthCheck: React.FunctionComponent<Record<string, any>> = () => {
   const [checks, setChecks] = useState<HealthCheckItem[]>([]);
   const [isChecking, setIsChecking] = useState(false);
   const { isAuthenticated, user, token, refreshUserToken } = useAuth();
@@ -209,13 +218,13 @@ export const DashboardHealthCheck: React.FC = () => {
             <Button
               variant="outlined"
               startIcon={<RefreshIcon />}
-              onClick={runHealthChecks}
+              onClick={(e: React.MouseEvent) => runHealthChecks}
               disabled={isChecking}
               sx={{ mr: 2 }}
             >
               Re-run Checks
             </Button>
-            <Button variant="contained" onClick={testTokenRefresh}>
+            <Button variant="contained" onClick={(e: React.MouseEvent) => testTokenRefresh}>
               Test Token Refresh
             </Button>
           </Box>

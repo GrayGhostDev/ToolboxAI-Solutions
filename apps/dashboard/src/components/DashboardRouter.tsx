@@ -5,7 +5,9 @@
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Box, Typography, Button } from '@mui/material';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types/roles';
 
@@ -22,7 +24,7 @@ import NotFoundPage from './shared/NotFoundPage';
 import LoadingSpinner from './shared/LoadingSpinner';
 
 // Protected route wrapper
-const ProtectedRoute: React.FC<{
+const ProtectedRoute: React.FunctionComponent<{
   children: React.ReactNode;
   requiredRole?: UserRole;
   permission?: string;
@@ -44,7 +46,7 @@ const ProtectedRoute: React.FC<{
   return <>{children}</>;
 };
 
-const DashboardRouter: React.FC = () => {
+const DashboardRouter: React.FunctionComponent<Record<string, any>> = () => {
   const { user, userConfig, isLoading } = useAuth();
 
   if (isLoading) {
@@ -168,7 +170,7 @@ const DashboardRouter: React.FC = () => {
         }}>
           <Typography variant="h4" gutterBottom>Unauthorized Access</Typography>
           <Typography variant="body1" gutterBottom>You don't have permission to access this page.</Typography>
-          <Button variant="contained" onClick={() => window.history.back()}>Go Back</Button>
+          <Button variant="contained" onClick={(e: React.MouseEvent) => () => window.history.back()}>Go Back</Button>
         </Box>
       } />
 

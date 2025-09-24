@@ -4,10 +4,14 @@
  */
 
 import React, { useState } from 'react';
-import { Box, Button, TextField, Typography, Paper } from '@mui/material';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
 import { apiClient } from '../../services/api';
 
-export const AIAssistantTest: React.FC = () => {
+export const AIAssistantTest: React.FunctionComponent<Record<string, any>> = () => {
   const [message, setMessage] = useState('');
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
@@ -55,7 +59,7 @@ export const AIAssistantTest: React.FC = () => {
 
       <Button
         variant="contained"
-        onClick={testAIAssistant}
+        onClick={(e: React.MouseEvent) => testAIAssistant}
         disabled={loading || !message.trim()}
         sx={{ mb: 2 }}
       >

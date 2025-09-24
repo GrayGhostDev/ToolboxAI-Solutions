@@ -170,7 +170,7 @@ class MockApiClient {
     };
   }
 
-  async getClasses() {
+  async listClasses() {
     return [
       {
         id: 'class-1',
@@ -334,13 +334,12 @@ export { MockApiClient as ApiClient };
 export default apiClient;
 
 // Export individual functions that match the real API
-export const listClasses = vi.fn(apiClient.getClasses.bind(apiClient));
+export const listClasses = vi.fn(apiClient.listClasses.bind(apiClient));
 export const logout = vi.fn(apiClient.logout.bind(apiClient));
 export const refreshToken = vi.fn(apiClient.refreshToken.bind(apiClient));
 export const forgotPassword = vi.fn(apiClient.forgotPassword.bind(apiClient));
 export const resetPassword = vi.fn(apiClient.resetPassword.bind(apiClient));
 export const getDashboardOverview = vi.fn(apiClient.getDashboardOverview.bind(apiClient));
-export const getClasses = vi.fn(apiClient.getClasses.bind(apiClient));
 export const getClass = vi.fn(apiClient.getClass.bind(apiClient));
 export const createClass = vi.fn(apiClient.createClass.bind(apiClient));
 export const updateClass = vi.fn(apiClient.updateClass.bind(apiClient));

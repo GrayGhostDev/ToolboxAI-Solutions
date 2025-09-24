@@ -1,5 +1,7 @@
+
+
 import { test, expect } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import { Page } from '@playwright/test';
 
 /**
  * Lessons Management E2E Tests
@@ -10,9 +12,9 @@ import type { Page } from '@playwright/test';
 // Helper to login as teacher
 async function loginAsTeacher(page: Page) {
   await page.goto('/login');
-  await page.locator('input[name="email"]').fill('jane.smith@school.edu');
-  await page.locator('input[name="password"]').fill('Teacher123!');
-  await page.locator('button[type="submit"]').click();
+  await page.locator('input[name="identifier"], input[id="identifier-field"]').fill('jane.smith@school.edu');
+  await page.locator('input[name="password"], input[id="password-field"]').fill('Teacher123!');
+  await page.locator('button[type="submit"], button:has-text("Continue")').click();
   await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 10000 });
 }
 
@@ -295,9 +297,9 @@ test.describe('Student Lesson Interaction', () => {
   test.beforeEach(async ({ page }) => {
     // Login as student
     await page.goto('/login');
-    await page.locator('input[name="email"]').fill('alex.johnson@student.edu');
-    await page.locator('input[name="password"]').fill('Student123!');
-    await page.locator('button[type="submit"]').click();
+    await page.locator('input[name="identifier"], input[id="identifier-field"]').fill('alex.johnson@student.edu');
+    await page.locator('input[name="password"], input[id="password-field"]').fill('Student123!');
+    await page.locator('button[type="submit"], button:has-text("Continue")').click();
     await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 10000 });
   });
 

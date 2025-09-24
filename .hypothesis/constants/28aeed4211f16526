@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/security/jwt_handler.py
+# hypothesis_version: 6.139.2
+
+[', ', '30', 'Bearer', 'HS256', 'JWT_ALGORITHM', 'JWT_SECRET_KEY', 'Token', 'TokenData', 'WWW-Authenticate', 'admin', 'bearer', 'create_access_token', 'exp', 'get_admin_user', 'get_current_user', 'get_student_user', 'get_teacher_user', 'require_role', 'require_roles', 'role', 'student', 'sub', 'teacher', 'user_id', 'verify_token']

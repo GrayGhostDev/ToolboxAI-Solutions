@@ -6,24 +6,22 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Grid,
-  Paper,
-  Typography,
-  Button,
-  Alert,
-  Chip,
-  Stack,
-  Card,
-  CardContent,
-  CardActions,
-  IconButton,
-  Tooltip,
-  LinearProgress,
-  Divider,
-  useTheme
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardActions from '@mui/material/CardActions';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import LinearProgress from '@mui/material/LinearProgress';
+import Divider from '@mui/material/Divider';
+import { useTheme } from '@mui/material/styles';
 import {
   PlayArrow,
   Download,
@@ -68,7 +66,7 @@ interface GeneratedEnvironment {
   };
 }
 
-export const RobloxStudioIntegration: React.FC = () => {
+export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any>> = () => {
   const theme = useTheme();
   const currentUser = useAppSelector(state => state.user);
   
@@ -284,7 +282,7 @@ export const RobloxStudioIntegration: React.FC = () => {
             
             <Button
               variant="outlined"
-              onClick={checkPluginStatus}
+              onClick={(e: React.MouseEvent) => checkPluginStatus}
               disabled={isCheckingPlugin}
               startIcon={<Refresh />}
             >
@@ -294,7 +292,7 @@ export const RobloxStudioIntegration: React.FC = () => {
             {!pluginStatus.connected && (
               <Button
                 variant="contained"
-                onClick={installPlugin}
+                onClick={(e: React.MouseEvent) => installPlugin}
                 startIcon={<CloudUpload />}
               >
                 Install Plugin
@@ -384,7 +382,7 @@ export const RobloxStudioIntegration: React.FC = () => {
                           : theme.palette.divider,
                         // Removed hover effects to prevent any movement
                       }}
-                      onClick={() => setSelectedEnvironment(environment.id)}
+                      onClick={(e: React.MouseEvent) => () => setSelectedEnvironment(environment.id)}
                     >
                       <CardContent>
                         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
@@ -444,7 +442,7 @@ export const RobloxStudioIntegration: React.FC = () => {
                           <Button
                             size="small"
                             startIcon={<PlayArrow />}
-                            onClick={(e) => {
+                            onClick={(e: React.MouseEvent) => (e) => {
                               e.stopPropagation();
                               deployToStudio(environment.id);
                             }}
@@ -456,7 +454,7 @@ export const RobloxStudioIntegration: React.FC = () => {
                           <Button
                             size="small"
                             startIcon={<Download />}
-                            onClick={(e) => {
+                            onClick={(e: React.MouseEvent) => (e) => {
                               e.stopPropagation();
                               downloadEnvironment(environment.id);
                             }}
@@ -468,7 +466,7 @@ export const RobloxStudioIntegration: React.FC = () => {
                             <Button
                               size="small"
                               startIcon={<Visibility />}
-                              onClick={(e) => {
+                              onClick={(e: React.MouseEvent) => (e) => {
                                 e.stopPropagation();
                                 window.open(environment.previewUrl, '_blank');
                               }}
@@ -480,7 +478,7 @@ export const RobloxStudioIntegration: React.FC = () => {
                           <Tooltip title="Share">
                             <IconButton
                               size="small"
-                              onClick={(e) => {
+                              onClick={(e: React.MouseEvent) => (e) => {
                                 e.stopPropagation();
                                 shareEnvironment(environment);
                               }}

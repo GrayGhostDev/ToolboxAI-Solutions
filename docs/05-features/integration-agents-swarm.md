@@ -319,7 +319,7 @@ pytest tests/integration/test_integration_agents_startup.py
 ### Manual Testing
 ```bash
 # Start backend with agents
-cd apps/backend && uvicorn main:app --reload
+uvicorn apps.backend.main:app --reload
 
 # Check status
 curl http://localhost:8008/api/v1/integration/status

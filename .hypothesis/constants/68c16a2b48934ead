@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/toolboxai_settings/__init__.py
+# hypothesis_version: 6.139.2
+
+['1.0.0', 'SERVICE_URLS', 'settings', 'should_use_real_data']

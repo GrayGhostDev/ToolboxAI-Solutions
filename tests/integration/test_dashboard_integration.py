@@ -1,3 +1,17 @@
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 #!/usr/bin/env python3
 """
 Dashboard Integration Test Suite
@@ -179,13 +193,13 @@ class DashboardIntegrationTest:
             
             # Send authentication
             if self.auth_token:
-                ws.send(json.dumps({
+                pusher.trigger(json.dumps({
                     "type": "auth",
                     "token": self.auth_token
                 }, default=make_json_serializable))
                 
             # Send a ping
-            ws.send(json.dumps({"type": "ping"}, default=make_json_serializable))
+            pusher.trigger(json.dumps({"type": "ping"}, default=make_json_serializable))
             
             # Wait for response
             response = ws.recv()

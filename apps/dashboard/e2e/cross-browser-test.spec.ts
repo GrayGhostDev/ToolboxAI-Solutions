@@ -1,3 +1,5 @@
+
+
 import { test, expect } from '@playwright/test';
 
 test.describe('Cross-Browser Authentication Tests', () => {
@@ -32,10 +34,10 @@ test.describe('Cross-Browser Authentication Tests', () => {
     // Verify we're on the login page
     await expect(page).toHaveURL(/.*login/);
 
-    // Check for login form elements with multiple selector strategies
-    const emailInput = await page.locator('input[name="email"], input[type="email"], [data-testid="email-input"]').first();
-    const passwordInput = await page.locator('input[name="password"], input[type="password"], [data-testid="password-input"]').first();
-    const submitButton = await page.locator('button[type="submit"], [data-testid="login-submit"]').first();
+    // Check for login form elements with Clerk-specific selectors
+    const emailInput = await page.locator('input[name="identifier"], input[id="identifier-field"], input[type="email"], [data-testid="email-input"]').first();
+    const passwordInput = await page.locator('input[name="password"], input[id="password-field"], input[type="password"], [data-testid="password-input"]').first();
+    const submitButton = await page.locator('button[type="submit"], button:has-text("Continue"), [data-testid="login-submit"]').first();
 
     // Verify elements are visible
     await expect(emailInput).toBeVisible({ timeout: 10000 });

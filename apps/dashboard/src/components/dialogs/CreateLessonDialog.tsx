@@ -219,10 +219,10 @@ export default function CreateLessonDialog({ open, onClose, onSuccess }: Props) 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>
+        <Button onClick={(e: React.MouseEvent) => onClose} disabled={loading}>
           Cancel
         </Button>
-        <Button variant="contained" onClick={handleSave} disabled={loading}>
+        <Button variant="contained" onClick={(e: React.MouseEvent) => handleSave} disabled={loading}>
           {loading ? "Creating..." : "Create Lesson"}
         </Button>
       </DialogActions>

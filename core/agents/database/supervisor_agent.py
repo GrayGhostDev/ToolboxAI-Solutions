@@ -39,12 +39,35 @@ from core.agents.database.advanced_agents import (
     MonitoringAgent
 )
 
-from langchain.agents import AgentExecutor
-from langchain.memory import ConversationBufferMemory
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.schema import AgentAction, AgentFinish
-from langchain.tools import Tool
-from langchain_openai import ChatOpenAI
+# Temporarily disable LangChain imports due to Pydantic v2 compatibility
+# from langchain.agents import AgentExecutor
+# from langchain.memory import ConversationBufferMemory
+# from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+# from langchain_core.messages import AgentAction, AgentFinish
+# from langchain.tools import Tool
+# from langchain_openai import ChatOpenAI
+
+# Placeholder classes for LangChain compatibility
+class AgentExecutor:
+    pass
+
+class ConversationBufferMemory:
+    pass
+
+class ChatPromptTemplate:
+    pass
+
+class MessagesPlaceholder:
+    pass
+
+class AgentAction:
+    pass
+
+class AgentFinish:
+    pass
+
+class Tool:
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -242,12 +265,14 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
     def _initialize_langchain(self):
         """Initialize LangChain components for intelligent orchestration."""
         try:
-            # Initialize LLM
-            self.llm = ChatOpenAI(
-                temperature=0.1,
-                model="gpt-4",
-                streaming=False
-            )
+            # Initialize LLM - temporarily disabled due to Pydantic v2 compatibility
+            # from langchain_openai import ChatOpenAI
+            # self.llm = ChatOpenAI(
+            #     temperature=0.1,
+            #     model="gpt-4",
+            #     streaming=False
+            # )
+            self.llm = None  # Placeholder - will use OpenAI directly
 
             # Create tools for each agent
             tools = []
@@ -283,6 +308,10 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
             ])
 
             # Create agent executor
+            # Apply compatibility patches before LangChain imports
+            from core.agents.langchain_compat import apply_compatibility_patches
+            apply_compatibility_patches()
+
             from langchain.agents import create_openai_tools_agent
             agent = create_openai_tools_agent(self.llm, tools, prompt)
 

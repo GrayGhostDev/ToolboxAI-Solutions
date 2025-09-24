@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 """
 WebSocket Performance Tests
 Comprehensive WebSocket connection and message throughput tests
@@ -6,7 +21,7 @@ Comprehensive WebSocket connection and message throughput tests
 import asyncio
 import time
 import pytest
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
@@ -33,7 +48,8 @@ class TestWebSocketPerformance:
     """WebSocket performance and scalability tests"""
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_connection_establishment(self):
+    @pytest.mark.asyncio
+async def test_websocket_connection_establishment(self):
         """Test WebSocket connection establishment time"""
         url = "ws://localhost:9876"
         num_connections = 100
@@ -67,16 +83,18 @@ class TestWebSocketPerformance:
             print(f"  Max time: {max(connection_times)*1000:.2f}ms")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_message_latency(self):
+    @pytest.mark.asyncio
+async def test_websocket_message_latency(self):
         """Test WebSocket message round-trip latency"""
         url = "ws://localhost:9876"
         num_messages = 100
         
         latencies = []
         
-        async with websockets.connect(url) as ws:
+        async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherurl) as ws:
             # Warmup
-            await ws.send(json.dumps({"type": "ping"}, default=make_json_serializable))
+            await pusher.trigger(json.dumps({"type": "ping"}, default=make_json_serializable))
             await ws.recv()
             
             # Actual test
@@ -89,7 +107,7 @@ class TestWebSocketPerformance:
                     "timestamp": start
                 }
                 
-                await ws.send(json.dumps(message, default=make_json_serializable))
+                await pusher.trigger(json.dumps(message, default=make_json_serializable))
                 
                 try:
                     response = await asyncio.wait_for(ws.recv(), timeout=1.0)
@@ -115,7 +133,8 @@ class TestWebSocketPerformance:
             pytest.fail("No successful message exchanges")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_concurrent_connections(self):
+    @pytest.mark.asyncio
+async def test_websocket_concurrent_connections(self):
         """Test handling of many concurrent WebSocket connections"""
         url = "ws://localhost:9876"
         target_connections = 50  # Reduced for stability
@@ -126,7 +145,8 @@ class TestWebSocketPerformance:
         async def maintain_connection(connection_id: int):
             """Maintain a WebSocket connection with periodic messages"""
             try:
-                async with websockets.connect(url) as ws:
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherurl) as ws:
                     active_connections.append(connection_id)
                     
                     # Send periodic messages for 10 seconds
@@ -136,7 +156,7 @@ class TestWebSocketPerformance:
                             "connection_id": connection_id,
                             "sequence": i
                         }
-                        await ws.send(json.dumps(message, default=make_json_serializable))
+                        await pusher.trigger(json.dumps(message, default=make_json_serializable))
                         await asyncio.sleep(1)
                     
                     return True
@@ -161,7 +181,8 @@ class TestWebSocketPerformance:
         assert successful >= target_connections * 0.8, f"Too many failed connections: {successful}/{target_connections}"
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_message_throughput(self):
+    @pytest.mark.asyncio
+async def test_websocket_message_throughput(self):
         """Test WebSocket message throughput"""
         url = "ws://localhost:9876"
         num_clients = 5
@@ -179,7 +200,8 @@ class TestWebSocketPerformance:
             messages_received = 0
             
             try:
-                async with websockets.connect(url) as ws:
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherurl) as ws:
                     if start_time is None:
                         start_time = time.time()
                     
@@ -192,7 +214,7 @@ class TestWebSocketPerformance:
                             "timestamp": time.time()
                         }
                         
-                        await ws.send(json.dumps(message, default=make_json_serializable))
+                        await pusher.trigger(json.dumps(message, default=make_json_serializable))
                         messages_sent += 1
                         
                         # Try to receive response (non-blocking)
@@ -234,7 +256,8 @@ class TestWebSocketPerformance:
             pytest.fail("Could not measure throughput")
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_memory_usage(self):
+    @pytest.mark.asyncio
+async def test_websocket_memory_usage(self):
         """Test WebSocket memory usage with many connections"""
         import psutil
         import os
@@ -253,7 +276,7 @@ class TestWebSocketPerformance:
                 connections.append(ws)
                 
                 # Send initial message
-                await ws.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "memory_test",
                     "connection_id": i
                 }, default=make_json_serializable))
@@ -265,7 +288,7 @@ class TestWebSocketPerformance:
             for i in range(10):
                 for j, ws in enumerate(connections):
                     try:
-                        await ws.send(json.dumps({
+                        await pusher.trigger(json.dumps({
                             "type": "sustained_test",
                             "round": i,
                             "connection": j

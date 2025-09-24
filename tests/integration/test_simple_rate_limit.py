@@ -1,3 +1,4 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """
 Simple test script to isolate and test just the rate limiting functionality.
@@ -31,6 +32,7 @@ from apps.backend.core.security.rate_limit_manager import (
 )
 
 @pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_rate_limiting():
     """Test rate limiting in isolation"""
     

@@ -1,18 +1,16 @@
 import React, { useState } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Stack,
-  SelectChangeEvent,
-} from "@mui/material";
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Stack from '@mui/material/Stack';
+
 
 interface CreateClassDialogProps {
   open: boolean;
@@ -22,7 +20,7 @@ interface CreateClassDialogProps {
   initialData?: any;
 }
 
-const CreateClassDialog: React.FC<CreateClassDialogProps> = ({
+const CreateClassDialog: React.FunctionComponent<CreateClassDialogProps> = ({
   open,
   onClose,
   onSave,
@@ -172,11 +170,11 @@ const CreateClassDialog: React.FC<CreateClassDialogProps> = ({
         </Stack>
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
-        <Button onClick={handleClose} color="inherit">
+        <Button onClick={(e: React.MouseEvent) => handleClose} color="inherit">
           Cancel
         </Button>
         <Button
-          onClick={handleSave}
+          onClick={(e: React.MouseEvent) => handleSave}
           variant="contained"
           disabled={!className || !grade}
           data-testid="save-class-button"

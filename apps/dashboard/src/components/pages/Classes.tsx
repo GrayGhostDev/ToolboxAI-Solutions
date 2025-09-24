@@ -1,33 +1,30 @@
 import * as React from "react";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import AvatarGroup from '@mui/material/AvatarGroup';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Box from '@mui/material/Box';
+import LinearProgress from '@mui/material/LinearProgress';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import SelectChangeEvent from '@mui/material/SelectChangeEvent';
+
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Stack,
-  Avatar,
-  AvatarGroup,
-  Chip,
-  IconButton,
-  Menu,
-  MenuItem,
-  Box,
-  LinearProgress,
-  TextField,
-  InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  SelectChangeEvent,
-} from "@mui/material";
 import Grid from "@mui/material/Grid";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PeopleIcon from "@mui/icons-material/People";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import ScheduleIcon from "@mui/icons-material/Schedule";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -36,11 +33,9 @@ import { useAppDispatch, useAppSelector } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
 import { setClasses, removeClass, setClassOnlineStatus } from "../../store/slices/classesSlice";
 import { listClasses, createClass, updateClass, deleteClass } from "../../services/api";
-import { useApiData } from "../../hooks/useApiData";
-import { ROUTES, getClassDetailsRoute } from "../../config/routes";
+import { getClassDetailsRoute } from "../../config/routes";
 import CreateClassDialog from "../dialogs/CreateClassDialog";
 import StudentProgressTracker from "../widgets/StudentProgressTracker";
-
 interface ClassCardData {
   id: string;
   name: string;
@@ -53,7 +48,6 @@ interface ClassCardData {
   isOnline: boolean;
   studentAvatars: string[];
 }
-
 export default function Classes() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -66,26 +60,21 @@ export default function Classes() {
   const [createClassOpen, setCreateClassOpen] = React.useState(false);
   const [editClassOpen, setEditClassOpen] = React.useState(false);
   const [editingClass, setEditingClass] = React.useState<ClassCardData | null>(null);
-
   // Filter states
   const [filterGrade, setFilterGrade] = React.useState<string>("all");
   const [filterStatus, setFilterStatus] = React.useState<string>("all");
   const [sortBy, setSortBy] = React.useState<string>("name");
-
   React.useEffect(() => {
     fetchClasses();
   }, []);
-
   const fetchClasses = async () => {
     setLoading(true);
     try {
       const data = await listClasses();
-      
       // Transform API response to match component interface
       const transformedClasses: ClassCardData[] = data.map((classItem: any) => {
         // Calculate progress based on available data or use defaults
         const progressValue = classItem.average_progress || classItem.progress || 0.75; // Default 75% progress
-
         // Format next session into readable lesson string
         let nextLessonText = "No upcoming lessons";
         if (classItem.next_session) {
@@ -94,7 +83,6 @@ export default function Classes() {
         } else if (classItem.next_lesson) {
           nextLessonText = classItem.next_lesson;
         }
-
         return {
           id: classItem.id,
           name: classItem.name,
@@ -108,13 +96,11 @@ export default function Classes() {
           studentAvatars: classItem.student_avatars || [], // Will be populated when we have student endpoints
         };
       });
-      
       setClasses(transformedClasses);
     } catch (error: any) {
       console.error("Failed to fetch classes:", error);
       const errorDetail = error.response?.data?.detail;
       let errorMessage = "Failed to load classes. Please try again.";
-      
       if (typeof errorDetail === 'string') {
         errorMessage = errorDetail;
       } else if (Array.isArray(errorDetail)) {
@@ -123,7 +109,6 @@ export default function Classes() {
           err.msg || err.message || 'Validation error'
         ).join(', ');
       }
-      
       dispatch(
         addNotification({
           type: "error",
@@ -135,17 +120,14 @@ export default function Classes() {
       setLoading(false);
     }
   };
-
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, classData: ClassCardData) => {
     setAnchorEl(event.currentTarget);
     setSelectedClass(classData);
   };
-
   const handleMenuClose = () => {
     setAnchorEl(null);
     setSelectedClass(null);
   };
-
   const handlePushToRoblox = (classData: ClassCardData) => {
     console.log('Pushing to Roblox:', classData);
     dispatch(
@@ -154,7 +136,6 @@ export default function Classes() {
         message: `Preparing Roblox environment for "${classData.name}"...`,
       })
     );
-    
     // Simulate push process then navigate to Roblox dashboard
     setTimeout(() => {
       dispatch(
@@ -166,16 +147,13 @@ export default function Classes() {
       // Navigate to Roblox dashboard with class context
       navigate(`/roblox?classId=${classData.id}&className=${encodeURIComponent(classData.name)}`);
     }, 1500);
-    
     handleMenuClose();
   };
-
   const handleEditClass = (classData: ClassCardData) => {
     setEditingClass(classData);
     setEditClassOpen(true);
     handleMenuClose();
   };
-
   const handleDeleteClass = async (classData: ClassCardData) => {
     if (window.confirm(`Are you sure you want to delete "${classData.name}"?`)) {
       try {
@@ -199,7 +177,6 @@ export default function Classes() {
     }
     handleMenuClose();
   };
-
   // Apply filters
   const filteredClasses = React.useMemo(() => {
     let filtered = classes.filter((c) => {
@@ -207,21 +184,17 @@ export default function Classes() {
       if (searchTerm && !c.name.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
-
       // Grade filter
       if (filterGrade !== "all" && c.grade.toString() !== filterGrade) {
         return false;
       }
-
       // Status filter
       if (filterStatus !== "all") {
         if (filterStatus === "online" && !c.isOnline) return false;
         if (filterStatus === "offline" && c.isOnline) return false;
       }
-
       return true;
     });
-
     // Apply sorting
     filtered.sort((a, b) => {
       switch (sortBy) {
@@ -237,10 +210,8 @@ export default function Classes() {
           return 0;
       }
     });
-
     return filtered;
   }, [classes, searchTerm, filterGrade, filterStatus, sortBy]);
-
   return (
     <Grid container spacing={3}>
       {/* Header */}
@@ -272,7 +243,6 @@ export default function Classes() {
                   }}
                   data-testid="search-input"
                 />
-
                 <FormControl size="small" sx={{ minWidth: 120 }}>
                   <InputLabel id="grade-filter-label">Grade</InputLabel>
                   <Select
@@ -298,7 +268,6 @@ export default function Classes() {
                     <MenuItem value="12">Grade 12</MenuItem>
                   </Select>
                 </FormControl>
-
                 <FormControl size="small" sx={{ minWidth: 120 }}>
                   <InputLabel id="status-filter-label">Status</InputLabel>
                   <Select
@@ -314,7 +283,6 @@ export default function Classes() {
                     <MenuItem value="offline">Offline</MenuItem>
                   </Select>
                 </FormControl>
-
                 <FormControl size="small" sx={{ minWidth: 120 }}>
                   <InputLabel id="sort-by-label">Sort By</InputLabel>
                   <Select
@@ -331,12 +299,11 @@ export default function Classes() {
                     <MenuItem value="progress">Progress</MenuItem>
                   </Select>
                 </FormControl>
-
                 {role === "teacher" && (
                   <Button
                     variant="contained"
                     startIcon={<AddIcon />}
-                    onClick={() => setCreateClassOpen(true)}
+                    onClick={(e: React.MouseEvent) => () => setCreateClassOpen(true)}
                     data-testid="create-class-button"
                   >
                     Create Class
@@ -347,7 +314,6 @@ export default function Classes() {
           </CardContent>
         </Card>
       </Grid>
-
       {/* Stats Overview */}
       <Grid item xs={12} md={3}>
         <Card>
@@ -363,7 +329,6 @@ export default function Classes() {
           </CardContent>
         </Card>
       </Grid>
-
       <Grid item xs={12} md={3}>
         <Card>
           <CardContent>
@@ -378,7 +343,6 @@ export default function Classes() {
           </CardContent>
         </Card>
       </Grid>
-
       <Grid item xs={12} md={3}>
         <Card>
           <CardContent>
@@ -395,7 +359,6 @@ export default function Classes() {
           </CardContent>
         </Card>
       </Grid>
-
       <Grid item xs={12} md={3}>
         <Card>
           <CardContent>
@@ -413,7 +376,6 @@ export default function Classes() {
           </CardContent>
         </Card>
       </Grid>
-
       {/* Class Cards */}
       {loading ? (
         <Grid item xs={12}>
@@ -456,7 +418,7 @@ export default function Classes() {
                   boxShadow: 4,
                 },
               }}
-              onClick={() => navigate(`/classes/${classData.id}`)}
+              onClick={(e: React.MouseEvent) => () => navigate(`/classes/${classData.id}`)}
             >
               <CardContent>
                 <Stack spacing={2}>
@@ -487,14 +449,13 @@ export default function Classes() {
                     </Stack>
                     <IconButton
                       size="small"
-                      onClick={(e) => handleMenuOpen(e, classData)}
+                      onClick={(e: React.MouseEvent) => (e) => handleMenuOpen(e, classData)}
                       aria-label="More options"
                       data-testid="class-menu-button"
                     >
                       <MoreVertIcon />
                     </IconButton>
                   </Stack>
-
                   {/* Students */}
                   <Stack direction="row" alignItems="center" spacing={2}>
                     <AvatarGroup max={4} sx={{ "& .MuiAvatar-root": { width: 32, height: 32 } }}>
@@ -511,7 +472,6 @@ export default function Classes() {
                       </Typography>
                     </Stack>
                   </Stack>
-
                   {/* Progress */}
                   <Box>
                     <Stack direction="row" justifyContent="space-between" mb={0.5}>
@@ -528,7 +488,6 @@ export default function Classes() {
                       sx={{ height: 8, borderRadius: 4 }}
                     />
                   </Box>
-
                   {/* Next Lesson */}
                   <Box
                     sx={{
@@ -544,7 +503,6 @@ export default function Classes() {
                       {classData.nextLesson}
                     </Typography>
                   </Box>
-
                   {/* Actions */}
                   <Stack direction="row" gap={1}>
                     <Button
@@ -552,7 +510,7 @@ export default function Classes() {
                       variant="outlined"
                       startIcon={<VisibilityIcon />}
                       sx={{ flex: 1 }}
-                      onClick={() => {
+                      onClick={(e: React.MouseEvent) => () => {
                         console.log('View button clicked for class:', classData.id);
                         const route = `/classes/${classData.id}`;
                         console.log('Navigating to:', route);
@@ -566,7 +524,7 @@ export default function Classes() {
                       variant="contained"
                       startIcon={<RocketLaunchIcon />}
                       sx={{ flex: 1 }}
-                      onClick={() => handlePushToRoblox(classData)}
+                      onClick={(e: React.MouseEvent) => () => handlePushToRoblox(classData)}
                     >
                       Roblox
                     </Button>
@@ -578,14 +536,13 @@ export default function Classes() {
         ))}
         </>
       )}
-
       {/* Action Menu */}
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={() => {
+        <MenuItem onClick={(e: React.MouseEvent) => () => {
           if (selectedClass) {
             navigate(getClassDetailsRoute(selectedClass.id));
           }
@@ -594,7 +551,7 @@ export default function Classes() {
           <VisibilityIcon fontSize="small" sx={{ mr: 1 }} />
           View Details
         </MenuItem>
-        <MenuItem onClick={() => {
+        <MenuItem onClick={(e: React.MouseEvent) => () => {
           if (selectedClass) {
             handleEditClass(selectedClass);
           }
@@ -604,7 +561,7 @@ export default function Classes() {
           <EditIcon fontSize="small" sx={{ mr: 1 }} />
           Edit Class
         </MenuItem>
-        <MenuItem onClick={() => {
+        <MenuItem onClick={(e: React.MouseEvent) => () => {
           // TODO: Navigate to manage students page
           handleMenuClose();
         }}
@@ -615,7 +572,7 @@ export default function Classes() {
         </MenuItem>
         {selectedClass && !selectedClass.isOnline && (
           <MenuItem
-            onClick={() => selectedClass && handlePushToRoblox(selectedClass)}
+            onClick={(e: React.MouseEvent) => () => selectedClass && handlePushToRoblox(selectedClass)}
             data-testid="push-to-roblox"
           >
             <RocketLaunchIcon fontSize="small" sx={{ mr: 1 }} />
@@ -623,7 +580,7 @@ export default function Classes() {
           </MenuItem>
         )}
         <MenuItem
-          onClick={() => selectedClass && handleDeleteClass(selectedClass)}
+          onClick={(e: React.MouseEvent) => () => selectedClass && handleDeleteClass(selectedClass)}
           sx={{ color: "error.main" }}
           data-testid="delete-class"
         >
@@ -631,7 +588,6 @@ export default function Classes() {
           Delete Class
         </MenuItem>
       </Menu>
-      
       {/* Create Class Dialog */}
       <CreateClassDialog
         open={createClassOpen}
@@ -640,13 +596,10 @@ export default function Classes() {
           try {
             setLoading(true);
             const newClass = await createClass(classData);
-            
             // Normalize backend snake_case fields safely
             const newClassAny: any = newClass as any;
-
             // Calculate progress based on available data or use defaults
             const progressValue = newClassAny.average_progress || newClassAny.progress || 0.0; // New class starts at 0%
-
             // Format next session into readable lesson string
             let nextLessonText = "No upcoming lessons";
             if (newClassAny.next_session) {
@@ -655,7 +608,6 @@ export default function Classes() {
             } else if (newClassAny.next_lesson) {
               nextLessonText = newClassAny.next_lesson;
             }
-
             // Add the new class to the list immediately
             const transformedClass: ClassCardData = {
               id: newClassAny.id,
@@ -670,7 +622,6 @@ export default function Classes() {
               studentAvatars: newClassAny.student_avatars || [],
             };
             setClasses(prev => [transformedClass, ...prev]);
-            
             dispatch(
               addNotification({
                 type: "success",
@@ -694,7 +645,6 @@ export default function Classes() {
           }
         }}
       />
-
       {/* Edit Class Dialog */}
       {editingClass && (
         <CreateClassDialog
@@ -717,13 +667,10 @@ export default function Classes() {
             try {
               setLoading(true);
               const updatedClass = await updateClass(editingClass.id, classData);
-
               // Update the class in the local state
               const updatedClassAny: any = updatedClass as any;
-
               // Calculate progress based on available data or use existing
               const progressValue = updatedClassAny.average_progress || updatedClassAny.progress || editingClass.completionRate / 100;
-
               // Format next session into readable lesson string
               let nextLessonText = editingClass.nextLesson;
               if (updatedClassAny.next_session) {
@@ -732,7 +679,6 @@ export default function Classes() {
               } else if (updatedClassAny.next_lesson) {
                 nextLessonText = updatedClassAny.next_lesson;
               }
-
               // Update the transformed class
               const transformedClass: ClassCardData = {
                 ...editingClass,
@@ -743,9 +689,7 @@ export default function Classes() {
                 completionRate: progressValue * 100,
                 nextLesson: nextLessonText,
               };
-
               setClasses(prev => prev.map(c => c.id === editingClass.id ? transformedClass : c));
-
               dispatch(
                 addNotification({
                   type: "success",
@@ -771,7 +715,6 @@ export default function Classes() {
           }}
         />
       )}
-
       {/* Student Progress Tracker for Teachers */}
       {role === "teacher" && (
         <Grid item xs={12}>

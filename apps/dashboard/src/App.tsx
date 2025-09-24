@@ -5,13 +5,19 @@ import { useAppSelector } from "./store";
 import AppRoutes from "./routes";
 import { ConsentModal } from "./components/modals/ConsentModal";
 import { NotificationToast } from "./components/notifications/NotificationToast";
+import { logger } from "./utils/logger";
 import RealtimeToast from "./components/notifications/RealtimeToast";
 import { LoadingOverlay } from "./components/common/LoadingOverlay";
 import { COPPA_COMPLIANCE } from "./config";
+// Auth Components
+import ClerkLogin from "./components/auth/ClerkLogin";
+import ClerkSignUp from "./components/auth/ClerkSignUp";
 import Login from "./components/pages/Login";
 import Register from "./components/pages/Register";
 import PasswordReset from "./components/pages/PasswordReset";
-import { useAuth } from "./hooks/useAuth";
+
+// Unified Auth Hook
+import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import ErrorBoundary from "./components/ErrorBoundary";
 // WebSocket removed - using Pusher for real-time features
 import { pusherService } from "./services/pusher";
@@ -25,12 +31,16 @@ import { Canvas2D } from "./components/three/fallbacks/Canvas2D";
 import { PerformanceMonitor } from "./components/common/PerformanceMonitor";
 // Import WebSocketProvider for context
 import { WebSocketProvider } from "./contexts/WebSocketContext";
+// Import Migration Control Panel for development
+import { MigrationControlPanel } from "./components/migration/MigrationWrapper";
 
 // Keep old FloatingCharacters as fallback
 const FloatingCharacters = React.lazy(() => import("./components/roblox/FloatingCharacters").then(module => ({ default: module.FloatingCharacters })));
 
 // Terminal services removed - not part of application
 // Old performance monitor disabled due to performance issues
+
+const CookieBannerLazy = React.lazy(() => import('./components/consent/CookieBanner').then(m => ({ default: m.default })));
 
 export default function App() {
   const role = useAppSelector((s) => s.user.role);
@@ -44,8 +54,11 @@ export default function App() {
   // Disable animations on Roblox Studio page to prevent movement
   const isRobloxPage = location.pathname.includes('/roblox-studio');
 
-  // Initialize authentication and persistence
-  useAuth();
+  // Check if Clerk auth is enabled
+  const useClerkAuthEnabled = import.meta.env.VITE_ENABLE_CLERK_AUTH === 'true';
+
+  // Use the unified auth hook that handles conditional logic correctly
+  const authHookResult = useUnifiedAuth();
 
   // Validate configuration on startup
   React.useEffect(() => {
@@ -56,12 +69,12 @@ export default function App() {
         const report = await configHealthCheck.runHealthCheck();
 
         if (report.overall === 'error') {
-          console.error('❌ Critical configuration issues detected:', report);
-          report.recommendations.forEach(rec => console.warn(`⚠️  ${rec}`));
+          logger.error('Critical configuration issues detected', report);
+          report.recommendations.forEach(rec => logger.warn(rec));
         } else if (report.overall === 'warning') {
-          console.warn('⚠️  Configuration warnings:', report);
+          logger.warn('Configuration warnings detected', report);
         } else {
-          console.log('✅ Configuration validated successfully');
+          logger.info('Configuration validated successfully');
         }
       }
     };
@@ -78,7 +91,7 @@ export default function App() {
       const connectTimer = setTimeout(() => {
         pusherService.connect();
         isConnected = true;
-        console.log('✅ Pusher connected for real-time updates');
+        logger.info('Pusher connected for real-time updates');
       }, 100);
 
       return () => {
@@ -95,7 +108,7 @@ export default function App() {
   // Lightweight performance monitoring for development
   React.useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('🚀 Lightweight performance monitoring enabled');
+      logger.debug('Lightweight performance monitoring enabled');
     }
   }, []);
 
@@ -126,12 +139,15 @@ export default function App() {
     return (
       <ErrorBoundary>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          {/* Use Clerk components if enabled, otherwise use legacy */}
+          <Route path="/login" element={useClerkAuthEnabled ? <ClerkLogin /> : <Login />} />
+          <Route path="/sign-in" element={<ClerkLogin />} />
+          <Route path="/register" element={useClerkAuthEnabled ? <ClerkSignUp /> : <Register />} />
+          <Route path="/sign-up" element={<ClerkSignUp />} />
           <Route path="/password-reset" element={<PasswordReset />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to={useClerkAuthEnabled ? "/sign-in" : "/login"} replace />} />
         </Routes>
-        
+
         {/* Global Components */}
         <NotificationToast />
         {loading && <LoadingOverlay />}
@@ -172,6 +188,13 @@ export default function App() {
         <NetworkStatus />
         {loading && <LoadingOverlay />}
 
+        {/* Cookie Consent */}
+        {process.env.NODE_ENV === 'production' && (
+          <React.Suspense fallback={null}>
+            <CookieBannerLazy />
+          </React.Suspense>
+        )}
+
         {/* Performance Monitoring - Development Only */}
         <PerformanceMonitor enabled={process.env.NODE_ENV === 'development'} />
 
@@ -182,6 +205,7 @@ export default function App() {
             onClose={handleConsentClose}
           />
         )}
+        <MigrationControlPanel />
       </WebSocketProvider>
     </ErrorBoundary>
   );

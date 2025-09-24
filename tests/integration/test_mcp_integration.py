@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 #!/usr/bin/env python3
 """
 MCP Server Integration Test Suite
@@ -21,7 +36,7 @@ def make_json_serializable(obj):
 import json
 import time
 from datetime import datetime
-import websockets
+from tests.fixtures.pusher_mocks import MockPusherService
 import httpx
 import requests
 from typing import Dict, List, Optional
@@ -44,14 +59,16 @@ class MCPIntegrationTest:
         self.test_results = []
         
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_websocket_connection(self):
+    @pytest.mark.asyncio
+async def test_websocket_connection(self):
         """Test basic WebSocket connection to MCP server"""
         print("\n🔍 Testing WebSocket Connection...")
         
         try:
-            async with websockets.connect(self.mcp_ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.mcp_ws_url) as websocket:
                 # Test initial connection
-                await websocket.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "get_context"
                 }, default=make_json_serializable))
                 
@@ -96,12 +113,14 @@ class MCPIntegrationTest:
             return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_context_management(self):
+    @pytest.mark.asyncio
+async def test_context_management(self):
         """Test context add, update, and retrieval"""
         print("\n🔍 Testing Context Management...")
         
         try:
-            async with websockets.connect(self.mcp_ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.mcp_ws_url) as websocket:
                 # Add context
                 test_context = {
                     "type": "update_context",
@@ -115,7 +134,7 @@ class MCPIntegrationTest:
                     "priority": 2
                 }
                 
-                await websocket.send(json.dumps(test_context, default=make_json_serializable))
+                await pusher.trigger(json.dumps(test_context, default=make_json_serializable))
                 
                 # Wait for broadcast update
                 response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
@@ -126,7 +145,7 @@ class MCPIntegrationTest:
                     print(f"     Entry count: {data.get('metadata', {}).get('entry_count', 0)}")
                     
                     # Query the context
-                    await websocket.send(json.dumps({
+                    await pusher.trigger(json.dumps({
                         "type": "query_context",
                         "query": {
                             "source": "test_suite",
@@ -167,14 +186,16 @@ class MCPIntegrationTest:
             return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_priority_pruning(self):
+    @pytest.mark.asyncio
+async def test_priority_pruning(self):
         """Test context pruning based on priority"""
         print("\n🔍 Testing Priority-Based Pruning...")
         
         try:
-            async with websockets.connect(self.mcp_ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.mcp_ws_url) as websocket:
                 # Clear existing context first
-                await websocket.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "clear_context"
                 }, default=make_json_serializable))
                 
@@ -189,7 +210,7 @@ class MCPIntegrationTest:
                 ]
                 
                 for ctx in contexts:
-                    await websocket.send(json.dumps({
+                    await pusher.trigger(json.dumps({
                         "type": "update_context",
                         "context": {"content": ctx["content"]},
                         "source": "priority_test",
@@ -199,7 +220,7 @@ class MCPIntegrationTest:
                     await asyncio.wait_for(websocket.recv(), timeout=5.0)
                 
                 # Query high priority context
-                await websocket.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "query_context",
                     "query": {
                         "source": "priority_test",
@@ -232,13 +253,15 @@ class MCPIntegrationTest:
             return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_multi_client_sync(self):
+    @pytest.mark.asyncio
+async def test_multi_client_sync(self):
         """Test synchronization between multiple clients"""
         print("\n🔍 Testing Multi-Client Synchronization...")
         
         try:
             # Connect two clients
-            async with websockets.connect(self.mcp_ws_url) as client1, \
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.mcp_ws_url) as client1, \
                        websockets.connect(self.mcp_ws_url) as client2:
                 
                 client2_ws = await client2
@@ -292,14 +315,16 @@ class MCPIntegrationTest:
             return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_token_limit_enforcement(self):
+    @pytest.mark.asyncio
+async def test_token_limit_enforcement(self):
         """Test that token limits are enforced"""
         print("\n🔍 Testing Token Limit Enforcement...")
         
         try:
-            async with websockets.connect(self.mcp_ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.mcp_ws_url) as websocket:
                 # Clear context first
-                await websocket.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "clear_context"
                 }, default=make_json_serializable))
                 await asyncio.wait_for(websocket.recv(), timeout=5.0)
@@ -307,7 +332,7 @@ class MCPIntegrationTest:
                 # Add large context
                 large_content = "Educational content " * 1000  # Large text
                 
-                await websocket.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "update_context",
                     "context": {"content": large_content},
                     "source": "token_test",
@@ -346,7 +371,8 @@ class MCPIntegrationTest:
             return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_agent_integration(self):
+    @pytest.mark.asyncio
+async def test_agent_integration(self):
         """Test if agents can communicate with MCP"""
         print("\n🔍 Testing Agent Integration with MCP...")
         
@@ -357,7 +383,8 @@ class MCPIntegrationTest:
                 health_data = response.json()
                 
                 # Try to connect as an agent
-                async with websockets.connect(self.mcp_ws_url) as websocket:
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.mcp_ws_url) as websocket:
                     # Send agent-specific context
                     agent_context = {
                         "type": "update_context",
@@ -371,7 +398,7 @@ class MCPIntegrationTest:
                         "priority": 4
                     }
                     
-                    await websocket.send(json.dumps(agent_context, default=make_json_serializable))
+                    await pusher.trigger(json.dumps(agent_context, default=make_json_serializable))
                     response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
                     data = json.loads(response)
                     
@@ -379,7 +406,7 @@ class MCPIntegrationTest:
                         print(f"  ✅ Agent can update MCP context")
                         
                         # Query agent context
-                        await websocket.send(json.dumps({
+                        await pusher.trigger(json.dumps({
                             "type": "query_context",
                             "query": {"source": "supervisor_agent"}
                         }, default=make_json_serializable))
@@ -415,14 +442,16 @@ class MCPIntegrationTest:
             return False
     
     @pytest.mark.asyncio(loop_scope="function")
-    async def test_error_handling(self):
+    @pytest.mark.asyncio
+async def test_error_handling(self):
         """Test error handling for invalid messages"""
         print("\n🔍 Testing Error Handling...")
         
         try:
-            async with websockets.connect(self.mcp_ws_url) as websocket:
+            async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherself.mcp_ws_url) as websocket:
                 # Send invalid JSON
-                await websocket.send("invalid json {")
+                await pusher.trigger("invalid json {")
                 response = await asyncio.wait_for(websocket.recv(), timeout=5.0)
                 data = json.loads(response)
                 
@@ -433,7 +462,7 @@ class MCPIntegrationTest:
                     print(f"  ⚠️  Unexpected response to invalid JSON")
                 
                 # Send unknown message type
-                await websocket.send(json.dumps({
+                await pusher.trigger(json.dumps({
                     "type": "unknown_type",
                     "data": "test"
                 }, default=make_json_serializable))

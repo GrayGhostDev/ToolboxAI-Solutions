@@ -9,8 +9,10 @@
     "globalTimeout": 600000,
     "grep": {},
     "grepInvert": null,
-    "maxFailures": 0,
-    "metadata": {},
+    "maxFailures": 1,
+    "metadata": {
+      "actualWorkers": 14
+    },
     "preserveOutput": "always",
     "reporter": [
       [
@@ -46,7 +48,9 @@
         "outputDir": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 14
+        },
         "id": "chromium",
         "name": "chromium",
         "testDir": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e",
@@ -60,7 +64,9 @@
         "outputDir": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 14
+        },
         "id": "firefox",
         "name": "firefox",
         "testDir": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e",
@@ -74,7 +80,9 @@
         "outputDir": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 14
+        },
         "id": "webkit",
         "name": "webkit",
         "testDir": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e",
@@ -88,7 +96,9 @@
         "outputDir": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 14
+        },
         "id": "mobile-chrome",
         "name": "mobile-chrome",
         "testDir": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e",
@@ -102,7 +112,9 @@
         "outputDir": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 14
+        },
         "id": "mobile-safari",
         "name": "mobile-safari",
         "testDir": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e",
@@ -116,7 +128,9 @@
         "outputDir": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 14
+        },
         "id": "accessibility",
         "name": "accessibility",
         "testDir": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e",
@@ -130,7 +144,9 @@
         "outputDir": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {},
+        "metadata": {
+          "actualWorkers": 14
+        },
         "id": "api",
         "name": "api",
         "testDir": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e",
@@ -148,23 +164,755 @@
     "workers": 14,
     "webServer": null
   },
-  "suites": [],
+  "suites": [
+    {
+      "title": "tests/auth/authentication.spec.ts",
+      "file": "tests/auth/authentication.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Authentication",
+          "file": "tests/auth/authentication.spec.ts",
+          "line": 27,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should display login form",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 8478,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  locator('h1, h2, h3, h4, h5').filter({ hasText: /welcome/i }).first()\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2, h3, h4, h5').filter({ hasText: /welcome/i }).first()\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  locator('h1, h2, h3, h4, h5').filter({ hasText: /welcome/i }).first()\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2, h3, h4, h5').filter({ hasText: /welcome/i }).first()\u001b[22m\n\n    at /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e/tests/auth/authentication.spec.ts:39:27",
+                        "location": {
+                          "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e/tests/auth/authentication.spec.ts",
+                          "column": 27,
+                          "line": 39
+                        },
+                        "snippet": "  37 |     // Try to find any heading with \"Welcome\" text\n  38 |     const heading = page.locator('h1, h2, h3, h4, h5').filter({ hasText: /welcome/i }).first();\n> 39 |     await expect(heading).toBeVisible();\n     |                           ^\n  40 |\n  41 |     // Wait for form elements to be visible - Clerk uses \"identifier\" field\n  42 |     await page.waitForSelector('input[name=\"identifier\"], input[id=\"identifier-field\"]', { state: 'visible', timeout: 5000 });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e/tests/auth/authentication.spec.ts",
+                            "column": 27,
+                            "line": 39
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m failed\n\nLocator:  locator('h1, h2, h3, h4, h5').filter({ hasText: /welcome/i }).first()\nExpected: visible\nReceived: <element(s) not found>\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1, h2, h3, h4, h5').filter({ hasText: /welcome/i }).first()\u001b[22m\n\n\n  37 |     // Try to find any heading with \"Welcome\" text\n  38 |     const heading = page.locator('h1, h2, h3, h4, h5').filter({ hasText: /welcome/i }).first();\n> 39 |     await expect(heading).toBeVisible();\n     |                           ^\n  40 |\n  41 |     // Wait for form elements to be visible - Clerk uses \"identifier\" field\n  42 |     await page.waitForSelector('input[name=\"identifier\"], input[id=\"identifier-field\"]', { state: 'visible', timeout: 5000 });\n    at /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e/tests/auth/authentication.spec.ts:39:27"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:10.606Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--b773e-n-should-display-login-form-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--b773e-n-should-display-login-form-chromium/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--b773e-n-should-display-login-form-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e/tests/auth/authentication.spec.ts",
+                        "column": 27,
+                        "line": 39
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-3a52203e422b7bbae0ec",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 35,
+              "column": 3
+            },
+            {
+              "title": "should show validation errors for empty form",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "interrupted",
+                      "duration": 8840,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:10.613Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--9f943-ation-errors-for-empty-form-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--9f943-ation-errors-for-empty-form-chromium/video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-3f7d99c528e7045a28eb",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 57,
+              "column": 3
+            },
+            {
+              "title": "should show error for invalid email format",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "interrupted",
+                      "duration": 8662,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:10.614Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--8944a-or-for-invalid-email-format-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--8944a-or-for-invalid-email-format-chromium/video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-9e92fec943e67041cdfe",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 66,
+              "column": 3
+            },
+            {
+              "title": "should show error for incorrect credentials",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "interrupted",
+                      "duration": 8710,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:10.611Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--8769f-r-for-incorrect-credentials-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--8769f-r-for-incorrect-credentials-chromium/video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-d765ef192c5ea9711cf2",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 76,
+              "column": 3
+            },
+            {
+              "title": "should successfully login as admin",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "interrupted",
+                      "duration": 8718,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:10.608Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--bcdc3-successfully-login-as-admin-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--bcdc3-successfully-login-as-admin-chromium/video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-12fec9665cc6df85d1f9",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 87,
+              "column": 3
+            },
+            {
+              "title": "should successfully login as teacher",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "interrupted",
+                      "duration": 8774,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:10.620Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--11191-ccessfully-login-as-teacher-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--11191-ccessfully-login-as-teacher-chromium/video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-c2dbf69d6ee5abf1cbb3",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 124,
+              "column": 3
+            },
+            {
+              "title": "should successfully login as student",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 6,
+                      "status": "interrupted",
+                      "duration": 8759,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:10.606Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--0ac99-ccessfully-login-as-student-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--0ac99-ccessfully-login-as-student-chromium/video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-04feedf7f9ef762f70bf",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 151,
+              "column": 3
+            },
+            {
+              "title": "should logout successfully",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 7,
+                      "status": "interrupted",
+                      "duration": 8803,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:10.604Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--def4b--should-logout-successfully-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--def4b--should-logout-successfully-chromium/video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-8cda0abc6d2b8219e1be",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 178,
+              "column": 3
+            },
+            {
+              "title": "should persist authentication on page refresh",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 8,
+                      "status": "interrupted",
+                      "duration": 8660,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:10.607Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--323ba-hentication-on-page-refresh-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--323ba-hentication-on-page-refresh-chromium/video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-b4ccdfcf9f2cda0e93f8",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 223,
+              "column": 3
+            },
+            {
+              "title": "should redirect to login when accessing protected route without auth",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 9,
+                      "status": "interrupted",
+                      "duration": 8741,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:10.621Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--33c4e-rotected-route-without-auth-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--33c4e-rotected-route-without-auth-chromium/video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-d6a60ea54dc41bebb4dd",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 240,
+              "column": 3
+            },
+            {
+              "title": "should handle password visibility toggle",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 10,
+                      "status": "interrupted",
+                      "duration": 8721,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:10.610Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--28535--password-visibility-toggle-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--28535--password-visibility-toggle-chromium/video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-dcf5bd7d20b2195bcd44",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 255,
+              "column": 3
+            },
+            {
+              "title": "should handle remember me functionality",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "location": {
+                        "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e/tests/auth/authentication.spec.ts",
+                        "line": 295,
+                        "column": 12
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 11,
+                      "status": "skipped",
+                      "duration": 3704,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:10.628Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "location": {
+                            "file": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/e2e/tests/auth/authentication.spec.ts",
+                            "line": 295,
+                            "column": 12
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-4d2eac0215546e2ebc26",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 271,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Role-Based Access Control",
+          "file": "tests/auth/authentication.spec.ts",
+          "line": 300,
+          "column": 6,
+          "specs": [
+            {
+              "title": "admin should access all sections",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 12,
+                      "status": "interrupted",
+                      "duration": 8836,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:10.609Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--79bf1--should-access-all-sections-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--79bf1--should-access-all-sections-chromium/video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-a6dea255bebe93d19679",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 301,
+              "column": 3
+            },
+            {
+              "title": "teacher should not access admin sections",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 13,
+                      "parallelIndex": 13,
+                      "status": "interrupted",
+                      "duration": 8736,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:10.606Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--46a57-d-not-access-admin-sections-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--46a57-d-not-access-admin-sections-chromium/video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-de1acc6c7e5d32eaef09",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 326,
+              "column": 3
+            },
+            {
+              "title": "student should have limited access",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 11,
+                      "status": "interrupted",
+                      "duration": 5031,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-21T21:41:14.620Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--a893b--should-have-limited-access-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/test-results/tests-auth-authentication--a893b--should-have-limited-access-chromium/video.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e7ee9e0f86c740b13a94-81d5a755c1669f7a3b7b",
+              "file": "tests/auth/authentication.spec.ts",
+              "line": 347,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "errors": [
     {
-      "message": "SyntaxError: The requested module '@playwright/test' does not provide an export named 'Page'",
-      "stack": "SyntaxError: The requested module '@playwright/test' does not provide an export named 'Page'"
-    },
-    {
-      "message": "SyntaxError: The requested module '@playwright/test' does not provide an export named 'Page'",
-      "stack": "SyntaxError: The requested module '@playwright/test' does not provide an export named 'Page'"
+      "message": "\u001b[31mTesting stopped early after 1 maximum allowed failures.\u001b[39m"
     }
   ],
   "stats": {
-    "startTime": "2025-09-19T17:49:46.909Z",
-    "duration": 6748.817,
+    "startTime": "2025-09-21T21:40:38.420Z",
+    "duration": 41371.05,
     "expected": 0,
-    "skipped": 0,
-    "unexpected": 0,
+    "skipped": 14,
+    "unexpected": 1,
     "flaky": 0
   }
 }

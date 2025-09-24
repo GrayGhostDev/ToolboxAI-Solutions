@@ -14,7 +14,7 @@ interface FloatingCharactersV2Props {
   showClouds?: boolean;
 }
 
-export const FloatingCharactersV2: React.FC<FloatingCharactersV2Props> = ({
+export const FloatingCharactersV2: React.FunctionComponent<FloatingCharactersV2Props> = ({
   characters = [
     { type: 'astronaut', position: [-4, 2, -3] },
     { type: 'robot', position: [4, 1, -2] },

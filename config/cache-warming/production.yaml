@@ -1,0 +1,212 @@
+# ================================================================================
+# TOOLBOXAI CACHE WARMING CONFIGURATION - PRODUCTION
+# ================================================================================
+
+cache_warming:
+  # Base configuration
+  base_url: "https://toolboxai.com"
+  api_base_url: "https://api.toolboxai.com"
+  cdn_base_url: "https://cdn.toolboxai.com"
+
+  # Performance settings
+  concurrent_requests: 10
+  request_delay: 0.1
+  timeout: 30
+  retries: 3
+
+  # Authentication
+  user_agent: "ToolboxAI-CacheWarmer/1.0"
+  auth_token: null  # Set via environment variable
+  ssl_verify: true
+
+# Custom warming targets
+targets:
+  # Critical application endpoints
+  - url: "https://toolboxai.com/"
+    priority: 1
+    cache_layers: ["cdn", "app"]
+    health_check: true
+
+  - url: "https://toolboxai.com/dashboard"
+    priority: 1
+    cache_layers: ["cdn", "app"]
+
+  - url: "https://toolboxai.com/login"
+    priority: 2
+    cache_layers: ["cdn", "app"]
+
+  - url: "https://toolboxai.com/signup"
+    priority: 2
+    cache_layers: ["cdn", "app"]
+
+  # API endpoints
+  - url: "https://api.toolboxai.com/health"
+    priority: 1
+    cache_layers: ["app"]
+    health_check: true
+
+  - url: "https://api.toolboxai.com/api/v1/status"
+    priority: 2
+    cache_layers: ["app"]
+
+  - url: "https://api.toolboxai.com/api/v1/version"
+    priority: 3
+    cache_layers: ["app"]
+
+  - url: "https://api.toolboxai.com/api/v1/classes"
+    priority: 4
+    cache_layers: ["app"]
+    method: "GET"
+    headers:
+      "Accept": "application/json"
+
+  - url: "https://api.toolboxai.com/api/v1/lessons"
+    priority: 4
+    cache_layers: ["app"]
+    method: "GET"
+    headers:
+      "Accept": "application/json"
+
+  # Static assets (CSS)
+  - url: "https://cdn.toolboxai.com/assets/css/main.css"
+    priority: 3
+    cache_layers: ["cdn"]
+
+  - url: "https://cdn.toolboxai.com/assets/css/dashboard.css"
+    priority: 4
+    cache_layers: ["cdn"]
+
+  - url: "https://cdn.toolboxai.com/assets/css/components.css"
+    priority: 4
+    cache_layers: ["cdn"]
+
+  # Static assets (JavaScript)
+  - url: "https://cdn.toolboxai.com/assets/js/main.js"
+    priority: 3
+    cache_layers: ["cdn"]
+
+  - url: "https://cdn.toolboxai.com/assets/js/dashboard.js"
+    priority: 4
+    cache_layers: ["cdn"]
+
+  - url: "https://cdn.toolboxai.com/assets/js/vendor.js"
+    priority: 4
+    cache_layers: ["cdn"]
+
+  # Images and media
+  - url: "https://cdn.toolboxai.com/assets/images/logo.png"
+    priority: 5
+    cache_layers: ["cdn"]
+
+  - url: "https://cdn.toolboxai.com/assets/images/favicon.ico"
+    priority: 5
+    cache_layers: ["cdn"]
+
+  - url: "https://cdn.toolboxai.com/assets/images/hero-bg.jpg"
+    priority: 6
+    cache_layers: ["cdn"]
+
+  # Fonts
+  - url: "https://cdn.toolboxai.com/assets/fonts/inter-regular.woff2"
+    priority: 5
+    cache_layers: ["cdn"]
+
+  - url: "https://cdn.toolboxai.com/assets/fonts/inter-bold.woff2"
+    priority: 5
+    cache_layers: ["cdn"]
+
+  # User interface pages
+  - url: "https://toolboxai.com/classes"
+    priority: 5
+    cache_layers: ["cdn", "app"]
+
+  - url: "https://toolboxai.com/lessons"
+    priority: 5
+    cache_layers: ["cdn", "app"]
+
+  - url: "https://toolboxai.com/assignments"
+    priority: 6
+    cache_layers: ["cdn", "app"]
+
+  - url: "https://toolboxai.com/profile"
+    priority: 6
+    cache_layers: ["app"]
+
+  # Administrative interfaces
+  - url: "https://toolboxai.com/admin"
+    priority: 8
+    cache_layers: ["app"]
+
+  - url: "https://toolboxai.com/admin/users"
+    priority: 9
+    cache_layers: ["app"]
+
+  - url: "https://toolboxai.com/admin/classes"
+    priority: 9
+    cache_layers: ["app"]
+
+  # API administrative endpoints
+  - url: "https://api.toolboxai.com/api/v1/admin/health"
+    priority: 9
+    cache_layers: ["app"]
+
+  - url: "https://api.toolboxai.com/api/v1/admin/metrics"
+    priority: 10
+    cache_layers: ["app"]
+
+  # Documentation and help
+  - url: "https://toolboxai.com/help"
+    priority: 7
+    cache_layers: ["cdn", "app"]
+
+  - url: "https://toolboxai.com/docs"
+    priority: 7
+    cache_layers: ["cdn", "app"]
+
+  - url: "https://toolboxai.com/privacy"
+    priority: 8
+    cache_layers: ["cdn", "app"]
+
+  - url: "https://toolboxai.com/terms"
+    priority: 8
+    cache_layers: ["cdn", "app"]
+
+  # Roblox integration endpoints
+  - url: "https://api.toolboxai.com/api/v1/roblox/status"
+    priority: 6
+    cache_layers: ["app"]
+
+  - url: "https://api.toolboxai.com/api/v1/roblox/scripts"
+    priority: 7
+    cache_layers: ["app"]
+
+  # WebSocket health checks
+  - url: "https://api.toolboxai.com/ws/health"
+    priority: 5
+    cache_layers: ["app"]
+    method: "GET"
+
+# Warming schedules (optional)
+schedules:
+  # Critical paths - warm every 5 minutes
+  critical:
+    frequency: 300  # seconds
+    targets:
+      - "https://toolboxai.com/"
+      - "https://api.toolboxai.com/health"
+
+  # Important paths - warm every 15 minutes
+  important:
+    frequency: 900
+    targets:
+      - "https://toolboxai.com/dashboard"
+      - "https://toolboxai.com/classes"
+      - "https://toolboxai.com/lessons"
+
+  # Static assets - warm every hour
+  static:
+    frequency: 3600
+    targets:
+      - "https://cdn.toolboxai.com/assets/css/main.css"
+      - "https://cdn.toolboxai.com/assets/js/main.js"
+      - "https://cdn.toolboxai.com/assets/images/logo.png"

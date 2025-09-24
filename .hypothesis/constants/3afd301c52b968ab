@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/mcp/server.py
+# hypothesis_version: 6.139.2
+
+[4001, 4002, 9876, 128000, '..', '1.0.0', 'Connection timeout', 'HS256', 'JWT_SECRET_KEY', 'MCP_JWT_SECRET_KEY', 'Not authenticated', 'Token has expired', '__main__', 'auth_success', 'authenticated_at', 'authentication', 'clear_context', 'client_id', 'connected_clients', 'context', 'context_entries', 'context_management', 'context_update', 'data', 'entry_count', 'error', 'exp', 'features', 'full_payload', 'get_context', 'jwt_auth', 'key', 'last_activity', 'localhost', 'max_tokens', 'message', 'metadata', 'min_priority', 'priority', 'query', 'query_context', 'query_response', 'refresh_token', 'secure_connections', 'server_info', 'set_priority', 'source', 'success', 'timestamp', 'token', 'token_refresh', 'token_refreshed', 'total_tokens', 'type', 'update_context', 'user_id', 'user_info', 'version']

@@ -1,3 +1,4 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """Test script to verify AI Assistant doesn't ask redundant questions"""
 
@@ -11,6 +12,7 @@ from typing import Dict, List
 API_BASE_URL = "http://127.0.0.1:8009"
 AUTH_TOKEN = "dev-token"
 
+@pytest.mark.asyncio
 async def test_redundancy_fix():
     """Test that AI Assistant doesn't repeatedly ask for information already provided"""
 

@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/mcp/auth_middleware.py
+# hypothesis_version: 6.139.2
+
+[b'authorization', 4001, '.', '=', '?', 'Authorization', 'Bearer ', 'HS256', 'Invalid token format', 'JWT', 'Token has expired', 'WebSocketAuthError', 'access_token', 'active_connections', 'admin', 'algorithm', 'auth_system', 'authorization', 'connected_at', 'cookies', 'email', 'exp', 'full_payload', 'iat', 'is_active', 'last_activity', 'message_count', 'raw_request_headers', 'request_headers', 'role', 'student', 'sub', 'teacher', 'token', 'token_expires_at', 'token_issued_at', 'total_connections', 'unknown', 'unknown@example.com', 'user_id', 'user_info', 'user_roles', 'username', 'utf-8', 'websocket']

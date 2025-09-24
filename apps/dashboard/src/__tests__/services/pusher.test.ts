@@ -1,3 +1,8 @@
+import { vi } from 'vitest';
+
+// Configure test timeout for Vitest
+vi.setConfig({ testTimeout: 10000 });
+
 /**
  * Pusher Service Test Suite
  * 
@@ -7,8 +12,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach, MockedFunction } from 'vitest';
 import Pusher, { Channel, PresenceChannel } from 'pusher-js';
+import { PusherService, pusherService } from '../../services/pusher';
 import { PusherService } from '../../services/pusher';
-import { WebSocketState, WebSocketMessageType } from '../../types/websocket';
 
 // Mock Pusher
 vi.mock('pusher-js');
@@ -42,6 +47,9 @@ describe('PusherService', () => {
   let mockPresenceChannel: any;
 
   beforeEach(() => {
+    // Reset singleton for clean test state
+    (PusherService as any).instance = null;
+    
     // Reset all mocks
     vi.clearAllMocks();
     
@@ -88,15 +96,20 @@ describe('PusherService', () => {
     
     (Pusher as unknown as MockedFunction<any>).mockImplementation(() => mockPusherInstance);
     
-    // Create service instance
-    service = new PusherService({
+    // Get service instance
+    service = PusherService.getInstance({
       debug: true,
       autoConnect: false,
     });
   });
 
   afterEach(() => {
-    service.disconnect();
+    if (service) {
+      service.disconnect();
+    }
+    // Reset singleton for clean test state
+    (PusherService as any).instance = null;
+    vi.clearAllMocks();
   });
 
   describe('Connection Management', () => {
@@ -264,7 +277,7 @@ describe('PusherService', () => {
     });
 
     it('should send message to channel', async () => {
-      await service.send(WebSocketMessageType.CONTENT_UPDATE, { content: 'test' }, { channel: 'public' });
+      await service.send(PusherEventType.CONTENT_UPDATE, { content: 'test' }, { channel: 'public' });
       
       // Since send triggers server-side events, we need to verify API call
       // In real implementation, this would call the API to trigger server event
@@ -360,7 +373,7 @@ describe('PusherService', () => {
       await service.subscribeToChannel(channelName);
       
       // Trigger client event
-      await service.send(WebSocketMessageType.CONTENT_UPDATE, { test: 'data' }, { channel: channelName });
+      await service.send(PusherEventType.CONTENT_UPDATE, { test: 'data' }, { channel: channelName });
       
       // Client events would be triggered on the channel
       expect(mockPresenceChannel.trigger).toBeDefined();
@@ -376,7 +389,7 @@ describe('PusherService', () => {
         AUTH_TOKEN_KEY: 'test-token-key',
       }));
       
-      const serviceWithoutKey = new PusherService();
+      const serviceWithoutKey = PusherService.getInstance();
       await expect(serviceWithoutKey.connect()).resolves.toBeUndefined();
       expect(serviceWithoutKey.getState()).toBe(WebSocketState.DISCONNECTED);
     });
@@ -438,7 +451,7 @@ describe('PusherService', () => {
       const initialStats = service.getStats();
       
       // Send a message
-      await service.send(WebSocketMessageType.CONTENT_UPDATE, { test: 'data' });
+      await service.send(PusherEventType.CONTENT_UPDATE, { test: 'data' });
       
       const updatedStats = service.getStats();
       expect(updatedStats.messagesSent).toBeGreaterThan(initialStats.messagesSent);

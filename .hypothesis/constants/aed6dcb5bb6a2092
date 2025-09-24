@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/github_agents/error_recovery.py
+# hypothesis_version: 6.139.2
+
+['errors_detected', 'message', 'recovery_actions', 'success']

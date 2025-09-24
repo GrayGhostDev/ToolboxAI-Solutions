@@ -18,6 +18,7 @@ import { AUTH_TOKEN_KEY, DEBUG_MODE, ENABLE_WEBSOCKET, WS_URL } from '../config'
 import { pusherService as websocketService } from '../services/pusher';
 import { useAppDispatch, useAppSelector } from '../store';
 import { addNotification } from '../store/slices/uiSlice';
+import { logger } from '../utils/logger';
 import {
   CollaborationMessage,
   ContentGenerationProgress,
@@ -108,7 +109,7 @@ interface WebSocketProviderProps {
 /**
  * WebSocket Provider Component
  */
-export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
+export const WebSocketProvider: React.FunctionComponent<WebSocketProviderProps> = ({
   children,
   url = WS_URL,
   autoConnect = true,
@@ -136,7 +137,10 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         isConnecting.current = true;
         // Get token from localStorage first, then fallback to Redux store, then provided token
         const currentToken = token || localStorage.getItem(AUTH_TOKEN_KEY) || authToken;
-        console.log(`[WebSocket] Connecting with token: ${currentToken ? `${currentToken.substring(0, 20)}...` : 'null'}`);
+        logger.debug('WebSocket connecting', {
+          hasToken: !!currentToken,
+          tokenPrefix: currentToken ? `${currentToken.substring(0, 20)}...` : null
+        });
         await websocketService.connect(currentToken);
       } finally {
         isConnecting.current = false;
@@ -206,7 +210,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
               ...message,
               payload: message.payload ? '[PAYLOAD_SANITIZED]' : undefined,
             };
-            console.log('[WebSocket] User message:', safeMessage);
+            logger.debug('WebSocket user message', safeMessage);
           }
       }
     },
@@ -216,7 +220,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   // Initialize WebSocket service
   useEffect(() => {
     if (!ENABLE_WEBSOCKET) {
-      console.log('WebSocket disabled by configuration');
+      logger.info('WebSocket disabled by configuration');
       return;
     }
 
@@ -288,12 +292,14 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     const currentToken = localStorage.getItem(AUTH_TOKEN_KEY) || authToken;
     if (autoConnect && currentToken && !isConnecting.current) {
       isConnecting.current = true;
-      console.log(`[WebSocket] Auto-connecting with token: ${currentToken.substring(0, 20)}...`);
+      logger.debug('WebSocket auto-connecting', {
+        tokenPrefix: currentToken.substring(0, 20)
+      });
       service
         .connect(currentToken)
         .then(() => {
           isConnecting.current = false;
-          console.log('[WebSocket] Successfully connected');
+          logger.info('WebSocket successfully connected');
           // Subscribe to user-specific channel
           if (userId) {
             service.subscribe(`user_${userId}`, (message) => {
@@ -310,7 +316,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
           const sanitizedError = String(error.message || error)
             .replace(/[\n\r]/g, '')
             .substring(0, 200);
-          console.error('Failed to connect WebSocket:', sanitizedError);
+          logger.error('Failed to connect WebSocket', { error: sanitizedError });
 
           // Set error state but don't show notification here (handled by error handler)
           setError({
@@ -337,11 +343,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
     if (currentToken && state === WebSocketState.DISCONNECTED && !isConnecting.current) {
       // Reconnect with new token
-      console.log('[WebSocket] Token detected, reconnecting...');
+      logger.debug('WebSocket token detected, reconnecting');
       connectFunc(currentToken);
     } else if (!currentToken && state === WebSocketState.CONNECTED) {
       // Disconnect if logged out
-      console.log('[WebSocket] No token detected, disconnecting...');
+      logger.debug('WebSocket no token detected, disconnecting');
       disconnectFunc('User logged out');
     }
   }, [authToken, state, connectFunc, disconnectFunc]);
@@ -385,17 +391,17 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const handleTokenRefresh = useCallback(async () => {
     const currentToken = localStorage.getItem(AUTH_TOKEN_KEY) || authToken;
     if (!currentToken) {
-      console.log('[WebSocket] No token available for refresh');
+      logger.warn('WebSocket no token available for refresh');
       return;
     }
 
     try {
-      console.log('[WebSocket] Attempting manual token refresh...');
+      logger.debug('WebSocket attempting manual token refresh');
       // Use the websocket service's refresh method
       await websocketService.refreshTokenAndReconnect();
-      console.log('[WebSocket] Token refresh successful');
+      logger.info('WebSocket token refresh successful');
     } catch (error) {
-      console.error('[WebSocket] Failed to refresh token:', error);
+      logger.error('WebSocket failed to refresh token', error);
       // Disconnect and attempt to reconnect
       disconnectFunc('Token refresh failed');
       setTimeout(() => connectFunc(), 1000);
@@ -410,7 +416,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     if (!currentToken) return;
 
     const unsubscribe = websocketService.on('token_expired', () => {
-      console.log('[WebSocket] Token expired event received');
+      logger.warn('WebSocket token expired event received');
       handleTokenRefresh();
     });
 

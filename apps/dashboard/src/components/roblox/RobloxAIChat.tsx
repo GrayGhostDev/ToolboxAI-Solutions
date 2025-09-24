@@ -7,22 +7,21 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Chip,
-  Stack,
-  Avatar,
-  IconButton,
-  CircularProgress,
-  Alert,
-  Tooltip,
-  useTheme,
-  alpha
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import IconButton from '@mui/material/IconButton';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import Tooltip from '@mui/material/Tooltip';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import {
   Send,
   AutoAwesome,
@@ -107,7 +106,7 @@ const SUGGESTED_PROMPTS = [
   }
 ];
 
-export const RobloxAIChat: React.FC = () => {
+export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector(state => state.user);
@@ -459,12 +458,12 @@ export const RobloxAIChat: React.FC = () => {
           
           <Stack direction="row" spacing={1}>
             <Tooltip title="Clear conversation">
-              <IconButton onClick={clearConversation} size="small">
+              <IconButton onClick={(e: React.MouseEvent) => clearConversation} size="small">
                 <Clear />
               </IconButton>
             </Tooltip>
             <Tooltip title="Refresh connection">
-              <IconButton onClick={() => window.location.reload()} size="small">
+              <IconButton onClick={(e: React.MouseEvent) => () => window.location.reload()} size="small">
                 <Refresh />
               </IconButton>
             </Tooltip>
@@ -519,7 +518,7 @@ export const RobloxAIChat: React.FC = () => {
                   key={index}
                   icon={prompt.icon}
                   label={prompt.text}
-                  onClick={() => handleSuggestedPrompt(prompt.text)}
+                  onClick={(e: React.MouseEvent) => () => handleSuggestedPrompt(prompt.text)}
                   variant="outlined"
                   sx={{ 
                     justifyContent: 'flex-start',
@@ -614,14 +613,14 @@ export const RobloxAIChat: React.FC = () => {
               <Button
                 size="small"
                 startIcon={<Download />}
-                onClick={() => window.open(generatedEnvironment.downloadUrl)}
+                onClick={(e: React.MouseEvent) => () => window.open(generatedEnvironment.downloadUrl)}
               >
                 Download
               </Button>
               <Button
                 size="small"
                 startIcon={<Share />}
-                onClick={() => navigator.share?.({ url: generatedEnvironment.previewUrl })}
+                onClick={(e: React.MouseEvent) => () => navigator.share?.({ url: generatedEnvironment.previewUrl })}
               >
                 Share
               </Button>
@@ -655,7 +654,7 @@ export const RobloxAIChat: React.FC = () => {
             
             <Tooltip title={isRecording ? "Stop recording" : "Voice input"}>
               <IconButton 
-                onClick={toggleRecording}
+                onClick={(e: React.MouseEvent) => toggleRecording}
                 color={isRecording ? "error" : "default"}
                 disabled={isLoading}
               >
@@ -679,7 +678,7 @@ export const RobloxAIChat: React.FC = () => {
             <Button
               variant="outlined"
               color="success"
-              onClick={generateEnvironment}
+              onClick={(e: React.MouseEvent) => generateEnvironment}
               disabled={isGenerating}
               startIcon={<AutoAwesome />}
               fullWidth

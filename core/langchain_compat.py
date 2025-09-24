@@ -15,9 +15,15 @@ logger = logging.getLogger(__name__)
 # Core imports with modern patterns
 try:
     # Models - Using modern initialization patterns
-    from langchain.chat_models import init_chat_model
+    # Note: init_chat_model has been deprecated/moved in LangChain 0.3+
     from langchain_openai import ChatOpenAI, AzureChatOpenAI
     from langchain_anthropic import ChatAnthropic
+
+    # Try to import init_chat_model, but don't fail if not available
+    try:
+        from langchain_community.chat_models import init_chat_model
+    except ImportError:
+        init_chat_model = None
 
     # Messages
     from langchain_core.messages import (
@@ -72,8 +78,9 @@ try:
         StreamingStdOutCallbackHandler
     )
 
-    # Memory components
-    from langchain.memory import ConversationBufferMemory, ConversationSummaryMemory
+    # Memory components - Note: LangChain legacy memory has Pydantic v2 compatibility issues
+    # Use LangGraph's MemorySaver instead for state persistence
+    # ConversationBufferMemory and ConversationSummaryMemory are deprecated
 
     # Document processing
     from langchain_core.documents import Document
@@ -140,38 +147,39 @@ def get_chat_model(
         else:
             provider = "openai"  # Default fallback
 
-    try:
-        # Use the modern init_chat_model for automatic provider detection
-        return init_chat_model(
-            model_name,
-            model_provider=provider,
+    # Try to use init_chat_model if available, otherwise use direct initialization
+    if init_chat_model is not None:
+        try:
+            return init_chat_model(
+                model_name,
+                model_provider=provider,
+                temperature=temperature,
+                **kwargs
+            )
+        except Exception as e:
+            logger.warning(f"Failed to initialize model with init_chat_model: {e}, falling back to direct initialization")
+
+    # Direct initialization (always works with current LangChain versions)
+    if provider == "openai":
+        return ChatOpenAI(
+            model=model_name,
             temperature=temperature,
             **kwargs
         )
-    except Exception as e:
-        logger.error(f"Failed to initialize model with init_chat_model: {e}")
-
-        # Fallback to direct initialization
-        if provider == "openai":
-            return ChatOpenAI(
-                model=model_name,
-                temperature=temperature,
-                **kwargs
-            )
-        elif provider == "anthropic":
-            return ChatAnthropic(
-                model=model_name,
-                temperature=temperature,
-                **kwargs
-            )
-        elif provider == "azure":
-            return AzureChatOpenAI(
-                model=model_name,
-                temperature=temperature,
-                **kwargs
-            )
-        else:
-            raise ValueError(f"Unknown provider: {provider}")
+    elif provider == "anthropic":
+        return ChatAnthropic(
+            model=model_name,
+            temperature=temperature,
+            **kwargs
+        )
+    elif provider == "azure":
+        return AzureChatOpenAI(
+            model=model_name,
+            temperature=temperature,
+            **kwargs
+        )
+    else:
+        raise ValueError(f"Unknown provider: {provider}")
 
 
 @lru_cache(maxsize=32)

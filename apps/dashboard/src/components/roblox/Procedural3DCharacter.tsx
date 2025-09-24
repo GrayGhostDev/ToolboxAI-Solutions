@@ -1,11 +1,11 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Box as ThreeBox, Sphere, Cylinder, Cone } from '@react-three/drei';
-import { Box } from '@mui/material';
+import Box from '@mui/material/Box';
 import * as THREE from 'three';
 
 // Character type definitions
-const characterTypes: Record<string, React.FC<any>> = {
+const characterTypes: Record<string, React.FunctionComponent<any>> = {
   astronaut: ({ color, ...props }) => (
     <group {...props}>
       {/* Helmet */}
@@ -244,7 +244,7 @@ const characterTypes: Record<string, React.FC<any>> = {
 };
 
 // Animated character component
-const AnimatedCharacter: React.FC<{ type: string; color?: string }> = ({ type, color }) => {
+const AnimatedCharacter: React.FunctionComponent<{ type: string; color?: string }> = ({ type, color }) => {
   const meshRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
@@ -272,7 +272,7 @@ interface Procedural3DCharacterProps {
   style?: React.CSSProperties;
 }
 
-export const Procedural3DCharacter: React.FC<Procedural3DCharacterProps> = ({
+export const Procedural3DCharacter: React.FunctionComponent<Procedural3DCharacterProps> = ({
   characterType = 'default',
   size = 'medium',
   color,

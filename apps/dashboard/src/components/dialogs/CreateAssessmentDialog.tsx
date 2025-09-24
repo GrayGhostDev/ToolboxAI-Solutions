@@ -1,20 +1,19 @@
 import React, { useState } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Stack,
-  Chip,
-  Box,
-  Typography,
-} from "@mui/material";
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -25,7 +24,7 @@ interface CreateAssessmentDialogProps {
   onSave: (assessmentData: any) => void;
 }
 
-const CreateAssessmentDialog: React.FC<CreateAssessmentDialogProps> = ({
+const CreateAssessmentDialog: React.FunctionComponent<CreateAssessmentDialogProps> = ({
   open,
   onClose,
   onSave,
@@ -159,10 +158,10 @@ const CreateAssessmentDialog: React.FC<CreateAssessmentDialogProps> = ({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={(e: React.MouseEvent) => handleClose}>Cancel</Button>
         <Button
           variant="contained"
-          onClick={handleSave}
+          onClick={(e: React.MouseEvent) => handleSave}
           disabled={!title || !type || !classId}
         >
           Create Assessment

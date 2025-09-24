@@ -1,5 +1,7 @@
+
+
 import { test, expect } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import { Page } from '@playwright/test';
 
 /**
  * Messages System E2E Tests
@@ -16,9 +18,9 @@ async function loginAs(page: Page, role: 'teacher' | 'student' | 'admin') {
   };
 
   await page.goto('/login');
-  await page.locator('input[name="email"]').fill(credentials[role].email);
-  await page.locator('input[name="password"]').fill(credentials[role].password);
-  await page.locator('button[type="submit"]').click();
+  await page.locator('input[name="identifier"], input[id="identifier-field"]').fill(credentials[role].email);
+  await page.locator('input[name="password"], input[id="password-field"]').fill(credentials[role].password);
+  await page.locator('button[type="submit"], button:has-text("Continue")').click();
   await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 10000 });
 }
 

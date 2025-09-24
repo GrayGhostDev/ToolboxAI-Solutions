@@ -16,6 +16,7 @@ efficiently, and with proper error handling and recovery mechanisms.
 import asyncio
 import json
 import logging
+import os
 import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Callable, Union, Tuple
@@ -535,9 +536,15 @@ class ActionExecutor:
         self.processing_active = False
         self.processor_task: Optional[asyncio.Task] = None
 
-        # Persistence
-        self.persistence_path = Path("data/action_executor")
-        self.persistence_path.mkdir(parents=True, exist_ok=True)
+        # Persistence - use environment-aware path for Docker compatibility
+        data_dir = os.environ.get('DATA_DIR', '/tmp' if os.path.exists('/tmp') else 'data')
+        self.persistence_path = Path(data_dir) / "action_executor"
+        try:
+            self.persistence_path.mkdir(parents=True, exist_ok=True)
+        except PermissionError:
+            # Fallback to temp directory if permission denied
+            self.persistence_path = Path("/tmp/action_executor")
+            self.persistence_path.mkdir(parents=True, exist_ok=True)
 
         logger.info(f"ActionExecutor initialized with max_parallel={max_parallel}")
 

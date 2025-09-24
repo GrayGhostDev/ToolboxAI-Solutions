@@ -1,4 +1,3 @@
-import * as React from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
@@ -27,8 +26,7 @@ import {
 } from "recharts";
 import { UserRole } from "../../types";
 import { useTheme } from "@mui/material/styles";
-import { Box } from "@mui/material";
-
+import Box from '@mui/material/Box';
 const weeklyData = [
   { day: "Mon", xp: 120, hours: 2.5 },
   { day: "Tue", xp: 180, hours: 3.2 },
@@ -38,7 +36,6 @@ const weeklyData = [
   { day: "Sat", xp: 60, hours: 1.2 },
   { day: "Sun", xp: 40, hours: 0.8 },
 ];
-
 const subjectData = [
   { subject: "Math", mastery: 78, avgScore: 85 },
   { subject: "Science", mastery: 64, avgScore: 72 },
@@ -46,9 +43,7 @@ const subjectData = [
   { subject: "Arts", mastery: 70, avgScore: 75 },
   { subject: "Tech", mastery: 90, avgScore: 92 },
 ];
-
 const levelData = [{ name: "Level Progress", value: 65, fill: "#2563EB" }];
-
 const skillsData = [
   { skill: "Problem Solving", A: 85, fullMark: 100 },
   { skill: "Critical Thinking", A: 78, fullMark: 100 },
@@ -57,17 +52,14 @@ const skillsData = [
   { skill: "Communication", A: 88, fullMark: 100 },
   { skill: "Digital Literacy", A: 95, fullMark: 100 },
 ];
-
 const activityData = [
   { name: "Lessons", value: 35, color: "#2563EB" },
   { name: "Quizzes", value: 25, color: "#22C55E" },
   { name: "Projects", value: 20, color: "#FACC15" },
   { name: "Games", value: 20, color: "#9333EA" },
 ];
-
 export function ProgressCharts({ role }: { role: UserRole }) {
   const theme = useTheme();
-
   const chartColors = {
     primary: theme.palette.primary.main,
     secondary: theme.palette.secondary.main,
@@ -75,7 +67,6 @@ export function ProgressCharts({ role }: { role: UserRole }) {
     info: theme.palette.info.main,
     success: theme.palette.success.main,
   };
-
   return (
     <Grid2 container spacing={3}>
       {/* Weekly XP Progress */}
@@ -122,7 +113,6 @@ export function ProgressCharts({ role }: { role: UserRole }) {
           </CardContent>
         </Card>
       </Grid2>
-
       {/* Subject Mastery */}
       <Grid2 xs={12} md={6}>
         <Card role="region" aria-label="Subject mastery bar chart">
@@ -153,7 +143,6 @@ export function ProgressCharts({ role }: { role: UserRole }) {
           </CardContent>
         </Card>
       </Grid2>
-
       {/* Skills Radar Chart */}
       {role === "student" && (
         <Grid2 xs={12} md={6}>
@@ -193,7 +182,6 @@ export function ProgressCharts({ role }: { role: UserRole }) {
           </Card>
         </Grid2>
       )}
-
       {/* Activity Distribution */}
       <Grid2 xs={12} md={role === "student" ? 6 : 4}>
         <Card role="region" aria-label="Activity distribution pie chart">
@@ -231,7 +219,6 @@ export function ProgressCharts({ role }: { role: UserRole }) {
           </CardContent>
         </Card>
       </Grid2>
-
       {/* Level Progress (for Students) or Completion Rate (for others) */}
       {role !== "parent" && (
         <Grid2 xs={12} md={4}>
@@ -278,7 +265,6 @@ export function ProgressCharts({ role }: { role: UserRole }) {
           </Card>
         </Grid2>
       )}
-
       {/* Monthly Trend (for Teachers and Admins) */}
       {(role === "teacher" || role === "admin") && (
         <Grid2 xs={12} md={4}>

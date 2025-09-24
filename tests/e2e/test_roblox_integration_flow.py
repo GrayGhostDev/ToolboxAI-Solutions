@@ -1,3 +1,8 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import pytest_asyncio
 """
 End-to-End Tests for Roblox Integration Flow
 Tests the complete 8-stage conversation flow and environment generation
@@ -225,7 +230,8 @@ class TestRobloxIntegrationE2E:
         assert sync_status["session_id"] == "rojo-session-123"
 
     @pytest.mark.asyncio
-    async def test_error_handling(self, conversation_manager):
+    @pytest.mark.asyncio
+async def test_error_handling(self, conversation_manager):
         """Test error handling in conversation flow"""
         session_id = "error-session"
         user_id = "test-user"
@@ -240,7 +246,8 @@ class TestRobloxIntegrationE2E:
             await conversation_manager.generate_roblox_environment(session_id)
 
     @pytest.mark.asyncio
-    async def test_pusher_integration(self, conversation_manager):
+    @pytest.mark.asyncio
+async def test_pusher_integration(self, conversation_manager):
         """Test Pusher channel events during flow"""
         with patch('apps.backend.core.prompts.enhanced_conversation_flow.pusher') as mock_pusher:
             session_id = "pusher-test-session"
@@ -256,7 +263,8 @@ class TestRobloxIntegrationE2E:
             assert call_args[0][1] == "stage_changed"
 
     @pytest.mark.asyncio
-    async def test_conversation_persistence(self, conversation_manager):
+    @pytest.mark.asyncio
+async def test_conversation_persistence(self, conversation_manager):
         """Test conversation state persistence"""
         session_id = "persist-session"
         user_id = "test-user"
@@ -272,7 +280,8 @@ class TestRobloxIntegrationE2E:
         assert session_data["user_id"] == user_id
 
     @pytest.mark.asyncio
-    async def test_concurrent_sessions(self, conversation_manager):
+    @pytest.mark.asyncio
+async def test_concurrent_sessions(self, conversation_manager):
         """Test handling multiple concurrent sessions"""
         sessions = [
             ("session-1", "user-1"),
@@ -294,7 +303,8 @@ class TestRobloxIntegrationE2E:
             assert result["current_stage"] == ConversationStage.GREETING.value
 
     @pytest.mark.asyncio
-    async def test_full_integration_with_api(self, conversation_manager):
+    @pytest.mark.asyncio
+async def test_full_integration_with_api(self, conversation_manager):
         """Test complete flow with API endpoints"""
         with patch('apps.backend.api.v1.endpoints.roblox_integration.flow_manager', conversation_manager):
             from apps.backend.main import app
@@ -317,7 +327,8 @@ class TestRobloxIntegrationPerformance:
     """Performance tests for Roblox integration"""
 
     @pytest.mark.asyncio
-    async def test_conversation_response_time(self, conversation_manager):
+    @pytest.mark.asyncio
+async def test_conversation_response_time(self, conversation_manager):
         """Test response time for conversation processing"""
         import time
 
@@ -334,7 +345,8 @@ class TestRobloxIntegrationPerformance:
         assert elapsed < 2.0, f"Response took {elapsed:.2f} seconds"
 
     @pytest.mark.asyncio
-    async def test_generation_performance(self, conversation_manager):
+    @pytest.mark.asyncio
+async def test_generation_performance(self, conversation_manager):
         """Test environment generation performance"""
         import time
 
@@ -362,7 +374,8 @@ class TestRobloxIntegrationSecurity:
     """Security tests for Roblox integration"""
 
     @pytest.mark.asyncio
-    async def test_token_security(self, mock_oauth_service):
+    @pytest.mark.asyncio
+async def test_token_security(self, mock_oauth_service):
         """Test secure token handling"""
         # Ensure tokens are not exposed in logs
         with patch('logging.Logger.info') as mock_log:
@@ -374,7 +387,8 @@ class TestRobloxIntegrationSecurity:
                 assert "test-refresh-token" not in str(call)
 
     @pytest.mark.asyncio
-    async def test_sql_injection_protection(self, conversation_manager):
+    @pytest.mark.asyncio
+async def test_sql_injection_protection(self, conversation_manager):
         """Test protection against SQL injection in user inputs"""
         session_id = "security-session"
         user_id = "test-user"
@@ -390,7 +404,8 @@ class TestRobloxIntegrationSecurity:
         # Verify no database errors occurred
 
     @pytest.mark.asyncio
-    async def test_rate_limiting(self):
+    @pytest.mark.asyncio
+async def test_rate_limiting(self):
         """Test rate limiting on endpoints"""
         from apps.backend.main import app
 

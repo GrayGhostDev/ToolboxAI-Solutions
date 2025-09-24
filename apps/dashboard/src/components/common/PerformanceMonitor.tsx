@@ -18,7 +18,7 @@ interface PerformanceMonitorProps {
  * Performance monitoring component that tracks Web Vitals
  * Only active in development or when explicitly enabled
  */
-export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
+export const PerformanceMonitor: React.FunctionComponent<PerformanceMonitorProps> = ({
   onMetric,
   enabled = process.env.NODE_ENV === 'development'
 }) => {

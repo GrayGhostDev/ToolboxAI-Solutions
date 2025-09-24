@@ -1,22 +1,47 @@
 -- Create multiple databases for the ToolboxAI platform
 -- This script runs automatically when PostgreSQL container starts
 
--- Create educational_platform database
-CREATE DATABASE educational_platform;
-GRANT ALL PRIVILEGES ON DATABASE educational_platform TO eduplatform;
+-- Create roles if they don't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'eduplatform') THEN
+        CREATE ROLE eduplatform WITH LOGIN PASSWORD 'eduplatform2024';
+    END IF;
 
--- Create ghost_backend database for CMS
-CREATE DATABASE ghost_backend;
-GRANT ALL PRIVILEGES ON DATABASE ghost_backend TO eduplatform;
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'toolboxai') THEN
+        CREATE ROLE toolboxai WITH LOGIN PASSWORD 'secure_password';
+    END IF;
+END
+$$;
 
--- Create roblox_data database for Roblox integration
-CREATE DATABASE roblox_data;
-GRANT ALL PRIVILEGES ON DATABASE roblox_data TO eduplatform;
+-- Create databases if they don't exist
+SELECT 'CREATE DATABASE educational_platform_dev'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'educational_platform_dev')\gexec
 
--- Create mcp_memory database for MCP context storage
-CREATE DATABASE mcp_memory;
-GRANT ALL PRIVILEGES ON DATABASE mcp_memory TO eduplatform;
+SELECT 'CREATE DATABASE toolboxai_prod'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'toolboxai_prod')\gexec
 
--- Create test database
-CREATE DATABASE educational_platform_test;
+SELECT 'CREATE DATABASE ghost_cms'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'ghost_cms')\gexec
+
+SELECT 'CREATE DATABASE roblox_data'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'roblox_data')\gexec
+
+SELECT 'CREATE DATABASE mcp_memory'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mcp_memory')\gexec
+
+SELECT 'CREATE DATABASE analytics'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'analytics')\gexec
+
+SELECT 'CREATE DATABASE educational_platform_test'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'educational_platform_test')\gexec
+
+-- Grant permissions
+GRANT ALL PRIVILEGES ON DATABASE educational_platform_dev TO eduplatform;
+GRANT ALL PRIVILEGES ON DATABASE toolboxai_prod TO toolboxai;
+GRANT ALL PRIVILEGES ON DATABASE ghost_cms TO toolboxai;
+GRANT ALL PRIVILEGES ON DATABASE mcp_memory TO toolboxai;
+GRANT ALL PRIVILEGES ON DATABASE analytics TO toolboxai;
 GRANT ALL PRIVILEGES ON DATABASE educational_platform_test TO eduplatform;
+GRANT ALL PRIVILEGES ON DATABASE roblox_data TO eduplatform;
+GRANT ALL PRIVILEGES ON DATABASE ghost_cms TO eduplatform;

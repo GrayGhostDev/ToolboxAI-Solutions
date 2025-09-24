@@ -6,7 +6,9 @@
  */
 
 import React, { forwardRef } from 'react';
-import { SvgIcon, SvgIconProps, styled } from '@mui/material';
+import SvgIcon from '@mui/material/SvgIcon';
+import SvgIconProps from '@mui/material/SvgIconProps';
+import { styled } from '@mui/material/styles';
 import { designTokens } from '../../../theme/designTokens';
 
 export interface IconProps extends Omit<SvgIconProps, 'color'> {

@@ -8,7 +8,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import RobloxThemedDashboard from '../components/pages/RobloxThemedDashboard';
 
-export const RobloxRoutes: React.FC = () => {
+export const RobloxRoutes: React.FunctionComponent<Record<string, any>> = () => {
   return (
     <Routes>
       <Route path="/" element={<RobloxThemedDashboard />} />

@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { 
-  Box, 
-  useTheme, 
-  alpha, 
-  keyframes, 
-  styled,
-  Typography,
-  Paper,
-  Stack
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import { keyframes } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Stack from '@mui/material/Stack';
 import { Roblox3DButton } from './Roblox3DButton';
 import { Roblox3DTabs } from './Roblox3DTabs';
 
@@ -103,7 +102,7 @@ const SubNavigation = styled(Box)(({ theme, isOpen }: any) => ({
   animation: isOpen ? `${fadeInAnimation} 0.3s ease-out` : 'none',
 }));
 
-export const Roblox3DNavigation: React.FC<Roblox3DNavigationProps> = ({
+export const Roblox3DNavigation: React.FunctionComponent<Roblox3DNavigationProps> = ({
   items,
   onItemClick,
   orientation = 'horizontal',
@@ -144,7 +143,7 @@ export const Roblox3DNavigation: React.FC<Roblox3DNavigationProps> = ({
           <Roblox3DButton
             iconName={item.iconName}
             label={showLabels ? item.label : undefined}
-            onClick={() => handleItemClick(item)}
+            onClick={(e: React.MouseEvent) => () => handleItemClick(item)}
             variant={isActive ? 'primary' : 'secondary'}
             size={size}
             disabled={item.disabled}
@@ -161,7 +160,7 @@ export const Roblox3DNavigation: React.FC<Roblox3DNavigationProps> = ({
                   <Roblox3DButton
                     iconName={child.iconName}
                     label={showLabels ? child.label : undefined}
-                    onClick={() => handleItemClick(child)}
+                    onClick={(e: React.MouseEvent) => () => handleItemClick(child)}
                     variant={isActive ? 'primary' : 'info'}
                     size="small"
                     disabled={child.disabled}
@@ -214,7 +213,7 @@ export const Roblox3DNavigation: React.FC<Roblox3DNavigationProps> = ({
         <Roblox3DButton
           iconName={item.iconName}
           label={showLabels ? item.label : undefined}
-          onClick={() => handleItemClick(item)}
+          onClick={(e: React.MouseEvent) => () => handleItemClick(item)}
           variant={isActive ? 'primary' : 'secondary'}
           size={size}
           disabled={item.disabled}
@@ -234,7 +233,7 @@ export const Roblox3DNavigation: React.FC<Roblox3DNavigationProps> = ({
                 <Roblox3DButton
                   iconName={child.iconName}
                   label={showLabels ? child.label : undefined}
-                  onClick={() => handleItemClick(child)}
+                  onClick={(e: React.MouseEvent) => () => handleItemClick(child)}
                   variant={isActive ? 'primary' : 'info'}
                   size="small"
                   disabled={child.disabled}

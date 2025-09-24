@@ -5,21 +5,73 @@ This agent analyzes Roblox Luau scripts for performance bottlenecks,
 memory leaks, and inefficient patterns, providing optimized versions.
 """
 
-import re
 import json
-from typing import Dict, List, Any, Optional, Tuple
+import logging
+import re
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
-from langchain.agents import AgentExecutor
-from langchain.agents.format_scratchpad import format_to_openai_function_messages
-from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.tools import Tool, StructuredTool
-from langchain.schema import SystemMessage, HumanMessage
-from langchain_openai import ChatOpenAI
+logger = logging.getLogger(__name__)
 
-from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
+# LangChain imports with compatibility handling
+try:
+    from langchain.tools import StructuredTool, Tool
+    from langchain_core.messages import HumanMessage, SystemMessage
+    from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+    from langchain_openai import ChatOpenAI
+    LANGCHAIN_CORE_AVAILABLE = True
+except ImportError as e:
+    print(f"LangChain core imports failed: {e}")
+    LANGCHAIN_CORE_AVAILABLE = False
+    # Create mock classes
+    class ChatPromptTemplate:
+        @classmethod
+        def from_messages(cls, messages): return cls()
+    class MessagesPlaceholder:
+        def __init__(self, variable_name): pass
+    class SystemMessage:
+        def __init__(self, content): self.content = content
+    class HumanMessage:
+        def __init__(self, content): self.content = content
+    class Tool:
+        def __init__(self, **kwargs): pass
+    class StructuredTool:
+        def __init__(self, **kwargs): pass
+    class ChatOpenAI:
+        def __init__(self, **kwargs): pass
+
+# Use LangChain 0.3.26+ LCEL compatibility layer
+try:
+    from core.langchain_lcel_compat import (
+        LLMChain, AgentExecutor, create_lcel_chain, create_chat_chain, 
+        get_compatible_llm, LANGCHAIN_CORE_AVAILABLE
+    )
+    LANGCHAIN_AGENTS_AVAILABLE = True
+    logger.info("LangChain LCEL compatibility layer imported successfully")
+except ImportError as e:
+    logger.error(f"LCEL compatibility layer import failed: {e}")
+    LANGCHAIN_AGENTS_AVAILABLE = False
+    
+    # Fallback mock classes
+    class LLMChain:
+        def __init__(self, **kwargs): pass
+        def run(self, *args, **kwargs): return "Mock optimization result"
+        async def arun(self, *args, **kwargs): return "Mock optimization result"
+    
+    class AgentExecutor:
+        def __init__(self, **kwargs): pass
+        def run(self, *args, **kwargs): return "Mock agent result"
+        async def arun(self, *args, **kwargs): return "Mock agent result"
+
+def format_to_openai_function_messages(*args, **kwargs): 
+    return []
+
+class OpenAIFunctionsAgentOutputParser:
+    def parse(self, text): 
+        return {"output": text, "optimized_code": text}
+
+from core.agents.base_agent import AgentConfig, AgentState, BaseAgent, TaskResult
 
 
 class OptimizationLevel(Enum):
@@ -57,7 +109,7 @@ class RobloxScriptOptimizationAgent(BaseAgent):
     def __init__(
         self,
         config: Optional[AgentConfig] = None,
-        llm: Optional[ChatOpenAI] = None,
+        llm: Optional[Any] = None,
         optimization_level: OptimizationLevel = OptimizationLevel.BALANCED
     ):
         # Create default config if not provided
@@ -76,9 +128,10 @@ class RobloxScriptOptimizationAgent(BaseAgent):
         # Override llm if provided
         if llm is not None:
             self.llm = llm
-        elif not self.llm:
-            self.llm = ChatOpenAI(
-                model="gpt-4",
+        elif not hasattr(self, 'llm') or not self.llm:
+            # Use the new LCEL compatibility layer
+            self.llm = get_compatible_llm(
+                model_name="gpt-4",
                 temperature=0.1
             )
         self.optimization_level = optimization_level

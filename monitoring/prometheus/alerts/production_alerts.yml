@@ -1,0 +1,113 @@
+# Alerting Rules - ToolBoxAI Production
+groups:
+  - name: api_alerts
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} errors per second"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High API latency"
+          description: "95th percentile latency is {{ $value }} seconds"
+
+  - name: gpt41_alerts
+    interval: 30s
+    rules:
+      - alert: GPT41Unavailable
+        expr: up{job="gpt41-metrics"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: ai
+        annotations:
+          summary: "GPT-4.1 service unavailable"
+          description: "GPT-4.1 metrics endpoint is down"
+
+      - alert: HighTokenUsage
+        expr: rate(gpt41_tokens_used_total[1h]) > 1000000
+        for: 10m
+        labels:
+          severity: warning
+          team: ai
+        annotations:
+          summary: "High token usage detected"
+          description: "Token usage rate: {{ $value }} tokens/hour"
+
+      - alert: GPT41HighCost
+        expr: increase(gpt41_cost_dollars_total[1h]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: finance
+        annotations:
+          summary: "High GPT-4.1 costs"
+          description: "Hourly cost: ${{ $value }}"
+
+  - name: database_alerts
+    interval: 30s
+    rules:
+      - alert: DatabaseDown
+        expr: up{job="postgresql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: database
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "PostgreSQL exporter is not responding"
+
+      - alert: HighDatabaseConnections
+        expr: pg_stat_database_numbackends > 180
+        for: 5m
+        labels:
+          severity: warning
+          team: database
+        annotations:
+          summary: "High number of database connections"
+          description: "Current connections: {{ $value }}"
+
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          team: database
+        annotations:
+          summary: "Redis memory usage high"
+          description: "Redis using {{ $value }}% of max memory"
+
+  - name: security_alerts
+    interval: 30s
+    rules:
+      - alert: HighAuthFailureRate
+        expr: rate(auth_failures_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Auth failures: {{ $value }} per second"
+
+      - alert: SuspiciousActivity
+        expr: rate(suspicious_requests_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "Suspicious activity detected"
+          description: "Suspicious requests: {{ $value }} per second"

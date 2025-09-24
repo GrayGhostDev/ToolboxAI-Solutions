@@ -10,11 +10,11 @@ import json
 import logging
 from typing import Any, Dict, Optional
 
-from apps.backend.services.pusher import trigger_event as pusher_trigger_event
-from apps.backend.services.roblox_ai_agent import roblox_ai_agent
 from apps.backend.core.config import settings
 from apps.backend.services.design_file_converter import design_file_converter
 from apps.backend.services.design_folder_scanner import design_folder_scanner
+from apps.backend.services.pusher import trigger_event as pusher_trigger_event
+from apps.backend.services.roblox_ai_agent import roblox_ai_agent
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class WebSocketHandler:
             'design_file_search': self._handle_design_file_search,
             'ping': self._handle_ping,
             'subscribe': self._handle_subscribe,
-            'unsubscribe': self._handle_unsubscribe
+            'unsubscribe': self._handle_unsubscribe,
         }
 
     async def handle_message(self, message_type: str, payload: Dict[str, Any], connection_id: str = None) -> None:
@@ -534,7 +534,9 @@ class WebSocketManager:
 
             # Rate limit per user and type
             try:
-                from apps.backend.services.rate_limit_manager import get_rate_limit_manager
+                from apps.backend.services.rate_limit_manager import (
+                    get_rate_limit_manager,
+                )
                 rlm = get_rate_limit_manager()
                 limit = getattr(settings, 'WS_RATE_LIMIT_PER_MINUTE', None) or getattr(settings, 'RATE_LIMIT_PER_MINUTE', 60)
                 identifier = f"ws:{client.get('user_id') or client_id}:type:{msg_type or 'message'}"
@@ -690,6 +692,8 @@ class WebSocketManager:
         self._stats['active_connections'] = 0
 
         logger.info("WebSocket manager shutdown complete")
+
+
 
 # Create global websocket manager instance
 websocket_manager = WebSocketManager()

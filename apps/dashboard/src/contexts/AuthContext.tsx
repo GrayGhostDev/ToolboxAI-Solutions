@@ -13,6 +13,7 @@ import { store } from '../store';
 import { addNotification } from '../store/slices/uiSlice';
 import { signInSuccess, signOut } from '../store/slices/userSlice';
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from '../config';
+import { logger } from '../utils/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -38,7 +39,7 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FunctionComponent<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userConfig, setUserConfig] = useState<ReturnType<typeof getUserConfig> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,11 +59,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(response);
             const config = getUserConfig(response.role as UserRole);
             setUserConfig(config);
+            logger.info('Authentication restored successfully');
           }
-        } catch (error) {
-          console.error('Failed to restore authentication:', error);
-          localStorage.removeItem(AUTH_TOKEN_KEY);
-          localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
+        } catch (error: any) {
+          logger.warn('Failed to restore authentication - token may be expired or backend unavailable', error);
+
+          // Only clear tokens if it's a 401 (unauthorized) or 403 (forbidden) error
+          // For network errors or 500 errors, keep the token for retry
+          if (error.response?.status === 401 || error.response?.status === 403) {
+            localStorage.removeItem(AUTH_TOKEN_KEY);
+            localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
+            logger.info('Cleared expired authentication tokens');
+          } else {
+            // For other errors (network, 500, etc.), keep tokens and show warning
+            logger.warn('Keeping tokens for retry - backend may be temporarily unavailable');
+
+            // Show a non-intrusive notification
+            store.dispatch(addNotification({
+              type: 'warning',
+              message: 'Unable to verify authentication. Some features may be limited until connection is restored.',
+              autoHide: true,
+            }));
+          }
         }
       }
       setIsLoading(false);
@@ -116,15 +134,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           try {
             await refreshAuth();
           } catch (error) {
-            console.error('Automatic token refresh failed:', error);
+            logger.error('Automatic token refresh failed', error);
           }
         }, refreshTime);
         
         setTokenRefreshTimer(timer);
-        console.log(`Token refresh scheduled for ${new Date(expiryTime - 5 * 60 * 1000).toISOString()}`);
+        logger.debug('Token refresh scheduled', {
+          refreshTime: new Date(expiryTime - 5 * 60 * 1000).toISOString()
+        });
       }
     } catch (error) {
-      console.error('Failed to schedule token refresh:', error);
+      logger.error('Failed to schedule token refresh', error);
     }
   }, [tokenRefreshTimer]);
   
@@ -174,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await apiClient.logout();
     } catch (error) {
-      console.error('Logout error:', error);
+      logger.error('Logout error', error);
     } finally {
       // Clear token refresh timer
       if (tokenRefreshTimer) {
@@ -301,7 +321,7 @@ const updateProfile = useCallback(async (updates: Partial<User>) => {
   // Switch role (for development/testing)
   const switchRole = useCallback((role: UserRole) => {
     if (process.env.NODE_ENV !== 'development') {
-      console.warn('Role switching is only available in development mode');
+      logger.warn('Role switching is only available in development mode');
       return;
     }
 
@@ -344,7 +364,7 @@ const updateProfile = useCallback(async (updates: Partial<User>) => {
               refreshAuth();
             });
           } catch (error) {
-            console.error('Failed to connect WebSocket:', error);
+            logger.error('Failed to connect WebSocket', error);
           }
         }
       }

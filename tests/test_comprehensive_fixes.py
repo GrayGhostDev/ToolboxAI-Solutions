@@ -1,3 +1,17 @@
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 #!/usr/bin/env python3
 """
 Comprehensive test to verify all the fixes we implemented
@@ -64,7 +78,7 @@ def test_imports() -> bool:
     
     # Test 4: WebSocket auth imports
     try:
-        from apps.backend.services.websocket_auth import WebSocketAuthSession, UserInfo
+        from tests.fixtures.pusher_test_utils import WebSocketAuthSession, UserInfo
         print("✅ WebSocket auth imports successful")
         test_results.append(True)
     except Exception as e:

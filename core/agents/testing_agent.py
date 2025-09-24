@@ -427,9 +427,10 @@ Always provide clear, actionable feedback with specific file references and line
                 skipped=0,
                 errors=0,
                 duration=1.0,
-                coverage=85.0,
-                test_results=[],
-                summary="Mock test results (prevented recursive execution)"
+                coverage_percentage=85.0,
+                individual_results=[],
+                command_used="pytest (mock)",
+                raw_output="Mock test results (prevented recursive execution)"
             )
         
         # Change to project directory

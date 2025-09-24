@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/errors/error_handler.py
+# hypothesis_version: 6.139.2
+
+[400, 401, 403, 404, 409, 422, 429, 500, 503, '.', 'Rate limit exceeded', 'Retry-After', 'Stack trace', 'Validation failed', 'X-Correlation-ID', 'X-Error-ID', 'authentication', 'authorization', 'body.', 'business_logic', 'category', 'configuration', 'conflict', 'correlation_id', 'critical', 'database', 'debug', 'debug_info', 'detail', 'error_id', 'external_service', 'high', 'input', 'internal', 'isoformat', 'json', 'loc', 'low', 'medium', 'method', 'model_dump', 'msg', 'network', 'not_found', 'path', 'rate_limit', 'status_code', 'timestamp', 'traceback', 'type', 'validation', 'value']

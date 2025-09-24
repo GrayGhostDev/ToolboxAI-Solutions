@@ -17,6 +17,7 @@ optimization loop in the SPARC framework.
 import asyncio
 import json
 import logging
+import os
 import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple, Union
@@ -575,9 +576,15 @@ class RewardCalculator:
             "reward_distribution": defaultdict(int),
         }
 
-        # Persistence
-        self.persistence_path = Path("data/reward_calculator")
-        self.persistence_path.mkdir(parents=True, exist_ok=True)
+        # Persistence - use environment-aware path for Docker compatibility
+        data_dir = os.environ.get('DATA_DIR', '/tmp' if os.path.exists('/tmp') else 'data')
+        self.persistence_path = Path(data_dir) / "reward_calculator"
+        try:
+            self.persistence_path.mkdir(parents=True, exist_ok=True)
+        except PermissionError:
+            # Fallback to temp directory if permission denied
+            self.persistence_path = Path("/tmp/reward_calculator")
+            self.persistence_path.mkdir(parents=True, exist_ok=True)
 
         logger.info(
             f"RewardCalculator initialized with {len(self.dimensions)} dimensions"

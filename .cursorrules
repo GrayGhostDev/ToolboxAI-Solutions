@@ -1,0 +1,549 @@
+# ToolBoxAI-Solutions Cursor Rules
+# Last Updated: 2025-09-21
+# Status: Backend FULLY OPERATIONAL - All systems active
+
+## 🚀 PROJECT OVERVIEW
+
+This is a monorepo for an educational platform with AI-powered content generation, Roblox integration, and real-time features.
+
+**Current State (2025-09-21):**
+- ✅ Backend fully operational on port 8009 (all import errors RESOLVED)
+- ✅ Database connectivity established (PostgreSQL + Redis)
+- ✅ SPARC framework and agent systems initialized
+- ✅ JWT authentication with enhanced security
+- ✅ Pusher real-time integration (migrated from Socket.IO)
+- ✅ All API endpoints verified and functional
+
+**Architecture:**
+- Monorepo with FastAPI backend and React frontend
+- AI agents using SPARC framework for structured reasoning
+- Real-time features via Pusher Channels
+- PostgreSQL for persistence, Redis for caching
+- Docker development environment with hot-reload
+
+## 🛠️ TECH STACK
+
+### Backend (Python 3.12)
+- **Framework**: FastAPI 0.115.6
+- **Database**: SQLAlchemy 2.0.36, Alembic
+- **Validation**: Pydantic v2 (2.10.5)
+- **AI/ML**: LangChain 0.3.16, LangGraph 0.2.65
+- **Real-time**: Pusher, WebSockets (legacy)
+- **Auth**: PyJWT 2.10.1 (enhanced security)
+- **Type Checking**: BasedPyright (NOT pyright)
+- **Testing**: pytest 8.3.4, pytest-asyncio
+
+### Frontend (Node.js 22)
+- **Framework**: React 18.3.1
+- **TypeScript**: 5.5.4
+- **Build**: Vite 5.4.10
+- **UI**: Material-UI 6.1.8, Mantine 7.14.3
+- **State**: Redux Toolkit 2.5.0
+- **Auth**: Clerk 5.14.0
+- **Real-time**: Pusher-js 8.4.0-rc2
+- **Testing**: Vitest 2.1.8, @testing-library/react
+
+### Infrastructure
+- **Database**: PostgreSQL 15, Redis 7
+- **Monitoring**: Sentry, custom monitoring dashboard
+- **Deployment**: Docker, docker-compose
+- **CI/CD**: GitHub Actions
+
+## 📁 DIRECTORY STRUCTURE
+
+```
+/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/
+├── apps/
+│   ├── backend/          # FastAPI server (port 8009) - FULLY OPERATIONAL
+│   │   ├── api/          # API endpoints (v1 router active)
+│   │   ├── agents/       # Agent implementations
+│   │   ├── core/         # Core utilities and JWT
+│   │   └── main.py       # Entry point (uvicorn)
+│   └── dashboard/        # React frontend (port 5179)
+│       ├── src/
+│       │   ├── components/   # UI components
+│       │   ├── services/     # API clients
+│       │   └── App.tsx       # Main app
+│       └── vite.config.ts    # Vite configuration
+├── core/                 # Core functionality
+│   ├── agents/          # AI agent system (SPARC framework)
+│   ├── mcp/            # Model Context Protocol
+│   ├── coordinators/   # Agent coordination
+│   └── types/          # Type definitions (Pydantic v2)
+├── database/           # Database layer
+│   ├── models.py       # SQLAlchemy models
+│   ├── migrations/     # Alembic migrations
+│   └── services/       # Database services
+├── roblox/            # Roblox integration
+│   └── src/           # Luau scripts
+├── tests/             # All test files
+├── venv/              # Python virtual environment (STANDARD)
+├── toolboxai_settings/ # Shared settings module
+└── infrastructure/    # Docker and deployment configs
+```
+
+## 🚦 CRITICAL RULES
+
+### File Management
+1. **NEVER create files unless absolutely necessary**
+2. **ALWAYS prefer editing existing files over creating new ones**
+3. **NEVER proactively create documentation files (*.md) or README files**
+4. **Only create documentation when EXPLICITLY requested**
+
+### Import Paths (RESOLVED)
+- Use absolute imports from project root
+- Backend imports: `from apps.backend.api import ...`
+- Core imports: `from core.agents import ...`
+- Database imports: `from database.models import ...`
+- Settings: `from toolboxai_settings.settings import settings`
+
+### Ports & URLs
+- Backend API: `http://127.0.0.1:8009`
+- Dashboard: `http://localhost:5179`
+- PostgreSQL: `localhost:5434`
+- Redis: `localhost:6381`
+- MCP Server: `localhost:9877`
+- Agent Coordinator: `localhost:8888`
+
+## 💻 DEVELOPMENT SETUP
+
+### Python Environment
+```bash
+# Create and activate virtual environment (MUST use venv/)
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Set IDE interpreter to:
+/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/venv/bin/python
+
+# Reload IDE window after changing interpreter
+```
+
+### Quick Start Commands
+```bash
+# Start everything
+make dev
+
+# Or run separately:
+make backend    # FastAPI on 127.0.0.1:8009
+make dashboard  # React on localhost:5179
+
+# Alternative direct commands:
+uvicorn apps.backend.main:app --host 127.0.0.1 --port 8009 --reload
+cd apps/dashboard && npm run dev
+```
+
+### Environment Variables (.env)
+```bash
+# Database (REQUIRED)
+DATABASE_URL=postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev
+REDIS_URL=redis://localhost:6379
+
+# Pusher (for real-time features)
+PUSHER_APP_ID=your-id
+PUSHER_KEY=your-key
+PUSHER_SECRET=your-secret
+PUSHER_CLUSTER=your-cluster
+
+# Optional
+OPENAI_API_KEY=your-key
+SENTRY_DSN=your-dsn
+```
+
+### Dashboard Environment (apps/dashboard/.env.local)
+```bash
+VITE_API_BASE_URL=http://127.0.0.1:8009
+VITE_WS_URL=http://127.0.0.1:8009
+VITE_ENABLE_WEBSOCKET=true
+VITE_PUSHER_KEY=your-key
+VITE_PUSHER_CLUSTER=your-cluster
+```
+
+## 🎨 CODE STYLE & CONVENTIONS
+
+### Python
+- Use type hints for all functions
+- Pydantic v2 patterns:
+  - `@field_validator` NOT `@validator`
+  - `model_config = ConfigDict()` NOT `class Config`
+  - `model_validator` for cross-field validation
+- Async/await for database operations
+- Error handling with proper status codes
+- NO unnecessary comments unless requested
+
+### TypeScript/React
+- Functional components with hooks
+- TypeScript strict mode enabled
+- Interface over type for object shapes
+- Proper error boundaries
+- Memoization for expensive operations
+- NO console.log in production code
+
+### Naming Conventions
+- Python: snake_case for functions/variables, PascalCase for classes
+- TypeScript: camelCase for functions/variables, PascalCase for components/types
+- API endpoints: kebab-case
+- Database: snake_case for tables/columns
+- Files: kebab-case for components, snake_case for Python
+
+## 🧪 TESTING REQUIREMENTS
+
+### Python Tests
+```bash
+# Run all tests
+pytest -q
+
+# Run with coverage (must be >80%)
+pytest --cov=apps.backend --cov=core
+
+# Run specific markers
+pytest -m unit
+pytest -m integration
+
+# Environment flags for heavy tests
+RUN_ENDPOINT_TESTS=1 pytest
+RUN_ROJO_TESTS=1 pytest
+```
+
+### Frontend Tests
+```bash
+# Run dashboard tests
+npm -w apps/dashboard test
+
+# With coverage (must be >80%)
+npm -w apps/dashboard run test:coverage
+
+# Type checking
+npm -w apps/dashboard run typecheck
+```
+
+### Test Patterns
+- Unit tests for individual functions/components
+- Integration tests for API endpoints
+- E2E tests for critical user flows
+- Mock external services (OpenAI, Pusher)
+- Use fixtures for database setup/teardown
+
+## 🔧 TYPE CHECKING
+
+### Python (BasedPyright)
+```bash
+# Use BasedPyright (NOT pyright)
+basedpyright .
+
+# Configuration in pyproject.toml
+# typeCheckingMode = "standard"
+# pythonVersion = "3.12"
+```
+
+### TypeScript
+```bash
+# Type check dashboard
+npm -w apps/dashboard run typecheck
+
+# Fix type errors immediately
+# Use 'as const' for literal types
+# Avoid 'any' type
+```
+
+## 🐳 DOCKER DEVELOPMENT
+
+### Start Services
+```bash
+# Start all services
+docker-compose -f infrastructure/docker/docker-compose.dev.yml up -d
+
+# Individual services
+docker-compose -f infrastructure/docker/docker-compose.dev.yml up postgres redis
+docker-compose -f infrastructure/docker/docker-compose.dev.yml up fastapi-main
+```
+
+### Docker Services
+- postgres: Port 5434
+- redis: Port 6381
+- fastapi-main: Port 8009
+- dashboard-frontend: Port 5179
+- mcp-server: Port 9877
+- agent-coordinator: Port 8888
+
+### Health Checks
+- All services must maintain >85% availability
+- Dashboard tests must pass with >85% coverage
+- Backend must respond to /health endpoint
+
+## 🚀 API PATTERNS
+
+### Response Format
+```python
+{
+    "status": "success|error",
+    "data": {...},
+    "message": "...",
+    "metadata": {...}
+}
+```
+
+### Authentication
+- JWT tokens in Authorization header
+- Format: `Bearer <token>`
+- Roles: admin, teacher, student
+- Pusher auth via `/pusher/auth`
+
+### Endpoints Structure
+- `/api/v1/` - Main API prefix
+- `/api/v1/auth/` - Authentication
+- `/api/v1/content/` - Content management
+- `/api/v1/agents/` - AI agent operations
+- `/pusher/` - Pusher real-time
+
+## 🤖 AI AGENT GUIDELINES
+
+### SPARC Framework
+- All agents use SPARC for structured reasoning
+- Located in `core/agents/`
+- Base class: `BaseAgent`
+- Orchestration via `SupervisorAgent`
+
+### Agent Development
+```python
+from core.agents.base_agent import BaseAgent
+from core.sparc.framework import SPARCFramework
+
+class CustomAgent(BaseAgent):
+    def __init__(self):
+        super().__init__()
+        self.sparc = SPARCFramework()
+
+    async def process(self, input_data):
+        # Use SPARC for reasoning
+        return await self.sparc.reason(input_data)
+```
+
+### Agent Communication
+- HTTP POST to `/api/v1/agents/execute`
+- Pusher channels for real-time updates
+- Redis task queue for background processing
+
+## 📡 REAL-TIME FEATURES (PUSHER)
+
+### Channels
+- `dashboard-updates` - General notifications
+- `content-generation` - Content progress
+- `agent-status` - Agent monitoring
+- `public` - Public announcements
+
+### Implementation
+```typescript
+// Frontend
+import Pusher from 'pusher-js';
+
+const pusher = new Pusher(VITE_PUSHER_KEY, {
+  cluster: VITE_PUSHER_CLUSTER,
+  authEndpoint: '/api/v1/pusher/auth'
+});
+
+// Backend
+from pusher import Pusher
+pusher_client.trigger('channel', 'event', data)
+```
+
+## ⚠️ COMMON ISSUES & FIXES
+
+### Import Errors (RESOLVED)
+- All import path errors have been fixed as of 2025-09-20
+- Backend is fully operational on port 8009
+- Use absolute imports from project root
+
+### Port Conflicts
+```bash
+# Kill processes on ports
+lsof -i :8009 | grep LISTEN | awk '{print $2}' | xargs kill -9
+lsof -i :5179 | grep LISTEN | awk '{print $2}' | xargs kill -9
+```
+
+### Database Connection
+```bash
+# Ensure PostgreSQL is running
+psql -h localhost -p 5434 -U eduplatform -d educational_platform_dev
+
+# Reset database if needed
+alembic downgrade base
+alembic upgrade head
+```
+
+### TypeScript Errors
+- Clear node_modules and reinstall
+- Check tsconfig.json paths
+- Ensure vite.config.ts proxy matches backend
+
+### Virtual Environment
+- MUST use `venv/` directory (not venv_clean)
+- Activate before any Python operations
+- Reload IDE after changing interpreter
+
+## 🔐 SECURITY CONSIDERATIONS
+
+### Authentication
+- JWT tokens auto-expire after 24 hours
+- Secure secret keys (auto-generated in dev)
+- CORS properly configured
+- Rate limiting on API endpoints
+
+### Database
+- Use parameterized queries (SQLAlchemy ORM)
+- Connection pooling configured
+- SSL for production connections
+- Regular backups
+
+### Frontend
+- XSS protection via React
+- CSRF tokens for mutations
+- Content Security Policy headers
+- Secure cookie flags
+
+## 📈 PERFORMANCE OPTIMIZATION
+
+### Backend
+- Async database operations
+- Redis caching for frequent queries
+- Connection pooling
+- Lazy loading for relationships
+
+### Frontend
+- Code splitting with React.lazy
+- Memoization with useMemo/useCallback
+- Virtual scrolling for long lists
+- Image optimization with WebP
+
+## 🎯 GIT WORKFLOW
+
+### Branches
+- `main` - Production ready code
+- `feature/*` - New features
+- `fix/*` - Bug fixes
+- `chore/*` - Maintenance tasks
+
+### Commit Messages
+```
+feat: Add new feature
+fix: Fix bug in component
+chore: Update dependencies
+docs: Update documentation (only when requested)
+test: Add missing tests
+refactor: Improve code structure
+```
+
+### Pull Requests
+- Must pass all tests
+- Type checking must pass
+- Code review required
+- Update CHANGELOG.md if exists
+
+## 📝 DOCUMENTATION POLICY
+
+### When to Document
+- ONLY when explicitly requested
+- API documentation in code (docstrings)
+- Complex algorithms need explanation
+- Configuration changes
+
+### When NOT to Document
+- Never create README.md proactively
+- Don't create documentation files unless asked
+- Avoid excessive inline comments
+- No auto-generated docs
+
+## 🔄 MAINTENANCE
+
+### Regular Tasks
+```bash
+# Before commits
+make test
+make lint
+npm -w apps/dashboard run typecheck
+
+# Weekly
+docker system prune -f
+pip list --outdated
+npm outdated
+```
+
+### Dependencies
+- Keep Pydantic at v2
+- LangChain at 0.3.x
+- React at 18.x
+- Check security advisories regularly
+
+## 📞 SUPPORT & TROUBLESHOOTING
+
+### Quick Checks
+1. Is venv activated? `which python`
+2. Are services running? `docker-compose ps`
+3. Database connected? `make db-check`
+4. Redis working? `redis-cli ping`
+5. Pusher configured? Check dashboard logs
+
+### Debug Mode
+```bash
+# Backend debug
+DEBUG=true uvicorn apps.backend.main:app --reload --log-level debug
+
+# Frontend debug
+VITE_DEBUG=true npm -w apps/dashboard run dev
+```
+
+### Logs Location
+- Backend: Console output
+- Frontend: Browser console
+- Docker: `docker-compose logs [service]`
+- System: `/var/log/` (production)
+
+## 🎓 KEY LEARNINGS
+
+1. **Always use absolute imports** - Prevents path resolution issues
+2. **Test before commit** - Maintains code quality
+3. **Use TypeScript strictly** - Catches errors early
+4. **Cache appropriately** - Improves performance
+5. **Handle errors gracefully** - Better user experience
+
+## ⚡ QUICK REFERENCE
+
+### Start Development
+```bash
+source venv/bin/activate
+make dev
+```
+
+### Run Tests
+```bash
+pytest -q
+npm -w apps/dashboard test
+```
+
+### Type Check
+```bash
+basedpyright .
+npm -w apps/dashboard run typecheck
+```
+
+### Build Production
+```bash
+make build
+docker-compose -f infrastructure/docker/docker-compose.prod.yml build
+```
+
+### Deploy
+```bash
+make deploy
+```
+
+---
+
+**REMEMBER**:
+- Backend is FULLY OPERATIONAL on port 8009
+- All import errors are RESOLVED
+- Don't create unnecessary files
+- Always prefer edits over new files
+- Follow established patterns
+- Test everything before committing

@@ -1,16 +1,22 @@
+import { vi } from 'vitest';
+
+// Configure test timeout for Vitest
+vi.setConfig({ testTimeout: 10000 });
+
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, beforeEach } from 'vitest';
 import RobloxAIAssistantEnhanced from '../RobloxAIAssistantEnhanced';
 import { api } from '../../../services/api';
 import { pusherService } from '../../../services/pusher';
 
 // Mock dependencies
-jest.mock('../../../services/api');
-jest.mock('../../../services/pusher');
-jest.mock('react-chat-elements', () => ({
+vi.mock('../../../services/api');
+vi.mock('../../../services/pusher');
+vi.mock('react-chat-elements', () => ({
   MessageList: ({ dataSource }: any) => (
     <div data-testid="message-list">
       {dataSource.map((msg: any) => (
@@ -30,7 +36,7 @@ jest.mock('react-chat-elements', () => ({
     />
   ),
   Button: ({ text, onClick, disabled }: any) => (
-    <button data-testid="send-button" onClick={onClick} disabled={disabled}>
+    <button data-testid="send-button" onClick={(e: React.MouseEvent) => onClick} disabled={disabled}>
       {text}
     </button>
   ),
@@ -59,8 +65,8 @@ const renderComponent = () => {
 
 describe('RobloxAIAssistantEnhanced', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (pusherService.subscribe as jest.Mock).mockReturnValue('sub-id');
+    vi.clearAllMocks();
+    (pusherService.subscribe as any).mockReturnValue('sub-id');
   });
 
   it('renders the component with header and input', () => {
@@ -89,7 +95,7 @@ describe('RobloxAIAssistantEnhanced', () => {
         }
       }
     };
-    (api.post as jest.Mock).mockResolvedValue(mockResponse);
+    (api.post as any).mockResolvedValue(mockResponse);
 
     renderComponent();
     
@@ -116,7 +122,7 @@ describe('RobloxAIAssistantEnhanced', () => {
         }
       }
     };
-    (api.post as jest.Mock).mockResolvedValue(mockResponse);
+    (api.post as any).mockResolvedValue(mockResponse);
 
     renderComponent();
     
@@ -132,7 +138,7 @@ describe('RobloxAIAssistantEnhanced', () => {
 
   it('extracts Roblox spec from user input', async () => {
     const mockResponse = { data: { message: { id: '1', content: 'Spec extracted!' } } };
-    (api.post as jest.Mock).mockResolvedValue(mockResponse);
+    (api.post as any).mockResolvedValue(mockResponse);
 
     renderComponent();
     
@@ -158,7 +164,7 @@ describe('RobloxAIAssistantEnhanced', () => {
     renderComponent();
     
     // Simulate WebSocket subscription callback
-    const subscribeCallback = (pusherService.subscribe as jest.Mock).mock.calls[0][1];
+    const subscribeCallback = (pusherService.subscribe as any).mock.calls[0][1];
     
     // Start streaming
     subscribeCallback({ type: 'stream_start' });
@@ -178,7 +184,7 @@ describe('RobloxAIAssistantEnhanced', () => {
 
   it('handles suggested prompt clicks', async () => {
     const mockResponse = { data: { message: { id: '1', content: 'Creating math puzzle!' } } };
-    (api.post as jest.Mock).mockResolvedValue(mockResponse);
+    (api.post as any).mockResolvedValue(mockResponse);
 
     renderComponent();
     
@@ -203,7 +209,7 @@ describe('RobloxAIAssistantEnhanced', () => {
   });
 
   it('handles API errors gracefully', async () => {
-    (api.post as jest.Mock).mockRejectedValue(new Error('API Error'));
+    (api.post as any).mockRejectedValue(new Error('API Error'));
 
     renderComponent();
     

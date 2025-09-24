@@ -6,40 +6,37 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Grid,
-  Paper,
-  Chip,
-  IconButton,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  LinearProgress,
-  CircularProgress,
-  Stack,
-  Divider,
-  Alert,
-  AlertTitle,
-  Tooltip,
-  ToggleButton,
-  ToggleButtonGroup,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Avatar,
-  AvatarGroup,
-  useTheme,
-  alpha
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import LinearProgress from '@mui/material/LinearProgress';
+import CircularProgress from '@mui/material/CircularProgress';
+import Stack from '@mui/material/Stack';
+import Divider from '@mui/material/Divider';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Tooltip from '@mui/material/Tooltip';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Avatar from '@mui/material/Avatar';
+import AvatarGroup from '@mui/material/AvatarGroup';
+import { useTheme, alpha } from '@mui/material/styles';
 import {
   BarChart,
   Bar,
@@ -149,7 +146,7 @@ type ChartType = 'bar' | 'line' | 'pie' | 'radar';
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0'];
 
-export const QuizResultsAnalytics: React.FC = () => {
+export const QuizResultsAnalytics: React.FunctionComponent<Record<string, any>> = () => {
   const theme = useTheme();
   const { on, sendMessage, isConnected } = useWebSocketContext();
   
@@ -350,7 +347,7 @@ export const QuizResultsAnalytics: React.FC = () => {
               </FormControl>
               
               <IconButton
-                onClick={() => sendMessage(WebSocketMessageType.REQUEST_QUIZ_RESULTS, { timeRange })}
+                onClick={(e: React.MouseEvent) => () => sendMessage(WebSocketMessageType.REQUEST_QUIZ_RESULTS, { timeRange })}
               >
                 <Refresh />
               </IconButton>
@@ -359,7 +356,7 @@ export const QuizResultsAnalytics: React.FC = () => {
                 <Button
                   variant="outlined"
                   startIcon={<Download />}
-                  onClick={exportResults}
+                  onClick={(e: React.MouseEvent) => exportResults}
                   size="small"
                 >
                   Export
@@ -383,7 +380,7 @@ export const QuizResultsAnalytics: React.FC = () => {
                   <Chip
                     key={quiz.quizId}
                     label={quiz.quizName}
-                    onClick={() => setSelectedQuiz(quiz)}
+                    onClick={(e: React.MouseEvent) => () => setSelectedQuiz(quiz)}
                     color={selectedQuiz?.quizId === quiz.quizId ? 'primary' : 'default'}
                     icon={<Quiz />}
                     sx={{ minWidth: 120 }}

@@ -1,0 +1,208 @@
+groups:
+  - name: load_balancing_alerts
+    interval: 30s
+    rules:
+      # Circuit Breaker Alerts
+      - alert: CircuitBreakerOpen
+        expr: circuit_breaker_state{state="open"} == 1
+        for: 1m
+        labels:
+          severity: warning
+          component: circuit_breaker
+        annotations:
+          summary: "Circuit breaker {{ $labels.name }} is open"
+          description: "Circuit breaker {{ $labels.name }} has been open for more than 1 minute. Service {{ $labels.service }} may be experiencing issues."
+          runbook_url: "https://docs.toolboxai.com/runbooks/circuit-breaker-open"
+
+      - alert: CircuitBreakerHighFailureRate
+        expr: rate(circuit_breaker_failures_total[5m]) > 0.5
+        for: 2m
+        labels:
+          severity: critical
+          component: circuit_breaker
+        annotations:
+          summary: "High failure rate for circuit breaker {{ $labels.name }}"
+          description: "Circuit breaker {{ $labels.name }} is experiencing a failure rate of {{ $value | humanizePercentage }} over the last 5 minutes."
+
+      # Rate Limiting Alerts
+      - alert: RateLimitHighRejectionRate
+        expr: rate(rate_limit_rejections_total[5m]) / rate(rate_limit_requests_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: rate_limiter
+        annotations:
+          summary: "High rate limit rejection rate"
+          description: "{{ $value | humanizePercentage }} of requests are being rate limited in {{ $labels.endpoint }}."
+
+      - alert: RateLimitExhausted
+        expr: rate_limit_remaining{endpoint=~".*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: rate_limiter
+        annotations:
+          summary: "Rate limit exhausted for {{ $labels.identifier }}"
+          description: "User/IP {{ $labels.identifier }} has exhausted their rate limit on endpoint {{ $labels.endpoint }}."
+
+      # Database Connection Pool Alerts
+      - alert: DatabaseConnectionPoolExhausted
+        expr: database_pool_active_connections / database_pool_size > 0.9
+        for: 2m
+        labels:
+          severity: critical
+          component: database_pool
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "Database connection pool {{ $labels.pool_name }} is at {{ $value | humanizePercentage }} capacity."
+
+      - alert: DatabaseConnectionPoolHighWaitTime
+        expr: database_pool_wait_time_seconds > 1
+        for: 3m
+        labels:
+          severity: warning
+          component: database_pool
+        annotations:
+          summary: "High database connection pool wait time"
+          description: "Applications are waiting {{ $value }}s on average for database connections from pool {{ $labels.pool_name }}."
+
+      - alert: PgBouncerConnectionsExhausted
+        expr: pgbouncer_pools_client_active / pgbouncer_pools_client_maxwait > 0.8
+        for: 2m
+        labels:
+          severity: critical
+          component: pgbouncer
+        annotations:
+          summary: "PgBouncer connection pool near limit"
+          description: "PgBouncer pool {{ $labels.database }} is at {{ $value | humanizePercentage }} of maximum connections."
+
+      # Nginx Load Balancer Alerts
+      - alert: NginxUpstreamUnhealthy
+        expr: nginx_upstream_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: nginx
+        annotations:
+          summary: "Nginx upstream {{ $labels.upstream }} is down"
+          description: "All servers in Nginx upstream {{ $labels.upstream }} are marked as unhealthy."
+
+      - alert: NginxHighErrorRate
+        expr: rate(nginx_http_requests_total{status=~"5.."}[5m]) / rate(nginx_http_requests_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          component: nginx
+        annotations:
+          summary: "High error rate in Nginx"
+          description: "Nginx is returning {{ $value | humanizePercentage }} 5xx errors."
+
+      - alert: NginxHighLatency
+        expr: histogram_quantile(0.95, rate(nginx_http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: nginx
+        annotations:
+          summary: "High latency in Nginx"
+          description: "95th percentile latency is {{ $value }}s for Nginx requests."
+
+      # Kubernetes HPA Alerts
+      - alert: HPAMaxReplicasReached
+        expr: kube_horizontalpodautoscaler_status_current_replicas == kube_horizontalpodautoscaler_spec_max_replicas
+        for: 5m
+        labels:
+          severity: warning
+          component: kubernetes_hpa
+        annotations:
+          summary: "HPA {{ $labels.horizontalpodautoscaler }} at maximum replicas"
+          description: "HorizontalPodAutoscaler {{ $labels.horizontalpodautoscaler }} has reached its maximum replica count of {{ $value }}."
+
+      - alert: HPAScalingFailure
+        expr: kube_horizontalpodautoscaler_status_condition{condition="ScalingActive",status="false"} == 1
+        for: 5m
+        labels:
+          severity: critical
+          component: kubernetes_hpa
+        annotations:
+          summary: "HPA {{ $labels.horizontalpodautoscaler }} scaling failed"
+          description: "HorizontalPodAutoscaler {{ $labels.horizontalpodautoscaler }} is unable to scale the deployment."
+
+      # WebSocket Session Affinity Alerts
+      - alert: WebSocketConnectionChurn
+        expr: rate(websocket_connections_total[5m]) - rate(websocket_disconnections_total[5m]) < -10
+        for: 2m
+        labels:
+          severity: warning
+          component: websocket
+        annotations:
+          summary: "High WebSocket disconnection rate"
+          description: "WebSocket connections are disconnecting at a rate of {{ $value }} per second. Session affinity may be broken."
+
+      - alert: WebSocketLoadImbalance
+        expr: stddev_over_time(websocket_connections_per_pod[10m]) / avg_over_time(websocket_connections_per_pod[10m]) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: websocket
+        annotations:
+          summary: "WebSocket connections are imbalanced"
+          description: "WebSocket connections have a coefficient of variation of {{ $value }}, indicating poor load distribution."
+
+      # Application Load Balancer Alerts
+      - alert: LoadBalancerHighUtilization
+        expr: load_balancer_utilization > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          component: load_balancer
+        annotations:
+          summary: "Load balancer {{ $labels.balancer_name }} is highly utilized"
+          description: "Load balancer {{ $labels.balancer_name }} is at {{ $value | humanizePercentage }} utilization."
+
+      - alert: LoadBalancerBottleneck
+        expr: load_balancer_bottleneck_indicators > 0
+        for: 3m
+        labels:
+          severity: warning
+          component: load_balancer
+        annotations:
+          summary: "Bottlenecks detected in load balancer"
+          description: "Load balancer {{ $labels.balancer_name }} has detected {{ $value }} bottleneck indicators."
+
+      # Redis Rate Limiting Backend Alerts
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: redis
+        annotations:
+          summary: "Redis memory usage critical"
+          description: "Redis is using {{ $value | humanizePercentage }} of available memory. Rate limiting may fail."
+
+      - alert: RedisConnectionPoolExhausted
+        expr: redis_connected_clients / redis_config_maxclients > 0.9
+        for: 2m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "Redis connection pool near limit"
+          description: "Redis has {{ $value | humanizePercentage }} of maximum client connections in use."
+
+      # Overall System Health
+      - alert: LoadBalancingSystemDegraded
+        expr: |
+          (
+            circuit_breaker_state{state="open"} == 1 or
+            database_pool_active_connections / database_pool_size > 0.9 or
+            rate(rate_limit_rejections_total[5m]) / rate(rate_limit_requests_total[5m]) > 0.1
+          )
+        for: 5m
+        labels:
+          severity: critical
+          component: load_balancing_system
+        annotations:
+          summary: "Load balancing system is degraded"
+          description: "Multiple load balancing components are showing signs of stress. Immediate attention required."

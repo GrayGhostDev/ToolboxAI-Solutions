@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/database/connection.py
+# hypothesis_version: 6.139.2
+
+[1000, 3600, '--clean', '--no-owner', '--no-privileges', '--verbose', '-U', '-d', '-f', '-h', '-p', 'DB_MAX_OVERFLOW', 'DB_POOL_RECYCLE', 'DB_POOL_SIZE', 'DB_POOL_TIMEOUT', 'DEBUG', 'DatabaseManager', 'N/A', 'PGPASSWORD', 'Reset statistics', 'SELECT 1', 'analytics', 'bulk_insert', 'cached', 'close_db', 'completed', 'courses', 'create_or_update', 'db_manager', 'details', 'development', 'education', 'error', 'failed', 'get_async_session', 'get_db', 'has_next', 'has_prev', 'healthy', 'init_db', 'items', 'lessons', 'max_overflow', 'optimizations', 'page', 'pages', 'paginate_query', 'per_page', 'pg_dump', 'pool_pre_ping', 'pool_recycle', 'pool_size', 'pool_status', 'pool_timeout', 'postgresql://', 'quizzes', 'response_time_ms', 'statistics', 'status', 'timestamp', 'total', 'unhealthy', 'unknown', 'user_progress', 'users']

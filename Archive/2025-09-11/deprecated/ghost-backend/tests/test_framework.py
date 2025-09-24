@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 """Test the complete Ghost Backend Framework integration."""
 
 import pytest
@@ -168,7 +183,8 @@ class TestDatabaseIntegration:
     """Test database integration if available."""
     
     @pytest.mark.asyncio
-    async def test_database_manager_creation(self):
+    @pytest.mark.asyncio
+async def test_database_manager_creation(self):
         """Test that DatabaseManager can be created."""
         from src.ghost.database import DatabaseManager
         

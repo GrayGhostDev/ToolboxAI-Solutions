@@ -1,3 +1,4 @@
+import pytest_asyncio
 """
 Test CompleteSupervisorAgent with real OpenAI API
 """
@@ -15,6 +16,7 @@ sys.path.insert(0, '/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solu
 from core.agents.supervisor_complete import CompleteSupervisorAgent
 from core.agents.base_agent import AgentConfig
 
+@pytest.mark.asyncio
 async def test_real_openai():
     """Test with real OpenAI API"""
     print("\n=== Testing CompleteSupervisorAgent with Real OpenAI API ===\n")

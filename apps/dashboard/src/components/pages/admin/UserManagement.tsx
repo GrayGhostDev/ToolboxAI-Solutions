@@ -1,41 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  CardHeader,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Paper,
-  IconButton,
-  Button,
-  Chip,
-  Avatar,
-  TextField,
-  InputAdornment,
-  Menu,
-  MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  Typography,
-  Stack,
-  Tooltip,
-  Alert,
-  CircularProgress,
-  Switch,
-  FormControlLabel,
-  Grid,
-} from '@mui/material';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TablePagination from '@mui/material/TablePagination';
+import Paper from '@mui/material/Paper';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import Avatar from '@mui/material/Avatar';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Grid from '@mui/material/Grid';
+
 import {
   Search,
   Add,
@@ -81,7 +80,7 @@ interface EditUserDialogProps {
   onSave: (user: User) => void;
 }
 
-const EditUserDialog: React.FC<EditUserDialogProps> = ({ open, user, onClose, onSave }) => {
+const EditUserDialog: React.FunctionComponent<EditUserDialogProps> = ({ open, user, onClose, onSave }) => {
   const [formData, setFormData] = useState<Partial<User>>({
     username: '',
     email: '',
@@ -175,8 +174,8 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ open, user, onClose, on
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained">
+        <Button onClick={(e: React.MouseEvent) => onClose}>Cancel</Button>
+        <Button onClick={(e: React.MouseEvent) => handleSubmit} variant="contained">
           {user ? 'Update' : 'Create'}
         </Button>
       </DialogActions>
@@ -184,7 +183,7 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ open, user, onClose, on
   );
 };
 
-const UserManagement: React.FC = () => {
+const UserManagement: React.FunctionComponent<Record<string, any>> = () => {
   const dispatch = useAppDispatch();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -534,14 +533,14 @@ const UserManagement: React.FC = () => {
                 variant="outlined"
                 startIcon={<Download />}
                 size="small"
-                onClick={handleExportUsers}
+                onClick={(e: React.MouseEvent) => handleExportUsers}
               >
                 Export
               </Button>
               <Button
                 variant="contained"
                 startIcon={<Add />}
-                onClick={() => {
+                onClick={(e: React.MouseEvent) => () => {
                   setSelectedUser(null);
                   setEditDialogOpen(true);
                 }}
@@ -599,7 +598,7 @@ const UserManagement: React.FC = () => {
               <Button
                 variant="outlined"
                 startIcon={<FilterList />}
-                onClick={(e) => setBulkActionMenu(e.currentTarget)}
+                onClick={(e: React.MouseEvent) => (e) => setBulkActionMenu(e.currentTarget)}
               >
                 Bulk Actions ({selectedUsers.length})
               </Button>
@@ -700,7 +699,7 @@ const UserManagement: React.FC = () => {
                         <TableCell align="right">
                           <IconButton
                             size="small"
-                            onClick={(e) => {
+                            onClick={(e: React.MouseEvent) => (e) => {
                               setSelectedUser(user);
                               setAnchorEl(e.currentTarget);
                             }}
@@ -737,7 +736,7 @@ const UserManagement: React.FC = () => {
         onClose={() => setAnchorEl(null)}
       >
         <MenuItem
-          onClick={() => {
+          onClick={(e: React.MouseEvent) => () => {
             if (selectedUser) handleEditUser(selectedUser);
           }}
         >
@@ -760,7 +759,7 @@ const UserManagement: React.FC = () => {
           Reset Password
         </MenuItem>
         <MenuItem
-          onClick={() => {
+          onClick={(e: React.MouseEvent) => () => {
             // Toggle user status
             if (selectedUser) {
               const newStatus = selectedUser.status === 'active' ? 'inactive' : 'active';
@@ -784,7 +783,7 @@ const UserManagement: React.FC = () => {
           )}
         </MenuItem>
         <MenuItem
-          onClick={() => {
+          onClick={(e: React.MouseEvent) => () => {
             setDeleteDialogOpen(true);
             setAnchorEl(null);
           }}
@@ -801,15 +800,15 @@ const UserManagement: React.FC = () => {
         open={Boolean(bulkActionMenu)}
         onClose={() => setBulkActionMenu(null)}
       >
-        <MenuItem onClick={() => handleBulkAction('activate')}>
+        <MenuItem onClick={(e: React.MouseEvent) => () => handleBulkAction('activate')}>
           <CheckCircle fontSize="small" sx={{ mr: 1 }} />
           Activate Selected
         </MenuItem>
-        <MenuItem onClick={() => handleBulkAction('deactivate')}>
+        <MenuItem onClick={(e: React.MouseEvent) => () => handleBulkAction('deactivate')}>
           <Cancel fontSize="small" sx={{ mr: 1 }} />
           Deactivate Selected
         </MenuItem>
-        <MenuItem onClick={() => handleBulkAction('delete')} sx={{ color: 'error.main' }}>
+        <MenuItem onClick={(e: React.MouseEvent) => () => handleBulkAction('delete')} sx={{ color: 'error.main' }}>
           <Delete fontSize="small" sx={{ mr: 1 }} />
           Delete Selected
         </MenuItem>
@@ -836,9 +835,9 @@ const UserManagement: React.FC = () => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={(e: React.MouseEvent) => () => setDeleteDialogOpen(false)}>Cancel</Button>
           <Button
-            onClick={() => selectedUser && handleDeleteUser(selectedUser)}
+            onClick={(e: React.MouseEvent) => () => selectedUser && handleDeleteUser(selectedUser)}
             color="error"
             variant="contained"
           >

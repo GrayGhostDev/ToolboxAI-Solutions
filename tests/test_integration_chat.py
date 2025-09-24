@@ -1,3 +1,18 @@
+import pytest_asyncio
+
+import pytest
+from unittest.mock import Mock, patch
+
+@pytest.fixture
+def mock_db_connection():
+    """Mock database connection for tests"""
+    with patch('psycopg2.connect') as mock_connect:
+        mock_conn = Mock()
+        mock_cursor = Mock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+        yield mock_conn
+
 #!/usr/bin/env python
 """End-to-end integration test for AI Chat system with Roblox content generation"""
 
@@ -6,6 +21,7 @@ import httpx
 import json
 from datetime import datetime
 
+@pytest.mark.asyncio
 async def test_full_chat_flow():
     """Test complete AI chat flow from conversation creation to content generation"""
 
@@ -62,13 +78,14 @@ async def test_full_chat_flow():
         # 3. Test WebSocket connection for streaming
         print("\n3. Testing WebSocket streaming...")
         try:
-            import websockets
-            ws_url = f"ws://127.0.0.1:8008/api/v1/ai-chat/ws/{conversation['id']}"
+            from tests.fixtures.pusher_mocks import MockPusherService
+            ws_url = f"pusher://app_key@cluster/{conversation['id']}"
 
             try:
-                async with websockets.connect(ws_url) as websocket:
+                async with async_mock_pusher_context() as pusher:
+        # Connect using Pusherws_url) as websocket:
                     # Send a message via WebSocket
-                    await websocket.send(json.dumps({
+                    await pusher.trigger(json.dumps({
                         "type": "message",
                         "content": "Design a space station environment for science experiments"
                     }))
@@ -243,7 +260,7 @@ async def main():
         print(f"❌ Server not responding at http://127.0.0.1:8008")
         print(f"   Error: {e}")
         print("\nPlease start the server with:")
-        print("   cd apps/backend && uvicorn main:app --host 127.0.0.1 --port 8008 --reload")
+        print("   uvicorn apps.backend.main:app --host 127.0.0.1 --port 8008 --reload")
         return
 
     # Run tests

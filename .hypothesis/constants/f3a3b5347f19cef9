@@ -1,0 +1,4 @@
+# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/base_agent.py
+# hypothesis_version: 6.139.2
+
+[0.0, 0.7, 100, 200, 300, 4096, 128000, 'BaseAgent', 'ContentAgent', 'OPENAI_API_KEY', 'ScriptAgent', 'TaskResult', 'TerrainAgent', 'USE_MOCK_LLM', 'adaptation', 'agent', 'agent_scratchpad', 'agents', 'analysis', 'assessment', 'collaboration', 'completed', 'content_generation', 'current_task', 'educational_support', 'error', 'errors', 'execution_time', 'gpt-3.5-turbo', 'history', 'idle', 'memory_size', 'metadata', 'metrics', 'name', 'orchestration', 'output', 'output_summary', 'processing', 'reflection', 'status', 'success', 'task', 'task_completed', 'tasks_processed', 'timestamp', 'tokens_used', 'tools_count', 'total_tokens', 'trigger_testing', 'triggered_by', 'true', 'validation', 'waiting', '{input}']

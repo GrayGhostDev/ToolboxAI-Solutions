@@ -234,9 +234,16 @@ class StateManager:
         self.state_predictors = {}
         self.prediction_accuracy = {}
 
-        # Persistence
-        self.persistence_path = Path("data/state_manager")
-        self.persistence_path.mkdir(parents=True, exist_ok=True)
+        # Persistence - use environment-aware path for Docker compatibility
+        import os
+        data_dir = os.environ.get('DATA_DIR', '/tmp' if os.path.exists('/tmp') else 'data')
+        self.persistence_path = Path(data_dir) / "state_manager"
+        try:
+            self.persistence_path.mkdir(parents=True, exist_ok=True)
+        except PermissionError:
+            # Fallback to temp directory if permission denied
+            self.persistence_path = Path("/tmp/state_manager")
+            self.persistence_path.mkdir(parents=True, exist_ok=True)
         self.last_persistence = datetime.now()
 
         # Performance tracking
@@ -629,7 +636,7 @@ class StateManager:
         return "|".join(pattern_elements)
 
     async def _persist_states(self):
-        """Persist states to storage"""
+        """Persist states to storage with enhanced educational context"""
 
         try:
             # Save current state
@@ -638,19 +645,38 @@ class StateManager:
                 with open(current_file, "w") as f:
                     json.dump(self.current_state.to_dict(), f, indent=2)
 
-            # Save recent states
+            # Save recent states with educational metadata
             recent_states = self.get_recent_states(50)
             recent_file = self.persistence_path / "recent_states.json"
-            with open(recent_file, "w") as f:
-                json.dump([state.to_dict() for state in recent_states], f, indent=2)
+            educational_states = []
+            for state in recent_states:
+                state_dict = state.to_dict()
+                # Add educational analytics
+                state_dict["educational_metrics"] = {
+                    "learning_effectiveness": self._calculate_learning_effectiveness(state),
+                    "curriculum_alignment": self._calculate_curriculum_alignment(state),
+                    "engagement_score": self._calculate_engagement_score(state)
+                }
+                educational_states.append(state_dict)
 
-            # Save quality metrics
+            with open(recent_file, "w") as f:
+                json.dump(educational_states, f, indent=2)
+
+            # Save enhanced quality metrics with educational insights
+            enhanced_metrics = self.quality_metrics.copy()
+            enhanced_metrics["educational_analytics"] = {
+                "subject_distribution": self._analyze_subject_distribution(),
+                "grade_level_coverage": self._analyze_grade_level_coverage(),
+                "learning_objective_completion": self._analyze_learning_objectives(),
+                "adaptive_learning_trends": self._analyze_adaptive_trends()
+            }
+
             metrics_file = self.persistence_path / "quality_metrics.json"
             with open(metrics_file, "w") as f:
-                json.dump(self.quality_metrics, f, indent=2)
+                json.dump(enhanced_metrics, f, indent=2)
 
             self.last_persistence = datetime.now()
-            logger.debug("States persisted successfully")
+            logger.debug("Enhanced educational states persisted successfully")
 
         except (IOError, OSError, json.JSONDecodeError) as e:
             logger.error(f"Failed to persist states: {e}")
@@ -836,6 +862,173 @@ class StateManager:
         self.compression_stats = {"compressed": 0, "saved_bytes": 0}
 
         logger.info("StateManager reset completed")
+
+    def _calculate_learning_effectiveness(self, state: EnvironmentState) -> float:
+        """Calculate learning effectiveness score for educational state"""
+        if state.state_type != StateType.EDUCATIONAL_CONTENT:
+            return 0.0
+
+        effectiveness_factors = []
+
+        # Content quality factor
+        effectiveness_factors.append(state.confidence)
+
+        # Learning objective alignment
+        if state.learning_objective:
+            # Analyze objective completion indicators in state data
+            objective_indicators = state.data.get("objective_completion", {})
+            if objective_indicators:
+                avg_completion = sum(objective_indicators.values()) / len(objective_indicators)
+                effectiveness_factors.append(avg_completion)
+
+        # Student engagement metrics
+        engagement_data = state.data.get("engagement_metrics", {})
+        if engagement_data:
+            engagement_score = engagement_data.get("interaction_rate", 0.5)
+            effectiveness_factors.append(engagement_score)
+
+        return sum(effectiveness_factors) / len(effectiveness_factors) if effectiveness_factors else 0.0
+
+    def _calculate_curriculum_alignment(self, state: EnvironmentState) -> float:
+        """Calculate curriculum alignment score"""
+        if not state.subject_area or not state.grade_level:
+            return 0.0
+
+        # Grade-appropriate content scoring
+        grade_appropriateness = 1.0  # Default assumption
+        if state.data.get("content_complexity"):
+            complexity = state.data["content_complexity"]
+            expected_complexity = state.grade_level / 12.0  # Normalize to 0-1
+            grade_appropriateness = 1.0 - abs(complexity - expected_complexity)
+
+        # Subject relevance scoring
+        subject_relevance = 1.0
+        if state.data.get("content_tags"):
+            content_tags = state.data["content_tags"]
+            subject_keywords = self._get_subject_keywords(state.subject_area)
+            if subject_keywords:
+                relevance_score = len(set(content_tags) & set(subject_keywords)) / len(subject_keywords)
+                subject_relevance = min(1.0, relevance_score)
+
+        return (grade_appropriateness + subject_relevance) / 2.0
+
+    def _calculate_engagement_score(self, state: EnvironmentState) -> float:
+        """Calculate student engagement potential score"""
+        engagement_factors = []
+
+        # Interactive elements
+        if state.state_type == StateType.ROBLOX_GAME:
+            if state.active_tools:
+                tool_diversity = min(1.0, len(state.active_tools) / 5.0)  # Normalize to max 5 tools
+                engagement_factors.append(tool_diversity)
+
+        # Content variety
+        content_variety = state.data.get("content_variety_score", 0.5)
+        engagement_factors.append(content_variety)
+
+        # Multimedia elements
+        multimedia_score = 0.0
+        multimedia_types = state.data.get("multimedia_types", [])
+        if multimedia_types:
+            multimedia_score = min(1.0, len(multimedia_types) / 4.0)  # Normalize to max 4 types
+        engagement_factors.append(multimedia_score)
+
+        return sum(engagement_factors) / len(engagement_factors) if engagement_factors else 0.5
+
+    def _analyze_subject_distribution(self) -> Dict[str, int]:
+        """Analyze distribution of subjects across recent states"""
+        subject_counts = {}
+        recent_states = self.get_recent_states(100)
+
+        for state in recent_states:
+            if state.subject_area:
+                subject_counts[state.subject_area] = subject_counts.get(state.subject_area, 0) + 1
+
+        return subject_counts
+
+    def _analyze_grade_level_coverage(self) -> Dict[str, int]:
+        """Analyze grade level coverage across recent states"""
+        grade_counts = {}
+        recent_states = self.get_recent_states(100)
+
+        for state in recent_states:
+            if state.grade_level:
+                grade_key = f"Grade {state.grade_level}"
+                grade_counts[grade_key] = grade_counts.get(grade_key, 0) + 1
+
+        return grade_counts
+
+    def _analyze_learning_objectives(self) -> Dict[str, float]:
+        """Analyze learning objective completion rates"""
+        objective_metrics = {
+            "total_objectives_tracked": 0,
+            "average_completion_rate": 0.0,
+            "objectives_per_session": 0.0
+        }
+
+        recent_states = self.get_recent_states(50)
+        total_completion = 0.0
+        total_objectives = 0
+
+        for state in recent_states:
+            if state.learning_objective:
+                total_objectives += 1
+                # Estimate completion based on state quality and educational metrics
+                completion_estimate = (state.confidence + state.completeness) / 2.0
+                total_completion += completion_estimate
+
+        if total_objectives > 0:
+            objective_metrics["total_objectives_tracked"] = total_objectives
+            objective_metrics["average_completion_rate"] = total_completion / total_objectives
+            objective_metrics["objectives_per_session"] = total_objectives / max(1, len(recent_states))
+
+        return objective_metrics
+
+    def _analyze_adaptive_trends(self) -> Dict[str, Any]:
+        """Analyze adaptive learning trends from state history"""
+        trends = {
+            "quality_improvement": 0.0,
+            "complexity_adaptation": "stable",
+            "engagement_trend": "stable",
+            "personalization_effectiveness": 0.0
+        }
+
+        recent_states = self.get_recent_states(20)
+        if len(recent_states) < 5:
+            return trends
+
+        # Analyze quality improvement over time
+        early_quality = sum(s.confidence for s in recent_states[:5]) / 5
+        recent_quality = sum(s.confidence for s in recent_states[-5:]) / 5
+        trends["quality_improvement"] = recent_quality - early_quality
+
+        # Analyze complexity adaptation
+        complexity_changes = []
+        for i in range(1, len(recent_states)):
+            prev_complexity = recent_states[i-1].data.get("content_complexity", 0.5)
+            curr_complexity = recent_states[i].data.get("content_complexity", 0.5)
+            complexity_changes.append(curr_complexity - prev_complexity)
+
+        if complexity_changes:
+            avg_change = sum(complexity_changes) / len(complexity_changes)
+            if avg_change > 0.1:
+                trends["complexity_adaptation"] = "increasing"
+            elif avg_change < -0.1:
+                trends["complexity_adaptation"] = "decreasing"
+
+        return trends
+
+    def _get_subject_keywords(self, subject: str) -> List[str]:
+        """Get relevant keywords for subject area"""
+        subject_keywords = {
+            "math": ["equation", "number", "calculation", "algebra", "geometry", "statistics"],
+            "science": ["experiment", "hypothesis", "observation", "theory", "biology", "chemistry", "physics"],
+            "english": ["reading", "writing", "grammar", "literature", "vocabulary", "composition"],
+            "history": ["timeline", "event", "civilization", "culture", "war", "politics"],
+            "geography": ["map", "location", "climate", "population", "resources", "continent"]
+        }
+
+        return subject_keywords.get(subject.lower(), [])
 
 
 # Backward compatibility alias

@@ -32,7 +32,7 @@ interface ThreeProviderProps {
   fallback?: React.ReactNode;
 }
 
-export const ThreeProvider: React.FC<ThreeProviderProps> = ({ children, fallback }) => {
+export const ThreeProvider: React.FunctionComponent<ThreeProviderProps> = ({ children, fallback }) => {
   const [isWebGLAvailable, setIsWebGLAvailable] = useState(false);
   const [performanceLevel, setPerformanceLevel] = useState<'high' | 'medium' | 'low'>('high');
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -150,7 +150,7 @@ export const ThreeProvider: React.FC<ThreeProviderProps> = ({ children, fallback
       }
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize as EventListener);
 
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -233,3 +233,5 @@ export const ThreeProvider: React.FC<ThreeProviderProps> = ({ children, fallback
     </ThreeContext.Provider>
   );
 };
+
+export default ThreeProvider;

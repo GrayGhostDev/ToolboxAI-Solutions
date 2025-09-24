@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  Typography, 
-  Box, 
-  Tabs, 
-  Tab,
-  Paper,
-  Badge,
-  Chip
-} from '@mui/material';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Paper from '@mui/material/Paper';
+import Badge from '@mui/material/Badge';
+import Chip from '@mui/material/Chip';
 import {
   Group,
   School,
@@ -56,7 +54,7 @@ function a11yProps(index: number) {
   };
 }
 
-const AdminControlPanel: React.FC = () => {
+const AdminControlPanel: React.FunctionComponent<Record<string, any>> = () => {
   const [tabValue, setTabValue] = useState(0);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {

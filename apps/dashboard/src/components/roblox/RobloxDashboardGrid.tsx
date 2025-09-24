@@ -6,23 +6,22 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Stack,
-  Chip,
-  LinearProgress,
-  IconButton,
-  Tooltip,
-  Fade,
-  Zoom,
-  Slide,
-  useTheme,
-  alpha
-} from '@mui/material';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import LinearProgress from '@mui/material/LinearProgress';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Fade from '@mui/material/Fade';
+import Zoom from '@mui/material/Zoom';
+import Slide from '@mui/material/Slide';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import {
   PlayArrow,
   Pause,
@@ -169,7 +168,7 @@ const getTypeColor = (type: string, theme: any) => {
   }
 };
 
-export const RobloxDashboardGrid: React.FC<RobloxDashboardGridProps> = ({
+export const RobloxDashboardGrid: React.FunctionComponent<RobloxDashboardGridProps> = ({
   items = SAMPLE_ITEMS,
   onItemClick,
   onItemPlay,
@@ -264,7 +263,7 @@ export const RobloxDashboardGrid: React.FC<RobloxDashboardGridProps> = ({
                   }}
                   onMouseEnter={() => setHoveredItem(item.id)}
                   onMouseLeave={() => setHoveredItem(null)}
-                  onClick={() => handleItemClick(item)}
+                  onClick={(e: React.MouseEvent) => () => handleItemClick(item)}
                 >
                   <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
                     {/* Header with icon and actions */}
@@ -305,7 +304,7 @@ export const RobloxDashboardGrid: React.FC<RobloxDashboardGridProps> = ({
                           <Tooltip title="Pause">
                             <IconButton
                               size="small"
-                              onClick={(e) => handleItemPause(item, e)}
+                              onClick={(e: React.MouseEvent) => (e) => handleItemPause(item, e)}
                               sx={{
                                 color: theme.palette.warning.main,
                                 background: alpha(theme.palette.warning.main, 0.1),
@@ -321,7 +320,7 @@ export const RobloxDashboardGrid: React.FC<RobloxDashboardGridProps> = ({
                           <Tooltip title="Play">
                             <IconButton
                               size="small"
-                              onClick={(e) => handleItemPlay(item, e)}
+                              onClick={(e: React.MouseEvent) => (e) => handleItemPlay(item, e)}
                               sx={{
                                 color: theme.palette.success.main,
                                 background: alpha(theme.palette.success.main, 0.1),
@@ -338,7 +337,7 @@ export const RobloxDashboardGrid: React.FC<RobloxDashboardGridProps> = ({
                         <Tooltip title="Refresh">
                           <IconButton
                             size="small"
-                            onClick={(e) => handleItemRefresh(item, e)}
+                            onClick={(e: React.MouseEvent) => (e) => handleItemRefresh(item, e)}
                             sx={{
                               color: theme.palette.info.main,
                               background: alpha(theme.palette.info.main, 0.1),

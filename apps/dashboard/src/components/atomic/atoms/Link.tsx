@@ -9,7 +9,7 @@ export interface LinkProps {
   children?: React.ReactNode;
 }
 
-const AtomicLink = React.forwardRef<HTMLAnchorElement, LinkProps>((props, ref) => (
+const AtomicLink = (({ ...props, ref }: HTMLAnchorElement, LinkProps & { ref?: React.Ref<any> }) => (
   <a ref={ref} {...props} />
 ));
 
