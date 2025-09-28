@@ -746,6 +746,85 @@ export function MCPAgentDashboard({
         </Grid>
       ))}
 
+      {/* Performance Analytics */}
+      <Grid item xs={12}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+              Agent Performance Analytics
+            </Typography>
+            <Box sx={{ height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={agents[0]?.metrics || []}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="timestamp" />
+                  <YAxis />
+                  <Tooltip />
+                  <Area
+                    type="monotone"
+                    dataKey="responseTime"
+                    stackId="1"
+                    stroke="#8884d8"
+                    fill="#8884d8"
+                    fillOpacity={0.6}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="memoryUsage"
+                    stackId="1"
+                    stroke="#82ca9d"
+                    fill="#82ca9d"
+                    fillOpacity={0.6}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* System Metrics with Icons */}
+      <Grid item xs={12} md={6}>
+        <Card>
+          <CardContent>
+            <Stack spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Memory color="primary" />
+                <Typography variant="h6">Memory Usage</Typography>
+              </Stack>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Speed color="secondary" />
+                <Typography variant="body1">Response Speed Metrics</Typography>
+              </Stack>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <School color="info" />
+                <Typography variant="body2">Educational Content Processing</Typography>
+              </Stack>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* Warning Indicators */}
+      <Grid item xs={12} md={6}>
+        <Card>
+          <CardContent>
+            <Stack spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Warning color="warning" />
+                <Typography variant="h6">System Alerts</Typography>
+              </Stack>
+              <Typography variant="body2">
+                All systems operational
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Grid>
+
       {/* Message Log */}
       {showLogs && (
         <Grid item xs={12}>

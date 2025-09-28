@@ -65,7 +65,7 @@ export function useRealtimeContent(
   } = options;
   
   const [state, setState] = useState<ContentGenerationState>(initialState);
-  const cleanupTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const cleanupTimerRef = useRef<number | null>(null);
   
   // Store callbacks in refs
   const onProgressRef = useRef(onProgress);

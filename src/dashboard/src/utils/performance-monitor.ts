@@ -92,7 +92,7 @@ export class PerformanceMonitor {
   private systemMetrics: SystemMetric[] = [];
   private alerts: PerformanceAlert[] = [];
   private isMonitoring: boolean = false;
-  private monitoringTimer: NodeJS.Timeout | null = null;
+  private monitoringTimer: number | null = null;
   private observers: Map<string, PerformanceObserver> = new Map();
 
   // Thresholds for performance alerts

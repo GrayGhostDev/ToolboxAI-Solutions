@@ -57,7 +57,7 @@ export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
   const notifications = useAppSelector(selectNotifications);
   const unreadCount = useAppSelector(selectUnreadNotificationCount);
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const [autoMarkReadTimer, setAutoMarkReadTimer] = useState<NodeJS.Timeout | null>(null);
+  const [autoMarkReadTimer, setAutoMarkReadTimer] = useState<number | null>(null);
 
   const visibleNotifications = notifications.slice(0, maxNotifications);
   const open = Boolean(anchorEl);
@@ -279,7 +279,7 @@ export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
           )}
 
           {/* Footer */}
-          {notifications.length > maxNotifications && (
+          {notifications.length > 0 && (
             <Box
               sx={{
                 p: 1,
@@ -288,9 +288,18 @@ export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
                 borderColor: 'divider'
               }}
             >
-              <Typography variant="caption" color="text.secondary">
-                Showing {maxNotifications} of {notifications.length} notifications
-              </Typography>
+              {notifications.length > maxNotifications && (
+                <Typography variant="caption" color="text.secondary" display="block" mb={1}>
+                  Showing {maxNotifications} of {notifications.length} notifications
+                </Typography>
+              )}
+              <Button 
+                size="small" 
+                onClick={handleClearAll}
+                sx={{ textTransform: 'none' }}
+              >
+                Clear All
+              </Button>
             </Box>
           )}
         </Paper>

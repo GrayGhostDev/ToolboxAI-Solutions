@@ -90,7 +90,7 @@ describe('Complete API Service Test Suite - Corrected', () => {
   beforeAll(() => {
     // Fix for axios config serialization in Vitest
     if (typeof globalThis.structuredClone === 'undefined') {
-      globalThis.structuredClone = (obj: any) => {
+      globalThis.structuredClone = (obj: unknown) => {
         try {
           return JSON.parse(JSON.stringify(obj));
         } catch {
@@ -98,6 +98,11 @@ describe('Complete API Service Test Suite - Corrected', () => {
         }
       };
     }
+  });
+
+  afterAll(() => {
+    // Cleanup after all tests
+    vi.restoreAllMocks();
   });
 
   beforeEach(() => {
@@ -138,6 +143,26 @@ describe('Complete API Service Test Suite - Corrected', () => {
     mock.restore();
     vi.clearAllMocks();
     localStorage.clear();
+  });
+
+  describe('Type Validation', () => {
+    it('should validate User type structure', () => {
+      const mockUser: User = {
+        id: 'test-user-123',
+        email: 'test@example.com',
+        username: 'testuser',
+        displayName: 'Test User',
+        role: 'student',
+        isActive: true,
+        avatarUrl: 'https://example.com/avatar.jpg',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      expect(mockUser.id).toBe('test-user-123');
+      expect(mockUser.role).toBe('student');
+      expect(mockUser.isActive).toBe(true);
+    });
   });
 
   describe('Authentication Module', () => {

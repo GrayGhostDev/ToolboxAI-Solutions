@@ -353,7 +353,12 @@ export function PerformanceIndicator({
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string, metricName?: string) => {
+    // Use Speed icon for performance-related metrics
+    if (metricName?.toLowerCase().includes('response') || metricName?.toLowerCase().includes('speed')) {
+      return <Speed color={status === 'excellent' ? 'success' : status === 'good' ? 'info' : 'warning'} />;
+    }
+    
     switch (status) {
       case "excellent":
         return <CheckCircle color="success" />;
@@ -415,7 +420,9 @@ export function PerformanceIndicator({
               </Typography>
               <Stack direction="row" spacing={1} alignItems="center">
                 {isConnected && autoRefresh && (
-                  <Chip label="Live" color="success" size="small" />
+                  <Badge badgeContent="●" color="success">
+                    <Chip label="Live" color="success" size="small" />
+                  </Badge>
                 )}
                 <Chip 
                   label={systemHealth.overall.toUpperCase()} 
@@ -530,7 +537,7 @@ export function PerformanceIndicator({
                     </Stack>
                   </Box>
                   <Avatar sx={{ bgcolor: getStatusColor(metric.status) + '20', width: 40, height: 40 }}>
-                    {getStatusIcon(metric.status)}
+                    {getStatusIcon(metric.status, metric.name)}
                   </Avatar>
                 </Stack>
 

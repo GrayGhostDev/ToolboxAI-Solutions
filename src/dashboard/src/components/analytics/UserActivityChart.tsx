@@ -260,6 +260,7 @@ export function UserActivityChart({
                 borderRadius: 8,
               }}
             />
+            <Legend />
             <Bar dataKey={selectedMetric} fill={color} radius={[4, 4, 0, 0]} />
           </BarChart>
         );
@@ -277,11 +278,12 @@ export function UserActivityChart({
                 borderRadius: 8,
               }}
             />
-            <Area
-              type="monotone"
-              dataKey={selectedMetric}
-              stroke={color}
-              fill={color}
+            <Legend />
+            <Area 
+              type="monotone" 
+              dataKey={selectedMetric} 
+              stroke={color} 
+              fill={color} 
               fillOpacity={0.3}
             />
           </AreaChart>
@@ -300,6 +302,7 @@ export function UserActivityChart({
                 borderRadius: 8,
               }}
             />
+            <Legend />
             <Line
               type="monotone"
               dataKey={selectedMetric}

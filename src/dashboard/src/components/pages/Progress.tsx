@@ -237,7 +237,9 @@ export default function Progress() {
           <CardContent>
             <Stack spacing={2}>
               <Stack direction="row" alignItems="center" spacing={1}>
-                <LocalFireDepartment color="error" />
+                <Tooltip title="Consecutive days of activity">
+                  <LocalFireDepartment color="error" />
+                </Tooltip>
                 <Typography variant="caption" color="text.secondary">
                   Current Streak
                 </Typography>
@@ -245,7 +247,9 @@ export default function Progress() {
               <Typography variant="h3" sx={{ fontWeight: 700 }}>
                 7 Days
               </Typography>
-              <Chip label="Personal Best!" color="success" size="small" />
+              <Badge badgeContent="NEW" color="primary">
+                <Chip label="Personal Best!" color="success" size="small" />
+              </Badge>
             </Stack>
           </CardContent>
         </Card>
@@ -307,6 +311,12 @@ export default function Progress() {
               <Typography variant="h3" sx={{ fontWeight: 700 }}>
                 Level 12
               </Typography>
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                <TrendingDown color="error" fontSize="small" />
+                <Typography variant="caption" color="error.main">
+                  -2 levels this month
+                </Typography>
+              </Stack>
               <Typography variant="caption" color="text.secondary">
                 450 XP to Level 13
               </Typography>

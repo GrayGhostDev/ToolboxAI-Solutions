@@ -25,7 +25,7 @@ import { useAppSelector } from "./store";
 import TeacherRobloxDashboard from "./components/pages/TeacherRobloxDashboard";
 
 export default function AppRoutes() {
-  const role = useAppSelector((s) => s.user.role);
+  const role: UserRole = useAppSelector((s) => s.user.role);
   
   return (
     <Routes>

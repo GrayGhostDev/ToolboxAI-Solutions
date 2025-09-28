@@ -72,8 +72,8 @@ const DashboardRouter: React.FC = () => {
 
   return (
     <Routes>
-      {/* Default route - redirect to role-specific dashboard */}
-      <Route path="/" element={<Navigate to={userConfig.defaultRoute} replace />} />
+      {/* Default route - render role-specific dashboard component */}
+      <Route path="/" element={getDashboardComponent()} />
 
       {/* Admin Routes */}
       <Route path="/admin/*" element={

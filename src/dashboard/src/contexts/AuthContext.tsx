@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [userConfig, setUserConfig] = useState<ReturnType<typeof getUserConfig> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [tokenRefreshTimer, setTokenRefreshTimer] = useState<NodeJS.Timeout | null>(null);
+  const [tokenRefreshTimer, setTokenRefreshTimer] = useState<number | null>(null);
   const navigate = useNavigate();
   const apiClient = new ApiClient();
 

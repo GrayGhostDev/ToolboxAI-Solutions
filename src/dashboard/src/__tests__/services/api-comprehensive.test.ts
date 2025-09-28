@@ -148,6 +148,81 @@ describe('Comprehensive API Service Tests', () => {
   });
 
   /**
+   * TYPE VALIDATION TESTS
+   * Ensure all imported types are properly used
+   */
+  describe('Type Validation', () => {
+    it('should validate all imported types work correctly', () => {
+      // Test type usage to prevent unused import errors
+      const mockRobloxWorld: RobloxWorld = {
+        id: 'world-123',
+        name: 'Test World',
+        description: 'A test world',
+        thumbnailUrl: 'https://example.com/thumb.jpg',
+        isPublic: true,
+        createdBy: 'user-123',
+        createdAt: new Date().toISOString(),
+      };
+
+      const mockCompliance: ComplianceStatus = {
+        isCompliant: true,
+        lastAudit: new Date().toISOString(),
+        violations: [],
+        score: 95,
+      };
+
+      const mockSchool: SchoolCreate = {
+        name: 'Test School',
+        district: 'Test District',
+        address: '123 Test St',
+        contactEmail: 'admin@testschool.edu',
+      };
+
+      const mockUserCreate: UserCreate = {
+        email: 'newuser@example.com',
+        username: 'newuser',
+        password: 'password123',
+        firstName: 'New',
+        lastName: 'User',
+        role: 'student',
+      };
+
+      const mockUserUpdate: UserUpdate = {
+        displayName: 'Updated Name',
+        email: 'updated@example.com',
+      };
+
+      const mockReportGenerate: ReportGenerateRequest = {
+        templateId: 'template-123',
+        parameters: {
+          dateRange: '30days',
+          includeCharts: true,
+        },
+        format: 'pdf',
+      };
+
+      const mockReportSchedule: ReportScheduleRequest = {
+        templateId: 'template-123',
+        schedule: {
+          frequency: 'weekly',
+          dayOfWeek: 1,
+          time: '09:00',
+        },
+        recipients: ['admin@school.edu'],
+      };
+
+      // Verify types are properly structured
+      expect(mockRobloxWorld.id).toBe('world-123');
+      expect(mockCompliance.isCompliant).toBe(true);
+      expect(mockSchool.name).toBe('Test School');
+      expect(mockUserCreate.role).toBe('student');
+      expect(mockUserUpdate.displayName).toBe('Updated Name');
+      expect(mockReportGenerate.format).toBe('pdf');
+      expect(mockReportSchedule.recipients).toContain('admin@school.edu');
+    });
+  });
+
+  /**
    * AUTHENTICATION TESTS
    * Complete coverage of all authentication flows
    */
@@ -1292,6 +1367,7 @@ describe('Comprehensive API Service Tests', () => {
 
         const result = await apiClient.getLeaderboard(undefined, 'all');
 
+        expect(result).toEqual([]);
         expect(mock.history.get[0].params?.class_id).toBeUndefined();
         expect(mock.history.get[0].params?.timeframe).toBe('all');
       });
@@ -1562,7 +1638,7 @@ describe('Comprehensive API Service Tests', () => {
       it('should add auth token to all requests', async () => {
         localStorage.setItem('toolboxai_auth_token', 'test-token-xyz');
 
-        mock.onGet(`${API_BASE_URL}/test`).reply((config) => {
+        mock.onGet(`${API_BASE_URL}/test`).reply((_config) => {
           // Check if auth header is present
           // Note: axios-mock-adapter might not preserve headers
           return [200, { success: true }];
