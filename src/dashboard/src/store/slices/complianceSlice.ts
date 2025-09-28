@@ -117,9 +117,11 @@ export const recordConsent = createAsyncThunk(
 export const fetchAuditLogs = createAsyncThunk(
   'compliance/fetchAuditLogs',
   async (filters?: { regulation?: string; startDate?: string; endDate?: string }) => {
-    // This would call a specific audit logs endpoint
-    // For now, we'll generate mock data
-    const mockLogs: AuditLog[] = [
+    // This would call a specific audit logs endpoint with filters
+    console.error('Fetching audit logs with filters:', filters);
+    
+    // Apply filters to mock data generation
+    let mockLogs: AuditLog[] = [
       {
         id: '1',
         timestamp: new Date().toISOString(),
@@ -143,6 +145,18 @@ export const fetchAuditLogs = createAsyncThunk(
         ipAddress: '192.168.1.2',
       },
     ];
+    
+    // Apply filters if provided
+    if (filters?.regulation) {
+      mockLogs = mockLogs.filter(log => log.regulation === filters.regulation);
+    }
+    if (filters?.startDate) {
+      mockLogs = mockLogs.filter(log => new Date(log.timestamp) >= new Date(filters.startDate!));
+    }
+    if (filters?.endDate) {
+      mockLogs = mockLogs.filter(log => new Date(log.timestamp) <= new Date(filters.endDate!));
+    }
+    
     return mockLogs;
   }
 );
@@ -150,8 +164,10 @@ export const fetchAuditLogs = createAsyncThunk(
 export const fetchConsentRecords = createAsyncThunk(
   'compliance/fetchConsents',
   async (studentId?: string) => {
-    // This would call a specific consent records endpoint
-    // For now, we'll generate mock data
+    // This would call a specific consent records endpoint for the student
+    console.error('Fetching consent records for student:', studentId);
+    
+    // Generate mock data filtered by studentId if provided
     const mockConsents: ConsentRecord[] = [
       {
         id: '1',
@@ -178,6 +194,12 @@ export const fetchConsentRecords = createAsyncThunk(
         expiryDate: new Date(Date.now() + 305 * 86400000).toISOString(),
       },
     ];
+    
+    // Filter by studentId if provided
+    if (studentId) {
+      return mockConsents.filter(consent => consent.studentId === studentId);
+    }
+    
     return mockConsents;
   }
 );

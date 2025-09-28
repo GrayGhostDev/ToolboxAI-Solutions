@@ -202,12 +202,32 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
       </Box>
 
       {/* Status */}
-      <Chip
-        label={getStatusText()}
-        color={getStatusColor()}
-        size="small"
-        sx={{ mb: 2 }}
-      />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Chip
+          label={getStatusText()}
+          color={getStatusColor()}
+          size="small"
+        />
+        <Stack direction="row" spacing={1}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={onReconnect}
+            disabled={status.state === WebSocketState.CONNECTING}
+          >
+            Reconnect
+          </Button>
+          <IconButton
+            size="small"
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </IconButton>
+        </Stack>
+      </Box>
+
+      <Collapse in={expanded}>
 
       {/* Progress bar for connecting states */}
       {(status.isConnecting) && (
@@ -286,6 +306,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
           )}
         </>
       )}
+      </Collapse>
     </Paper>
   );
 };

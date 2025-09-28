@@ -433,6 +433,116 @@ const StudentProgressTracker: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Student Details Dialog */}
+      {selectedStudent && (
+        <Card sx={{ mt: 2 }}>
+          <CardHeader
+            title={`${selectedStudent.name} - Progress Details`}
+            action={
+              <IconButton onClick={() => setSelectedStudent(null)}>
+                <span>✕</span>
+              </IconButton>
+            }
+          />
+          <CardContent>
+            <Grid container spacing={3}>
+              {/* Student Info */}
+              <Grid item xs={12} md={4}>
+                <Paper sx={{ p: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Avatar sx={{ width: 56, height: 56 }}>
+                      {selectedStudent.name[0]}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h6">{selectedStudent.name}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Grade {selectedStudent.grade}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  <List dense>
+                    <ListItem>
+                      <ListItemAvatar>
+                        <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
+                          <School fontSize="small" />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary="Overall Progress"
+                        secondary={`${selectedStudent.overallProgress}%`}
+                      />
+                    </ListItem>
+                    
+                    <ListItem>
+                      <ListItemAvatar>
+                        <Avatar sx={{ width: 32, height: 32, bgcolor: 'warning.main' }}>
+                          <EmojiEvents fontSize="small" />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary="Current Level"
+                        secondary={`Level ${selectedStudent.level}`}
+                      />
+                    </ListItem>
+                    
+                    <ListItem>
+                      <ListItemAvatar>
+                        <Avatar sx={{ 
+                          width: 32, 
+                          height: 32, 
+                          bgcolor: selectedStudent.overallProgress >= 80 ? 'success.main' : 
+                                  selectedStudent.overallProgress >= 60 ? 'warning.main' : 'error.main' 
+                        }}>
+                          {selectedStudent.overallProgress >= 80 ? <CheckCircle fontSize="small" /> : 
+                           selectedStudent.overallProgress >= 60 ? <Warning fontSize="small" /> : 
+                           <Warning fontSize="small" />}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary="Performance Status"
+                        secondary={
+                          selectedStudent.overallProgress >= 80 ? 'Excellent' :
+                          selectedStudent.overallProgress >= 60 ? 'Good' : 'Needs Attention'
+                        }
+                      />
+                    </ListItem>
+                  </List>
+                </Paper>
+              </Grid>
+              
+              {/* Subject Progress */}
+              <Grid item xs={12} md={8}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="h6" gutterBottom>Subject Progress</Typography>
+                  {selectedStudent.subjects.map((subject) => (
+                    <Box key={subject.name} sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                        <Typography variant="body2">{subject.name}</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {subject.progress > (subject.lastScore || 0) ? (
+                            <TrendingUp color="success" fontSize="small" />
+                          ) : (
+                            <TrendingDown color="error" fontSize="small" />
+                          )}
+                          <Typography variant="body2">{subject.progress}%</Typography>
+                        </Box>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={subject.progress}
+                        color={getProgressColor(subject.progress)}
+                        sx={{ height: 8, borderRadius: 4 }}
+                      />
+                    </Box>
+                  ))}
+                </Paper>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Connection Status */}
       {!isConnected && (
         <Box sx={{ mt: 2, textAlign: 'center' }}>

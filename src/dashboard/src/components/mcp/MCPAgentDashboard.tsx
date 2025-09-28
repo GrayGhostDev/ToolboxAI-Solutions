@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -147,6 +147,79 @@ export function MCPAgentDashboard({
   const MAX_RECONNECT_ATTEMPTS = 3;
   const RECONNECT_DELAY_BASE = 5000; // Base delay in ms
 
+  // Handle MCP messages
+  const handleMCPMessage = useCallback((message: any) => {
+    switch (message.type) {
+      case 'agents_status':
+        if (message.agents) {
+          setAgents(message.agents);
+        }
+        break;
+      case 'agent_update':
+        setAgents(prevAgents =>
+          prevAgents.map(agent =>
+            agent.id === message.agentId
+              ? { ...agent, ...message.updates }
+              : agent
+          )
+        );
+        break;
+      case 'task_progress':
+        setAgents(prevAgents =>
+          prevAgents.map(agent =>
+            agent.id === message.agentId
+              ? { 
+                  ...agent, 
+                  currentTask: message.task,
+                  status: "working"
+                }
+              : agent
+          )
+        );
+        break;
+      case 'task_completed':
+        setAgents(prevAgents =>
+          prevAgents.map(agent =>
+            agent.id === message.agentId
+              ? { 
+                  ...agent, 
+                  currentTask: undefined,
+                  status: "active",
+                  tasksCompleted: agent.tasksCompleted + 1,
+                  lastActivity: new Date().toISOString(),
+                }
+              : agent
+          )
+        );
+        // Add success notification
+        dispatch(addNotification({
+          type: 'success',
+          message: `Task completed by ${agents.find(a => a.id === message.agentId)?.name || 'Agent'}`,
+        }));
+        break;
+      case 'error':
+        dispatch(addNotification({
+          type: 'error',
+          message: `MCP Error: ${message.error}`,
+        }));
+        break;
+      default:
+        // Add to message log
+        setMessages(prevMessages => [
+          {
+            id: Date.now().toString(),
+            type: message.type,
+            agentId: message.agentId || 'system',
+            content: message.content || JSON.stringify(message),
+            timestamp: new Date().toISOString(),
+            data: message,
+          },
+          ...prevMessages.slice(0, 99), // Keep last 100 messages
+        ]);
+        break;
+    }
+  }, [dispatch, agents]);
+
   // Connect to MCP WebSocket server on port 9876 with retry logic
   const connectToMCP = React.useCallback(async () => {
     // Check if we've exceeded max reconnection attempts
@@ -221,10 +294,10 @@ export function MCPAgentDashboard({
     } finally {
       setLoading(false);
     }
-  }, [autoRefresh, reconnectAttempts, mcpWebSocket]);
+  }, [autoRefresh, reconnectAttempts, mcpWebSocket, handleMCPMessage]);
 
   // Handle MCP messages
-  const handleMCPMessage = (message: any) => {
+  const handleMCPMessage = useCallback((message: any) => {
     switch (message.type) {
       case 'agents_status':
         if (message.agents) {
@@ -289,7 +362,7 @@ export function MCPAgentDashboard({
         ]);
         break;
     }
-  };
+  }, [dispatch]);
 
   // Load mock data when MCP is not available
   const loadMockData = () => {
@@ -448,7 +521,7 @@ export function MCPAgentDashboard({
     return () => {
       unsubscribe(subscriptionId);
     };
-  }, [isConnected, autoRefresh, subscribe, unsubscribe]);
+  }, [isConnected, autoRefresh, subscribe, unsubscribe, handleMCPMessage]);
 
   // Send task to agent
   const handleSendTask = async () => {
@@ -804,6 +877,35 @@ export function MCPAgentDashboard({
                 <Typography variant="body2">Educational Content Processing</Typography>
               </Stack>
             </Stack>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* Task Distribution Chart */}
+      <Grid item xs={12} md={6}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+              Task Distribution
+            </Typography>
+            <Box sx={{ height: 250 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={agents.map(agent => ({
+                    name: agent.name.split(' ')[0],
+                    tasks: agent.tasksCompleted,
+                    responseTime: agent.avgResponseTime
+                  }))}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="tasks" fill="#8884d8" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
           </CardContent>
         </Card>
       </Grid>

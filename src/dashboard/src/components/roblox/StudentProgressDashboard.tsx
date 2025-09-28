@@ -488,6 +488,107 @@ export const StudentProgressDashboard: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Loading State */}
+      {isLoading && (
+        <Card>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+              <Typography variant="body2" sx={{ ml: 2 }}>
+                Loading student progress data...
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Top Performers Section */}
+      {studentProgress.length > 0 && (
+        <Card>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Star color="warning" />
+              <Typography variant="h6">Top Performers</Typography>
+            </Box>
+            <AvatarGroup max={6}>
+              {studentProgress
+                .sort((a, b) => b.totalXp - a.totalXp)
+                .slice(0, 6)
+                .map((student) => (
+                  <Tooltip key={student.userId} title={`${student.displayName} - ${student.totalXp} XP`}>
+                    <Avatar>
+                      {student.displayName[0]}
+                    </Avatar>
+                  </Tooltip>
+                ))}
+            </AvatarGroup>
+            <Divider sx={{ my: 2 }} />
+            <Stack direction="row" spacing={2}>
+              <Typography variant="body2" color="text.secondary">
+                Showing students with highest XP this week
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Alerts Section */}
+      {studentProgress.some(s => s.needsHelp) && (
+        <Alert severity="warning">
+          <AlertTitle>Students Need Attention</AlertTitle>
+          <Typography variant="body2">
+            {studentProgress.filter(s => s.needsHelp).length} students may need additional support.
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+            <Button size="small" startIcon={<Person />}>
+              View Details
+            </Button>
+            <Button size="small" startIcon={<Message />}>
+              Send Messages
+            </Button>
+          </Stack>
+        </Alert>
+      )}
+
+      {/* Progress Control Actions */}
+      <Card>
+        <CardContent>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Tooltip title="Start all sessions">
+              <IconButton color="success">
+                <PlayArrow />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Pause all sessions">
+              <IconButton color="warning">
+                <Pause />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Stop all sessions">
+              <IconButton color="error">
+                <Stop />
+              </IconButton>
+            </Tooltip>
+            <Divider orientation="vertical" flexItem />
+            <Tooltip title="View assignments">
+              <IconButton>
+                <Assignment />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Monitor performance">
+              <IconButton>
+                <Speed />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Access time tracking">
+              <IconButton>
+                <AccessTime />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        </CardContent>
+      </Card>
+
       {/* Student List/Grid */}
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         {viewMode === 'grid' ? (

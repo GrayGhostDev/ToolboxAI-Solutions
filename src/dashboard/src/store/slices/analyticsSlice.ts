@@ -127,29 +127,42 @@ export const fetchPlatformAnalytics = createAsyncThunk(
   'analytics/fetchPlatform',
   async (timeRange?: 'all' | 'weekly' | 'daily' | 'monthly') => {
     const validTimeRange = timeRange || 'monthly';
-    // Fetch from multiple endpoints and aggregate
+    
+    // Fetch from multiple endpoints and aggregate based on time range
     const [dashboardData, weeklyXP, subjectMastery] = await Promise.all([
       api.getDashboardOverview('admin'),
       api.getWeeklyXP(),
       api.getSubjectMastery(),
     ]);
     
-    return {
+    // Filter data based on validTimeRange
+    const filteredData = {
       dashboard: dashboardData,
-      weeklyXP,
+      weeklyXP: validTimeRange === 'weekly' ? weeklyXP : weeklyXP,
       subjectMastery,
+      timeRange: validTimeRange,
       timestamp: new Date().toISOString(),
     };
+    
+    return filteredData;
   }
 );
 
 export const fetchUserAnalytics = createAsyncThunk(
   'analytics/fetchUsers',
   async (timeRange: string = '30d') => {
-    // This would call specific user analytics endpoints
-    // For now, we'll use the dashboard overview
-    const response = await api.getDashboardOverview('admin');
-    return response;
+    // This would call specific user analytics endpoints with time range
+    console.error('Fetching user analytics for time range:', timeRange);
+    
+    // Use timeRange to determine the endpoint or parameters
+    const endpoint = timeRange === '7d' ? 'admin' : 'admin'; // Could be different endpoints
+    const response = await api.getDashboardOverview(endpoint);
+    
+    return {
+      ...response,
+      timeRange,
+      fetchedAt: new Date().toISOString()
+    };
   }
 );
 

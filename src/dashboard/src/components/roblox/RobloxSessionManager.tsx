@@ -638,6 +638,16 @@ export const RobloxSessionManager: React.FC = () => {
                   size="small"
                   onClick={() => {
                     setSelectedSession(session);
+                    setSettingsDialogOpen(true);
+                  }}
+                >
+                  <Settings fontSize="small" />
+                </IconButton>
+                
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    setSelectedSession(session);
                     setInviteDialogOpen(true);
                   }}
                 >
@@ -947,6 +957,137 @@ export const RobloxSessionManager: React.FC = () => {
             onClick={handleCreateSession}
           >
             {activeStep < 3 ? 'Next' : 'Create Session'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Session Settings Dialog */}
+      <Dialog
+        open={settingsDialogOpen}
+        onClose={() => setSettingsDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Session Settings</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <FormControl fullWidth>
+              <InputLabel>Access Type</InputLabel>
+              <Select value="public">
+                <MenuItem value="public">Public</MenuItem>
+                <MenuItem value="private">Private</MenuItem>
+                <MenuItem value="friends">Friends Only</MenuItem>
+              </Select>
+            </FormControl>
+            
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>Player Limits</Typography>
+              <Slider
+                valueLabelDisplay="auto"
+                step={1}
+                min={1}
+                max={50}
+                defaultValue={30}
+              />
+            </Paper>
+            
+            <Divider />
+            
+            <FormControlLabel
+              control={<Switch defaultChecked />}
+              label="Enable Chat"
+            />
+            <FormControlLabel
+              control={<Switch />}
+              label="Enable Voice Chat"
+            />
+            <FormControlLabel
+              control={<Switch defaultChecked />}
+              label="Record Session"
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSettingsDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained">Save Settings</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Student Invite Dialog */}
+      <Dialog
+        open={inviteDialogOpen}
+        onClose={() => setInviteDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Invite Students</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              fullWidth
+              label="Search Students"
+              value={studentSearch}
+              onChange={(e) => setStudentSearch(e.target.value)}
+              placeholder="Type student name or email..."
+            />
+            
+            <List sx={{ maxHeight: 300, overflow: 'auto' }}>
+              {/* Mock student list filtered by search */}
+              {['Alice Johnson', 'Bob Smith', 'Carol Brown', 'David Wilson'].filter(name => 
+                name.toLowerCase().includes(studentSearch.toLowerCase())
+              ).map((student) => (
+                <ListItem key={student}>
+                  <ListItemIcon>
+                    <Avatar sx={{ width: 32, height: 32 }}>
+                      {student[0]}
+                    </Avatar>
+                  </ListItemIcon>
+                  <ListItemText primary={student} />
+                  <ListItemSecondaryAction>
+                    <Checkbox
+                      checked={selectedStudents.includes(student)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStudents([...selectedStudents, student]);
+                        } else {
+                          setSelectedStudents(selectedStudents.filter(s => s !== student));
+                        }
+                      }}
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+              ))}
+            </List>
+            
+            {selectedStudents.length > 0 && (
+              <Paper sx={{ p: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Selected Students ({selectedStudents.length})
+                </Typography>
+                <AvatarGroup max={5}>
+                  {selectedStudents.map((student) => (
+                    <Avatar key={student} sx={{ width: 32, height: 32 }}>
+                      {student[0]}
+                    </Avatar>
+                  ))}
+                </AvatarGroup>
+              </Paper>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInviteDialogOpen(false)}>Cancel</Button>
+          <Button 
+            variant="contained" 
+            disabled={selectedStudents.length === 0}
+            onClick={() => {
+              // Handle student invitations
+              console.error('Inviting students:', selectedStudents);
+              setInviteDialogOpen(false);
+              setSelectedStudents([]);
+            }}
+          >
+            Send Invites
           </Button>
         </DialogActions>
       </Dialog>

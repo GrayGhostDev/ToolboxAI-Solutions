@@ -59,6 +59,8 @@ export const WebSocketTest: React.FC = () => {
     requestContent,
     onContentProgress
   } = useWebSocketContext();
+  
+  const connectionState = useWebSocketState();
 
   // Local state
   const [messageLog, setMessageLog] = useState<Array<{
@@ -285,8 +287,13 @@ export const WebSocketTest: React.FC = () => {
               Reconnect Attempts: {stats.reconnectAttempts}
             </Typography>
             {stats.latency && (
-              <Typography variant="body2">
-                Latency: {stats.latency}ms
+            <Typography variant="body2">
+              Latency: {stats.latency}ms
+            </Typography>
+            )}
+            {contentRequestId && (
+              <Typography variant="body2" color="primary">
+                Active Request: {contentRequestId}
               </Typography>
             )}
           </Grid>

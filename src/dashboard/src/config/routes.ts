@@ -8,8 +8,8 @@
 import React from 'react';
 
 // Enhanced route parameter types
-export interface DashboardParams {
-  // Dashboard route has no parameters
+export interface DashboardParams extends Record<string, never> {
+  // Dashboard route has no parameters - using proper empty object type
 }
 
 export interface UserParams extends Record<string, string> {

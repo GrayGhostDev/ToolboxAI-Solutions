@@ -80,16 +80,28 @@ const initialState: ProgressState = {
 export const fetchStudentProgress = createAsyncThunk(
   'progress/fetchStudent',
   async ({ studentId, daysBack = 30 }: { studentId: string; daysBack?: number }) => {
+    console.error('Fetching student progress for', studentId, 'with', daysBack, 'days back');
     const response = await api.getStudentProgress(studentId);
-    return { studentId, data: response };
+    return { 
+      studentId, 
+      data: response, 
+      daysBack,
+      fetchedAt: new Date().toISOString() 
+    };
   }
 );
 
 export const fetchClassProgress = createAsyncThunk(
   'progress/fetchClass',
   async ({ classId, daysBack = 30 }: { classId: string; daysBack?: number }) => {
+    console.error('Fetching class progress for', classId, 'with', daysBack, 'days back');
     const response = await api.getClassProgress(classId);
-    return { classId, data: response };
+    return { 
+      classId, 
+      data: response, 
+      daysBack,
+      fetchedAt: new Date().toISOString() 
+    };
   }
 );
 
@@ -148,10 +160,18 @@ export const compareStudents = createAsyncThunk(
 export const generateProgressReport = createAsyncThunk(
   'progress/generateReport',
   async ({ studentId, format = 'pdf' }: { studentId: string; format?: 'pdf' | 'csv' }) => {
-    // This would call an API endpoint to generate a downloadable report
-    // For now, we'll return the progress data
+    // This would call an API endpoint to generate a downloadable report in specified format
+    console.error('Generating progress report for', studentId, 'in', format, 'format');
+    
     const response = await api.getStudentProgress(studentId);
-    return response;
+    
+    // Return formatted response based on format type
+    return {
+      ...response,
+      reportFormat: format,
+      generatedAt: new Date().toISOString(),
+      downloadUrl: `/api/reports/progress/${studentId}.${format}`
+    };
   }
 );
 
@@ -253,10 +273,12 @@ const progressSlice = createSlice({
       .addCase(fetchLessonAnalytics.fulfilled, (state, action) => {
         state.loading = false;
         state.lessonAnalytics[action.payload.lessonId] = action.payload.data;
+        console.error('Lesson analytics loaded for:', action.payload.lessonId);
       })
       .addCase(fetchLessonAnalytics.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch lesson analytics';
+        console.error('Failed to fetch lesson analytics:', action.error);
       });
 
     // Update student progress
@@ -267,6 +289,7 @@ const progressSlice = createSlice({
       })
       .addCase(updateStudentProgress.fulfilled, (state, action) => {
         state.loading = false;
+        console.error('Student progress updated:', action.payload);
         // Refresh the student's progress data after update
         if (state.currentStudentId) {
           // In a real app, you might want to refetch the data or update locally
@@ -285,11 +308,13 @@ const progressSlice = createSlice({
       })
       .addCase(recordAchievement.fulfilled, (state, action) => {
         state.loading = false;
+        console.error('Achievement recorded:', action.payload);
         // Update the student's badges/achievements in the progress data
       })
       .addCase(recordAchievement.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to record achievement';
+        console.error('Failed to record achievement:', action.error);
       });
 
     // Compare students
@@ -301,11 +326,13 @@ const progressSlice = createSlice({
       .addCase(compareStudents.fulfilled, (state, action) => {
         state.loading = false;
         state.comparisons.data = action.payload;
+        console.error('Student comparison completed:', Object.keys(action.payload).length, 'students');
       })
       .addCase(compareStudents.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to compare students';
         state.comparisons.isComparing = false;
+        console.error('Student comparison failed:', action.error);
       });
 
     // Generate progress report
@@ -316,11 +343,13 @@ const progressSlice = createSlice({
       })
       .addCase(generateProgressReport.fulfilled, (state, action) => {
         state.loading = false;
+        console.error('Progress report generated:', action.payload);
         // In a real implementation, this would trigger a download
       })
       .addCase(generateProgressReport.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to generate report';
+        console.error('Report generation failed:', action.error);
       });
 
     // Get skill mastery

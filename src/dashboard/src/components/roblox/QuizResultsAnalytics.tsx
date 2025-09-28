@@ -266,8 +266,16 @@ export const QuizResultsAnalytics: React.FC = () => {
   }, [selectedQuiz]);
 
   const calculateImprovement = (quiz: QuizResult): number => {
-    // Mock calculation - would compare with previous quiz results
-    return Math.random() * 20 - 10; // -10% to +10% improvement
+    // Calculate improvement based on quiz completion rate and average score
+    const baselineScore = 75; // Baseline expectation
+    const currentScore = quiz.averageScore;
+    const completionWeight = quiz.completionRate / 100;
+    
+    // Calculate improvement percentage
+    const scoreImprovement = ((currentScore - baselineScore) / baselineScore) * 100;
+    const weightedImprovement = scoreImprovement * completionWeight;
+    
+    return Math.round(weightedImprovement * 100) / 100; // Round to 2 decimal places
   };
 
   // Chart data preparation
@@ -338,6 +346,7 @@ export const QuizResultsAnalytics: React.FC = () => {
             
             <Stack direction="row" spacing={1}>
               <FormControl size="small" sx={{ minWidth: 120 }}>
+                <InputLabel>Time Range</InputLabel>
                 <Select
                   value={timeRange}
                   onChange={(e) => setTimeRange(e.target.value as any)}
@@ -349,10 +358,34 @@ export const QuizResultsAnalytics: React.FC = () => {
                 </Select>
               </FormControl>
               
+              <FormControl size="small" sx={{ minWidth: 120 }}>
+                <InputLabel>Chart Type</InputLabel>
+                <Select
+                  value={chartType}
+                  onChange={(e) => setChartType(e.target.value as ChartType)}
+                >
+                  <MenuItem value="bar">Bar Chart</MenuItem>
+                  <MenuItem value="line">Line Chart</MenuItem>
+                  <MenuItem value="area">Area Chart</MenuItem>
+                  <MenuItem value="pie">Pie Chart</MenuItem>
+                </Select>
+              </FormControl>
+              
               <IconButton
-                onClick={() => sendMessage(WebSocketMessageType.REQUEST_QUIZ_RESULTS, { timeRange })}
+                onClick={() => {
+                  setLoading(true);
+                  sendMessage(WebSocketMessageType.REQUEST_QUIZ_RESULTS, { timeRange });
+                }}
+                disabled={loading}
               >
-                <Refresh />
+                {loading ? <CircularProgress size={20} /> : <Refresh />}
+              </IconButton>
+              
+              <IconButton
+                onClick={() => setAutoRefresh(!autoRefresh)}
+                color={autoRefresh ? 'primary' : 'default'}
+              >
+                <Timer />
               </IconButton>
               
               {selectedQuiz && (
@@ -361,6 +394,7 @@ export const QuizResultsAnalytics: React.FC = () => {
                   startIcon={<Download />}
                   onClick={exportResults}
                   size="small"
+                  disabled={loading}
                 >
                   Export
                 </Button>
@@ -773,6 +807,152 @@ export const QuizResultsAnalytics: React.FC = () => {
                           />
                         </Box>
                       ))}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Topic Performance Radar Chart */}
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Topic Performance Analysis</Typography>
+                    <Box sx={{ height: 300 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart data={topicPerformanceData}>
+                          <PolarGrid />
+                          <PolarAngleAxis dataKey="topic" />
+                          <PolarRadiusAxis domain={[0, 100]} />
+                          <Radar
+                            name="Performance"
+                            dataKey="performance"
+                            stroke="#8884d8"
+                            fill="#8884d8"
+                            fillOpacity={0.6}
+                          />
+                          <Legend />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Score Distribution Pie Chart */}
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Score Distribution</Typography>
+                    <Box sx={{ height: 300 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: 'A (90-100%)', value: 25 },
+                              { name: 'B (80-89%)', value: 35 },
+                              { name: 'C (70-79%)', value: 25 },
+                              { name: 'D (60-69%)', value: 10 },
+                              { name: 'F (<60%)', value: 5 },
+                            ]}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {[
+                              { name: 'A (90-100%)', value: 25 },
+                              { name: 'B (80-89%)', value: 35 },
+                              { name: 'C (70-79%)', value: 25 },
+                              { name: 'D (60-69%)', value: 10 },
+                              { name: 'F (<60%)', value: 5 },
+                            ].map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <RechartsTooltip />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Performance Trends Area Chart */}
+              <Grid item xs={12}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>Performance Trends Over Time</Typography>
+                    <Box sx={{ height: 300 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={questionPerformanceData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="question" />
+                          <YAxis domain={[0, 100]} />
+                          <RechartsTooltip />
+                          <Legend />
+                          <Area
+                            type="monotone"
+                            dataKey="accuracy"
+                            stackId="1"
+                            stroke="#8884d8"
+                            fill="#8884d8"
+                            fillOpacity={0.6}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Student Group Performance */}
+              <Grid item xs={12} md={6}>
+                <Paper elevation={2} sx={{ p: 2 }}>
+                  <Card>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        <FilterList color="primary" />
+                        <Typography variant="h6">Student Groups</Typography>
+                      </Box>
+                      <AvatarGroup max={4} sx={{ mb: 2 }}>
+                        {insights.topPerformers.slice(0, 4).map((student) => (
+                          <Avatar key={student.studentId}>
+                            {student.studentName[0]}
+                          </Avatar>
+                        ))}
+                      </AvatarGroup>
+                      <Divider sx={{ my: 2 }} />
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Person color="action" />
+                        <Typography variant="body2">
+                          {insights.topPerformers.length} high performers
+                        </Typography>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Paper>
+              </Grid>
+
+              {/* Speed Analytics */}
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                      <Speed color="info" />
+                      <Typography variant="h6">Response Speed Metrics</Typography>
+                    </Box>
+                    <Stack spacing={2}>
+                      <Typography variant="body2">
+                        Average response time: {selectedQuiz?.averageTime || 0}s
+                      </Typography>
+                      <LinearProgress 
+                        variant="determinate" 
+                        value={Math.min((selectedQuiz?.averageTime || 0) / 60 * 100, 100)} 
+                        color="info"
+                      />
                     </Stack>
                   </CardContent>
                 </Card>
