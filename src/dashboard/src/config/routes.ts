@@ -1,7 +1,104 @@
 /**
  * Centralized routing configuration for the ToolBoxAI Dashboard
  * This file contains all route definitions and helper functions for navigation
+ * 
+ * @version 2025
  */
+
+import type { RouteParams, QueryParams } from '../types/utility-types';
+
+// Enhanced route parameter types
+export interface DashboardParams extends Record<string, never> {
+  // Dashboard route has no parameters
+}
+
+export interface UserParams extends Record<string, string> {
+  userId: string;
+}
+
+export interface ClassParams extends Record<string, string> {
+  id: string;
+}
+
+export interface LessonParams extends Record<string, string> {
+  id: string;
+}
+
+export interface AssessmentParams extends Record<string, string> {
+  id: string;
+}
+
+export interface MissionParams extends Record<string, string> {
+  id: string;
+}
+
+export interface RewardParams extends Record<string, string> {
+  id: string;
+}
+
+export interface MessageParams extends Record<string, string> {
+  id: string;
+}
+
+export interface SchoolParams extends Record<string, string> {
+  id: string;
+}
+
+export interface IntegrationParams extends Record<string, string> {
+  id: string;
+}
+
+export interface ChildProgressParams extends Record<string, string> {
+  childId: string;
+}
+
+export interface RobloxSessionParams extends Record<string, string> {
+  id: string;
+}
+
+export interface RobloxPreviewParams extends Record<string, string> {
+  id: string;
+}
+
+// Route metadata interface
+export interface RouteMetadata {
+  title: string;
+  description?: string;
+  requiresAuth: boolean;
+  roles?: string[];
+  breadcrumb?: string;
+  icon?: string;
+  hidden?: boolean;
+  exact?: boolean;
+}
+
+// Route configuration type
+export interface RouteConfig {
+  path: string;
+  component: React.ComponentType<any>;
+  metadata: RouteMetadata;
+  children?: RouteConfig[];
+}
+
+// Navigation item type
+export interface NavigationItem {
+  key: string;
+  label: string;
+  icon?: React.ComponentType<any>;
+  path?: string;
+  children?: NavigationItem[];
+  disabled?: boolean;
+  badge?: string | number;
+  roles?: string[];
+}
+
+// Breadcrumb item type
+export interface BreadcrumbItem {
+  label: string;
+  path?: string;
+  icon?: React.ComponentType<any>;
+  active?: boolean;
+}
 
 export const ROUTES = {
   // Authentication routes
