@@ -102,11 +102,11 @@ export type PropsWithChildren<P = Record<string, unknown>> = P & {
   children?: React.ReactNode;
 };
 
-export type ComponentPropsWithoutRef<T extends keyof JSX.IntrinsicElements | React.JSXElementConstructor<any>> =
+export type ComponentPropsWithoutRef<T extends keyof React.JSX.IntrinsicElements | React.JSXElementConstructor<unknown>> =
   T extends React.JSXElementConstructor<infer P>
     ? Omit<P, 'ref'>
-    : T extends keyof JSX.IntrinsicElements
-    ? Omit<JSX.IntrinsicElements[T], 'ref'>
+    : T extends keyof React.JSX.IntrinsicElements
+    ? Omit<React.JSX.IntrinsicElements[T], 'ref'>
     : Record<string, unknown>;
 
 // Redux/State management types

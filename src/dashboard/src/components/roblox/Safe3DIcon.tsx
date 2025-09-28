@@ -40,7 +40,7 @@ const Safe3DIcon: React.FC<Safe3DIconProps> = memo(({
   // Dynamic condition based on state instead of constant
   const shouldUseFallback = hasError || !currentSrc || currentSrc.trim() === '';
 
-  const handleImageError = useCallback((error: React.SyntheticEvent<HTMLImageElement, Event>) => {
+  const handleImageError = useCallback((_error: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.error('Image failed to load:', currentSrc);
     
     // Try fallback first if available

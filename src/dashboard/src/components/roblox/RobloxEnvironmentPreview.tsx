@@ -70,6 +70,7 @@ import {
   Upload,
   Share,
   Info,
+  Timer,
   CheckCircle,
   Warning,
   Error as ErrorIcon,

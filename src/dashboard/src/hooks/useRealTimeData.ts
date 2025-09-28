@@ -3,7 +3,7 @@
  * Provides optimistic updates with WebSocket fallback
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useWebSocketContext } from '../contexts/WebSocketContext';
 import { addNotification } from '../store/slices/uiSlice';
 import { useAppDispatch } from '../store';

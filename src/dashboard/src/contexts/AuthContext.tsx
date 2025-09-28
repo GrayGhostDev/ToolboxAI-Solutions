@@ -311,7 +311,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Initialize WebSocket connection when authenticated
   useEffect(() => {
     const initWebSocket = async () => {
-      if (user && isAuthenticated) {
+      if (user && !!user) {
         const token = localStorage.getItem(AUTH_TOKEN_KEY);
         if (token) {
           const { websocketService } = await import('../services/websocket');
@@ -330,7 +330,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     
     initWebSocket();
-  }, [user, isAuthenticated, refreshAuth]);
+  }, [user, refreshAuth]);
 
   const value = {
     user,
