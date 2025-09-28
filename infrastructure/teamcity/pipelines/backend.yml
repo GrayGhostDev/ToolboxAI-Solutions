@@ -1,0 +1,296 @@
+# ============================================
+# TEAMCITY PIPELINE - BACKEND (FASTAPI)
+# ============================================
+# Build pipeline for ToolBoxAI Backend API
+# Features: FastAPI, LangChain, Pusher, PostgreSQL, Redis
+# ============================================
+
+version: 2025.03
+name: Backend-Build-Pipeline
+
+# Pipeline triggers
+triggers:
+  - vcs:
+      branches:
+        include:
+          - main
+          - develop
+          - feature/*
+      paths:
+        include:
+          - apps/backend/**
+          - core/**
+          - database/**
+          - toolboxai_settings/**
+          - toolboxai_utils/**
+          - requirements.txt
+          - pyproject.toml
+
+# Environment variables
+environment:
+  PYTHON_VERSION: "3.12"
+  DATABASE_URL: "postgresql://test:test@postgres:5432/test"
+  REDIS_URL: "redis://redis:6379/0"
+  JWT_SECRET_KEY: "${env.JWT_SECRET_KEY}"
+  DOCKER_REGISTRY: "docker.io/thegrayghost23/toolboxai-backend"
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"
+
+# Pipeline stages
+stages:
+  # ----------------------------------------
+  # Stage 1: Setup & Dependencies
+  # ----------------------------------------
+  - name: Setup
+    agent: Backend-Builder-01
+    steps:
+      - name: Checkout
+        type: vcs-checkout
+
+      - name: Setup Python
+        type: python
+        params:
+          version: 3.12
+
+      - name: Cache Dependencies
+        type: cache
+        params:
+          key: "pip-${hashFiles('requirements.txt')}"
+          paths:
+            - .venv
+            - ~/.cache/pip
+
+      - name: Create Virtual Environment
+        type: script
+        params:
+          script: |
+            python -m venv .venv
+            source .venv/bin/activate
+            pip install --upgrade pip setuptools wheel
+
+      - name: Install Dependencies
+        type: script
+        params:
+          script: |
+            source .venv/bin/activate
+            pip install -r requirements.txt
+            echo "✅ Python dependencies installed"
+
+  # ----------------------------------------
+  # Stage 2: Quality Checks (Parallel)
+  # ----------------------------------------
+  - name: Quality
+    agent: Backend-Builder-01
+    parallel: true
+    steps:
+      - name: Type Checking
+        type: script
+        params:
+          script: |
+            source .venv/bin/activate
+            basedpyright . --pythonpath .venv/bin/python
+            echo "✅ Type checking passed"
+
+      - name: Code Formatting
+        type: script
+        params:
+          script: |
+            source .venv/bin/activate
+            black --check apps/backend core database
+            echo "✅ Code formatting check passed"
+
+      - name: Linting
+        type: script
+        params:
+          script: |
+            source .venv/bin/activate
+            ruff check apps/backend core database
+            echo "✅ Linting passed"
+
+      - name: Security Scan
+        type: script
+        params:
+          script: |
+            source .venv/bin/activate
+            pip install safety bandit
+            safety check
+            bandit -r apps/backend core database -ll
+            echo "✅ Security scan passed"
+
+  # ----------------------------------------
+  # Stage 3: Testing
+  # ----------------------------------------
+  - name: Testing
+    agent: Backend-Builder-01
+    steps:
+      - name: Start Test Services
+        type: docker-compose
+        params:
+          file: infrastructure/docker/compose/docker-compose.test.yml
+          action: up
+          services:
+            - postgres
+            - redis
+          detached: true
+
+      - name: Database Migrations
+        type: script
+        params:
+          script: |
+            source .venv/bin/activate
+            alembic upgrade head
+            echo "✅ Database migrations complete"
+
+      - name: Unit Tests
+        type: script
+        params:
+          script: |
+            source .venv/bin/activate
+            pytest tests/unit -v --cov=apps/backend --cov-report=html
+            echo "✅ Unit tests passed"
+
+      - name: Integration Tests
+        type: script
+        params:
+          script: |
+            source .venv/bin/activate
+            RUN_INTEGRATION_TESTS=1 pytest tests/integration -v
+            echo "✅ Integration tests passed"
+
+      - name: API Tests
+        type: script
+        params:
+          script: |
+            source .venv/bin/activate
+            # Start the server in background
+            uvicorn apps.backend.main:app --host 0.0.0.0 --port 8009 &
+            SERVER_PID=$!
+            sleep 10
+            # Run API tests
+            pytest tests/api -v
+            kill $SERVER_PID
+            echo "✅ API tests passed"
+
+      - name: Stop Test Services
+        type: docker-compose
+        params:
+          file: infrastructure/docker/compose/docker-compose.test.yml
+          action: down
+          volumes: true
+
+  # ----------------------------------------
+  # Stage 4: Docker Build
+  # ----------------------------------------
+  - name: Docker
+    agent: Integration-Builder-01
+    steps:
+      - name: Docker Registry Login
+        type: docker-registry
+        params:
+          registry: docker.io
+          username: "${env.DOCKER_USERNAME}"
+          password: "${env.DOCKER_PASSWORD}"
+
+      - name: Build Docker Image
+        type: docker
+        params:
+          dockerfile: infrastructure/docker/dockerfiles/backend.Dockerfile
+          context: .
+          tags:
+            - "${DOCKER_REGISTRY}:${BUILD_NUMBER}"
+            - "${DOCKER_REGISTRY}:latest"
+          buildArgs:
+            - PYTHON_VERSION=3.12
+            - ENVIRONMENT=production
+          cache: true
+          target: production
+
+      - name: Security Scan Docker Image
+        type: script
+        params:
+          script: |
+            # Scan with Trivy
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy image ${DOCKER_REGISTRY}:${BUILD_NUMBER}
+
+            # Scan with Grype
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+              anchore/grype ${DOCKER_REGISTRY}:${BUILD_NUMBER}
+
+      - name: Push Docker Image
+        type: docker
+        params:
+          action: push
+          tags:
+            - "${DOCKER_REGISTRY}:${BUILD_NUMBER}"
+            - "${DOCKER_REGISTRY}:latest"
+
+  # ----------------------------------------
+  # Stage 5: Performance Testing
+  # ----------------------------------------
+  - name: Performance
+    agent: Integration-Builder-01
+    steps:
+      - name: Start Performance Environment
+        type: docker-compose
+        params:
+          file: infrastructure/docker/compose/docker-compose.perf.yml
+          action: up
+          detached: true
+
+      - name: Load Testing
+        type: script
+        params:
+          script: |
+            # Install k6 for load testing
+            docker run -i loadimpact/k6 run - < tests/performance/load_test.js
+            echo "✅ Load testing complete"
+
+      - name: Stress Testing
+        type: script
+        params:
+          script: |
+            # Run stress test
+            docker run -i loadimpact/k6 run - < tests/performance/stress_test.js
+            echo "✅ Stress testing complete"
+
+      - name: Stop Performance Environment
+        type: docker-compose
+        params:
+          file: infrastructure/docker/compose/docker-compose.perf.yml
+          action: down
+          volumes: true
+
+# Artifacts to collect
+artifacts:
+  - path: htmlcov/**
+    name: coverage-report
+  - path: tests/results/**
+    name: test-results
+  - path: performance-results/**
+    name: performance-reports
+
+# Build failure conditions
+failure_conditions:
+  - type: test_failure
+    enabled: true
+  - type: coverage_decrease
+    threshold: 80
+  - type: build_duration
+    max_duration: 45m
+  - type: exit_code
+    codes: [1, 2, 3]
+
+# Notifications
+notifications:
+  - type: pusher
+    events:
+      - success
+      - failure
+    channel: ci-cd-notifications
+    params:
+      app_id: "${env.PUSHER_APP_ID}"
+      key: "${env.PUSHER_KEY}"
+      secret: "${env.PUSHER_SECRET}"
+      cluster: "${env.PUSHER_CLUSTER}"
+      message: "Backend build ${BUILD_NUMBER} ${BUILD_STATUS}"

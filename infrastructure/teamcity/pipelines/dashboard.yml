@@ -1,0 +1,240 @@
+# ============================================
+# TEAMCITY PIPELINE - DASHBOARD (REACT + VITE)
+# ============================================
+# Build pipeline for ToolBoxAI Dashboard
+# Features: Mantine UI, Pusher, Clerk Auth, React 19
+# ============================================
+
+version: 2025.03
+name: Dashboard-Build-Pipeline
+
+# Pipeline triggers
+triggers:
+  - vcs:
+      branches:
+        include:
+          - main
+          - develop
+          - feature/*
+      paths:
+        include:
+          - apps/dashboard/**
+          - package.json
+          - package-lock.json
+
+# Environment variables
+environment:
+  NODE_VERSION: "22"
+  VITE_API_BASE_URL: "${TEAMCITY_SERVER_URL}/api"
+  VITE_PUSHER_KEY: "${env.VITE_PUSHER_KEY}"
+  VITE_PUSHER_CLUSTER: "${env.VITE_PUSHER_CLUSTER}"
+  VITE_CLERK_PUBLISHABLE_KEY: "${env.VITE_CLERK_PUBLISHABLE_KEY}"
+  DOCKER_REGISTRY: "docker.io/thegrayghost23/toolboxai-dashboard"
+
+# Pipeline stages
+stages:
+  # ----------------------------------------
+  # Stage 1: Install Dependencies
+  # ----------------------------------------
+  - name: Install
+    agent: Frontend-Builder-01
+    steps:
+      - name: Checkout
+        type: vcs-checkout
+
+      - name: Setup Node
+        type: nodejs
+        params:
+          version: 22
+
+      - name: Cache Dependencies
+        type: cache
+        params:
+          key: "npm-${hashFiles('package-lock.json')}"
+          paths:
+            - node_modules
+            - .npm
+
+      - name: Install Dependencies
+        type: script
+        params:
+          script: |
+            cd apps/dashboard
+            npm ci --legacy-peer-deps
+            echo "✅ Dependencies installed successfully"
+
+  # ----------------------------------------
+  # Stage 2: Quality Checks
+  # ----------------------------------------
+  - name: Quality
+    agent: Frontend-Builder-01
+    parallel: true
+    steps:
+      - name: TypeScript Check
+        type: script
+        params:
+          script: |
+            cd apps/dashboard
+            npm run typecheck
+            echo "✅ TypeScript check passed"
+
+      - name: ESLint
+        type: script
+        params:
+          script: |
+            cd apps/dashboard
+            npm run lint
+            echo "✅ Linting passed"
+
+      - name: Unit Tests
+        type: script
+        params:
+          script: |
+            cd apps/dashboard
+            npm test -- --run --coverage
+            echo "✅ Tests passed"
+
+      - name: Security Scan
+        type: script
+        params:
+          script: |
+            cd apps/dashboard
+            npm audit --audit-level=moderate
+            echo "✅ Security scan passed"
+
+  # ----------------------------------------
+  # Stage 3: Build Application
+  # ----------------------------------------
+  - name: Build
+    agent: Frontend-Builder-01
+    steps:
+      - name: Build Production
+        type: script
+        params:
+          script: |
+            cd apps/dashboard
+            npm run build
+            echo "✅ Production build complete"
+            ls -la dist/
+
+      - name: Build Size Analysis
+        type: script
+        params:
+          script: |
+            cd apps/dashboard
+            du -sh dist/
+            find dist -name "*.js" -size +500k -exec echo "Large file: {}" \;
+
+  # ----------------------------------------
+  # Stage 4: Docker Build
+  # ----------------------------------------
+  - name: Docker
+    agent: Integration-Builder-01
+    steps:
+      - name: Docker Registry Login
+        type: docker-registry
+        params:
+          registry: docker.io
+          username: "${env.DOCKER_USERNAME}"
+          password: "${env.DOCKER_PASSWORD}"
+
+      - name: Build Docker Image
+        type: docker
+        params:
+          dockerfile: infrastructure/docker/dockerfiles/dashboard-fixed.Dockerfile
+          context: .
+          tags:
+            - "${DOCKER_REGISTRY}:${BUILD_NUMBER}"
+            - "${DOCKER_REGISTRY}:latest"
+          buildArgs:
+            - NODE_ENV=production
+            - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+            - VITE_PUSHER_KEY=${VITE_PUSHER_KEY}
+            - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
+          cache: true
+
+      - name: Security Scan Docker Image
+        type: script
+        params:
+          script: |
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy image ${DOCKER_REGISTRY}:${BUILD_NUMBER}
+
+      - name: Push Docker Image
+        type: docker
+        params:
+          action: push
+          tags:
+            - "${DOCKER_REGISTRY}:${BUILD_NUMBER}"
+            - "${DOCKER_REGISTRY}:latest"
+
+  # ----------------------------------------
+  # Stage 5: Integration Tests
+  # ----------------------------------------
+  - name: Integration
+    agent: Integration-Builder-01
+    steps:
+      - name: Start Test Environment
+        type: docker-compose
+        params:
+          file: infrastructure/docker/compose/docker-compose.test.yml
+          action: up
+          services:
+            - dashboard
+            - backend
+            - postgres
+            - redis
+
+      - name: Run E2E Tests
+        type: script
+        params:
+          script: |
+            cd apps/dashboard
+            npm run test:e2e
+            echo "✅ E2E tests passed"
+
+      - name: Performance Test
+        type: script
+        params:
+          script: |
+            # Run Lighthouse CI
+            npm install -g @lhci/cli
+            lhci autorun --config=.lighthouserc.json
+
+      - name: Cleanup Test Environment
+        type: docker-compose
+        params:
+          file: infrastructure/docker/compose/docker-compose.test.yml
+          action: down
+          volumes: true
+
+# Artifacts to collect
+artifacts:
+  - path: apps/dashboard/dist/**
+    name: dashboard-build
+  - path: apps/dashboard/coverage/**
+    name: test-coverage
+  - path: lighthouse-results/**
+    name: performance-reports
+
+# Notifications
+notifications:
+  - type: pusher
+    events:
+      - success
+      - failure
+    channel: ci-cd-notifications
+    params:
+      app_id: "${env.PUSHER_APP_ID}"
+      key: "${env.PUSHER_KEY}"
+      secret: "${env.PUSHER_SECRET}"
+      cluster: "${env.PUSHER_CLUSTER}"
+
+# Build failure conditions
+failure_conditions:
+  - type: test_failure
+    enabled: true
+  - type: build_duration
+    max_duration: 30m
+  - type: exit_code
+    codes: [1, 2, 3]

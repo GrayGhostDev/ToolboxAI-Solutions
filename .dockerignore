@@ -1,0 +1,74 @@
+# Node modules - never needed in Docker context
+**/node_modules
+**/.npm
+**/.pnpm-store
+
+# Python
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.hypothesis
+**/venv
+**/venv_*
+**/.venv
+**/*.egg-info
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+**/dist
+**/build
+**/coverage
+**/htmlcov
+
+# Documentation
+docs/
+Documentation/
+*.md
+
+# Archives
+Archive/
+archives/
+
+# Logs
+*.log
+logs/
+
+# Test files
+**/test-results
+**/.coverage
+
+# Temporary files
+tmp/
+temp/
+
+# Large data files
+*.sqlite
+*.db
+*.tar.gz
+*.zip
+
+# Docker files themselves
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Infrastructure except dockerfiles
+infrastructure/docker/scripts/
+infrastructure/docker/config/
+infrastructure/docker/volumes/
+
+# Keep only the dockerfiles folder
+!infrastructure/docker/dockerfiles/

@@ -1,0 +1,320 @@
+# ============================================
+# TEAMCITY CI/CD DOCKER COMPOSE - 2025 EDITION
+# ============================================
+# Complete TeamCity setup for ToolBoxAI with:
+# - TeamCity Server with PostgreSQL database
+# - 3 Build Agents for parallel builds
+# - Docker-in-Docker support for container builds
+# - Non-root security configuration
+# - External drive optimization
+# Created: 2025-09-28
+# ============================================
+
+services:
+  # ----------------------------------------
+  # TeamCity Database (PostgreSQL 16)
+  # ----------------------------------------
+  teamcity-db:
+    image: postgres:16-alpine
+    container_name: teamcity-postgres
+    environment:
+      POSTGRES_DB: teamcity
+      POSTGRES_USER: ${TEAMCITY_DB_USER:-teamcity}
+      POSTGRES_PASSWORD: ${TEAMCITY_DB_PASSWORD:-teamcity_secure_2025}
+    volumes:
+      - teamcity_db_data:/var/lib/postgresql/data
+      # Optimization for TeamCity-specific PostgreSQL settings
+      - type: bind
+        source: ../config/teamcity-postgres.conf
+        target: /etc/postgresql/postgresql.conf
+        read_only: true
+    networks:
+      - teamcity
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TEAMCITY_DB_USER:-teamcity}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  # ----------------------------------------
+  # TeamCity Server (2025.03)
+  # ----------------------------------------
+  teamcity-server:
+    image: jetbrains/teamcity-server:2025.03
+    container_name: teamcity-server
+    user: "1000:1000" # Non-root user as per 2025 security standards
+    environment:
+      # Database configuration
+      TEAMCITY_DATABASE_URL: jdbc:postgresql://teamcity-db:5432/teamcity
+      TEAMCITY_DATABASE_USER: ${TEAMCITY_DB_USER:-teamcity}
+      TEAMCITY_DATABASE_PASSWORD: ${TEAMCITY_DB_PASSWORD:-teamcity_secure_2025}
+
+      # Server configuration
+      TEAMCITY_SERVER_MEM_OPTS: "-Xmx4g -XX:MaxPermSize=512m"
+      TEAMCITY_HTTPS_PORT: 8111
+
+      # External URL for webhooks and agents
+      TEAMCITY_SERVER_URL: ${TEAMCITY_SERVER_URL:-https://grayghost-toolboxai.teamcity.com}
+
+      # Pipeline token for API access
+      TEAMCITY_PIPELINE_ACCESS_TOKEN: ${TEAMCITY_PIPELINE_ACCESS_TOKEN}
+
+      # Integration with existing services
+      PUSHER_KEY: ${VITE_PUSHER_KEY}
+      PUSHER_SECRET: ${PUSHER_SECRET}
+      PUSHER_CLUSTER: ${VITE_PUSHER_CLUSTER:-us2}
+
+      # Performance tuning for external drive
+      TEAMCITY_DATA_PATH: /data/teamcity_server/datadir
+      TEAMCITY_LOGS_PATH: /opt/teamcity/logs
+    ports:
+      - "8111:8111"
+    volumes:
+      # TeamCity data directory on external drive
+      - teamcity_data:/data/teamcity_server/datadir
+      - teamcity_logs:/opt/teamcity/logs
+      # Mount project for build configurations
+      - ../../../.teamcity:/data/teamcity_server/datadir/config/projects/ToolBoxAI/.teamcity:ro
+    networks:
+      - teamcity
+      - toolboxai # Connect to main network for service integration
+    depends_on:
+      teamcity-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8111/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+        reservations:
+          memory: 4G
+
+  # ----------------------------------------
+  # TeamCity Agent 1 - Frontend Specialist
+  # ----------------------------------------
+  teamcity-agent-1:
+    image: jetbrains/teamcity-agent:2025.03-linux-sudo
+    container_name: teamcity-agent-frontend
+    user: "1000:1000"
+    privileged: true # Required for Docker-in-Docker
+    environment:
+      SERVER_URL: http://teamcity-server:8111
+      AGENT_NAME: "Frontend-Builder-01"
+
+      # Docker configuration
+      DOCKER_IN_DOCKER: "start"
+
+      # Node.js environment
+      NODE_VERSION: "22"
+      NPM_CONFIG_CACHE: /data/cache/npm
+
+      # External drive optimization
+      TMPDIR: /tmp/build
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - agent1_conf:/data/teamcity_agent/conf
+      - agent1_work:/data/teamcity_agent/work
+      - agent1_temp:/data/teamcity_agent/temp
+      - agent1_tools:/data/teamcity_agent/tools
+      # Cache for npm/yarn on faster storage
+      - npm_cache:/data/cache/npm
+      # Mount source for builds
+      - ../../../:/workspace/source:cached
+    networks:
+      - teamcity
+      - toolboxai
+    depends_on:
+      - teamcity-server
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  # ----------------------------------------
+  # TeamCity Agent 2 - Backend Specialist
+  # ----------------------------------------
+  teamcity-agent-2:
+    image: jetbrains/teamcity-agent:2025.03-linux-sudo
+    container_name: teamcity-agent-backend
+    user: "1000:1000"
+    privileged: true
+    environment:
+      SERVER_URL: http://teamcity-server:8111
+      AGENT_NAME: "Backend-Builder-01"
+
+      # Docker configuration
+      DOCKER_IN_DOCKER: "start"
+
+      # Python environment
+      PYTHON_VERSION: "3.12"
+      PIP_CACHE_DIR: /data/cache/pip
+      PYTHONDONTWRITEBYTECODE: 1
+
+      # External drive optimization
+      TMPDIR: /tmp/build
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - agent2_conf:/data/teamcity_agent/conf
+      - agent2_work:/data/teamcity_agent/work
+      - agent2_temp:/data/teamcity_agent/temp
+      - agent2_tools:/data/teamcity_agent/tools
+      # Cache for pip on faster storage
+      - pip_cache:/data/cache/pip
+      # Mount source for builds
+      - ../../../:/workspace/source:cached
+    networks:
+      - teamcity
+      - toolboxai
+    depends_on:
+      - teamcity-server
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  # ----------------------------------------
+  # TeamCity Agent 3 - Integration/Docker Specialist
+  # ----------------------------------------
+  teamcity-agent-3:
+    image: jetbrains/teamcity-agent:2025.03-linux-sudo
+    container_name: teamcity-agent-integration
+    user: "1000:1000"
+    privileged: true
+    environment:
+      SERVER_URL: http://teamcity-server:8111
+      AGENT_NAME: "Integration-Builder-01"
+
+      # Docker configuration
+      DOCKER_IN_DOCKER: "start"
+
+      # Multi-language support
+      NODE_VERSION: "22"
+      PYTHON_VERSION: "3.12"
+
+      # External drive optimization
+      TMPDIR: /tmp/build
+
+      # Integration testing
+      INTEGRATION_TEST_ENABLED: "true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - agent3_conf:/data/teamcity_agent/conf
+      - agent3_work:/data/teamcity_agent/work
+      - agent3_temp:/data/teamcity_agent/temp
+      - agent3_tools:/data/teamcity_agent/tools
+      # Shared caches
+      - npm_cache:/data/cache/npm
+      - pip_cache:/data/cache/pip
+      - docker_cache:/data/cache/docker
+      # Mount source for builds
+      - ../../../:/workspace/source:cached
+    networks:
+      - teamcity
+      - toolboxai
+    depends_on:
+      - teamcity-server
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  # ----------------------------------------
+  # Docker Registry Cache (Optional)
+  # ----------------------------------------
+  registry-cache:
+    image: registry:2
+    container_name: teamcity-registry-cache
+    environment:
+      REGISTRY_PROXY_REMOTEURL: https://registry-1.docker.io
+      REGISTRY_STORAGE_CACHE_BLOBDESCRIPTOR: inmemory
+      REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry_data:/var/lib/registry
+    networks:
+      - teamcity
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  # TeamCity Server volumes
+  teamcity_db_data:
+    driver: local
+  teamcity_data:
+    driver: local
+  teamcity_logs:
+    driver: local
+
+  # Agent configuration volumes
+  agent1_conf:
+    driver: local
+  agent1_work:
+    driver: local
+  agent1_temp:
+    driver: local
+  agent1_tools:
+    driver: local
+
+  agent2_conf:
+    driver: local
+  agent2_work:
+    driver: local
+  agent2_temp:
+    driver: local
+  agent2_tools:
+    driver: local
+
+  agent3_conf:
+    driver: local
+  agent3_work:
+    driver: local
+  agent3_temp:
+    driver: local
+  agent3_tools:
+    driver: local
+
+  # Cache volumes (on faster internal storage)
+  npm_cache:
+    driver: local
+  pip_cache:
+    driver: local
+  docker_cache:
+    driver: local
+  registry_data:
+    driver: local
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  teamcity:
+    driver: bridge
+    name: teamcity-network
+  toolboxai:
+    external: true
+    name: toolboxai
