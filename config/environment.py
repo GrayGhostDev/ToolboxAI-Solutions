@@ -567,7 +567,7 @@ def is_testing() -> bool:
 async def get_async_session(database: str = "education"):
     """Get async database session (compatibility method)"""
     # This is a compatibility method - actual implementation should be in database layer
-    from core.database.connection_manager import get_async_session as _get_async_session
+    from database.connection_manager import get_async_session as _get_async_session
     async for session in _get_async_session(database):
         yield session
 
@@ -575,7 +575,7 @@ async def get_async_session(database: str = "education"):
 def get_session(database: str = "education"):
     """Get database session (compatibility method)"""
     # This is a compatibility method - actual implementation should be in database layer
-    from core.database.connection_manager import get_session as _get_session
+    from database.connection_manager import get_session as _get_session
     return _get_session(database)
 
 

@@ -10,6 +10,7 @@ Notes:
 - Integrate parental consent verification using an out-of-band verifier (email/SMS/ID).
 - Ensure audit logs are immutable and retained per policy.
 """
+
 from __future__ import annotations
 
 import logging
@@ -30,7 +31,7 @@ except Exception:  # pragma: no cover - fallback for alternate paths
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/privacy", tags=["Privacy & DSAR"]) 
+router = APIRouter(prefix="/api/v1/privacy", tags=["Privacy & DSAR"])
 
 
 def _new_ticket(prefix: str) -> str:
@@ -62,7 +63,10 @@ async def request_data_export(
     # Launch async export build (store in Redis)
     try:
         from apps.backend.services.dsar_service import generate_export
-        background_tasks.add_task(lambda: asyncio.create_task(generate_export(ticket, current_user)))
+
+        background_tasks.add_task(
+            lambda: asyncio.create_task(generate_export(ticket, current_user))
+        )
     except Exception as e:  # pragma: no cover
         logger.warning(f"Failed to schedule DSAR export: {e}")
 
@@ -76,12 +80,15 @@ async def request_data_export(
 
 
 @router.get("/export/{ticket}")
-async def download_export(ticket: str, current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def download_export(
+    ticket: str, current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
     """
     Return export bundle if ready, else a 404 with message.
     """
     try:
         from apps.backend.services.dsar_service import get_export
+
         bundle = await get_export(ticket)
         if not bundle:
             raise HTTPException(status_code=404, detail="Export not ready")
@@ -126,9 +133,12 @@ async def request_data_deletion(
 
 
 @router.get("/export-status/{ticket}")
-async def export_status(ticket: str, current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def export_status(
+    ticket: str, current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
     try:
         from apps.backend.services.dsar_service import get_status
+
         status = await get_status(ticket)
         return {"ticket": ticket, "status": status or "unknown"}
     except Exception as e:  # pragma: no cover

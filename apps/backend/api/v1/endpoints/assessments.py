@@ -11,6 +11,7 @@ from apps.backend.api.auth.auth import get_current_user
 from pydantic import BaseModel
 from typing import Optional as Opt
 
+
 # User model for type hints
 class User(BaseModel):
     id: str
@@ -18,9 +19,11 @@ class User(BaseModel):
     role: str
     email: Optional[str] = None
 
+
 # Placeholder for database service
 class DBService:
     pool = None
+
 
 db_service = DBService()
 
@@ -35,6 +38,7 @@ assessments_router = APIRouter(prefix="/assessments", tags=["Assessments"])
 # Export standardized router name
 router = assessments_router
 
+
 @assessments_router.get("/")
 async def get_assessments(
     current_user: User = Depends(get_current_user),
@@ -42,12 +46,12 @@ async def get_assessments(
     assessment_type: Optional[str] = None,
     status: Optional[str] = None,
     limit: int = Query(default=20, le=100),
-    offset: int = Query(default=0, ge=0)
+    offset: int = Query(default=0, ge=0),
 ) -> List[Dict[str, Any]]:
     """Get assessments based on user role and filters."""
-    
+
     role = current_user.role.lower()
-    
+
     # Try to get real data from database
     try:
         if role == "teacher":
@@ -67,9 +71,11 @@ async def get_assessments(
                 LIMIT $5 OFFSET $6
             """
             async with db_service.pool.acquire() as conn:
-                rows = await conn.fetch(query, current_user.id, class_id, assessment_type, status, limit, offset)
+                rows = await conn.fetch(
+                    query, current_user.id, class_id, assessment_type, status, limit, offset
+                )
                 return [dict(row) for row in rows]
-                
+
         elif role == "student":
             query = """
                 SELECT a.*, c.name as class_name, c.subject,
@@ -87,9 +93,11 @@ async def get_assessments(
                 LIMIT $4 OFFSET $5
             """
             async with db_service.pool.acquire() as conn:
-                rows = await conn.fetch(query, current_user.id, class_id, assessment_type, limit, offset)
+                rows = await conn.fetch(
+                    query, current_user.id, class_id, assessment_type, limit, offset
+                )
                 return [dict(row) for row in rows]
-                
+
         elif role == "admin":
             query = """
                 SELECT a.*, c.name as class_name, c.subject,
@@ -110,7 +118,7 @@ async def get_assessments(
             async with db_service.pool.acquire() as conn:
                 rows = await conn.fetch(query, class_id, assessment_type, status, limit, offset)
                 return [dict(row) for row in rows]
-                
+
         elif role == "parent":
             query = """
                 SELECT DISTINCT a.*, c.name as class_name, c.subject,
@@ -131,15 +139,17 @@ async def get_assessments(
             async with db_service.pool.acquire() as conn:
                 rows = await conn.fetch(query, current_user.id, class_id, limit, offset)
                 return [dict(row) for row in rows]
-                
+
     except Exception as e:
         logger.warning(f"Failed to fetch assessments from database: {e}. Using fallback data.")
-    
+
     # Fallback sample data combined with in-memory assessments
     if role == "teacher":
         # Get user's in-memory assessments first
-        user_assessments = [a for a in in_memory_assessments if a.get("teacher_id") == current_user.id]
-        
+        user_assessments = [
+            a for a in in_memory_assessments if a.get("teacher_id") == current_user.id
+        ]
+
         # Add fallback sample data
         fallback_assessments = [
             {
@@ -153,7 +163,7 @@ async def get_assessments(
                 "submissions_count": 24,
                 "average_score": 82.5,
                 "status": "published",
-                "created_at": "2025-01-08T09:00:00"
+                "created_at": "2025-01-08T09:00:00",
             },
             {
                 "id": 2,
@@ -166,7 +176,7 @@ async def get_assessments(
                 "submissions_count": 28,
                 "average_score": 87.3,
                 "status": "published",
-                "created_at": "2025-01-05T11:00:00"
+                "created_at": "2025-01-05T11:00:00",
             },
             {
                 "id": 3,
@@ -178,8 +188,8 @@ async def get_assessments(
                 "submissions_count": 15,
                 "average_score": 91.2,
                 "status": "published",
-                "created_at": "2025-01-01T08:00:00"
-            }
+                "created_at": "2025-01-01T08:00:00",
+            },
         ]
         # Return user's created assessments first, then fallback assessments
         return user_assessments + fallback_assessments
@@ -199,7 +209,7 @@ async def get_assessments(
                 "submission_status": "completed",
                 "time_spent": 87,
                 "attempts_used": 1,
-                "max_attempts": 1
+                "max_attempts": 1,
             },
             {
                 "id": 2,
@@ -214,7 +224,7 @@ async def get_assessments(
                 "completed_at": null,
                 "submission_status": "pending",
                 "attempts_used": 0,
-                "max_attempts": 2
+                "max_attempts": 2,
             },
             {
                 "id": 4,
@@ -230,8 +240,8 @@ async def get_assessments(
                 "submission_status": "completed",
                 "time_spent": 23,
                 "attempts_used": 1,
-                "max_attempts": 2
-            }
+                "max_attempts": 2,
+            },
         ]
     elif role == "admin":
         return [
@@ -247,7 +257,7 @@ async def get_assessments(
                 "submissions_count": 24,
                 "average_score": 82.5,
                 "status": "published",
-                "created_at": "2025-01-08T09:00:00"
+                "created_at": "2025-01-08T09:00:00",
             },
             {
                 "id": 2,
@@ -261,8 +271,8 @@ async def get_assessments(
                 "submissions_count": 26,
                 "average_score": 78.9,
                 "status": "published",
-                "created_at": "2025-01-05T10:00:00"
-            }
+                "created_at": "2025-01-05T10:00:00",
+            },
         ]
     elif role == "parent":
         return [
@@ -277,7 +287,7 @@ async def get_assessments(
                 "due_date": "2025-01-15T10:00:00",
                 "score": 85,
                 "completed_at": "2025-01-08T11:30:00",
-                "submission_status": "completed"
+                "submission_status": "completed",
             },
             {
                 "id": 2,
@@ -290,21 +300,21 @@ async def get_assessments(
                 "due_date": "2025-01-12T14:00:00",
                 "score": null,
                 "completed_at": null,
-                "submission_status": "pending"
-            }
+                "submission_status": "pending",
+            },
         ]
-    
+
     return []
+
 
 @assessments_router.get("/{assessment_id}")
 async def get_assessment_details(
-    assessment_id: int,
-    current_user: User = Depends(get_current_user)
+    assessment_id: int, current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Get detailed information about a specific assessment."""
-    
+
     role = current_user.role.lower()
-    
+
     try:
         # Get assessment details with appropriate access control
         query = """
@@ -319,7 +329,7 @@ async def get_assessment_details(
             row = await conn.fetchrow(query, assessment_id)
             if row:
                 assessment = dict(row)
-                
+
                 # Add role-specific information
                 if role == "student":
                     result_query = """
@@ -330,7 +340,7 @@ async def get_assessment_details(
                     result = await conn.fetchrow(result_query, assessment_id, current_user.id)
                     if result:
                         assessment.update(dict(result))
-                        
+
                 elif role == "teacher":
                     stats_query = """
                         SELECT COUNT(*) as total_submissions,
@@ -343,12 +353,12 @@ async def get_assessment_details(
                     stats = await conn.fetchrow(stats_query, assessment_id)
                     if stats:
                         assessment.update(dict(stats))
-                        
+
                 return assessment
-                
+
     except Exception as e:
         logger.warning(f"Failed to fetch assessment details: {e}")
-    
+
     # Fallback sample data
     return {
         "id": assessment_id,
@@ -369,68 +379,74 @@ async def get_assessment_details(
                 "type": "multiple_choice",
                 "question": "What is the value of x in the equation 2x + 5 = 13?",
                 "options": ["2", "4", "6", "8"],
-                "points": 10
+                "points": 10,
             },
-            {
-                "id": 2,
-                "type": "short_answer",
-                "question": "Solve for y: 3y - 7 = 14",
-                "points": 15
-            }
+            {"id": 2, "type": "short_answer", "question": "Solve for y: 3y - 7 = 14", "points": 15},
         ],
-        "resources": [
-            {"name": "Formula Sheet", "url": "/resources/algebra_formulas.pdf"}
-        ],
+        "resources": [{"name": "Formula Sheet", "url": "/resources/algebra_formulas.pdf"}],
         "status": "published",
-        "created_at": "2025-01-08T09:00:00"
+        "created_at": "2025-01-08T09:00:00",
     }
+
 
 @assessments_router.post("/")
 async def create_assessment(
-    assessment_data: Dict[str, Any],
-    current_user: User = Depends(get_current_user)
+    assessment_data: Dict[str, Any], current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Create a new assessment (teachers and admins only)."""
-    
+
     role = current_user.role.lower()
-    
+
     if role not in ["teacher", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized to create assessments")
-    
+
     # Return the submitted data with added metadata for development since database isn't set up
     import random
     from datetime import datetime
-    
+
     # Use all the submitted data and just add the necessary metadata
     new_assessment = {
         **assessment_data,  # Include all submitted data
         "id": random.randint(1000, 9999),
-        "teacher_id": current_user.id if role == "teacher" else assessment_data.get("teacher_id", current_user.id),
-        "teacher_name": f"{current_user.first_name} {current_user.last_name}" if hasattr(current_user, 'first_name') else current_user.email,
+        "teacher_id": (
+            current_user.id
+            if role == "teacher"
+            else assessment_data.get("teacher_id", current_user.id)
+        ),
+        "teacher_name": (
+            f"{current_user.first_name} {current_user.last_name}"
+            if hasattr(current_user, "first_name")
+            else current_user.email
+        ),
         "submissions_count": 0,
         "average_score": 0,
         "status": assessment_data.get("status", "draft"),
         "created_at": datetime.now().isoformat(),
-        "updated_at": datetime.now().isoformat()
+        "updated_at": datetime.now().isoformat(),
     }
-    
+
     # Add class_name if class_id is provided
     if "class_id" in assessment_data or "classId" in assessment_data:
         # Handle both snake_case and camelCase
         class_id = assessment_data.get("class_id") or assessment_data.get("classId")
-        new_assessment["class_name"] = f"Class {class_id}"  # You could fetch the real class name here
-    
+        new_assessment["class_name"] = (
+            f"Class {class_id}"  # You could fetch the real class name here
+        )
+
     # Add to in-memory storage
     in_memory_assessments.append(new_assessment)
-    
-    logger.info(f"Created mock assessment: {new_assessment.get('title', 'Unnamed')} for user {current_user.email}")
+
+    logger.info(
+        f"Created mock assessment: {new_assessment.get('title', 'Unnamed')} for user {current_user.email}"
+    )
     return new_assessment
+
 
 @assessments_router.post("/{assessment_id}/submit")
 async def submit_assessment(
     assessment_id: int,
     submission_data: Dict[str, Any],
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     Submit student assessment responses with automatic scoring.
@@ -486,10 +502,10 @@ async def submit_assessment(
         print(f"Score: {result['percentage']}%")
         ```
     """
-    
+
     if current_user.role.lower() != "student":
         raise HTTPException(status_code=403, detail="Only students can submit assessments")
-    
+
     try:
         # Check if student can still submit
         check_query = """
@@ -500,9 +516,9 @@ async def submit_assessment(
         """
         async with db_service.pool.acquire() as conn:
             check = await conn.fetchrow(check_query, assessment_id, current_user.id)
-            if check and check['attempts_used'] >= check['max_attempts']:
+            if check and check["attempts_used"] >= check["max_attempts"]:
                 raise HTTPException(status_code=400, detail="Maximum attempts exceeded")
-            
+
             # Insert or update assessment result
             query = """
                 INSERT INTO assessment_results (assessment_id, student_id, answers, score, 
@@ -527,27 +543,28 @@ async def submit_assessment(
                 current_user.id,
                 submission_data.get("answers", {}),
                 submission_data.get("score", 0),
-                submission_data.get("time_spent", 0)
+                submission_data.get("time_spent", 0),
             )
             return dict(row)
-            
+
     except Exception as e:
         logger.error(f"Failed to submit assessment: {e}")
         raise HTTPException(status_code=500, detail="Failed to submit assessment")
+
 
 @assessments_router.get("/{assessment_id}/results")
 async def get_assessment_results(
     assessment_id: int,
     current_user: User = Depends(get_current_user),
-    limit: int = Query(default=50, le=200)
+    limit: int = Query(default=50, le=200),
 ) -> List[Dict[str, Any]]:
     """Get assessment results (teachers and admins only)."""
-    
+
     role = current_user.role.lower()
-    
+
     if role not in ["teacher", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized to view assessment results")
-    
+
     try:
         query = """
             SELECT ar.*, u.first_name || ' ' || u.last_name as student_name,
@@ -561,10 +578,10 @@ async def get_assessment_results(
         async with db_service.pool.acquire() as conn:
             rows = await conn.fetch(query, assessment_id, limit)
             return [dict(row) for row in rows]
-            
+
     except Exception as e:
         logger.warning(f"Failed to fetch assessment results: {e}")
-    
+
     # Fallback sample data
     return [
         {
@@ -576,7 +593,7 @@ async def get_assessment_results(
             "completed_at": "2025-01-08T11:30:00",
             "time_spent": 87,
             "attempts_used": 1,
-            "status": "completed"
+            "status": "completed",
         },
         {
             "id": 2,
@@ -587,22 +604,22 @@ async def get_assessment_results(
             "completed_at": "2025-01-08T14:15:00",
             "time_spent": 92,
             "attempts_used": 1,
-            "status": "completed"
-        }
+            "status": "completed",
+        },
     ]
+
 
 @assessments_router.get("/{assessment_id}/statistics")
 async def get_assessment_statistics(
-    assessment_id: int,
-    current_user: User = Depends(get_current_user)
+    assessment_id: int, current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Get detailed statistics for an assessment (teachers and admins only)."""
-    
+
     role = current_user.role.lower()
-    
+
     if role not in ["teacher", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized to view statistics")
-    
+
     # Fallback sample data
     return {
         "assessment_id": assessment_id,
@@ -620,13 +637,13 @@ async def get_assessment_statistics(
             "medium_questions": 8,
             "hard_questions": 4,
             "most_missed_question": 12,
-            "easiest_question": 3
+            "easiest_question": 3,
         },
         "score_distribution": [
             {"range": "90-100", "count": 8},
             {"range": "80-89", "count": 10},
             {"range": "70-79", "count": 4},
             {"range": "60-69", "count": 2},
-            {"range": "0-59", "count": 0}
-        ]
+            {"range": "0-59", "count": 0},
+        ],
     }

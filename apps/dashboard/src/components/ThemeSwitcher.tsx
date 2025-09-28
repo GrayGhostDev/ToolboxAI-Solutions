@@ -1,60 +1,41 @@
 import React from 'react';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import Tooltip from '@mui/material/Tooltip';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
-import {
-  Brightness4,
-  Brightness7,
-  SettingsBrightness,
-  Check
-} from '@mui/icons-material';
+import { ActionIcon, Menu, Text, Box, Tooltip } from '@mantine/core';
+import { IconSun, IconMoon, IconDeviceDesktop, IconCheck } from '@tabler/icons-react';
 import { useThemeContext } from '../contexts/ThemeContext';
 import { designTokens } from '../theme/designTokens';
 
 interface ThemeSwitcherProps {
   variant?: 'icon' | 'button' | 'menu';
   showLabel?: boolean;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
 const ThemeSwitcher: React.FunctionComponent<ThemeSwitcherProps> = ({
   variant = 'icon',
   showLabel = false,
-  size = 'medium'
+  size = 'md'
 }) => {
-  const theme = useTheme();
   const { mode, actualMode, toggleTheme, setThemeMode } = useThemeContext();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
+  const [opened, setOpened] = React.useState(false);
 
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handleClick = () => {
     if (variant === 'menu') {
-      setAnchorEl(event.currentTarget);
+      setOpened((o) => !o);
     } else {
       toggleTheme();
     }
   };
 
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
   const handleModeSelect = (selectedMode: 'light' | 'dark' | 'system') => {
     setThemeMode(selectedMode);
-    handleClose();
+    setOpened(false);
   };
 
   const getIcon = () => {
     if (mode === 'system') {
-      return <SettingsBrightness />;
+      return <IconDeviceDesktop size={16} />;
     }
-    return actualMode === 'dark' ? <Brightness7 /> : <Brightness4 />;
+    return actualMode === 'dark' ? <IconSun size={16} /> : <IconMoon size={16} />;
   };
 
   const getTooltip = () => {
@@ -75,19 +56,19 @@ const ThemeSwitcher: React.FunctionComponent<ThemeSwitcherProps> = ({
     {
       mode: 'light' as const,
       label: 'Light',
-      icon: <Brightness7 />,
+      icon: <IconSun size={16} />,
       description: 'Always use light theme'
     },
     {
       mode: 'dark' as const,
       label: 'Dark',
-      icon: <Brightness4 />,
+      icon: <IconMoon size={16} />,
       description: 'Always use dark theme'
     },
     {
       mode: 'system' as const,
       label: 'System',
-      icon: <SettingsBrightness />,
+      icon: <IconDeviceDesktop size={16} />,
       description: 'Use system preference'
     }
   ];
@@ -96,125 +77,105 @@ const ThemeSwitcher: React.FunctionComponent<ThemeSwitcherProps> = ({
     return (
       <Box
         component="button"
-        onClick={(e: React.MouseEvent) => handleClick}
-        sx={{
+        onClick={handleClick}
+        style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 1,
+          gap: 8,
           padding: designTokens.spacing[2],
           borderRadius: designTokens.borderRadius.lg,
-          border: `1px solid ${theme.palette.divider}`,
+          border: '1px solid var(--mantine-color-gray-4)',
           backgroundColor: 'transparent',
-          color: theme.palette.text.primary,
+          color: 'var(--mantine-color-text)',
           cursor: 'pointer',
           transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`,
-          '&:hover': {
-            backgroundColor: theme.palette.action.hover,
-            borderColor: theme.palette.primary.main
-          },
-          '&:focus-visible': {
-            outline: `2px solid ${theme.palette.primary.main}`,
-            outlineOffset: '2px'
-          }
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-1)';
+          e.currentTarget.style.borderColor = 'var(--mantine-color-blue-6)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'transparent';
+          e.currentTarget.style.borderColor = 'var(--mantine-color-gray-4)';
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.outline = '2px solid var(--mantine-color-blue-6)';
+          e.currentTarget.style.outlineOffset = '2px';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.outline = 'none';
         }}
       >
         {getIcon()}
         {showLabel && (
-          <Typography variant="body2" component="span">
+          <Text size="sm">
             {getLabel()}
-          </Typography>
+          </Text>
         )}
       </Box>
     );
   }
 
-  return (
-    <>
-      <Tooltip title={getTooltip()} placement="bottom">
-        <IconButton
-          onClick={(e: React.MouseEvent) => handleClick}
-          size={size}
-          sx={{
-            color: theme.palette.text.primary,
-            '&:hover': {
-              backgroundColor: theme.palette.action.hover,
-              color: theme.palette.primary.main
-            }
-          }}
-          aria-label="Toggle theme"
-          aria-controls={open ? 'theme-menu' : undefined}
-          aria-haspopup={variant === 'menu' ? 'true' : undefined}
-          aria-expanded={variant === 'menu' && open ? 'true' : undefined}
-        >
-          {getIcon()}
-        </IconButton>
-      </Tooltip>
+  const iconButton = (
+    <ActionIcon
+      onClick={handleClick}
+      size={size}
+      variant="subtle"
+      aria-label="Toggle theme"
+    >
+      {getIcon()}
+    </ActionIcon>
+  );
 
-      {variant === 'menu' && (
-        <Menu
-          id="theme-menu"
-          anchorEl={anchorEl}
-          open={open}
-          onClose={handleClose}
-          MenuListProps={{
-            'aria-labelledby': 'theme-button',
-            dense: true
-          }}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-          PaperProps={{
-            sx: {
-              minWidth: 200,
-              mt: 1,
-              borderRadius: designTokens.borderRadius.xl,
-              boxShadow: designTokens.shadows.lg
-            }
-          }}
-        >
+  if (variant === 'menu') {
+    return (
+      <Menu
+        opened={opened}
+        onChange={setOpened}
+        position="bottom-end"
+        withArrow
+        shadow="md"
+        width={200}
+      >
+        <Menu.Target>
+          <Tooltip label={getTooltip()} position="bottom">
+            {iconButton}
+          </Tooltip>
+        </Menu.Target>
+
+        <Menu.Dropdown>
           {themeOptions.map((option) => (
-            <MenuItem
+            <Menu.Item
               key={option.mode}
-              onClick={(e: React.MouseEvent) => () => handleModeSelect(option.mode)}
-              selected={mode === option.mode}
-              sx={{
+              onClick={() => handleModeSelect(option.mode)}
+              leftSection={option.icon}
+              rightSection={mode === option.mode ? <IconCheck size={16} /> : null}
+              style={{
                 borderRadius: designTokens.borderRadius.lg,
-                mx: 1,
-                my: 0.5,
-                '&.Mui-selected': {
-                  backgroundColor: theme.palette.primary.main + '20',
-                  '&:hover': {
-                    backgroundColor: theme.palette.primary.main + '30'
-                  }
-                }
+                ...(mode === option.mode && {
+                  backgroundColor: 'var(--mantine-color-blue-1)',
+                })
               }}
             >
-              <ListItemIcon sx={{ minWidth: 36 }}>
-                {option.icon}
-              </ListItemIcon>
-              <ListItemText
-                primary={option.label}
-                secondary={option.description}
-                primaryTypographyProps={{
-                  variant: 'body2',
-                  fontWeight: mode === option.mode ? 'bold' : 'normal'
-                }}
-                secondaryTypographyProps={{
-                  variant: 'caption'
-                }}
-              />
-              {mode === option.mode && (
-                <Check
-                  sx={{
-                    color: theme.palette.primary.main,
-                    ml: 1
-                  }}
-                />
-              )}
-            </MenuItem>
+              <Box>
+                <Text size="sm" fw={mode === option.mode ? 600 : 400}>
+                  {option.label}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {option.description}
+                </Text>
+              </Box>
+            </Menu.Item>
           ))}
-        </Menu>
-      )}
-    </>
+        </Menu.Dropdown>
+      </Menu>
+    );
+  }
+
+  return (
+    <Tooltip label={getTooltip()} position="bottom">
+      {iconButton}
+    </Tooltip>
   );
 };
 

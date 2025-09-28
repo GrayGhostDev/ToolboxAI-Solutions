@@ -27,7 +27,7 @@ class RateLimitManager:
 
     def set_mode(self, mode) -> None:
         """Set the rate limiting mode (2025 best practice)."""
-        self.mode = mode.value if hasattr(mode, 'value') else mode
+        self.mode = mode.value if hasattr(mode, "value") else mode
         logger.debug(f"Rate limiting mode set to: {self.mode}")
 
     def clear_all_limits(self) -> None:
@@ -41,7 +41,7 @@ class RateLimitManager:
         identifier: str,
         max_requests: int = None,
         window_seconds: int = 60,
-        source: str = "api"
+        source: str = "api",
     ) -> Tuple[bool, Optional[int]]:
         """
         Check if a request is within rate limits.
@@ -63,8 +63,10 @@ class RateLimitManager:
             window_key = f"{identifier}:{source}"
 
             # Check if we need to reset the window
-            if window_key not in self.window_starts or \
-               current_time - self.window_starts[window_key] >= window_seconds:
+            if (
+                window_key not in self.window_starts
+                or current_time - self.window_starts[window_key] >= window_seconds
+            ):
                 self.window_starts[window_key] = current_time
                 self.request_counts[window_key] = defaultdict(int)
 
@@ -88,7 +90,9 @@ class RateLimitManager:
         """
         if identifier:
             # Reset specific identifier
-            keys_to_remove = [k for k in self.request_counts.keys() if k.startswith(f"{identifier}:")]
+            keys_to_remove = [
+                k for k in self.request_counts.keys() if k.startswith(f"{identifier}:")
+            ]
             for key in keys_to_remove:
                 del self.request_counts[key]
                 if key in self.window_starts:
@@ -113,11 +117,7 @@ class RateLimitManager:
         current_time = time.time()
 
         if window_key not in self.window_starts:
-            return {
-                "requests": 0,
-                "window_start": None,
-                "time_remaining": 0
-            }
+            return {"requests": 0, "window_start": None, "time_remaining": 0}
 
         window_start = self.window_starts[window_key]
         time_elapsed = current_time - window_start
@@ -126,7 +126,7 @@ class RateLimitManager:
         return {
             "requests": self.request_counts[window_key][source],
             "window_start": window_start,
-            "time_remaining": time_remaining
+            "time_remaining": time_remaining,
         }
 
 

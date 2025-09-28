@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/services/roblox_auth.py
-# hypothesis_version: 6.139.2
-
-[200, '=', 'Authorization', 'Content-Type', 'ROBLOX_CLIENT_ID', 'ROBLOX_CLIENT_SECRET', 'S256', 'access_token', 'access_type', 'asset:read', 'asset:write', 'authorization_code', 'authorization_url', 'client_id', 'client_secret', 'code', 'code_challenge', 'code_verifier', 'consent', 'created_at', 'data-store:read', 'data-store:write', 'expires_at', 'grant_type', 'offline', 'openid', 'profile', 'prompt', 'redirect_uri', 'refresh_token', 'response_type', 'scope', 'scopes', 'state', 'token', 'token_type_hint', 'user_id', 'utf-8']

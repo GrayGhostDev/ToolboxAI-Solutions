@@ -18,7 +18,6 @@ __all__ = [
     "BaseAgent",
     "AgentConfig",
     "TaskResult",
-
     # From agent_classes.py
     "ContentAgent",
     "QuizAgent",
@@ -27,10 +26,8 @@ __all__ = [
     "ReviewAgent",
     "SupervisorAgent",
     "OrchestrationAgent",
-
     # From implementations.py
     "implementations",
-
     # From tools.py
     "AgentTools",
 ]

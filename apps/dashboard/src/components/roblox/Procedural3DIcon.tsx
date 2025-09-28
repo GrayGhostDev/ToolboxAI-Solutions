@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Box as ThreeBox, Sphere, Cone, Cylinder, Torus, Octahedron } from '@react-three/drei';
-import Box from '@mui/material/Box';
+import { Box } from '@mantine/core';
 import * as THREE from 'three';
 
 // Icon type to 3D shape mapping
@@ -230,7 +230,7 @@ export const Procedural3DIcon: React.FunctionComponent<Procedural3DIconProps> = 
 
   return (
     <Box
-      sx={{
+      style={{
         width: iconSize,
         height: iconSize,
         borderRadius: '12px',

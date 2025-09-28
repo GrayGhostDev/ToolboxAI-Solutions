@@ -73,6 +73,10 @@ htmlcov/
 coverage.xml
 *.cover
 
+# Python type checking and testing caches
+.mypy_cache/
+.hypothesis/
+
 # Database
 *.db
 *.sqlite
@@ -109,6 +113,7 @@ scripts/pids/
 .env.*
 .envrc
 .secret*
+config/secrets/
 *.secrets
 *.pem
 *.crt
@@ -307,4 +312,30 @@ audit-log*
 *.bak
 *.orig
 *~
+
+
+# INFRASTRUCTURE SECURITY: Docker Secrets Directory
+infrastructure/docker/secrets/
+infrastructure/*/secrets/
+**/secrets/
+!/infrastructure/docker/secrets.example/
+
+# KUBERNETES SECURITY: Secret Files
+infrastructure/kubernetes/*/secret*.yaml
+infrastructure/kubernetes/secret*.yaml
+!/infrastructure/kubernetes/**/secret*.example.yaml
+
+# TERRAFORM SECURITY: State and Variable Files
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+terraform.tfvars
+.terraform/
+.terraform.lock.hcl
+
+# MONITORING SECURITY: Credentials and Config
+infrastructure/monitoring/*/admin.conf
+infrastructure/monitoring/*/htpasswd
+infrastructure/monitoring/*/.htpasswd
 

@@ -10,38 +10,29 @@
 
 import React from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Modal,
   Button,
-  Grid,
+  SimpleGrid,
   Card,
-  CardContent,
-  Typography,
+  Text,
   Box,
-  Divider,
   List,
-  ListItem,
-  ListItemText,
-  LinearProgress,
-  Chip,
+  Progress,
+  Badge,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-} from '@mui/material';
+  Stack,
+  Group,
+  Flex,
+  Title,
+} from '@mantine/core';
 import {
-  Close as CloseIcon,
-  TrendingUp as TrendingUpIcon,
-  Speed as SpeedIcon,
-  Memory as MemoryIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-} from '@mui/icons-material';
+  IconX,
+  IconTrendingUp,
+  IconBolt,
+  IconCpu,
+  IconCircleCheck,
+  IconAlertTriangle,
+} from '@tabler/icons-react';
 
 interface SystemMetrics {
   agents: {
@@ -116,271 +107,252 @@ export const AgentMetricsPanel = ({
   };
 
   return (
-    <Dialog
-      open={open}
+    <Modal
+      opened={open}
       onClose={onClose}
-      maxWidth="lg"
-      fullWidth
-      PaperProps={{
-        sx: { height: '80vh' }
+      size="xl"
+      title={
+        <Flex justify="space-between" align="center" w="100%">
+          <Title order={4}>Agent System Metrics</Title>
+          <Text size="sm" c="dimmed">
+            Last updated: {systemMetrics?.system.last_updated ?
+              new Date(systemMetrics.system.last_updated).toLocaleString() : 'Never'}
+          </Text>
+        </Flex>
+      }
+      styles={{
+        content: { height: '80vh' },
+        body: { height: 'calc(100% - 60px)', overflow: 'auto' }
       }}
     >
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">Agent System Metrics</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Last updated: {systemMetrics?.system.last_updated ? 
-            new Date(systemMetrics.system.last_updated).toLocaleString() : 'Never'}
-        </Typography>
-      </DialogTitle>
+      {!systemMetrics ? (
+        <Text>No metrics data available</Text>
+      ) : (
+        <Stack spacing="lg">
+          {/* System Overview */}
+          <Card padding="md" withBorder>
+            <Title order={5} mb="md">
+              System Overview
+            </Title>
+            <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md">
+              <Box ta="center">
+                <Text size="xl" fw={700} c="blue">
+                  {systemMetrics.agents.total}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  Total Agents
+                </Text>
+              </Box>
+              <Box ta="center">
+                <Text size="xl" fw={700} c="green">
+                  {systemMetrics.agents.utilization_rate.toFixed(1)}%
+                </Text>
+                <Text size="sm" c="dimmed">
+                  Utilization
+                </Text>
+              </Box>
+              <Box ta="center">
+                <Text size="xl" fw={700} c="cyan">
+                  {systemMetrics.tasks.success_rate.toFixed(1)}%
+                </Text>
+                <Text size="sm" c="dimmed">
+                  Success Rate
+                </Text>
+              </Box>
+              <Box ta="center">
+                <Text size="xl" fw={700} c="orange">
+                  {systemMetrics.tasks.queued}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  Queued Tasks
+                </Text>
+              </Box>
+            </SimpleGrid>
+          </Card>
 
-      <DialogContent>
-        {!systemMetrics ? (
-          <Typography>No metrics data available</Typography>
-        ) : (
-          <Grid container spacing={3}>
-            {/* System Overview */}
-            <Grid item xs={12}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    System Overview
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6} md={3}>
-                      <Box textAlign="center">
-                        <Typography variant="h4" color="primary">
-                          {systemMetrics.agents.total}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Total Agents
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                      <Box textAlign="center">
-                        <Typography variant="h4" color="success.main">
-                          {systemMetrics.agents.utilization_rate.toFixed(1)}%
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Utilization
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                      <Box textAlign="center">
-                        <Typography variant="h4" color="info.main">
-                          {systemMetrics.tasks.success_rate.toFixed(1)}%
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Success Rate
-                        </Typography>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                      <Box textAlign="center">
-                        <Typography variant="h4" color="warning.main">
-                          {systemMetrics.tasks.queued}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Queued Tasks
-                        </Typography>
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-            </Grid>
-
+          {/* Agent Status and Task Statistics */}
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
             {/* Agent Status Breakdown */}
-            <Grid item xs={12} md={6}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Agent Status Breakdown
-                  </Typography>
-                  <List>
-                    <ListItem>
-                      <ListItemText 
-                        primary={`Idle: ${systemMetrics.agents.idle}`}
-                        secondary="Available for tasks"
-                      />
-                      <Chip 
-                        icon={<CheckCircleIcon />} 
-                        label={systemMetrics.agents.idle} 
-                        color="success" 
-                        size="small" 
-                      />
-                    </ListItem>
-                    <ListItem>
-                      <ListItemText 
-                        primary={`Busy: ${systemMetrics.agents.busy}`}
-                        secondary="Currently processing tasks"
-                      />
-                      <Chip 
-                        icon={<SpeedIcon />} 
-                        label={systemMetrics.agents.busy} 
-                        color="primary" 
-                        size="small" 
-                      />
-                    </ListItem>
-                    <ListItem>
-                      <ListItemText 
-                        primary={`Error: ${systemMetrics.agents.error}`}
-                        secondary="Agents with errors"
-                      />
-                      <Chip 
-                        icon={<ErrorIcon />} 
-                        label={systemMetrics.agents.error} 
-                        color="error" 
-                        size="small" 
-                      />
-                    </ListItem>
-                  </List>
-                </CardContent>
-              </Card>
-            </Grid>
+            <Card padding="md" withBorder>
+              <Title order={5} mb="md">
+                Agent Status Breakdown
+              </Title>
+              <Stack spacing="sm">
+                <Group justify="space-between">
+                  <Box>
+                    <Text fw={500}>Idle: {systemMetrics.agents.idle}</Text>
+                    <Text size="sm" c="dimmed">Available for tasks</Text>
+                  </Box>
+                  <Badge
+                    leftSection={<IconCircleCheck size={14} />}
+                    color="green"
+                    size="sm"
+                  >
+                    {systemMetrics.agents.idle}
+                  </Badge>
+                </Group>
+                <Group justify="space-between">
+                  <Box>
+                    <Text fw={500}>Busy: {systemMetrics.agents.busy}</Text>
+                    <Text size="sm" c="dimmed">Currently processing tasks</Text>
+                  </Box>
+                  <Badge
+                    leftSection={<IconBolt size={14} />}
+                    color="blue"
+                    size="sm"
+                  >
+                    {systemMetrics.agents.busy}
+                  </Badge>
+                </Group>
+                <Group justify="space-between">
+                  <Box>
+                    <Text fw={500}>Error: {systemMetrics.agents.error}</Text>
+                    <Text size="sm" c="dimmed">Agents with errors</Text>
+                  </Box>
+                  <Badge
+                    leftSection={<IconAlertTriangle size={14} />}
+                    color="red"
+                    size="sm"
+                  >
+                    {systemMetrics.agents.error}
+                  </Badge>
+                </Group>
+              </Stack>
+            </Card>
 
             {/* Task Statistics */}
-            <Grid item xs={12} md={6}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Task Statistics
-                  </Typography>
-                  <List>
-                    <ListItem>
-                      <ListItemText 
-                        primary={`Completed: ${systemMetrics.tasks.completed}`}
-                        secondary="Successfully completed tasks"
-                      />
-                    </ListItem>
-                    <ListItem>
-                      <ListItemText 
-                        primary={`Failed: ${systemMetrics.tasks.failed}`}
-                        secondary="Failed task executions"
-                      />
-                    </ListItem>
-                    <ListItem>
-                      <ListItemText 
-                        primary={`Running: ${systemMetrics.tasks.running}`}
-                        secondary="Currently executing"
-                      />
-                    </ListItem>
-                    <ListItem>
-                      <ListItemText 
-                        primary={`Queued: ${systemMetrics.tasks.queued}`}
-                        secondary="Waiting for execution"
-                      />
-                    </ListItem>
-                  </List>
-                </CardContent>
-              </Card>
-            </Grid>
+            <Card padding="md" withBorder>
+              <Title order={5} mb="md">
+                Task Statistics
+              </Title>
+              <Stack spacing="sm">
+                <Group justify="space-between">
+                  <Text fw={500}>Completed: {systemMetrics.tasks.completed}</Text>
+                  <Text size="sm" c="dimmed">Successfully completed tasks</Text>
+                </Group>
+                <Group justify="space-between">
+                  <Text fw={500}>Failed: {systemMetrics.tasks.failed}</Text>
+                  <Text size="sm" c="dimmed">Failed task executions</Text>
+                </Group>
+                <Group justify="space-between">
+                  <Text fw={500}>Running: {systemMetrics.tasks.running}</Text>
+                  <Text size="sm" c="dimmed">Currently executing</Text>
+                </Group>
+                <Group justify="space-between">
+                  <Text fw={500}>Queued: {systemMetrics.tasks.queued}</Text>
+                  <Text size="sm" c="dimmed">Waiting for execution</Text>
+                </Group>
+              </Stack>
+            </Card>
+          </SimpleGrid>
 
-            {/* Individual Agent Performance */}
-            <Grid item xs={12}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Individual Agent Performance
-                  </Typography>
-                  <TableContainer component={Paper} variant="outlined">
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Agent ID</TableCell>
-                          <TableCell>Type</TableCell>
-                          <TableCell>Status</TableCell>
-                          <TableCell align="right">Tasks</TableCell>
-                          <TableCell align="right">Success Rate</TableCell>
-                          <TableCell align="right">Avg Time</TableCell>
-                          <TableCell align="right">CPU</TableCell>
-                          <TableCell align="right">Memory</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {agents.map((agent) => (
-                          <TableRow key={agent.agent_id}>
-                            <TableCell>
-                              <Typography variant="body2" noWrap>
-                                {agent.agent_id.substring(0, 12)}...
-                              </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Typography variant="body2">
-                                {agent.agent_type.replace(/_/g, ' ')}
-                              </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Chip
-                                label={agent.status}
-                                color={
-                                  agent.status === 'idle' ? 'success' :
-                                  agent.status === 'busy' ? 'primary' :
-                                  agent.status === 'error' ? 'error' : 'default'
-                                }
-                                size="small"
-                              />
-                            </TableCell>
-                            <TableCell align="right">
-                              <Typography variant="body2">
-                                {agent.total_tasks_completed}
-                                {agent.total_tasks_failed > 0 && (
-                                  <Typography component="span" color="error.main" sx={{ ml: 1 }}>
-                                    ({agent.total_tasks_failed} failed)
-                                  </Typography>
-                                )}
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="right">
-                              <Typography 
-                                variant="body2" 
-                                color={getPerformanceColor(agent.performance_metrics.success_rate) + '.main'}
-                              >
-                                {agent.performance_metrics.success_rate.toFixed(1)}%
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="right">
-                              <Typography variant="body2">
-                                {formatDuration(agent.average_execution_time)}
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="right">
-                              <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 60 }}>
-                                <LinearProgress
-                                  variant="determinate"
-                                  value={agent.resource_usage.cpu_percent}
-                                  color={getPerformanceColor(100 - agent.resource_usage.cpu_percent) as any}
-                                  sx={{ flexGrow: 1, mr: 1, height: 6 }}
-                                />
-                                <Typography variant="caption">
-                                  {agent.resource_usage.cpu_percent.toFixed(0)}%
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                            <TableCell align="right">
-                              <Typography variant="body2">
-                                {agent.resource_usage.memory_mb}MB
-                              </Typography>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        )}
-      </DialogContent>
+          {/* Individual Agent Performance */}
+          <Card padding="md" withBorder>
+            <Title order={5} mb="md">
+              Individual Agent Performance
+            </Title>
+            <Table.ScrollContainer minWidth={800}>
+              <Table>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Agent ID</Table.Th>
+                    <Table.Th>Type</Table.Th>
+                    <Table.Th>Status</Table.Th>
+                    <Table.Th ta="right">Tasks</Table.Th>
+                    <Table.Th ta="right">Success Rate</Table.Th>
+                    <Table.Th ta="right">Avg Time</Table.Th>
+                    <Table.Th ta="right">CPU</Table.Th>
+                    <Table.Th ta="right">Memory</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {agents.map((agent) => (
+                    <Table.Tr key={agent.agent_id}>
+                      <Table.Td>
+                        <Text size="sm" lineClamp={1}>
+                          {agent.agent_id.substring(0, 12)}...
+                        </Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm">
+                          {agent.agent_type.replace(/_/g, ' ')}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Badge
+                          color={
+                            agent.status === 'idle' ? 'green' :
+                            agent.status === 'busy' ? 'blue' :
+                            agent.status === 'error' ? 'red' : 'gray'
+                          }
+                          size="sm"
+                        >
+                          {agent.status}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td ta="right">
+                        <Box>
+                          <Text size="sm">
+                            {agent.total_tasks_completed}
+                          </Text>
+                          {agent.total_tasks_failed > 0 && (
+                            <Text size="xs" c="red" component="span" ml="xs">
+                              ({agent.total_tasks_failed} failed)
+                            </Text>
+                          )}
+                        </Box>
+                      </Table.Td>
+                      <Table.Td ta="right">
+                        <Text
+                          size="sm"
+                          c={getPerformanceColor(agent.performance_metrics.success_rate)}
+                        >
+                          {agent.performance_metrics.success_rate.toFixed(1)}%
+                        </Text>
+                      </Table.Td>
+                      <Table.Td ta="right">
+                        <Text size="sm">
+                          {formatDuration(agent.average_execution_time)}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td ta="right">
+                        <Group spacing="xs" justify="flex-end" style={{ minWidth: 80 }}>
+                          <Progress
+                            value={agent.resource_usage.cpu_percent}
+                            color={getPerformanceColor(100 - agent.resource_usage.cpu_percent)}
+                            size="sm"
+                            style={{ flex: 1 }}
+                          />
+                          <Text size="xs">
+                            {agent.resource_usage.cpu_percent.toFixed(0)}%
+                          </Text>
+                        </Group>
+                      </Table.Td>
+                      <Table.Td ta="right">
+                        <Text size="sm">
+                          {agent.resource_usage.memory_mb}MB
+                        </Text>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </Table.ScrollContainer>
+          </Card>
+        </Stack>
+      )}
 
-      <DialogActions>
-        <Button onClick={onClose} startIcon={<CloseIcon />}>
+      {/* Close Button */}
+      <Group justify="flex-end" mt="md">
+        <Button
+          onClick={onClose}
+          leftSection={<IconX size={16} />}
+          variant="subtle"
+        >
           Close
         </Button>
-      </DialogActions>
-    </Dialog>
+      </Group>
+    </Modal>
   );
 };
 

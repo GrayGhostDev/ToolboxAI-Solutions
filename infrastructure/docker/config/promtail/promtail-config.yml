@@ -1,0 +1,372 @@
+# ============================================
+# PROMTAIL CONFIGURATION
+# ============================================
+# Log shipper for Loki - collects and forwards logs
+# Updated: 2025-09-26
+# ============================================
+
+# Server configuration
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: info
+
+# Positions file - tracks read position in log files
+positions:
+  filename: /tmp/positions.yaml
+
+# Loki client configuration
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    tenant_id: toolboxai
+    batchwait: 1s
+    batchsize: 1048576  # 1MB
+
+    # Basic auth if needed
+    # basic_auth:
+    #   username: ${LOKI_USER}
+    #   password: ${LOKI_PASSWORD}
+
+    # Timeout and retry configuration
+    timeout: 10s
+
+    # TLS configuration (for production)
+    # tls_config:
+    #   insecure_skip_verify: false
+
+    # External labels applied to all logs
+    external_labels:
+      environment: ${ENVIRONMENT:-development}
+      project: toolboxai
+      host: ${HOSTNAME}
+
+# Scrape configurations - what logs to collect
+scrape_configs:
+  # ----------------------------------------
+  # Docker Container Logs
+  # ----------------------------------------
+  - job_name: docker
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          __path__: /var/lib/docker/containers/*/*log
+
+    # Pipeline stages for processing
+    pipeline_stages:
+      # Parse Docker JSON logs
+      - json:
+          expressions:
+            output: log
+            stream: stream
+            time: time
+            container_id: container_id
+
+      # Extract container name from filename
+      - regex:
+          source: filename
+          expression: '/var/lib/docker/containers/(?P<container_id>[^/]+)/.*'
+
+      # Get container name from Docker labels
+      - docker: {}
+
+      # Parse timestamp
+      - timestamp:
+          source: time
+          format: RFC3339Nano
+
+      # Set labels based on parsed fields
+      - labels:
+          stream:
+          container_name:
+          container_id:
+
+      # Filter out health check logs
+      - match:
+          selector: '{container_name=~"toolboxai.*"}'
+          stages:
+            - drop:
+                expression: '.*GET /health.*'
+                older_than: 24h
+
+      # Output the actual log message
+      - output:
+          source: output
+
+  # ----------------------------------------
+  # Application Logs (Backend)
+  # ----------------------------------------
+  - job_name: backend
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          service: backend
+          component: fastapi
+          __path__: /app/logs/backend*.log
+
+    pipeline_stages:
+      # Multiline detection for Python tracebacks
+      - multiline:
+          firstline: '^\d{4}-\d{2}-\d{2}'
+          max_wait_time: 3s
+
+      # Parse log format: TIMESTAMP LEVEL MODULE MESSAGE
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) - (?P<level>\w+) - (?P<module>[\w\.]+) - (?P<message>.*)'
+
+      # Parse timestamp
+      - timestamp:
+          source: timestamp
+          format: '2006-01-02 15:04:05,000'
+
+      # Set labels
+      - labels:
+          level:
+          module:
+
+      # Parse structured logs (JSON in message)
+      - match:
+          selector: '{level="INFO"}'
+          stages:
+            - json:
+                source: message
+                expressions:
+                  user_id: user_id
+                  request_id: request_id
+                  method: method
+                  path: path
+                  status_code: status_code
+                  response_time: response_time
+
+      # Drop debug logs older than 1 day
+      - match:
+          selector: '{level="DEBUG"}'
+          stages:
+            - drop:
+                older_than: 24h
+
+  # ----------------------------------------
+  # Celery Worker Logs
+  # ----------------------------------------
+  - job_name: celery
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          service: celery
+          __path__: /celery/logs/*.log
+
+    pipeline_stages:
+      # Parse Celery log format
+      - regex:
+          expression: '^\[(?P<timestamp>[^\]]+)\] (?P<level>\w+)/(?P<component>[\w\.]+): (?P<message>.*)'
+
+      # Parse timestamp
+      - timestamp:
+          source: timestamp
+          format: '2006-01-02 15:04:05,000'
+
+      # Extract task information
+      - match:
+          selector: '{component="celery.worker"}'
+          stages:
+            - regex:
+                source: message
+                expression: 'Task (?P<task_name>[\w\.]+)\[(?P<task_id>[^\]]+)\]'
+            - labels:
+                task_name:
+                task_id:
+
+      # Labels
+      - labels:
+          level:
+          component:
+
+  # ----------------------------------------
+  # Agent Logs (AI/LLM)
+  # ----------------------------------------
+  - job_name: agents
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          service: agents
+          __path__: /agent/logs/*.log
+
+    pipeline_stages:
+      # Parse agent log format
+      - json:
+          expressions:
+            timestamp: timestamp
+            level: level
+            agent_id: agent_id
+            agent_name: agent_name
+            task_id: task_id
+            message: message
+            execution_time: execution_time
+            tokens_used: tokens_used
+            model: model
+
+      # Parse timestamp
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+
+      # Set labels
+      - labels:
+          level:
+          agent_name:
+          model:
+
+      # Metrics extraction
+      - metrics:
+          agent_execution_time:
+            type: Histogram
+            description: "Agent task execution time"
+            source: execution_time
+            config:
+              buckets: [0.1, 0.5, 1, 2, 5, 10, 30, 60]
+
+          tokens_total:
+            type: Counter
+            description: "Total tokens used"
+            source: tokens_used
+            config:
+              action: add
+
+  # ----------------------------------------
+  # Nginx/Proxy Logs (if used)
+  # ----------------------------------------
+  - job_name: nginx
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          service: nginx
+          __path__: /var/log/nginx/*.log
+
+    pipeline_stages:
+      # Parse nginx access log format
+      - regex:
+          expression: '^(?P<remote_addr>[\w\.]+) - (?P<remote_user>[^ ]*) \[(?P<time_local>[^\]]+)\] "(?P<method>\w+) (?P<path>[^ ]+) (?P<protocol>[^"]+)" (?P<status>\d+) (?P<body_bytes_sent>\d+) "(?P<http_referer>[^"]*)" "(?P<http_user_agent>[^"]*)"'
+
+      # Parse timestamp
+      - timestamp:
+          source: time_local
+          format: '02/Jan/2006:15:04:05 -0700'
+
+      # Labels
+      - labels:
+          method:
+          status:
+
+      # Drop successful health checks
+      - match:
+          selector: '{status="200",path="/health"}'
+          stages:
+            - drop:
+                older_than: 1h
+
+  # ----------------------------------------
+  # PostgreSQL Logs
+  # ----------------------------------------
+  - job_name: postgres
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          service: postgres
+          __path__: /var/log/postgresql/*.log
+
+    pipeline_stages:
+      # Parse PostgreSQL log format
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} \w+) \[(?P<pid>\d+)\] (?P<level>\w+):  (?P<message>.*)'
+
+      # Parse timestamp
+      - timestamp:
+          source: timestamp
+          format: '2006-01-02 15:04:05.000 MST'
+
+      # Extract query information
+      - match:
+          selector: '{level="LOG"}'
+          stages:
+            - regex:
+                source: message
+                expression: 'duration: (?P<duration>[\d\.]+) ms  statement: (?P<query>.*)'
+            - labels:
+                duration:
+
+      # Labels
+      - labels:
+          level:
+          pid:
+
+  # ----------------------------------------
+  # Redis Logs
+  # ----------------------------------------
+  - job_name: redis
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          service: redis
+          __path__: /var/log/redis/*.log
+
+    pipeline_stages:
+      # Parse Redis log format
+      - regex:
+          expression: '^(?P<pid>\d+):(?P<role>\w) (?P<timestamp>\d{2} \w+ \d{2}:\d{2}:\d{2}\.\d{3}) (?P<level>.) (?P<message>.*)'
+
+      # Parse timestamp
+      - timestamp:
+          source: timestamp
+          format: '02 Jan 15:04:05.000'
+
+      # Map Redis log levels
+      - template:
+          source: level
+          template: |
+            {{if eq .level "."}}info{{else if eq .level "#"}}warning{{else if eq .level "*"}}notice{{else if eq .level "-"}}verbose{{else}}debug{{end}}
+
+      # Labels
+      - labels:
+          level:
+          role:
+
+  # ----------------------------------------
+  # System Logs (syslog)
+  # ----------------------------------------
+  - job_name: syslog
+    syslog:
+      listen_address: 0.0.0.0:514
+      listen_protocol: udp
+      idle_timeout: 60s
+      label_structured_data: true
+      labels:
+        job: syslog
+        service: system
+
+    relabel_configs:
+      - source_labels: ['__syslog_message_hostname']
+        target_label: 'host'
+      - source_labels: ['__syslog_message_app_name']
+        target_label: 'app'
+      - source_labels: ['__syslog_message_severity']
+        target_label: 'severity'
+      - source_labels: ['__syslog_message_facility']
+        target_label: 'facility'
+
+# Limits configuration
+limits_config:
+  readline_rate_enabled: true
+  readline_rate: 100
+  readline_burst: 1000
+  max_streams: 10000
+
+# Target configuration
+target_config:
+  sync_period: 10s

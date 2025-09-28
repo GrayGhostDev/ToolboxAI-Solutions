@@ -13,6 +13,9 @@ Provides comprehensive user authentication and management with:
 import re
 import secrets
 import string
+import hashlib
+import hmac
+import base64
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List, Tuple
 from dataclasses import dataclass
@@ -20,6 +23,7 @@ from enum import Enum
 import logging
 
 import bcrypt
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 import redis
@@ -32,12 +36,14 @@ logger = logging.getLogger(__name__)
 
 class AuthenticationError(HTTPException):
     """Authentication-specific HTTP exception"""
+
     def __init__(self, message: str, status_code: int = status.HTTP_401_UNAUTHORIZED):
         super().__init__(status_code=status_code, detail=message)
 
 
 class UserRole(Enum):
     """User role enumeration"""
+
     ADMIN = "admin"
     TEACHER = "teacher"
     STUDENT = "student"
@@ -47,6 +53,7 @@ class UserRole(Enum):
 @dataclass
 class PasswordPolicy:
     """Password policy configuration"""
+
     min_length: int = 12
     max_length: int = 128
     require_uppercase: bool = True
@@ -64,6 +71,7 @@ class PasswordPolicy:
 @dataclass
 class LockoutPolicy:
     """Account lockout policy"""
+
     max_attempts: int = 5
     lockout_duration_minutes: int = 15
     progressive_delay: bool = True  # Increase delay with each failure
@@ -77,11 +85,31 @@ class SecureUserManager:
 
     # Common weak passwords to prevent
     COMMON_PASSWORDS = {
-        "password", "password123", "123456", "12345678", "qwerty",
-        "abc123", "monkey", "1234567", "letmein", "trustno1",
-        "dragon", "baseball", "111111", "iloveyou", "master",
-        "sunshine", "ashley", "bailey", "passw0rd", "shadow",
-        "123123", "654321", "superman", "qazwsx", "michael"
+        "password",
+        "password123",
+        "123456",
+        "12345678",
+        "qwerty",
+        "abc123",
+        "monkey",
+        "1234567",
+        "letmein",
+        "trustno1",
+        "dragon",
+        "baseball",
+        "111111",
+        "iloveyou",
+        "master",
+        "sunshine",
+        "ashley",
+        "bailey",
+        "passw0rd",
+        "shadow",
+        "123123",
+        "654321",
+        "superman",
+        "qazwsx",
+        "michael",
     }
 
     def __init__(
@@ -89,7 +117,7 @@ class SecureUserManager:
         db_session: Session,
         redis_client: Optional[redis.Redis] = None,
         password_policy: Optional[PasswordPolicy] = None,
-        lockout_policy: Optional[LockoutPolicy] = None
+        lockout_policy: Optional[LockoutPolicy] = None,
     ):
         self.db = db_session
         self.redis = redis_client
@@ -97,13 +125,23 @@ class SecureUserManager:
         self.lockout_policy = lockout_policy or LockoutPolicy()
         self.bcrypt_cost = 12  # Bcrypt cost factor (12 is secure for 2025)
 
+        # OWASP 2025 recommendation: Use pepper for additional security
+        # Pepper should be stored in environment variable, not in database
+        self.pepper = getattr(settings, "PASSWORD_PEPPER", None) or secrets.token_hex(32)
+
+        # Use bcrypt_sha256 for better password handling (2025 best practice)
+        # This automatically handles passwords > 72 bytes by pre-hashing with SHA-256
+        self.pwd_context = CryptContext(
+            schemes=["bcrypt_sha256"], bcrypt_sha256__rounds=self.bcrypt_cost, deprecated="auto"
+        )
+
     async def create_user(
         self,
         username: str,
         email: str,
         password: str,
         role: UserRole,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> User:
         """
         Create a new user with secure password hashing
@@ -145,7 +183,7 @@ class SecureUserManager:
             is_verified=False,  # Require email verification
             metadata=metadata or {},
             password_changed_at=datetime.now(timezone.utc),
-            failed_login_attempts=0
+            failed_login_attempts=0,
         )
 
         self.db.add(user)
@@ -163,7 +201,7 @@ class SecureUserManager:
         username_or_email: str,
         password: str,
         ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None
+        user_agent: Optional[str] = None,
     ) -> Tuple[User, str]:
         """
         Authenticate user with comprehensive security checks
@@ -184,7 +222,7 @@ class SecureUserManager:
         if await self._is_locked_out(username_or_email):
             raise AuthenticationError(
                 "Account is temporarily locked due to multiple failed login attempts",
-                status.HTTP_423_LOCKED
+                status.HTTP_423_LOCKED,
             )
 
         # Find user
@@ -217,20 +255,14 @@ class SecureUserManager:
         session_token = self._create_session(user, ip_address, user_agent)
 
         # Audit log
-        await self._audit_log("user_login", user.id, {
-            "ip_address": ip_address,
-            "user_agent": user_agent
-        })
+        await self._audit_log(
+            "user_login", user.id, {"ip_address": ip_address, "user_agent": user_agent}
+        )
 
         logger.info(f"User authenticated successfully: {user.username}")
         return user, session_token
 
-    async def change_password(
-        self,
-        user_id: int,
-        current_password: str,
-        new_password: str
-    ) -> bool:
+    async def change_password(self, user_id: int, current_password: str, new_password: str) -> bool:
         """
         Change user password with validation
 
@@ -277,11 +309,7 @@ class SecureUserManager:
         logger.info(f"Password changed for user: {user.username}")
         return True
 
-    async def reset_password(
-        self,
-        reset_token: str,
-        new_password: str
-    ) -> bool:
+    async def reset_password(self, reset_token: str, new_password: str) -> bool:
         """
         Reset password using secure token
 
@@ -319,11 +347,7 @@ class SecureUserManager:
         logger.info(f"Password reset for user: {user.username}")
         return True
 
-    async def enable_mfa(
-        self,
-        user_id: int,
-        mfa_secret: Optional[str] = None
-    ) -> str:
+    async def enable_mfa(self, user_id: int, mfa_secret: Optional[str] = None) -> str:
         """
         Enable multi-factor authentication for user
 
@@ -356,28 +380,36 @@ class SecureUserManager:
     # Private helper methods
 
     def _hash_password(self, password: str) -> str:
-        """Hash password using bcrypt"""
-        salt = bcrypt.gensalt(rounds=self.bcrypt_cost)
-        hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
-        return hashed.decode('utf-8')
+        """
+        Hash password using bcrypt_sha256 (2025 best practice)
+
+        bcrypt_sha256 automatically:
+        - Handles passwords of any length
+        - Pre-hashes with SHA-256 to avoid 72-byte limitation
+        - Prevents null byte issues
+        - Adds salt automatically
+        """
+        # Add pepper for additional security (OWASP recommendation)
+        peppered_password = password + self.pepper
+
+        # bcrypt_sha256 handles everything else automatically
+        return self.pwd_context.hash(peppered_password)
 
     def _verify_password(self, password: str, hashed: str) -> bool:
-        """Verify password against hash"""
+        """
+        Verify password using bcrypt_sha256
+        """
         try:
-            return bcrypt.checkpw(
-                password.encode('utf-8'),
-                hashed.encode('utf-8')
-            )
+            # Add pepper (same as in hashing)
+            peppered_password = password + self.pepper
+
+            # bcrypt_sha256 handles verification with timing attack protection
+            return self.pwd_context.verify(peppered_password, hashed)
         except Exception as e:
             logger.error(f"Password verification error: {e}")
             return False
 
-    def _validate_password(
-        self,
-        password: str,
-        username: str,
-        email: str
-    ) -> None:
+    def _validate_password(self, password: str, username: str, email: str) -> None:
         """
         Validate password against policy
 
@@ -390,14 +422,16 @@ class SecureUserManager:
         if len(password) < self.password_policy.min_length:
             errors.append(f"Password must be at least {self.password_policy.min_length} characters")
         if len(password) > self.password_policy.max_length:
-            errors.append(f"Password must be less than {self.password_policy.max_length} characters")
+            errors.append(
+                f"Password must be less than {self.password_policy.max_length} characters"
+            )
 
         # Character requirements
-        if self.password_policy.require_uppercase and not re.search(r'[A-Z]', password):
+        if self.password_policy.require_uppercase and not re.search(r"[A-Z]", password):
             errors.append("Password must contain at least one uppercase letter")
-        if self.password_policy.require_lowercase and not re.search(r'[a-z]', password):
+        if self.password_policy.require_lowercase and not re.search(r"[a-z]", password):
             errors.append("Password must contain at least one lowercase letter")
-        if self.password_policy.require_numbers and not re.search(r'\d', password):
+        if self.password_policy.require_numbers and not re.search(r"\d", password):
             errors.append("Password must contain at least one number")
         if self.password_policy.require_special:
             if not any(c in self.password_policy.special_chars for c in password):
@@ -405,7 +439,9 @@ class SecureUserManager:
 
         # Unique characters check
         if len(set(password)) < self.password_policy.min_unique_chars:
-            errors.append(f"Password must contain at least {self.password_policy.min_unique_chars} unique characters")
+            errors.append(
+                f"Password must contain at least {self.password_policy.min_unique_chars} unique characters"
+            )
 
         # Common password check
         if self.password_policy.prevent_common_passwords:
@@ -415,7 +451,7 @@ class SecureUserManager:
         # User info in password check
         if self.password_policy.prevent_user_info_in_password:
             lower_password = password.lower()
-            if username.lower() in lower_password or email.split('@')[0].lower() in lower_password:
+            if username.lower() in lower_password or email.split("@")[0].lower() in lower_password:
                 errors.append("Password cannot contain username or email")
 
         if errors:
@@ -423,39 +459,43 @@ class SecureUserManager:
 
     def _validate_username(self, username: str) -> None:
         """Validate username format"""
-        if not re.match(r'^[a-zA-Z0-9_-]{3,30}$', username):
-            raise ValueError("Username must be 3-30 characters and contain only letters, numbers, underscore, and hyphen")
+        if not re.match(r"^[a-zA-Z0-9_-]{3,30}$", username):
+            raise ValueError(
+                "Username must be 3-30 characters and contain only letters, numbers, underscore, and hyphen"
+            )
 
     def _validate_email(self, email: str) -> None:
         """Validate email format"""
-        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         if not re.match(email_regex, email):
             raise ValueError("Invalid email address")
 
     def _user_exists(self, username: str, email: str) -> bool:
         """Check if user already exists"""
-        return self.db.query(User).filter(
-            (User.username == username) | (User.email == email)
-        ).first() is not None
+        return (
+            self.db.query(User).filter((User.username == username) | (User.email == email)).first()
+            is not None
+        )
 
     def _get_user_by_username_or_email(self, identifier: str) -> Optional[User]:
         """Get user by username or email"""
-        return self.db.query(User).filter(
-            (User.username == identifier) | (User.email == identifier)
-        ).first()
+        return (
+            self.db.query(User)
+            .filter((User.username == identifier) | (User.email == identifier))
+            .first()
+        )
 
     def _is_password_expired(self, password_changed_at: datetime) -> bool:
         """Check if password has expired"""
         if not password_changed_at:
             return True
-        expiry_date = password_changed_at + timedelta(days=self.password_policy.password_expiry_days)
+        expiry_date = password_changed_at + timedelta(
+            days=self.password_policy.password_expiry_days
+        )
         return datetime.now(timezone.utc) > expiry_date
 
     def _create_session(
-        self,
-        user: User,
-        ip_address: Optional[str],
-        user_agent: Optional[str]
+        self, user: User, ip_address: Optional[str], user_agent: Optional[str]
     ) -> str:
         """Create user session"""
         session_token = secrets.token_urlsafe(32)
@@ -466,7 +506,7 @@ class SecureUserManager:
             ip_address=ip_address,
             user_agent=user_agent,
             created_at=datetime.now(timezone.utc),
-            expires_at=datetime.now(timezone.utc) + timedelta(hours=24)
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=24),
         )
 
         self.db.add(session)
@@ -474,11 +514,7 @@ class SecureUserManager:
 
         # Store in Redis for fast lookup
         if self.redis:
-            self.redis.setex(
-                f"session:{session_token}",
-                86400,  # 24 hours
-                str(user.id)
-            )
+            self.redis.setex(f"session:{session_token}", 86400, str(user.id))  # 24 hours
 
         return session_token
 
@@ -491,10 +527,7 @@ class SecureUserManager:
         return self.redis.exists(lockout_key) > 0
 
     async def _record_failed_attempt(
-        self,
-        identifier: str,
-        ip_address: Optional[str],
-        user_id: Optional[int] = None
+        self, identifier: str, ip_address: Optional[str], user_id: Optional[int] = None
     ) -> None:
         """Record failed login attempt"""
         if user_id:
@@ -508,16 +541,13 @@ class SecureUserManager:
                     if self.redis:
                         lockout_key = f"lockout:{identifier}"
                         self.redis.setex(
-                            lockout_key,
-                            self.lockout_policy.lockout_duration_minutes * 60,
-                            "locked"
+                            lockout_key, self.lockout_policy.lockout_duration_minutes * 60, "locked"
                         )
 
         # Audit log
-        await self._audit_log("failed_login", user_id, {
-            "identifier": identifier,
-            "ip_address": ip_address
-        })
+        await self._audit_log(
+            "failed_login", user_id, {"identifier": identifier, "ip_address": ip_address}
+        )
 
     async def _is_password_reused(self, user_id: int, password: str) -> bool:
         """Check if password was recently used"""
@@ -529,7 +559,8 @@ class SecureUserManager:
         history = self.redis.lrange(history_key, 0, -1)
 
         for old_hash in history:
-            if self._verify_password(password, old_hash.decode('utf-8')):
+            # Use the same truncation as in _verify_password
+            if self._verify_password(password, old_hash.decode("utf-8")):
                 return True
 
         return False
@@ -545,9 +576,7 @@ class SecureUserManager:
 
     async def _invalidate_user_sessions(self, user_id: int) -> None:
         """Invalidate all user sessions"""
-        sessions = self.db.query(UserSession).filter(
-            UserSession.user_id == user_id
-        ).all()
+        sessions = self.db.query(UserSession).filter(UserSession.user_id == user_id).all()
 
         for session in sessions:
             if self.redis:
@@ -579,10 +608,7 @@ class SecureUserManager:
         return data
 
     async def _audit_log(
-        self,
-        action: str,
-        user_id: Optional[int],
-        details: Dict[str, Any]
+        self, action: str, user_id: Optional[int], details: Dict[str, Any]
     ) -> None:
         """Create audit log entry"""
         try:
@@ -594,4 +620,10 @@ class SecureUserManager:
 
 
 # Export main class
-__all__ = ["SecureUserManager", "UserRole", "PasswordPolicy", "LockoutPolicy", "AuthenticationError"]
+__all__ = [
+    "SecureUserManager",
+    "UserRole",
+    "PasswordPolicy",
+    "LockoutPolicy",
+    "AuthenticationError",
+]

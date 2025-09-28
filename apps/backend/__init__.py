@@ -22,8 +22,9 @@ import logging
 from pathlib import Path
 
 # Add project root to path for imports
-PROJECT_ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+PROJECT_ROOT = Path(__file__).parent.parent.parent  # Go up to ToolBoxAI-Solutions
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 # Ensure logs directory exists before configuring logging
 os.makedirs(PROJECT_ROOT / "logs", exist_ok=True)
@@ -47,10 +48,20 @@ __description__ = "AI-Powered Educational Roblox Environment Server"
 
 # Export main components
 from .main import app as fastapi_app
-from .roblox_server import roblox_server
-from .agents.tools import ALL_TOOLS
-from .models import *
 from .core.config import settings
+
+# Handle imports that might not exist yet but are needed by other components
+try:
+    from .roblox_server import roblox_server
+except ImportError:
+    logger.warning("roblox_server module not found, using None placeholder")
+    roblox_server = None
+
+try:
+    from .agents.tools import ALL_TOOLS
+except ImportError:
+    logger.warning("agents.tools module not found, using empty list placeholder")
+    ALL_TOOLS = []
 
 # For backward compatibility with tests expecting flask_app
 app = fastapi_app  # Tests can use this

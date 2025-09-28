@@ -31,11 +31,13 @@ from flask_cors import CORS
 # Fix imports for standalone execution
 import os
 import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from toolboxai_settings import settings
+
 settings = settings
-from toolboxai_utils.async_utils import run_async
+from apps.backend.core.async_utils import run_async
 from apps.backend.core.security.rate_limit_manager import get_rate_limit_manager
 
 # Import agent systems for integration
@@ -44,6 +46,7 @@ try:
     from core.sparc.state_manager import StateManager  # Fixed: was SPARCStateManager
     from core.swarm.swarm_controller import SwarmController
     from core.mcp.context_manager import ContextManager
+
     AGENT_INTEGRATION = True
     print("Agent systems successfully imported for Flask bridge")
 except ImportError as e:
@@ -51,7 +54,7 @@ except ImportError as e:
     print(f"Warning: Agent systems not available for Flask bridge: {e}")
 
 
-# from src.shared.utils.cache import LRUCache
+# from core.shared.utils.cache import LRUCache
 # Real LRUCache implementation with full functionality
 class LRUCache:
     def __init__(self, capacity=100, max_size=None, ttl=None, persist_file=None):
@@ -64,7 +67,7 @@ class LRUCache:
         self.misses = 0
         self.evictions = 0
         self.timestamps = {}  # Track insertion times for TTL
-        
+
     def get(self, key):
         """Get value from cache"""
         # Check TTL if applicable
@@ -74,7 +77,7 @@ class LRUCache:
                 self._remove(key)
                 self.misses += 1
                 return None
-        
+
         if key in self.cache:
             self.order.remove(key)
             self.order.append(key)
@@ -82,7 +85,7 @@ class LRUCache:
             return self.cache[key]
         self.misses += 1
         return None
-    
+
     def put(self, key, value):
         """Add value to cache (original method)"""
         if key in self.cache:
@@ -97,11 +100,11 @@ class LRUCache:
         self.order.append(key)
         if self.ttl:
             self.timestamps[key] = time.time()
-    
+
     def set(self, key, value):
         """Alias for put to match test expectations"""
         self.put(key, value)
-    
+
     def delete(self, key):
         """Delete a key from the cache"""
         if key in self.cache:
@@ -110,7 +113,7 @@ class LRUCache:
             return True
         print(f"Cache: Key '{key}' not found in cache")
         return False
-    
+
     def _remove(self, key):
         """Remove key from cache"""
         if key in self.cache:
@@ -118,17 +121,17 @@ class LRUCache:
             self.order.remove(key)
             if key in self.timestamps:
                 del self.timestamps[key]
-    
+
     def clear(self):
         """Clear all cache entries"""
         self.cache.clear()
         self.order.clear()
         self.timestamps.clear()
-    
+
     def size(self):
         """Get current cache size"""
         return len(self.cache)
-    
+
     def stats(self):
         """Get cache statistics"""
         total_requests = self.hits + self.misses
@@ -139,36 +142,36 @@ class LRUCache:
             "evictions": self.evictions,
             "size": len(self.cache),
             "capacity": self.capacity,
-            "hit_rate": hit_rate
+            "hit_rate": hit_rate,
         }
-    
+
     def cleanup_expired(self):
         """Clean up expired entries and return count of cleaned entries"""
         if not self.ttl:
             return 0
-        
+
         current_time = time.time()
         expired_keys = []
-        
+
         for key, timestamp in self.timestamps.items():
             if current_time - timestamp > self.ttl:
                 expired_keys.append(key)
-        
+
         for key in expired_keys:
             self._remove(key)
-        
+
         return len(expired_keys)
 
 
-# from src.shared.utils.config import config_manager
-# from src.shared.utils.monitoring import (
+# from core.shared.utils.config import config_manager
+# from core.shared.utils.monitoring import (
 #     CorrelationIDFilter,
 #     health_checker,
 #     metrics,
 #     set_correlation_id,
 # )
-# from src.shared.utils.security import PluginSecurity
-# from src.shared.utils.storage import PersistentMemoryStore
+# from core.shared.utils.security import PluginSecurity
+# from core.shared.utils.storage import PersistentMemoryStore
 
 
 # Simple placeholders for now
@@ -180,11 +183,11 @@ class config_manager:
     @staticmethod
     def get(key, default=None):
         return default
-    
+
     @staticmethod
     def to_dict():
         return {}
-    
+
     @staticmethod
     def update(config_dict):
         pass
@@ -193,7 +196,7 @@ class config_manager:
 class CorrelationIDFilter:
     def filter(self, record):
         # Add correlation ID to log records
-        if not hasattr(record, 'correlation_id'):
+        if not hasattr(record, "correlation_id"):
             record.correlation_id = str(uuid.uuid4())[:8]
         return True
 
@@ -206,16 +209,12 @@ class health_checker:
     @staticmethod
     def register_check(name, check_func):
         pass
-    
+
     @staticmethod
     def run_checks():
         return {
             "overall_healthy": True,
-            "checks": {
-                "redis": True,
-                "fastapi": True,
-                "plugins": True
-            }
+            "checks": {"redis": True, "fastapi": True, "plugins": True},
         }
 
 
@@ -223,15 +222,15 @@ class metrics:
     @staticmethod
     def increment_counter(name):
         pass
-    
+
     @staticmethod
     def increment(name, value=1):
         pass
-    
+
     @staticmethod
     def set_gauge(name, value):
         pass
-    
+
     @staticmethod
     def get_metrics():
         return {"counters": {}, "gauges": {}}
@@ -245,10 +244,10 @@ def set_correlation_id(correlation_id=None):
 
 class PluginSecurity:
     """Enhanced security implementation for Roblox plugin authentication and authorization"""
-    
+
     def __init__(self, secret_key=None):
         """Initialize with optional secret key"""
-        self.secret_key = secret_key or getattr(settings, 'JWT_SECRET_KEY', 'default-secret-key')
+        self.secret_key = secret_key or getattr(settings, "JWT_SECRET_KEY", "default-secret-key")
         self.tokens = {}  # Store generated tokens
         self.permissions = {}  # Store plugin permissions
         self.rate_limits = {}  # Track rate limiting
@@ -259,108 +258,109 @@ class PluginSecurity:
         self.max_failed_attempts = 5  # Maximum failed authentication attempts
         self.failed_attempts = {}  # Track failed attempts per IP/plugin
         self.suspicious_activity = {}  # Track suspicious activity patterns
-        
+
     def validate_plugin_data(self, plugin_data):
         """Validate plugin registration data"""
         errors = []
-        
+
         # Check required fields (only studio_id is truly required)
-        required_fields = ['studio_id']
+        required_fields = ["studio_id"]
         for field in required_fields:
             if field not in plugin_data:
                 errors.append(f"Missing required field: {field}")
-        
+
         # Validate port number if provided
-        if 'port' in plugin_data:
-            port = plugin_data['port']
+        if "port" in plugin_data:
+            port = plugin_data["port"]
             if not isinstance(port, int) or port < 1024 or port > 65535:
                 errors.append(f"Invalid port number: {port}")
-        
+
         # Validate studio_id format
-        if 'studio_id' in plugin_data:
-            studio_id = plugin_data['studio_id']
+        if "studio_id" in plugin_data:
+            studio_id = plugin_data["studio_id"]
             if not isinstance(studio_id, str) or len(studio_id) < 5:
                 errors.append(f"Invalid studio_id: {studio_id}")
-        
+
         # Validate version format if provided
-        if 'version' in plugin_data:
-            version = plugin_data['version']
+        if "version" in plugin_data:
+            version = plugin_data["version"]
             if not isinstance(version, str) or len(version) > 20:
                 errors.append(f"Invalid version: {version}")
-        
+
         return errors
-    
+
     def generate_token(self, plugin_id):
         """Generate authentication token for plugin"""
         import hashlib
         import secrets
-        
+
         # Generate secure random token
         token_data = f"{plugin_id}:{secrets.token_hex(32)}:{time.time()}"
         token = hashlib.sha256(token_data.encode()).hexdigest()
-        
+
         # Store token with metadata
         self.tokens[token] = {
-            'plugin_id': plugin_id,
-            'created_at': time.time(),
-            'last_used': time.time()
+            "plugin_id": plugin_id,
+            "created_at": time.time(),
+            "last_used": time.time(),
         }
-        
+
         return token
-    
+
     def validate_token(self, plugin_id, token):
         """Validate authentication token for a specific plugin"""
         if not token or token not in self.tokens:
             return False
-        
+
         token_data = self.tokens[token]
-        
+
         # Check if token belongs to the specified plugin
-        if token_data.get('plugin_id') != plugin_id:
+        if token_data.get("plugin_id") != plugin_id:
             return False
-        
+
         # Check if token is expired (24 hours)
-        if time.time() - token_data['created_at'] > 86400:
+        if time.time() - token_data["created_at"] > 86400:
             del self.tokens[token]
             return False
-        
+
         # Update last used time
-        token_data['last_used'] = time.time()
+        token_data["last_used"] = time.time()
         return True
-    
+
     def set_permissions(self, plugin_id, permissions):
         """Set permissions for a plugin"""
         self.permissions[plugin_id] = permissions
-    
+
     def check_permission(self, plugin_id, permission):
         """Check if plugin has specific permission"""
         if plugin_id not in self.permissions:
             return False
         return permission in self.permissions[plugin_id]
-    
+
     def check_rate_limit(self, identifier, max_requests=100, window=60):
         """Check rate limiting for an identifier (IP or plugin_id)"""
         # Use centralized rate limit manager
         manager = get_rate_limit_manager()
-        
+
         # Convert async call to sync for backward compatibility
         import asyncio
+
         try:
             loop = asyncio.get_event_loop()
         except RuntimeError:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-        
+
         allowed, _ = loop.run_until_complete(
             manager.check_rate_limit(
                 identifier=identifier,
                 max_requests=max_requests,
                 window_seconds=window,
-                source="flask"
+                source="flask",
             )
         )
         return allowed
-    
+
     def validate_plugin(self, plugin_id, token):
         """Validate plugin with token"""
         return self.validate_token(plugin_id, token)
@@ -368,48 +368,50 @@ class PluginSecurity:
 
 class PersistentMemoryStore:
     """Real persistent memory store with file backup"""
-    
+
     def __init__(self, backup_file=None, max_memory_mb=100):
         self.backup_file = backup_file
         self.max_memory_mb = max_memory_mb
         self.store = {}
         self.last_backup = time.time()
         self.backup_interval = 300  # 5 minutes
-        
+
         # Load from backup if exists
         if backup_file and Path(backup_file).exists():
             try:
                 import json
-                with open(backup_file, 'r') as f:
+
+                with open(backup_file, "r") as f:
                     self.store = json.load(f)
             except Exception as e:
                 logger.warning(f"Failed to load backup: {e}")
-    
+
     def set(self, key, value):
         """Store a value"""
         self.store[key] = value
         self._check_backup()
-    
+
     def get(self, key, default=None):
         """Retrieve a value"""
         return self.store.get(key, default)
-    
+
     def delete(self, key):
         """Delete a key"""
         if key in self.store:
             del self.store[key]
-    
+
     def _check_backup(self):
         """Check if backup is needed"""
         if self.backup_file and time.time() - self.last_backup > self.backup_interval:
             self._backup()
-    
+
     def _backup(self):
         """Backup store to file"""
         if self.backup_file:
             try:
                 import json
-                with open(self.backup_file, 'w') as f:
+
+                with open(self.backup_file, "w") as f:
                     json.dump(self.store, f)
                 self.last_backup = time.time()
             except Exception as e:
@@ -496,9 +498,7 @@ class PluginManager:
         token = self.security.generate_token(plugin_id)
 
         # Set default permissions
-        self.security.set_permissions(
-            plugin_id, ["content_generation", "script_access"]
-        )
+        self.security.set_permissions(plugin_id, ["content_generation", "script_access"])
 
         registration = {
             "plugin_id": plugin_id,
@@ -582,9 +582,7 @@ class PluginManager:
                             if last_heartbeat > cutoff_time:
                                 active_plugins.append(plugin_data)
                         except (ValueError, TypeError) as e:
-                            logger.warning(
-                                "Invalid heartbeat for plugin %s: %s", key, e
-                            )
+                            logger.warning("Invalid heartbeat for plugin %s: %s", key, e)
 
         return active_plugins
 
@@ -623,9 +621,7 @@ class PluginManager:
                                 if plugin_id in self.plugins:
                                     del self.plugins[plugin_id]
                         except (ValueError, TypeError) as e:
-                            logger.warning(
-                                "Invalid heartbeat for plugin %s: %s", key, e
-                            )
+                            logger.warning("Invalid heartbeat for plugin %s: %s", key, e)
                             # Remove invalid entries
                             memory_store.delete(key)
 
@@ -637,9 +633,7 @@ class ContentBridge:
     """Bridges content requests between Roblox and FastAPI server"""
 
     def __init__(self):
-        self.fastapi_base_url = "http://{}:{}".format(
-            settings.API_HOST, settings.API_PORT
-        )
+        self.fastapi_base_url = "http://{}:{}".format(settings.API_HOST, settings.API_PORT)
         self.cache = LRUCache(
             max_size=config_manager.get("cache_max_size", 1000),
             ttl=config_manager.get("cache_ttl", 300),
@@ -647,35 +641,35 @@ class ContentBridge:
         )
         self._auth_token = None
         self._token_expiry = None
-        
+
         # Initialize agent systems if available
         global AGENT_INTEGRATION
         if AGENT_INTEGRATION:
             try:
                 self.supervisor_agent = SupervisorAgent()
                 self.sparc_manager = StateManager()  # Fixed: was SPARCStateManager
-                
+
                 # Initialize SwarmController with all required dependencies
                 from core.swarm.worker_pool import WorkerPool
                 from core.swarm.task_distributor import TaskDistributor
                 from core.swarm.consensus_engine import ConsensusEngine
                 from core.swarm.load_balancer import LoadBalancer
                 from core.swarm.swarm_controller import SwarmConfig
-                
+
                 swarm_config = SwarmConfig()
                 worker_pool = WorkerPool(max_workers=swarm_config.max_workers)
                 task_distributor = TaskDistributor()
                 consensus_engine = ConsensusEngine(threshold=swarm_config.consensus_threshold)
                 load_balancer = LoadBalancer(strategy=swarm_config.load_balancing_strategy)
-                
+
                 self.swarm_controller = SwarmController(
                     config=swarm_config,
                     worker_pool=worker_pool,
                     task_distributor=task_distributor,
                     consensus_engine=consensus_engine,
-                    load_balancer=load_balancer
+                    load_balancer=load_balancer,
                 )
-                
+
                 self.mcp_context = ContextManager()
                 logger.info("Agent systems integrated with Flask bridge")
             except Exception as e:
@@ -715,13 +709,11 @@ class ContentBridge:
         metrics.increment("cache_misses")
         return None
 
-    async def _forward_to_fastapi(
-        self, content_request: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _forward_to_fastapi(self, content_request: Dict[str, Any]) -> Dict[str, Any]:
         """Forward request to FastAPI server with real authentication"""
         # Get real authentication token
         auth_token = await self._get_auth_token()
-        
+
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {auth_token}",
@@ -740,25 +732,21 @@ class ContentBridge:
             return content_data
         else:
             logger.error("FastAPI request failed: %d", response.status_code)
-            return self._error_response(
-                f"Content generation failed: {response.status_code}"
-            )
+            return self._error_response(f"Content generation failed: {response.status_code}")
 
-    def _cache_result(
-        self, content_request: Dict[str, Any], content_data: Dict[str, Any]
-    ):
+    def _cache_result(self, content_request: Dict[str, Any], content_data: Dict[str, Any]):
         """Cache successful result"""
         cache_key = self._generate_cache_key(content_request)
         self.cache.set(cache_key, content_data)
-    
+
     def _is_cached(self, cache_key: str) -> bool:
         """Check if a key is in cache"""
         return self.cache.get(cache_key) is not None
-    
+
     def _cache_response(self, cache_key: str, data: Dict[str, Any]) -> None:
         """Cache a response with a given key"""
         self.cache.set(cache_key, data)
-    
+
     def _get_cached(self, cache_key: str) -> Optional[Dict[str, Any]]:
         """Get cached data by key"""
         return self.cache.get(cache_key)
@@ -771,57 +759,51 @@ class ContentBridge:
             "content": {},
             "scripts": [],
         }
-    
+
     async def _get_auth_token(self) -> str:
         """Get or refresh authentication token"""
         # Check if we have a valid token
         if self._auth_token and self._token_expiry:
             if datetime.now(timezone.utc) < self._token_expiry:
                 return self._auth_token
-        
+
         # Get new token from FastAPI
         try:
             # Use service account credentials for Flask bridge
-            auth_data = {
-                "username": "flask_bridge",
-                "password": "FlaskBridge2024!"
-            }
-            
+            auth_data = {"username": "flask_bridge", "password": "FlaskBridge2024!"}
+
             # Try real authentication first
             response = requests.post(
-                f"{self.fastapi_base_url}/auth/login",
-                json=auth_data,
-                timeout=5
+                f"{self.fastapi_base_url}/auth/login", json=auth_data, timeout=5
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
-                self._auth_token = data.get("access_token", data.get("data", {}).get("access_token"))
+                self._auth_token = data.get(
+                    "access_token", data.get("data", {}).get("access_token")
+                )
                 # Set expiry to 55 minutes from now (tokens usually last 1 hour)
                 self._token_expiry = datetime.now(timezone.utc) + timedelta(minutes=55)
                 logger.info("Flask bridge authenticated with FastAPI")
                 return self._auth_token
             else:
                 # Fall back to test credentials
-                auth_data = {
-                    "username": "john_teacher",
-                    "password": "Teacher123!"
-                }
+                auth_data = {"username": "john_teacher", "password": "Teacher123!"}
                 response = requests.post(
-                    f"{self.fastapi_base_url}/auth/login",
-                    json=auth_data,
-                    timeout=5
+                    f"{self.fastapi_base_url}/auth/login", json=auth_data, timeout=5
                 )
                 if response.status_code == 200:
                     data = response.json()
-                    self._auth_token = data.get("access_token", data.get("data", {}).get("access_token"))
+                    self._auth_token = data.get(
+                        "access_token", data.get("data", {}).get("access_token")
+                    )
                     self._token_expiry = datetime.now(timezone.utc) + timedelta(minutes=55)
                     logger.info("Flask bridge authenticated with test credentials")
                     return self._auth_token
-                    
+
         except Exception as e:
             logger.warning(f"Failed to get auth token: {e}")
-        
+
         # Return a demo token as last resort
         return "demo-token-flask-bridge"
 
@@ -997,9 +979,7 @@ class InputValidator:
             data.get("learning_objectives", []),
             "learning_objectives",
             max_items=20,
-            item_validator=lambda x, n: InputValidator.validate_string(
-                x, n, max_length=200
-            ),
+            item_validator=lambda x, n: InputValidator.validate_string(x, n, max_length=200),
         )
         validated["include_quiz"] = bool(data.get("include_quiz", True))
         validated["difficulty_level"] = InputValidator.validate_string(
@@ -1052,9 +1032,7 @@ def health_check():
     return (
         jsonify(
             {
-                "status": (
-                    "healthy" if health_results["overall_healthy"] else "unhealthy"
-                ),
+                "status": ("healthy" if health_results["overall_healthy"] else "unhealthy"),
                 "service": "ToolboxAI-Roblox-Flask-Bridge",
                 "version": "1.0.0",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -1108,7 +1086,10 @@ def register_plugin():
 def plugin_heartbeat(plugin_id: str):
     """Update plugin heartbeat with rate limiting"""
     correlation_id = set_correlation_id()
-    logger.info("Plugin heartbeat request started", extra={"correlation_id": correlation_id, "plugin_id": plugin_id})
+    logger.info(
+        "Plugin heartbeat request started",
+        extra={"correlation_id": correlation_id, "plugin_id": plugin_id},
+    )
 
     # Check rate limit
     if not plugin_security.check_rate_limit(
@@ -1184,7 +1165,7 @@ def generate_simple_content():
         # Map common subject aliases to valid enum values
         subject_mapping = {
             "math": "Mathematics",
-            "science": "Science", 
+            "science": "Science",
             "history": "History",
             "english": "English",
             "art": "Art",
@@ -1192,23 +1173,19 @@ def generate_simple_content():
             "computer_science": "Computer Science",
             "physics": "Physics",
             "chemistry": "Chemistry",
-            "biology": "Biology"
+            "biology": "Biology",
         }
-        
+
         subject = validated_data["subject"].lower()
         mapped_subject = subject_mapping.get(subject, validated_data["subject"])
-        
+
         full_request = {
             "subject": mapped_subject,
             "grade_level": validated_data["grade_level"],
             "learning_objectives": [
                 {
-                    "title": (
-                        obj if isinstance(obj, str) else obj.get("title", "Objective")
-                    ),
-                    "description": (
-                        "" if isinstance(obj, str) else obj.get("description", "")
-                    ),
+                    "title": (obj if isinstance(obj, str) else obj.get("title", "Objective")),
+                    "description": ("" if isinstance(obj, str) else obj.get("description", "")),
                 }
                 for obj in validated_data["learning_objectives"]
             ],
@@ -1407,9 +1384,7 @@ def _create_script_response(script_type: str, script_content: str) -> Response:
     return Response(
         script_content,
         mimetype="text/plain",
-        headers={
-            "Content-Disposition": f"attachment; filename={script_type}_template.lua"
-        },
+        headers={"Content-Disposition": f"attachment; filename={script_type}_template.lua"},
     )
 
 
@@ -1469,13 +1444,15 @@ def get_metrics():
     try:
         # Get metrics from the Metrics instance
         system_metrics = metrics.get_metrics()
-        
-        return jsonify({
-            "counters": system_metrics.get("counters", {}),
-            "gauges": system_metrics.get("gauges", {}),
-            "histograms": system_metrics.get("histograms", {}),
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        })
+
+        return jsonify(
+            {
+                "counters": system_metrics.get("counters", {}),
+                "gauges": system_metrics.get("gauges", {}),
+                "histograms": system_metrics.get("histograms", {}),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
     except Exception as e:
         logger.error("Metrics request failed: %s", e)
         return jsonify({"error": str(e)}), 500
@@ -1516,9 +1493,7 @@ def cleanup_task():
         except Exception as e:
             # Catch any other unexpected errors to prevent cleanup thread from dying
             logger.exception("Unexpected cleanup task error: %s", e)
-            time.sleep(
-                CLEANUP_SYSTEM_ERROR_RETRY_SECONDS
-            )  # Longer sleep for unexpected errors
+            time.sleep(CLEANUP_SYSTEM_ERROR_RETRY_SECONDS)  # Longer sleep for unexpected errors
 
 
 # Error handlers
@@ -1592,12 +1567,13 @@ def update_config():
         logger.error("Configuration update failed: %s", e)
         return jsonify({"success": False, "error": str(e)}), 400
 
+
 # Missing test functions for compatibility
 def handle_plugin_request(request_data: Dict[str, Any]) -> Dict[str, Any]:
     """Handle plugin communication requests"""
     action = request_data.get("action")
     data = request_data.get("data", {})
-    
+
     if action == "generate_content":
         # Forward to content bridge
         result = run_async(content_bridge.generate_content(data))
@@ -1614,18 +1590,12 @@ def sync_with_main_server(sync_data: Dict[str, Any]) -> Dict[str, Any]:
     try:
         # Build sync request
         sync_url = f"http://{settings.API_HOST}:{settings.API_PORT}/sync"
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer demo-token"
-        }
-        
+        headers = {"Content-Type": "application/json", "Authorization": "Bearer demo-token"}
+
         response = requests.post(
-            sync_url,
-            json=sync_data,
-            headers=headers,
-            timeout=REQUEST_TIMEOUT_SECONDS
+            sync_url, json=sync_data, headers=headers, timeout=REQUEST_TIMEOUT_SECONDS
         )
-        
+
         if response.status_code == 200:
             return {"status": "synced", "data": response.json()}
         else:
@@ -1676,16 +1646,16 @@ local behaviorType = "{behavior}"
 local patrolRadius = {radius}
 
 return npc
-"""
+""",
     }
-    
+
     # Get template
     template = scripts.get(script_type, "-- Unknown script type")
-    
+
     # Replace parameters
     for key, value in parameters.items():
         template = template.replace(f"{{{key}}}", str(value))
-    
+
     return template
 
 
@@ -1697,52 +1667,59 @@ def trigger_agent_pipeline():
         request_data = request.get_json()
         if not request_data:
             return jsonify({"status": "error", "message": "No data provided"}), 400
-        
+
         # Validate plugin authentication
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             return jsonify({"status": "error", "message": "Authentication required"}), 401
-        
+
         token = auth_header.split(" ")[1]
         plugin_id = plugin_security.validate_token(token)
         if not plugin_id:
             return jsonify({"status": "error", "message": "Invalid token"}), 401
-        
+
         # Check permissions
         if not plugin_security.check_permission(plugin_id, "content_generation"):
             return jsonify({"status": "error", "message": "Permission denied"}), 403
-        
+
         # Trigger agent pipeline
         if AGENT_INTEGRATION:
             from core.agents.plugin_communication import PluginCommunicationHub
-            
+
             hub = PluginCommunicationHub()
-            result = run_async(hub.handle_plugin_request({
-                "request_id": str(uuid.uuid4()),
-                "event_type": request_data.get("event_type"),
-                "config": request_data.get("config"),
-                "context": request_data.get("context"),
-                "metadata": {"plugin_id": plugin_id}
-            }))
-            
-            return jsonify({
-                "status": "success",
-                "request_id": result.get("request_id"),
-                "message": "Agent pipeline triggered"
-            })
+            result = run_async(
+                hub.handle_plugin_request(
+                    {
+                        "request_id": str(uuid.uuid4()),
+                        "event_type": request_data.get("event_type"),
+                        "config": request_data.get("config"),
+                        "context": request_data.get("context"),
+                        "metadata": {"plugin_id": plugin_id},
+                    }
+                )
+            )
+
+            return jsonify(
+                {
+                    "status": "success",
+                    "request_id": result.get("request_id"),
+                    "message": "Agent pipeline triggered",
+                }
+            )
         else:
             # Fallback to direct FastAPI call
             response = requests.post(
                 f"http://{settings.API_HOST}:{settings.API_PORT}/plugin/trigger-agents",
                 json=request_data,
                 headers={"Authorization": auth_header},
-                timeout=REQUEST_TIMEOUT_SECONDS
+                timeout=REQUEST_TIMEOUT_SECONDS,
             )
             return jsonify(response.json())
-            
+
     except Exception as e:
         logger.error(f"Agent pipeline error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route("/plugin/database/query", methods=["POST"])
 def query_database():
@@ -1751,56 +1728,49 @@ def query_database():
         request_data = request.get_json()
         if not request_data:
             return jsonify({"status": "error", "message": "No query provided"}), 400
-        
+
         # Validate authentication
         auth_header = request.headers.get("Authorization")
         if not auth_header:
             return jsonify({"status": "error", "message": "Authentication required"}), 401
-        
+
         # Import database helper
-        from core.database.roblox_models import RobloxDatabaseHelper
-        from core.database import get_db
-        
+        from database.core.roblox_models import RobloxDatabaseHelper
+        from database import get_db
+
         query_type = request_data.get("query_type")
         params = request_data.get("params", {})
-        
+
         # Execute query based on type
         async def execute_query():
             async with get_db() as session:
                 helper = RobloxDatabaseHelper()
-                
+
                 if query_type == "get_lesson_content":
                     return await helper.get_content_for_lesson(
-                        session,
-                        params.get("lesson_id"),
-                        params.get("content_type")
+                        session, params.get("lesson_id"), params.get("content_type")
                     )
                 elif query_type == "get_student_progress":
                     return await helper.track_student_progress(
-                        session,
-                        params.get("student_id"),
-                        params.get("lesson_id"),
-                        {}
+                        session, params.get("student_id"), params.get("lesson_id"), {}
                     )
                 else:
                     raise ValueError(f"Unknown query type: {query_type}")
-        
+
         result = run_async(execute_query())
-        
+
         # Convert result to JSON-serializable format
-        if hasattr(result, '__iter__'):
-            result = [item.to_dict() if hasattr(item, 'to_dict') else str(item) for item in result]
-        elif hasattr(result, 'to_dict'):
+        if hasattr(result, "__iter__"):
+            result = [item.to_dict() if hasattr(item, "to_dict") else str(item) for item in result]
+        elif hasattr(result, "to_dict"):
             result = result.to_dict()
-        
-        return jsonify({
-            "status": "success",
-            "data": result
-        })
-        
+
+        return jsonify({"status": "success", "data": result})
+
     except Exception as e:
         logger.error(f"Database query error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route("/plugin/dashboard/sync", methods=["POST"])
 def sync_with_dashboard():
@@ -1809,29 +1779,29 @@ def sync_with_dashboard():
         sync_data = request.get_json()
         if not sync_data:
             return jsonify({"status": "error", "message": "No sync data provided"}), 400
-        
+
         # Forward to dashboard backend
         response = requests.post(
             f"http://127.0.0.1:3000/api/roblox/sync",
             json=sync_data,
             headers={"Content-Type": "application/json"},
-            timeout=REQUEST_TIMEOUT_SECONDS
+            timeout=REQUEST_TIMEOUT_SECONDS,
         )
-        
+
         if response.status_code == 200:
-            return jsonify({
-                "status": "success",
-                "message": "Synced with dashboard"
-            })
+            return jsonify({"status": "success", "message": "Synced with dashboard"})
         else:
-            return jsonify({
-                "status": "error",
-                "message": f"Dashboard sync failed: {response.status_code}"
-            }), response.status_code
-            
+            return (
+                jsonify(
+                    {"status": "error", "message": f"Dashboard sync failed: {response.status_code}"}
+                ),
+                response.status_code,
+            )
+
     except Exception as e:
         logger.error(f"Dashboard sync error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route("/plugin/session/start", methods=["POST"])
 def start_plugin_session():
@@ -1840,29 +1810,28 @@ def start_plugin_session():
         session_data = request.get_json()
         if not session_data:
             return jsonify({"status": "error", "message": "No session data provided"}), 400
-        
+
         # Create session
         session_id = str(uuid.uuid4())
         session_data["session_id"] = session_id
         session_data["started_at"] = datetime.now(timezone.utc).isoformat()
         session_data["status"] = "active"
-        
+
         # Store session
         if redis_client:
             redis_client.hset(f"session:{session_id}", mapping=session_data)
             redis_client.expire(f"session:{session_id}", REDIS_PLUGIN_TTL_SECONDS)
         else:
             memory_store.set(f"session:{session_id}", session_data)
-        
-        return jsonify({
-            "status": "success",
-            "session_id": session_id,
-            "message": "Session started"
-        })
-        
+
+        return jsonify(
+            {"status": "success", "session_id": session_id, "message": "Session started"}
+        )
+
     except Exception as e:
         logger.error(f"Session start error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route("/plugin/session/<session_id>/end", methods=["POST"])
 def end_plugin_session(session_id):
@@ -1873,28 +1842,26 @@ def end_plugin_session(session_id):
             session_data = redis_client.hgetall(f"session:{session_id}")
         else:
             session_data = memory_store.get(f"session:{session_id}")
-        
+
         if not session_data:
             return jsonify({"status": "error", "message": "Session not found"}), 404
-        
+
         # Update session status
         session_data["status"] = "ended"
         session_data["ended_at"] = datetime.now(timezone.utc).isoformat()
-        
+
         # Store final state
         if redis_client:
             redis_client.hset(f"session:{session_id}", mapping=session_data)
         else:
             memory_store.set(f"session:{session_id}", session_data)
-        
-        return jsonify({
-            "status": "success",
-            "message": "Session ended"
-        })
-        
+
+        return jsonify({"status": "success", "message": "Session ended"})
+
     except Exception as e:
         logger.error(f"Session end error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route("/plugin/content/generate", methods=["POST"])
 def generate_content():
@@ -1903,18 +1870,16 @@ def generate_content():
         request_data = request.get_json()
         if not request_data:
             return jsonify({"status": "error", "message": "No data provided"}), 400
-        
+
         # Use content bridge to generate
         result = run_async(content_bridge.generate_content(request_data))
-        
-        return jsonify({
-            "status": "success",
-            "content": result
-        })
-        
+
+        return jsonify({"status": "success", "content": result})
+
     except Exception as e:
         logger.error(f"Content generation error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route("/plugin/progress/update", methods=["POST"])
 def update_progress():
@@ -1923,14 +1888,14 @@ def update_progress():
         progress_data = request.get_json()
         if not progress_data:
             return jsonify({"status": "error", "message": "No progress data provided"}), 400
-        
+
         # Store progress update
         student_id = progress_data.get("student_id")
         lesson_id = progress_data.get("lesson_id")
-        
+
         if not student_id or not lesson_id:
             return jsonify({"status": "error", "message": "Student ID and Lesson ID required"}), 400
-        
+
         # Store in cache
         progress_key = f"progress:{student_id}:{lesson_id}"
         if redis_client:
@@ -1938,22 +1903,20 @@ def update_progress():
             redis_client.expire(progress_key, REDIS_PLUGIN_TTL_SECONDS)
         else:
             memory_store.set(progress_key, progress_data)
-        
+
         # Forward to main server for persistence
         response = requests.post(
             f"http://{settings.API_HOST}:{settings.API_PORT}/progress/update",
             json=progress_data,
-            timeout=REQUEST_TIMEOUT_SECONDS
+            timeout=REQUEST_TIMEOUT_SECONDS,
         )
-        
-        return jsonify({
-            "status": "success",
-            "message": "Progress updated"
-        })
-        
+
+        return jsonify({"status": "success", "message": "Progress updated"})
+
     except Exception as e:
         logger.error(f"Progress update error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 # New Flask routes for missing test endpoints
 @app.route("/plugin/communicate", methods=["POST"])
@@ -1963,7 +1926,7 @@ def plugin_communicate():
         request_data = request.get_json()
         if not request_data:
             return jsonify({"status": "error", "message": "No data provided"}), 400
-        
+
         result = handle_plugin_request(request_data)
         return jsonify(result)
     except Exception as e:
@@ -1978,29 +1941,31 @@ def poll_messages():
         request_data = request.get_json()
         if not request_data:
             return jsonify({"status": "error", "message": "No data provided"}), 400
-        
+
         plugin_id = request_data.get("plugin_id")
         last_message_id = request_data.get("last_message_id", 0)
-        
+
         if not plugin_id:
             return jsonify({"status": "error", "message": "Plugin ID required"}), 400
-        
+
         # Get plugin from manager
         plugin = plugin_manager.get_plugin(plugin_id)
         if not plugin:
             return jsonify({"status": "error", "message": "Plugin not found"}), 404
-        
+
         # Get messages from message queue (in production, this would be from Redis/database)
         messages = []
         # This is a simplified implementation - in production, you'd store messages in Redis
         # and retrieve them based on last_message_id
-        
-        return jsonify({
-            "status": "success",
-            "messages": messages,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        })
-        
+
+        return jsonify(
+            {
+                "status": "success",
+                "messages": messages,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
+
     except Exception as e:
         logger.error(f"Message polling error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -2013,27 +1978,29 @@ def send_message():
         request_data = request.get_json()
         if not request_data:
             return jsonify({"status": "error", "message": "No data provided"}), 400
-        
+
         plugin_id = request_data.get("plugin_id")
         message = request_data.get("message")
-        
+
         if not plugin_id or not message:
             return jsonify({"status": "error", "message": "Plugin ID and message required"}), 400
-        
+
         # Get plugin from manager
         plugin = plugin_manager.get_plugin(plugin_id)
         if not plugin:
             return jsonify({"status": "error", "message": "Plugin not found"}), 404
-        
+
         # Process the message (in production, this would route to appropriate handlers)
         # For now, just acknowledge receipt
-        
-        return jsonify({
-            "status": "success",
-            "message": "Message received",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        })
-        
+
+        return jsonify(
+            {
+                "status": "success",
+                "message": "Message received",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
+
     except Exception as e:
         logger.error(f"Send message error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -2046,7 +2013,7 @@ def sync_endpoint():
         sync_data = request.get_json()
         if not sync_data:
             return jsonify({"status": "error", "message": "No sync data provided"}), 400
-        
+
         result = sync_with_main_server(sync_data)
         return jsonify(result)
     except Exception as e:
@@ -2061,10 +2028,10 @@ def generate_script_endpoint():
         request_data = request.get_json()
         if not request_data:
             return jsonify({"error": "No data provided"}), 400
-        
+
         script_type = request_data.get("script_type", "quiz_ui")
         parameters = request_data.get("parameters", {})
-        
+
         script = generate_roblox_script(script_type, parameters)
         return jsonify({"script": script})
     except Exception as e:

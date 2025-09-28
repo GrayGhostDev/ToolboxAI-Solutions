@@ -6,6 +6,8 @@
  */
 
 import React, { createContext, useContext, ReactNode } from 'react';
+import { ClerkProvider, useAuth, useUser, useSession } from '@clerk/nextjs/server';
+import { SignIn, SignUp, UserButton, SignOutButton } from '@clerk/nextjs/server';
 
 // Mock types matching Clerk's API
 interface MockUser {
@@ -355,4 +357,27 @@ export const createMockUser = (
   ...overrides
 });
 
-export default ClerkMockProvider;
+const selectProvider = (enableClerk: boolean) => (enableClerk ? ClerkProvider : LegacyClerkProvider);
+
+export const ClerkMockProvider: React.FC<{ children: ReactNode }> = ({ children }) => (
+  <ClerkMockProvider>{children}</ClerkMockProvider>
+);
+
+const LegacyClerkProvider: React.FC<{ children: ReactNode }> = ({ children }) => (
+  <ClerkMockProvider>{children}</ClerkMockProvider>
+);
+
+export const createClerkMockConfig = (options: { enableClerk: boolean }) => {
+  const Provider = selectProvider(options.enableClerk);
+
+  return {
+    Provider,
+    useAuth: mockedUseAuth,
+    useUser,
+    useSession,
+    SignIn,
+    SignUp,
+    UserButton,
+    SignOutButton,
+  };
+};

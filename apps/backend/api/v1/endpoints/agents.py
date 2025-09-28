@@ -12,14 +12,10 @@ from apps.backend.core.dependencies import (
     get_current_active_user,
     get_admin_user,
     get_agent_service,
-    validate_agent_id
+    validate_agent_id,
 )
 from apps.backend.core.logging import logging_manager
-from apps.backend.core.exceptions import (
-    NotFoundError,
-    ExternalServiceError,
-    ValidationError
-)
+from apps.backend.core.exceptions import NotFoundError, ExternalServiceError, ValidationError
 from apps.backend.models.schemas import BaseResponse, User
 from apps.backend.agents.agent import (
     agent_manager,
@@ -60,9 +56,7 @@ class AgentListResponse(BaseModel):
 
 
 @router.get("/health", response_model=List[AgentHealthResponse])
-async def get_agents_health(
-    current_user: User = Depends(get_current_active_user)
-):
+async def get_agents_health(current_user: User = Depends(get_current_active_user)):
     """Get health status of all agents"""
     try:
         health_data = await get_agent_health()
@@ -73,17 +67,19 @@ async def get_agents_health(
         # Transform the health data to match response model
         health_responses = []
         for agent_id, health_info in health_data.items():
-            health_responses.append(AgentHealthResponse(
-                agent_id=agent_id,
-                status=health_info.get("status", "unknown"),
-                uptime=health_info.get("uptime", 0.0),
-                last_heartbeat=health_info.get("last_heartbeat"),
-                metrics=health_info.get("metrics", {})
-            ))
+            health_responses.append(
+                AgentHealthResponse(
+                    agent_id=agent_id,
+                    status=health_info.get("status", "unknown"),
+                    uptime=health_info.get("uptime", 0.0),
+                    last_heartbeat=health_info.get("last_heartbeat"),
+                    metrics=health_info.get("metrics", {}),
+                )
+            )
 
         logger.info(
             f"Retrieved health for {len(health_responses)} agents",
-            extra_fields={"user_id": getattr(current_user, 'id', 'unknown')}
+            extra_fields={"user_id": getattr(current_user, "id", "unknown")},
         )
 
         return health_responses
@@ -91,23 +87,19 @@ async def get_agents_health(
     except Exception as e:
         logger.error(f"Failed to get agent health: {e}")
         raise ExternalServiceError(
-            detail="Failed to retrieve agent health information",
-            service="agent_system"
+            detail="Failed to retrieve agent health information", service="agent_system"
         )
 
 
 @router.get("/list", response_model=AgentListResponse)
-async def list_agents(
-    current_user: User = Depends(get_current_active_user)
-):
+async def list_agents(current_user: User = Depends(get_current_active_user)):
     """List all available agents"""
     try:
         # Get agent service
         agent_service = get_agent_service()
         if not agent_service:
             raise ExternalServiceError(
-                detail="Agent service not available",
-                service="agent_service"
+                detail="Agent service not available", service="agent_service"
             )
 
         agents = await agent_service.list_agents()
@@ -116,36 +108,30 @@ async def list_agents(
         inactive_count = len(agents) - active_count
 
         response = AgentListResponse(
-            agents=agents,
-            total=len(agents),
-            active=active_count,
-            inactive=inactive_count
+            agents=agents, total=len(agents), active=active_count, inactive=inactive_count
         )
 
         logger.info(
             f"Listed {len(agents)} agents",
             extra_fields={
-                "user_id": getattr(current_user, 'id', 'unknown'),
+                "user_id": getattr(current_user, "id", "unknown"),
                 "active_agents": active_count,
-                "inactive_agents": inactive_count
-            }
+                "inactive_agents": inactive_count,
+            },
         )
 
         return response
 
     except Exception as e:
         logger.error(f"Failed to list agents: {e}")
-        raise ExternalServiceError(
-            detail="Failed to list agents",
-            service="agent_system"
-        )
+        raise ExternalServiceError(detail="Failed to list agents", service="agent_system")
 
 
 @router.post("/execute", response_model=BaseResponse)
 async def execute_agent_task(
     request: AgentExecuteRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Execute a task using an agent"""
     try:
@@ -157,8 +143,7 @@ async def execute_agent_task(
         agent_service = get_agent_service()
         if not agent_service:
             raise ExternalServiceError(
-                detail="Agent service not available",
-                service="agent_service"
+                detail="Agent service not available", service="agent_service"
             )
 
         # Execute task in background
@@ -168,192 +153,147 @@ async def execute_agent_task(
             request.agent_type,
             request.task,
             request.parameters,
-            getattr(current_user, 'id', 'unknown')
+            getattr(current_user, "id", "unknown"),
         )
 
         logger.info(
             f"Agent task queued: {request.agent_type}",
             extra_fields={
                 "agent_type": request.agent_type,
-                "user_id": getattr(current_user, 'id', 'unknown'),
-                "task_length": len(request.task)
-            }
+                "user_id": getattr(current_user, "id", "unknown"),
+                "task_length": len(request.task),
+            },
         )
 
         return BaseResponse(
             status="success",
             message=f"Task queued for {request.agent_type} agent",
-            data={"agent_type": request.agent_type, "task_id": f"task_{asyncio.current_task().get_name()}"}
+            data={
+                "agent_type": request.agent_type,
+                "task_id": f"task_{asyncio.current_task().get_name()}",
+            },
         )
 
     except ValidationError:
         raise
     except Exception as e:
         logger.error(f"Failed to execute agent task: {e}")
-        raise ExternalServiceError(
-            detail="Failed to execute agent task",
-            service="agent_system"
-        )
+        raise ExternalServiceError(detail="Failed to execute agent task", service="agent_system")
 
 
 @router.get("/{agent_id}/status")
 async def get_agent_status(
     agent_id: str = Depends(validate_agent_id),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Get status of a specific agent"""
     try:
         agent_service = get_agent_service()
         if not agent_service:
             raise ExternalServiceError(
-                detail="Agent service not available",
-                service="agent_service"
+                detail="Agent service not available", service="agent_service"
             )
 
         status_info = await agent_service.get_agent_status(agent_id)
 
         if not status_info:
             raise NotFoundError(
-                detail=f"Agent {agent_id} not found",
-                resource_type="agent",
-                resource_id=agent_id
+                detail=f"Agent {agent_id} not found", resource_type="agent", resource_id=agent_id
             )
 
         logger.info(
             f"Retrieved status for agent {agent_id}",
-            extra_fields={
-                "agent_id": agent_id,
-                "user_id": getattr(current_user, 'id', 'unknown')
-            }
+            extra_fields={"agent_id": agent_id, "user_id": getattr(current_user, "id", "unknown")},
         )
 
-        return BaseResponse(
-            status="success",
-            data=status_info
-        )
+        return BaseResponse(status="success", data=status_info)
 
     except (NotFoundError, ExternalServiceError):
         raise
     except Exception as e:
         logger.error(f"Failed to get agent status: {e}")
-        raise ExternalServiceError(
-            detail="Failed to retrieve agent status",
-            service="agent_system"
-        )
+        raise ExternalServiceError(detail="Failed to retrieve agent status", service="agent_system")
 
 
 @router.post("/{agent_id}/restart")
 async def restart_agent(
-    agent_id: str = Depends(validate_agent_id),
-    current_user: User = Depends(get_admin_user)
+    agent_id: str = Depends(validate_agent_id), current_user: User = Depends(get_admin_user)
 ):
     """Restart a specific agent (admin only)"""
     try:
         agent_service = get_agent_service()
         if not agent_service:
             raise ExternalServiceError(
-                detail="Agent service not available",
-                service="agent_service"
+                detail="Agent service not available", service="agent_service"
             )
 
         success = await agent_service.restart_agent(agent_id)
 
         if not success:
             raise ExternalServiceError(
-                detail=f"Failed to restart agent {agent_id}",
-                service="agent_system"
+                detail=f"Failed to restart agent {agent_id}", service="agent_system"
             )
 
         logger.info(
             f"Agent {agent_id} restarted by admin",
-            extra_fields={
-                "agent_id": agent_id,
-                "admin_id": getattr(current_user, 'id', 'unknown')
-            }
+            extra_fields={"agent_id": agent_id, "admin_id": getattr(current_user, "id", "unknown")},
         )
 
-        return BaseResponse(
-            status="success",
-            message=f"Agent {agent_id} restarted successfully"
-        )
+        return BaseResponse(status="success", message=f"Agent {agent_id} restarted successfully")
 
-    except (ExternalServiceError):
+    except ExternalServiceError:
         raise
     except Exception as e:
         logger.error(f"Failed to restart agent: {e}")
-        raise ExternalServiceError(
-            detail="Failed to restart agent",
-            service="agent_system"
-        )
+        raise ExternalServiceError(detail="Failed to restart agent", service="agent_system")
 
 
 @router.post("/initialize")
-async def initialize_agent_system(
-    current_user: User = Depends(get_admin_user)
-):
+async def initialize_agent_system(current_user: User = Depends(get_admin_user)):
     """Initialize the agent system (admin only)"""
     try:
         await initialize_agents()
 
         logger.info(
             "Agent system initialized",
-            extra_fields={"admin_id": getattr(current_user, 'id', 'unknown')}
+            extra_fields={"admin_id": getattr(current_user, "id", "unknown")},
         )
 
-        return BaseResponse(
-            status="success",
-            message="Agent system initialized successfully"
-        )
+        return BaseResponse(status="success", message="Agent system initialized successfully")
 
     except Exception as e:
         logger.error(f"Failed to initialize agent system: {e}")
         raise ExternalServiceError(
-            detail="Failed to initialize agent system",
-            service="agent_system"
+            detail="Failed to initialize agent system", service="agent_system"
         )
 
 
 @router.post("/shutdown")
-async def shutdown_agent_system(
-    current_user: User = Depends(get_admin_user)
-):
+async def shutdown_agent_system(current_user: User = Depends(get_admin_user)):
     """Shutdown the agent system (admin only)"""
     try:
         await shutdown_agents()
 
         logger.warning(
             "Agent system shutdown",
-            extra_fields={"admin_id": getattr(current_user, 'id', 'unknown')}
+            extra_fields={"admin_id": getattr(current_user, "id", "unknown")},
         )
 
-        return BaseResponse(
-            status="success",
-            message="Agent system shutdown successfully"
-        )
+        return BaseResponse(status="success", message="Agent system shutdown successfully")
 
     except Exception as e:
         logger.error(f"Failed to shutdown agent system: {e}")
-        raise ExternalServiceError(
-            detail="Failed to shutdown agent system",
-            service="agent_system"
-        )
+        raise ExternalServiceError(detail="Failed to shutdown agent system", service="agent_system")
 
 
 # Background task function
 async def _execute_agent_task_background(
-    agent_service,
-    agent_type: str,
-    task: str,
-    parameters: Dict[str, Any],
-    user_id: str
+    agent_service, agent_type: str, task: str, parameters: Dict[str, Any], user_id: str
 ):
     """Execute agent task in background"""
     try:
         result = await agent_service.execute_task(
-            agent_type=agent_type,
-            task=task,
-            parameters=parameters,
-            user_id=user_id
+            agent_type=agent_type, task=task, parameters=parameters, user_id=user_id
         )
 
         logger.info(
@@ -361,15 +301,12 @@ async def _execute_agent_task_background(
             extra_fields={
                 "agent_type": agent_type,
                 "user_id": user_id,
-                "result_status": result.get("status", "unknown")
-            }
+                "result_status": result.get("status", "unknown"),
+            },
         )
 
     except Exception as e:
         logger.error(
             f"Background agent task failed: {e}",
-            extra_fields={
-                "agent_type": agent_type,
-                "user_id": user_id
-            }
+            extra_fields={"agent_type": agent_type, "user_id": user_id},
         )

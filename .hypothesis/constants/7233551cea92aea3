@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/github_agents/base_github_agent.py
-# hypothesis_version: 6.139.2
-
-[0.1, 1024.0, 100, '--version', '.git/', 'B', 'GB', 'INFO', 'KB', 'MB', 'TB', '__pycache__/', 'agent', 'command', 'critical_mb', 'details', 'enabled', 'error', 'errors_encountered', 'exempt_patterns', 'files_processed', 'git_available', 'github_agents', 'github_limit_mb', 'gpt-3.5-turbo', 'in_git_repo', 'large_file_detection', 'log_level', 'logs', 'logs/github_agents', 'logs_directory', 'monitoring', 'node_modules/', 'operation', 'operations_performed', 'r', 'runtime_seconds', 'size_thresholds', 'start_time', 'stderr', 'stdout', 'success', 'success_rate', 'timestamp', 'utf-8', 'venv/', 'w', 'warning_mb']

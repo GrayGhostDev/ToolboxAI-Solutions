@@ -8,7 +8,7 @@ from ..models.schemas import (
     GeneratedScript,
     TerrainConfiguration,
     GameMechanics,
-    LearningObjective
+    LearningObjective,
 )
 
 # Content-related schemas
@@ -31,5 +31,5 @@ __all__ = [
     "ScriptGeneration",
     "TerrainConfig",
     "GameConfig",
-    "Objective"
+    "Objective",
 ]

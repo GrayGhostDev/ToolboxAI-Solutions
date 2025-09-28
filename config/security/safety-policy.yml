@@ -1,0 +1,69 @@
+# Safety Policy for ToolBoxAI-Solutions
+# ====================================
+# Configuration for safety scanning of Python dependencies
+# Updated: 2025-09-25
+# ====================================
+
+# Security policy settings
+security-requirements:
+  # Ignore specific vulnerability IDs (use with caution)
+  ignore-vulnerabilities:
+    # Example: temporary ignores for accepted risks
+    # - 12345  # Acceptable risk - dev dependency only
+    # - 67890  # False positive - not applicable to our usage
+
+  # Continue on vulnerability discovery
+  continue-on-vulnerability-error: false
+
+  # Output formats
+  output:
+    - json
+    - text
+
+  # Severity levels to check
+  severity-levels:
+    - critical
+    - high
+    - medium
+    # - low  # Uncomment to include low severity
+
+# File patterns to include/exclude
+files:
+  include:
+    - "requirements*.txt"
+    - "pyproject.toml"
+    - "**/requirements*.txt"
+
+  exclude:
+    - "tests/**"
+    - "docs/**"
+    - "**/test-requirements.txt"
+
+# Reporting configuration
+reporting:
+  # Create SARIF output for GitHub Security tab
+  sarif: true
+
+  # Create JSON output for CI/CD processing
+  json: true
+
+  # Include full vulnerability details
+  full-report: true
+
+# CI/CD specific settings
+ci-cd:
+  # Fail CI/CD pipeline on vulnerabilities
+  fail-on-vulnerability: true
+
+  # Allow list for temporary acceptance of vulnerabilities
+  # (should be reviewed regularly)
+  accepted-risks: []
+    # - vulnerability-id: 12345
+    #   reason: "Dev dependency only, not in production"
+    #   expires: "2025-12-31"
+    #   approved-by: "security-team"
+
+# Custom rules (if supported by safety)
+custom-rules:
+  # Add any custom vulnerability detection rules here
+  enabled: false

@@ -1,21 +1,23 @@
 import * as React from "react";
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Alert from '@mui/material/Alert';
-import Stack from '@mui/material/Stack';
-import InputAdornment from '@mui/material/InputAdornment';
-import Paper from '@mui/material/Paper';
-import Stepper from '@mui/material/Stepper';
-import Step from '@mui/material/Step';
-import StepLabel from '@mui/material/StepLabel';
+import {
+  Box,
+  Card,
+  TextInput,
+  Button,
+  Text,
+  Alert,
+  Stack,
+  Paper,
+  Stepper,
+  Title,
+  Center,
+  Container,
+  Group
+} from '@mantine/core';
 
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Email, Lock, CheckCircle } from "@mui/icons-material";
+import { IconMail, IconLock, IconCircleCheck } from "@tabler/icons-react";
 import { useAppDispatch } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
 import { apiClient } from "../../services/api";
@@ -126,105 +128,86 @@ export default function PasswordReset() {
   };
 
   return (
-    <Box
-      sx={{
+    <Center
+      style={{
         minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        p: 2,
+        padding: 16,
       }}
     >
       <Paper
-        elevation={24}
-        sx={{
+        shadow="xl"
+        style={{
           width: "100%",
           maxWidth: 450,
-          borderRadius: 3,
+          borderRadius: 12,
           overflow: "hidden",
         }}
       >
         <Box
-          sx={{
-            p: 3,
+          p="xl"
+          style={{
             background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             color: "white",
             textAlign: "center",
           }}
         >
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+          <Title order={2} fw={700} mb="xs">
             Password Reset
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.9 }}>
+          </Title>
+          <Text size="sm" style={{ opacity: 0.9 }}>
             {token ? "Set your new password" : "Reset your ToolBoxAI password"}
-          </Typography>
+          </Text>
         </Box>
 
-        <CardContent sx={{ p: 3 }}>
-          <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
+        <Box p="xl">
+          <Stepper active={activeStep} mb="xl">
+            {steps.map((label, index) => (
+              <Stepper.Step key={label} label={label} />
             ))}
           </Stepper>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+            <Alert color="red" mb="md" radius="md">
               {error}
             </Alert>
           )}
 
           {/* Step 1: Request Reset */}
           {activeStep === 0 && !token && (
-            <Box component="form" onSubmit={handleRequestReset}>
-              <Stack spacing={3}>
-                <Typography variant="body2" color="text.secondary">
+            <form onSubmit={handleRequestReset}>
+              <Stack gap="lg">
+                <Text size="sm" c="dimmed">
                   Enter your email address and we'll send you a link to reset your password.
-                </Typography>
-                
-                <TextField
-                  fullWidth
+                </Text>
+
+                <TextInput
                   label="Email Address"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={loading}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Email color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                    },
-                  }}
+                  leftSection={<IconMail size={16} />}
+                  radius="md"
                 />
 
                 <Button
                   type="submit"
                   fullWidth
-                  variant="contained"
-                  size="large"
+                  size="md"
                   disabled={loading}
-                  sx={{
-                    borderRadius: 2,
-                    py: 1.5,
-                    textTransform: "none",
-                    fontSize: "1rem",
+                  radius="md"
+                  style={{
+                    padding: "12px 16px",
                     fontWeight: 600,
                   }}
                 >
                   {loading ? "Sending..." : "Send Reset Email"}
                 </Button>
 
-                <Box sx={{ textAlign: "center" }}>
-                  <Typography variant="body2" color="text.secondary">
+                <Center>
+                  <Text size="sm" c="dimmed">
                     Remember your password?{" "}
                     <Link
                       to="/login"
@@ -236,110 +219,82 @@ export default function PasswordReset() {
                     >
                       Back to login
                     </Link>
-                  </Typography>
-                </Box>
+                  </Text>
+                </Center>
               </Stack>
-            </Box>
+            </form>
           )}
 
           {/* Step 2: Set New Password */}
           {activeStep === 1 && token && (
-            <Box component="form" onSubmit={handleResetPassword}>
-              <Stack spacing={3}>
-                <Typography variant="body2" color="text.secondary">
+            <form onSubmit={handleResetPassword}>
+              <Stack gap="lg">
+                <Text size="sm" c="dimmed">
                   Please enter your new password below.
-                </Typography>
-                
-                <TextField
-                  fullWidth
+                </Text>
+
+                <TextInput
                   label="New Password"
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   disabled={loading}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Lock color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                    },
-                  }}
+                  leftSection={<IconLock size={16} />}
+                  radius="md"
                 />
 
-                <TextField
-                  fullWidth
+                <TextInput
                   label="Confirm New Password"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   disabled={loading}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Lock color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                    },
-                  }}
+                  leftSection={<IconLock size={16} />}
+                  radius="md"
                 />
 
                 <Button
                   type="submit"
                   fullWidth
-                  variant="contained"
-                  size="large"
+                  size="md"
                   disabled={loading}
-                  sx={{
-                    borderRadius: 2,
-                    py: 1.5,
-                    textTransform: "none",
-                    fontSize: "1rem",
+                  radius="md"
+                  style={{
+                    padding: "12px 16px",
                     fontWeight: 600,
                   }}
                 >
                   {loading ? "Resetting..." : "Reset Password"}
                 </Button>
               </Stack>
-            </Box>
+            </form>
           )}
 
           {/* Step 3: Success */}
           {activeStep === 2 && success && (
-            <Stack spacing={3} alignItems="center">
-              <CheckCircle sx={{ fontSize: 64, color: "success.main" }} />
-              
-              <Typography variant="h6" textAlign="center">
+            <Stack gap="lg" align="center">
+              <IconCircleCheck size={64} color="green" />
+
+              <Title order={4} ta="center">
                 {token ? "Password Reset Successful!" : "Reset Email Sent!"}
-              </Typography>
-              
-              <Typography variant="body2" color="text.secondary" textAlign="center">
-                {token 
+              </Title>
+
+              <Text size="sm" c="dimmed" ta="center">
+                {token
                   ? "Your password has been successfully reset. Redirecting to login..."
                   : "Please check your email for the password reset link. The link will expire in 1 hour."
                 }
-              </Typography>
+              </Text>
 
               {!token && (
                 <Button
                   fullWidth
-                  variant="contained"
-                  onClick={(e: React.MouseEvent) => () => navigate("/login")}
-                  sx={{
-                    borderRadius: 2,
-                    py: 1.5,
-                    textTransform: "none",
-                    fontSize: "1rem",
+                  onClick={() => navigate("/login")}
+                  radius="md"
+                  style={{
+                    padding: "12px 16px",
                     fontWeight: 600,
                   }}
                 >
@@ -348,8 +303,8 @@ export default function PasswordReset() {
               )}
             </Stack>
           )}
-        </CardContent>
+        </Box>
       </Paper>
-    </Box>
+    </Center>
   );
 }

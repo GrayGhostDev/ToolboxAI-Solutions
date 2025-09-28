@@ -1,29 +1,5 @@
 import { useState, useEffect } from "react";
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import Avatar from '@mui/material/Avatar';
-import InputAdornment from '@mui/material/InputAdornment';
+import { Box, Card, Text, Button, Table, Badge, ActionIcon, Stack, TextInput, Modal, Select, Avatar, Group } from '@mantine/core';
 
 import {
   listUsers,
@@ -33,7 +9,7 @@ import {
   suspendUser,
 } from "../../../services/api";
 import type { User as UserType, UserCreate, UserUpdate } from "@/types/api";
-import { Add, Edit, Delete, Search, Email } from "@mui/icons-material";
+import { IconPlus, IconEdit, IconTrash, IconSearch, IconMail } from "@tabler/icons-react";
 interface UserFormData {
   email: string;
   username: string;
@@ -243,274 +219,256 @@ export default function Users() {
     }
   };
   const getRoleColor = (role: string) => {
-    switch (role) {
-      case "Admin": return "error";
-      case "Teacher": return "primary";
-      case "Student": return "success";
-      case "Parent": return "info";
-      default: return "default";
+    switch (role.toLowerCase()) {
+      case "admin": return "red";
+      case "teacher": return "blue";
+      case "student": return "green";
+      case "parent": return "cyan";
+      default: return "gray";
     }
   };
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active": return "success";
-      case "suspended": return "error";
-      case "pending": return "warning";
-      default: return "default";
+      case "active": return "green";
+      case "suspended": return "red";
+      case "pending": return "orange";
+      default: return "gray";
     }
   };
   return (
     <Box>
       {error && (
-        <Box sx={{ mb: 2 }}>
-          <Typography color="error">{error}</Typography>
+        <Box mb="md" p="md" style={{ backgroundColor: 'var(--mantine-color-red-1)', borderRadius: 'var(--mantine-radius-sm)' }}>
+          <Text c="red">{error}</Text>
         </Box>
       )}
-      <Stack direction="row" justifyContent="between" alignItems="center" mb={3}>
-        <Typography variant="h4" sx={{ fontWeight: 600 }}>
+      <Group justify="space-between" mb="lg">
+        <Text size="xl" fw={600}>
           Users Management
-        </Typography>
+        </Text>
         <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={(e: React.MouseEvent) => handleAdd}
+          leftSection={<IconPlus size={16} />}
+          onClick={handleAdd}
         >
           Add User
         </Button>
-      </Stack>
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <TextField
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ flex: 1 }}
-            />
-            <FormControl sx={{ minWidth: 120 }}>
-              <InputLabel>Role</InputLabel>
-              <Select
-                value={roleFilter}
-                label="Role"
-                onChange={(e) => setRoleFilter(e.target.value)}
-              >
-                <MenuItem value="all">All Roles</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
-                <MenuItem value="teacher">Teacher</MenuItem>
-                <MenuItem value="student">Student</MenuItem>
-                <MenuItem value="parent">Parent</MenuItem>
-              </Select>
-            </FormControl>
-          </Stack>
-        </CardContent>
+      </Group>
+      <Card mb="lg">
+        <Group align="center" gap="md">
+          <TextInput
+            placeholder="Search users..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            leftSection={<IconSearch size={16} />}
+            style={{ flex: 1 }}
+          />
+          <Select
+            placeholder="Role"
+            value={roleFilter}
+            onChange={(value) => setRoleFilter(value || "all")}
+            data={[
+              { value: "all", label: "All Roles" },
+              { value: "admin", label: "Admin" },
+              { value: "teacher", label: "Teacher" },
+              { value: "student", label: "Student" },
+              { value: "parent", label: "Parent" },
+            ]}
+            w={120}
+          />
+        </Group>
       </Card>
       <Card>
-        <CardContent>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>User</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Role</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Last Login</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loading && users.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      <Typography>Loading users...</Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : users.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      <Typography>No users found. Add your first user!</Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <Stack direction="row" alignItems="center" spacing={2}>
-                          <Avatar src={user.avatarUrl}>
-                            {user.displayName?.charAt(0) || 'U'}
-                          </Avatar>
-                          <Typography fontWeight={500}>{user.displayName}</Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={user.role}
-                          color={getRoleColor(user.role) as any}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={user.status}
-                          color={getStatusColor(user.status) as any}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : "Never"}
-                      </TableCell>
-                      <TableCell>
-                        <IconButton 
-                          onClick={(e: React.MouseEvent) => () => handleEdit(user)} 
-                          size="small"
+        <Table.ScrollContainer minWidth={800}>
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>User</Table.Th>
+                <Table.Th>Email</Table.Th>
+                <Table.Th>Role</Table.Th>
+                <Table.Th>Status</Table.Th>
+                <Table.Th>Last Login</Table.Th>
+                <Table.Th>Actions</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {loading && users.length === 0 ? (
+                <Table.Tr>
+                  <Table.Td colSpan={6} ta="center">
+                    <Text>Loading users...</Text>
+                  </Table.Td>
+                </Table.Tr>
+              ) : users.length === 0 ? (
+                <Table.Tr>
+                  <Table.Td colSpan={6} ta="center">
+                    <Text>No users found. Add your first user!</Text>
+                  </Table.Td>
+                </Table.Tr>
+              ) : (
+                users.map((user) => (
+                  <Table.Tr key={user.id}>
+                    <Table.Td>
+                      <Group gap="sm">
+                        <Avatar src={user.avatarUrl} size="sm">
+                          {user.displayName?.charAt(0) || 'U'}
+                        </Avatar>
+                        <Text fw={500}>{user.displayName}</Text>
+                      </Group>
+                    </Table.Td>
+                    <Table.Td>{user.email}</Table.Td>
+                    <Table.Td>
+                      <Badge
+                        color={getRoleColor(user.role)}
+                        size="sm"
+                      >
+                        {user.role}
+                      </Badge>
+                    </Table.Td>
+                    <Table.Td>
+                      <Badge
+                        color={getStatusColor(user.status)}
+                        size="sm"
+                      >
+                        {user.status}
+                      </Badge>
+                    </Table.Td>
+                    <Table.Td>
+                      {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : "Never"}
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <ActionIcon
+                          onClick={() => handleEdit(user)}
+                          size="sm"
                           disabled={loading}
+                          variant="subtle"
                         >
-                          <Edit />
-                        </IconButton>
+                          <IconEdit size={16} />
+                        </ActionIcon>
                         <Button
-                          size="small"
-                          onClick={(e: React.MouseEvent) => () => handleSuspend(user.id)}
-                          color={user.status === "suspended" ? "success" : "warning"}
+                          size="xs"
+                          onClick={() => handleSuspend(user.id)}
+                          color={user.status === "suspended" ? "green" : "orange"}
                           disabled={loading}
+                          variant="light"
                         >
                           {user.status === "suspended" ? "Activate" : "Suspend"}
                         </Button>
-                        <IconButton 
-                          onClick={(e: React.MouseEvent) => () => handleDelete(user.id)} 
-                          size="small"
-                          color="error"
+                        <ActionIcon
+                          onClick={() => handleDelete(user.id)}
+                          size="sm"
+                          color="red"
                           disabled={loading}
+                          variant="subtle"
                         >
-                          <Delete />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                ))
+              )}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
       </Card>
-      <Dialog 
-        open={openDialog} 
-        onClose={() => setOpenDialog(false)} 
-        maxWidth="sm" 
-        fullWidth
-        keepMounted={false}
-        disableRestoreFocus={false}
-        disablePortal={false}
+      <Modal
+        opened={openDialog}
+        onClose={() => setOpenDialog(false)}
+        title={editingUser ? "Edit User" : "Add New User"}
+        size="md"
       >
-        <DialogTitle>
-          {editingUser ? "Edit User" : "Add New User"}
-        </DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField
-              fullWidth
-              label="First Name *"
-              value={formData.firstName}
-              onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+        <Stack gap="md">
+          <TextInput
+            label="First Name"
+            value={formData.firstName}
+            onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+            required
+            withAsterisk
+            error={!formData.firstName && formData.firstName !== "" ? "First name is required" : undefined}
+          />
+          <TextInput
+            label="Last Name"
+            value={formData.lastName}
+            onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+            required
+            withAsterisk
+            error={!formData.lastName && formData.lastName !== "" ? "Last name is required" : undefined}
+          />
+          <TextInput
+            label="Display Name"
+            value={formData.displayName}
+            onChange={(e) => setFormData(prev => ({ ...prev, displayName: e.target.value }))}
+            placeholder="Optional - defaults to First Last"
+          />
+          <TextInput
+            label="Username"
+            value={formData.username}
+            onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+            required
+            withAsterisk
+            error={!formData.username && formData.username !== "" ? "Username is required (min 3 characters)" : undefined}
+          />
+          <TextInput
+            label="Email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+            required
+            withAsterisk
+            leftSection={<IconMail size={16} />}
+            error={!formData.email && formData.email !== "" ? "Valid email is required" : undefined}
+          />
+          {!editingUser && (
+            <TextInput
+              label="Password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+              placeholder="Minimum 8 characters"
               required
-              error={!formData.firstName && formData.firstName !== ""}
-              helperText={!formData.firstName && formData.firstName !== "" ? "First name is required" : ""}
-              autoFocus
+              withAsterisk
+              error={!editingUser && formData.password !== "" && formData.password.length < 8 ? "Password must be at least 8 characters" : undefined}
             />
-            <TextField
-              fullWidth
-              label="Last Name *"
-              value={formData.lastName}
-              onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-              required
-              error={!formData.lastName && formData.lastName !== ""}
-              helperText={!formData.lastName && formData.lastName !== "" ? "Last name is required" : ""}
+          )}
+          {editingUser && (
+            <TextInput
+              label="New Password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+              placeholder="Leave blank to keep current password"
             />
-            <TextField
-              fullWidth
-              label="Display Name"
-              value={formData.displayName}
-              onChange={(e) => setFormData(prev => ({ ...prev, displayName: e.target.value }))}
-              placeholder="Optional - defaults to First Last"
-            />
-            <TextField
-              fullWidth
-              label="Username *"
-              value={formData.username}
-              onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-              required
-              error={!formData.username && formData.username !== ""}
-              helperText={!formData.username && formData.username !== "" ? "Username is required (min 3 characters)" : ""}
-            />
-            <TextField
-              fullWidth
-              label="Email *"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              required
-              error={!formData.email && formData.email !== ""}
-              helperText={!formData.email && formData.email !== "" ? "Valid email is required" : ""}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Email />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            {!editingUser && (
-              <TextField
-                fullWidth
-                label="Password *"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                placeholder="Minimum 8 characters"
-                required
-                error={!editingUser && formData.password !== "" && formData.password.length < 8}
-                helperText={!editingUser && formData.password !== "" && formData.password.length < 8 ? "Password must be at least 8 characters" : ""}
-              />
-            )}
-            {editingUser && (
-              <TextField
-                fullWidth
-                label="New Password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                placeholder="Leave blank to keep current password"
-              />
-            )}
-            <FormControl fullWidth required>
-              <InputLabel>Role *</InputLabel>
-              <Select
-                value={formData.role}
-                label="Role *"
-                onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
-              >
-                <MenuItem value="admin">Admin</MenuItem>
-                <MenuItem value="teacher">Teacher</MenuItem>
-                <MenuItem value="student">Student</MenuItem>
-                <MenuItem value="parent">Parent</MenuItem>
-              </Select>
-            </FormControl>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={(e: React.MouseEvent) => () => setOpenDialog(false)}>Cancel</Button>
-          <Button variant="contained" onClick={(e: React.MouseEvent) => handleSave}>
-            {editingUser ? "Update" : "Create"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          )}
+          <Select
+            label="Role"
+            value={formData.role}
+            onChange={(value) => setFormData(prev => ({ ...prev, role: value || "student" }))}
+            data={[
+              { value: "admin", label: "Admin" },
+              { value: "teacher", label: "Teacher" },
+              { value: "student", label: "Student" },
+              { value: "parent", label: "Parent" },
+            ]}
+            required
+            withAsterisk
+          />
+
+          <Group justify="flex-end" mt="md">
+            <Button
+              variant="subtle"
+              onClick={() => setOpenDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              loading={loading}
+            >
+              {editingUser ? "Update" : "Create"}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Box>
   );
 }

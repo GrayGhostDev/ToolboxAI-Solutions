@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Application Settings
-APP_NAME = os.getenv("APP_NAME", "ToolboxAI-Roblox-Environment")
+APP_NAME = os.getenv("APP_NAME", "ToolboxAI-Roblox")
 VERSION = "1.0.0"
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes", "on")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")

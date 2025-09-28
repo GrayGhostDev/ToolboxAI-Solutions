@@ -1,17 +1,32 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import Grid2 from "@mui/material/Unstable_Grid2";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Typography from "@mui/material/Typography";
-import LinearProgress from "@mui/material/LinearProgress";
-import Avatar from "@mui/material/Avatar";
-import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
-import CircularProgress from "@mui/material/CircularProgress";
-import RefreshIcon from "@mui/icons-material/Refresh";
+import {
+  Grid,
+  Card,
+  Text,
+  Progress,
+  Avatar,
+  Stack,
+  Button,
+  Box,
+  Badge,
+  Loader,
+  Group,
+  Divider,
+  ActionIcon,
+  Container
+} from "@mantine/core";
+import {
+  IconRefresh,
+  IconTrophy,
+  IconTrendingUp,
+  IconCheck,
+  IconRocket,
+  IconSchool,
+  IconDeviceGamepad2,
+  IconClipboardCheck
+} from "@tabler/icons-react";
+import { useMantineTheme } from "@mantine/core";
 import { UserRole } from "../../types";
 import { ProgressCharts } from "../widgets/ProgressCharts";
 import { useAppSelector, useAppDispatch } from "../../store";
@@ -19,13 +34,6 @@ import { addXP } from "../../store/slices/gamificationSlice";
 import { addNotification } from "../../store/slices/uiSlice";
 import { getDashboardOverview } from "../../services/api";
 import { DashboardOverview } from "../../types/api";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
-import SchoolIcon from "@mui/icons-material/School";
-import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
-import AssessmentIcon from "@mui/icons-material/Assessment";
 import { ROUTES } from "../../config/routes";
 import CreateLessonDialog from "../dialogs/CreateLessonDialog";
 import RealTimeAnalytics from "../widgets/RealTimeAnalytics";
@@ -41,14 +49,9 @@ import { RobloxAchievementBadge } from "../roblox/RobloxAchievementBadge";
 import { Simple3DIcon } from "../roblox/Simple3DIcon";
 import { Real3DIcon } from "../roblox/Real3DIcon";
 import { robloxColors } from "../../theme/robloxTheme";
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import Fade from '@mui/material/Fade';
-import Zoom from '@mui/material/Zoom';
-import Slide from '@mui/material/Slide';
 
 export function DashboardHome({ role }: { role?: UserRole }) {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const xp = useAppSelector((s) => s.gamification?.xp ?? 0);
@@ -72,20 +75,20 @@ export function DashboardHome({ role }: { role?: UserRole }) {
       setLoading(false);
       return;
     }
-    
+
     try {
       if (!isRetry) {
         setLoading(true);
         setError(null);
         setRetryCount(0);
       }
-      
+
       const data = await getDashboardOverview(effectiveRole);
       setDashboardData(data);
       setRetryCount(0); // Reset retry count on success
     } catch (err: any) {
       console.error("Dashboard data load error:", err);
-      
+
       // After 3 failed attempts, show fallback data instead of infinite retries
       if (retryCount >= 2) {
         console.log("Using fallback dashboard data due to repeated failures");
@@ -110,7 +113,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
         setLoading(false);
         return;
       }
-      
+
       // Provide more specific error messages
       if (err && typeof err === 'object' && 'code' in err && err.code === 'ECONNABORTED') {
         if (retryCount < 2 && !isRetry) {
@@ -171,120 +174,97 @@ export function DashboardHome({ role }: { role?: UserRole }) {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
+      <Box style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
+        <Loader />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box p={3}>
-        <Typography color="error" variant="h6">Error loading dashboard</Typography>
-        <Typography variant="body2" sx={{ mb: 2 }}>{error}</Typography>
-        <Stack direction="row" spacing={2}>
+      <Box p={20}>
+        <Text c="red" size="xl" fw={600}>Error loading dashboard</Text>
+        <Text size="sm" style={{ marginBottom: 16 }}>{error}</Text>
+        <Group>
           <Button
-            onClick={(e: React.MouseEvent) => () => loadDashboardData()}
-            variant="contained"
+            onClick={() => loadDashboardData()}
+            variant="filled"
             disabled={loading}
-            startIcon={loading ? <CircularProgress size={16} /> : <RefreshIcon />}
+            leftSection={loading ? <Loader size={16} /> : <IconRefresh size={16} />}
           >
             {loading ? 'Retrying...' : 'Retry'}
           </Button>
           <Button
-            onClick={(e: React.MouseEvent) => () => window.location.reload()}
-            variant="outlined"
+            onClick={() => window.location.reload()}
+            variant="outline"
           >
             Refresh Page
           </Button>
-        </Stack>
+        </Group>
       </Box>
     );
   }
 
   return (
     <>
-      <Grid2 container spacing={3}>
+      <Grid gutter="md">
       {/* Roblox-themed Welcome Banner */}
-      <Grid2 xs={12}>
+      <Grid.Col span={12}>
         <Card
-          sx={{
-            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+          style={{
+            background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
             color: "white",
             position: 'relative',
             overflow: 'hidden',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: `
-                radial-gradient(circle at 20% 80%, ${alpha('#fff', 0.1)} 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, ${alpha('#fff', 0.05)} 0%, transparent 50%)
-              `,
-              animation: 'float 20s ease-in-out infinite',
-              '@keyframes float': {
-                '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
-                '50%': { transform: 'translateY(-20px) rotate(180deg)' }
-              }
-            }
           }}
         >
-          <CardContent sx={{ position: 'relative', zIndex: 1 }}>
+          <Card.Section p="xl">
             <Stack
-              direction={{ xs: "column", md: "row" }}
-              justifyContent="space-between"
-              alignItems={{ xs: "flex-start", md: "center" }}
-              gap={2}
+              justify="space-between"
+              align="center"
+              gap="md"
             >
-              <Stack sx={{ flex: 1 }}>
-                <Fade in={true} timeout={1000} appear={false}>
-                  <Typography 
-                    variant="h4" 
-                    sx={{ 
-                      fontWeight: 800, 
-                      mb: 1,
-                      background: 'linear-gradient(135deg, #fff, #e0e0e0)',
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      textShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                    }}
-                  >
-                    <Stack direction="row" alignItems="center" spacing={1} component="span">
+              <Stack style={{ flex: 1 }}>
+                <Text
+                  size="xl"
+                  fw={800}
+                  style={{
+                    background: 'linear-gradient(135deg, #fff, #e0e0e0)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  <Group align="center" gap="xs">
+                    <Real3DIcon
+                      iconName="ROCKET"
+                      size="small"
+                      animated={true}
+                      particleEffect="sparkle"
+                      glowColor={robloxColors.neon.electricBlue}
+                    />
+                    <span>Welcome to Space Station!</span>
+                    <Box style={{ display: 'inline-flex', animation: 'neon-pulse 2s ease-in-out infinite' }}>
                       <Real3DIcon
-                        iconName="ROCKET"
+                        iconName="STAR"
                         size="small"
                         animated={true}
-                        particleEffect="sparkle"
-                        glowColor={robloxColors.neon.electricBlue}
+                        particleEffect="none"
+                        glowColor={robloxColors.neon.plasmaYellow}
                       />
-                      <span>Welcome to Space Station!</span>
-                      <Box sx={{ display: 'inline-flex', animation: 'neon-pulse 2s ease-in-out infinite' }}>
-                        <Real3DIcon
-                          iconName="STAR"
-                          size="small"
-                          animated={true}
-                          particleEffect="none"
-                          glowColor={robloxColors.neon.plasmaYellow}
-                        />
-                      </Box>
-                    </Stack>
-                  </Typography>
-                </Fade>
-                <Slide in={true} direction="up" timeout={1500} appear={false}>
-                  <Typography variant="body1" sx={{ opacity: 0.9, mb: 2 }}>
-                    {role === "teacher" && "Review today's classes, push lessons to Roblox, and track assessments."}
-                    {role === "admin" && "Monitor usage across schools, manage integrations, and review compliance."}
-                    {role === "student" && "Jump into your next mission, level up, and check the leaderboard!"}
-                    {role === "parent" && "See your child's progress, download reports, and message teachers."}
-                  </Typography>
-                </Slide>
-                
+                    </Box>
+                  </Group>
+                </Text>
+                <Text size="md" style={{ opacity: 0.9, marginBottom: 16 }}>
+                  {role === "teacher" && "Review today's classes, push lessons to Roblox, and track assessments."}
+                  {role === "admin" && "Monitor usage across schools, manage integrations, and review compliance."}
+                  {role === "student" && "Jump into your next mission, level up, and check the leaderboard!"}
+                  {role === "parent" && "See your child's progress, download reports, and message teachers."}
+                </Text>
+
                 {/* Character Avatar */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                <Group align="center" gap="md" style={{ marginBottom: 16 }}>
                   <RobloxCharacterAvatar
                     character={{
                       name: "Space Explorer",
@@ -301,22 +281,22 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     animated={true}
                   />
                   <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    <Text size="lg" fw={600}>
                       Level {level} Explorer
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                    </Text>
+                    <Text size="sm" style={{ opacity: 0.8 }}>
                       {userXP} XP • {streakDays} day streak
-                    </Typography>
+                    </Text>
                   </Box>
-                </Box>
+                </Group>
               </Stack>
-              <Stack direction="row" gap={2} flexWrap="wrap">
+              <Group gap="md" wrap="wrap">
                 {role === "teacher" && (
                   <>
                     <Roblox3DButton
                       iconName="ROCKET"
                       label="Roblox Studio"
-                      onClick={(e: React.MouseEvent) => () => navigate('/roblox-studio')}
+                      onClick={() => navigate('/roblox-studio')}
                       variant="primary"
                       size="medium"
                       animated={true}
@@ -326,7 +306,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="OPEN_BOOK"
                       label="Create Lesson"
-                      onClick={(e: React.MouseEvent) => () => setCreateLessonOpen(true)}
+                      onClick={() => setCreateLessonOpen(true)}
                       variant="secondary"
                       size="medium"
                       animated={true}
@@ -335,7 +315,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="ASSESSMENT"
                       label="View Assessments"
-                      onClick={(e: React.MouseEvent) => () => navigate(ROUTES.ASSESSMENTS)}
+                      onClick={() => navigate(ROUTES.ASSESSMENTS)}
                       variant="secondary"
                       size="medium"
                       animated={true}
@@ -348,7 +328,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="LIGHT_BULB"
                       label="Analytics"
-                      onClick={(e: React.MouseEvent) => () => navigate(ROUTES.ANALYTICS)}
+                      onClick={() => navigate(ROUTES.ANALYTICS)}
                       variant="primary"
                       size="medium"
                       animated={true}
@@ -357,7 +337,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="SETTINGS"
                       label="Manage LMS"
-                      onClick={(e: React.MouseEvent) => () => navigate(ROUTES.INTEGRATIONS)}
+                      onClick={() => navigate(ROUTES.INTEGRATIONS)}
                       variant="secondary"
                       size="medium"
                       animated={true}
@@ -370,7 +350,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="ROCKET"
                       label="Enter Roblox World"
-                      onClick={(e: React.MouseEvent) => handleCompleteTask}
+                      onClick={handleCompleteTask}
                       variant="primary"
                       size="medium"
                       animated={true}
@@ -379,7 +359,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="TROPHY"
                       label="View Rewards"
-                      onClick={(e: React.MouseEvent) => () => navigate(ROUTES.REWARDS)}
+                      onClick={() => navigate(ROUTES.REWARDS)}
                       variant="secondary"
                       size="medium"
                       animated={true}
@@ -392,7 +372,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="SPORTS_ESPORTS"
                       label="Watch Gameplay"
-                      onClick={(e: React.MouseEvent) => () => navigate('/gameplay-replay')}
+                      onClick={() => navigate('/gameplay-replay')}
                       variant="primary"
                       size="medium"
                       animated={true}
@@ -401,7 +381,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     <Roblox3DButton
                       iconName="ASSESSMENT"
                       label="View Reports"
-                      onClick={(e: React.MouseEvent) => () => navigate(ROUTES.REPORTS)}
+                      onClick={() => navigate(ROUTES.REPORTS)}
                       variant="secondary"
                       size="medium"
                       animated={true}
@@ -412,682 +392,632 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                 <Roblox3DButton
                   iconName="REFRESH"
                   label="Refresh"
-                  onClick={(e: React.MouseEvent) => () => void loadDashboardData()}
+                  onClick={() => void loadDashboardData()}
                   variant="info"
                   size="medium"
                   animated={true}
                   glowEffect={true}
                   tooltip="Refresh dashboard data"
                 />
-              </Stack>
+              </Group>
             </Stack>
-          </CardContent>
+          </Card.Section>
         </Card>
-      </Grid2>
+      </Grid.Col>
 
       {/* 3D Educational Tools Section */}
-      <Grid2 xs={12}>
-        <Fade in={true} timeout={2000} appear={false}>
-          <Card
-            sx={{
-              background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.05)})`,
-              border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-              borderRadius: 3,
-              overflow: 'hidden'
-            }}
-          >
-            <CardContent sx={{ p: 4 }}>
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 700,
-                  mb: 3,
-                  textAlign: 'center',
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                <Stack direction="row" alignItems="center" spacing={1} justifyContent="center">
-                  <Real3DIcon
-                    iconName="SPORTS_ESPORTS"
-                    size="small"
-                    animated={true}
-                    particleEffect="none"
-                    glowColor={robloxColors.neon.hotPink}
-                  />
-                  <span>Your Learning Tools</span>
-                </Stack>
-              </Typography>
-              
-              <Grid2 container spacing={3} justifyContent="center">
-                {[
-                  { name: 'ABC_CUBE', description: 'ABC Learning Cube' },
-                  { name: 'BOARD', description: 'Math Learning Board' },
-                  { name: 'ROCKET', description: 'Space Quiz Mission' },
-                  { name: 'SOCCER_BALL', description: 'Sports Challenge' },
-                  { name: 'BRUSH_PAINT', description: 'Art Studio' },
-                  { name: 'TROPHY', description: 'Achievements Hall' },
-                ].map((tool, index) => (
-                  <Grid2 xs={6} sm={4} md={2} key={index}>
-                    <Zoom in={true} timeout={2000 + index * 200} appear={false}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          p: 2,
-                          borderRadius: 3,
-                          background: `linear-gradient(145deg, ${alpha(theme.palette.primary.main, 0.1)}, ${alpha(theme.palette.secondary.main, 0.05)})`,
-                          border: `2px solid ${alpha(theme.palette.primary.main, 0.3)}`,
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            transform: 'translateY(-5px) scale(1.05)',
-                            boxShadow: `0 10px 25px ${alpha(theme.palette.primary.main, 0.3)}`,
-                            borderColor: theme.palette.primary.main,
-                          }
-                        }}
-                        onClick={(e: React.MouseEvent) => () => console.log(`Clicked ${tool.name}`)}
-                      >
-                          <Real3DIcon
-                            iconName={tool.name}
-                            size="large"
-                            animated={true}
-                            description={tool.description}
-                          />
-                        <Typography variant="body2" sx={{ textAlign: 'center', fontWeight: 600, mt: 1 }}>
-                          {tool.description}
-                        </Typography>
-                      </Box>
-                    </Zoom>
-                  </Grid2>
-                ))}
-              </Grid2>
-            </CardContent>
-          </Card>
-        </Fade>
-      </Grid2>
-
-      {/* Navigation Section */}
-      <Grid2 xs={12}>
-        <Fade in={true} timeout={2500} appear={false}>
-          <Card
-            sx={{
-              background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.05)})`,
-              border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-              borderRadius: 3,
-              p: 2,
-            }}
-          >
-            <Typography variant="h6" sx={{ textAlign: 'center', mb: 2, fontWeight: 700 }}>
-              <Stack direction="row" alignItems="center" spacing={1} justifyContent="center">
+      <Grid.Col span={12}>
+        <Card
+          style={{
+            background: `linear-gradient(145deg, ${theme.colors.gray[0]}, ${theme.colors.blue[0]})`,
+            border: `2px solid ${theme.colors.blue[2]}`,
+            borderRadius: theme.radius.md,
+            overflow: 'hidden'
+          }}
+        >
+          <Card.Section p="xl">
+            <Text
+              size="xl"
+              fw={700}
+              style={{
+                marginBottom: 24,
+                textAlign: 'center',
+                background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              <Group justify="center" align="center" gap="xs">
                 <Real3DIcon
-                  iconName="BOARD"
+                  iconName="SPORTS_ESPORTS"
                   size="small"
                   animated={true}
                   particleEffect="none"
-                  glowColor={robloxColors.neon.electricBlue}
+                  glowColor={robloxColors.neon.hotPink}
                 />
-                <span>Navigation Hub</span>
-              </Stack>
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <span>Your Learning Tools</span>
+              </Group>
+            </Text>
+
+            <Grid gutter="md" justify="center">
               {[
-                { name: 'Dashboard', icon: 'BOARD', iconColor: robloxColors.neon.electricBlue, path: '/dashboard' },
-                { name: 'Lessons', icon: 'BOOKS', iconColor: robloxColors.neon.toxicGreen, path: '/lessons', badge: 3 },
-                { name: 'Assessments', icon: 'ASSESSMENT', iconColor: robloxColors.neon.hotPink, path: '/assessments' },
-                { name: 'Rewards', icon: 'TROPHY', iconColor: robloxColors.neon.plasmaYellow, path: '/rewards', badge: 5 },
-                { name: 'Profile', icon: 'BADGE', iconColor: robloxColors.neon.deepPurple, path: '/profile' },
-              ].map((item, index) => (
-                <Button
-                  key={index}
-                  variant="contained"
-                  startIcon={
-                    <Real3DIcon
-                      iconName={item.icon}
-                      size="small"
-                      animated={false}
-                      particleEffect="none"
-                      glowColor={item.iconColor}
-                    />
-                  }
-                  onClick={(e: React.MouseEvent) => () => navigate(item.path)}
-                  sx={{
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                    borderRadius: 2,
-                    px: 3,
-                    py: 1,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    boxShadow: `0 4px 15px ${alpha(theme.palette.primary.main, 0.3)}`,
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
-                    }
-                  }}
-                >
-                  {item.name}
-                  {item.badge && (
-                    <Chip
-                      label={item.badge}
-                      size="small"
-                      sx={{
-                        ml: 1,
-                        backgroundColor: theme.palette.error.main,
-                        color: 'white',
-                        fontSize: '0.7rem',
-                        height: 20,
-                      }}
-                    />
-                  )}
-                </Button>
+                { name: 'ABC_CUBE', description: 'ABC Learning Cube' },
+                { name: 'BOARD', description: 'Math Learning Board' },
+                { name: 'ROCKET', description: 'Space Quiz Mission' },
+                { name: 'SOCCER_BALL', description: 'Sports Challenge' },
+                { name: 'BRUSH_PAINT', description: 'Art Studio' },
+                { name: 'TROPHY', description: 'Achievements Hall' },
+              ].map((tool, index) => (
+                <Grid.Col span={{ base: 6, sm: 4, md: 2 }} key={index}>
+                  <Box
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      padding: 16,
+                      borderRadius: theme.radius.md,
+                      background: `linear-gradient(145deg, ${theme.colors.blue[1]}, ${theme.colors.violet[0]})`,
+                      border: `2px solid ${theme.colors.blue[3]}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                    }}
+                    onClick={() => console.log(`Clicked ${tool.name}`)}
+                  >
+                      <Real3DIcon
+                        iconName={tool.name}
+                        size="large"
+                        animated={true}
+                        description={tool.description}
+                      />
+                    <Text size="sm" ta="center" fw={600} mt="xs">
+                      {tool.description}
+                    </Text>
+                  </Box>
+                </Grid.Col>
               ))}
-            </Box>
-          </Card>
-        </Fade>
-      </Grid2>
+            </Grid>
+          </Card.Section>
+        </Card>
+      </Grid.Col>
+
+      {/* Navigation Section */}
+      <Grid.Col span={12}>
+        <Card
+          style={{
+            background: `linear-gradient(145deg, ${theme.colors.gray[0]}, ${theme.colors.blue[0]})`,
+            border: `2px solid ${theme.colors.blue[2]}`,
+            borderRadius: theme.radius.md,
+            padding: 16,
+          }}
+        >
+          <Text size="lg" ta="center" mb="md" fw={700}>
+            <Group justify="center" align="center" gap="xs">
+              <Real3DIcon
+                iconName="BOARD"
+                size="small"
+                animated={true}
+                particleEffect="none"
+                glowColor={robloxColors.neon.electricBlue}
+              />
+              <span>Navigation Hub</span>
+            </Group>
+          </Text>
+          <Group justify="center" gap="md" wrap="wrap">
+            {[
+              { name: 'Dashboard', icon: 'BOARD', iconColor: robloxColors.neon.electricBlue, path: '/dashboard' },
+              { name: 'Lessons', icon: 'BOOKS', iconColor: robloxColors.neon.toxicGreen, path: '/lessons', badge: 3 },
+              { name: 'Assessments', icon: 'ASSESSMENT', iconColor: robloxColors.neon.hotPink, path: '/assessments' },
+              { name: 'Rewards', icon: 'TROPHY', iconColor: robloxColors.neon.plasmaYellow, path: '/rewards', badge: 5 },
+              { name: 'Profile', icon: 'BADGE', iconColor: robloxColors.neon.deepPurple, path: '/profile' },
+            ].map((item, index) => (
+              <Button
+                key={index}
+                variant="filled"
+                leftSection={
+                  <Real3DIcon
+                    iconName={item.icon}
+                    size="small"
+                    animated={false}
+                    particleEffect="none"
+                    glowColor={item.iconColor}
+                  />
+                }
+                onClick={() => navigate(item.path)}
+                style={{
+                  background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
+                  borderRadius: theme.radius.sm,
+                  padding: '8px 24px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                }}
+              >
+                {item.name}
+                {item.badge && (
+                  <Badge
+                    size="sm"
+                    style={{
+                      marginLeft: 8,
+                      backgroundColor: theme.colors.red[6],
+                      color: 'white',
+                      fontSize: '0.7rem',
+                    }}
+                  >
+                    {item.badge}
+                  </Badge>
+                )}
+              </Button>
+            ))}
+          </Group>
+        </Card>
+      </Grid.Col>
 
       {/* 3D Progress and Achievement Cards */}
       {role === "student" && (
         <>
-          <Grid2 xs={12} md={4}>
-            <Fade in={true} timeout={3000} appear={false}>
-              <Card 
-                role="region" 
-                aria-label="XP overview"
-                sx={{
-                  background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.05)})`,
-                  border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                  borderRadius: 3,
-                  overflow: 'hidden'
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Avatar
-                      sx={{
-                        width: 50,
-                        height: 50,
-                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                        fontSize: '1.5rem',
-                        border: `2px solid ${theme.palette.primary.main}`,
-                        boxShadow: `0 0 15px ${alpha(theme.palette.primary.main, 0.4)}`,
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Card
+              role="region"
+              aria-label="XP overview"
+              style={{
+                background: `linear-gradient(145deg, ${theme.colors.gray[0]}, ${theme.colors.blue[0]})`,
+                border: `2px solid ${theme.colors.blue[2]}`,
+                borderRadius: theme.radius.md,
+                overflow: 'hidden'
+              }}
+            >
+              <Card.Section p="md">
+                <Group align="center" gap="md" mb="md">
+                  <Avatar
+                    size="lg"
+                    style={{
+                      background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
+                      border: `2px solid ${theme.colors.blue[6]}`,
+                    }}
+                  >
+                    🏆
+                  </Avatar>
+                  <Box>
+                    <Text size="lg" fw={700} c={theme.colors.blue[6]}>
+                      Experience Points
+                    </Text>
+                    <Text size="xl" fw={800}>
+                      {xp.toLocaleString()}
+                    </Text>
+                  </Box>
+                </Group>
+
+                <Box mb="xs">
+                  <Text size="sm" c="dimmed" mb="xs">
+                    Level Progress: {xp % 100}%
+                  </Text>
+                  <Progress
+                    value={xp % 100}
+                    size="lg"
+                    radius="xl"
+                    color="blue"
+                  />
+                </Box>
+              </Card.Section>
+            </Card>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Card
+              role="region"
+              aria-label="Level status"
+              style={{
+                background: `linear-gradient(145deg, ${theme.colors.gray[0]}, ${theme.colors.orange[0]})`,
+                border: `2px solid ${theme.colors.orange[2]}`,
+                borderRadius: theme.radius.md,
+                overflow: 'hidden'
+              }}
+            >
+              <Card.Section p="md">
+                <Group align="center" gap="md" mb="md">
+                  <Avatar
+                    size="lg"
+                    style={{
+                      background: `linear-gradient(135deg, ${theme.colors.orange[6]}, ${theme.colors.red[6]})`,
+                      border: `2px solid ${theme.colors.orange[6]}`,
+                    }}
+                  >
+                    ⭐
+                  </Avatar>
+                  <Box>
+                    <Text size="lg" fw={700} c={theme.colors.orange[6]}>
+                      Current Level
+                    </Text>
+                    <Text size="xl" fw={800}>
+                      Level {level}
+                    </Text>
+                  </Box>
+                </Group>
+
+                <Text size="sm" c="dimmed" mb="xs">
+                  {100 - (xp % 100)} XP to next level
+                </Text>
+
+                <Box mb="xs">
+                  <Progress
+                    value={100 - (xp % 100)}
+                    size="lg"
+                    radius="xl"
+                    color="orange"
+                  />
+                </Box>
+              </Card.Section>
+            </Card>
+          </Grid.Col>
+
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Card
+              role="region"
+              aria-label="Achievements"
+              style={{
+                background: `linear-gradient(145deg, ${theme.colors.gray[0]}, ${theme.colors.violet[0]})`,
+                border: `2px solid ${theme.colors.violet[2]}`,
+                borderRadius: theme.radius.md,
+                overflow: 'hidden'
+              }}
+            >
+              <Card.Section p="md">
+                <Text size="lg" fw={700} c={theme.colors.violet[6]} mb="md">
+                  Recent Achievements
+                </Text>
+
+                <Group gap="md" wrap="wrap">
+                  {[
+                    { name: 'ROCKET', description: 'Space Walker' },
+                    { name: 'LIGHT_BULB', description: 'Quiz Master' },
+                    { name: 'TROPHY', description: 'Streak Keeper' },
+                    { name: 'STAR', description: 'Level Up' },
+                  ].map((achievement, index) => (
+                    <Box
+                      key={index}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        padding: 12,
+                        borderRadius: theme.radius.sm,
+                        background: `linear-gradient(145deg, ${theme.colors.violet[1]}, ${theme.colors.violet[0]})`,
+                        border: `2px solid ${theme.colors.violet[3]}`,
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        minWidth: 80,
                       }}
+                      onClick={() => console.log('Achievement clicked:', achievement.description)}
                     >
-                      🏆
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
-                        Experience Points
-                      </Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 800, color: theme.palette.text.primary }}>
-                        {xp.toLocaleString()}
-                      </Typography>
+                        <Real3DIcon
+                          iconName={achievement.name}
+                          size="small"
+                          animated={true}
+                          description={achievement.description}
+                        />
+                      <Text size="xs" ta="center" fw={600} mt={4}>
+                        {achievement.description}
+                      </Text>
                     </Box>
-                  </Box>
-                  
-                  <Box sx={{ mb: 1 }}>
-                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
-                      Level Progress: {xp % 100}%
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={xp % 100}
-                      sx={{
-                        height: 8,
-                        borderRadius: 4,
-                        backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                        '& .MuiLinearProgress-bar': {
-                          background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                          borderRadius: 4,
-                        }
-                      }}
-                    />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Fade>
-          </Grid2>
-          <Grid2 xs={12} md={4}>
-            <Fade in={true} timeout={3200} appear={false}>
-              <Card 
-                role="region" 
-                aria-label="Level status"
-                sx={{
-                  background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.warning.main, 0.05)})`,
-                  border: `2px solid ${alpha(theme.palette.warning.main, 0.2)}`,
-                  borderRadius: 3,
-                  overflow: 'hidden'
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Avatar
-                      sx={{
-                        width: 50,
-                        height: 50,
-                        background: `linear-gradient(135deg, ${theme.palette.warning.main}, ${theme.palette.error.main})`,
-                        fontSize: '1.5rem',
-                        border: `2px solid ${theme.palette.warning.main}`,
-                        boxShadow: `0 0 15px ${alpha(theme.palette.warning.main, 0.4)}`,
-                      }}
-                    >
-                      ⭐
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.warning.main }}>
-                        Current Level
-                      </Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 800, color: theme.palette.text.primary }}>
-                        Level {level}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  
-                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
-                    {100 - (xp % 100)} XP to next level
-                  </Typography>
-                  
-                  <Box sx={{ mb: 1 }}>
-                    <LinearProgress
-                      variant="determinate"
-                      value={100 - (xp % 100)}
-                      sx={{
-                        height: 8,
-                        borderRadius: 4,
-                        backgroundColor: alpha(theme.palette.warning.main, 0.2),
-                        '& .MuiLinearProgress-bar': {
-                          background: `linear-gradient(90deg, ${theme.palette.warning.main}, ${theme.palette.error.main})`,
-                          borderRadius: 4,
-                        }
-                      }}
-                    />
-                  </Box>
-                </CardContent>
-              </Card>
-            </Fade>
-          </Grid2>
-          
-          <Grid2 xs={12} md={4}>
-            <Fade in={true} timeout={3400} appear={false}>
-              <Card 
-                role="region" 
-                aria-label="Achievements"
-                sx={{
-                  background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.secondary.main, 0.05)})`,
-                  border: `2px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
-                  borderRadius: 3,
-                  overflow: 'hidden'
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.secondary.main, mb: 2 }}>
-                    Recent Achievements
-                  </Typography>
-                  
-                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    {[
-                      { name: 'ROCKET', description: 'Space Walker' },
-                      { name: 'LIGHT_BULB', description: 'Quiz Master' },
-                      { name: 'TROPHY', description: 'Streak Keeper' },
-                      { name: 'STAR', description: 'Level Up' },
-                    ].map((achievement, index) => (
-                      <Box
-                        key={index}
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          p: 1.5,
-                          borderRadius: 2,
-                          background: `linear-gradient(145deg, ${alpha(theme.palette.secondary.main, 0.1)}, ${alpha(theme.palette.secondary.main, 0.05)})`,
-                          border: `2px solid ${alpha(theme.palette.secondary.main, 0.3)}`,
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          minWidth: 80,
-                          '&:hover': {
-                            transform: 'scale(1.1)',
-                            boxShadow: `0 5px 15px ${alpha(theme.palette.secondary.main, 0.3)}`,
-                          }
-                        }}
-                        onClick={(e: React.MouseEvent) => () => console.log('Achievement clicked:', achievement.description)}
-                      >
-                          <Real3DIcon
-                            iconName={achievement.name}
-                            size="small"
-                            animated={true}
-                            description={achievement.description}
-                          />
-                        <Typography variant="caption" sx={{ textAlign: 'center', fontWeight: 600, fontSize: '0.7rem', mt: 0.5 }}>
-                          {achievement.description}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Fade>
-          </Grid2>
+                  ))}
+                </Group>
+              </Card.Section>
+            </Card>
+          </Grid.Col>
         </>
       )}
 
       {(role === "teacher" || role === "admin") && (
         <>
-          <Grid2 xs={12} md={3}>
+          <Grid.Col span={{ base: 12, md: 3 }}>
             <Card role="region" aria-label="Active classes">
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48 }}>
-                    <SchoolIcon />
+              <Card.Section p="md">
+                <Group align="center" gap="md">
+                  <Avatar size="lg" color="blue">
+                    <IconSchool size={24} />
                   </Avatar>
-                  <Stack>
-                    <Typography variant="caption" color="text.secondary" gutterBottom>
+                  <Stack gap="xs">
+                    <Text size="xs" c="dimmed">
                       Active Classes
-                    </Typography>
-                    <Typography variant="h5" fontWeight={700}>
+                    </Text>
+                    <Text size="xl" fw={700}>
                       {dashboardData?.kpis?.activeClasses || 0}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    </Text>
+                    <Text size="xs" c="dimmed">
                       {dashboardData?.kpis?.totalStudents || 0} total students
-                    </Typography>
+                    </Text>
                   </Stack>
-                </Stack>
-              </CardContent>
+                </Group>
+              </Card.Section>
             </Card>
-          </Grid2>
-          <Grid2 xs={12} md={3}>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 3 }}>
             <Card role="region" aria-label="Lessons scheduled">
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar sx={{ bgcolor: "info.main", width: 48, height: 48 }}>
+              <Card.Section p="md">
+                <Group align="center" gap="md">
+                  <Avatar size="lg" color="cyan">
                     📚
                   </Avatar>
-                  <Stack>
-                    <Typography variant="caption" color="text.secondary" gutterBottom>
+                  <Stack gap="xs">
+                    <Text size="xs" c="dimmed">
                       Today's Lessons
-                    </Typography>
-                    <Typography variant="h5" fontWeight={700}>
+                    </Text>
+                    <Text size="xl" fw={700}>
                       {dashboardData?.kpis?.todaysLessons || 0}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    </Text>
+                    <Text size="xs" c="dimmed">
                       {dashboardData?.kpis?.pendingAssessments || 0} assessments due
-                    </Typography>
+                    </Text>
                   </Stack>
-                </Stack>
-              </CardContent>
+                </Group>
+              </Card.Section>
             </Card>
-          </Grid2>
-          <Grid2 xs={12} md={3}>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 3 }}>
             <Card role="region" aria-label="Average progress">
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar sx={{ bgcolor: "secondary.main", width: 48, height: 48 }}>
-                    <TrendingUpIcon />
+              <Card.Section p="md">
+                <Group align="center" gap="md">
+                  <Avatar size="lg" color="violet">
+                    <IconTrendingUp size={24} />
                   </Avatar>
-                  <Stack>
-                    <Typography variant="caption" color="text.secondary" gutterBottom>
+                  <Stack gap="xs">
+                    <Text size="xs" c="dimmed">
                       Avg. Progress
-                    </Typography>
-                    <Typography variant="h5" fontWeight={700}>
+                    </Text>
+                    <Text size="xl" fw={700}>
                       {dashboardData?.kpis?.averageProgress || 0}%
-                    </Typography>
-                    <Chip
-                      label={`${dashboardData?.kpis?.progressChange || 0}% this week`}
-                      size="small"
-                      color={((dashboardData?.kpis?.progressChange || 0) >= 0) ? "success" : "error"}
-                      sx={{ mt: 0.5 }}
-                    />
+                    </Text>
+                    <Badge
+                      size="sm"
+                      color={((dashboardData?.kpis?.progressChange || 0) >= 0) ? "green" : "red"}
+                      style={{ marginTop: 4 }}
+                    >
+                      {dashboardData?.kpis?.progressChange || 0}% this week
+                    </Badge>
                   </Stack>
-                </Stack>
-              </CardContent>
+                </Group>
+              </Card.Section>
             </Card>
-          </Grid2>
-          <Grid2 xs={12} md={3}>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 3 }}>
             <Card role="region" aria-label="Compliance status">
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar sx={{ bgcolor: "success.main", width: 48, height: 48 }}>
-                    <CheckCircleIcon />
+              <Card.Section p="md">
+                <Group align="center" gap="md">
+                  <Avatar size="lg" color="green">
+                    <IconCheck size={24} />
                   </Avatar>
-                  <Stack>
-                    <Typography variant="caption" color="text.secondary" gutterBottom>
+                  <Stack gap="xs">
+                    <Text size="xs" c="dimmed">
                       Compliance
-                    </Typography>
-                    <Typography variant="h5" fontWeight={700}>
+                    </Text>
+                    <Text size="xl" fw={700}>
                       {dashboardData?.compliance?.status || "Unknown"}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    </Text>
+                    <Text size="xs" c="dimmed">
                       {dashboardData?.compliance?.pendingAlerts || 0} pending alerts
-                    </Typography>
+                    </Text>
                   </Stack>
-                </Stack>
-              </CardContent>
+                </Group>
+              </Card.Section>
             </Card>
-          </Grid2>
+          </Grid.Col>
         </>
       )}
 
       {role === "parent" && (
         <>
-          <Grid2 xs={12} md={3}>
+          <Grid.Col span={{ base: 12, md: 3 }}>
             <Card role="region" aria-label="Child's XP">
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48 }}>
-                    <TrendingUpIcon />
+              <Card.Section p="md">
+                <Group align="center" gap="md">
+                  <Avatar size="lg" color="blue">
+                    <IconTrendingUp size={24} />
                   </Avatar>
-                  <Stack>
-                    <Typography variant="caption" color="text.secondary" gutterBottom>
+                  <Stack gap="xs">
+                    <Text size="xs" c="dimmed">
                       Child's XP
-                    </Typography>
-                    <Typography variant="h5" fontWeight={700}>
+                    </Text>
+                    <Text size="xl" fw={700}>
                       {dashboardData?.studentData?.xp || userXP}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    </Text>
+                    <Text size="xs" c="dimmed">
                       Level {Math.floor((dashboardData?.studentData?.xp || userXP) / 100) + 1}
-                    </Typography>
+                    </Text>
                   </Stack>
-                </Stack>
-              </CardContent>
+                </Group>
+              </Card.Section>
             </Card>
-          </Grid2>
-          <Grid2 xs={12} md={3}>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 3 }}>
             <Card role="region" aria-label="Overall progress">
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar sx={{ bgcolor: "secondary.main", width: 48, height: 48 }}>
+              <Card.Section p="md">
+                <Group align="center" gap="md">
+                  <Avatar size="lg" color="violet">
                     📊
                   </Avatar>
-                  <Stack>
-                    <Typography variant="caption" color="text.secondary" gutterBottom>
+                  <Stack gap="xs">
+                    <Text size="xs" c="dimmed">
                       Overall Progress
-                    </Typography>
-                    <Typography variant="h5" fontWeight={700}>
+                    </Text>
+                    <Text size="xl" fw={700}>
                       {dashboardData?.studentData?.overallProgress || 0}%
-                    </Typography>
-                    <Chip
-                      label={dashboardData?.studentData?.performanceRating || "Average"}
-                      size="small"
-                      color="success"
-                      sx={{ mt: 0.5 }}
-                    />
+                    </Text>
+                    <Badge
+                      size="sm"
+                      color="green"
+                      style={{ marginTop: 4 }}
+                    >
+                      {dashboardData?.studentData?.performanceRating || "Average"}
+                    </Badge>
                   </Stack>
-                </Stack>
-              </CardContent>
+                </Group>
+              </Card.Section>
             </Card>
-          </Grid2>
-          <Grid2 xs={12} md={3}>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 3 }}>
             <Card role="region" aria-label="Assignments completed">
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar sx={{ bgcolor: "info.main", width: 48, height: 48 }}>
-                    <CheckCircleIcon />
+              <Card.Section p="md">
+                <Group align="center" gap="md">
+                  <Avatar size="lg" color="cyan">
+                    <IconCheck size={24} />
                   </Avatar>
-                  <Stack>
-                    <Typography variant="caption" color="text.secondary" gutterBottom>
+                  <Stack gap="xs">
+                    <Text size="xs" c="dimmed">
                       Assignments
-                    </Typography>
-                    <Typography variant="h5" fontWeight={700}>
+                    </Text>
+                    <Text size="xl" fw={700}>
                       {dashboardData?.studentData?.completedAssignments || 0}/{dashboardData?.studentData?.totalAssignments || 0}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    </Text>
+                    <Text size="xs" c="dimmed">
                       {(dashboardData?.studentData?.totalAssignments || 0) - (dashboardData?.studentData?.completedAssignments || 0)} pending
-                    </Typography>
+                    </Text>
                   </Stack>
-                </Stack>
-              </CardContent>
+                </Group>
+              </Card.Section>
             </Card>
-          </Grid2>
-          <Grid2 xs={12} md={3}>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 3 }}>
             <Card role="region" aria-label="Last active">
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Avatar sx={{ bgcolor: "success.main", width: 48, height: 48 }}>
+              <Card.Section p="md">
+                <Group align="center" gap="md">
+                  <Avatar size="lg" color="green">
                     ✅
                   </Avatar>
-                  <Stack>
-                    <Typography variant="caption" color="text.secondary" gutterBottom>
+                  <Stack gap="xs">
+                    <Text size="xs" c="dimmed">
                       Last Active
-                    </Typography>
-                    <Typography variant="h5" fontWeight={700}>
+                    </Text>
+                    <Text size="xl" fw={700}>
                       {dashboardData?.studentData?.lastActive ? new Date(dashboardData.studentData.lastActive).toLocaleDateString() : "Today"}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    </Text>
+                    <Text size="xs" c="dimmed">
                       {dashboardData?.studentData?.lastActive ? new Date(dashboardData.studentData.lastActive).toLocaleTimeString() : "Recently"}
-                    </Typography>
+                    </Text>
                   </Stack>
-                </Stack>
-              </CardContent>
+                </Group>
+              </Card.Section>
             </Card>
-          </Grid2>
+          </Grid.Col>
         </>
       )}
 
       {/* Real-Time Analytics for Admin and Teacher */}
       {(role === "admin" || role === "teacher") && (
-        <Grid2 xs={12}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        <Grid.Col span={12}>
+          <Group justify="space-between" align="center" mb="md">
+            <Text size="lg" fw={600}>
               Real-Time Analytics
-            </Typography>
+            </Text>
             <ConnectionStatus showLabel={true} />
-          </Box>
+          </Group>
           <RealTimeAnalytics />
-        </Grid2>
+        </Grid.Col>
       )}
 
       {/* Charts Section */}
-      <Grid2 xs={12}>
-        <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+      <Grid.Col span={12}>
+        <Text size="lg" mb="md" fw={600}>
           Analytics & Progress
-        </Typography>
+        </Text>
         <ProgressCharts role={(effectiveRole ?? 'student') as UserRole} />
-      </Grid2>
+      </Grid.Col>
 
       {/* Recent Activity */}
-      <Grid2 xs={12} md={6}>
+      <Grid.Col span={{ base: 12, md: 6 }}>
         <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+          <Card.Section p="md">
+            <Text size="lg" mb="md" fw={600}>
               Recent Activity
-            </Typography>
-            <Stack spacing={2}>
+            </Text>
+            <Stack gap="md">
               {(dashboardData?.recentActivity || [
                 { time: "2 hours ago", action: "Completed Math Lesson", type: "success" },
                 { time: "5 hours ago", action: "Earned 'Problem Solver' badge", type: "achievement" },
                 { time: "Yesterday", action: "Submitted Science Assignment", type: "info" },
                 { time: "2 days ago", action: "Joined Roblox Chemistry Lab", type: "game" },
               ]).map((activity: any, index) => (
-                <Box
+                <Group
                   key={index}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    p: 1.5,
-                    borderRadius: 2,
-                    bgcolor: "background.default",
+                  align="center"
+                  gap="md"
+                  p="md"
+                  style={{
+                    borderRadius: theme.radius.sm,
+                    backgroundColor: theme.colors.gray[0],
                   }}
                 >
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.main", fontSize: "1rem" }}>
+                  <Avatar size="sm" color="blue">
                     {activity.type === "success" && "✓"}
                     {activity.type === "achievement" && "🏆"}
                     {activity.type === "info" && "📝"}
                     {activity.type === "game" && "🎮"}
                   </Avatar>
-                  <Stack sx={{ flex: 1 }}>
-                    <Typography variant="body2">{activity.action}</Typography>
-                    <Typography variant="caption" color="text.secondary">
+                  <Stack gap="xs" style={{ flex: 1 }}>
+                    <Text size="sm">{activity.action}</Text>
+                    <Text size="xs" c="dimmed">
                       {activity.time}
-                    </Typography>
+                    </Text>
                   </Stack>
-                </Box>
+                </Group>
               ))}
             </Stack>
-          </CardContent>
+          </Card.Section>
         </Card>
-      </Grid2>
+      </Grid.Col>
 
       {/* Upcoming Events */}
-      <Grid2 xs={12} md={6}>
+      <Grid.Col span={{ base: 12, md: 6 }}>
         <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+          <Card.Section p="md">
+            <Text size="lg" mb="md" fw={600}>
               Upcoming Events
-            </Typography>
-            <Stack spacing={2}>
+            </Text>
+            <Stack gap="md">
               {(dashboardData?.upcomingEvents || [
                 { date: "Today, 2:00 PM", event: "Math Quiz", type: "assessment" },
                 { date: "Tomorrow, 10:00 AM", event: "Science Lab (Roblox)", type: "lesson" },
                 { date: "Friday, 3:00 PM", event: "Parent-Teacher Meeting", type: "meeting" },
                 { date: "Next Monday", event: "History Project Due", type: "deadline" },
               ]).map((event: any, index) => (
-                <Box
+                <Group
                   key={index}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 2,
-                    p: 1.5,
-                    borderRadius: 2,
-                    bgcolor: "background.default",
+                  align="center"
+                  gap="md"
+                  p="md"
+                  style={{
+                    borderRadius: theme.radius.sm,
+                    backgroundColor: theme.colors.gray[0],
                   }}
                 >
                   <Avatar
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      bgcolor:
-                        event.type === "assessment"
-                          ? "warning.main"
-                          : event.type === "lesson"
-                          ? "info.main"
-                          : event.type === "meeting"
-                          ? "secondary.main"
-                          : "error.main",
-                      fontSize: "1rem",
-                    }}
+                    size="sm"
+                    color={
+                      event.type === "assessment"
+                        ? "orange"
+                        : event.type === "lesson"
+                        ? "cyan"
+                        : event.type === "meeting"
+                        ? "violet"
+                        : "red"
+                    }
                   >
                     {event.type === "assessment" && "📝"}
                     {event.type === "lesson" && "📚"}
                     {event.type === "meeting" && "👥"}
                     {event.type === "deadline" && "⏰"}
                   </Avatar>
-                  <Stack sx={{ flex: 1 }}>
-                    <Typography variant="body2">{event.event}</Typography>
-                    <Typography variant="caption" color="text.secondary">
+                  <Stack gap="xs" style={{ flex: 1 }}>
+                    <Text size="sm">{event.event}</Text>
+                    <Text size="xs" c="dimmed">
                       {event.date}
-                    </Typography>
+                    </Text>
                   </Stack>
-                </Box>
+                </Group>
               ))}
             </Stack>
-          </CardContent>
+          </Card.Section>
         </Card>
-      </Grid2>
-      </Grid2>
+      </Grid.Col>
+      </Grid>
 
       {/* Create Lesson Dialog for Teachers */}
       {role === "teacher" && (

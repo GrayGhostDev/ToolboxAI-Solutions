@@ -4,33 +4,20 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import Chip from '@mui/material/Chip';
-import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Divider from '@mui/material/Divider';
-import Divider from '@mui/material/Divider';
+import { Box, Card, Text, Button, Loader, Alert, Badge, Grid, Paper, ActionIcon, Tooltip, Divider, Group, useMantineTheme } from '@mantine/core';
 import {
-  Preview as PreviewIcon,
-  Download as DownloadIcon,
-  Code as CodeIcon,
-  Refresh as RefreshIcon,
-  School as SchoolIcon,
-  Group as GroupIcon,
-  Timer as TimerIcon,
-  Terrain as TerrainIcon,
-  Home as HomeIcon,
-  Computer as ComputerIcon,
-  Lightbulb as LightbulbIcon
-} from '@mui/icons-material';
+  IconEye,
+  IconDownload,
+  IconCode,
+  IconRefresh,
+  IconSchool,
+  IconUsers,
+  IconClock,
+  IconMountain,
+  IconHome,
+  IconDeviceDesktop,
+  IconX
+} from '@tabler/icons-react';
 
 import { robloxEnvironmentService } from '../../services/robloxEnvironment';
 
@@ -45,6 +32,7 @@ const EnvironmentPreview: React.FunctionComponent<EnvironmentPreviewProps> = ({
   environmentDetails,
   onClose
 }) => {
+  const theme = useMantineTheme();
   const [preview, setPreview] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -148,291 +136,289 @@ const EnvironmentPreview: React.FunctionComponent<EnvironmentPreviewProps> = ({
 
   if (loading) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
-        <CircularProgress size={40} />
-        <Typography variant="body1" sx={{ mt: 2 }}>
+      <Box style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
+        <Loader size={40} />
+        <Text mt="md">
           Generating environment preview...
-        </Typography>
+        </Text>
       </Box>
     );
   }
 
   if (error && !preview) {
     return (
-      <Alert severity="error" sx={{ m: 2 }}>
+      <Alert color="red" style={{ margin: theme.spacing.md }}>
         {error}
       </Alert>
     );
   }
 
   return (
-    <Card sx={{ maxWidth: 800, mx: 'auto', m: 2 }}>
-      <CardContent>
-        {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="h5" component="h2">
-            {preview?.name || environmentId}
-          </Typography>
-          <Box>
-            <Tooltip title="Refresh Preview">
-              <IconButton onClick={(e: React.MouseEvent) => generatePreview} disabled={isGenerating}>
-                <RefreshIcon />
-              </IconButton>
-            </Tooltip>
-            {onClose && (
-              <IconButton onClick={(e: React.MouseEvent) => onClose}>
-                ×
-              </IconButton>
-            )}
-          </Box>
-        </Box>
+    <Card withBorder style={{ maxWidth: 800, margin: '0 auto' }} mt="md">
+      {/* Header */}
+      <Group position="apart" align="center" mb="md">
+        <Text size="xl" weight={700}>
+          {preview?.name || environmentId}
+        </Text>
+        <Group spacing={theme.spacing.xs}>
+          <Tooltip label="Refresh Preview">
+            <ActionIcon onClick={generatePreview} disabled={isGenerating}>
+              <IconRefresh />
+            </ActionIcon>
+          </Tooltip>
+          {onClose && (
+            <ActionIcon onClick={onClose}>
+              <IconX />
+            </ActionIcon>
+          )}
+        </Group>
+      </Group>
 
-        {/* Environment Details */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={6} sm={3}>
-            <Paper sx={{ p: 1, textAlign: 'center' }}>
-              <SchoolIcon color="primary" sx={{ mb: 0.5 }} />
-              <Typography variant="caption" display="block">
-                Grade: {preview?.metadata?.grade_level || 'Any'}
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={6} sm={3}>
-            <Paper sx={{ p: 1, textAlign: 'center' }}>
-              <GroupIcon color="primary" sx={{ mb: 0.5 }} />
-              <Typography variant="caption" display="block">
-                Max Players: {preview?.metadata?.max_players || 20}
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={6} sm={3}>
-            <Paper sx={{ p: 1, textAlign: 'center' }}>
-              <TimerIcon color="primary" sx={{ mb: 0.5 }} />
-              <Typography variant="caption" display="block">
-                Duration: 30-45 min
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={6} sm={3}>
-            <Paper sx={{ p: 1, textAlign: 'center' }}>
-              <Chip
-                label={preview?.metadata?.complexity || 'Medium'}
-                size="small"
-                color="primary"
-                variant="outlined"
-              />
-            </Paper>
-          </Grid>
-        </Grid>
-
-        {/* 3D Environment Visualization */}
-        <Box sx={{
-          height: 400,
-          backgroundColor: '#f5f5f5',
-          borderRadius: 2,
-          position: 'relative',
-          overflow: 'hidden',
-          border: '2px solid #e0e0e0',
-          mb: 3
-        }}>
-          {/* Terrain */}
-          {preview?.structure?.terrain?.map((terrain: any, index: number) => (
-            <Box
-              key={`terrain-${index}`}
-              sx={{
-                position: 'absolute',
-                left: `${terrain.position.x}%`,
-                top: `${terrain.position.z}%`,
-                width: `${terrain.size.x}px`,
-                height: `${terrain.size.z}px`,
-                backgroundColor: terrain.type === 'Grass' ? '#4CAF50' : '#8BC34A',
-                borderRadius: terrain.type === 'Hills' ? '50%' : '4px',
-                opacity: 0.8,
-                border: '2px solid #2E7D32',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '10px',
-                fontWeight: 'bold',
-                color: 'white',
-                textShadow: '1px 1px 1px rgba(0,0,0,0.5)'
-              }}
-              title={terrain.type}
+      {/* Environment Details */}
+      <Grid mb="lg">
+        <Grid.Col span={6} sm={3}>
+          <Paper style={{ padding: theme.spacing.xs, textAlign: 'center' }}>
+            <IconSchool color={theme.colors.blue[6]} style={{ marginBottom: theme.spacing.xs / 2 }} />
+            <Text size="xs">
+              Grade: {preview?.metadata?.grade_level || 'Any'}
+            </Text>
+          </Paper>
+        </Grid.Col>
+        <Grid.Col span={6} sm={3}>
+          <Paper style={{ padding: theme.spacing.xs, textAlign: 'center' }}>
+            <IconUsers color={theme.colors.blue[6]} style={{ marginBottom: theme.spacing.xs / 2 }} />
+            <Text size="xs">
+              Max Players: {preview?.metadata?.max_players || 20}
+            </Text>
+          </Paper>
+        </Grid.Col>
+        <Grid.Col span={6} sm={3}>
+          <Paper style={{ padding: theme.spacing.xs, textAlign: 'center' }}>
+            <IconClock color={theme.colors.blue[6]} style={{ marginBottom: theme.spacing.xs / 2 }} />
+            <Text size="xs">
+              Duration: 30-45 min
+            </Text>
+          </Paper>
+        </Grid.Col>
+        <Grid.Col span={6} sm={3}>
+          <Paper style={{ padding: theme.spacing.xs, textAlign: 'center' }}>
+            <Badge
+              size="sm"
+              color="blue"
+              variant="outline"
             >
-              {terrain.type}
-            </Box>
-          ))}
+              {preview?.metadata?.complexity || 'Medium'}
+            </Badge>
+          </Paper>
+        </Grid.Col>
+      </Grid>
 
-          {/* Buildings */}
-          {preview?.structure?.buildings?.map((building: any, index: number) => (
-            <Box
-              key={`building-${index}`}
-              sx={{
-                position: 'absolute',
-                left: `${building.position.x}%`,
-                top: `${building.position.z}%`,
-                width: `${building.size.x}px`,
-                height: `${building.size.z}px`,
-                backgroundColor: building.color,
-                border: '2px solid #333',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '9px',
-                fontWeight: 'bold',
-                color: 'white',
-                textShadow: '1px 1px 1px rgba(0,0,0,0.5)',
-                borderRadius: '2px'
-              }}
-              title={building.type}
-            >
-              {building.type}
-            </Box>
-          ))}
-
-          {/* Objects */}
-          {preview?.structure?.objects?.map((object: any, index: number) => (
-            <Box
-              key={`object-${index}`}
-              sx={{
-                position: 'absolute',
-                left: `${object.position.x}%`,
-                top: `${object.position.z}%`,
-                width: `${object.size.x}px`,
-                height: `${object.size.z}px`,
-                backgroundColor: object.color,
-                border: '1px solid #666',
-                borderRadius: '2px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '8px',
-                color: 'white',
-                textShadow: '1px 1px 1px rgba(0,0,0,0.5)'
-              }}
-              title={object.type}
-            >
-              {object.type}
-            </Box>
-          ))}
-
-          {/* Lighting Overlay */}
+      {/* 3D Environment Visualization */}
+      <Box style={{
+        height: 400,
+        backgroundColor: theme.colors.gray[1],
+        borderRadius: theme.radius.md,
+        position: 'relative',
+        overflow: 'hidden',
+        border: `2px solid ${theme.colors.gray[3]}`,
+        marginBottom: theme.spacing.lg
+      }}>
+        {/* Terrain */}
+        {preview?.structure?.terrain?.map((terrain: any, index: number) => (
           <Box
-            sx={{
+            key={`terrain-${index}`}
+            style={{
+              position: 'absolute',
+              left: `${terrain.position.x}%`,
+              top: `${terrain.position.z}%`,
+              width: `${terrain.size.x}px`,
+              height: `${terrain.size.z}px`,
+              backgroundColor: terrain.type === 'Grass' ? theme.colors.green[5] : theme.colors.green[4],
+              borderRadius: terrain.type === 'Hills' ? '50%' : theme.radius.xs,
+              opacity: 0.8,
+              border: `2px solid ${theme.colors.green[7]}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '10px',
+              fontWeight: 700,
+              color: 'white',
+              textShadow: '1px 1px 1px rgba(0,0,0,0.5)'
+            }}
+            title={terrain.type}
+          >
+            {terrain.type}
+          </Box>
+        ))}
+
+        {/* Buildings */}
+        {preview?.structure?.buildings?.map((building: any, index: number) => (
+          <Box
+            key={`building-${index}`}
+            style={{
+              position: 'absolute',
+              left: `${building.position.x}%`,
+              top: `${building.position.z}%`,
+              width: `${building.size.x}px`,
+              height: `${building.size.z}px`,
+              backgroundColor: building.color,
+              border: '2px solid #333',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '9px',
+              fontWeight: 700,
+              color: 'white',
+              textShadow: '1px 1px 1px rgba(0,0,0,0.5)',
+              borderRadius: theme.radius.xs
+            }}
+            title={building.type}
+          >
+            {building.type}
+          </Box>
+        ))}
+
+        {/* Objects */}
+        {preview?.structure?.objects?.map((object: any, index: number) => (
+          <Box
+            key={`object-${index}`}
+            style={{
+              position: 'absolute',
+              left: `${object.position.x}%`,
+              top: `${object.position.z}%`,
+              width: `${object.size.x}px`,
+              height: `${object.size.z}px`,
+              backgroundColor: object.color,
+              border: '1px solid #666',
+              borderRadius: theme.radius.xs,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '8px',
+              color: 'white',
+              textShadow: '1px 1px 1px rgba(0,0,0,0.5)'
+            }}
+            title={object.type}
+          >
+            {object.type}
+          </Box>
+        ))}
+
+        {/* Lighting Overlay */}
+        <Box
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: preview?.lighting?.color || '#FFE4B5',
+            opacity: 1 - (preview?.lighting?.brightness || 0.8),
+            pointerEvents: 'none'
+          }}
+        />
+
+        {/* Effects */}
+        {preview?.effects?.map((effect: any, index: number) => (
+          <Box
+            key={`effect-${index}`}
+            style={{
               position: 'absolute',
               top: 0,
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: preview?.lighting?.color || '#FFE4B5',
-              opacity: 1 - (preview?.lighting?.brightness || 0.8),
-              pointerEvents: 'none'
+              background: effect.type === 'Sunshine' ?
+                'radial-gradient(circle, rgba(255,255,0,0.1) 0%, transparent 70%)' : 'none',
+              pointerEvents: 'none',
+              opacity: effect.intensity || 0.5
             }}
           />
+        ))}
 
-          {/* Effects */}
-          {preview?.effects?.map((effect: any, index: number) => (
-            <Box
-              key={`effect-${index}`}
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: effect.type === 'Sunshine' ?
-                  'radial-gradient(circle, rgba(255,255,0,0.1) 0%, transparent 70%)' : 'none',
-                pointerEvents: 'none',
-                opacity: effect.intensity || 0.5
-              }}
-            />
-          ))}
-
-          {/* Legend */}
-          <Box sx={{
-            position: 'absolute',
-            top: 8,
-            left: 8,
-            backgroundColor: 'rgba(255,255,255,0.9)',
-            padding: 1,
-            borderRadius: 1,
-            fontSize: '10px'
-          }}>
-            <Typography variant="caption" display="block">
-              🟢 Terrain &nbsp; 🏠 Buildings &nbsp; 📦 Objects
-            </Typography>
-          </Box>
+        {/* Legend */}
+        <Box style={{
+          position: 'absolute',
+          top: 8,
+          left: 8,
+          backgroundColor: 'rgba(255,255,255,0.9)',
+          padding: theme.spacing.xs,
+          borderRadius: theme.radius.sm,
+          fontSize: '10px'
+        }}>
+          <Text size="xs">
+            🟢 Terrain   🏠 Buildings   📦 Objects
+          </Text>
         </Box>
+      </Box>
 
-        {/* Environment Components Summary */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={4}>
-            <Paper sx={{ p: 2, textAlign: 'center' }}>
-              <TerrainIcon color="primary" sx={{ mb: 1 }} />
-              <Typography variant="subtitle2">Terrain</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {preview?.structure?.terrain?.length || 0} areas
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Paper sx={{ p: 2, textAlign: 'center' }}>
-              <HomeIcon color="primary" sx={{ mb: 1 }} />
-              <Typography variant="subtitle2">Buildings</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {preview?.structure?.buildings?.length || 0} structures
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Paper sx={{ p: 2, textAlign: 'center' }}>
-              <ComputerIcon color="primary" sx={{ mb: 1 }} />
-              <Typography variant="subtitle2">Objects</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {preview?.structure?.objects?.length || 0} items
-              </Typography>
-            </Paper>
-          </Grid>
-        </Grid>
+      {/* Environment Components Summary */}
+      <Grid mb="lg">
+        <Grid.Col span={12} sm={4}>
+          <Paper style={{ padding: theme.spacing.md, textAlign: 'center' }}>
+            <IconMountain color={theme.colors.blue[6]} style={{ marginBottom: theme.spacing.xs }} />
+            <Text weight={600} size="sm">Terrain</Text>
+            <Text size="sm" color="dimmed">
+              {preview?.structure?.terrain?.length || 0} areas
+            </Text>
+          </Paper>
+        </Grid.Col>
+        <Grid.Col span={12} sm={4}>
+          <Paper style={{ padding: theme.spacing.md, textAlign: 'center' }}>
+            <IconHome color={theme.colors.blue[6]} style={{ marginBottom: theme.spacing.xs }} />
+            <Text weight={600} size="sm">Buildings</Text>
+            <Text size="sm" color="dimmed">
+              {preview?.structure?.buildings?.length || 0} structures
+            </Text>
+          </Paper>
+        </Grid.Col>
+        <Grid.Col span={12} sm={4}>
+          <Paper style={{ padding: theme.spacing.md, textAlign: 'center' }}>
+            <IconDeviceDesktop color={theme.colors.blue[6]} style={{ marginBottom: theme.spacing.xs }} />
+            <Text weight={600} size="sm">Objects</Text>
+            <Text size="sm" color="dimmed">
+              {preview?.structure?.objects?.length || 0} items
+            </Text>
+          </Paper>
+        </Grid.Col>
+      </Grid>
 
-        {/* Action Buttons */}
-        <Divider sx={{ mb: 2 }} />
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-          <Button
-            variant="contained"
-            startIcon={<PreviewIcon />}
-            onClick={(e: React.MouseEvent) => () => window.open(`/environment-preview/${environmentId}`, '_blank')}
-            size="large"
-          >
-            View Full Preview
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={(e: React.MouseEvent) => handleDownload}
-            size="large"
-          >
-            Download .rbxl
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<CodeIcon />}
-            onClick={(e: React.MouseEvent) => handleDeployToRoblox}
-            size="large"
-          >
-            Deploy to Roblox
-          </Button>
+      {/* Action Buttons */}
+      <Divider mb="md" />
+      <Group position="center" spacing={theme.spacing.md}>
+        <Button
+          leftIcon={<IconEye />}
+          onClick={() => window.open(`/environment-preview/${environmentId}`, '_blank')}
+          size="md"
+        >
+          View Full Preview
+        </Button>
+        <Button
+          variant="outline"
+          leftIcon={<IconDownload />}
+          onClick={handleDownload}
+          size="md"
+        >
+          Download .rbxl
+        </Button>
+        <Button
+          variant="outline"
+          leftIcon={<IconCode />}
+          onClick={handleDeployToRoblox}
+          size="md"
+        >
+          Deploy to Roblox
+        </Button>
+      </Group>
+
+      {/* Description */}
+      {preview?.description && (
+        <Box mt="lg">
+          <Text size="sm" color="dimmed">
+            {preview.description}
+          </Text>
         </Box>
-
-        {/* Description */}
-        {preview?.description && (
-          <Box sx={{ mt: 3 }}>
-            <Typography variant="body2" color="text.secondary">
-              {preview.description}
-            </Typography>
-          </Box>
-        )}
-      </CardContent>
+      )}
     </Card>
   );
 };

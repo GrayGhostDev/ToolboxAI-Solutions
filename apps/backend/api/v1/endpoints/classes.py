@@ -11,8 +11,13 @@ from uuid import UUID
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.models.classes import (
-    ClassCreate, ClassUpdate, ClassSummary, ClassDetails,
-    ClassResponse, ClassListResponse, ClassDetailsResponse
+    ClassCreate,
+    ClassUpdate,
+    ClassSummary,
+    ClassDetails,
+    ClassResponse,
+    ClassListResponse,
+    ClassDetailsResponse,
 )
 from database.models import Class, ClassEnrollment, User
 from database.database_service import DatabaseService
@@ -24,6 +29,7 @@ from sqlalchemy.orm import selectinload
 from pydantic import BaseModel
 from typing import Optional as Opt
 
+
 # User model for type hints (keeping for backward compatibility)
 class UserModel(BaseModel):
     id: str
@@ -31,7 +37,9 @@ class UserModel(BaseModel):
     role: str
     email: Optional[str] = None
 
+
 logger = logging.getLogger(__name__)
+
 
 # Database session dependency
 async def get_db_session():
@@ -39,11 +47,13 @@ async def get_db_session():
     async with database_service.async_session_scope() as session:
         yield session
 
+
 # Create router for classes endpoints
 classes_router = APIRouter(prefix="/classes", tags=["Classes"])
 
 # Export standardized router name
 router = classes_router
+
 
 @classes_router.get("/", response_model=List[ClassSummary])
 async def get_classes(
@@ -52,7 +62,7 @@ async def get_classes(
     offset: int = Query(default=0, ge=0),
     subject: Optional[str] = None,
     grade_level: Optional[int] = None,
-    session = Depends(get_db_session)
+    session=Depends(get_db_session),
 ) -> List[ClassSummary]:
     """Get classes based on user role."""
 
@@ -65,14 +75,21 @@ async def get_classes(
         async with database_service.async_session_scope() as db_session:
             if role == "teacher":
                 # Get teacher's classes with student count
-                query = select(
-                    Class,
-                    func.count(ClassEnrollment.student_id).label('student_count')
-                ).select_from(
-                    Class.__table__.join(ClassEnrollment.__table__, Class.id == ClassEnrollment.class_id, isouter=True)
-                ).where(
-                    Class.teacher_id == user_id
-                ).group_by(Class.id).order_by(Class.created_at.desc()).limit(limit).offset(offset)
+                query = (
+                    select(Class, func.count(ClassEnrollment.student_id).label("student_count"))
+                    .select_from(
+                        Class.__table__.join(
+                            ClassEnrollment.__table__,
+                            Class.id == ClassEnrollment.class_id,
+                            isouter=True,
+                        )
+                    )
+                    .where(Class.teacher_id == user_id)
+                    .group_by(Class.id)
+                    .order_by(Class.created_at.desc())
+                    .limit(limit)
+                    .offset(offset)
+                )
 
                 result = await db_session.execute(query)
                 rows = result.all()
@@ -95,7 +112,7 @@ async def get_classes(
                         student_count=student_count or 0,
                         average_xp=0,  # TODO: Implement XP calculation
                         created_at=class_obj.created_at,
-                        updated_at=class_obj.updated_at
+                        updated_at=class_obj.updated_at,
                     )
                     classes.append(class_summary)
 
@@ -103,19 +120,23 @@ async def get_classes(
 
             elif role == "student":
                 # Get student's enrolled classes
-                query = select(
-                    Class
-                ).select_from(
-                    Class.__table__.join(
-                        ClassEnrollment.__table__,
-                        Class.id == ClassEnrollment.class_id
+                query = (
+                    select(Class)
+                    .select_from(
+                        Class.__table__.join(
+                            ClassEnrollment.__table__, Class.id == ClassEnrollment.class_id
+                        )
                     )
-                ).where(
-                    and_(
-                        ClassEnrollment.student_id == user_id,
-                        ClassEnrollment.status == 'active'
+                    .where(
+                        and_(
+                            ClassEnrollment.student_id == user_id,
+                            ClassEnrollment.status == "active",
+                        )
                     )
-                ).order_by(Class.name).limit(limit).offset(offset)
+                    .order_by(Class.name)
+                    .limit(limit)
+                    .offset(offset)
+                )
 
                 result = await db_session.execute(query)
                 class_objects = result.scalars().all()
@@ -138,7 +159,7 @@ async def get_classes(
                         student_count=0,  # Individual view doesn't need count
                         average_xp=0,  # TODO: Implement XP calculation
                         created_at=class_obj.created_at,
-                        updated_at=class_obj.updated_at
+                        updated_at=class_obj.updated_at,
                     )
                     classes.append(class_summary)
 
@@ -147,10 +168,13 @@ async def get_classes(
             elif role == "admin":
                 # Get all classes with optional filters
                 query = select(
-                    Class,
-                    func.count(ClassEnrollment.student_id).label('student_count')
+                    Class, func.count(ClassEnrollment.student_id).label("student_count")
                 ).select_from(
-                    Class.__table__.join(ClassEnrollment.__table__, Class.id == ClassEnrollment.class_id, isouter=True)
+                    Class.__table__.join(
+                        ClassEnrollment.__table__,
+                        Class.id == ClassEnrollment.class_id,
+                        isouter=True,
+                    )
                 )
 
                 # Apply filters
@@ -163,7 +187,12 @@ async def get_classes(
                 if conditions:
                     query = query.where(and_(*conditions))
 
-                query = query.group_by(Class.id).order_by(Class.created_at.desc()).limit(limit).offset(offset)
+                query = (
+                    query.group_by(Class.id)
+                    .order_by(Class.created_at.desc())
+                    .limit(limit)
+                    .offset(offset)
+                )
 
                 result = await db_session.execute(query)
                 rows = result.all()
@@ -186,7 +215,7 @@ async def get_classes(
                         student_count=student_count or 0,
                         average_xp=0,  # TODO: Implement XP calculation
                         created_at=class_obj.created_at,
-                        updated_at=class_obj.updated_at
+                        updated_at=class_obj.updated_at,
                     )
                     classes.append(class_summary)
 
@@ -218,7 +247,7 @@ async def get_classes(
                     average_xp=0,
                     max_students=30,
                     is_active=True,
-                    created_at=datetime(2024, 9, 1, 8, 0, 0)
+                    created_at=datetime(2024, 9, 1, 8, 0, 0),
                 )
             ]
         elif role == "student":
@@ -235,7 +264,7 @@ async def get_classes(
                     average_xp=0,
                     max_students=30,
                     is_active=True,
-                    created_at=datetime(2024, 9, 1, 8, 0, 0)
+                    created_at=datetime(2024, 9, 1, 8, 0, 0),
                 )
             ]
         elif role == "admin":
@@ -252,16 +281,16 @@ async def get_classes(
                     average_xp=0,
                     max_students=30,
                     is_active=True,
-                    created_at=datetime(2024, 9, 1, 8, 0, 0)
+                    created_at=datetime(2024, 9, 1, 8, 0, 0),
                 )
             ]
         else:
             return []
 
+
 @classes_router.get("/{class_id}", response_model=ClassDetails)
 async def get_class_details(
-    class_id: str,
-    current_user: UserModel = Depends(get_current_user)
+    class_id: str, current_user: UserModel = Depends(get_current_user)
 ) -> ClassDetails:
     """Get detailed information about a specific class."""
 
@@ -283,10 +312,7 @@ async def get_class_details(
             elif role == "student":
                 # Student can only see classes they're enrolled in
                 query = query.join(ClassEnrollment).where(
-                    and_(
-                        ClassEnrollment.student_id == user_id,
-                        ClassEnrollment.status == 'active'
-                    )
+                    and_(ClassEnrollment.student_id == user_id, ClassEnrollment.status == "active")
                 )
             # Admin can see all classes (no additional filter)
 
@@ -295,16 +321,12 @@ async def get_class_details(
 
             if not class_obj:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Class not found or access denied"
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Class not found or access denied"
                 )
 
             # Get student count
             student_count_query = select(func.count(ClassEnrollment.student_id)).where(
-                and_(
-                    ClassEnrollment.class_id == class_obj.id,
-                    ClassEnrollment.status == 'active'
-                )
+                and_(ClassEnrollment.class_id == class_obj.id, ClassEnrollment.status == "active")
             )
             student_count_result = await db_session.execute(student_count_query)
             student_count = student_count_result.scalar() or 0
@@ -341,7 +363,7 @@ async def get_class_details(
                 teacher_name=teacher_name,
                 students=[],  # TODO: Implement student list
                 total_lessons=0,  # TODO: Implement lesson count
-                completed_lessons=0  # TODO: Implement completed lesson count
+                completed_lessons=0,  # TODO: Implement completed lesson count
             )
 
             return class_details
@@ -349,8 +371,7 @@ async def get_class_details(
     except ValueError as e:
         # Invalid UUID
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid class ID format"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid class ID format"
         )
     except HTTPException:
         # Re-raise HTTP exceptions
@@ -359,13 +380,13 @@ async def get_class_details(
         logger.error(f"Error fetching class details: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch class details"
+            detail="Failed to fetch class details",
         )
+
 
 @classes_router.get("/{class_id}/students")
 async def get_class_students(
-    class_id: str,
-    current_user: UserModel = Depends(get_current_user)
+    class_id: str, current_user: UserModel = Depends(get_current_user)
 ) -> List[Dict[str, Any]]:
     """Get students enrolled in a class."""
 
@@ -374,8 +395,7 @@ async def get_class_students(
     # Only teachers and admins can see full student list
     if role not in ["teacher", "admin"]:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to view student list"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view student list"
         )
 
     try:
@@ -397,25 +417,26 @@ async def get_class_students(
 
             if not class_obj:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Class not found or access denied"
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Class not found or access denied"
                 )
 
             # Get enrolled students
-            students_query = select(
-                User,
-                ClassEnrollment.enrolled_at,
-                ClassEnrollment.status,
-                ClassEnrollment.final_grade,
-                ClassEnrollment.attendance_percentage
-            ).select_from(
-                User.__table__.join(
-                    ClassEnrollment.__table__,
-                    User.id == ClassEnrollment.student_id
+            students_query = (
+                select(
+                    User,
+                    ClassEnrollment.enrolled_at,
+                    ClassEnrollment.status,
+                    ClassEnrollment.final_grade,
+                    ClassEnrollment.attendance_percentage,
                 )
-            ).where(
-                ClassEnrollment.class_id == class_uuid
-            ).order_by(User.last_name, User.first_name)
+                .select_from(
+                    User.__table__.join(
+                        ClassEnrollment.__table__, User.id == ClassEnrollment.student_id
+                    )
+                )
+                .where(ClassEnrollment.class_id == class_uuid)
+                .order_by(User.last_name, User.first_name)
+            )
 
             result = await db_session.execute(students_query)
             students_data = result.all()
@@ -431,7 +452,7 @@ async def get_class_students(
                     "enrolled_at": enrolled_at,
                     "status": enrollment_status,
                     "final_grade": final_grade,
-                    "attendance_percentage": attendance
+                    "attendance_percentage": attendance,
                 }
                 students.append(student)
 
@@ -439,8 +460,7 @@ async def get_class_students(
 
     except ValueError:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid class ID format"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid class ID format"
         )
     except HTTPException:
         raise
@@ -457,14 +477,14 @@ async def get_class_students(
                 "enrolled_at": "2024-09-01T08:00:00",
                 "status": "active",
                 "final_grade": None,
-                "attendance_percentage": None
+                "attendance_percentage": None,
             }
         ]
 
+
 @classes_router.post("/", response_model=ClassSummary, status_code=status.HTTP_201_CREATED)
 async def create_class(
-    class_data: ClassCreate,
-    current_user: UserModel = Depends(get_current_user)
+    class_data: ClassCreate, current_user: UserModel = Depends(get_current_user)
 ) -> ClassSummary:
     """Create a new class (teachers and admins only)."""
 
@@ -472,8 +492,7 @@ async def create_class(
 
     if role not in ["teacher", "admin"]:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to create classes"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to create classes"
         )
 
     try:
@@ -497,7 +516,7 @@ async def create_class(
                 start_time=class_data.start_time,
                 end_time=class_data.end_time,
                 max_students=class_data.max_students,
-                is_active=class_data.is_active
+                is_active=class_data.is_active,
             )
 
             db_session.add(new_class)
@@ -521,7 +540,7 @@ async def create_class(
                 student_count=0,  # New class has no students
                 average_xp=0,  # TODO: Implement XP calculation
                 created_at=new_class.created_at,
-                updated_at=new_class.updated_at
+                updated_at=new_class.updated_at,
             )
 
             await db_session.commit()
@@ -533,14 +552,13 @@ async def create_class(
         logger.error(f"Error creating class: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create class: {str(e)}"
+            detail=f"Failed to create class: {str(e)}",
         )
+
 
 @classes_router.put("/{class_id}", response_model=ClassSummary)
 async def update_class(
-    class_id: str,
-    class_data: ClassUpdate,
-    current_user: UserModel = Depends(get_current_user)
+    class_id: str, class_data: ClassUpdate, current_user: UserModel = Depends(get_current_user)
 ) -> ClassSummary:
     """Update class information."""
 
@@ -548,8 +566,7 @@ async def update_class(
 
     if role not in ["teacher", "admin"]:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to update classes"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to update classes"
         )
 
     try:
@@ -571,8 +588,7 @@ async def update_class(
 
             if not class_obj:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Class not found or access denied"
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Class not found or access denied"
                 )
 
             # Update only provided fields
@@ -585,10 +601,7 @@ async def update_class(
 
             # Get student count for response
             student_count_query = select(func.count(ClassEnrollment.student_id)).where(
-                and_(
-                    ClassEnrollment.class_id == class_obj.id,
-                    ClassEnrollment.status == 'active'
-                )
+                and_(ClassEnrollment.class_id == class_obj.id, ClassEnrollment.status == "active")
             )
             student_count_result = await db_session.execute(student_count_query)
             student_count = student_count_result.scalar() or 0
@@ -610,7 +623,7 @@ async def update_class(
                 student_count=student_count,
                 average_xp=0,  # TODO: Implement XP calculation
                 created_at=class_obj.created_at,
-                updated_at=class_obj.updated_at
+                updated_at=class_obj.updated_at,
             )
 
             await db_session.commit()
@@ -620,23 +633,20 @@ async def update_class(
 
     except ValueError:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid class ID format"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid class ID format"
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error updating class: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update class"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update class"
         )
+
 
 @classes_router.post("/{class_id}/students/{student_id}")
 async def enroll_student(
-    class_id: str,
-    student_id: str,
-    current_user: UserModel = Depends(get_current_user)
+    class_id: str, student_id: str, current_user: UserModel = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Enroll a student in a class."""
 
@@ -644,8 +654,7 @@ async def enroll_student(
 
     if role not in ["teacher", "admin"]:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to enroll students"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to enroll students"
         )
 
     try:
@@ -666,59 +675,51 @@ async def enroll_student(
 
             if not class_obj:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Class not found or access denied"
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Class not found or access denied"
                 )
 
             # Check if student exists and is actually a student
             student_query = select(User).where(
-                and_(
-                    User.id == student_uuid,
-                    User.role == 'student'
-                )
+                and_(User.id == student_uuid, User.role == "student")
             )
             student_result = await db_session.execute(student_query)
             student = student_result.scalar_one_or_none()
 
             if not student:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Student not found"
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Student not found"
                 )
 
             # Check if already enrolled
             existing_query = select(ClassEnrollment).where(
                 and_(
                     ClassEnrollment.class_id == class_uuid,
-                    ClassEnrollment.student_id == student_uuid
+                    ClassEnrollment.student_id == student_uuid,
                 )
             )
             existing_result = await db_session.execute(existing_query)
             existing_enrollment = existing_result.scalar_one_or_none()
 
             if existing_enrollment:
-                if existing_enrollment.status == 'active':
+                if existing_enrollment.status == "active":
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Student is already enrolled in this class"
+                        detail="Student is already enrolled in this class",
                     )
                 else:
                     # Reactivate enrollment
-                    existing_enrollment.status = 'active'
+                    existing_enrollment.status = "active"
                     existing_enrollment.enrolled_at = datetime.utcnow()
                     await db_session.commit()
                     return {
                         "message": f"Student {student.username} re-enrolled successfully",
                         "student_id": str(student.id),
-                        "class_id": str(class_obj.id)
+                        "class_id": str(class_obj.id),
                     }
 
             # Check max students limit
             student_count_query = select(func.count(ClassEnrollment.student_id)).where(
-                and_(
-                    ClassEnrollment.class_id == class_uuid,
-                    ClassEnrollment.status == 'active'
-                )
+                and_(ClassEnrollment.class_id == class_uuid, ClassEnrollment.status == "active")
             )
             count_result = await db_session.execute(student_count_query)
             current_count = count_result.scalar() or 0
@@ -726,7 +727,7 @@ async def enroll_student(
             if class_obj.max_students and current_count >= class_obj.max_students:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Class is full (max {class_obj.max_students} students)"
+                    detail=f"Class is full (max {class_obj.max_students} students)",
                 )
 
             # Create new enrollment
@@ -734,7 +735,7 @@ async def enroll_student(
                 class_id=class_uuid,
                 student_id=student_uuid,
                 enrolled_at=datetime.utcnow(),
-                status='active'
+                status="active",
             )
             db_session.add(enrollment)
             await db_session.commit()
@@ -743,28 +744,23 @@ async def enroll_student(
             return {
                 "message": f"Student {student.username} enrolled successfully",
                 "student_id": str(student.id),
-                "class_id": str(class_obj.id)
+                "class_id": str(class_obj.id),
             }
 
     except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid ID format"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid ID format")
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error enrolling student: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to enroll student"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to enroll student"
         )
+
 
 @classes_router.delete("/{class_id}/students/{student_id}")
 async def unenroll_student(
-    class_id: str,
-    student_id: str,
-    current_user: UserModel = Depends(get_current_user)
+    class_id: str, student_id: str, current_user: UserModel = Depends(get_current_user)
 ) -> Dict[str, str]:
     """Remove a student from a class."""
 
@@ -772,8 +768,7 @@ async def unenroll_student(
 
     if role not in ["teacher", "admin"]:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to remove students"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to remove students"
         )
 
     try:
@@ -794,15 +789,14 @@ async def unenroll_student(
 
             if not class_obj:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Class not found or access denied"
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Class not found or access denied"
                 )
 
             # Find the enrollment
             enrollment_query = select(ClassEnrollment).where(
                 and_(
                     ClassEnrollment.class_id == class_uuid,
-                    ClassEnrollment.student_id == student_uuid
+                    ClassEnrollment.student_id == student_uuid,
                 )
             )
             enrollment_result = await db_session.execute(enrollment_query)
@@ -811,35 +805,30 @@ async def unenroll_student(
             if not enrollment:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Student is not enrolled in this class"
+                    detail="Student is not enrolled in this class",
                 )
 
             # Mark as inactive instead of deleting
-            enrollment.status = 'inactive'
+            enrollment.status = "inactive"
             await db_session.commit()
 
             logger.info(f"Removed student {student_id} from class {class_id}")
             return {"message": "Student removed from class successfully"}
 
     except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid ID format"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid ID format")
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error removing student: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to remove student"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to remove student"
         )
+
 
 @classes_router.post("/{class_id}/students/batch")
 async def batch_enroll_students(
-    class_id: str,
-    student_ids: List[str],
-    current_user: UserModel = Depends(get_current_user)
+    class_id: str, student_ids: List[str], current_user: UserModel = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Enroll multiple students in a class at once."""
 
@@ -847,8 +836,7 @@ async def batch_enroll_students(
 
     if role not in ["teacher", "admin"]:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to enroll students"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to enroll students"
         )
 
     try:
@@ -868,8 +856,7 @@ async def batch_enroll_students(
 
             if not class_obj:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Class not found or access denied"
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Class not found or access denied"
                 )
 
             enrolled = []
@@ -882,10 +869,7 @@ async def batch_enroll_students(
 
                     # Check if student exists
                     student_query = select(User).where(
-                        and_(
-                            User.id == student_uuid,
-                            User.role == 'student'
-                        )
+                        and_(User.id == student_uuid, User.role == "student")
                     )
                     student_result = await db_session.execute(student_query)
                     student = student_result.scalar_one_or_none()
@@ -898,19 +882,19 @@ async def batch_enroll_students(
                     existing_query = select(ClassEnrollment).where(
                         and_(
                             ClassEnrollment.class_id == class_uuid,
-                            ClassEnrollment.student_id == student_uuid
+                            ClassEnrollment.student_id == student_uuid,
                         )
                     )
                     existing_result = await db_session.execute(existing_query)
                     existing = existing_result.scalar_one_or_none()
 
-                    if existing and existing.status == 'active':
+                    if existing and existing.status == "active":
                         already_enrolled.append(student.username)
                         continue
 
                     if existing:
                         # Reactivate
-                        existing.status = 'active'
+                        existing.status = "active"
                         existing.enrolled_at = datetime.utcnow()
                     else:
                         # Create new enrollment
@@ -918,7 +902,7 @@ async def batch_enroll_students(
                             class_id=class_uuid,
                             student_id=student_uuid,
                             enrolled_at=datetime.utcnow(),
-                            status='active'
+                            status="active",
                         )
                         db_session.add(enrollment)
 
@@ -939,14 +923,13 @@ async def batch_enroll_students(
                     "total_processed": len(student_ids),
                     "successfully_enrolled": len(enrolled),
                     "already_enrolled": len(already_enrolled),
-                    "failed": len(failed)
-                }
+                    "failed": len(failed),
+                },
             }
 
     except ValueError:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid class ID format"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid class ID format"
         )
     except HTTPException:
         raise
@@ -954,20 +937,19 @@ async def batch_enroll_students(
         logger.error(f"Error in batch enrollment: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to process batch enrollment"
+            detail="Failed to process batch enrollment",
         )
+
 
 @classes_router.delete("/{class_id}")
 async def delete_class(
-    class_id: str,
-    current_user: UserModel = Depends(get_current_user)
+    class_id: str, current_user: UserModel = Depends(get_current_user)
 ) -> Dict[str, str]:
     """Delete a class (admins only)."""
 
     if current_user.role.lower() != "admin":
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can delete classes"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Only admins can delete classes"
         )
 
     try:
@@ -982,10 +964,7 @@ async def delete_class(
             class_obj = result.scalar_one_or_none()
 
             if not class_obj:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Class not found"
-                )
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Class not found")
 
             class_name = class_obj.name
             await db_session.delete(class_obj)
@@ -996,14 +975,12 @@ async def delete_class(
 
     except ValueError:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid class ID format"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid class ID format"
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error deleting class: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete class"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete class"
         )

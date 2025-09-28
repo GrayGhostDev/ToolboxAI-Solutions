@@ -1,0 +1,186 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: toolboxai-production
+  annotations:
+    config.kubernetes.io/local-config: "true"
+
+# Base
+bases:
+- ../../base
+
+# Namespace override
+namespace: toolboxai-production
+
+# Name Prefix (no prefix for production)
+namePrefix: ""
+
+# Common Labels
+commonLabels:
+  environment: production
+  tier: production
+  criticality: high
+
+# Common Annotations
+commonAnnotations:
+  environment: production
+  managed-by: kustomize
+  contact: devops@toolboxai.solutions
+  backup-policy: "continuous"
+  monitoring: "enabled"
+  alerting: "enabled"
+
+# Image Tags for Production (use specific versions, not latest)
+images:
+- name: ghcr.io/toolboxai-solutions/backend
+  newTag: v1.2.0
+- name: postgres
+  newTag: 15.4-alpine
+- name: redis
+  newTag: 7.2-alpine
+
+# Resource Adjustments for Production
+replicas:
+- name: backend
+  count: 5
+- name: redis
+  count: 1
+
+# Strategic Merge Patches
+patchesStrategicMerge:
+- config-patch.yaml
+- resource-patch.yaml
+- security-patch.yaml
+
+# JSON Patches for Production
+patches:
+# Production resource allocation
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: backend
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/cpu
+      value: "500m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: "1Gi"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/cpu
+      value: "2000m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: "2Gi"
+
+- target:
+    group: apps
+    version: v1
+    kind: StatefulSet
+    name: postgres
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/cpu
+      value: "1000m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: "2Gi"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/cpu
+      value: "2000m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: "4Gi"
+
+# Production HPA settings
+- target:
+    group: autoscaling
+    version: v2
+    kind: HorizontalPodAutoscaler
+    name: backend-hpa
+  patch: |-
+    - op: replace
+      path: /spec/minReplicas
+      value: 5
+    - op: replace
+      path: /spec/maxReplicas
+      value: 20
+
+# Add production-specific annotations
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+  patch: |-
+    - op: add
+      path: /metadata/annotations/deployment.kubernetes.io~1revision
+      value: "production"
+    - op: add
+      path: /metadata/annotations/app.kubernetes.io~1managed-by
+      value: "kustomize"
+
+# ConfigMap Generators for Production
+configMapGenerator:
+- name: production-config
+  literals:
+  - ENVIRONMENT=production
+  - LOG_LEVEL=info
+  - DEBUG=false
+  - CACHE_TTL=3600
+  - RATE_LIMIT_PER_MINUTE=100
+  - DATABASE_POOL_SIZE=30
+  - REDIS_POOL_SIZE=20
+  - BACKUP_ENABLED=true
+  - MONITORING_ENABLED=true
+  - HIGH_AVAILABILITY=true
+  - CLUSTERING_ENABLED=true
+
+# Secret Generators for Production (secrets will be managed externally)
+secretGenerator:
+- name: production-secrets
+  literals:
+  - DATABASE_PASSWORD=PRODUCTION_SECRET_MANAGED_EXTERNALLY
+  - REDIS_PASSWORD=PRODUCTION_SECRET_MANAGED_EXTERNALLY
+  - JWT_SECRET_KEY=PRODUCTION_SECRET_MANAGED_EXTERNALLY
+  - OPENAI_API_KEY=PRODUCTION_SECRET_MANAGED_EXTERNALLY
+  type: Opaque
+
+# Storage adjustments for production (full sizes)
+patchesJson6902:
+- target:
+    group: ""
+    version: v1
+    kind: PersistentVolumeClaim
+    name: agent-data
+  patch: |-
+    - op: replace
+      path: /spec/resources/requests/storage
+      value: "50Gi"
+    - op: replace
+      path: /spec/storageClassName
+      value: "fast-ssd-encrypted"
+
+- target:
+    group: ""
+    version: v1
+    kind: PersistentVolumeClaim
+    name: redis-data
+  patch: |-
+    - op: replace
+      path: /spec/resources/requests/storage
+      value: "20Gi"
+    - op: replace
+      path: /spec/storageClassName
+      value: "fast-ssd-encrypted"
+
+# Add production-specific resources
+resources:
+- production-ingress.yaml
+- production-monitoring.yaml
+- production-backup.yaml
+
+# Generators for production-specific CRDs
+generators:
+- production-generator.yaml

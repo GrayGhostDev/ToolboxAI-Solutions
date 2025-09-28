@@ -1,30 +1,30 @@
 /**
  * Roblox Character Avatar Component
- * 
+ *
  * Displays character avatars from the parsed design assets
  * with fun animations and interactions for kids
  */
 
 import React, { useState } from 'react';
-import Avatar from '@mui/material/Avatar';
-import Box from '@mui/material/Box';
-import Tooltip from '@mui/material/Tooltip';
-import Zoom from '@mui/material/Zoom';
-import Fade from '@mui/material/Fade';
-import Badge from '@mui/material/Badge';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import CircularProgress from '@mui/material/CircularProgress';
 import {
-  RocketLaunch,
-  Star,
-  EmojiEvents,
-  AutoAwesome
-} from '@mui/icons-material';
+  Avatar,
+  Box,
+  Tooltip,
+  Transition,
+  Badge,
+  ActionIcon,
+  Text,
+  Group,
+  useMantineTheme,
+  rem
+} from '@mantine/core';
+import { createStyles, keyframes } from '@mantine/emotion';
+import {
+  IconRocket,
+  IconStar,
+  IconTrophy,
+  IconSparkles
+} from '@tabler/icons-react';
 import { Procedural3DCharacter } from './Procedural3DCharacter';
 
 interface CharacterData {
@@ -45,6 +45,42 @@ interface RobloxCharacterAvatarProps {
   onClick?: () => void;
 }
 
+// Animations
+const floatAnimation = keyframes({
+  '0%, 100%': { transform: 'translateY(0px)' },
+  '50%': { transform: 'translateY(-10px)' }
+});
+
+const pulseAnimation = keyframes({
+  '0%': { transform: 'scale(1)', opacity: 1 },
+  '50%': { transform: 'scale(1.2)', opacity: 0.7 },
+  '100%': { transform: 'scale(1)', opacity: 1 }
+});
+
+const useStyles = createStyles((theme, { isHovered, isActive }: { isHovered: boolean; isActive: boolean }) => ({
+  container: {
+    position: 'relative',
+    display: 'inline-block',
+    cursor: 'pointer',
+    transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+    transition: 'transform 0.3s ease'
+  },
+  activeIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #4caf50, #8bc34a)',
+    boxShadow: '0 0 10px #4caf50',
+    animation: isActive ? `${pulseAnimation} 1s ease-in-out infinite` : 'none'
+  },
+  floatingIcon: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    animation: `${floatAnimation} 2s ease-in-out infinite`
+  }
+}));
+
 // Character images will be loaded dynamically from design_files
 
 export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvatarProps> = ({
@@ -55,9 +91,10 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
   animated = true,
   onClick
 }) => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const { classes } = useStyles({ isHovered, isActive: character.isActive });
 
   const sizeMap = {
     small: 40,
@@ -75,77 +112,60 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
 
   return (
     <Box
-      sx={{
-        position: 'relative',
-        display: 'inline-block',
-        cursor: onClick ? 'pointer' : 'default',
-        transform: isHovered ? 'scale(1.1)' : 'scale(1)',
-        transition: 'transform 0.3s ease',
-      }}
+      className={classes.container}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={(e: React.MouseEvent) => handleClick}
+      onClick={handleClick}
     >
       <Tooltip
-        title={
+        label={
           <Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+            <Text size="sm" fw={600} mb="xs">
               {character.name}
-            </Typography>
+            </Text>
             {showLevel && (
-              <Typography variant="body2" color="text.secondary">
+              <Text size="sm" c="dimmed">
                 Level {character.level}
-              </Typography>
+              </Text>
             )}
             {showXP && (
-              <Typography variant="body2" color="text.secondary">
+              <Text size="sm" c="dimmed">
                 {character.xp} XP
-              </Typography>
+              </Text>
             )}
             {character.achievements.length > 0 && (
-              <Stack direction="row" spacing={0.5} sx={{ mt: 1 }}>
+              <Group spacing="xs" mt="xs">
                 {character.achievements.slice(0, 3).map((achievement, index) => (
-                  <Chip
+                  <Badge
                     key={index}
-                    label={achievement}
-                    size="small"
-                    sx={{
-                      fontSize: '0.7rem',
-                      height: 20,
-                      background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                    size="xs"
+                    style={{
+                      background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
                       color: 'white'
                     }}
-                  />
+                  >
+                    {achievement}
+                  </Badge>
                 ))}
-              </Stack>
+              </Group>
             )}
           </Box>
         }
-        arrow
-        placement="top"
+        withArrow
+        position="top"
       >
         <Badge
-          overlap="circular"
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-          badgeContent={
-            character.isActive ? (
-              <Box
-                sx={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: '50%',
-                  background: `linear-gradient(135deg, #4caf50, #8bc34a)`,
-                  boxShadow: `0 0 10px #4caf50`,
-                  animation: isAnimating ? 'pulse 1s ease-in-out' : 'none',
-                  '@keyframes pulse': {
-                    '0%': { transform: 'scale(1)', opacity: 1 },
-                    '50%': { transform: 'scale(1.2)', opacity: 0.7 },
-                    '100%': { transform: 'scale(1)', opacity: 1 }
-                  }
-                }}
-              />
-            ) : null
-          }
+          variant="dot"
+          color={character.isActive ? 'green' : 'gray'}
+          size="lg"
+          style={{
+            position: 'relative'
+          }}
+          styles={{
+            indicator: {
+              ...classes.activeIndicator
+            }
+          }}
         >
           <Procedural3DCharacter
             characterType={character.type}
@@ -154,8 +174,9 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
             style={{
               width: avatarSize,
               height: avatarSize,
-              boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.3)}`,
+              boxShadow: `0 4px 20px ${theme.fn.rgba(theme.colors.blue[6], 0.3)}`,
               transition: 'all 0.3s ease',
+              borderRadius: '50%'
             }}
           />
         </Badge>
@@ -163,30 +184,24 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
 
       {/* Floating icons for active characters */}
       {character.isActive && animated && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: -10,
-            right: -10,
-            animation: 'float 2s ease-in-out infinite',
-            '@keyframes float': {
-              '0%, 100%': { transform: 'translateY(0px)' },
-              '50%': { transform: 'translateY(-10px)' }
-            }
-          }}
-        >
-          <IconButton
-            size="small"
-            sx={{
-              color: theme.palette.warning.main,
-              background: alpha(theme.palette.warning.main, 0.1),
-              '&:hover': {
-                background: alpha(theme.palette.warning.main, 0.2),
+        <Box className={classes.floatingIcon}>
+          <ActionIcon
+            size="sm"
+            variant="light"
+            color="yellow"
+            style={{
+              background: theme.fn.rgba(theme.colors.yellow[6], 0.1)
+            }}
+            styles={{
+              root: {
+                '&:hover': {
+                  background: theme.fn.rgba(theme.colors.yellow[6], 0.2)
+                }
               }
             }}
           >
-            <Star fontSize="small" />
-          </IconButton>
+            <IconStar size={16} />
+          </ActionIcon>
         </Box>
       )}
     </Box>

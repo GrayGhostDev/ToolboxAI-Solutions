@@ -41,20 +41,23 @@ def _serialize_audit_event(event: "AuditEvent") -> Dict[str, Any]:
         event_dict["severity"] = event.severity.value
     return event_dict
 
+
 Base = declarative_base()
 
 
 class AuditSeverity(Enum):
     """Audit event severity levels"""
+
     CRITICAL = "critical"  # Security breaches, data loss
-    HIGH = "high"         # Failed authentications, authorization violations
-    MEDIUM = "medium"     # Configuration changes, suspicious activity
-    LOW = "low"          # Normal operations, successful logins
-    INFO = "info"        # Informational events
+    HIGH = "high"  # Failed authentications, authorization violations
+    MEDIUM = "medium"  # Configuration changes, suspicious activity
+    LOW = "low"  # Normal operations, successful logins
+    INFO = "info"  # Informational events
 
 
 class AuditCategory(Enum):
     """Audit event categories"""
+
     AUTHENTICATION = "authentication"
     AUTHORIZATION = "authorization"
     DATA_ACCESS = "data_access"
@@ -70,6 +73,7 @@ class AuditCategory(Enum):
 @dataclass
 class AuditEvent:
     """Structured audit event"""
+
     timestamp: str
     event_id: str
     category: AuditCategory
@@ -93,6 +97,7 @@ class AuditEvent:
 
 class AuditLogEntry(Base):
     """Database model for audit logs"""
+
     __tablename__ = "security_audit_logs"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -132,7 +137,7 @@ class SecurityAuditLogger:
         enable_siem_export: bool = False,
         integrity_key: Optional[str] = None,
         async_mode: bool = True,
-        buffer_size: int = 1000
+        buffer_size: int = 1000,
     ):
         """
         Initialize the audit logger
@@ -179,7 +184,7 @@ class SecurityAuditLogger:
             "total_events": 0,
             "events_by_category": {},
             "events_by_severity": {},
-            "failed_events": 0
+            "failed_events": 0,
         }
 
         # Alert callbacks
@@ -214,7 +219,7 @@ class SecurityAuditLogger:
         resource: Optional[str] = None,
         session_id: Optional[str] = None,
         request_id: Optional[str] = None,
-        correlation_id: Optional[str] = None
+        correlation_id: Optional[str] = None,
     ) -> str:
         """
         Log a security audit event
@@ -259,7 +264,7 @@ class SecurityAuditLogger:
             correlation_id=correlation_id,
             environment=self.environment,
             service_name=self.service_name,
-            host=self.host
+            host=self.host,
         )
 
         # Calculate integrity hash
@@ -333,7 +338,7 @@ class SecurityAuditLogger:
             log_line = json.dumps(_serialize_audit_event(event)) + "\n"
 
             # Atomic write with rotation
-            with open(self.log_file_path, 'a', encoding='utf-8') as f:
+            with open(self.log_file_path, "a", encoding="utf-8") as f:
                 f.write(log_line)
 
             # Check for rotation
@@ -361,7 +366,7 @@ class SecurityAuditLogger:
                 session_id=event.session_id,
                 request_id=event.request_id,
                 correlation_id=event.correlation_id,
-                integrity_hash=event.integrity_hash
+                integrity_hash=event.integrity_hash,
             )
 
             self.db.add(db_entry)
@@ -381,7 +386,7 @@ class SecurityAuditLogger:
             "source": self.service_name,
             "sourcetype": "security_audit",
             "host": event.host,
-            "event": _serialize_audit_event(event)
+            "event": _serialize_audit_event(event),
         }
 
         # Send to SIEM endpoint
@@ -413,7 +418,9 @@ class SecurityAuditLogger:
         if event.category == AuditCategory.AUTHENTICATION and event.result == "failure":
             count = await self._count_recent_failures(event.user_id or event.ip_address)
             if count >= 5:
-                await self._trigger_alert(event, f"Multiple failed authentication attempts: {count}")
+                await self._trigger_alert(
+                    event, f"Multiple failed authentication attempts: {count}"
+                )
 
         # Unauthorized data access
         if event.category == AuditCategory.DATA_ACCESS and event.result == "unauthorized":
@@ -424,7 +431,7 @@ class SecurityAuditLogger:
         alert = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "message": message,
-            "event": _serialize_audit_event(event)
+            "event": _serialize_audit_event(event),
         }
 
         # Execute alert callbacks
@@ -453,11 +460,7 @@ class SecurityAuditLogger:
         data += f"{event.action}|{event.result}|{json.dumps(event.details, sort_keys=True)}"
 
         # Calculate HMAC
-        h = hmac.new(
-            self.integrity_key.encode('utf-8'),
-            data.encode('utf-8'),
-            hashlib.sha256
-        )
+        h = hmac.new(self.integrity_key.encode("utf-8"), data.encode("utf-8"), hashlib.sha256)
         return h.hexdigest()
 
     def verify_integrity(self, event: AuditEvent) -> bool:
@@ -468,12 +471,13 @@ class SecurityAuditLogger:
     def _generate_event_id(self) -> str:
         """Generate unique event ID"""
         import uuid
+
         return str(uuid.uuid4())
 
     def _reconstruct_event(self, event_data: Dict[str, Any]) -> AuditEvent:
         """Reconstruct AuditEvent from dictionary"""
-        event_data['category'] = AuditCategory(event_data['category'])
-        event_data['severity'] = AuditSeverity(event_data['severity'])
+        event_data["category"] = AuditCategory(event_data["category"])
+        event_data["severity"] = AuditSeverity(event_data["severity"])
         return AuditEvent(**event_data)
 
     def _update_statistics(self, event: AuditEvent):
@@ -481,10 +485,14 @@ class SecurityAuditLogger:
         self.stats["total_events"] += 1
 
         category = event.category.value
-        self.stats["events_by_category"][category] = self.stats["events_by_category"].get(category, 0) + 1
+        self.stats["events_by_category"][category] = (
+            self.stats["events_by_category"].get(category, 0) + 1
+        )
 
         severity = event.severity.value
-        self.stats["events_by_severity"][severity] = self.stats["events_by_severity"].get(severity, 0) + 1
+        self.stats["events_by_severity"][severity] = (
+            self.stats["events_by_severity"].get(severity, 0) + 1
+        )
 
     async def _rotate_log_if_needed(self):
         """Rotate log file if it exceeds size limit"""
@@ -500,8 +508,8 @@ class SecurityAuditLogger:
                 # Move and compress
                 shutil.move(self.log_file_path, rotated_path)
 
-                with open(rotated_path, 'rb') as f_in:
-                    with gzip.open(f"{rotated_path}.gz", 'wb') as f_out:
+                with open(rotated_path, "rb") as f_in:
+                    with gzip.open(f"{rotated_path}.gz", "wb") as f_out:
                         shutil.copyfileobj(f_in, f_out)
 
                 os.remove(rotated_path)
@@ -522,7 +530,7 @@ class SecurityAuditLogger:
         category: Optional[AuditCategory] = None,
         severity: Optional[AuditSeverity] = None,
         user_id: Optional[str] = None,
-        limit: int = 100
+        limit: int = 100,
     ) -> List[AuditEvent]:
         """Query audit events from database"""
         if not self.db:
@@ -563,7 +571,7 @@ class SecurityAuditLogger:
                 "environment": self.environment,
                 "service_name": self.service_name,
                 "host": self.host,
-                "integrity_hash": entry.integrity_hash
+                "integrity_hash": entry.integrity_hash,
             }
             results.append(AuditEvent(**event_data))
 
@@ -583,8 +591,7 @@ class SecurityAuditLogger:
         try:
             # Mark old events as archived
             self.db.query(AuditLogEntry).filter(
-                AuditLogEntry.timestamp < cutoff_date,
-                AuditLogEntry.archived == False
+                AuditLogEntry.timestamp < cutoff_date, AuditLogEntry.archived == False
             ).update({"archived": True})
 
             self.db.commit()
@@ -598,6 +605,7 @@ class SecurityAuditLogger:
 # Singleton instance for easy access
 _audit_logger = None
 
+
 def get_audit_logger() -> SecurityAuditLogger:
     """Get singleton audit logger instance"""
     global _audit_logger
@@ -607,12 +615,7 @@ def get_audit_logger() -> SecurityAuditLogger:
 
 
 # Convenience functions
-async def audit_log(
-    category: AuditCategory,
-    severity: AuditSeverity,
-    action: str,
-    **kwargs
-) -> str:
+async def audit_log(category: AuditCategory, severity: AuditSeverity, action: str, **kwargs) -> str:
     """Convenience function for logging audit events"""
     logger = get_audit_logger()
     return await logger.log_event(category, severity, action, **kwargs)
@@ -626,5 +629,5 @@ __all__ = [
     "AuditCategory",
     "AuditLogEntry",
     "get_audit_logger",
-    "audit_log"
+    "audit_log",
 ]

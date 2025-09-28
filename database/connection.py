@@ -22,9 +22,8 @@ from sqlalchemy import text, pool, event
 from sqlalchemy.exc import DBAPIError, OperationalError, IntegrityError
 from sqlalchemy.pool import NullPool, QueuePool
 
-from core.database.models import Base
-from toolboxai_settings import settings
-settings = settings
+from database.models.models import Base
+from apps.backend.core.config import settings
 
 logger = logging.getLogger(__name__)
 

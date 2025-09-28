@@ -3,6 +3,7 @@ Stripe Checkout Session endpoints (hosted Checkout)
 
 Creates a Checkout session to keep PCI scope at SAQ A. Do not handle card data in the app.
 """
+
 from __future__ import annotations
 
 import os
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import stripe  # type: ignore
+
     STRIPE_AVAILABLE = True
 except Exception:  # pragma: no cover
     STRIPE_AVAILABLE = False
@@ -45,10 +47,12 @@ async def create_checkout_session(payload: CheckoutSessionRequest) -> Dict[str, 
     try:
         session = stripe.checkout.Session.create(
             mode=payload.mode,
-            line_items=[{
-                "price": payload.price_id,
-                "quantity": payload.quantity,
-            }],
+            line_items=[
+                {
+                    "price": payload.price_id,
+                    "quantity": payload.quantity,
+                }
+            ],
             success_url=payload.success_url,
             cancel_url=payload.cancel_url,
             allow_promotion_codes=True,

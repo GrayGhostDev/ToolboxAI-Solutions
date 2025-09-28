@@ -60,7 +60,7 @@ async def resolve_users(
     info,
     filter: Optional[Dict] = None,
     sort: Optional[Dict] = None,
-    pagination: Optional[Dict] = None
+    pagination: Optional[Dict] = None,
 ) -> Dict[str, Any]:
     """List users with filtering and pagination"""
 
@@ -78,10 +78,10 @@ async def resolve_users(
         if filter.get("search"):
             search_term = f"%{filter['search']}%"
             stmt = stmt.where(
-                (User.username.ilike(search_term)) |
-                (User.email.ilike(search_term)) |
-                (User.first_name.ilike(search_term)) |
-                (User.last_name.ilike(search_term))
+                (User.username.ilike(search_term))
+                | (User.email.ilike(search_term))
+                | (User.first_name.ilike(search_term))
+                | (User.last_name.ilike(search_term))
             )
 
     # Count total
@@ -111,9 +111,9 @@ async def resolve_users(
             "hasNextPage": offset + limit < total_count,
             "hasPreviousPage": offset > 0,
             "startCursor": str(offset) if offset > 0 else None,
-            "endCursor": str(offset + limit) if offset + limit < total_count else None
+            "endCursor": str(offset + limit) if offset + limit < total_count else None,
         },
-        "totalCount": total_count
+        "totalCount": total_count,
     }
 
 
@@ -135,16 +135,14 @@ async def resolve_courses(
     info,
     filter: Optional[Dict] = None,
     sort: Optional[Dict] = None,
-    pagination: Optional[Dict] = None
+    pagination: Optional[Dict] = None,
 ) -> Dict[str, Any]:
     """List courses with filtering and pagination"""
 
     db = info.context["db"]
 
     # Build query with eager loading
-    stmt = select(Course).options(
-        selectinload(Course.teacher)
-    )
+    stmt = select(Course).options(selectinload(Course.teacher))
 
     # Apply filters
     if filter:
@@ -184,9 +182,9 @@ async def resolve_courses(
             "hasNextPage": offset + limit < total_count,
             "hasPreviousPage": offset > 0,
             "startCursor": str(offset) if offset > 0 else None,
-            "endCursor": str(offset + limit) if offset + limit < total_count else None
+            "endCursor": str(offset + limit) if offset + limit < total_count else None,
         },
-        "totalCount": total_count
+        "totalCount": total_count,
     }
 
 
@@ -196,7 +194,7 @@ async def resolve_enrolled_courses(
     info,
     studentId: Optional[str] = None,
     status: Optional[str] = None,
-    pagination: Optional[Dict] = None
+    pagination: Optional[Dict] = None,
 ) -> Dict[str, Any]:
     """Get courses enrolled by a student"""
 
@@ -212,9 +210,11 @@ async def resolve_enrolled_courses(
         student_id = uuid.UUID(studentId)
 
     # Query enrollments
-    stmt = select(Enrollment).options(
-        selectinload(Enrollment.course)
-    ).where(Enrollment.student_id == student_id)
+    stmt = (
+        select(Enrollment)
+        .options(selectinload(Enrollment.course))
+        .where(Enrollment.student_id == student_id)
+    )
 
     if status:
         stmt = stmt.where(Enrollment.status == status)
@@ -231,9 +231,9 @@ async def resolve_enrolled_courses(
             "hasNextPage": False,
             "hasPreviousPage": False,
             "startCursor": None,
-            "endCursor": None
+            "endCursor": None,
         },
-        "totalCount": len(courses)
+        "totalCount": len(courses),
     }
 
 
@@ -251,10 +251,7 @@ async def resolve_lesson(obj, info, id: str) -> Optional[Lesson]:
 
 @query.field("courseLessons")
 async def resolve_course_lessons(
-    obj,
-    info,
-    courseId: str,
-    includeHidden: bool = False
+    obj, info, courseId: str, includeHidden: bool = False
 ) -> List[Lesson]:
     """Get lessons for a course"""
 
@@ -293,7 +290,7 @@ async def resolve_course_quizzes(
     courseId: str,
     type: Optional[str] = None,
     status: Optional[str] = None,
-    includeHidden: bool = False
+    includeHidden: bool = False,
 ) -> List[Quiz]:
     """Get quizzes for a course"""
 

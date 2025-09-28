@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/v1/endpoints/classes.py
-# hypothesis_version: 6.139.2
-
-[100, 2024, '/', '/classes', '/{class_id}', '/{class_id}/students', '1', '2024-09-01T08:00:00', 'Alex', 'Class not found', 'Classes', 'Invalid ID format', 'Johnson', 'Mathematics', 'Mathematics 101', 'Mon/Wed/Fri 10:00 AM', 'Room 203', 'Student not found', 'active', 'admin', 'alex.j@school.edu', 'alex_j', 'already_enrolled', 'class_id', 'email', 'enrolled', 'enrolled_at', 'failed', 'final_grade', 'first_name', 'id', 'inactive', 'last_name', 'message', 'parent', 'reason', 'status', 'student', 'student_count', 'student_id', 'summary', 'teacher', 'teacher123', 'total_processed', 'username']

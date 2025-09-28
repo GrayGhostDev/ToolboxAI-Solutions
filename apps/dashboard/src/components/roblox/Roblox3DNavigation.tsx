@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import { keyframes } from '@mui/material/styles';
-import { styled } from '@mui/material/styles';
-import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
-import Stack from '@mui/material/Stack';
-import Stack from '@mui/material/Stack';
+import { Box, Text, Paper, Stack, useMantineTheme, createStyles, keyframes } from '@mantine/core';
 import { Roblox3DButton } from './Roblox3DButton';
 import { Roblox3DTabs } from './Roblox3DTabs';
 
@@ -35,71 +27,73 @@ interface Roblox3DNavigationProps {
 }
 
 // Animations
-const slideInAnimation = keyframes`
-  0% { transform: translateX(-100%); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
-`;
+const slideInAnimation = keyframes({
+  '0%': { transform: 'translateX(-100%)', opacity: 0 },
+  '100%': { transform: 'translateX(0)', opacity: 1 }
+});
 
-const fadeInAnimation = keyframes`
-  0% { opacity: 0; transform: scale(0.9); }
-  100% { opacity: 1; transform: scale(1); }
-`;
+const fadeInAnimation = keyframes({
+  '0%': { opacity: 0, transform: 'scale(0.9)' },
+  '100%': { opacity: 1, transform: 'scale(1)' }
+});
 
-const StyledNavigation = styled(Paper)(({ theme, orientation, variant }: any) => ({
-  background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.05)})`,
-  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-  borderRadius: 16,
-  padding: 16,
-  boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`,
-  backdropFilter: 'blur(10px)',
-  animation: `${slideInAnimation} 0.5s ease-out`,
-  
-  ...(orientation === 'vertical' && {
+const useStyles = createStyles((theme, { orientation, variant }: any) => ({
+  styledNavigation: {
+    background: `linear-gradient(145deg, ${theme.colors.gray[0]}, ${theme.colors.blue[0]})`,
+    border: `1px solid ${theme.colors.blue[2]}`,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.md,
+    boxShadow: `0 8px 32px ${theme.colors.blue[1]}`,
+    backdropFilter: 'blur(10px)',
+    animation: `${slideInAnimation} 0.5s ease-out`,
+
+    ...(orientation === 'vertical' && {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: theme.spacing.xs,
+    }),
+
+    ...(orientation === 'horizontal' && {
+      display: 'flex',
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+      alignItems: 'center',
+      flexWrap: 'wrap',
+    }),
+
+    ...(variant === 'tabs' && {
+      padding: theme.spacing.xs,
+      background: `linear-gradient(135deg, ${theme.colors.gray[0]}, ${theme.colors.blue[0]})`,
+    }),
+  },
+
+  navigationHeader: {
+    marginBottom: theme.spacing.md,
+    paddingBottom: theme.spacing.sm,
+    borderBottom: `2px solid ${theme.colors.blue[2]}`,
+
+    '& .mantine-Text-root': {
+      background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
+      backgroundClip: 'text',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      fontWeight: 800,
+      textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    },
+  },
+
+  subNavigation: {
+    marginLeft: theme.spacing.lg,
+    marginTop: theme.spacing.xs,
+    padding: theme.spacing.sm,
+    background: `linear-gradient(145deg, ${theme.colors.blue[0]}, ${theme.colors.violet[0]})`,
+    borderRadius: theme.radius.sm,
+    border: `1px solid ${theme.colors.blue[1]}`,
     display: 'flex',
     flexDirection: 'column',
-    gap: 8,
-  }),
-  
-  ...(orientation === 'horizontal' && {
-    display: 'flex',
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  }),
-  
-  ...(variant === 'tabs' && {
-    padding: 8,
-    background: `linear-gradient(135deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.02)})`,
-  }),
-}));
-
-const NavigationHeader = styled(Box)(({ theme }) => ({
-  marginBottom: 16,
-  paddingBottom: 12,
-  borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-  
-  '& .MuiTypography-root': {
-    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-    backgroundClip: 'text',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    fontWeight: 800,
-    textShadow: '0 2px 4px rgba(0,0,0,0.1)',
-  },
-}));
-
-const SubNavigation = styled(Box)(({ theme, isOpen }: any) => ({
-  marginLeft: 24,
-  marginTop: 8,
-  padding: 12,
-  background: `linear-gradient(145deg, ${alpha(theme.palette.primary.main, 0.05)}, ${alpha(theme.palette.secondary.main, 0.02)})`,
-  borderRadius: 12,
-  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-  display: isOpen ? 'flex' : 'none',
-  flexDirection: 'column',
-  gap: 8,
-  animation: isOpen ? `${fadeInAnimation} 0.3s ease-out` : 'none',
+    gap: theme.spacing.xs,
+    animation: `${fadeInAnimation} 0.3s ease-out`,
+  }
 }));
 
 export const Roblox3DNavigation: React.FunctionComponent<Roblox3DNavigationProps> = ({
@@ -113,14 +107,15 @@ export const Roblox3DNavigation: React.FunctionComponent<Roblox3DNavigationProps
   showLabels = true,
   compact = false,
 }) => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
+  const { classes } = useStyles({ orientation, variant });
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [activeItem, setActiveItem] = useState<string | null>(null);
 
   const handleItemClick = (item: NavigationItem) => {
     setActiveItem(item.id);
     onItemClick(item);
-    
+
     if (item.children && item.children.length > 0) {
       const newExpanded = new Set(expandedItems);
       if (newExpanded.has(item.id)) {
@@ -139,11 +134,11 @@ export const Roblox3DNavigation: React.FunctionComponent<Roblox3DNavigationProps
 
     if (variant === 'buttons') {
       return (
-        <Box key={item.id} sx={{ position: 'relative' }}>
+        <Box key={item.id} style={{ position: 'relative' }}>
           <Roblox3DButton
             iconName={item.iconName}
             label={showLabels ? item.label : undefined}
-            onClick={(e: React.MouseEvent) => () => handleItemClick(item)}
+            onClick={() => handleItemClick(item)}
             variant={isActive ? 'primary' : 'secondary'}
             size={size}
             disabled={item.disabled}
@@ -152,15 +147,15 @@ export const Roblox3DNavigation: React.FunctionComponent<Roblox3DNavigationProps
             glowEffect={glowEffect}
             fullWidth={orientation === 'vertical'}
           />
-          
-          {hasChildren && (
-            <SubNavigation isOpen={isExpanded}>
+
+          {hasChildren && isExpanded && (
+            <Box className={classes.subNavigation}>
               {item.children!.map((child, childIndex) => (
-                <Box key={child.id} sx={{ position: 'relative' }}>
+                <Box key={child.id} style={{ position: 'relative' }}>
                   <Roblox3DButton
                     iconName={child.iconName}
                     label={showLabels ? child.label : undefined}
-                    onClick={(e: React.MouseEvent) => () => handleItemClick(child)}
+                    onClick={() => handleItemClick(child)}
                     variant={isActive ? 'primary' : 'info'}
                     size="small"
                     disabled={child.disabled}
@@ -171,7 +166,7 @@ export const Roblox3DNavigation: React.FunctionComponent<Roblox3DNavigationProps
                   />
                 </Box>
               ))}
-            </SubNavigation>
+            </Box>
           )}
         </Box>
       );
@@ -209,11 +204,11 @@ export const Roblox3DNavigation: React.FunctionComponent<Roblox3DNavigationProps
 
     // Mixed variant - buttons for main items, tabs for sub-items
     return (
-      <Box key={item.id} sx={{ position: 'relative' }}>
+      <Box key={item.id} style={{ position: 'relative' }}>
         <Roblox3DButton
           iconName={item.iconName}
           label={showLabels ? item.label : undefined}
-          onClick={(e: React.MouseEvent) => () => handleItemClick(item)}
+          onClick={() => handleItemClick(item)}
           variant={isActive ? 'primary' : 'secondary'}
           size={size}
           disabled={item.disabled}
@@ -222,18 +217,18 @@ export const Roblox3DNavigation: React.FunctionComponent<Roblox3DNavigationProps
           glowEffect={glowEffect}
           fullWidth={orientation === 'vertical'}
         />
-        
-        {hasChildren && (
-          <SubNavigation isOpen={isExpanded}>
-            <Typography variant="caption" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
+
+        {hasChildren && isExpanded && (
+          <Box className={classes.subNavigation}>
+            <Text size="xs" color="dimmed" mb="xs">
               {item.label} Options:
-            </Typography>
+            </Text>
             {item.children!.map((child, childIndex) => (
-              <Box key={child.id} sx={{ position: 'relative' }}>
+              <Box key={child.id} style={{ position: 'relative' }}>
                 <Roblox3DButton
                   iconName={child.iconName}
                   label={showLabels ? child.label : undefined}
-                  onClick={(e: React.MouseEvent) => () => handleItemClick(child)}
+                  onClick={() => handleItemClick(child)}
                   variant={isActive ? 'primary' : 'info'}
                   size="small"
                   disabled={child.disabled}
@@ -244,31 +239,30 @@ export const Roblox3DNavigation: React.FunctionComponent<Roblox3DNavigationProps
                 />
               </Box>
             ))}
-          </SubNavigation>
+          </Box>
         )}
       </Box>
     );
   };
 
   return (
-    <StyledNavigation
-      orientation={orientation}
-      variant={variant}
-      elevation={0}
+    <Paper
+      className={classes.styledNavigation}
+      shadow="none"
     >
       {!compact && (
-        <NavigationHeader>
-          <Typography variant="h6">
+        <Box className={classes.navigationHeader}>
+          <Text size="lg" weight={700}>
             🚀 Navigation Hub
-          </Typography>
-        </NavigationHeader>
+          </Text>
+        </Box>
       )}
-      
+
       <Stack
-        direction={orientation === 'vertical' ? 'column' : 'row'}
-        spacing={orientation === 'vertical' ? 1 : 2}
-        sx={{
+        spacing={orientation === 'vertical' ? theme.spacing.xs : theme.spacing.sm}
+        style={{
           ...(orientation === 'horizontal' && {
+            flexDirection: 'row',
             flexWrap: 'wrap',
             justifyContent: 'center',
           }),
@@ -276,6 +270,6 @@ export const Roblox3DNavigation: React.FunctionComponent<Roblox3DNavigationProps
       >
         {items.map((item, index) => renderNavigationItem(item, index))}
       </Stack>
-    </StyledNavigation>
+    </Paper>
   );
 };

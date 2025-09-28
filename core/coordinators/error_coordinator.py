@@ -578,7 +578,7 @@ class ErrorCoordinator:
 
             elif component == "database":
                 # Reinitialize database connection
-                from core.database.connection_manager import get_session
+                from database.connection_manager import get_session
                 
                 # Test database connection
                 try:

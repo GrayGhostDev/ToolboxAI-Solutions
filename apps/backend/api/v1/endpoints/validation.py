@@ -31,16 +31,20 @@ except ImportError:
         # Fallback for development
         def get_current_user():
             from pydantic import BaseModel
+
             class MockUser(BaseModel):
                 email: str = "test@example.com"
                 role: str = "teacher"
                 id: Optional[str] = "test_user_id"
+
             return MockUser()
+
 
 # User model fallback
 try:
     from apps.backend.models.schemas import User
 except ImportError:
+
     class User(BaseModel):
         email: str
         role: str
@@ -58,6 +62,7 @@ validation_engine = ValidationEngine()
 
 class ValidationType(str, Enum):
     """Types of validation to perform"""
+
     SYNTAX_ONLY = "syntax_only"
     SECURITY_ONLY = "security_only"
     QUALITY_ONLY = "quality_only"
@@ -68,6 +73,7 @@ class ValidationType(str, Enum):
 
 class ReportFormat(str, Enum):
     """Report output formats"""
+
     JSON = "json"
     SUMMARY = "summary"
     DETAILED = "detailed"
@@ -76,48 +82,61 @@ class ReportFormat(str, Enum):
 # Request Models
 class ScriptValidationRequest(BaseModel):
     """Request for script validation"""
-    script_code: str = Field(..., min_length=1, max_length=1000000, description="Lua script code to validate")
+
+    script_code: str = Field(
+        ..., min_length=1, max_length=1000000, description="Lua script code to validate"
+    )
     script_name: str = Field(..., min_length=1, max_length=100, description="Name of the script")
-    validation_type: ValidationType = Field(default=ValidationType.COMPREHENSIVE, description="Type of validation")
+    validation_type: ValidationType = Field(
+        default=ValidationType.COMPREHENSIVE, description="Type of validation"
+    )
 
     # Educational context (optional)
-    grade_level: Optional[GradeLevel] = Field(None, description="Target grade level for educational validation")
+    grade_level: Optional[GradeLevel] = Field(
+        None, description="Target grade level for educational validation"
+    )
     subject: Optional[Subject] = Field(None, description="Educational subject")
-    learning_objectives: Optional[List[str]] = Field(None, description="Learning objectives to validate against")
+    learning_objectives: Optional[List[str]] = Field(
+        None, description="Learning objectives to validate against"
+    )
 
     # Validation options
     strict_mode: bool = Field(default=False, description="Enable strict validation mode")
     include_suggestions: bool = Field(default=True, description="Include auto-fix suggestions")
     educational_context: bool = Field(default=True, description="Validate for educational use")
 
-    @field_validator('script_code')
+    @field_validator("script_code")
     def validate_script_code(cls, v):
         if not v.strip():
-            raise ValueError('Script code cannot be empty')
+            raise ValueError("Script code cannot be empty")
         # Basic safety check for obviously malicious content
-        dangerous_patterns = ['getfenv', 'setfenv', 'loadstring', 'debug.']
+        dangerous_patterns = ["getfenv", "setfenv", "loadstring", "debug."]
         for pattern in dangerous_patterns:
             if pattern in v.lower():
                 logger.warning(f"Potentially dangerous pattern detected: {pattern}")
         return v
 
-    @field_validator('learning_objectives')
+    @field_validator("learning_objectives")
     def validate_learning_objectives(cls, v):
         if v:
             for obj in v:
                 if len(obj.strip()) < 10:
-                    raise ValueError('Learning objectives must be at least 10 characters')
+                    raise ValueError("Learning objectives must be at least 10 characters")
         return v
 
 
 class BatchValidationRequest(BaseModel):
     """Request for batch validation of multiple scripts"""
-    scripts: List[ScriptValidationRequest] = Field(..., min_items=1, max_items=10, description="Scripts to validate")
+
+    scripts: List[ScriptValidationRequest] = Field(
+        ..., min_items=1, max_items=10, description="Scripts to validate"
+    )
     parallel_processing: bool = Field(default=True, description="Process scripts in parallel")
 
 
 class ValidationConfigRequest(BaseModel):
     """Request to update validation configuration"""
+
     strict_mode_default: Optional[bool] = None
     educational_context_default: Optional[bool] = None
     max_script_size: Optional[int] = None
@@ -127,6 +146,7 @@ class ValidationConfigRequest(BaseModel):
 # Response Models
 class ValidationSummary(BaseModel):
     """Summary of validation results"""
+
     script_name: str
     overall_status: ValidationStatus
     overall_score: float
@@ -140,6 +160,7 @@ class ValidationSummary(BaseModel):
 
 class ValidationResponse(BaseModel):
     """Response for script validation"""
+
     success: bool
     validation_id: str
     summary: ValidationSummary
@@ -150,6 +171,7 @@ class ValidationResponse(BaseModel):
 
 class BatchValidationResponse(BaseModel):
     """Response for batch validation"""
+
     success: bool
     batch_id: str
     total_scripts: int
@@ -161,6 +183,7 @@ class BatchValidationResponse(BaseModel):
 
 class ValidationStatsResponse(BaseModel):
     """Validation statistics response"""
+
     total_validations: int
     passed_validations: int
     failed_validations: int
@@ -173,16 +196,15 @@ class ValidationStatsResponse(BaseModel):
 # VALIDATION ENDPOINTS
 # ============================================================================
 
+
 @validation_router.post(
-    "/validate",
-    response_model=ValidationResponse,
-    status_code=status.HTTP_200_OK
+    "/validate", response_model=ValidationResponse, status_code=status.HTTP_200_OK
 )
 async def validate_script(
     request: ScriptValidationRequest,
     background_tasks: BackgroundTasks,
     report_format: ReportFormat = ReportFormat.JSON,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> ValidationResponse:
     """
     Validate a Roblox Lua script for syntax, security, quality, and compliance.
@@ -210,22 +232,26 @@ async def validate_script(
         if current_user.role.lower() not in ["teacher", "admin", "developer"]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permissions for script validation"
+                detail="Insufficient permissions for script validation",
             )
 
-        logger.info(f"Starting validation for script '{request.script_name}' by user {current_user.email}")
+        logger.info(
+            f"Starting validation for script '{request.script_name}' by user {current_user.email}"
+        )
 
         # Convert learning objectives to proper format
         learning_objectives = []
         if request.learning_objectives:
             for i, obj_text in enumerate(request.learning_objectives):
-                learning_objectives.append(LearningObjective(
-                    id=f"obj_{i}",
-                    description=obj_text,
-                    grade_level=request.grade_level or GradeLevel.ELEMENTARY,
-                    subject=request.subject or Subject.COMPUTER_SCIENCE,
-                    bloom_level="understand"  # Default level
-                ))
+                learning_objectives.append(
+                    LearningObjective(
+                        id=f"obj_{i}",
+                        description=obj_text,
+                        grade_level=request.grade_level or GradeLevel.ELEMENTARY,
+                        subject=request.subject or Subject.COMPUTER_SCIENCE,
+                        bloom_level="understand",  # Default level
+                    )
+                )
 
         # Create validation request
         validation_request = ValidationRequest(
@@ -236,7 +262,7 @@ async def validate_script(
             learning_objectives=learning_objectives,
             educational_context=request.educational_context,
             strict_mode=request.strict_mode,
-            include_suggestions=request.include_suggestions
+            include_suggestions=request.include_suggestions,
         )
 
         # Perform validation based on type
@@ -260,7 +286,7 @@ async def validate_script(
             warnings_count=len(report.warnings),
             deployment_ready=report.deployment_ready,
             educational_ready=report.educational_ready,
-            platform_compliant=report.platform_compliant
+            platform_compliant=report.platform_compliant,
         )
 
         # Format report based on requested format
@@ -272,9 +298,13 @@ async def validate_script(
             formatted_report = json.loads(validation_engine.export_report(report, "json"))
 
         # Store report in background (would typically save to database)
-        background_tasks.add_task(_store_validation_report, validation_id, report, current_user.email)
+        background_tasks.add_task(
+            _store_validation_report, validation_id, report, current_user.email
+        )
 
-        logger.info(f"Validation completed for script '{request.script_name}' - Status: {report.overall_status.value}")
+        logger.info(
+            f"Validation completed for script '{request.script_name}' - Status: {report.overall_status.value}"
+        )
 
         return ValidationResponse(
             success=True,
@@ -282,32 +312,28 @@ async def validate_script(
             summary=summary,
             report=formatted_report,
             report_url=f"/api/v1/validation/reports/{validation_id}",
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
 
     except ValueError as e:
         logger.error(f"Validation request error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid request: {str(e)}"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid request: {str(e)}"
         )
     except Exception as e:
         logger.error(f"Validation failed: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Validation failed: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Validation failed: {str(e)}"
         )
 
 
 @validation_router.post(
-    "/validate/batch",
-    response_model=BatchValidationResponse,
-    status_code=status.HTTP_200_OK
+    "/validate/batch", response_model=BatchValidationResponse, status_code=status.HTTP_200_OK
 )
 async def validate_scripts_batch(
     request: BatchValidationRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> BatchValidationResponse:
     """
     Validate multiple Roblox Lua scripts in batch.
@@ -327,10 +353,12 @@ async def validate_scripts_batch(
         if current_user.role.lower() not in ["teacher", "admin", "developer"]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permissions for batch validation"
+                detail="Insufficient permissions for batch validation",
             )
 
-        logger.info(f"Starting batch validation of {len(request.scripts)} scripts by user {current_user.email}")
+        logger.info(
+            f"Starting batch validation of {len(request.scripts)} scripts by user {current_user.email}"
+        )
 
         # Convert requests to validation requests
         validation_requests = []
@@ -338,24 +366,28 @@ async def validate_scripts_batch(
             learning_objectives = []
             if script_req.learning_objectives:
                 for i, obj_text in enumerate(script_req.learning_objectives):
-                    learning_objectives.append(LearningObjective(
-                        id=f"obj_{i}",
-                        description=obj_text,
-                        grade_level=script_req.grade_level or GradeLevel.ELEMENTARY,
-                        subject=script_req.subject or Subject.COMPUTER_SCIENCE,
-                        bloom_level="understand"
-                    ))
+                    learning_objectives.append(
+                        LearningObjective(
+                            id=f"obj_{i}",
+                            description=obj_text,
+                            grade_level=script_req.grade_level or GradeLevel.ELEMENTARY,
+                            subject=script_req.subject or Subject.COMPUTER_SCIENCE,
+                            bloom_level="understand",
+                        )
+                    )
 
-            validation_requests.append(ValidationRequest(
-                script_code=script_req.script_code,
-                script_name=script_req.script_name,
-                grade_level=script_req.grade_level,
-                subject=script_req.subject,
-                learning_objectives=learning_objectives,
-                educational_context=script_req.educational_context,
-                strict_mode=script_req.strict_mode,
-                include_suggestions=script_req.include_suggestions
-            ))
+            validation_requests.append(
+                ValidationRequest(
+                    script_code=script_req.script_code,
+                    script_name=script_req.script_name,
+                    grade_level=script_req.grade_level,
+                    subject=script_req.subject,
+                    learning_objectives=learning_objectives,
+                    educational_context=script_req.educational_context,
+                    strict_mode=script_req.strict_mode,
+                    include_suggestions=script_req.include_suggestions,
+                )
+            )
 
         # Perform batch validation
         if request.parallel_processing:
@@ -383,7 +415,7 @@ async def validate_scripts_batch(
                 warnings_count=len(report.warnings),
                 deployment_ready=report.deployment_ready,
                 educational_ready=report.educational_ready,
-                platform_compliant=report.platform_compliant
+                platform_compliant=report.platform_compliant,
             )
             results.append(summary)
 
@@ -402,25 +434,22 @@ async def validate_scripts_batch(
             processed_scripts=len(reports),
             failed_scripts=failed_count,
             results=results,
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
 
     except Exception as e:
         logger.error(f"Batch validation failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Batch validation failed: {str(e)}"
+            detail=f"Batch validation failed: {str(e)}",
         )
 
 
-@validation_router.get(
-    "/reports/{validation_id}",
-    response_model=Dict[str, Any]
-)
+@validation_router.get("/reports/{validation_id}", response_model=Dict[str, Any])
 async def get_validation_report(
     validation_id: str,
     format: ReportFormat = ReportFormat.JSON,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     Retrieve a previously generated validation report.
@@ -436,17 +465,13 @@ async def get_validation_report(
     # This would typically retrieve from database
     # For now, return a placeholder response
     raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Validation report {validation_id} not found"
+        status_code=status.HTTP_404_NOT_FOUND, detail=f"Validation report {validation_id} not found"
     )
 
 
-@validation_router.get(
-    "/statistics",
-    response_model=ValidationStatsResponse
-)
+@validation_router.get("/statistics", response_model=ValidationStatsResponse)
 async def get_validation_statistics(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> ValidationStatsResponse:
     """
     Get validation statistics and metrics.
@@ -458,29 +483,25 @@ async def get_validation_statistics(
         stats = validation_engine.get_validation_statistics()
 
         return ValidationStatsResponse(
-            total_validations=stats['total_validations'],
-            passed_validations=stats['passed_validations'],
-            failed_validations=stats['failed_validations'],
-            average_score=stats['average_score'],
-            common_issues=stats['common_issues'],
-            last_updated=datetime.now()
+            total_validations=stats["total_validations"],
+            passed_validations=stats["passed_validations"],
+            failed_validations=stats["failed_validations"],
+            average_score=stats["average_score"],
+            common_issues=stats["common_issues"],
+            last_updated=datetime.now(),
         )
 
     except Exception as e:
         logger.error(f"Failed to get validation statistics: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve validation statistics"
+            detail="Failed to retrieve validation statistics",
         )
 
 
-@validation_router.post(
-    "/templates/secure",
-    response_model=Dict[str, str]
-)
+@validation_router.post("/templates/secure", response_model=Dict[str, str])
 async def generate_secure_template(
-    template_type: str,
-    current_user: User = Depends(get_current_user)
+    template_type: str, current_user: User = Depends(get_current_user)
 ) -> Dict[str, str]:
     """
     Generate secure code templates for common Roblox patterns.
@@ -502,14 +523,14 @@ async def generate_secure_template(
         if not template_code or "Template not found" in template_code:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Template type '{template_type}' not found"
+                detail=f"Template type '{template_type}' not found",
             )
 
         return {
             "template_type": template_type,
             "code": template_code,
             "generated_at": datetime.now().isoformat(),
-            "generated_by": current_user.email
+            "generated_by": current_user.email,
         }
 
     except HTTPException:
@@ -518,16 +539,13 @@ async def generate_secure_template(
         logger.error(f"Failed to generate secure template: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate template: {str(e)}"
+            detail=f"Failed to generate template: {str(e)}",
         )
 
 
-@validation_router.get(
-    "/checklists/security",
-    response_model=Dict[str, List[str]]
-)
+@validation_router.get("/checklists/security", response_model=Dict[str, List[str]])
 async def get_security_checklist(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> Dict[str, List[str]]:
     """
     Get security checklist for developers.
@@ -547,16 +565,13 @@ async def get_security_checklist(
         logger.error(f"Failed to get security checklist: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve security checklist"
+            detail="Failed to retrieve security checklist",
         )
 
 
-@validation_router.get(
-    "/checklists/compliance",
-    response_model=Dict[str, List[str]]
-)
+@validation_router.get("/checklists/compliance", response_model=Dict[str, List[str]])
 async def get_compliance_checklist(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> Dict[str, List[str]]:
     """
     Get Roblox compliance checklist.
@@ -576,7 +591,7 @@ async def get_compliance_checklist(
         logger.error(f"Failed to get compliance checklist: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve compliance checklist"
+            detail="Failed to retrieve compliance checklist",
         )
 
 
@@ -584,7 +599,10 @@ async def get_compliance_checklist(
 # HELPER FUNCTIONS
 # ============================================================================
 
-def _filter_report_by_type(report: ComprehensiveReport, validation_type: ValidationType) -> ComprehensiveReport:
+
+def _filter_report_by_type(
+    report: ComprehensiveReport, validation_type: ValidationType
+) -> ComprehensiveReport:
     """Filter comprehensive report based on validation type"""
     # For specific validation types, we could filter out irrelevant sections
     # For now, return the full report with a note about the type
@@ -592,7 +610,9 @@ def _filter_report_by_type(report: ComprehensiveReport, validation_type: Validat
     return report
 
 
-async def _store_validation_report(validation_id: str, report: ComprehensiveReport, user_email: str):
+async def _store_validation_report(
+    validation_id: str, report: ComprehensiveReport, user_email: str
+):
     """Store validation report (background task)"""
     try:
         # This would typically save to database

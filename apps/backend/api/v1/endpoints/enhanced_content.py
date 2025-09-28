@@ -32,7 +32,7 @@ from fastapi import (
     Request,
     WebSocket,
     WebSocketDisconnect,
-    status
+    status,
 )
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field, field_validator
@@ -44,7 +44,7 @@ from apps.backend.api.auth.auth import (
     require_role,
     RateLimitError,
     AuthenticationError,
-    AuthorizationError
+    AuthorizationError,
 )
 from apps.backend.models.schemas import User, BaseResponse
 from apps.backend.services.pusher import trigger_event as pusher_trigger
@@ -54,18 +54,18 @@ from core.agents.enhanced_content_pipeline import (
     EnhancedContentPipeline,
     PipelineState,
     PipelineStage,
-    ContentType
+    ContentType,
 )
 from core.agents.content_quality_validator import (
     ContentQualityValidator,
     ValidationReport,
-    ValidationSeverity
+    ValidationSeverity,
 )
 from database.content_pipeline_models import (
     EnhancedContentGeneration,
     ContentQualityMetrics,
     LearningProfile,
-    ContentPersonalizationLog
+    ContentPersonalizationLog,
 )
 
 logger = logging.getLogger(__name__)
@@ -84,61 +84,67 @@ websocket_connections: Dict[str, WebSocket] = {}
 
 # Pydantic Models for Request/Response Validation
 
+
 class ContentGenerationRequest(BaseModel):
     """Request model for enhanced content generation"""
 
-    subject: str = Field(..., min_length=1, max_length=100, description="Subject area for the content")
-    grade_level: str = Field(..., description="Target grade level (e.g., 'K-2', '3-5', '6-8', '9-12')")
+    subject: str = Field(
+        ..., min_length=1, max_length=100, description="Subject area for the content"
+    )
+    grade_level: str = Field(
+        ..., description="Target grade level (e.g., 'K-2', '3-5', '6-8', '9-12')"
+    )
     content_type: str = Field(..., description="Type of content to generate")
 
     learning_objectives: List[str] = Field(
         default_factory=list,
         min_items=1,
         max_items=10,
-        description="Specific learning objectives for the content"
+        description="Specific learning objectives for the content",
     )
 
     difficulty_level: Optional[str] = Field(
-        "medium",
-        description="Difficulty level: 'easy', 'medium', 'hard'"
+        "medium", description="Difficulty level: 'easy', 'medium', 'hard'"
     )
 
     duration_minutes: Optional[int] = Field(
-        30,
-        ge=5,
-        le=120,
-        description="Expected duration in minutes"
+        30, ge=5, le=120, description="Expected duration in minutes"
     )
 
     personalization_enabled: bool = Field(
-        True,
-        description="Whether to apply personalization based on user profile"
+        True, description="Whether to apply personalization based on user profile"
     )
 
     roblox_requirements: Optional[Dict[str, Any]] = Field(
-        default_factory=dict,
-        description="Specific Roblox environment requirements"
+        default_factory=dict, description="Specific Roblox environment requirements"
     )
 
     custom_parameters: Optional[Dict[str, Any]] = Field(
-        default_factory=dict,
-        description="Additional custom parameters"
+        default_factory=dict, description="Additional custom parameters"
     )
 
-    @field_validator('content_type')
+    @field_validator("content_type")
     @classmethod
     def validate_content_type(cls, v):
-        valid_types = ['lesson', 'quiz', 'activity', 'scenario', 'assessment', 'project', 'simulation']
+        valid_types = [
+            "lesson",
+            "quiz",
+            "activity",
+            "scenario",
+            "assessment",
+            "project",
+            "simulation",
+        ]
         if v.lower() not in valid_types:
-            raise ValueError(f'Content type must be one of: {valid_types}')
+            raise ValueError(f"Content type must be one of: {valid_types}")
         return v.lower()
 
-    @field_validator('grade_level')
+    @field_validator("grade_level")
     @classmethod
     def validate_grade_level(cls, v):
-        valid_levels = ['K-2', '3-5', '6-8', '9-12', 'college', 'adult']
+        valid_levels = ["K-2", "3-5", "6-8", "9-12", "college", "adult"]
         if v not in valid_levels:
-            raise ValueError(f'Grade level must be one of: {valid_levels}')
+            raise ValueError(f"Grade level must be one of: {valid_levels}")
         return v
 
 
@@ -150,22 +156,15 @@ class ContentGenerationResponse(BaseModel):
     message: str = Field(..., description="Human-readable status message")
 
     estimated_completion_time: Optional[datetime] = Field(
-        None,
-        description="Estimated completion time"
+        None, description="Estimated completion time"
     )
 
     current_stage: str = Field(..., description="Current pipeline stage")
     progress_percentage: float = Field(0.0, ge=0, le=100, description="Completion percentage")
 
-    websocket_url: Optional[str] = Field(
-        None,
-        description="WebSocket URL for real-time updates"
-    )
+    websocket_url: Optional[str] = Field(None, description="WebSocket URL for real-time updates")
 
-    pusher_channel: Optional[str] = Field(
-        None,
-        description="Pusher channel for real-time updates"
-    )
+    pusher_channel: Optional[str] = Field(None, description="Pusher channel for real-time updates")
 
 
 class ContentStatusResponse(BaseModel):
@@ -220,14 +219,10 @@ class ContentValidationRequest(BaseModel):
     target_age: int = Field(10, ge=5, le=18, description="Target age for validation")
 
     validation_categories: Optional[List[str]] = Field(
-        None,
-        description="Specific validation categories to run"
+        None, description="Specific validation categories to run"
     )
 
-    strict_mode: bool = Field(
-        False,
-        description="Whether to use strict validation rules"
-    )
+    strict_mode: bool = Field(False, description="Whether to use strict validation rules")
 
 
 class ContentValidationResponse(BaseModel):
@@ -258,19 +253,12 @@ class PersonalizationRequest(BaseModel):
 
     content_id: str = Field(..., description="ID of content to personalize")
     personalization_params: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Specific personalization parameters"
+        default_factory=dict, description="Specific personalization parameters"
     )
 
-    learning_style: Optional[str] = Field(
-        None,
-        description="Preferred learning style"
-    )
+    learning_style: Optional[str] = Field(None, description="Preferred learning style")
 
-    difficulty_preference: Optional[str] = Field(
-        None,
-        description="Preferred difficulty level"
-    )
+    difficulty_preference: Optional[str] = Field(None, description="Preferred difficulty level")
 
 
 class ContentHistoryResponse(BaseModel):
@@ -284,6 +272,7 @@ class ContentHistoryResponse(BaseModel):
 
 
 # Dependency functions
+
 
 async def get_pipeline_orchestrator() -> EnhancedContentPipeline:
     """Get or create pipeline orchestrator instance"""
@@ -309,13 +298,14 @@ async def get_db_session() -> Optional[AsyncSession]:
 
 # API Endpoints
 
+
 @router.post("/generate", response_model=ContentGenerationResponse)
 async def generate_enhanced_content(
     request: ContentGenerationRequest,
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     pipeline: EnhancedContentPipeline = Depends(get_pipeline_orchestrator),
-    _: None = Depends(rate_limit(max_requests=10, window_seconds=60))  # 10 calls per minute
+    _: None = Depends(rate_limit(max_requests=10, window_seconds=60)),  # 10 calls per minute
 ) -> ContentGenerationResponse:
     """
     Initiate enhanced content generation using the 5-stage pipeline.
@@ -339,7 +329,7 @@ async def generate_enhanced_content(
             user_id=current_user.id,
             content_type=ContentType(request.content_type),
             original_request=request.model_dump(),
-            started_at=datetime.now()
+            started_at=datetime.now(),
         )
 
         # Store session info
@@ -350,7 +340,7 @@ async def generate_enhanced_content(
             "current_stage": PipelineStage.IDEATION.value,
             "progress": 0.0,
             "started_at": datetime.now(),
-            "pipeline_state": pipeline_state
+            "pipeline_state": pipeline_state,
         }
 
         # Create Pusher channel for real-time updates
@@ -364,20 +354,18 @@ async def generate_enhanced_content(
                 "pipeline_id": pipeline_id,
                 "user_id": current_user.id,
                 "status": "initiated",
-                "stage": PipelineStage.IDEATION.value
-            }
+                "stage": PipelineStage.IDEATION.value,
+            },
         )
 
         # Start background generation process
         background_tasks.add_task(
-            run_content_generation,
-            pipeline_id,
-            pipeline_state,
-            pipeline,
-            pusher_channel
+            run_content_generation, pipeline_id, pipeline_state, pipeline, pusher_channel
         )
 
-        logger.info(f"Content generation initiated for user {current_user.id}, pipeline {pipeline_id}")
+        logger.info(
+            f"Content generation initiated for user {current_user.id}, pipeline {pipeline_id}"
+        )
 
         return ContentGenerationResponse(
             pipeline_id=pipeline_id,
@@ -386,21 +374,19 @@ async def generate_enhanced_content(
             current_stage=PipelineStage.IDEATION.value,
             progress_percentage=0.0,
             pusher_channel=pusher_channel,
-            websocket_url=f"/ws/content/{pipeline_id}"
+            websocket_url=f"/ws/content/{pipeline_id}",
         )
 
     except Exception as e:
         logger.error(f"Failed to initiate content generation: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to initiate content generation: {str(e)}"
+            status_code=500, detail=f"Failed to initiate content generation: {str(e)}"
         )
 
 
 @router.get("/status/{pipeline_id}", response_model=ContentStatusResponse)
 async def get_generation_status(
-    pipeline_id: str,
-    current_user: User = Depends(get_current_user)
+    pipeline_id: str, current_user: User = Depends(get_current_user)
 ) -> ContentStatusResponse:
     """
     Get the current status of a content generation pipeline.
@@ -410,19 +396,13 @@ async def get_generation_status(
     """
     try:
         if pipeline_id not in generation_sessions:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Pipeline {pipeline_id} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Pipeline {pipeline_id} not found")
 
         session = generation_sessions[pipeline_id]
 
         # Check if user has access to this pipeline
         if session["user_id"] != current_user.id and current_user.role != "admin":
-            raise HTTPException(
-                status_code=403,
-                detail="Access denied to this pipeline"
-            )
+            raise HTTPException(status_code=403, detail="Access denied to this pipeline")
 
         pipeline_state = session.get("pipeline_state")
 
@@ -437,24 +417,21 @@ async def get_generation_status(
             errors=pipeline_state.errors if pipeline_state else [],
             warnings=session.get("warnings", []),
             generated_artifacts=session.get("artifacts", {}),
-            quality_metrics=session.get("quality_metrics")
+            quality_metrics=session.get("quality_metrics"),
         )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to get pipeline status: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to retrieve pipeline status"
-        )
+        raise HTTPException(status_code=500, detail="Failed to retrieve pipeline status")
 
 
 @router.get("/{content_id}", response_model=GeneratedContentResponse)
 async def get_generated_content(
     content_id: str,
     current_user: User = Depends(get_current_user),
-    include_validation: bool = Query(False, description="Include validation report in response")
+    include_validation: bool = Query(False, description="Include validation report in response"),
 ) -> GeneratedContentResponse:
     """
     Retrieve generated content by ID.
@@ -474,17 +451,11 @@ async def get_generated_content(
                 break
 
         if not content_data:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Content {content_id} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Content {content_id} not found")
 
         # Check access permissions
         if content_data["user_id"] != current_user.id and current_user.role != "admin":
-            raise HTTPException(
-                status_code=403,
-                detail="Access denied to this content"
-            )
+            raise HTTPException(status_code=403, detail="Access denied to this content")
 
         pipeline_state = content_data.get("pipeline_state")
 
@@ -502,17 +473,14 @@ async def get_generated_content(
             personalization_applied=content_data.get("personalization_applied", False),
             validation_report=content_data.get("validation_report") if include_validation else None,
             created_at=content_data["started_at"],
-            generation_time_seconds=content_data.get("generation_time", 0.0)
+            generation_time_seconds=content_data.get("generation_time", 0.0),
         )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to retrieve content: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to retrieve content"
-        )
+        raise HTTPException(status_code=500, detail="Failed to retrieve content")
 
 
 @router.post("/validate", response_model=ContentValidationResponse)
@@ -520,7 +488,7 @@ async def validate_content(
     request: ContentValidationRequest,
     current_user: User = Depends(get_current_user),
     validator: ContentQualityValidator = Depends(get_quality_validator),
-    _: None = Depends(rate_limit(max_requests=20, window_seconds=60))  # 20 validations per minute
+    _: None = Depends(rate_limit(max_requests=20, window_seconds=60)),  # 20 validations per minute
 ) -> ContentValidationResponse:
     """
     Validate existing content for quality, safety, and compliance.
@@ -542,7 +510,7 @@ async def validate_content(
         report = await validator.validate_content(
             content=request.content,
             content_type=request.content_type,
-            target_age=request.target_age
+            target_age=request.target_age,
         )
 
         end_time = datetime.now()
@@ -564,15 +532,12 @@ async def validate_content(
             detailed_report=report.__dict__,
             recommendations=report.recommendations,
             validated_at=end_time,
-            validation_duration_seconds=duration
+            validation_duration_seconds=duration,
         )
 
     except Exception as e:
         logger.error(f"Content validation failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Content validation failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Content validation failed: {str(e)}")
 
 
 @router.get("/history", response_model=ContentHistoryResponse)
@@ -581,7 +546,7 @@ async def get_content_history(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     content_type: Optional[str] = Query(None, description="Filter by content type"),
-    subject: Optional[str] = Query(None, description="Filter by subject")
+    subject: Optional[str] = Query(None, description="Filter by subject"),
 ) -> ContentHistoryResponse:
     """
     Get user's content generation history with filtering and pagination.
@@ -594,21 +559,20 @@ async def get_content_history(
         # For now, filter in-memory sessions
 
         user_sessions = [
-            session for session in generation_sessions.values()
+            session
+            for session in generation_sessions.values()
             if session["user_id"] == current_user.id
         ]
 
         # Apply filters
         if content_type:
             user_sessions = [
-                s for s in user_sessions
-                if s["request"]["content_type"] == content_type
+                s for s in user_sessions if s["request"]["content_type"] == content_type
             ]
 
         if subject:
             user_sessions = [
-                s for s in user_sessions
-                if s["request"]["subject"].lower() == subject.lower()
+                s for s in user_sessions if s["request"]["subject"].lower() == subject.lower()
             ]
 
         # Sort by creation time (newest first)
@@ -623,40 +587,41 @@ async def get_content_history(
         # Format response items
         items = []
         for session in page_items:
-            items.append({
-                "pipeline_id": session.get("pipeline_id", ""),
-                "content_id": session.get("content_id"),
-                "content_type": session["request"]["content_type"],
-                "subject": session["request"]["subject"],
-                "grade_level": session["request"]["grade_level"],
-                "status": session["status"],
-                "quality_score": session.get("quality_score"),
-                "created_at": session["started_at"],
-                "completed_at": session.get("completed_at"),
-                "generation_time": session.get("generation_time", 0.0)
-            })
+            items.append(
+                {
+                    "pipeline_id": session.get("pipeline_id", ""),
+                    "content_id": session.get("content_id"),
+                    "content_type": session["request"]["content_type"],
+                    "subject": session["request"]["subject"],
+                    "grade_level": session["request"]["grade_level"],
+                    "status": session["status"],
+                    "quality_score": session.get("quality_score"),
+                    "created_at": session["started_at"],
+                    "completed_at": session.get("completed_at"),
+                    "generation_time": session.get("generation_time", 0.0),
+                }
+            )
 
         return ContentHistoryResponse(
             items=items,
             total_count=total_count,
             page=page,
             page_size=page_size,
-            has_more=end_idx < total_count
+            has_more=end_idx < total_count,
         )
 
     except Exception as e:
         logger.error(f"Failed to retrieve content history: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to retrieve content history"
-        )
+        raise HTTPException(status_code=500, detail="Failed to retrieve content history")
 
 
 @router.post("/personalize", response_model=Dict[str, Any])
 async def apply_personalization(
     request: PersonalizationRequest,
     current_user: User = Depends(get_current_user),
-    _: None = Depends(rate_limit(max_requests=15, window_seconds=60))  # 15 personalizations per minute
+    _: None = Depends(
+        rate_limit(max_requests=15, window_seconds=60)
+    ),  # 15 personalizations per minute
 ) -> Dict[str, Any]:
     """
     Apply personalization to existing content based on user profile.
@@ -675,17 +640,11 @@ async def apply_personalization(
                 break
 
         if not content_session:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Content {request.content_id} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Content {request.content_id} not found")
 
         # Check permissions
         if content_session["user_id"] != current_user.id and current_user.role != "admin":
-            raise HTTPException(
-                status_code=403,
-                detail="Access denied to this content"
-            )
+            raise HTTPException(status_code=403, detail="Access denied to this content")
 
         # Apply personalization (simplified implementation)
         personalization_log = {
@@ -694,14 +653,16 @@ async def apply_personalization(
             "personalization_type": "user_preferences",
             "parameters": request.personalization_params,
             "applied_at": datetime.now(),
-            "success": True
+            "success": True,
         }
 
         # Update session with personalization info
         content_session["personalization_applied"] = True
         content_session["personalization_log"] = personalization_log
 
-        logger.info(f"Personalization applied to content {request.content_id} for user {current_user.id}")
+        logger.info(
+            f"Personalization applied to content {request.content_id} for user {current_user.id}"
+        )
 
         return {
             "success": True,
@@ -709,24 +670,18 @@ async def apply_personalization(
             "content_id": request.content_id,
             "personalization_id": str(uuid4()),
             "applied_at": personalization_log["applied_at"],
-            "parameters": request.personalization_params
+            "parameters": request.personalization_params,
         }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to apply personalization: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to apply personalization: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to apply personalization: {str(e)}")
 
 
 @router.websocket("/ws/{pipeline_id}")
-async def content_generation_websocket(
-    websocket: WebSocket,
-    pipeline_id: str
-):
+async def content_generation_websocket(websocket: WebSocket, pipeline_id: str):
     """
     Enhanced WebSocket endpoint for real-time content generation updates.
 
@@ -745,7 +700,7 @@ async def content_generation_websocket(
     5. Completion/error triggers cleanup after delay
     """
     # Initialize manager if needed
-    if not hasattr(websocket_pipeline_manager, 'redis'):
+    if not hasattr(websocket_pipeline_manager, "redis"):
         await websocket_pipeline_manager.initialize()
 
     # Connect to pipeline
@@ -757,14 +712,11 @@ async def content_generation_websocket(
             try:
                 # Wait for incoming messages with timeout
                 data = await asyncio.wait_for(
-                    websocket.receive_json(),
-                    timeout=60.0  # Longer timeout since we have heartbeat
+                    websocket.receive_json(), timeout=60.0  # Longer timeout since we have heartbeat
                 )
 
                 # Handle message through manager
-                await websocket_pipeline_manager.handle_message(
-                    websocket, pipeline_id, data
-                )
+                await websocket_pipeline_manager.handle_message(websocket, pipeline_id, data)
 
             except asyncio.TimeoutError:
                 # Timeout is normal - heartbeat handles keepalive
@@ -777,8 +729,7 @@ async def content_generation_websocket(
             except Exception as e:
                 logger.error(f"Error handling WebSocket message: {e}")
                 await websocket_pipeline_manager.send_error(
-                    pipeline_id,
-                    f"Message handling error: {str(e)}"
+                    pipeline_id, f"Message handling error: {str(e)}"
                 )
 
     except WebSocketDisconnect:
@@ -795,11 +746,12 @@ async def content_generation_websocket(
 
 # Background Tasks
 
+
 async def run_content_generation(
     pipeline_id: str,
     pipeline_state: PipelineState,
     pipeline: EnhancedContentPipeline,
-    pusher_channel: str
+    pusher_channel: str,
 ):
     """
     Background task to run the content generation pipeline.
@@ -822,8 +774,8 @@ async def run_content_generation(
             {
                 "stage": PipelineStage.IDEATION.value,
                 "progress": 10.0,
-                "message": "Starting creative ideation process"
-            }
+                "message": "Starting creative ideation process",
+            },
         )
 
         # Simulate pipeline stages (in real implementation, this would use the actual pipeline)
@@ -846,11 +798,7 @@ async def run_content_generation(
                 pipeline_id,
                 pusher_channel,
                 "stage-progress",
-                {
-                    "stage": stage.value,
-                    "progress": progress,
-                    "message": message
-                }
+                {"stage": stage.value, "progress": progress, "message": message},
             )
 
         # Complete the generation
@@ -870,8 +818,8 @@ async def run_content_generation(
                 "content_id": session["content_id"],
                 "quality_score": session["quality_score"],
                 "generation_time": session["generation_time"],
-                "message": "Content generation completed successfully"
-            }
+                "message": "Content generation completed successfully",
+            },
         )
 
         logger.info(f"Content generation pipeline {pipeline_id} completed successfully")
@@ -888,18 +836,12 @@ async def run_content_generation(
             pipeline_id,
             pusher_channel,
             "generation-failed",
-            {
-                "error": str(e),
-                "message": "Content generation failed"
-            }
+            {"error": str(e), "message": "Content generation failed"},
         )
 
 
 async def send_pipeline_update(
-    pipeline_id: str,
-    pusher_channel: str,
-    event_type: str,
-    data: Dict[str, Any]
+    pipeline_id: str, pusher_channel: str, event_type: str, data: Dict[str, Any]
 ):
     """
     Enhanced pipeline update sender using WebSocketPipelineManager.
@@ -916,7 +858,7 @@ async def send_pipeline_update(
 
     # Send via WebSocketPipelineManager
     try:
-        if not hasattr(websocket_pipeline_manager, 'redis'):
+        if not hasattr(websocket_pipeline_manager, "redis"):
             await websocket_pipeline_manager.initialize()
 
         # Map string stage to enum if needed
@@ -924,11 +866,7 @@ async def send_pipeline_update(
             stage = PipelineStage(stage)
 
         await websocket_pipeline_manager.update_pipeline_state(
-            pipeline_id=pipeline_id,
-            stage=stage,
-            progress=progress,
-            message=message,
-            metadata=data
+            pipeline_id=pipeline_id, stage=stage, progress=progress, message=message, metadata=data
         )
     except Exception as e:
         logger.warning(f"Failed to send WebSocket update: {e}")
@@ -938,11 +876,7 @@ async def send_pipeline_update(
         await pusher_trigger(
             pusher_channel,
             event_type,
-            {
-                "pipeline_id": pipeline_id,
-                "timestamp": datetime.now().isoformat(),
-                **data
-            }
+            {"pipeline_id": pipeline_id, "timestamp": datetime.now().isoformat(), **data},
         )
     except Exception as e:
         logger.warning(f"Failed to send Pusher update: {e}")

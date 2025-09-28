@@ -40,7 +40,7 @@ except ImportError:
     
     if USE_MOCK_LLM:
         # Use mock LLM for testing
-        from core.agents.mock_llm import MockChatModel as ChatOpenAI
+        from tests.fixtures.agents.mock_llm import MockChatModel as ChatOpenAI
         logger = logging.getLogger(__name__)
         logger.info("Using Mock LLM for testing (no OpenAI API key required)")
     else:

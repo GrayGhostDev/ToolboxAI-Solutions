@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/services/design_file_converter.py
-# hypothesis_version: 6.139.2
-
-[b'BLENDER', 10000, 50000, '*', '-print_format', '-show_format', '-show_streams', '-v', '.blend', '.fig', '.jpeg', '.jpg', '.json', '.mp4', '.obj', '.png', '.sketch', '.txt', '.xd', '[Binary data]', '_getexif', 'artboard', 'ascii', 'audio', 'codec_type', 'content', 'dump', 'error', 'error_count', 'exif', 'f ', 'ffprobe', 'fig2sketch', 'file_name', 'file_path', 'file_type', 'filename', 'files', 'folder_path', 'format', 'height', 'ignore', 'json', 'manifest', 'mode', 'page', 'pages', 'processed_count', 'quiet', 'r', 'rb', 'relative_path', 'replace', 'size', 'sketch-tool', 'streams', 'success', 'temp.sketch', 'total_files', 'usemtl ', 'utf-8', 'v ', 'video', 'vn ', 'vt ', 'width']

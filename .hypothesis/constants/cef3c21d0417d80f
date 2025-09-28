@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/services/open_cloud_client.py
-# hypothesis_version: 6.139.2
-
-[200, 201, 204, 404, 1000, 'Animation', 'Audio', 'Content-Type', 'Creator ID', 'Decal', 'FontFamily', 'Group', 'Mesh', 'Model', 'Plugin', 'Published', 'Published or Saved', 'ROBLOX_API_KEY', 'User', 'Video', 'application/json', 'asset', 'asset.rbxm', 'assetType', 'createdTime', 'creationContext', 'creator', 'desc', 'description', 'displayName', 'entries', 'error', 'expectedPrice', 'fileContent', 'global', 'groupId', 'key', 'limit', 'message', 'metadata', 'order', 'request', 'scope', 'topic', 'updatedTime', 'userId', 'userIds', 'value', 'version', 'versionType', 'x-api-key']

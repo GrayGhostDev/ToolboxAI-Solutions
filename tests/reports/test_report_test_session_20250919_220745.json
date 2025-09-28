@@ -1,0 +1,22 @@
+{
+  "test_suite": "test_session",
+  "test_type": "session",
+  "timestamp": "2025-09-19T22:07:45.916788",
+  "summary": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "pass_rate": 100.0
+  },
+  "results": [
+    {
+      "test_name": "Test Session",
+      "status": "passed",
+      "duration": 0.0,
+      "timestamp": "2025-09-19T22:07:45.915271",
+      "correlation_id": "session_",
+      "error": null
+    }
+  ]
+}

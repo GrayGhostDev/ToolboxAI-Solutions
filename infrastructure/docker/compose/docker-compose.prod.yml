@@ -256,12 +256,14 @@ services:
           memory: 1G
 
   # ----------------------------------------
-  # Prometheus Monitoring (Production Only)
+  # Enhanced Monitoring Stack (Production Only)
   # ----------------------------------------
+  # Enhanced Prometheus with production settings
   prometheus:
-    image: prom/prometheus:v2.47.0
-    container_name: toolboxai-prometheus
-    restart: unless-stopped
+    environment:
+      # Enhanced retention and performance settings
+      - PROMETHEUS_RETENTION_TIME=30d
+      - PROMETHEUS_STORAGE_RETENTION_SIZE=50GB
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -269,22 +271,23 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
       - '--web.enable-lifecycle'
       - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=50GB'
+      - '--web.enable-admin-api'
+      - '--web.external-url=https://metrics.toolboxai.com/prometheus'
     volumes:
-      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/prometheus/prometheus.prod.yml:/etc/prometheus/prometheus.yml:ro
       - ./config/prometheus/rules:/etc/prometheus/rules:ro
-      - prometheus_data:/prometheus:Z
-    networks:
-      - monitoring
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    labels:
-      - "com.toolboxai.service=prometheus"
-      - "com.toolboxai.environment=production"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
 
   # ----------------------------------------
-  # Grafana Dashboard (Production Only)
+  # Grafana with Enhanced Security
   # ----------------------------------------
   grafana:
     image: grafana/grafana:10.2.0
@@ -293,11 +296,18 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER_FILE: /run/secrets/grafana_user
       GF_SECURITY_ADMIN_PASSWORD_FILE: /run/secrets/grafana_password
-      GF_INSTALL_PLUGINS: grafana-piechart-panel,redis-datasource
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,redis-datasource,prometheus-datasource
       GF_SERVER_ROOT_URL: https://metrics.toolboxai.com
       GF_ANALYTICS_REPORTING_ENABLED: false
       GF_SECURITY_DISABLE_GRAVATAR: true
       GF_USERS_ALLOW_SIGN_UP: false
+      GF_SECURITY_COOKIE_SECURE: true
+      GF_SECURITY_COOKIE_SAMESITE: strict
+      GF_SECURITY_STRICT_TRANSPORT_SECURITY: true
+      GF_SECURITY_STRICT_TRANSPORT_SECURITY_MAX_AGE_SECONDS: 31536000
+      GF_SECURITY_X_CONTENT_TYPE_OPTIONS: true
+      GF_SECURITY_X_XSS_PROTECTION: true
+      GF_AUTH_ANONYMOUS_ENABLED: false
     secrets:
       - grafana_user
       - grafana_password
@@ -307,19 +317,25 @@ services:
       - grafana_data:/var/lib/grafana:Z
     networks:
       - monitoring
-      - backend
-    depends_on:
-      - prometheus
+    # Remove access to backend network in production
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     labels:
       - "com.toolboxai.service=grafana"
       - "com.toolboxai.environment=production"
 
   # ----------------------------------------
-  # Log Aggregation - Loki (Production Only)
+  # Log Aggregation - Loki with Persistence
   # ----------------------------------------
   loki:
     image: grafana/loki:2.9.0
@@ -327,7 +343,7 @@ services:
     restart: unless-stopped
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
-      - ./config/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - ./config/loki/loki-prod-config.yaml:/etc/loki/local-config.yaml:ro
       - loki_data:/loki:Z
     networks:
       - monitoring
@@ -335,9 +351,17 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
 
   # ----------------------------------------
-  # Log Shipper - Promtail (Production Only)
+  # Log Shipper - Promtail with Enhanced Collection
   # ----------------------------------------
   promtail:
     image: grafana/promtail:2.9.0
@@ -345,10 +369,11 @@ services:
     restart: unless-stopped
     command: -config.file=/etc/promtail/config.yml
     volumes:
-      - ./config/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - ./config/promtail/promtail-prod-config.yml:/etc/promtail/config.yml:ro
       - /var/log:/var/log:ro
       - nginx_logs:/var/log/nginx:ro
       - backend_logs:/app/logs:ro
+      - agent_logs:/app/agent_logs:ro
     networks:
       - monitoring
     security_opt:
@@ -357,12 +382,10 @@ services:
       - ALL
 
 # ============================================
-# PRODUCTION VOLUMES
+# PRODUCTION VOLUMES (Additional)
 # ============================================
 volumes:
   nginx_cache:
-    driver: local
-  prometheus_data:
     driver: local
   grafana_data:
     driver: local
@@ -370,17 +393,11 @@ volumes:
     driver: local
 
 # ============================================
-# PRODUCTION NETWORKS
+# PRODUCTION NETWORKS (Additional)
 # ============================================
 networks:
   monitoring:
-    driver: bridge
-    internal: true
-    driver_opts:
-      com.docker.network.bridge.name: br-monitoring
-    ipam:
-      config:
-        - subnet: 172.25.0.0/24
+    internal: true  # Make monitoring internal in production
 
 # ============================================
 # PRODUCTION SECRETS

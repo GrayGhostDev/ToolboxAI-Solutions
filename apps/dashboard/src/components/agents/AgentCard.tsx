@@ -1,8 +1,8 @@
 /**
  * Agent Card Component
- * 
+ *
  * Individual agent status card with real-time updates and actions.
- * 
+ *
  * @author ToolboxAI Team
  * @created 2025-09-21
  * @version 1.0.0
@@ -11,24 +11,25 @@
 import React from 'react';
 import {
   Card,
-  CardContent,
-  CardActions,
-  Typography,
-  Chip,
+  Text,
+  Badge,
   Button,
   Box,
-  LinearProgress,
+  Progress,
   Tooltip,
-  IconButton,
-  Badge,
-} from '@mui/material';
+  ActionIcon,
+  Indicator,
+  Group,
+  Stack,
+  Flex,
+} from '@mantine/core';
 import {
-  PlayArrow as PlayIcon,
-  Settings as SettingsIcon,
-  Analytics as AnalyticsIcon,
-  Memory as MemoryIcon,
-  Speed as SpeedIcon,
-} from '@mui/icons-material';
+  IconPlayerPlay,
+  IconSettings,
+  IconChartBar,
+  IconCpu,
+  IconBolt,
+} from '@tabler/icons-react';
 
 interface AgentStatus {
   agent_id: string;
@@ -90,133 +91,141 @@ export const AgentCard = ({
   };
 
   return (
-    <Card 
-      sx={{ 
-        height: '100%', 
-        display: 'flex', 
+    <Card
+      padding="md"
+      radius="md"
+      withBorder
+      style={{
+        height: '100%',
+        display: 'flex',
         flexDirection: 'column',
         cursor: 'pointer',
-        '&:hover': {
-          boxShadow: 3,
-          transform: 'translateY(-2px)',
-          transition: 'all 0.2s ease-in-out'
-        }
+        transition: 'all 0.2s ease-in-out'
       }}
       onClick={() => onAgentClick(agent)}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.12)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
     >
-      <CardContent sx={{ flexGrow: 1 }}>
+      <Stack style={{ flexGrow: 1 }} spacing="md">
         {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+        <Flex justify="space-between" align="flex-start">
           <Box>
-            <Typography variant="h6" component="div" noWrap>
+            <Text size="lg" fw={600} lineClamp={1}>
               {formatAgentType(agent.agent_type)}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" noWrap>
+            </Text>
+            <Text size="sm" c="dimmed" lineClamp={1}>
               {agent.agent_id}
-            </Typography>
+            </Text>
           </Box>
-          <Badge
-            color={getStatusColor(agent.status) as any}
-            variant="dot"
-            sx={{ mt: 0.5 }}
+          <Indicator
+            color={getStatusColor(agent.status)}
+            size={8}
+            offset={2}
           >
             {getStatusIcon(agent.status)}
-          </Badge>
-        </Box>
+          </Indicator>
+        </Flex>
 
         {/* Status */}
-        <Box sx={{ mb: 2 }}>
-          <Chip
-            label={agent.status.toUpperCase()}
-            color={getStatusColor(agent.status) as any}
-            size="small"
-            sx={{ mb: 1 }}
-          />
+        <Box>
+          <Badge
+            color={getStatusColor(agent.status)}
+            size="sm"
+            style={{ marginBottom: 4 }}
+          >
+            {agent.status.toUpperCase()}
+          </Badge>
           {agent.current_task_id && (
-            <Typography variant="caption" display="block" color="text.secondary">
+            <Text size="xs" c="dimmed">
               Running: {agent.current_task_id.substring(0, 8)}...
-            </Typography>
+            </Text>
           )}
         </Box>
 
         {/* Performance Stats */}
-        <Box sx={{ mb: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Typography variant="body2">
+        <Box>
+          <Flex justify="space-between" style={{ marginBottom: 4 }}>
+            <Text size="sm">
               Tasks: {agent.total_tasks_completed}
-            </Typography>
-            <Typography variant="body2" color={agent.total_tasks_failed > 0 ? 'error.main' : 'text.secondary'}>
+            </Text>
+            <Text size="sm" c={agent.total_tasks_failed > 0 ? 'red' : 'dimmed'}>
               Failed: {agent.total_tasks_failed}
-            </Typography>
-          </Box>
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Typography variant="body2">
+            </Text>
+          </Flex>
+
+          <Flex justify="space-between" style={{ marginBottom: 4 }}>
+            <Text size="sm">
               Success Rate: {agent.performance_metrics.success_rate.toFixed(1)}%
-            </Typography>
-            <Typography variant="body2">
+            </Text>
+            <Text size="sm">
               Avg Time: {agent.average_execution_time.toFixed(1)}s
-            </Typography>
-          </Box>
+            </Text>
+          </Flex>
         </Box>
 
         {/* Resource Usage */}
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" gutterBottom>
+        <Box>
+          <Text size="sm" fw={500} style={{ marginBottom: 8 }}>
             Resource Usage
-          </Typography>
-          
-          <Box sx={{ mb: 1 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-              <Typography variant="caption">CPU</Typography>
-              <Typography variant="caption">{agent.resource_usage.cpu_percent.toFixed(1)}%</Typography>
-            </Box>
-            <LinearProgress
-              variant="determinate"
+          </Text>
+
+          <Box style={{ marginBottom: 8 }}>
+            <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
+              <Text size="xs">CPU</Text>
+              <Text size="xs">{agent.resource_usage.cpu_percent.toFixed(1)}%</Text>
+            </Flex>
+            <Progress
               value={agent.resource_usage.cpu_percent}
-              color={getResourceColor(agent.resource_usage.cpu_percent) as any}
-              sx={{ height: 4, borderRadius: 2 }}
+              color={getResourceColor(agent.resource_usage.cpu_percent)}
+              size="sm"
+              radius="md"
             />
           </Box>
 
-          <Box sx={{ mb: 1 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-              <Typography variant="caption">Memory</Typography>
-              <Typography variant="caption">{agent.resource_usage.memory_mb}MB</Typography>
-            </Box>
-            <LinearProgress
-              variant="determinate"
+          <Box style={{ marginBottom: 8 }}>
+            <Flex justify="space-between" align="center" style={{ marginBottom: 4 }}>
+              <Text size="xs">Memory</Text>
+              <Text size="xs">{agent.resource_usage.memory_mb}MB</Text>
+            </Flex>
+            <Progress
               value={Math.min((agent.resource_usage.memory_mb / 1024) * 100, 100)}
-              color={getResourceColor((agent.resource_usage.memory_mb / 1024) * 100) as any}
-              sx={{ height: 4, borderRadius: 2 }}
+              color={getResourceColor((agent.resource_usage.memory_mb / 1024) * 100)}
+              size="sm"
+              radius="md"
             />
           </Box>
         </Box>
 
         {/* Last Activity */}
-        <Typography variant="caption" color="text.secondary">
+        <Text size="xs" c="dimmed">
           Last activity: {formatLastActivity(agent.last_activity)}
-        </Typography>
-      </CardContent>
+        </Text>
+      </Stack>
 
-      <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-        <Box>
-          <Tooltip title="View Metrics">
-            <IconButton size="small" onClick={(e) => { e.stopPropagation(); /* Handle metrics view */ }}>
-              <AnalyticsIcon fontSize="small" />
-            </IconButton>
+      <Flex justify="space-between" align="center" style={{ marginTop: 'auto', paddingTop: 12 }}>
+        <Group spacing="xs">
+          <Tooltip label="View Metrics">
+            <ActionIcon size="sm" variant="subtle" onClick={(e) => { e.stopPropagation(); /* Handle metrics view */ }}>
+              <IconChartBar size={16} />
+            </ActionIcon>
           </Tooltip>
-          <Tooltip title="Settings">
-            <IconButton size="small" onClick={(e) => { e.stopPropagation(); /* Handle settings */ }}>
-              <SettingsIcon fontSize="small" />
-            </IconButton>
+          <Tooltip label="Settings">
+            <ActionIcon size="sm" variant="subtle" onClick={(e) => { e.stopPropagation(); /* Handle settings */ }}>
+              <IconSettings size={16} />
+            </ActionIcon>
           </Tooltip>
-        </Box>
-        
+        </Group>
+
         <Button
-          variant="contained"
-          size="small"
-          startIcon={<PlayIcon />}
+          variant="filled"
+          size="xs"
+          leftSection={<IconPlayerPlay size={14} />}
           disabled={agent.status !== 'idle'}
           onClick={(e) => {
             e.stopPropagation();
@@ -225,7 +234,7 @@ export const AgentCard = ({
         >
           Execute
         </Button>
-      </CardActions>
+      </Flex>
     </Card>
   );
 };

@@ -19,7 +19,7 @@ import uuid
 from datetime import datetime
 from unittest.mock import MagicMock, AsyncMock, patch
 
-from core.database.models import (
+from database.models.models import (
     Base, User, UserRole, Course, Lesson, Content, EducationalContent,
     Quiz, QuizQuestion, ContentStatus, DifficultyLevel,
     Progress, Achievement, AchievementType, Session

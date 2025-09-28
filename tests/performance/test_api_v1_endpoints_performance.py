@@ -56,7 +56,7 @@ class ReportFormat(str, Enum):
     JSON = "json"
     CSV = "csv"
     PDF = "pdf"
-from core.database.models import (
+from database.models.models import (
     User, EducationalContent, Quiz, QuizAttempt,
     UserProgress, UserSession, Class, Assignment
 )

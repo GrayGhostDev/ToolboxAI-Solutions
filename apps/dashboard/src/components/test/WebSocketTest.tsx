@@ -1,458 +1,452 @@
 /**
- * WebSocket Test Component
- * 
- * Comprehensive testing interface for WebSocket functionality
+ * WebSocket Test Component (Mantine v8)
+ *
+ * Comprehensive testing interface for Pusher functionality
+ * Updated to use Mantine v8 components instead of MUI
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import Chip from '@mui/material/Chip';
-import Grid from '@mui/material/Grid';
-import Alert from '@mui/material/Alert';
-import CircularProgress from '@mui/material/CircularProgress';
-import Divider from '@mui/material/Divider';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Tooltip from '@mui/material/Tooltip';
 import {
-  Send as SendIcon,
-  Refresh as RefreshIcon,
-  Clear as ClearIcon,
-  WifiTethering as ConnectedIcon,
-  WifiTetheringOff as DisconnectedIcon,
-  Error as ErrorIcon,
-  CheckCircle as SuccessIcon
-} from '@mui/icons-material';
-import { useWebSocketContext } from '../../contexts/WebSocketContext';
+  Box,
+  Paper,
+  Text,
+  Title,
+  Button,
+  TextInput,
+  Stack,
+  Group,
+  Badge,
+  Alert,
+  Progress,
+  Divider,
+  Select,
+  ActionIcon,
+  Tooltip,
+  Card,
+  ScrollArea,
+  Code,
+  Tabs
+} from '@mantine/core';
+import {
+  IconSend,
+  IconRefresh,
+  IconTrash,
+  IconSettings,
+  IconWifi,
+  IconWifiOff,
+  IconAlertCircle,
+  IconCheck,
+  IconX
+} from '@tabler/icons-react';
+import { usePusherContext } from '../../contexts/PusherContext';
 import {
   WebSocketState,
   WebSocketMessageType,
   WebSocketChannel,
   ContentGenerationRequest
 } from '../../types/websocket';
+
+interface Message {
+  id: string;
+  type: string;
+  data: any;
+  timestamp: number;
+  channel?: string;
+}
+
+interface TestConfig {
+  autoReconnect: boolean;
+  debugMode: boolean;
+  heartbeatInterval: number;
+  maxReconnectAttempts: number;
+}
+
 export const WebSocketTest: React.FunctionComponent<Record<string, any>> = () => {
   const {
-    state,
     isConnected,
-    stats,
-    error,
-    connect,
-    disconnect,
-    reconnect,
-    sendMessage,
-    subscribe,
-    unsubscribe,
-    on,
-    requestContent,
-    onContentProgress
-  } = useWebSocketContext();
-  // Local state
-  const [messageLog, setMessageLog] = useState<Array<{
-    id: string;
-    timestamp: Date;
-    type: 'sent' | 'received' | 'error' | 'system';
-    message: any;
-  }>>([]);
-  const [testMessage, setTestMessage] = useState('');
-  const [selectedChannel, setSelectedChannel] = useState<WebSocketChannel>(WebSocketChannel.SYSTEM_EVENTS);
-  const [activeSubscriptions, setActiveSubscriptions] = useState<string[]>([]);
-  const [contentRequestId, setContentRequestId] = useState<string>('');
-  const [contentProgress, setContentProgress] = useState<any>(null);
-  // Add message to log
-  const addToLog = useCallback((type: 'sent' | 'received' | 'error' | 'system', message: any) => {
-    setMessageLog(prev => [{
-      id: `${Date.now()}_${Math.random()}`,
-      timestamp: new Date(),
-      type,
-      message
-    }, ...prev].slice(0, 50)); // Keep last 50 messages
+    connectionState,
+    send,
+    subscribeToChannel,
+    unsubscribeFromChannel,
+    refreshAuth
+  } = usePusherContext();
+
+  // Component state
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [messageInput, setMessageInput] = useState('');
+  const [channelInput, setChannelInput] = useState('public');
+  const [messageType, setMessageType] = useState<WebSocketMessageType>(WebSocketMessageType.INFO);
+  const [subscriptions, setSubscriptions] = useState<Set<string>>(new Set());
+  const [config, setConfig] = useState<TestConfig>({
+    autoReconnect: true,
+    debugMode: true,
+    heartbeatInterval: 30000,
+    maxReconnectAttempts: 5
+  });
+  const [stats, setStats] = useState({
+    messagesSent: 0,
+    messagesReceived: 0,
+    connectionAttempts: 0,
+    uptime: 0
+  });
+
+  // Message handler
+  const handleMessage = useCallback((message: any) => {
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      type: message.type || 'unknown',
+      data: message.data || message,
+      timestamp: Date.now(),
+      channel: message.channel
+    };
+    setMessages(prev => [newMessage, ...prev].slice(0, 100)); // Keep last 100 messages
+    setStats(prev => ({ ...prev, messagesReceived: prev.messagesReceived + 1 }));
   }, []);
-  // Setup message handlers
+
+  // Subscribe to test channels
   useEffect(() => {
-    // Subscribe to all message types for testing
-    const handlers: Array<() => void> = [];
-    // System notifications
-    handlers.push(
-      on(WebSocketMessageType.SYSTEM_NOTIFICATION, (data) => {
-        addToLog('received', { type: 'SYSTEM_NOTIFICATION', data });
-      })
-    );
-    // Connection events
-    handlers.push(
-      on(WebSocketMessageType.CONNECT, () => {
-        addToLog('system', 'Connected to WebSocket server');
-      })
-    );
-    handlers.push(
-      on(WebSocketMessageType.DISCONNECT, () => {
-        addToLog('system', 'Disconnected from WebSocket server');
-      })
-    );
-    // Ping/Pong
-    handlers.push(
-      on(WebSocketMessageType.PONG, (data) => {
-        addToLog('received', { type: 'PONG', data });
-      })
-    );
-    // Content progress
-    const unsubscribeProgress = onContentProgress((progress) => {
-      setContentProgress(progress);
-      addToLog('received', { type: 'CONTENT_PROGRESS', progress });
+    const testChannels = ['public', 'content-generation', 'agent-status'];
+    const newSubscriptions = new Set<string>();
+
+    testChannels.forEach(channel => {
+      const subId = subscribeToChannel(channel, handleMessage);
+      newSubscriptions.add(subId);
     });
-    handlers.push(unsubscribeProgress);
-    // Cleanup
+
+    setSubscriptions(newSubscriptions);
+
     return () => {
-      handlers.forEach(unsubscribe => unsubscribe());
-    };
-  }, [on, onContentProgress, addToLog]);
-  // Handle connection
-  const handleConnect = async () => {
-    try {
-      await connect();
-      addToLog('system', 'Connection initiated');
-    } catch (error) {
-      addToLog('error', `Connection failed: ${error}`);
-    }
-  };
-  const handleDisconnect = () => {
-    disconnect('Manual disconnect');
-    addToLog('system', 'Disconnected manually');
-  };
-  const handleReconnect = async () => {
-    try {
-      await reconnect();
-      addToLog('system', 'Reconnection initiated');
-    } catch (error) {
-      addToLog('error', `Reconnection failed: ${error}`);
-    }
-  };
-  // Send test message
-  const handleSendMessage = async () => {
-    if (!testMessage.trim()) return;
-    try {
-      const result = await sendMessage(
-        WebSocketMessageType.USER_MESSAGE,
-        { text: testMessage, timestamp: new Date().toISOString() },
-        { channel: selectedChannel, awaitAcknowledgment: true, timeout: 5000 }
-      );
-      addToLog('sent', {
-        type: 'USER_MESSAGE',
-        channel: selectedChannel,
-        payload: { text: testMessage },
-        result
+      newSubscriptions.forEach(subId => {
+        unsubscribeFromChannel(subId);
       });
-      setTestMessage('');
-    } catch (error) {
-      addToLog('error', `Send failed: ${error}`);
-    }
-  };
-  // Send ping
-  const handleSendPing = async () => {
-    try {
-      await sendMessage(WebSocketMessageType.PING, { timestamp: Date.now() });
-      addToLog('sent', { type: 'PING', timestamp: Date.now() });
-    } catch (error) {
-      addToLog('error', `Ping failed: ${error}`);
-    }
-  };
-  // Subscribe to channel
-  const handleSubscribeChannel = () => {
-    const subscriptionId = subscribe(selectedChannel, (message) => {
-      addToLog('received', { channel: selectedChannel, message });
-    });
-    setActiveSubscriptions(prev => [...prev, subscriptionId]);
-    addToLog('system', `Subscribed to channel: ${selectedChannel} (ID: ${subscriptionId})`);
-  };
-  // Unsubscribe from channel
-  const handleUnsubscribeChannel = (subscriptionId: string) => {
-    unsubscribe(subscriptionId);
-    setActiveSubscriptions(prev => prev.filter(id => id !== subscriptionId));
-    addToLog('system', `Unsubscribed: ${subscriptionId}`);
-  };
-  // Request content generation
-  const handleContentRequest = async () => {
-    const request: ContentGenerationRequest = {
-      subject: 'Mathematics',
-      gradeLevel: 5,
-      learningObjectives: ['Fractions', 'Decimals', 'Percentages'],
-      environmentType: 'classroom',
-      includeQuiz: true,
-      difficultyLevel: 'intermediate',
-      requestId: `test_${Date.now()}`,
-      userId: 'test_user'
     };
+  }, [subscribeToChannel, unsubscribeFromChannel, handleMessage]);
+
+  // Send test message
+  const sendTestMessage = useCallback(async () => {
+    if (!messageInput.trim()) return;
+
     try {
-      await requestContent(request);
-      setContentRequestId(request.requestId);
-      addToLog('sent', { type: 'CONTENT_REQUEST', request });
+      await send(messageType, {
+        message: messageInput,
+        timestamp: new Date().toISOString(),
+        testId: Date.now()
+      }, { channel: channelInput });
+
+      setStats(prev => ({ ...prev, messagesSent: prev.messagesSent + 1 }));
+      setMessageInput('');
     } catch (error) {
-      addToLog('error', `Content request failed: ${error}`);
+      console.error('Failed to send message:', error);
     }
-  };
-  // Clear log
-  const handleClearLog = () => {
-    setMessageLog([]);
-    addToLog('system', 'Log cleared');
-  };
-  // Get connection status color
+  }, [messageInput, messageType, channelInput, send]);
+
+  // Send content generation test
+  const sendContentGenerationTest = useCallback(async () => {
+    const request: ContentGenerationRequest = {
+      type: 'lesson',
+      subject: 'Mathematics',
+      grade: 8,
+      topic: 'Algebra Basics',
+      difficulty: 'medium',
+      length: 30,
+      customInstructions: 'Focus on practical examples'
+    };
+
+    try {
+      await send(WebSocketMessageType.CONTENT_UPDATE, request, {
+        channel: 'content-generation'
+      });
+      setStats(prev => ({ ...prev, messagesSent: prev.messagesSent + 1 }));
+    } catch (error) {
+      console.error('Failed to send content generation request:', error);
+    }
+  }, [send]);
+
+  // Clear messages
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+  }, []);
+
+  // Get connection status info
   const getStatusColor = () => {
-    switch (state) {
-      case WebSocketState.CONNECTED:
-        return 'success';
-      case WebSocketState.CONNECTING:
-      case WebSocketState.RECONNECTING:
-        return 'warning';
-      case WebSocketState.ERROR:
-        return 'error';
+    switch (connectionState) {
+      case 'connected':
+        return 'green';
+      case 'connecting':
+      case 'reconnecting':
+        return 'yellow';
+      case 'failed':
+        return 'red';
       default:
-        return 'default';
+        return 'gray';
     }
   };
-  // Get connection icon
+
   const getStatusIcon = () => {
-    switch (state) {
-      case WebSocketState.CONNECTED:
-        return <ConnectedIcon color="success" />;
-      case WebSocketState.DISCONNECTED:
-        return <DisconnectedIcon color="disabled" />;
-      case WebSocketState.ERROR:
-        return <ErrorIcon color="error" />;
+    switch (connectionState) {
+      case 'connected':
+        return <IconCheck color="green" />;
+      case 'disconnected':
+        return <IconWifiOff color="gray" />;
+      case 'failed':
+        return <IconX color="red" />;
       default:
-        return <CircularProgress size={20} />;
+        return <IconWifi color="gray" />;
     }
   };
+
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        WebSocket Test Interface
-      </Typography>
-      {/* Connection Status */}
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={4}>
-            <Box display="flex" alignItems="center" gap={1}>
-              {getStatusIcon()}
-              <Typography variant="h6">
-                Status: <Chip label={state} color={getStatusColor()} size="small" />
-              </Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Typography variant="body2">
-              Messages Sent: {stats.messagesSent} | Received: {stats.messagesReceived}
-            </Typography>
-            <Typography variant="body2">
-              Reconnect Attempts: {stats.reconnectAttempts}
-            </Typography>
-            {stats.latency && (
-              <Typography variant="body2">
-                Latency: {stats.latency}ms
-              </Typography>
-            )}
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Box display="flex" gap={1}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={(e: React.MouseEvent) => handleConnect}
-                disabled={isConnected}
-                startIcon={<ConnectedIcon />}
-              >
-                Connect
-              </Button>
-              <Button
-                variant="outlined"
-                color="secondary"
-                onClick={(e: React.MouseEvent) => handleDisconnect}
-                disabled={!isConnected}
-                startIcon={<DisconnectedIcon />}
-              >
-                Disconnect
-              </Button>
-              <Tooltip title="Reconnect">
-                <IconButton onClick={(e: React.MouseEvent) => handleReconnect} color="primary">
-                  <RefreshIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Grid>
-        </Grid>
-        {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error.message} ({error.code})
+    <Box p="xl">
+      <Stack gap="lg">
+        {/* Header */}
+        <Group justify="space-between" align="center">
+          <Title order={2}>Pusher Connection Test</Title>
+          <Group gap="sm">
+            <Badge color={getStatusColor()} variant="filled" leftSection={getStatusIcon()}>
+              {connectionState?.toUpperCase() || 'UNKNOWN'}
+            </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              leftSection={<IconRefresh size={16} />}
+              onClick={() => refreshAuth()}
+            >
+              Reconnect
+            </Button>
+          </Group>
+        </Group>
+
+        {/* Connection Status Alert */}
+        {!isConnected && (
+          <Alert
+            color="orange"
+            title="Connection Status"
+            icon={<IconAlertCircle size={16} />}
+          >
+            Pusher is not connected. Some features may not work properly.
           </Alert>
         )}
-      </Paper>
-      {/* Message Controls */}
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Message Testing
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Test Message"
-              value={testMessage}
-              onChange={(e) => setTestMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              disabled={!isConnected}
-            />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <FormControl fullWidth>
-              <InputLabel>Channel</InputLabel>
-              <Select
-                value={selectedChannel}
-                onChange={(e) => setSelectedChannel(e.target.value as WebSocketChannel)}
-                label="Channel"
-                disabled={!isConnected}
-              >
-                {Object.values(WebSocketChannel).map(channel => (
-                  <MenuItem key={channel} value={channel}>
-                    {channel}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <Box display="flex" gap={1} height="100%">
-              <Button
-                fullWidth
-                variant="contained"
-                onClick={(e: React.MouseEvent) => handleSendMessage}
-                disabled={!isConnected || !testMessage}
-                startIcon={<SendIcon />}
-              >
-                Send
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={(e: React.MouseEvent) => handleSendPing}
-                disabled={!isConnected}
-              >
-                Ping
-              </Button>
-            </Box>
-          </Grid>
-        </Grid>
-        <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-          <Button
-            variant="outlined"
-            onClick={(e: React.MouseEvent) => handleSubscribeChannel}
-            disabled={!isConnected}
-          >
-            Subscribe to {selectedChannel}
-          </Button>
-          <Button
-            variant="outlined"
-            color="warning"
-            onClick={(e: React.MouseEvent) => handleContentRequest}
-            disabled={!isConnected}
-          >
-            Test Content Generation
-          </Button>
-        </Box>
-      </Paper>
-      {/* Active Subscriptions */}
-      {activeSubscriptions.length > 0 && (
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            Active Subscriptions
-          </Typography>
-          <Box display="flex" gap={1} flexWrap="wrap">
-            {activeSubscriptions.map(id => (
-              <Chip
-                key={id}
-                label={id}
-                onDelete={() => handleUnsubscribeChannel(id)}
-                color="primary"
-                variant="outlined"
-              />
-            ))}
-          </Box>
-        </Paper>
-      )}
-      {/* Content Generation Progress */}
-      {contentProgress && (
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            Content Generation Progress
-          </Typography>
-          <Box>
-            <Typography>Request ID: {contentProgress.requestId}</Typography>
-            <Typography>Stage: {contentProgress.stage}</Typography>
-            <Typography>Progress: {contentProgress.percentage}%</Typography>
-            {contentProgress.currentAgent && (
-              <Typography>Current Agent: {contentProgress.currentAgent}</Typography>
-            )}
-            {contentProgress.message && (
-              <Typography>Message: {contentProgress.message}</Typography>
-            )}
-          </Box>
-        </Paper>
-      )}
-      {/* Message Log */}
-      <Paper sx={{ p: 2 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6">
-            Message Log ({messageLog.length})
-          </Typography>
-          <IconButton onClick={(e: React.MouseEvent) => handleClearLog} size="small">
-            <ClearIcon />
-          </IconButton>
-        </Box>
-        <List sx={{ maxHeight: 400, overflow: 'auto', bgcolor: 'background.default' }}>
-          {messageLog.map((entry) => (
-            <React.Fragment key={entry.id}>
-              <ListItem>
-                <ListItemText
-                  primary={
-                    <Box display="flex" alignItems="center" gap={1}>
-                      {entry.type === 'sent' && <SendIcon fontSize="small" color="primary" />}
-                      {entry.type === 'received' && <SuccessIcon fontSize="small" color="success" />}
-                      {entry.type === 'error' && <ErrorIcon fontSize="small" color="error" />}
-                      {entry.type === 'system' && <Chip label="SYSTEM" size="small" />}
-                      <Typography variant="caption">
-                        {entry.timestamp.toLocaleTimeString()}
-                      </Typography>
-                    </Box>
-                  }
-                  secondary={
-                    <Typography
-                      variant="body2"
-                      component="pre"
-                      sx={{ 
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-word',
-                        fontFamily: 'monospace',
-                        fontSize: '0.85rem'
-                      }}
+
+        <Tabs defaultValue="messaging">
+          <Tabs.List>
+            <Tabs.Tab value="messaging">Message Testing</Tabs.Tab>
+            <Tabs.Tab value="content">Content Generation</Tabs.Tab>
+            <Tabs.Tab value="stats">Statistics</Tabs.Tab>
+            <Tabs.Tab value="config">Configuration</Tabs.Tab>
+          </Tabs.List>
+
+          {/* Message Testing Tab */}
+          <Tabs.Panel value="messaging">
+            <Stack gap="md" mt="md">
+              <Card withBorder>
+                <Stack gap="md">
+                  <Title order={4}>Send Test Message</Title>
+
+                  <Group grow>
+                    <Select
+                      label="Message Type"
+                      value={messageType}
+                      onChange={(value) => value && setMessageType(value as WebSocketMessageType)}
+                      data={[
+                        { value: WebSocketMessageType.INFO, label: 'Info' },
+                        { value: WebSocketMessageType.WARNING, label: 'Warning' },
+                        { value: WebSocketMessageType.ERROR, label: 'Error' },
+                        { value: WebSocketMessageType.USER_UPDATE, label: 'User Update' },
+                        { value: WebSocketMessageType.SYSTEM_NOTIFICATION, label: 'System Notification' }
+                      ]}
+                    />
+
+                    <TextInput
+                      label="Channel"
+                      value={channelInput}
+                      onChange={(e) => setChannelInput(e.target.value)}
+                      placeholder="public"
+                    />
+                  </Group>
+
+                  <TextInput
+                    label="Message Content"
+                    value={messageInput}
+                    onChange={(e) => setMessageInput(e.target.value)}
+                    placeholder="Enter test message..."
+                    onKeyDown={(e) => e.key === 'Enter' && sendTestMessage()}
+                  />
+
+                  <Group>
+                    <Button
+                      leftSection={<IconSend size={16} />}
+                      onClick={sendTestMessage}
+                      disabled={!isConnected || !messageInput.trim()}
                     >
-                      {typeof entry.message === 'string' 
-                        ? entry.message 
-                        : JSON.stringify(entry.message, null, 2)}
-                    </Typography>
-                  }
-                />
-              </ListItem>
-              <Divider />
-            </React.Fragment>
-          ))}
-        </List>
-      </Paper>
+                      Send Message
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      leftSection={<IconTrash size={16} />}
+                      onClick={clearMessages}
+                      color="red"
+                    >
+                      Clear Messages
+                    </Button>
+                  </Group>
+                </Stack>
+              </Card>
+
+              {/* Messages List */}
+              <Card withBorder>
+                <Stack gap="sm">
+                  <Group justify="space-between">
+                    <Title order={4}>Recent Messages</Title>
+                    <Badge variant="outline">{messages.length} messages</Badge>
+                  </Group>
+
+                  <ScrollArea h={300}>
+                    <Stack gap="xs">
+                      {messages.length === 0 ? (
+                        <Text c="dimmed" ta="center" py="xl">
+                          No messages received yet
+                        </Text>
+                      ) : (
+                        messages.map((msg) => (
+                          <Paper key={msg.id} p="sm" withBorder>
+                            <Group justify="space-between" align="flex-start">
+                              <Stack gap={4}>
+                                <Group gap="xs">
+                                  <Badge size="sm" variant="outline">
+                                    {msg.type}
+                                  </Badge>
+                                  {msg.channel && (
+                                    <Badge size="sm" color="blue">
+                                      {msg.channel}
+                                    </Badge>
+                                  )}
+                                </Group>
+                                <Code block>{JSON.stringify(msg.data, null, 2)}</Code>
+                              </Stack>
+                              <Text size="xs" c="dimmed">
+                                {new Date(msg.timestamp).toLocaleTimeString()}
+                              </Text>
+                            </Group>
+                          </Paper>
+                        ))
+                      )}
+                    </Stack>
+                  </ScrollArea>
+                </Stack>
+              </Card>
+            </Stack>
+          </Tabs.Panel>
+
+          {/* Content Generation Tab */}
+          <Tabs.Panel value="content">
+            <Stack gap="md" mt="md">
+              <Card withBorder>
+                <Stack gap="md">
+                  <Title order={4}>Content Generation Test</Title>
+                  <Text size="sm" c="dimmed">
+                    Test the content generation pipeline through Pusher
+                  </Text>
+
+                  <Button
+                    leftSection={<IconSend size={16} />}
+                    onClick={sendContentGenerationTest}
+                    disabled={!isConnected}
+                  >
+                    Generate Test Content
+                  </Button>
+                </Stack>
+              </Card>
+            </Stack>
+          </Tabs.Panel>
+
+          {/* Statistics Tab */}
+          <Tabs.Panel value="stats">
+            <Stack gap="md" mt="md">
+              <Card withBorder>
+                <Stack gap="md">
+                  <Title order={4}>Connection Statistics</Title>
+
+                  <Group grow>
+                    <Paper p="md" withBorder>
+                      <Stack gap="xs">
+                        <Text size="sm" c="dimmed">Messages Sent</Text>
+                        <Text size="xl" fw={700}>{stats.messagesSent}</Text>
+                      </Stack>
+                    </Paper>
+
+                    <Paper p="md" withBorder>
+                      <Stack gap="xs">
+                        <Text size="sm" c="dimmed">Messages Received</Text>
+                        <Text size="xl" fw={700}>{stats.messagesReceived}</Text>
+                      </Stack>
+                    </Paper>
+
+                    <Paper p="md" withBorder>
+                      <Stack gap="xs">
+                        <Text size="sm" c="dimmed">Connection Attempts</Text>
+                        <Text size="xl" fw={700}>{stats.connectionAttempts}</Text>
+                      </Stack>
+                    </Paper>
+                  </Group>
+
+                  <Divider />
+
+                  <Stack gap="xs">
+                    <Text fw={500}>Active Subscriptions</Text>
+                    <Group gap="xs">
+                      {Array.from(subscriptions).map((subId) => (
+                        <Badge key={subId} variant="outline" size="sm">
+                          {subId.slice(0, 8)}...
+                        </Badge>
+                      ))}
+                    </Group>
+                  </Stack>
+                </Stack>
+              </Card>
+            </Stack>
+          </Tabs.Panel>
+
+          {/* Configuration Tab */}
+          <Tabs.Panel value="config">
+            <Stack gap="md" mt="md">
+              <Card withBorder>
+                <Stack gap="md">
+                  <Title order={4}>Test Configuration</Title>
+
+                  <Group grow>
+                    <TextInput
+                      label="Heartbeat Interval (ms)"
+                      type="number"
+                      value={config.heartbeatInterval}
+                      onChange={(e) => setConfig(prev => ({
+                        ...prev,
+                        heartbeatInterval: parseInt(e.target.value) || 30000
+                      }))}
+                    />
+
+                    <TextInput
+                      label="Max Reconnect Attempts"
+                      type="number"
+                      value={config.maxReconnectAttempts}
+                      onChange={(e) => setConfig(prev => ({
+                        ...prev,
+                        maxReconnectAttempts: parseInt(e.target.value) || 5
+                      }))}
+                    />
+                  </Group>
+
+                  <Alert color="blue" title="Configuration Note">
+                    <Text size="sm">
+                      These settings are for testing purposes only.
+                      Production configuration is managed through environment variables.
+                    </Text>
+                  </Alert>
+                </Stack>
+              </Card>
+            </Stack>
+          </Tabs.Panel>
+        </Tabs>
+      </Stack>
     </Box>
   );
 };

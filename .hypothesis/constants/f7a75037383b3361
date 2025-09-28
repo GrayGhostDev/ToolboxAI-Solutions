@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/v1/router.py
-# hypothesis_version: 6.139.2
-
-['/admin', '/analytics', '/assessments', '/auth', '/classes', '/compliance', '/gamification', '/health', '/lessons', '/messages', '/orchestrator', '/progress', '/reports', '/schools', '/users', '1.0.0', 'admin', 'analytics', 'assessments', 'authentication', 'classes', 'compliance', 'gamification', 'healthy', 'lessons', 'messages', 'orchestrator', 'progress', 'reports', 'roblox-agents', 'roblox-ai', 'schools', 'service', 'status', 'toolboxai-api-v1', 'users', 'version']

@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/v1/endpoints/progress.py
-# hypothesis_version: 6.139.2
-
-[0.0, 100.0, 404, '/', '/progress', '/update', '/{item_id}', 'Additional metadata', 'Not found', 'completed', 'completed_at', 'description', 'in_progress', 'item_id', 'item_type', 'items', 'last_activity', 'metadata', 'pending', 'percentage', 'progress', 'router', 'started_at', 'status']

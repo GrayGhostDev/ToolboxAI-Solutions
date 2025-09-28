@@ -21,6 +21,7 @@ from core.swarm.orchestration_controller import OrchestrationController
 # Pydantic models for API
 class ChatMessage(BaseModel):
     """User chat message."""
+
     message: str
     session_id: Optional[str] = None
     context: Optional[Dict[str, Any]] = Field(default_factory=dict)
@@ -28,6 +29,7 @@ class ChatMessage(BaseModel):
 
 class ChatResponse(BaseModel):
     """Chat response from agent swarm."""
+
     success: bool
     session_id: str
     message: str
@@ -38,6 +40,7 @@ class ChatResponse(BaseModel):
 
 class AgentTaskRequest(BaseModel):
     """Direct agent task request."""
+
     agent_type: str
     task_type: str
     data: Dict[str, Any]
@@ -46,6 +49,7 @@ class AgentTaskRequest(BaseModel):
 
 class AgentTaskResponse(BaseModel):
     """Agent task response."""
+
     success: bool
     agent: str
     result: Dict[str, Any]
@@ -54,6 +58,7 @@ class AgentTaskResponse(BaseModel):
 
 class SessionInfo(BaseModel):
     """Session information."""
+
     session_id: str
     started_at: datetime
     state: str
@@ -63,6 +68,7 @@ class SessionInfo(BaseModel):
 
 class SwarmStatus(BaseModel):
     """Swarm system status."""
+
     status: str
     active_sessions: int
     total_interactions: int
@@ -71,10 +77,7 @@ class SwarmStatus(BaseModel):
 
 
 # Create router
-router = APIRouter(
-    prefix="/api/v1/swarm",
-    tags=["Agent Swarm"]
-)
+router = APIRouter(prefix="/api/v1/swarm", tags=["Agent Swarm"])
 
 # Initialize orchestration controller
 orchestration_controller = None
@@ -93,7 +96,7 @@ def get_orchestration_controller() -> OrchestrationController:
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_swarm(
     request: ChatMessage,
-    controller: OrchestrationController = Depends(get_orchestration_controller)
+    controller: OrchestrationController = Depends(get_orchestration_controller),
 ) -> ChatResponse:
     """
     Main chat endpoint for natural language interaction with the agent swarm.
@@ -104,9 +107,7 @@ async def chat_with_swarm(
     try:
         # Process interaction through orchestration
         result = await controller.process_interaction(
-            user_input=request.message,
-            session_id=request.session_id,
-            user_context=request.context
+            user_input=request.message, session_id=request.session_id, user_context=request.context
         )
 
         # Extract response components
@@ -118,7 +119,7 @@ async def chat_with_swarm(
             message=response_data.get("message", ""),
             data=response_data.get("data"),
             suggestions=response_data.get("suggestions", []),
-            context=result.get("context")
+            context=result.get("context"),
         )
 
     except Exception as e:
@@ -129,13 +130,14 @@ async def chat_with_swarm(
 @router.post("/chat/stream")
 async def chat_stream(
     request: ChatMessage,
-    controller: OrchestrationController = Depends(get_orchestration_controller)
+    controller: OrchestrationController = Depends(get_orchestration_controller),
 ):
     """
     Streaming chat endpoint for real-time responses.
 
     Returns server-sent events for progressive response generation.
     """
+
     async def generate():
         try:
             # Start with thinking indicator
@@ -145,7 +147,7 @@ async def chat_stream(
             result = await controller.process_interaction(
                 user_input=request.message,
                 session_id=request.session_id,
-                user_context=request.context
+                user_context=request.context,
             )
 
             # Stream the response in chunks
@@ -159,7 +161,7 @@ async def chat_stream(
                     chunk = {
                         "type": "content",
                         "message": sentence + ("." if not sentence.endswith(".") else ""),
-                        "progress": (i + 1) / len(sentences)
+                        "progress": (i + 1) / len(sentences),
                     }
                     yield f"data: {json.dumps(chunk)}\n\n"
                     await asyncio.sleep(0.1)  # Small delay for effect
@@ -169,7 +171,7 @@ async def chat_stream(
                 "type": "complete",
                 "session_id": result["session_id"],
                 "suggestions": response_data.get("suggestions", []),
-                "data": response_data.get("data")
+                "data": response_data.get("data"),
             }
             yield f"data: {json.dumps(completion)}\n\n"
 
@@ -183,14 +185,14 @@ async def chat_stream(
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-        }
+        },
     )
 
 
 @router.post("/task", response_model=AgentTaskResponse)
 async def execute_agent_task(
     request: AgentTaskRequest,
-    controller: OrchestrationController = Depends(get_orchestration_controller)
+    controller: OrchestrationController = Depends(get_orchestration_controller),
 ) -> AgentTaskResponse:
     """
     Execute a specific task on a specific agent.
@@ -206,7 +208,7 @@ async def execute_agent_task(
             "analytics": "analytics",
             "assessment": "assessment",
             "validation": "validation",
-            "adaptive": "adaptive"
+            "adaptive": "adaptive",
         }
 
         agent_name = agent_mapping.get(request.agent_type)
@@ -223,7 +225,7 @@ async def execute_agent_task(
         task_data = {
             **request.data,
             "task_type": request.task_type,
-            "session_id": request.session_id
+            "session_id": request.session_id,
         }
 
         # Execute task
@@ -234,8 +236,8 @@ async def execute_agent_task(
         return AgentTaskResponse(
             success=result.success,
             agent=agent_name,
-            result=result.data if hasattr(result, 'data') else {},
-            execution_time=execution_time
+            result=result.data if hasattr(result, "data") else {},
+            execution_time=execution_time,
         )
 
     except HTTPException:
@@ -247,8 +249,7 @@ async def execute_agent_task(
 
 @router.get("/session/{session_id}", response_model=SessionInfo)
 async def get_session_info(
-    session_id: str,
-    controller: OrchestrationController = Depends(get_orchestration_controller)
+    session_id: str, controller: OrchestrationController = Depends(get_orchestration_controller)
 ) -> SessionInfo:
     """
     Get information about a specific session.
@@ -265,14 +266,13 @@ async def get_session_info(
         started_at=session.started_at,
         state=session.current_state.value,
         accumulated_context=session.accumulated_context,
-        completed_tasks=session.completed_tasks
+        completed_tasks=session.completed_tasks,
     )
 
 
 @router.delete("/session/{session_id}")
 async def clear_session(
-    session_id: str,
-    controller: OrchestrationController = Depends(get_orchestration_controller)
+    session_id: str, controller: OrchestrationController = Depends(get_orchestration_controller)
 ) -> Dict[str, str]:
     """
     Clear a specific session.
@@ -288,7 +288,7 @@ async def clear_session(
 
 @router.get("/status", response_model=SwarmStatus)
 async def get_swarm_status(
-    controller: OrchestrationController = Depends(get_orchestration_controller)
+    controller: OrchestrationController = Depends(get_orchestration_controller),
 ) -> SwarmStatus:
     """
     Get the current status of the agent swarm system.
@@ -296,23 +296,23 @@ async def get_swarm_status(
     Returns system health, metrics, and available agents.
     """
     # Calculate success rate
-    total = controller.metrics.get("successful_interactions", 0) + controller.metrics.get("failed_interactions", 0)
-    success_rate = (
-        controller.metrics["successful_interactions"] / total if total > 0 else 0.0
+    total = controller.metrics.get("successful_interactions", 0) + controller.metrics.get(
+        "failed_interactions", 0
     )
+    success_rate = controller.metrics["successful_interactions"] / total if total > 0 else 0.0
 
     return SwarmStatus(
         status="operational",
         active_sessions=len(controller.sessions),
         total_interactions=total,
         success_rate=success_rate,
-        agents_available=list(controller.agents.keys())
+        agents_available=list(controller.agents.keys()),
     )
 
 
 @router.post("/reset")
 async def reset_swarm(
-    controller: OrchestrationController = Depends(get_orchestration_controller)
+    controller: OrchestrationController = Depends(get_orchestration_controller),
 ) -> Dict[str, str]:
     """
     Reset the agent swarm system.
@@ -330,6 +330,7 @@ async def reset_swarm(
 
 # Educational content specific endpoints
 
+
 @router.post("/lesson/create")
 async def create_lesson(
     grade_level: str,
@@ -337,7 +338,7 @@ async def create_lesson(
     topic: str,
     objectives: Optional[List[str]] = None,
     session_id: Optional[str] = None,
-    controller: OrchestrationController = Depends(get_orchestration_controller)
+    controller: OrchestrationController = Depends(get_orchestration_controller),
 ) -> ChatResponse:
     """
     Create a complete lesson plan.
@@ -359,8 +360,8 @@ async def create_lesson(
             "grade_level": grade_level,
             "subject": subject,
             "topic": topic,
-            "objectives": objectives
-        }
+            "objectives": objectives,
+        },
     )
 
     response_data = result.get("response", {})
@@ -370,7 +371,7 @@ async def create_lesson(
         session_id=result["session_id"],
         message=response_data.get("message", ""),
         data=response_data.get("data"),
-        suggestions=["Create assessment", "Add game elements", "Generate practice materials"]
+        suggestions=["Create assessment", "Add game elements", "Generate practice materials"],
     )
 
 
@@ -382,7 +383,7 @@ async def create_assessment(
     topics: List[str],
     num_questions: int = 10,
     session_id: Optional[str] = None,
-    controller: OrchestrationController = Depends(get_orchestration_controller)
+    controller: OrchestrationController = Depends(get_orchestration_controller),
 ) -> ChatResponse:
     """
     Create an assessment or quiz.
@@ -390,7 +391,9 @@ async def create_assessment(
     Generates questions, answer keys, and rubrics based on specifications.
     """
     # Build natural language request
-    message = f"Create a {assessment_type} for {grade_level} {subject} covering {', '.join(topics)}. "
+    message = (
+        f"Create a {assessment_type} for {grade_level} {subject} covering {', '.join(topics)}. "
+    )
     message += f"Include {num_questions} questions."
 
     # Process through orchestration
@@ -403,8 +406,8 @@ async def create_assessment(
             "grade_level": grade_level,
             "subject": subject,
             "topics": topics,
-            "num_questions": num_questions
-        }
+            "num_questions": num_questions,
+        },
     )
 
     response_data = result.get("response", {})
@@ -414,7 +417,7 @@ async def create_assessment(
         session_id=result["session_id"],
         message=response_data.get("message", ""),
         data=response_data.get("data"),
-        suggestions=["Preview assessment", "Add time limit", "Create answer key"]
+        suggestions=["Preview assessment", "Add time limit", "Create answer key"],
     )
 
 
@@ -423,7 +426,7 @@ async def analyze_student_progress(
     student_id: str,
     performance_data: Dict[str, Any],
     session_id: Optional[str] = None,
-    controller: OrchestrationController = Depends(get_orchestration_controller)
+    controller: OrchestrationController = Depends(get_orchestration_controller),
 ) -> ChatResponse:
     """
     Analyze student progress and provide insights.
@@ -440,8 +443,8 @@ async def analyze_student_progress(
         user_context={
             "task": "analyze_progress",
             "student_id": student_id,
-            "performance_data": performance_data
-        }
+            "performance_data": performance_data,
+        },
     )
 
     response_data = result.get("response", {})
@@ -451,7 +454,7 @@ async def analyze_student_progress(
         session_id=result["session_id"],
         message=response_data.get("message", ""),
         data=response_data.get("data"),
-        suggestions=["Create personalized content", "Adjust difficulty", "Generate report"]
+        suggestions=["Create personalized content", "Adjust difficulty", "Generate report"],
     )
 
 
@@ -460,7 +463,7 @@ async def personalize_content(
     content: Dict[str, Any],
     student_profile: Dict[str, Any],
     session_id: Optional[str] = None,
-    controller: OrchestrationController = Depends(get_orchestration_controller)
+    controller: OrchestrationController = Depends(get_orchestration_controller),
 ) -> ChatResponse:
     """
     Personalize content for a specific student.
@@ -477,8 +480,8 @@ async def personalize_content(
         user_context={
             "task": "personalize",
             "content": content,
-            "student_profile": student_profile
-        }
+            "student_profile": student_profile,
+        },
     )
 
     response_data = result.get("response", {})
@@ -488,18 +491,19 @@ async def personalize_content(
         session_id=result["session_id"],
         message=response_data.get("message", ""),
         data=response_data.get("data"),
-        suggestions=["Apply personalization", "Preview changes", "Save profile"]
+        suggestions=["Apply personalization", "Preview changes", "Save profile"],
     )
 
 
 # WebSocket endpoint for real-time interaction (if needed)
 from fastapi import WebSocket, WebSocketDisconnect
 
+
 @router.websocket("/ws/{session_id}")
 async def websocket_endpoint(
     websocket: WebSocket,
     session_id: str,
-    controller: OrchestrationController = Depends(get_orchestration_controller)
+    controller: OrchestrationController = Depends(get_orchestration_controller),
 ):
     """
     WebSocket endpoint for real-time bidirectional communication.
@@ -518,14 +522,11 @@ async def websocket_endpoint(
             result = await controller.process_interaction(
                 user_input=message_data.get("message", ""),
                 session_id=session_id,
-                user_context=message_data.get("context", {})
+                user_context=message_data.get("context", {}),
             )
 
             # Send response
-            await websocket.send_json({
-                "type": "response",
-                "data": result
-            })
+            await websocket.send_json({"type": "response", "data": result})
 
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected for session {session_id}")

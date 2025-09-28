@@ -20,6 +20,7 @@ from .endpoints import analytics
 from .endpoints import compliance
 from .endpoints import reports
 from .endpoints import roblox_ai
+
 # Re-enabled for agent connectivity implementation
 from .endpoints import roblox_agents
 from .endpoints import direct_agents
@@ -51,12 +52,9 @@ api_router.include_router(orchestrator.router, prefix="/orchestrator", tags=["or
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(observability.router, prefix="/observability", tags=["observability"])
 
+
 # Health check endpoint
 @api_router.get("/health")
 async def health_check():
     """API v1 health check"""
-    return {
-        "status": "healthy",
-        "version": "1.0.0",
-        "service": "toolboxai-api-v1"
-    }
+    return {"status": "healthy", "version": "1.0.0", "service": "toolboxai-api-v1"}

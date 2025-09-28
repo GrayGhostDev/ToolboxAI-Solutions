@@ -13,38 +13,28 @@ from datetime import datetime
 # Import integration agents
 import sys
 import os
+
 # Add project root to path if not already there
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+project_root = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 try:
-    from core.agents.integration import (
-        IntegrationPlatform,
-        IntegrationEvent
-    )
-    from core.agents.integration.backend import (
-        APIGatewayAgent,
-        DatabaseSyncAgent
-    )
-    from core.agents.integration.frontend import (
-        UISyncAgent,
-        RealtimeUpdateAgent
-    )
-    from core.agents.integration.roblox import (
-        StudioBridgeAgent
-    )
-    from core.agents.integration.orchestration import (
-        IntegrationCoordinator
-    )
-    from core.agents.integration.data_flow import (
-        SchemaValidatorAgent
-    )
+    from core.agents.integration import IntegrationPlatform, IntegrationEvent
+    from core.agents.integration.backend import APIGatewayAgent, DatabaseSyncAgent
+    from core.agents.integration.frontend import UISyncAgent, RealtimeUpdateAgent
+    from core.agents.integration.roblox import StudioBridgeAgent
+    from core.agents.integration.orchestration import IntegrationCoordinator
+    from core.agents.integration.data_flow import SchemaValidatorAgent
+
     INTEGRATION_AVAILABLE = True
 except ImportError as e:
     logger = logging.getLogger(__name__)
     logger.warning(f"Integration agents not available: {e}")
     INTEGRATION_AVAILABLE = False
+
     # Mock classes for compatibility
     class IntegrationPlatform:
         BACKEND = "backend"
@@ -58,6 +48,7 @@ except ImportError as e:
 
     class MockAgent:
         """Base mock agent with health check"""
+
         def __init__(self, agent_name="MockAgent"):
             self.agent_name = agent_name
             self.healthy = True
@@ -67,7 +58,7 @@ except ImportError as e:
                 "status": "healthy" if self.healthy else "unhealthy",
                 "healthy": self.healthy,
                 "message": f"{self.agent_name} - mock implementation",
-                "agent_type": self.agent_name
+                "agent_type": self.agent_name,
             }
 
         async def cleanup(self):
@@ -88,7 +79,7 @@ except ImportError as e:
 
         async def sync_data(self, source_platform, target_platform, data):
             """Mock sync data method"""
-            return type('Result', (), {'success': True, 'output': {}, 'error': None})()
+            return type("Result", (), {"success": True, "output": {}, "error": None})()
 
     class UISyncAgent(MockAgent):
         def __init__(self):
@@ -108,7 +99,7 @@ except ImportError as e:
 
         async def broadcast_event(self, channel_name, event_name, data):
             """Mock broadcast event method"""
-            return type('Result', (), {'success': True, 'output': {}, 'error': None})()
+            return type("Result", (), {"success": True, "output": {}, "error": None})()
 
     class StudioBridgeAgent(MockAgent):
         def __init__(self):
@@ -124,7 +115,7 @@ except ImportError as e:
                 "status": "healthy" if self.healthy else "unhealthy",
                 "healthy": self.healthy,
                 "message": f"{self.agent_name} - mock implementation",
-                "agent_type": self.agent_name
+                "agent_type": self.agent_name,
             }
 
         async def register_agent(self, agent_type, agent):
@@ -133,11 +124,11 @@ except ImportError as e:
 
         async def create_workflow(self, name, description, template=None, custom_tasks=None):
             """Mock create workflow method"""
-            return type('Workflow', (), {'workflow_id': 'mock-workflow-id'})()
+            return type("Workflow", (), {"workflow_id": "mock-workflow-id"})()
 
         async def execute_workflow(self, workflow_id, parameters=None):
             """Mock execute workflow method"""
-            return type('Result', (), {'success': True, 'output': {}, 'error': None})()
+            return type("Result", (), {"success": True, "output": {}, "error": None})()
 
         async def cleanup(self):
             """Mock cleanup method"""
@@ -150,6 +141,7 @@ except ImportError as e:
         async def register_schema(self, schema_name, schema_type, definition, platform, version):
             """Mock register schema method"""
             pass
+
 
 # Import existing services for connection
 from apps.backend.core.config import settings
@@ -181,21 +173,21 @@ class IntegrationAgentsManager:
 
             if INTEGRATION_AVAILABLE:
                 # Initialize backend agents
-                self.agents['api_gateway'] = APIGatewayAgent()
-                self.agents['database_sync'] = DatabaseSyncAgent()
+                self.agents["api_gateway"] = APIGatewayAgent()
+                self.agents["database_sync"] = DatabaseSyncAgent()
                 logger.info("Backend integration agents initialized")
 
                 # Initialize frontend agents
-                self.agents['ui_sync'] = UISyncAgent()
-                self.agents['realtime_update'] = RealtimeUpdateAgent()
+                self.agents["ui_sync"] = UISyncAgent()
+                self.agents["realtime_update"] = RealtimeUpdateAgent()
                 logger.info("Frontend integration agents initialized")
 
                 # Initialize Roblox agents
-                self.agents['studio_bridge'] = StudioBridgeAgent()
+                self.agents["studio_bridge"] = StudioBridgeAgent()
                 logger.info("Roblox integration agents initialized")
 
                 # Initialize data flow agents
-                self.agents['schema_validator'] = SchemaValidatorAgent()
+                self.agents["schema_validator"] = SchemaValidatorAgent()
                 logger.info("Data flow agents initialized")
 
                 # Initialize orchestration coordinator
@@ -204,12 +196,12 @@ class IntegrationAgentsManager:
             else:
                 logger.warning("Integration agents not available, using mock agents")
                 # Create mock agents for compatibility
-                self.agents['api_gateway'] = APIGatewayAgent()
-                self.agents['database_sync'] = DatabaseSyncAgent()
-                self.agents['ui_sync'] = UISyncAgent()
-                self.agents['realtime_update'] = RealtimeUpdateAgent()
-                self.agents['studio_bridge'] = StudioBridgeAgent()
-                self.agents['schema_validator'] = SchemaValidatorAgent()
+                self.agents["api_gateway"] = APIGatewayAgent()
+                self.agents["database_sync"] = DatabaseSyncAgent()
+                self.agents["ui_sync"] = UISyncAgent()
+                self.agents["realtime_update"] = RealtimeUpdateAgent()
+                self.agents["studio_bridge"] = StudioBridgeAgent()
+                self.agents["schema_validator"] = SchemaValidatorAgent()
                 self.coordinator = IntegrationCoordinator()
 
             # Register all agents with the coordinator
@@ -225,7 +217,9 @@ class IntegrationAgentsManager:
             asyncio.create_task(self._monitor_health())
 
             self.initialized = True
-            logger.info(f"Integration Agents initialized successfully with {len(self.agents)} agents")
+            logger.info(
+                f"Integration Agents initialized successfully with {len(self.agents)} agents"
+            )
 
         except Exception as e:
             logger.error(f"Failed to initialize integration agents: {e}")
@@ -242,7 +236,7 @@ class IntegrationAgentsManager:
                 if agent is None:
                     continue
                 agent_type = type(agent).__name__
-                if hasattr(self.coordinator, 'register_agent'):
+                if hasattr(self.coordinator, "register_agent"):
                     await self.coordinator.register_agent(agent_type, agent)
                 logger.debug(f"Registered agent: {agent_type}")
 
@@ -258,46 +252,50 @@ class IntegrationAgentsManager:
 
         try:
             # Connect Database Sync Agent to PostgreSQL
-            if hasattr(settings, 'DATABASE_URL') and settings.DATABASE_URL and self.agents.get('database_sync'):
+            if (
+                hasattr(settings, "DATABASE_URL")
+                and settings.DATABASE_URL
+                and self.agents.get("database_sync")
+            ):
                 # Import database manager
                 from database.connection import DatabaseManager
+
                 db_manager = DatabaseManager()
                 await db_manager.initialize()
 
-                if hasattr(self.agents['database_sync'], 'connect_platform'):
-                    await self.agents['database_sync'].connect_platform(
-                        IntegrationPlatform.DATABASE,
-                        db_manager
+                if hasattr(self.agents["database_sync"], "connect_platform"):
+                    await self.agents["database_sync"].connect_platform(
+                        IntegrationPlatform.DATABASE, db_manager
                     )
                 logger.info("Connected DatabaseSyncAgent to PostgreSQL")
 
             # Connect Database Sync Agent to Redis
-            if hasattr(settings, 'REDIS_URL') and settings.REDIS_URL:
+            if hasattr(settings, "REDIS_URL") and settings.REDIS_URL:
                 import redis.asyncio as redis
+
                 redis_client = await redis.from_url(
-                    settings.REDIS_URL,
-                    encoding="utf-8",
-                    decode_responses=True
+                    settings.REDIS_URL, encoding="utf-8", decode_responses=True
                 )
 
-                await self.agents['database_sync'].connect_platform(
-                    IntegrationPlatform.CACHE,
-                    redis_client
+                await self.agents["database_sync"].connect_platform(
+                    IntegrationPlatform.CACHE, redis_client
                 )
                 logger.info("Connected DatabaseSyncAgent to Redis")
 
             # Initialize Pusher for Realtime Update Agent
-            if all([
-                hasattr(settings, 'PUSHER_APP_ID'),
-                hasattr(settings, 'PUSHER_KEY'),
-                hasattr(settings, 'PUSHER_SECRET'),
-                hasattr(settings, 'PUSHER_CLUSTER')
-            ]):
-                await self.agents['realtime_update'].initialize_pusher(
+            if all(
+                [
+                    hasattr(settings, "PUSHER_APP_ID"),
+                    hasattr(settings, "PUSHER_KEY"),
+                    hasattr(settings, "PUSHER_SECRET"),
+                    hasattr(settings, "PUSHER_CLUSTER"),
+                ]
+            ):
+                await self.agents["realtime_update"].initialize_pusher(
                     app_id=settings.PUSHER_APP_ID,
                     key=settings.PUSHER_KEY,
                     secret=settings.PUSHER_SECRET,
-                    cluster=settings.PUSHER_CLUSTER
+                    cluster=settings.PUSHER_CLUSTER,
                 )
                 logger.info("Connected RealtimeUpdateAgent to Pusher")
 
@@ -306,10 +304,10 @@ class IntegrationAgentsManager:
                     "integration-status",
                     "workflow-updates",
                     "sync-notifications",
-                    "agent-health"
+                    "agent-health",
                 ]
                 for channel in default_channels:
-                    await self.agents['realtime_update'].subscribe_channel(channel)
+                    await self.agents["realtime_update"].subscribe_channel(channel)
                     logger.debug(f"Subscribed to channel: {channel}")
 
         except Exception as e:
@@ -319,7 +317,7 @@ class IntegrationAgentsManager:
 
     async def _register_default_schemas(self):
         """Register default schemas for cross-platform validation"""
-        if not self.agents.get('schema_validator'):
+        if not self.agents.get("schema_validator"):
             logger.debug("No schema validator available, skipping schema registration")
             return
 
@@ -333,14 +331,11 @@ class IntegrationAgentsManager:
                     "description": {"type": "string"},
                     "grade_level": {"type": "integer", "minimum": 1, "maximum": 12},
                     "subject": {"type": "string"},
-                    "learning_objectives": {
-                        "type": "array",
-                        "items": {"type": "string"}
-                    },
+                    "learning_objectives": {"type": "array", "items": {"type": "string"}},
                     "created_at": {"type": "string", "format": "date-time"},
-                    "updated_at": {"type": "string", "format": "date-time"}
+                    "updated_at": {"type": "string", "format": "date-time"},
                 },
-                "required": ["content_id", "title", "grade_level", "subject"]
+                "required": ["content_id", "title", "grade_level", "subject"],
             }
 
             # Register for backend
@@ -351,14 +346,14 @@ class IntegrationAgentsManager:
                 class SchemaType:
                     JSON_SCHEMA = "json_schema"
 
-            if hasattr(self.agents['schema_validator'], 'register_schema'):
-                await self.agents['schema_validator'].register_schema(
+            if hasattr(self.agents["schema_validator"], "register_schema"):
+                await self.agents["schema_validator"].register_schema(
                     schema_name="educational_content",
-                schema_type=SchemaType.JSON_SCHEMA,
-                definition=educational_content_schema,
-                platform=IntegrationPlatform.BACKEND,
-                version="1.0.0"
-            )
+                    schema_type=SchemaType.JSON_SCHEMA,
+                    definition=educational_content_schema,
+                    platform=IntegrationPlatform.BACKEND,
+                    version="1.0.0",
+                )
 
             # User schema
             user_schema = {
@@ -367,18 +362,18 @@ class IntegrationAgentsManager:
                     "user_id": {"type": "string"},
                     "email": {"type": "string", "format": "email"},
                     "role": {"type": "string", "enum": ["student", "teacher", "admin"]},
-                    "created_at": {"type": "string", "format": "date-time"}
+                    "created_at": {"type": "string", "format": "date-time"},
                 },
-                "required": ["user_id", "email", "role"]
+                "required": ["user_id", "email", "role"],
             }
 
-            if hasattr(self.agents['schema_validator'], 'register_schema'):
-                await self.agents['schema_validator'].register_schema(
+            if hasattr(self.agents["schema_validator"], "register_schema"):
+                await self.agents["schema_validator"].register_schema(
                     schema_name="user",
                     schema_type=SchemaType.JSON_SCHEMA,
                     definition=user_schema,
                     platform=IntegrationPlatform.BACKEND,
-                    version="1.0.0"
+                    version="1.0.0",
                 )
 
             logger.info("Default schemas registered")
@@ -392,7 +387,7 @@ class IntegrationAgentsManager:
         workflow_description: str,
         template: Optional[str] = None,
         custom_tasks: Optional[list] = None,
-        parameters: Optional[Dict[str, Any]] = None
+        parameters: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Execute an integration workflow"""
         if not self.coordinator:
@@ -404,42 +399,38 @@ class IntegrationAgentsManager:
                 name=workflow_name,
                 description=workflow_description,
                 template=template,
-                custom_tasks=custom_tasks
+                custom_tasks=custom_tasks,
             )
 
             # Execute workflow
             result = await self.coordinator.execute_workflow(
-                workflow_id=workflow.workflow_id,
-                parameters=parameters
+                workflow_id=workflow.workflow_id, parameters=parameters
             )
 
             return {
                 "workflow_id": workflow.workflow_id,
                 "success": result.success,
                 "output": result.output,
-                "error": result.error if not result.success else None
+                "error": result.error if not result.success else None,
             }
 
         except Exception as e:
             logger.error(f"Error executing workflow: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def get_agent_status(self, agent_name: Optional[str] = None) -> Dict[str, Any]:
         """Get status of integration agents"""
         status = {
             "initialized": self.initialized,
             "timestamp": datetime.utcnow().isoformat(),
-            "agents": {}
+            "agents": {},
         }
 
         if agent_name:
             # Get specific agent status
             if agent_name in self.agents:
                 agent = self.agents[agent_name]
-                if agent is not None and hasattr(agent, 'health_check'):
+                if agent is not None and hasattr(agent, "health_check"):
                     try:
                         health = await agent.health_check()
                         status["agents"][agent_name] = health
@@ -447,18 +438,18 @@ class IntegrationAgentsManager:
                         status["agents"][agent_name] = {
                             "status": "error",
                             "healthy": False,
-                            "error": str(e)
+                            "error": str(e),
                         }
                 else:
                     status["agents"][agent_name] = {
                         "status": "not_available",
                         "healthy": False,
-                        "error": "Agent is None or missing health_check method"
+                        "error": "Agent is None or missing health_check method",
                     }
         else:
             # Get all agents status
             for name, agent in self.agents.items():
-                if agent is not None and hasattr(agent, 'health_check'):
+                if agent is not None and hasattr(agent, "health_check"):
                     try:
                         health = await agent.health_check()
                         status["agents"][name] = health
@@ -466,73 +457,55 @@ class IntegrationAgentsManager:
                         status["agents"][name] = {
                             "status": "error",
                             "healthy": False,
-                            "error": str(e)
+                            "error": str(e),
                         }
                 else:
                     status["agents"][name] = {
                         "status": "not_available",
                         "healthy": False,
-                        "error": "Agent is None or missing health_check method"
+                        "error": "Agent is None or missing health_check method",
                     }
 
         return status
 
     async def sync_data(
-        self,
-        source_platform: str,
-        target_platform: str,
-        data: Dict[str, Any]
+        self, source_platform: str, target_platform: str, data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Synchronize data between platforms"""
         try:
             source = IntegrationPlatform[source_platform.upper()]
             target = IntegrationPlatform[target_platform.upper()]
 
-            result = await self.agents['database_sync'].sync_data(
-                source_platform=source,
-                target_platform=target,
-                data=data
+            result = await self.agents["database_sync"].sync_data(
+                source_platform=source, target_platform=target, data=data
             )
 
             return {
                 "success": result.success,
                 "output": result.output,
-                "error": result.error if not result.success else None
+                "error": result.error if not result.success else None,
             }
 
         except Exception as e:
             logger.error(f"Error syncing data: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    async def broadcast_event(
-        self,
-        channel: str,
-        event: str,
-        data: Any
-    ) -> Dict[str, Any]:
+    async def broadcast_event(self, channel: str, event: str, data: Any) -> Dict[str, Any]:
         """Broadcast an event through the realtime update agent"""
         try:
-            result = await self.agents['realtime_update'].broadcast_event(
-                channel_name=channel,
-                event_name=event,
-                data=data
+            result = await self.agents["realtime_update"].broadcast_event(
+                channel_name=channel, event_name=event, data=data
             )
 
             return {
                 "success": result.success,
                 "output": result.output,
-                "error": result.error if not result.success else None
+                "error": result.error if not result.success else None,
             }
 
         except Exception as e:
             logger.error(f"Error broadcasting event: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def _monitor_health(self):
         """Background task to monitor agent health"""
@@ -545,17 +518,17 @@ class IntegrationAgentsManager:
                 status = await self.get_agent_status()
 
                 # Broadcast health status
-                if self.agents.get('realtime_update'):
+                if self.agents.get("realtime_update"):
                     await self.broadcast_event(
-                        channel="agent-health",
-                        event="health_update",
-                        data=status
+                        channel="agent-health", event="health_update", data=status
                     )
 
                 # Log any unhealthy agents
                 for agent_name, health in status.get("agents", {}).items():
                     if health.get("status") != "healthy":
-                        logger.warning(f"Agent {agent_name} is {health.get('status')}: {health.get('error')}")
+                        logger.warning(
+                            f"Agent {agent_name} is {health.get('status')}: {health.get('error')}"
+                        )
 
             except Exception as e:
                 logger.error(f"Error in health monitoring: {e}")
@@ -569,7 +542,7 @@ class IntegrationAgentsManager:
 
         # Cleanup each agent
         for name, agent in self.agents.items():
-            if agent is not None and hasattr(agent, 'cleanup'):
+            if agent is not None and hasattr(agent, "cleanup"):
                 try:
                     await agent.cleanup()
                     logger.debug(f"Cleaned up agent: {name}")
@@ -602,14 +575,10 @@ async def execute_integration_workflow(
     workflow_description: str,
     template: Optional[str] = None,
     custom_tasks: Optional[list] = None,
-    parameters: Optional[Dict[str, Any]] = None
+    parameters: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Execute an integration workflow"""
     manager = await get_integration_manager()
     return await manager.execute_workflow(
-        workflow_name,
-        workflow_description,
-        template,
-        custom_tasks,
-        parameters
+        workflow_name, workflow_description, template, custom_tasks, parameters
     )

@@ -75,3 +75,50 @@ export const LANGUAGES = [
 
 // Default language
 export const DEFAULT_LANGUAGE = "en";
+
+// Consolidated config object for components that need it
+export const config = {
+  api: {
+    baseURL: API_BASE_URL,
+    timeout: API_TIMEOUT,
+  },
+  websocket: {
+    url: WS_URL,
+    enabled: ENABLE_WEBSOCKET,
+    config: WS_CONFIG,
+  },
+  pusher: {
+    key: PUSHER_KEY,
+    cluster: PUSHER_CLUSTER,
+    enabled: PUSHER_ENABLED,
+    forceTLS: PUSHER_FORCE_TLS,
+    debug: PUSHER_DEBUG,
+    authEndpoint: PUSHER_AUTH_ENDPOINT,
+  },
+  auth: {
+    tokenKey: AUTH_TOKEN_KEY,
+    refreshTokenKey: AUTH_REFRESH_TOKEN_KEY,
+  },
+  roblox: {
+    apiUrl: ROBLOX_API_URL,
+    universeId: ROBLOX_UNIVERSE_ID,
+  },
+  features: {
+    websocket: ENABLE_WEBSOCKET,
+    gamification: ENABLE_GAMIFICATION,
+    analytics: ENABLE_ANALYTICS,
+  },
+  compliance: {
+    coppa: COPPA_COMPLIANCE,
+    ferpa: FERPA_COMPLIANCE,
+    gdpr: GDPR_COMPLIANCE,
+  },
+  debug: {
+    enabled: DEBUG_MODE,
+    mockApi: MOCK_API,
+  },
+  xp: XP_CONFIG,
+  pagination: PAGINATION,
+  languages: LANGUAGES,
+  defaultLanguage: DEFAULT_LANGUAGE,
+};

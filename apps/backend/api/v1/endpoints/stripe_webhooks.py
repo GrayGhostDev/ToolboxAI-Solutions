@@ -28,6 +28,7 @@ ENABLE_STRIPE_WEBHOOKS = os.getenv("ENABLE_STRIPE_WEBHOOKS", "false").lower() ==
 
 class StripeEvent(BaseModel):
     """Stripe webhook event model"""
+
     id: str
     object: str
     api_version: Optional[str] = None
@@ -41,17 +42,14 @@ class StripeEvent(BaseModel):
 
 class WebhookResponse(BaseModel):
     """Standard webhook response"""
+
     status: str = Field(default="success")
     message: str
     event_id: Optional[str] = None
     processed_at: Optional[str] = None
 
 
-def verify_stripe_signature(
-    payload: bytes,
-    signature: str,
-    secret: str
-) -> bool:
+def verify_stripe_signature(payload: bytes, signature: str, secret: str) -> bool:
     """
     Verify Stripe webhook signature for security
 
@@ -72,11 +70,11 @@ def verify_stripe_signature(
         timestamp = None
         signatures = []
 
-        for element in signature.split(','):
-            key, value = element.split('=')
-            if key == 't':
+        for element in signature.split(","):
+            key, value = element.split("=")
+            if key == "t":
                 timestamp = value
-            elif key == 'v1':
+            elif key == "v1":
                 signatures.append(value)
 
         if not timestamp or not signatures:
@@ -86,11 +84,7 @@ def verify_stripe_signature(
         signed_payload = f"{timestamp}.".encode() + payload
 
         # Compute expected signature
-        expected_signature = hmac.new(
-            secret.encode(),
-            signed_payload,
-            hashlib.sha256
-        ).hexdigest()
+        expected_signature = hmac.new(secret.encode(), signed_payload, hashlib.sha256).hexdigest()
 
         # Check if any signature matches
         for sig in signatures:
@@ -106,8 +100,7 @@ def verify_stripe_signature(
 
 @router.post("/webhooks", response_model=WebhookResponse)
 async def handle_stripe_webhook(
-    request: Request,
-    stripe_signature: Optional[str] = Header(None, alias="Stripe-Signature")
+    request: Request, stripe_signature: Optional[str] = Header(None, alias="Stripe-Signature")
 ):
     """
     Main Stripe webhook handler endpoint
@@ -126,7 +119,7 @@ async def handle_stripe_webhook(
         logger.warning("Stripe webhook received but webhooks are disabled")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Stripe webhooks are currently disabled"
+            detail="Stripe webhooks are currently disabled",
         )
 
     # Get raw body for signature verification
@@ -137,16 +130,12 @@ async def handle_stripe_webhook(
         if not stripe_signature:
             logger.error("Missing Stripe signature header")
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Missing Stripe signature"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Missing Stripe signature"
             )
 
         if not verify_stripe_signature(body, stripe_signature, STRIPE_WEBHOOK_SECRET):
             logger.error("Invalid Stripe signature")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid signature"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid signature")
 
     # Parse event
     try:
@@ -154,10 +143,7 @@ async def handle_stripe_webhook(
         event = StripeEvent(**event_data)
     except (json.JSONDecodeError, ValueError) as e:
         logger.error(f"Failed to parse Stripe event: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid event payload"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid event payload")
 
     # Log event receipt
     logger.info(f"Received Stripe webhook: {event.type} (ID: {event.id})")
@@ -188,15 +174,14 @@ async def handle_stripe_webhook(
     except Exception as e:
         logger.error(f"Error processing Stripe event {event.id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to process webhook"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to process webhook"
         )
 
     return WebhookResponse(
         status="success",
         message=f"Processed {event.type} event",
         event_id=event.id,
-        processed_at=datetime.now(timezone.utc).isoformat()
+        processed_at=datetime.now(timezone.utc).isoformat(),
     )
 
 
@@ -288,7 +273,7 @@ async def get_webhook_status():
         "api_key_configured": bool(STRIPE_API_KEY),
         "endpoints": {
             "webhooks": "/api/v1/stripe/webhooks",
-            "status": "/api/v1/stripe/webhook-status"
+            "status": "/api/v1/stripe/webhook-status",
         },
         "supported_events": [
             "checkout.session.completed",
@@ -296,6 +281,6 @@ async def get_webhook_status():
             "customer.subscription.updated",
             "customer.subscription.deleted",
             "invoice.payment_succeeded",
-            "invoice.payment_failed"
-        ]
+            "invoice.payment_failed",
+        ],
     }

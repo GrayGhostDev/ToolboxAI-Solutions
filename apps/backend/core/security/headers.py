@@ -32,7 +32,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         csp_policy: Optional[str] = None,
         enable_hsts: bool = True,
         enable_xss_protection: bool = True,
-        custom_headers: Optional[Dict[str, str]] = None
+        custom_headers: Optional[Dict[str, str]] = None,
     ):
         super().__init__(app)
         self.hsts_max_age = hsts_max_age
@@ -89,7 +89,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # HTTP Strict Transport Security (only for HTTPS)
         if self.enable_hsts and request.url.scheme == "https":
-            headers["Strict-Transport-Security"] = f"max-age={self.hsts_max_age}; includeSubDomains; preload"
+            headers["Strict-Transport-Security"] = (
+                f"max-age={self.hsts_max_age}; includeSubDomains; preload"
+            )
 
         # Permissions Policy (Feature Policy successor)
         headers["Permissions-Policy"] = (
@@ -177,7 +179,7 @@ class SecurityHeadersConfig:
         enable_hsts: bool = True,
         enable_xss_protection: bool = True,
         custom_csp: Optional[str] = None,
-        custom_headers: Optional[Dict[str, str]] = None
+        custom_headers: Optional[Dict[str, str]] = None,
     ):
         self.environment = environment
         self.hsts_max_age = hsts_max_age
@@ -198,5 +200,5 @@ class SecurityHeadersConfig:
             csp_policy=self.get_csp_policy(),
             enable_hsts=self.enable_hsts,
             enable_xss_protection=self.enable_xss_protection,
-            custom_headers=self.custom_headers
+            custom_headers=self.custom_headers,
         )

@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/agents/mock_llm.py
-# hypothesis_version: 6.139.2
-
-[0.1, 0.7, 'Mock response', 'OPENAI_API_KEY', 'USE_MOCK_LLM', 'assign', 'code', 'educational', 'environment', 'gpt-3.5-turbo', 'langchain_openai', 'lesson', 'lua', 'mock-chat', 'mock-llm', 'mock_llm', 'model', 'orchestrate', 'question', 'quiz', 'review', 'route', 'script', 'terrain', 'true', 'validate', 'workflow']

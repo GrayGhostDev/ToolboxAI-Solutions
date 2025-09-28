@@ -47,6 +47,7 @@ logger = logging_manager.get_logger(__name__)
 # TEST ENDPOINTS (Temporary - for development only)
 # =============================================================================
 
+
 @app.get("/endpoint/that/errors")
 async def test_error_endpoint():
     """Test endpoint that throws an error - for testing error handling"""
@@ -56,6 +57,7 @@ async def test_error_endpoint():
 # =============================================================================
 # MIGRATION STATUS ENDPOINT
 # =============================================================================
+
 
 @app.get("/migration/status")
 async def get_migration_status():
@@ -75,12 +77,12 @@ async def get_migration_status():
             "service_layer_foundation",
             "pusher_endpoints_migrated",
             "health_endpoints_migrated",
-            "content_endpoints_migrated"
+            "content_endpoints_migrated",
         ],
         "remaining_components": [
             "websocket_endpoints_legacy_support",
             "analytics_service_enhancement",
-            "admin_service_enhancement"
+            "admin_service_enhancement",
         ],
         "architecture_improvements": {
             "separation_of_concerns": "implemented",
@@ -90,12 +92,12 @@ async def get_migration_status():
             "logging": "structured_correlation_ids",
             "testing": "factory_pattern_ready",
             "router_modularization": "completed",
-            "legacy_endpoint_cleanup": "completed"
+            "legacy_endpoint_cleanup": "completed",
         },
         "original_file": "main_original.py",
         "new_file": "main.py (this file)",
         "backward_compatibility": "maintained",
-        "line_reduction": "from_4400+_to_<100_lines"
+        "line_reduction": "from_4400+_to_<100_lines",
     }
 
 
@@ -120,5 +122,5 @@ if __name__ == "__main__":
         port=port,
         reload=reload,
         log_level="info",
-        workers=workers if not reload else 1  # Reload mode requires single worker
+        workers=workers if not reload else 1,  # Reload mode requires single worker
     )

@@ -1,38 +1,36 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import Stepper from '@mui/material/Stepper';
-import Step from '@mui/material/Step';
-import StepLabel from '@mui/material/StepLabel';
-import StepContent from '@mui/material/StepContent';
-import Button from '@mui/material/Button';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import Chip from '@mui/material/Chip';
-import LinearProgress from '@mui/material/LinearProgress';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Grid from '@mui/material/Grid';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import Divider from '@mui/material/Divider';
-import Divider from '@mui/material/Divider';
 import {
-  CheckCircle,
-  RadioButtonUnchecked,
-  School,
-  Psychology,
-  Settings,
-  Palette,
-  Create,
-  Stars,
-  VerifiedUser,
-  CloudUpload
-} from '@mui/icons-material';
+  Box,
+  Stepper,
+  Paper,
+  Text,
+  TextInput,
+  Button,
+  Alert,
+  Badge,
+  Progress,
+  Card,
+  Grid,
+  Stack,
+  Group,
+  Divider,
+  useMantineTheme,
+  Title,
+  Textarea,
+  Loader
+} from '@mantine/core';
+import {
+  IconCircleCheck,
+  IconCircle,
+  IconSchool,
+  IconBrain,
+  IconSettings,
+  IconPalette,
+  IconEdit,
+  IconStar,
+  IconShieldCheck,
+  IconCloudUpload
+} from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import api from '../../services/api';
@@ -64,61 +62,62 @@ const CONVERSATION_STAGES: ConversationStage[] = [
     id: 'greeting',
     name: 'Welcome',
     description: 'Introduction and understanding your goals',
-    icon: <School />,
+    icon: <IconSchool />,
     status: 'pending'
   },
   {
     id: 'discovery',
     name: 'Discovery',
     description: 'Exploring learning objectives',
-    icon: <Psychology />,
+    icon: <IconBrain />,
     status: 'pending'
   },
   {
     id: 'requirements',
     name: 'Requirements',
     description: 'Gathering technical requirements',
-    icon: <Settings />,
+    icon: <IconSettings />,
     status: 'pending'
   },
   {
     id: 'personalization',
     name: 'Personalization',
     description: 'Customizing the experience',
-    icon: <Palette />,
+    icon: <IconPalette />,
     status: 'pending'
   },
   {
     id: 'content_design',
     name: 'Content Design',
     description: 'Designing educational content',
-    icon: <Create />,
+    icon: <IconEdit />,
     status: 'pending'
   },
   {
     id: 'uniqueness_enhancement',
     name: 'Uniqueness',
     description: 'Adding creative elements',
-    icon: <Stars />,
+    icon: <IconStar />,
     status: 'pending'
   },
   {
     id: 'validation',
     name: 'Validation',
     description: 'Quality and safety checks',
-    icon: <VerifiedUser />,
+    icon: <IconShieldCheck />,
     status: 'pending'
   },
   {
     id: 'generation_and_review',
     name: 'Generation',
     description: 'Creating your Roblox environment',
-    icon: <CloudUpload />,
+    icon: <IconCloudUpload />,
     status: 'pending'
   }
 ];
 
 const RobloxConversationFlow: React.FunctionComponent<Record<string, any>> = () => {
+  const theme = useMantineTheme();
   const [stages, setStages] = useState<ConversationStage[]>(CONVERSATION_STAGES);
   const [activeStep, setActiveStep] = useState(0);
   const [context, setContext] = useState<ConversationContext | null>(null);
@@ -332,212 +331,198 @@ const RobloxConversationFlow: React.FunctionComponent<Record<string, any>> = () 
   }, [context, startConversation]);
 
   return (
-    <Box sx={{ width: '100%', p: 3 }}>
-      <Typography variant="h4" gutterBottom>
+    <Box style={{ width: '100%', padding: theme.spacing.lg }}>
+      <Title order={2} mb="lg">
         Create Your Educational Roblox Experience
-      </Typography>
+      </Title>
 
       {/* Progress Bar */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="body2" color="text.secondary">
+      <Box mb="lg">
+        <Text size="sm" color="dimmed" mb="xs">
           Overall Progress: {Math.round(context?.progress || 0)}%
-        </Typography>
-        <LinearProgress
-          variant="determinate"
+        </Text>
+        <Progress
           value={context?.progress || 0}
-          sx={{ height: 8, borderRadius: 4 }}
+          size="lg"
+          radius="xl"
         />
       </Box>
 
-      <Grid container spacing={3}>
+      <Grid>
         {/* Conversation Stepper */}
-        <Grid item xs={12} md={8}>
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Stepper activeStep={activeStep} orientation="vertical">
+        <Grid.Col span={12} md={8}>
+          <Paper shadow="md" style={{ padding: theme.spacing.lg }}>
+            <Stepper active={activeStep} orientation="vertical" size="sm">
               {stages.map((stage, index) => (
-                <Step key={stage.id} completed={stage.status === 'completed'}>
-                  <StepLabel
-                    optional={
-                      <Typography variant="caption">{stage.description}</Typography>
-                    }
-                    icon={stage.status === 'completed' ? <CheckCircle color="success" /> :
-                          stage.status === 'active' ? stage.icon : <RadioButtonUnchecked />}
-                  >
-                    {stage.name}
-                  </StepLabel>
-                  <StepContent>
-                    {/* AI Response */}
-                    {aiResponse && activeStep === index && (
-                      <Alert severity="info" sx={{ mb: 2 }}>
-                        {aiResponse}
-                      </Alert>
-                    )}
+                <Stepper.Step
+                  key={stage.id}
+                  icon={
+                    stage.status === 'completed' ? <IconCircleCheck color={theme.colors.green[6]} /> :
+                    stage.status === 'active' ? stage.icon : <IconCircle />
+                  }
+                  label={stage.name}
+                  description={stage.description}
+                >
+                  {/* AI Response */}
+                  {aiResponse && activeStep === index && (
+                    <Alert color="blue" mb="md">
+                      {aiResponse}
+                    </Alert>
+                  )}
 
-                    {/* User Input */}
-                    {stage.status === 'active' && stage.id !== 'generation_and_review' && (
-                      <Box sx={{ mb: 2 }}>
-                        <TextField
-                          fullWidth
-                          multiline
-                          rows={3}
-                          value={userInput}
-                          onChange={(e) => setUserInput(e.target.value)}
-                          placeholder="Type your response here..."
-                          disabled={loading}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter' && e.shiftKey === false) {
-                              e.preventDefault();
-                              processUserInput();
-                            }
-                          }}
-                        />
-                        <Box sx={{ mt: 2 }}>
-                          <Button
-                            variant="contained"
-                            onClick={(e: React.MouseEvent) => processUserInput}
-                            disabled={loading || !userInput.trim()}
-                            sx={{ mr: 1 }}
-                          >
-                            {loading ? <CircularProgress size={24} /> : 'Send'}
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            onClick={(e: React.MouseEvent) => advanceStage}
-                            disabled={loading}
-                          >
-                            Skip to Next
-                          </Button>
-                        </Box>
-                      </Box>
-                    )}
-
-                    {/* Generation Stage */}
-                    {stage.id === 'generation_and_review' && stage.status === 'active' && (
-                      <Box>
+                  {/* User Input */}
+                  {stage.status === 'active' && stage.id !== 'generation_and_review' && (
+                    <Box mb="md">
+                      <Textarea
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        placeholder="Type your response here..."
+                        disabled={loading}
+                        minRows={3}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && e.shiftKey === false) {
+                            e.preventDefault();
+                            processUserInput();
+                          }
+                        }}
+                      />
+                      <Group mt="md">
                         <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={(e: React.MouseEvent) => generateEnvironment}
-                          disabled={loading}
-                          startIcon={<CloudUpload />}
-                          sx={{ mb: 2 }}
+                          onClick={processUserInput}
+                          disabled={loading || !userInput.trim()}
+                          leftIcon={loading ? <Loader size={16} /> : undefined}
                         >
-                          Generate Roblox Environment
+                          {loading ? 'Sending...' : 'Send'}
                         </Button>
+                        <Button
+                          variant="outline"
+                          onClick={advanceStage}
+                          disabled={loading}
+                        >
+                          Skip to Next
+                        </Button>
+                      </Group>
+                    </Box>
+                  )}
 
-                        {generationStatus && (
-                          <Alert severity="success" sx={{ mb: 2 }}>
-                            {generationStatus}
-                          </Alert>
-                        )}
+                  {/* Generation Stage */}
+                  {stage.id === 'generation_and_review' && stage.status === 'active' && (
+                    <Box>
+                      <Button
+                        color="blue"
+                        onClick={generateEnvironment}
+                        disabled={loading}
+                        leftIcon={<IconCloudUpload />}
+                        mb="md"
+                      >
+                        Generate Roblox Environment
+                      </Button>
 
-                        {context?.robloxData && (
-                          <Card sx={{ mb: 2 }}>
-                            <CardContent>
-                              <Typography variant="h6" gutterBottom>
-                                Roblox Studio Connection
-                              </Typography>
-                              <List dense>
-                                <ListItem>
-                                  <ListItemText
-                                    primary="Project ID"
-                                    secondary={context.robloxData.projectId}
-                                  />
-                                </ListItem>
-                                <ListItem>
-                                  <ListItemText
-                                    primary="Rojo Port"
-                                    secondary={context.robloxData.rojoPort}
-                                  />
-                                </ListItem>
-                                <ListItem>
-                                  <ListItemText
-                                    primary="Sync URL"
-                                    secondary={context.robloxData.syncUrl}
-                                  />
-                                </ListItem>
-                              </List>
-                              <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                                Open Roblox Studio and connect to this URL using the Rojo plugin
-                              </Typography>
-                            </CardContent>
-                          </Card>
-                        )}
-                      </Box>
-                    )}
-                  </StepContent>
-                </Step>
+                      {generationStatus && (
+                        <Alert color="green" mb="md">
+                          {generationStatus}
+                        </Alert>
+                      )}
+
+                      {context?.robloxData && (
+                        <Card withBorder mb="md">
+                          <Title order={4} mb="md">
+                            Roblox Studio Connection
+                          </Title>
+                          <Stack spacing="xs">
+                            <Group position="apart">
+                              <Text size="sm" weight={500}>Project ID</Text>
+                              <Text size="sm" color="dimmed">{context.robloxData.projectId}</Text>
+                            </Group>
+                            <Group position="apart">
+                              <Text size="sm" weight={500}>Rojo Port</Text>
+                              <Text size="sm" color="dimmed">{context.robloxData.rojoPort}</Text>
+                            </Group>
+                            <Group position="apart">
+                              <Text size="sm" weight={500}>Sync URL</Text>
+                              <Text size="sm" color="dimmed">{context.robloxData.syncUrl}</Text>
+                            </Group>
+                          </Stack>
+                          <Text size="sm" color="dimmed" mt="md">
+                            Open Roblox Studio and connect to this URL using the Rojo plugin
+                          </Text>
+                        </Card>
+                      )}
+                    </Box>
+                  )}
+                </Stepper.Step>
               ))}
             </Stepper>
           </Paper>
-        </Grid>
+        </Grid.Col>
 
         {/* Stage Data Summary */}
-        <Grid item xs={12} md={4}>
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+        <Grid.Col span={12} md={4}>
+          <Paper shadow="md" style={{ padding: theme.spacing.lg }}>
+            <Title order={4} mb="md">
               Your Choices
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
+            </Title>
+            <Divider mb="md" />
 
             {Object.entries(context?.stageData || {}).map(([stage, data]: [string, any]) => (
-              <Box key={stage} sx={{ mb: 2 }}>
-                <Typography variant="subtitle2" color="primary" gutterBottom>
+              <Box key={stage} mb="md">
+                <Text size="sm" weight={600} color="blue" mb="xs">
                   {stages.find(s => s.id === stage)?.name}
-                </Typography>
+                </Text>
 
-                {/* Display key data points */}
-                {data.subject_area && (
-                  <Chip label={`Subject: ${data.subject_area}`} size="small" sx={{ mr: 1, mb: 1 }} />
-                )}
-                {data.grade_level && (
-                  <Chip label={`Grade: ${data.grade_level}`} size="small" sx={{ mr: 1, mb: 1 }} />
-                )}
-                {data.environment_type && (
-                  <Chip label={`Environment: ${data.environment_type}`} size="small" sx={{ mr: 1, mb: 1 }} />
-                )}
-                {data.visual_style && (
-                  <Chip label={`Style: ${data.visual_style}`} size="small" sx={{ mr: 1, mb: 1 }} />
-                )}
-                {data.max_players && (
-                  <Chip label={`Players: ${data.max_players}`} size="small" sx={{ mr: 1, mb: 1 }} />
-                )}
+                <Group spacing="xs" mb="xs">
+                  {/* Display key data points */}
+                  {data.subject_area && (
+                    <Badge size="sm" variant="outline">Subject: {data.subject_area}</Badge>
+                  )}
+                  {data.grade_level && (
+                    <Badge size="sm" variant="outline">Grade: {data.grade_level}</Badge>
+                  )}
+                  {data.environment_type && (
+                    <Badge size="sm" variant="outline">Environment: {data.environment_type}</Badge>
+                  )}
+                  {data.visual_style && (
+                    <Badge size="sm" variant="outline">Style: {data.visual_style}</Badge>
+                  )}
+                  {data.max_players && (
+                    <Badge size="sm" variant="outline">Players: {data.max_players}</Badge>
+                  )}
+                </Group>
               </Box>
             ))}
 
             {/* Validation Scores */}
             {context?.stageData?.validation?.validation_scores && (
-              <Box sx={{ mt: 3 }}>
-                <Typography variant="subtitle2" gutterBottom>
+              <Box mt="lg">
+                <Text weight={600} size="sm" mb="md">
                   Quality Scores
-                </Typography>
+                </Text>
                 {Object.entries(context.stageData.validation.validation_scores).map(([key, value]: [string, any]) => (
-                  <Box key={key} sx={{ mb: 1 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2">
+                  <Box key={key} mb="md">
+                    <Group position="apart" mb="xs">
+                      <Text size="xs">
                         {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </Typography>
-                      <Typography variant="body2" color={value >= 0.85 ? 'success.main' : 'warning.main'}>
+                      </Text>
+                      <Text size="xs" color={value >= 0.85 ? 'green' : 'orange'}>
                         {Math.round(value * 100)}%
-                      </Typography>
-                    </Box>
-                    <LinearProgress
-                      variant="determinate"
+                      </Text>
+                    </Group>
+                    <Progress
                       value={value * 100}
-                      color={value >= 0.85 ? 'success' : 'warning'}
-                      sx={{ height: 4, borderRadius: 2 }}
+                      color={value >= 0.85 ? 'green' : 'orange'}
+                      size="sm"
                     />
                   </Box>
                 ))}
               </Box>
             )}
           </Paper>
-        </Grid>
+        </Grid.Col>
       </Grid>
 
       {/* Error Display */}
       {error && (
-        <Alert severity="error" sx={{ mt: 2 }} onClose={() => setError(null)}>
+        <Alert color="red" mt="md" onClose={() => setError(null)} withCloseButton>
           {error}
         </Alert>
       )}

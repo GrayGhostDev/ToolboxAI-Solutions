@@ -113,9 +113,11 @@ class EnrollmentLoader(DataLoader):
         """Batch load enrollments for multiple courses"""
 
         # Query all enrollments for the given course IDs
-        stmt = select(Enrollment).where(
-            Enrollment.course_id.in_(course_ids)
-        ).options(selectinload(Enrollment.student))
+        stmt = (
+            select(Enrollment)
+            .where(Enrollment.course_id.in_(course_ids))
+            .options(selectinload(Enrollment.student))
+        )
 
         result = await self.db.execute(stmt)
         enrollments = result.scalars().all()
@@ -140,9 +142,11 @@ class StudentEnrollmentLoader(DataLoader):
         """Batch load enrollments for multiple students"""
 
         # Query all enrollments for the given student IDs
-        stmt = select(Enrollment).where(
-            Enrollment.student_id.in_(student_ids)
-        ).options(selectinload(Enrollment.course))
+        stmt = (
+            select(Enrollment)
+            .where(Enrollment.student_id.in_(student_ids))
+            .options(selectinload(Enrollment.course))
+        )
 
         result = await self.db.execute(stmt)
         enrollments = result.scalars().all()

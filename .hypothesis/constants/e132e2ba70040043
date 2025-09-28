@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/database/repositories.py
-# hypothesis_version: 6.139.2
-
-[100, 'Email already exists', 'ModelType', 'Question not found', 'achievements', 'all', 'avatar_url', 'completed', 'count', 'current_streak', 'display_name', 'end_date', 'event_type', 'in_progress', 'lesson_id', 'lessons', 'max', 'min', 'monthly', 'progress', 'rank', 'score', 'start_date', 'title', 'total', 'total_events', 'total_score', 'unique_users', 'user_id', 'username', 'weekly']

@@ -104,31 +104,41 @@ services:
   # ----------------------------------------
   dashboard:
     build:
-      target: development  # Use development stage in Dockerfile
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/dashboard-fixed.Dockerfile
       args:
-        NODE_ENV: development
+        NODE_ENV: production
+        # Updated build args for Pusher migration
+        VITE_ENABLE_WEBSOCKET: "false"
+        VITE_ENABLE_PUSHER: "true"
+        VITE_PUSHER_KEY: "${VITE_PUSHER_KEY:-dummy-key-for-development}"
+        VITE_PUSHER_CLUSTER: "${VITE_PUSHER_CLUSTER:-us2}"
     ports:
-      - "5179:5179"
+      - "5180:80"  # Changed port to avoid conflict, using production port
       - "9229:9229"  # Node debugger port
     environment:
       NODE_ENV: development
-      # Vite dev server configuration
-      VITE_HOST: 0.0.0.0
-      VITE_PORT: 5179
-      VITE_HMR_HOST: localhost
-      VITE_HMR_PORT: 5179
       # API configuration for development
       VITE_API_BASE_URL: http://localhost:8009
-      VITE_WS_URL: ws://localhost:8009
-      # Enable all features in development
-      VITE_ENABLE_WEBSOCKET: "true"
+      # Pusher configuration (2025 standards)
+      VITE_PUSHER_KEY: "${VITE_PUSHER_KEY}"
+      VITE_PUSHER_CLUSTER: "${VITE_PUSHER_CLUSTER:-us2}"
+      VITE_PUSHER_AUTH_ENDPOINT: "/api/pusher/auth"
+      VITE_PUSHER_SSL: "true"
+      # Enable all features in development with Pusher
+      VITE_ENABLE_WEBSOCKET: "false"
+      VITE_ENABLE_PUSHER: "true"
       VITE_ENABLE_GAMIFICATION: "true"
       VITE_ENABLE_ANALYTICS: "true"
+      VITE_ENABLE_MCP: "true"
+      VITE_ENABLE_AGENTS: "true"
+      VITE_ENABLE_ROBLOX: "true"
+      VITE_ENABLE_GHOST: "true"
       VITE_ENABLE_AI_CHAT: "true"
       VITE_DEBUG_MODE: "true"
       VITE_MOCK_API: "false"
-      # Disable Clerk in local dev by default
-      VITE_ENABLE_CLERK_AUTH: "false"
+      # Enable Clerk auth
+      VITE_ENABLE_CLERK_AUTH: "true"
     volumes:
       # Mount source code for hot reload
       - ../../../apps/dashboard/src:/app/src:cached
@@ -204,6 +214,118 @@ services:
     read_only: false
     user: root
 
+  # ----------------------------------------
+  # Celery Worker (Development)
+  # ----------------------------------------
+  celery-worker:
+    build:
+      target: development
+    ports:
+      - "5678:5678"  # Python debugger port
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      LOG_LEVEL: DEBUG
+      # Direct connection strings for development
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      DATABASE_URL: postgresql://${POSTGRES_USER:-toolboxai}:${POSTGRES_PASSWORD:-devpass2024}@postgres:5432/${POSTGRES_DB:-toolboxai}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-test-key}
+      # Development settings
+      CELERY_WORKER_CONCURRENCY: 2  # Lower for dev
+      CELERY_TASK_ALWAYS_EAGER: false  # Don't run sync in dev
+      CELERY_LOG_LEVEL: DEBUG
+      CELERY_SEND_TASK_EVENTS: true  # For Flower monitoring
+      PYTHONDEBUG: 1
+    secrets: []
+    volumes:
+      # Mount source code for hot reload
+      - ../../../apps/backend:/app/apps/backend:cached
+      - ../../../core:/app/core:cached
+      - ../../../database:/app/database:cached
+      - ../../../toolboxai_settings:/app/toolboxai_settings:cached
+      - ../../../toolboxai_utils:/app/toolboxai_utils:cached
+      - celery_logs:/app/logs
+      - celery_data:/app/data
+    security_opt: []
+    cap_drop: []
+    read_only: false
+    user: root
+    command: >
+      watchmedo auto-restart
+      --directory=/app/apps/backend
+      --pattern=*.py
+      --recursive
+      --
+      celery -A apps.backend.celery_app worker
+      --loglevel=DEBUG
+      --concurrency=2
+      --pool=solo
+      -Q default,high_priority,low_priority,email,reports,ai_generation
+
+  # ----------------------------------------
+  # Celery Beat (Development)
+  # ----------------------------------------
+  celery-beat:
+    build:
+      target: development
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      LOG_LEVEL: DEBUG
+      # Direct connection strings
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      DATABASE_URL: postgresql://${POSTGRES_USER:-toolboxai}:${POSTGRES_PASSWORD:-devpass2024}@postgres:5432/${POSTGRES_DB:-toolboxai}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key}
+      # Beat settings
+      CELERY_BEAT_LOG_LEVEL: DEBUG
+      CELERY_BEAT_MAX_LOOP_INTERVAL: 5  # More frequent in dev
+      TZ: ${TZ:-UTC}
+    secrets: []
+    volumes:
+      # Mount source code for development
+      - ../../../apps/backend:/app/apps/backend:cached
+      - ../../../core:/app/core:cached
+      - ../../../database:/app/database:cached
+      - ../../../toolboxai_settings:/app/toolboxai_settings:cached
+      - ../../../toolboxai_utils:/app/toolboxai_utils:cached
+      - celerybeat_schedule:/app/celerybeat-schedule
+      - celery_logs:/app/logs
+    security_opt: []
+    cap_drop: []
+    read_only: false
+    user: root
+
+  # ----------------------------------------
+  # Flower (Celery Monitoring - Dev Only)
+  # ----------------------------------------
+  flower:
+    image: mher/flower:2.0
+    container_name: toolboxai-flower
+    restart: always
+    ports:
+      - "5555:5555"
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      FLOWER_PORT: 5555
+      FLOWER_BASIC_AUTH: ${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-admin}
+      FLOWER_DEBUG: "true"
+    networks:
+      - cache
+      - backend
+    depends_on:
+      - redis
+      - celery-worker
+    command: >
+      celery
+      --broker=redis://redis:6379/0
+      flower
+      --port=5555
+      --basic_auth=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-admin}
+
 # ============================================
 # ADDITIONAL DEVELOPMENT SERVICES
 # ============================================
@@ -256,6 +378,12 @@ volumes:
   pip_cache:
     driver: local
   node_modules:
+    driver: local
+  celery_logs:
+    driver: local
+  celery_data:
+    driver: local
+  celerybeat_schedule:
     driver: local
 
 # ============================================

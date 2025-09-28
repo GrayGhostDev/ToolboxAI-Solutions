@@ -15,7 +15,7 @@ from apps.backend.api.auth.mfa import (
     MFAFeatureFlags,
     MFARateLimitError,
     get_mfa_service,
-    get_mfa_feature_flags
+    get_mfa_feature_flags,
 )
 from apps.backend.api.auth.auth import get_current_user
 
@@ -25,41 +25,53 @@ router = APIRouter(prefix="/api/mfa", tags=["MFA"])
 
 # ===== Request/Response Models =====
 
+
 class MFASetupInitRequest(BaseModel):
     """Request to initialize MFA setup"""
+
     method: MFAMethod
     phone_number: Optional[str] = Field(None, description="Phone for SMS method")
     email: Optional[str] = Field(None, description="Email for email method")
 
+
 class MFASetupConfirmRequest(BaseModel):
     """Request to confirm MFA setup"""
+
     method: MFAMethod
     code: str = Field(..., min_length=6, max_length=6, description="Verification code")
 
+
 class MFAVerifyRequest(BaseModel):
     """Request to verify MFA code"""
+
     method: MFAMethod
     code: str = Field(..., description="Verification code or backup code")
     device_id: Optional[str] = Field(None, description="Device identifier for trust")
     trust_device: bool = Field(False, description="Whether to trust this device")
 
+
 class MFADisableRequest(BaseModel):
     """Request to disable MFA"""
+
     method: Optional[MFAMethod] = Field(None, description="Specific method to disable")
     password: str = Field(..., description="Current password for verification")
 
+
 class MFABackupCodesRequest(BaseModel):
     """Request new backup codes"""
+
     regenerate: bool = Field(True, description="Generate new codes")
 
+
 # ===== Setup Endpoints =====
+
 
 @router.post("/setup/init", status_code=status.HTTP_200_OK)
 async def init_mfa_setup(
     request: MFASetupInitRequest,
     current_user: dict = Depends(get_current_user),
     mfa_service: MFAService = Depends(get_mfa_service),
-    feature_flags: MFAFeatureFlags = Depends(get_mfa_feature_flags)
+    feature_flags: MFAFeatureFlags = Depends(get_mfa_feature_flags),
 ):
     """
     Initialize MFA setup for a specific method.
@@ -76,7 +88,7 @@ async def init_mfa_setup(
     if not feature_flags.is_mfa_enabled_for_user(user_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="MFA is not available for your account yet"
+            detail="MFA is not available for your account yet",
         )
 
     try:
@@ -84,8 +96,7 @@ async def init_mfa_setup(
             # Generate TOTP secret and QR code
             secret = mfa_service.generate_totp_secret(user_id)
             qr_code = mfa_service.generate_qr_code(
-                current_user.get("email", "user@toolboxai.com"),
-                secret
+                current_user.get("email", "user@toolboxai.com"), secret
             )
 
             # Generate backup codes
@@ -97,14 +108,14 @@ async def init_mfa_setup(
                 "qr_code": f"data:image/png;base64,{qr_code}",
                 "secret": secret,
                 "backup_codes": backup_codes,
-                "instructions": "Scan the QR code with your authenticator app"
+                "instructions": "Scan the QR code with your authenticator app",
             }
 
         elif request.method == MFAMethod.SMS:
             if not request.phone_number:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Phone number required for SMS method"
+                    detail="Phone number required for SMS method",
                 )
 
             # Send SMS code
@@ -113,7 +124,7 @@ async def init_mfa_setup(
             if not success:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="SMS service temporarily unavailable"
+                    detail="SMS service temporarily unavailable",
                 )
 
             return {
@@ -121,15 +132,14 @@ async def init_mfa_setup(
                 "code_sent": True,
                 "phone_number": f"***{request.phone_number[-4:]}",
                 "expires_in": 300,
-                "instructions": "Enter the 6-digit code sent to your phone"
+                "instructions": "Enter the 6-digit code sent to your phone",
             }
 
         elif request.method == MFAMethod.EMAIL:
             email = request.email or current_user.get("email")
             if not email:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Email address required"
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="Email address required"
                 )
 
             # Send email code
@@ -138,7 +148,7 @@ async def init_mfa_setup(
             if not success:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="Email service temporarily unavailable"
+                    detail="Email service temporarily unavailable",
                 )
 
             return {
@@ -146,21 +156,22 @@ async def init_mfa_setup(
                 "code_sent": True,
                 "email": f"{email[:3]}***@{email.split('@')[1]}",
                 "expires_in": 600,
-                "instructions": "Enter the 6-digit code sent to your email"
+                "instructions": "Enter the 6-digit code sent to your email",
             }
 
     except Exception as e:
         logger.error(f"MFA setup init failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to initialize MFA setup"
+            detail="Failed to initialize MFA setup",
         )
+
 
 @router.post("/setup/confirm", status_code=status.HTTP_201_CREATED)
 async def confirm_mfa_setup(
     request: MFASetupConfirmRequest,
     current_user: dict = Depends(get_current_user),
-    mfa_service: MFAService = Depends(get_mfa_service)
+    mfa_service: MFAService = Depends(get_mfa_service),
 ):
     """Confirm MFA setup by verifying initial code"""
 
@@ -177,8 +188,7 @@ async def confirm_mfa_setup(
 
         if not is_valid:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid verification code"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification code"
             )
 
         # Enable MFA method for user
@@ -188,30 +198,31 @@ async def confirm_mfa_setup(
             "success": True,
             "method": request.method.value,
             "message": f"MFA {request.method.value} successfully enabled",
-            "backup_codes_available": request.method == MFAMethod.TOTP
+            "backup_codes_available": request.method == MFAMethod.TOTP,
         }
 
     except MFARateLimitError:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many attempts. Please try again later."
+            detail="Too many attempts. Please try again later.",
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"MFA setup confirm failed: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to confirm MFA setup"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to confirm MFA setup"
         )
 
+
 # ===== Verification Endpoints =====
+
 
 @router.post("/verify", status_code=status.HTTP_200_OK)
 async def verify_mfa(
     request: MFAVerifyRequest,
     current_user: dict = Depends(get_current_user),
-    mfa_service: MFAService = Depends(get_mfa_service)
+    mfa_service: MFAService = Depends(get_mfa_service),
 ):
     """Verify MFA code during authentication"""
 
@@ -231,8 +242,7 @@ async def verify_mfa(
 
         if not is_valid:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid verification code"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid verification code"
             )
 
         # Trust device if requested
@@ -244,22 +254,22 @@ async def verify_mfa(
             "verified": True,
             "method": request.method.value,
             "device_token": device_token,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     except MFARateLimitError:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many attempts. Please try again in 15 minutes."
+            detail="Too many attempts. Please try again in 15 minutes.",
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"MFA verification failed: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Verification failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Verification failed"
         )
+
 
 @router.post("/resend", status_code=status.HTTP_200_OK)
 async def resend_mfa_code(
@@ -267,14 +277,13 @@ async def resend_mfa_code(
     phone_number: Optional[str] = None,
     email: Optional[str] = None,
     current_user: dict = Depends(get_current_user),
-    mfa_service: MFAService = Depends(get_mfa_service)
+    mfa_service: MFAService = Depends(get_mfa_service),
 ):
     """Resend MFA code via SMS or Email"""
 
     if method not in [MFAMethod.SMS, MFAMethod.EMAIL]:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Can only resend SMS or Email codes"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Can only resend SMS or Email codes"
         )
 
     user_id = current_user["id"]
@@ -283,8 +292,7 @@ async def resend_mfa_code(
         if method == MFAMethod.SMS:
             if not phone_number:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Phone number required"
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="Phone number required"
                 )
 
             success = await mfa_service.send_sms_code(user_id, phone_number)
@@ -295,8 +303,7 @@ async def resend_mfa_code(
                 email = current_user.get("email")
             if not email:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Email address required"
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="Email address required"
                 )
 
             success = await mfa_service.send_email_code(user_id, email)
@@ -305,14 +312,14 @@ async def resend_mfa_code(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"{method.value} service temporarily unavailable"
+                detail=f"{method.value} service temporarily unavailable",
             )
 
         return {
             "success": True,
             "method": method.value,
             "expires_in": expires_in,
-            "message": f"New code sent via {method.value}"
+            "message": f"New code sent via {method.value}",
         }
 
     except HTTPException:
@@ -320,17 +327,18 @@ async def resend_mfa_code(
     except Exception as e:
         logger.error(f"MFA resend failed: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to resend code"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to resend code"
         )
 
+
 # ===== Management Endpoints =====
+
 
 @router.get("/status", status_code=status.HTTP_200_OK)
 async def get_mfa_status(
     current_user: dict = Depends(get_current_user),
     mfa_service: MFAService = Depends(get_mfa_service),
-    feature_flags: MFAFeatureFlags = Depends(get_mfa_feature_flags)
+    feature_flags: MFAFeatureFlags = Depends(get_mfa_feature_flags),
 ):
     """Get user's MFA configuration status"""
 
@@ -344,14 +352,15 @@ async def get_mfa_status(
         "mfa_enabled": status["mfa_enabled"],
         "methods": status["methods"],
         "backup_codes_remaining": status["backup_codes_remaining"],
-        "require_setup": mfa_service.require_mfa_setup(user_id) and mfa_available
+        "require_setup": mfa_service.require_mfa_setup(user_id) and mfa_available,
     }
+
 
 @router.post("/disable", status_code=status.HTTP_200_OK)
 async def disable_mfa(
     request: MFADisableRequest,
     current_user: dict = Depends(get_current_user),
-    mfa_service: MFAService = Depends(get_mfa_service)
+    mfa_service: MFAService = Depends(get_mfa_service),
 ):
     """Disable MFA method(s) for user"""
 
@@ -372,29 +381,25 @@ async def disable_mfa(
 
         if not success:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to disable MFA"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to disable MFA"
             )
 
-        return {
-            "success": True,
-            "message": message
-        }
+        return {"success": True, "message": message}
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"MFA disable failed: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to disable MFA"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to disable MFA"
         )
+
 
 @router.post("/backup-codes", status_code=status.HTTP_200_OK)
 async def manage_backup_codes(
     request: MFABackupCodesRequest,
     current_user: dict = Depends(get_current_user),
-    mfa_service: MFAService = Depends(get_mfa_service)
+    mfa_service: MFAService = Depends(get_mfa_service),
 ):
     """Generate new backup codes"""
 
@@ -405,7 +410,7 @@ async def manage_backup_codes(
     if not status["mfa_enabled"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="MFA must be enabled to generate backup codes"
+            detail="MFA must be enabled to generate backup codes",
         )
 
     try:
@@ -416,89 +421,73 @@ async def manage_backup_codes(
                 "success": True,
                 "backup_codes": codes,
                 "message": "New backup codes generated. Store them securely.",
-                "warning": "Previous backup codes have been invalidated."
+                "warning": "Previous backup codes have been invalidated.",
             }
         else:
             # Just return count
-            return {
-                "success": True,
-                "backup_codes_remaining": status["backup_codes_remaining"]
-            }
+            return {"success": True, "backup_codes_remaining": status["backup_codes_remaining"]}
 
     except Exception as e:
         logger.error(f"Backup codes generation failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to generate backup codes"
+            detail="Failed to generate backup codes",
         )
 
+
 # ===== Admin Endpoints =====
+
 
 @router.post("/admin/rollout", status_code=status.HTTP_200_OK)
 async def set_mfa_rollout(
     percentage: int = Field(..., ge=0, le=100),
     current_user: dict = Depends(get_current_user),
-    feature_flags: MFAFeatureFlags = Depends(get_mfa_feature_flags)
+    feature_flags: MFAFeatureFlags = Depends(get_mfa_feature_flags),
 ):
     """Set MFA rollout percentage (admin only)"""
 
     # Check if user is admin
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
 
     feature_flags.set_mfa_rollout_percentage(percentage)
 
     return {
         "success": True,
         "rollout_percentage": percentage,
-        "message": f"MFA rollout set to {percentage}%"
+        "message": f"MFA rollout set to {percentage}%",
     }
+
 
 @router.post("/admin/enable-role", status_code=status.HTTP_200_OK)
 async def enable_mfa_for_role(
     role: str,
     current_user: dict = Depends(get_current_user),
-    feature_flags: MFAFeatureFlags = Depends(get_mfa_feature_flags)
+    feature_flags: MFAFeatureFlags = Depends(get_mfa_feature_flags),
 ):
     """Enable MFA for specific role (admin only)"""
 
     # Check if user is admin
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
 
     feature_flags.enable_mfa_for_role(role)
 
-    return {
-        "success": True,
-        "role": role,
-        "message": f"MFA enabled for role: {role}"
-    }
+    return {"success": True, "role": role, "message": f"MFA enabled for role: {role}"}
+
 
 @router.post("/admin/enable-user", status_code=status.HTTP_200_OK)
 async def enable_mfa_for_user(
     user_id: str,
     current_user: dict = Depends(get_current_user),
-    feature_flags: MFAFeatureFlags = Depends(get_mfa_feature_flags)
+    feature_flags: MFAFeatureFlags = Depends(get_mfa_feature_flags),
 ):
     """Enable MFA for specific user (admin only)"""
 
     # Check if user is admin
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
 
     feature_flags.enable_mfa_for_user(user_id)
 
-    return {
-        "success": True,
-        "user_id": user_id,
-        "message": f"MFA enabled for user: {user_id}"
-    }
+    return {"success": True, "user_id": user_id, "message": f"MFA enabled for user: {user_id}"}

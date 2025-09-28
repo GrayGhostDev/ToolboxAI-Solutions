@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.chat_history import InMemoryChatMessageHistory
+
 try:
     from langchain_openai import ChatOpenAI
 except ImportError:
@@ -26,17 +27,14 @@ from apps.backend.agents.agent import agent_manager
 
 logger = logging.getLogger(__name__)
 
+
 class RobloxAIAgent:
     """AI Agent for interactive Roblox environment creation"""
 
     def __init__(self):
         # Try to initialize LLM, fall back to mock mode if it fails
         try:
-            self.llm = ChatOpenAI(
-                model=settings.OPENAI_MODEL,
-                temperature=0.7,
-                max_tokens=1000
-            )
+            self.llm = ChatOpenAI(model=settings.OPENAI_MODEL, temperature=0.7, max_tokens=1000)
             self.mock_mode = False
             logger.info("RobloxAIAgent initialized with OpenAI")
         except Exception as e:
@@ -49,71 +47,73 @@ class RobloxAIAgent:
 
         # Required fields for complete specification
         self.required_fields = {
-            'environment_name': 'What should we name this Roblox environment?',
-            'theme': 'What is the theme or style (e.g., space station, medieval castle, jungle)?',
-            'map_type': 'Which map type fits best (obby, open_world, dungeon, lab, classroom, puzzle)?',
-            'learning_objectives': 'What are the key learning objectives or topics to cover?'
+            "environment_name": "What should we name this Roblox environment?",
+            "theme": "What is the theme or style (e.g., space station, medieval castle, jungle)?",
+            "map_type": "Which map type fits best (obby, open_world, dungeon, lab, classroom, puzzle)?",
+            "learning_objectives": "What are the key learning objectives or topics to cover?",
         }
 
         # Optional fields with questions
         self.optional_fields = {
-            'terrain': 'What type of terrain would you like (mountains, plains, water, etc.)?',
-            'npc_count': 'How many NPCs or characters should be in the environment?',
-            'difficulty': 'What difficulty level (easy, medium, hard)?',
-            'age_range': 'What age group is this for?',
-            'assets': 'Any specific assets or objects you want included?',
-            'scripting': 'Any special interactive features or scripts needed?',
-            'lighting': 'What lighting mood (bright, dark, colorful, etc.)?',
-            'weather': 'Any weather effects (sunny, rainy, snowy, etc.)?'
+            "terrain": "What type of terrain would you like (mountains, plains, water, etc.)?",
+            "npc_count": "How many NPCs or characters should be in the environment?",
+            "difficulty": "What difficulty level (easy, medium, hard)?",
+            "age_range": "What age group is this for?",
+            "assets": "Any specific assets or objects you want included?",
+            "scripting": "Any special interactive features or scripts needed?",
+            "lighting": "What lighting mood (bright, dark, colorful, etc.)?",
+            "weather": "Any weather effects (sunny, rainy, snowy, etc.)?",
         }
 
         # Pattern matching for extracting information
         self.extraction_patterns = {
-            'environment_name': [
+            "environment_name": [
                 r'(?:call it|named?|title(?:d)?)\s+["\']?([^"\'.\n]{3,40})["\']?',
                 r'environment\s+["\']?([^"\'.\n]{3,40})["\']?',
-                r'world\s+["\']?([^"\'.\n]{3,40})["\']?'
+                r'world\s+["\']?([^"\'.\n]{3,40})["\']?',
             ],
-            'theme': [
-                r'(?:theme|style|setting)\s*:?\s*([^.\n]{3,50})',
-                r'(?:space|medieval|jungle|forest|ocean|desert|city|school|lab)',
-                r'(?:futuristic|ancient|modern|fantasy|sci-fi)'
+            "theme": [
+                r"(?:theme|style|setting)\s*:?\s*([^.\n]{3,50})",
+                r"(?:space|medieval|jungle|forest|ocean|desert|city|school|lab)",
+                r"(?:futuristic|ancient|modern|fantasy|sci-fi)",
             ],
-            'map_type': [
-                r'\b(obby|obstacle\s+course)\b',
-                r'\b(open\s+world|sandbox)\b',
-                r'\b(dungeon|maze)\b',
-                r'\b(lab|laboratory)\b',
-                r'\b(classroom|school)\b',
-                r'\b(puzzle|brain\s+teaser)\b',
-                r'\b(arena|battle\s+ground)\b'
+            "map_type": [
+                r"\b(obby|obstacle\s+course)\b",
+                r"\b(open\s+world|sandbox)\b",
+                r"\b(dungeon|maze)\b",
+                r"\b(lab|laboratory)\b",
+                r"\b(classroom|school)\b",
+                r"\b(puzzle|brain\s+teaser)\b",
+                r"\b(arena|battle\s+ground)\b",
             ],
-            'learning_objectives': [
-                r'(?:learn|teach|objective|goal|topic)s?\s*:?\s*([^.\n]+)',
-                r'(?:math|science|history|english|art|geography|physics|chemistry|biology)',
-                r'(?:addition|subtraction|multiplication|division|fractions|geometry)'
+            "learning_objectives": [
+                r"(?:learn|teach|objective|goal|topic)s?\s*:?\s*([^.\n]+)",
+                r"(?:math|science|history|english|art|geography|physics|chemistry|biology)",
+                r"(?:addition|subtraction|multiplication|division|fractions|geometry)",
             ],
-            'difficulty': [
-                r'\b(easy|beginner|simple)\b',
-                r'\b(medium|intermediate|moderate)\b',
-                r'\b(hard|difficult|advanced|challenging)\b'
+            "difficulty": [
+                r"\b(easy|beginner|simple)\b",
+                r"\b(medium|intermediate|moderate)\b",
+                r"\b(hard|difficult|advanced|challenging)\b",
             ],
-            'age_range': [
-                r'(?:age|grade)\s*(?:group|level)?\s*:?\s*(\d+(?:-\d+)?)',
-                r'(?:kindergarten|elementary|middle\s+school|high\s+school)',
-                r'(?:preschool|primary|secondary)'
+            "age_range": [
+                r"(?:age|grade)\s*(?:group|level)?\s*:?\s*(\d+(?:-\d+)?)",
+                r"(?:kindergarten|elementary|middle\s+school|high\s+school)",
+                r"(?:preschool|primary|secondary)",
             ],
-            'terrain': [
-                r'(?:terrain|landscape|ground)\s*:?\s*([^.\n]{3,30})',
-                r'\b(mountains?|hills?|plains?|valleys?|water|ocean|lake|river|desert|forest|jungle)\b'
+            "terrain": [
+                r"(?:terrain|landscape|ground)\s*:?\s*([^.\n]{3,30})",
+                r"\b(mountains?|hills?|plains?|valleys?|water|ocean|lake|river|desert|forest|jungle)\b",
             ],
-            'npc_count': [
-                r'(?:npc|character|people|student)s?\s*:?\s*(\d{1,3})',
-                r'(\d{1,3})\s+(?:npc|character|people|student)s?'
-            ]
+            "npc_count": [
+                r"(?:npc|character|people|student)s?\s*:?\s*(\d{1,3})",
+                r"(\d{1,3})\s+(?:npc|character|people|student)s?",
+            ],
         }
 
-    async def handle_user_message(self, conversation_id: str, message: str, context: Dict[str, Any] = None) -> None:
+    async def handle_user_message(
+        self, conversation_id: str, message: str, context: Dict[str, Any] = None
+    ) -> None:
         """Process user message and respond with AI guidance"""
         try:
             # Initialize conversation if new
@@ -132,7 +132,9 @@ class RobloxAIAgent:
             current_spec.update(extracted_info)
 
             # Generate AI response
-            ai_response = await self._generate_response(conversation_id, message, current_spec, context)
+            ai_response = await self._generate_response(
+                conversation_id, message, current_spec, context
+            )
 
             # Add AI response to history
             self.conversations[conversation_id].add_ai_message(ai_response)
@@ -150,7 +152,9 @@ class RobloxAIAgent:
 
         except Exception as e:
             logger.error(f"Error handling user message: {e}")
-            await self._send_error_message(conversation_id, "I encountered an error processing your message. Please try again.")
+            await self._send_error_message(
+                conversation_id, "I encountered an error processing your message. Please try again."
+            )
 
     def _extract_information(self, message: str) -> Dict[str, Any]:
         """Extract structured information from user message"""
@@ -161,61 +165,69 @@ class RobloxAIAgent:
             for pattern in patterns:
                 matches = re.findall(pattern, message_lower, re.IGNORECASE)
                 if matches:
-                    if field == 'learning_objectives':
+                    if field == "learning_objectives":
                         # Handle multiple objectives
                         objectives = []
                         for match in matches:
                             if isinstance(match, str):
-                                objectives.extend([obj.strip() for obj in match.split(',') if obj.strip()])
+                                objectives.extend(
+                                    [obj.strip() for obj in match.split(",") if obj.strip()]
+                                )
                         if objectives:
                             extracted[field] = objectives
-                    elif field == 'npc_count':
+                    elif field == "npc_count":
                         # Convert to integer
                         try:
                             extracted[field] = int(matches[0])
                         except (ValueError, IndexError):
                             pass
-                    elif field in ['theme', 'terrain', 'lighting', 'weather']:
+                    elif field in ["theme", "terrain", "lighting", "weather"]:
                         # Take first match for descriptive fields
                         extracted[field] = matches[0].strip()
-                    elif field == 'map_type':
+                    elif field == "map_type":
                         # Normalize map type
                         map_type = matches[0].lower().strip()
-                        if 'obby' in map_type or 'obstacle' in map_type:
-                            extracted[field] = 'obby'
-                        elif 'open' in map_type or 'sandbox' in map_type:
-                            extracted[field] = 'open_world'
-                        elif 'dungeon' in map_type or 'maze' in map_type:
-                            extracted[field] = 'dungeon'
-                        elif 'lab' in map_type:
-                            extracted[field] = 'lab'
-                        elif 'classroom' in map_type or 'school' in map_type:
-                            extracted[field] = 'classroom'
-                        elif 'puzzle' in map_type:
-                            extracted[field] = 'puzzle'
-                        elif 'arena' in map_type or 'battle' in map_type:
-                            extracted[field] = 'arena'
+                        if "obby" in map_type or "obstacle" in map_type:
+                            extracted[field] = "obby"
+                        elif "open" in map_type or "sandbox" in map_type:
+                            extracted[field] = "open_world"
+                        elif "dungeon" in map_type or "maze" in map_type:
+                            extracted[field] = "dungeon"
+                        elif "lab" in map_type:
+                            extracted[field] = "lab"
+                        elif "classroom" in map_type or "school" in map_type:
+                            extracted[field] = "classroom"
+                        elif "puzzle" in map_type:
+                            extracted[field] = "puzzle"
+                        elif "arena" in map_type or "battle" in map_type:
+                            extracted[field] = "arena"
                     else:
                         extracted[field] = matches[0].strip()
                     break
 
         # Special handling for environment name
-        if 'environment_name' not in extracted:
+        if "environment_name" not in extracted:
             # Look for quoted strings or capitalized phrases
             name_patterns = [
                 r'"([^"]{3,40})"',
                 r"'([^']{3,40})'",
-                r'\b([A-Z][a-zA-Z\s]{2,39})\b(?:\s+(?:world|environment|place|room|area))?'
+                r"\b([A-Z][a-zA-Z\s]{2,39})\b(?:\s+(?:world|environment|place|room|area))?",
             ]
             for pattern in name_patterns:
                 matches = re.findall(pattern, message)
                 if matches:
-                    extracted['environment_name'] = matches[0].strip()
+                    extracted["environment_name"] = matches[0].strip()
                     break
 
         return extracted
 
-    async def _generate_response(self, conversation_id: str, message: str, current_spec: Dict[str, Any], context: Dict[str, Any] = None) -> str:
+    async def _generate_response(
+        self,
+        conversation_id: str,
+        message: str,
+        current_spec: Dict[str, Any],
+        context: Dict[str, Any] = None,
+    ) -> str:
         """Generate AI response based on conversation context"""
 
         # Build context for the AI
@@ -242,9 +254,7 @@ Respond to the user's message in a helpful, conversational way."""
         try:
             # Get conversation history
             history = self.conversations[conversation_id]
-            messages = [
-                {"role": "system", "content": system_prompt}
-            ]
+            messages = [{"role": "system", "content": system_prompt}]
 
             # Add recent conversation history (last 10 messages)
             for msg in history.messages[-10:]:
@@ -265,45 +275,53 @@ Respond to the user's message in a helpful, conversational way."""
             logger.error(f"Error generating AI response: {e}")
             return "I understand you want to create a Roblox environment. Could you tell me more about what you have in mind?"
 
-    def _generate_mock_response(self, message: str, current_spec: Dict[str, Any], missing_fields: list) -> str:
+    def _generate_mock_response(
+        self, message: str, current_spec: Dict[str, Any], missing_fields: list
+    ) -> str:
         """Generate a mock AI response for development"""
         message_lower = message.lower()
 
         # Check if it's about chemistry
-        if any(word in message_lower for word in ['chemistry', 'chemical', 'lab', 'experiment', 'molecule', 'atom']):
-            if 'environment_name' not in current_spec:
+        if any(
+            word in message_lower
+            for word in ["chemistry", "chemical", "lab", "experiment", "molecule", "atom"]
+        ):
+            if "environment_name" not in current_spec:
                 return "Great! A chemistry lab sounds exciting! 🧪 What would you like to name this environment? Something like 'Chemistry Lab' or 'Science Station'?"
-            elif 'theme' not in current_spec:
+            elif "theme" not in current_spec:
                 return "Perfect! Now, what theme would you like for your chemistry lab? We could make it look like a modern laboratory, a space station lab, or even a medieval alchemy workshop!"
-            elif 'map_type' not in current_spec:
+            elif "map_type" not in current_spec:
                 return "Excellent! For a chemistry lab, I'd recommend either a 'lab' or 'classroom' map type. Which would work better for your students?"
-            elif 'learning_objectives' not in current_spec:
+            elif "learning_objectives" not in current_spec:
                 return "Almost there! What specific chemistry concepts do you want students to learn? For example: chemical reactions, periodic table, molecular structure, or lab safety?"
             else:
                 return "Fantastic! Your chemistry lab specification is complete! 🎉 You can now generate the environment. Would you like me to create it for you?"
 
         # Check if it's about math
-        elif any(word in message_lower for word in ['math', 'mathematics', 'algebra', 'geometry', 'calculus', 'fraction']):
-            if 'environment_name' not in current_spec:
+        elif any(
+            word in message_lower
+            for word in ["math", "mathematics", "algebra", "geometry", "calculus", "fraction"]
+        ):
+            if "environment_name" not in current_spec:
                 return "Math environments are great for learning! 📐 What should we call this math world? Something like 'Math Adventure' or 'Number Land'?"
-            elif 'theme' not in current_spec:
+            elif "theme" not in current_spec:
                 return "Nice! What theme would make math more engaging? We could create a space station, medieval castle, or underwater city where students solve math problems!"
-            elif 'map_type' not in current_spec:
+            elif "map_type" not in current_spec:
                 return "Great choice! For math learning, I'd suggest either 'puzzle' or 'classroom' map type. Which would work better for your math activities?"
-            elif 'learning_objectives' not in current_spec:
+            elif "learning_objectives" not in current_spec:
                 return "Almost ready! What math topics should students practice? For example: multiplication tables, geometry shapes, word problems, or fractions?"
             else:
                 return "Perfect! Your math environment is ready to create! 🎯 Would you like me to generate it now?"
 
         # General response
         else:
-            if 'environment_name' not in current_spec:
+            if "environment_name" not in current_spec:
                 return f"Interesting! I'd love to help you create a Roblox environment about: '{message}'. What would you like to name this environment?"
-            elif 'theme' not in current_spec:
+            elif "theme" not in current_spec:
                 return "Great name! What theme or style would you like? We could make it look like a space station, medieval castle, jungle, or modern city!"
-            elif 'map_type' not in current_spec:
+            elif "map_type" not in current_spec:
                 return "Nice theme! What type of map would work best? We have obby (obstacle course), open world, dungeon, lab, classroom, or puzzle maps!"
-            elif 'learning_objectives' not in current_spec:
+            elif "learning_objectives" not in current_spec:
                 return "Almost there! What should students learn in this environment? What are the key learning objectives or topics to cover?"
             else:
                 return "Excellent! Your environment specification is complete! 🚀 Ready to create your Roblox world?"
@@ -316,13 +334,13 @@ Respond to the user's message in a helpful, conversational way."""
         summary_parts = []
         for field, value in spec.items():
             if value:
-                if field == 'learning_objectives' and isinstance(value, list):
+                if field == "learning_objectives" and isinstance(value, list):
                     summary_parts.append(f"Learning objectives: {', '.join(value)}")
                 else:
-                    field_name = field.replace('_', ' ').title()
+                    field_name = field.replace("_", " ").title()
                     summary_parts.append(f"{field_name}: {value}")
 
-        return '\n'.join(summary_parts) if summary_parts else "No information collected yet."
+        return "\n".join(summary_parts) if summary_parts else "No information collected yet."
 
     def _get_missing_required_fields(self, spec: Dict[str, Any]) -> List[str]:
         """Get list of missing required fields"""
@@ -352,9 +370,9 @@ Respond to the user's message in a helpful, conversational way."""
                             "payload": {
                                 "conversationId": conversation_id,
                                 "messageId": message_id,
-                                "token": token
-                            }
-                        }
+                                "token": token,
+                            },
+                        },
                     )
 
                     # Small delay for realistic streaming
@@ -369,14 +387,16 @@ Respond to the user's message in a helpful, conversational way."""
                         "payload": {
                             "conversationId": conversation_id,
                             "messageId": message_id,
-                            "content": response
-                        }
-                    }
+                            "content": response,
+                        },
+                    },
                 )
 
             except Exception as pusher_error:
                 # Pusher unavailable, send direct message via WebSocket handler
-                logger.warning(f"Pusher unavailable for streaming, sending direct message: {pusher_error}")
+                logger.warning(
+                    f"Pusher unavailable for streaming, sending direct message: {pusher_error}"
+                )
                 await self._send_direct_message(conversation_id, response)
 
         except Exception as e:
@@ -398,9 +418,9 @@ Respond to the user's message in a helpful, conversational way."""
                         "role": "assistant",
                         "content": response,
                         "timestamp": datetime.now(timezone.utc).isoformat(),
-                        "metadata": {"generated": True}
-                    }
-                }
+                        "metadata": {"generated": True},
+                    },
+                },
             }
 
             # Trigger the realtime endpoint directly
@@ -411,14 +431,16 @@ Respond to the user's message in a helpful, conversational way."""
                         "channel": f"ai-chat-{conversation_id}",
                         "event": "message",
                         "type": "ai_message",
-                        "payload": message_data["payload"]
-                    }
+                        "payload": message_data["payload"],
+                    },
                 )
 
         except Exception as e:
             logger.error(f"Error sending direct message: {e}")
 
-    async def _send_followup_questions(self, conversation_id: str, missing_fields: List[str], current_spec: Dict[str, Any]) -> None:
+    async def _send_followup_questions(
+        self, conversation_id: str, missing_fields: List[str], current_spec: Dict[str, Any]
+    ) -> None:
         """Send follow-up questions for missing information"""
         try:
             questions = []
@@ -436,15 +458,17 @@ Respond to the user's message in a helpful, conversational way."""
                             "conversationId": conversation_id,
                             "missingFields": missing_fields,
                             "questions": questions,
-                            "collected": current_spec
-                        }
-                    }
+                            "collected": current_spec,
+                        },
+                    },
                 )
 
         except Exception as e:
             logger.error(f"Error sending followup questions: {e}")
 
-    async def _notify_ready_for_generation(self, conversation_id: str, spec: Dict[str, Any]) -> None:
+    async def _notify_ready_for_generation(
+        self, conversation_id: str, spec: Dict[str, Any]
+    ) -> None:
         """Notify that specification is complete and ready for generation"""
         try:
             await pusher_trigger_event(
@@ -456,8 +480,8 @@ Respond to the user's message in a helpful, conversational way."""
                         "message": {
                             "content": "🎉 Perfect! I have all the information needed to create your Roblox environment. Click 'Generate Environment' when you're ready to start building!"
                         }
-                    }
-                }
+                    },
+                },
             )
 
         except Exception as e:
@@ -469,14 +493,7 @@ Respond to the user's message in a helpful, conversational way."""
             await pusher_trigger_event(
                 f"agent-chat-{conversation_id}",
                 "message",
-                {
-                    "type": "ai_message",
-                    "payload": {
-                        "message": {
-                            "content": f"❌ {error_message}"
-                        }
-                    }
-                }
+                {"type": "ai_message", "payload": {"message": {"content": f"❌ {error_message}"}}},
             )
 
         except Exception as e:
@@ -495,7 +512,7 @@ Respond to the user's message in a helpful, conversational way."""
                 ("generating_scripts", "Creating interactive scripts..."),
                 ("assembling_world", "Building the world..."),
                 ("baking_lighting", "Setting up lighting and atmosphere..."),
-                ("finalizing", "Adding final touches...")
+                ("finalizing", "Adding final touches..."),
             ]
 
             for i, (stage, message) in enumerate(stages):
@@ -510,9 +527,9 @@ Respond to the user's message in a helpful, conversational way."""
                             "requestId": request_id,
                             "stage": stage,
                             "percentage": progress,
-                            "message": message
-                        }
-                    }
+                            "message": message,
+                        },
+                    },
                 )
 
                 # Simulate processing time
@@ -522,15 +539,19 @@ Respond to the user's message in a helpful, conversational way."""
             from apps.backend.models.schemas import ContentRequest
 
             content_request = ContentRequest(
-                subject=spec.get('learning_objectives', ['General'])[0] if spec.get('learning_objectives') else 'General',
-                grade_level=self._extract_grade_level(spec.get('age_range', '5')),
+                subject=(
+                    spec.get("learning_objectives", ["General"])[0]
+                    if spec.get("learning_objectives")
+                    else "General"
+                ),
+                grade_level=self._extract_grade_level(spec.get("age_range", "5")),
                 learning_objectives=[
                     {"title": obj, "description": ""}
-                    for obj in spec.get('learning_objectives', ['Interactive Learning'])
+                    for obj in spec.get("learning_objectives", ["Interactive Learning"])
                 ],
-                environment_type=spec.get('map_type', 'classroom'),
+                environment_type=spec.get("map_type", "classroom"),
                 include_quiz=True,
-                difficulty_level=spec.get('difficulty', 'medium')
+                difficulty_level=spec.get("difficulty", "medium"),
             )
 
             # Generate content using agent manager
@@ -547,9 +568,9 @@ Respond to the user's message in a helpful, conversational way."""
                             "requestId": request_id,
                             "environmentId": response.content_id,
                             "previewUrl": f"/roblox/preview/{response.content_id}",
-                            "downloadUrl": f"/roblox/download/{response.content_id}"
-                        }
-                    }
+                            "downloadUrl": f"/roblox/download/{response.content_id}",
+                        },
+                    },
                 )
             else:
                 # Send error message
@@ -560,9 +581,9 @@ Respond to the user's message in a helpful, conversational way."""
                         "type": "roblox_env_error",
                         "payload": {
                             "requestId": request_id,
-                            "error": response.message or "Generation failed"
-                        }
-                    }
+                            "error": response.message or "Generation failed",
+                        },
+                    },
                 )
 
             return request_id
@@ -574,11 +595,8 @@ Respond to the user's message in a helpful, conversational way."""
                 "message",
                 {
                     "type": "roblox_env_error",
-                    "payload": {
-                        "requestId": request_id,
-                        "error": f"Generation failed: {str(e)}"
-                    }
-                }
+                    "payload": {"requestId": request_id, "error": f"Generation failed: {str(e)}"},
+                },
             )
             raise
 
@@ -586,7 +604,7 @@ Respond to the user's message in a helpful, conversational way."""
         """Extract grade level from age range string"""
         try:
             # Look for numbers in the age range
-            numbers = re.findall(r'\d+', str(age_range))
+            numbers = re.findall(r"\d+", str(age_range))
             if numbers:
                 age = int(numbers[0])
                 # Convert age to approximate grade level
@@ -610,6 +628,7 @@ Respond to the user's message in a helpful, conversational way."""
             del self.conversations[conversation_id]
         if conversation_id in self.conversation_specs:
             del self.conversation_specs[conversation_id]
+
 
 # Global instance
 roblox_ai_agent = RobloxAIAgent()

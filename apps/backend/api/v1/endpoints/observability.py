@@ -35,7 +35,7 @@ anomaly_detector = AnomalyDetector()
 async def get_metrics(
     time_range: str = Query("1h", description="Time range: 5m, 1h, 6h, 24h, 7d"),
     resolution: int = Query(60, description="Resolution in seconds"),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     Get aggregated metrics for the specified time range.
@@ -47,7 +47,7 @@ async def get_metrics(
             "1h": timedelta(hours=1),
             "6h": timedelta(hours=6),
             "24h": timedelta(days=1),
-            "7d": timedelta(days=7)
+            "7d": timedelta(days=7),
         }
 
         if time_range not in time_ranges:
@@ -59,9 +59,7 @@ async def get_metrics(
 
         # Collect metrics
         metrics = await metrics_collector.get_metrics_range(
-            start_time=start_time,
-            end_time=end_time,
-            resolution=resolution
+            start_time=start_time, end_time=end_time, resolution=resolution
         )
 
         # Add current system status
@@ -75,9 +73,9 @@ async def get_metrics(
                 "time_range": {
                     "start": start_time.isoformat(),
                     "end": end_time.isoformat(),
-                    "resolution": resolution
-                }
-            }
+                    "resolution": resolution,
+                },
+            },
         }
     except Exception as e:
         logger.error("Failed to get metrics", error=str(e))
@@ -89,25 +87,17 @@ async def get_traces(
     limit: int = Query(100, le=1000),
     service: Optional[str] = None,
     min_duration_ms: Optional[int] = None,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     Get distributed traces with optional filtering.
     """
     try:
         traces = await trace_correlator.get_traces(
-            limit=limit,
-            service=service,
-            min_duration_ms=min_duration_ms
+            limit=limit, service=service, min_duration_ms=min_duration_ms
         )
 
-        return {
-            "status": "success",
-            "data": {
-                "traces": traces,
-                "total": len(traces)
-            }
-        }
+        return {"status": "success", "data": {"traces": traces, "total": len(traces)}}
     except Exception as e:
         logger.error("Failed to get traces", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
@@ -115,35 +105,26 @@ async def get_traces(
 
 @router.get("/anomalies")
 async def get_anomalies(
-    severity: Optional[str] = Query(None, description="Filter by severity: low, medium, high, critical"),
+    severity: Optional[str] = Query(
+        None, description="Filter by severity: low, medium, high, critical"
+    ),
     limit: int = Query(50, le=200),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     Get detected anomalies.
     """
     try:
-        anomalies = await anomaly_detector.get_recent_anomalies(
-            limit=limit,
-            severity=severity
-        )
+        anomalies = await anomaly_detector.get_recent_anomalies(limit=limit, severity=severity)
 
-        return {
-            "status": "success",
-            "data": {
-                "anomalies": anomalies,
-                "total": len(anomalies)
-            }
-        }
+        return {"status": "success", "data": {"anomalies": anomalies, "total": len(anomalies)}}
     except Exception as e:
         logger.error("Failed to get anomalies", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/health/components")
-async def get_component_health(
-    current_user: dict = Depends(get_current_user)
-) -> Dict[str, Any]:
+async def get_component_health(current_user: dict = Depends(get_current_user)) -> Dict[str, Any]:
     """
     Get health status of all load balancing components.
     """
@@ -153,13 +134,12 @@ async def get_component_health(
             "rate_limiters": await get_rate_limiter_status(),
             "database_replicas": await get_replica_status(),
             "edge_cache": await get_cache_status(),
-            "websocket_cluster": await get_websocket_status()
+            "websocket_cluster": await get_websocket_status(),
         }
 
         # Calculate overall health score
         total_healthy = sum(
-            1 for component in health_data.values()
-            if component.get("status") == "healthy"
+            1 for component in health_data.values() if component.get("status") == "healthy"
         )
         health_score = (total_healthy / len(health_data)) * 100
 
@@ -168,8 +148,8 @@ async def get_component_health(
             "data": {
                 "components": health_data,
                 "health_score": health_score,
-                "timestamp": datetime.utcnow().isoformat()
-            }
+                "timestamp": datetime.utcnow().isoformat(),
+            },
         }
     except Exception as e:
         logger.error("Failed to get component health", error=str(e))
@@ -178,8 +158,7 @@ async def get_component_health(
 
 @router.post("/start-metrics-stream")
 async def start_metrics_stream(
-    background_tasks: BackgroundTasks,
-    current_user: dict = Depends(get_current_user)
+    background_tasks: BackgroundTasks, current_user: dict = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Start real-time metrics streaming via Pusher channel.
@@ -191,7 +170,7 @@ async def start_metrics_stream(
         return {
             "status": "success",
             "message": "Metrics streaming started",
-            "channel": "observability-metrics"
+            "channel": "observability-metrics",
         }
     except Exception as e:
         logger.error("Failed to start metrics streaming", error=str(e))
@@ -199,9 +178,7 @@ async def start_metrics_stream(
 
 
 @router.post("/stop-metrics-stream")
-async def stop_metrics_stream(
-    current_user: dict = Depends(get_current_user)
-) -> Dict[str, Any]:
+async def stop_metrics_stream(current_user: dict = Depends(get_current_user)) -> Dict[str, Any]:
     """
     Stop real-time metrics streaming.
     """
@@ -209,10 +186,7 @@ async def stop_metrics_stream(
         # In production, you would maintain a registry of active streams
         # and stop the specific stream. For now, we'll just acknowledge the request.
 
-        return {
-            "status": "success",
-            "message": "Metrics streaming stopped"
-        }
+        return {"status": "success", "message": "Metrics streaming stopped"}
     except Exception as e:
         logger.error("Failed to stop metrics streaming", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
@@ -232,25 +206,20 @@ async def get_prometheus_metrics() -> str:
 
 @router.post("/anomalies/acknowledge/{anomaly_id}")
 async def acknowledge_anomaly(
-    anomaly_id: str,
-    current_user: dict = Depends(get_current_user)
+    anomaly_id: str, current_user: dict = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Acknowledge an anomaly to mark it as reviewed.
     """
     try:
         success = await anomaly_detector.acknowledge_anomaly(
-            anomaly_id=anomaly_id,
-            user_id=current_user["id"]
+            anomaly_id=anomaly_id, user_id=current_user["id"]
         )
 
         if not success:
             raise HTTPException(status_code=404, detail="Anomaly not found")
 
-        return {
-            "status": "success",
-            "message": f"Anomaly {anomaly_id} acknowledged"
-        }
+        return {"status": "success", "message": f"Anomaly {anomaly_id} acknowledged"}
     except Exception as e:
         logger.error("Failed to acknowledge anomaly", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
@@ -258,8 +227,7 @@ async def acknowledge_anomaly(
 
 @router.get("/trace/{trace_id}")
 async def get_trace_details(
-    trace_id: str,
-    current_user: dict = Depends(get_current_user)
+    trace_id: str, current_user: dict = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Get detailed information about a specific trace.
@@ -279,8 +247,8 @@ async def get_trace_details(
                 "trace": trace,
                 "correlated_traces": correlated,
                 "span_count": len(trace.get("spans", [])),
-                "total_duration_ms": trace.get("duration_ms", 0)
-            }
+                "total_duration_ms": trace.get("duration_ms", 0),
+            },
         }
     except Exception as e:
         logger.error("Failed to get trace details", error=str(e))
@@ -289,6 +257,7 @@ async def get_trace_details(
 
 # Helper functions
 
+
 async def get_system_status() -> Dict[str, Any]:
     """Get current system status."""
     return {
@@ -296,7 +265,7 @@ async def get_system_status() -> Dict[str, Any]:
         "active_connections": await websocket_cluster.get_connection_count(),
         "cache_hit_rate": await edge_cache_manager.get_hit_rate(),
         "database_pool_usage": await replica_router.get_pool_stats(),
-        "rate_limit_remaining": await rate_limiter.get_global_remaining()
+        "rate_limit_remaining": await rate_limiter.get_global_remaining(),
     }
 
 
@@ -310,7 +279,7 @@ async def get_circuit_breaker_status() -> Dict[str, Any]:
         "status": "healthy" if healthy_count == len(breakers) else "degraded",
         "total": len(breakers),
         "healthy": healthy_count,
-        "breakers": breakers
+        "breakers": breakers,
     }
 
 
@@ -322,7 +291,7 @@ async def get_rate_limiter_status() -> Dict[str, Any]:
         "status": "healthy" if stats["throttled_percentage"] < 10 else "warning",
         "requests_per_minute": stats["rpm"],
         "throttled_percentage": stats["throttled_percentage"],
-        "active_limits": stats["active_limits"]
+        "active_limits": stats["active_limits"],
     }
 
 
@@ -336,7 +305,7 @@ async def get_replica_status() -> Dict[str, Any]:
         "status": "healthy" if healthy_count > 0 else "critical",
         "total": len(replicas),
         "healthy": healthy_count,
-        "replicas": replicas
+        "replicas": replicas,
     }
 
 
@@ -348,7 +317,7 @@ async def get_cache_status() -> Dict[str, Any]:
         "status": "healthy" if stats["hit_rate"] > 0.7 else "warning",
         "hit_rate": stats["hit_rate"],
         "size_mb": stats["size_mb"],
-        "evictions_per_minute": stats["evictions_per_minute"]
+        "evictions_per_minute": stats["evictions_per_minute"],
     }
 
 
@@ -360,7 +329,7 @@ async def get_websocket_status() -> Dict[str, Any]:
         "status": "healthy" if stats["nodes_healthy"] == stats["total_nodes"] else "degraded",
         "total_nodes": stats["total_nodes"],
         "healthy_nodes": stats["nodes_healthy"],
-        "total_connections": stats["total_connections"]
+        "total_connections": stats["total_connections"],
     }
 
 
@@ -376,8 +345,8 @@ async def get_real_time_metrics() -> Dict[str, Any]:
             "p99_latency": await metrics_collector.get_percentile_latency(99),
             "active_requests": await metrics_collector.get_active_requests(),
             "cpu_usage": await metrics_collector.get_cpu_usage(),
-            "memory_usage": await metrics_collector.get_memory_usage()
-        }
+            "memory_usage": await metrics_collector.get_memory_usage(),
+        },
     }
 
 
@@ -394,21 +363,19 @@ async def stream_metrics_to_pusher():
                 "rate_limiters": await get_rate_limiter_status(),
                 "database_replicas": await get_replica_status(),
                 "edge_cache": await get_cache_status(),
-                "websocket_cluster": await get_websocket_status()
+                "websocket_cluster": await get_websocket_status(),
             }
 
             # Combine all data
             stream_data = {
                 **metrics_data,
                 "component_health": components_health,
-                "system_status": await get_system_status()
+                "system_status": await get_system_status(),
             }
 
             # Trigger Pusher event
             trigger_event(
-                channel="observability-metrics",
-                event="metrics.updated",
-                data=stream_data
+                channel="observability-metrics", event="metrics.updated", data=stream_data
             )
 
             # Wait before next update (every 2 seconds to avoid overwhelming)

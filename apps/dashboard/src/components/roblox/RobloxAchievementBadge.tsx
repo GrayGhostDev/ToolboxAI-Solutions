@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import Tooltip from '@mui/material/Tooltip';
-import Zoom from '@mui/material/Zoom';
-import { keyframes } from '@mui/material/styles';
-import { styled } from '@mui/material/styles';
-import { EmojiEvents, Star, LocalFireDepartment, School, SportsEsports } from '@mui/icons-material';
+import {
+  Box,
+  Text,
+  Tooltip,
+  useMantineTheme,
+  keyframes,
+  rem,
+  Progress
+} from '@mantine/core';
+import { createStyles } from '@mantine/emotion';
+import { IconTrophy, IconStar, IconFlame, IconSchool, IconDeviceGamepad2 } from '@tabler/icons-react';
 
 interface Achievement {
   id: string;
@@ -30,27 +32,27 @@ interface RobloxAchievementBadgeProps {
 }
 
 // Rarity-based animations
-const glowAnimation = keyframes`
-  0% { box-shadow: 0 0 5px currentColor; }
-  50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
-  100% { box-shadow: 0 0 5px currentColor; }
-`;
+const glowAnimation = keyframes({
+  '0%': { boxShadow: '0 0 5px currentColor' },
+  '50%': { boxShadow: '0 0 20px currentColor, 0 0 30px currentColor' },
+  '100%': { boxShadow: '0 0 5px currentColor' }
+});
 
-const floatAnimation = keyframes`
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
-`;
+const floatAnimation = keyframes({
+  '0%, 100%': { transform: 'translateY(0px)' },
+  '50%': { transform: 'translateY(-5px)' }
+});
 
-const spinAnimation = keyframes`
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-`;
+const spinAnimation = keyframes({
+  '0%': { transform: 'rotate(0deg)' },
+  '100%': { transform: 'rotate(360deg)' }
+});
 
-const pulseAnimation = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-`;
+const pulseAnimation = keyframes({
+  '0%': { transform: 'scale(1)' },
+  '50%': { transform: 'scale(1.1)' },
+  '100%': { transform: 'scale(1)' }
+});
 
 const rarityColors = {
   common: '#9E9E9E',
@@ -66,83 +68,102 @@ const rarityGradients = {
   legendary: 'linear-gradient(135deg, #FF9800, #F57C00)'
 };
 
-const StyledBadge = styled(Box)(({ theme, rarity, unlocked, animated }: any) => ({
-  position: 'relative',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: '50%',
-  cursor: 'pointer',
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  background: unlocked ? rarityGradients[rarity] : `linear-gradient(135deg, ${theme.palette.grey[800]}, ${theme.palette.grey[900]})`,
-  border: `3px solid ${unlocked ? rarityColors[rarity] : theme.palette.grey[600]}`,
-  boxShadow: unlocked 
-    ? `0 0 20px ${alpha(rarityColors[rarity], 0.5)}, inset 0 0 20px ${alpha('#fff', 0.1)}`
-    : `0 0 10px ${alpha(theme.palette.grey[600], 0.3)}`,
-  filter: unlocked ? 'none' : 'grayscale(100%)',
-  animation: animated && unlocked ? `${floatAnimation} 3s ease-in-out infinite` : 'none',
-  
-  '&:hover': {
-    transform: 'scale(1.1) translateY(-5px)',
-    boxShadow: unlocked 
-      ? `0 0 30px ${alpha(rarityColors[rarity], 0.8)}, 0 10px 30px ${alpha(rarityColors[rarity], 0.3)}`
-      : `0 0 15px ${alpha(theme.palette.grey[600], 0.5)}`,
-    animation: unlocked ? `${pulseAnimation} 0.6s ease-in-out` : 'none',
-  },
-  
-  '&::before': unlocked ? {
-    content: '""',
-    position: 'absolute',
-    top: -2,
-    left: -2,
-    right: -2,
-    bottom: -2,
-    borderRadius: '50%',
-    background: `conic-gradient(from 0deg, ${rarityColors[rarity]}, transparent, ${rarityColors[rarity]})`,
-    zIndex: -1,
-    animation: `${spinAnimation} 3s linear infinite`,
-  } : {},
-}));
+const useStyles = createStyles((theme, { rarity, unlocked, animated, size }: { rarity: string; unlocked: boolean; animated: boolean; size: string }) => {
+  const sizeStyles = {
+    small: { width: 60, height: 60, fontSize: rem(24) },
+    medium: { width: 80, height: 80, fontSize: rem(32) },
+    large: { width: 100, height: 100, fontSize: rem(40) }
+  };
 
-const ProgressRing = styled(Box)(({ theme, progress }: any) => ({
-  position: 'absolute',
-  top: -3,
-  left: -3,
-  right: -3,
-  bottom: -3,
-  borderRadius: '50%',
-  background: `conic-gradient(from 0deg, ${theme.palette.primary.main} ${progress * 3.6}deg, transparent ${progress * 3.6}deg)`,
-  zIndex: -2,
-}));
+  return {
+    badge: {
+      position: 'relative',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: '50%',
+      cursor: 'pointer',
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      background: unlocked ? rarityGradients[rarity as keyof typeof rarityGradients] : `linear-gradient(135deg, ${theme.colors.gray[8]}, ${theme.colors.gray[9]})`,
+      border: `3px solid ${unlocked ? rarityColors[rarity as keyof typeof rarityColors] : theme.colors.gray[6]}`,
+      boxShadow: unlocked
+        ? `0 0 20px ${theme.fn.rgba(rarityColors[rarity as keyof typeof rarityColors], 0.5)}, inset 0 0 20px ${theme.fn.rgba('#fff', 0.1)}`
+        : `0 0 10px ${theme.fn.rgba(theme.colors.gray[6], 0.3)}`,
+      filter: unlocked ? 'none' : 'grayscale(100%)',
+      animation: animated && unlocked ? `${floatAnimation} 3s ease-in-out infinite` : 'none',
+      ...sizeStyles[size as keyof typeof sizeStyles],
 
-const RarityIndicator = styled(Box)(({ rarity }: any) => ({
-  position: 'absolute',
-  top: -8,
-  right: -8,
-  width: 16,
-  height: 16,
-  borderRadius: '50%',
-  background: rarityGradients[rarity],
-  border: '2px solid white',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '10px',
-  fontWeight: 'bold',
-  color: 'white',
-  textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-}));
+      '&:hover': {
+        transform: 'scale(1.1) translateY(-5px)',
+        boxShadow: unlocked
+          ? `0 0 30px ${theme.fn.rgba(rarityColors[rarity as keyof typeof rarityColors], 0.8)}, 0 10px 30px ${theme.fn.rgba(rarityColors[rarity as keyof typeof rarityColors], 0.3)}`
+          : `0 0 15px ${theme.fn.rgba(theme.colors.gray[6], 0.5)}`,
+        animation: unlocked ? `${pulseAnimation} 0.6s ease-in-out` : 'none'
+      },
+
+      '&::before': unlocked ? {
+        content: '""',
+        position: 'absolute',
+        top: -2,
+        left: -2,
+        right: -2,
+        bottom: -2,
+        borderRadius: '50%',
+        background: `conic-gradient(from 0deg, ${rarityColors[rarity as keyof typeof rarityColors]}, transparent, ${rarityColors[rarity as keyof typeof rarityColors]})`,
+        zIndex: -1,
+        animation: `${spinAnimation} 3s linear infinite`
+      } : {}
+    },
+    progressRing: {
+      position: 'absolute',
+      top: -3,
+      left: -3,
+      right: -3,
+      bottom: -3,
+      borderRadius: '50%',
+      zIndex: -2
+    },
+    rarityIndicator: {
+      position: 'absolute',
+      top: -8,
+      right: -8,
+      width: 16,
+      height: 16,
+      borderRadius: '50%',
+      background: rarityGradients[rarity as keyof typeof rarityGradients],
+      border: '2px solid white',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: rem(10),
+      fontWeight: 'bold',
+      color: 'white',
+      textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+    },
+    glowOverlay: {
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: '100%',
+      height: '100%',
+      borderRadius: '50%',
+      background: `radial-gradient(circle, transparent 30%, ${theme.fn.rgba(rarityColors[rarity as keyof typeof rarityColors], 0.3)} 100%)`,
+      animation: `${glowAnimation} 2s ease-in-out infinite`
+    }
+  };
+});
 
 const getIconComponent = (iconName: string) => {
   const iconMap: { [key: string]: React.ComponentType<any> } = {
-    'trophy': EmojiEvents,
-    'star': Star,
-    'fire': LocalFireDepartment,
-    'school': School,
-    'game': SportsEsports,
+    'trophy': IconTrophy,
+    'star': IconStar,
+    'fire': IconFlame,
+    'school': IconSchool,
+    'game': IconDeviceGamepad2,
   };
-  return iconMap[iconName] || EmojiEvents;
+  return iconMap[iconName] || IconTrophy;
 };
 
 export const RobloxAchievementBadge: React.FunctionComponent<RobloxAchievementBadgeProps> = ({
@@ -152,18 +173,13 @@ export const RobloxAchievementBadge: React.FunctionComponent<RobloxAchievementBa
   showProgress = true,
   onClick
 }) => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const [isHovered, setIsHovered] = useState(false);
-  
-  const sizeStyles = {
-    small: { width: 60, height: 60, fontSize: '1.5rem' },
-    medium: { width: 80, height: 80, fontSize: '2rem' },
-    large: { width: 100, height: 100, fontSize: '2.5rem' }
-  };
+  const { classes } = useStyles({ rarity: achievement.rarity, unlocked: achievement.unlocked, animated, size });
 
   const IconComponent = getIconComponent(achievement.icon);
-  const progress = achievement.progress && achievement.maxProgress 
-    ? (achievement.progress / achievement.maxProgress) * 100 
+  const progress = achievement.progress && achievement.maxProgress
+    ? (achievement.progress / achievement.maxProgress) * 100
     : 0;
 
   const handleClick = () => {
@@ -174,72 +190,64 @@ export const RobloxAchievementBadge: React.FunctionComponent<RobloxAchievementBa
 
   return (
     <Tooltip
-      title={
+      label={
         <Box>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'white' }}>
+          <Text size="sm" fw={700} c="white">
             {achievement.name}
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+          </Text>
+          <Text size="sm" style={{ color: 'rgba(255,255,255,0.8)' }}>
             {achievement.description}
-          </Typography>
+          </Text>
           {achievement.unlockedAt && (
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+            <Text size="xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
               Unlocked: {achievement.unlockedAt.toLocaleDateString()}
-            </Typography>
+            </Text>
           )}
           {showProgress && achievement.progress && achievement.maxProgress && !achievement.unlocked && (
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+            <Text size="xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
               Progress: {achievement.progress}/{achievement.maxProgress}
-            </Typography>
+            </Text>
           )}
         </Box>
       }
-      arrow
-      placement="top"
-      TransitionComponent={Zoom}
+      withArrow
+      position="top"
     >
-      <StyledBadge
-        rarity={achievement.rarity}
-        unlocked={achievement.unlocked}
-        animated={animated}
-        sx={sizeStyles[size]}
-        onClick={(e: React.MouseEvent) => handleClick}
+      <Box
+        className={classes.badge}
+        onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         {showProgress && !achievement.unlocked && progress > 0 && (
-          <ProgressRing progress={progress} />
-        )}
-        
-        <IconComponent
-          sx={{
-            fontSize: 'inherit',
-            color: achievement.unlocked ? 'white' : theme.palette.grey[500],
-            filter: achievement.unlocked ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' : 'none',
-            animation: isHovered && achievement.unlocked ? `${pulseAnimation} 0.6s ease-in-out` : 'none',
-          }}
-        />
-        
-        <RarityIndicator rarity={achievement.rarity}>
-          {achievement.rarity.charAt(0).toUpperCase()}
-        </RarityIndicator>
-        
-        {achievement.unlocked && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '100%',
-              height: '100%',
-              borderRadius: '50%',
-              background: `radial-gradient(circle, transparent 30%, ${alpha(rarityColors[achievement.rarity], 0.3)} 100%)`,
-              animation: `${glowAnimation} 2s ease-in-out infinite`,
+          <Progress
+            value={progress}
+            size="xl"
+            radius="xl"
+            className={classes.progressRing}
+            style={{
+              background: `conic-gradient(from 0deg, ${theme.colors.blue[6]} ${progress * 3.6}deg, transparent ${progress * 3.6}deg)`
             }}
           />
         )}
-      </StyledBadge>
+
+        <IconComponent
+          size={size === 'small' ? 24 : size === 'medium' ? 32 : 40}
+          color={achievement.unlocked ? 'white' : theme.colors.gray[5]}
+          style={{
+            filter: achievement.unlocked ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' : 'none',
+            animation: isHovered && achievement.unlocked ? `${pulseAnimation} 0.6s ease-in-out` : 'none'
+          }}
+        />
+
+        <Box className={classes.rarityIndicator}>
+          {achievement.rarity.charAt(0).toUpperCase()}
+        </Box>
+
+        {achievement.unlocked && (
+          <Box className={classes.glowOverlay} />
+        )}
+      </Box>
     </Tooltip>
   );
 };

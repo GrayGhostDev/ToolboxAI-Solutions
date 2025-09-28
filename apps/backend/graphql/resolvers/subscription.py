@@ -30,9 +30,7 @@ async def publish_event(channel: str, event: Dict[str, Any]):
 
 @subscription.source("contentGeneration")
 async def generate_content_updates(
-    obj,
-    info,
-    generationId: str
+    obj, info, generationId: str
 ) -> AsyncGenerator[Dict[str, Any], None]:
     """Subscribe to content generation updates"""
 
@@ -51,7 +49,7 @@ async def generate_content_updates(
             "generationId": generation_id,
             "status": "PROCESSING",
             "progress": 0.0,
-            "currentStep": "Initializing..."
+            "currentStep": "Initializing...",
         }
 
         # Simulate content generation progress
@@ -60,7 +58,7 @@ async def generate_content_updates(
             ("Generating content structure", 40),
             ("Creating educational material", 60),
             ("Adding interactive elements", 80),
-            ("Finalizing content", 100)
+            ("Finalizing content", 100),
         ]
 
         for step, progress in steps:
@@ -71,7 +69,7 @@ async def generate_content_updates(
                 "status": "GENERATING",
                 "progress": float(progress),
                 "currentStep": step,
-                "estimatedCompletion": datetime.utcnow().isoformat()
+                "estimatedCompletion": datetime.utcnow().isoformat(),
             }
 
         # Send completion
@@ -80,7 +78,7 @@ async def generate_content_updates(
             "status": "COMPLETED",
             "progress": 100.0,
             "currentStep": "Complete",
-            "partialResult": {"content": "Generated educational content here"}
+            "partialResult": {"content": "Generated educational content here"},
         }
 
     finally:
@@ -96,11 +94,7 @@ def resolve_content_generation(update, info):
 
 
 @subscription.source("courseUpdates")
-async def generate_course_updates(
-    obj,
-    info,
-    courseId: str
-) -> AsyncGenerator[Dict[str, Any], None]:
+async def generate_course_updates(obj, info, courseId: str) -> AsyncGenerator[Dict[str, Any], None]:
     """Subscribe to course updates"""
 
     course_id = uuid.UUID(courseId)
@@ -145,10 +139,7 @@ def resolve_course_updates(update, info):
 
 @subscription.source("lessonProgress")
 async def generate_lesson_progress(
-    obj,
-    info,
-    courseId: str,
-    studentId: str = None
+    obj, info, courseId: str, studentId: str = None
 ) -> AsyncGenerator[Dict[str, Any], None]:
     """Subscribe to lesson progress updates"""
 
@@ -174,7 +165,7 @@ async def generate_lesson_progress(
                 "progress": float(i),
                 "currentSection": f"Section {i // 20 + 1}",
                 "timeSpent": i * 60,
-                "isCompleted": i == 100
+                "isCompleted": i == 100,
             }
 
     except asyncio.CancelledError:

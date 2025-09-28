@@ -2,164 +2,181 @@
  * Atomic Avatar Component
  *
  * Avatar component with Roblox gaming features like level badges and online status.
+ * Uses Mantine's Avatar and Indicator components.
  */
 
 import React, { forwardRef } from 'react';
-import { Avatar as MuiAvatar } from '@mui/material';
-import { AvatarProps as MuiAvatarProps } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
+import { Avatar as MantineAvatar, AvatarProps as MantineAvatarProps, Indicator, Box } from '@mantine/core';
 import { designTokens } from '../../../theme/designTokens';
 
-export interface AvatarProps extends MuiAvatarProps {
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+export interface AtomicAvatarProps extends Omit<MantineAvatarProps, 'size'> {
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   level?: number;
   isOnline?: boolean;
   status?: 'online' | 'offline' | 'away' | 'busy';
   border?: boolean;
   robloxTheme?: boolean;
+  name?: string;
+  initials?: string;
 }
 
 const sizeMap = {
-  xs: { size: 24, levelSize: 16, statusSize: 6 },
-  sm: { size: 32, levelSize: 20, statusSize: 8 },
-  md: { size: 40, levelSize: 24, statusSize: 10 },
-  lg: { size: 48, levelSize: 28, statusSize: 12 },
-  xl: { size: 64, levelSize: 32, statusSize: 16 },
-  '2xl': { size: 80, levelSize: 40, statusSize: 20 }
+  xs: { size: 24, levelSize: 16, statusSize: 8, fontSize: '8px' },
+  sm: { size: 32, levelSize: 20, statusSize: 10, fontSize: '10px' },
+  md: { size: 40, levelSize: 24, statusSize: 12, fontSize: '12px' },
+  lg: { size: 48, levelSize: 28, statusSize: 14, fontSize: '14px' },
+  xl: { size: 64, levelSize: 32, statusSize: 16, fontSize: '16px' }
 };
 
-const statusColors = {
-  online: '#22C55E',
-  offline: '#6B7280',
-  away: '#F59E0B',
-  busy: '#EF4444'
+const statusColorMap = {
+  online: 'green',
+  offline: 'gray',
+  away: 'yellow',
+  busy: 'red'
 };
 
-const StyledAvatarContainer = styled('div')<AvatarProps>(({
-  theme,
-  size = 'md',
-  level,
-  isOnline,
-  status = 'online',
-  border = true,
-  robloxTheme = true
-}) => {
-  const { size: avatarSize, levelSize, statusSize } = sizeMap[size];
-  const robloxRed = '#E2231A';
-
-  return {
-    position: 'relative',
-    display: 'inline-block',
-
-    '& .MuiAvatar-root': {
-      width: avatarSize,
-      height: avatarSize,
-      ...(border && {
-        border: `3px solid ${robloxTheme ? robloxRed : theme.palette.primary.main}`,
-        boxShadow: robloxTheme
-          ? `0 0 0 2px ${alpha(robloxRed, 0.2)}`
-          : `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`
-      }),
-      transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`,
-
-      '&:hover': {
-        transform: 'scale(1.05)'
-      }
-    },
-
-    // Online status indicator
-    ...((isOnline || status) && {
-      '&::after': {
-        content: '""',
-        position: 'absolute',
-        bottom: size === 'xs' ? -2 : size === 'sm' ? -2 : 0,
-        right: size === 'xs' ? -2 : size === 'sm' ? -2 : 0,
-        width: statusSize,
-        height: statusSize,
-        backgroundColor: statusColors[status],
-        borderRadius: '50%',
-        border: `2px solid ${theme.palette.background.paper}`,
-        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-        ...(status === 'online' && {
-          animation: 'pulse 2s infinite'
-        })
-      }
-    }),
-
-    // Level badge
-    ...(level && {
-      '&::before': {
-        content: `"${level}"`,
-        position: 'absolute',
-        top: size === 'xs' ? -6 : size === 'sm' ? -8 : -8,
-        left: size === 'xs' ? -6 : size === 'sm' ? -8 : -8,
-        width: levelSize,
-        height: levelSize,
-        backgroundColor: '#F59E0B',
-        color: '#FFFFFF',
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: size === 'xs' ? '8px' : size === 'sm' ? '10px' : '12px',
-        fontWeight: 'bold',
-        border: `2px solid ${theme.palette.background.paper}`,
-        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-        zIndex: 1
-      }
-    }),
-
-    // Animation keyframes
-    '@keyframes pulse': {
-      '0%, 100%': {
-        opacity: 1
-      },
-      '50%': {
-        opacity: 0.5
-      }
-    }
-  };
-});
-
-const AtomicAvatar = forwardRef<HTMLDivElement, AvatarProps>(
+const AtomicAvatar = forwardRef<HTMLDivElement, AtomicAvatarProps>(
   (
     {
       children,
       size = 'md',
       level,
       isOnline,
-      status = isOnline ? 'online' : 'offline',
+      status = isOnline ? 'online' : undefined,
       border = true,
       robloxTheme = true,
       src,
       alt,
+      name,
+      initials,
+      color,
       ...props
     },
     ref
   ) => {
-    return (
-      <StyledAvatarContainer
+    const { size: avatarSize, levelSize, statusSize, fontSize } = sizeMap[size];
+
+    // Get initials from name if not provided
+    const getInitials = () => {
+      if (initials) return initials;
+      if (name) {
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      }
+      return children as string;
+    };
+
+    // Build avatar styles
+    const avatarStyles: React.CSSProperties = {
+      width: avatarSize,
+      height: avatarSize,
+      fontSize: fontSize,
+      transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`,
+      cursor: 'pointer',
+      ...(border && robloxTheme && {
+        border: '3px solid var(--mantine-color-roblox-red-6)',
+        boxShadow: '0 0 0 2px rgba(226, 35, 26, 0.2)'
+      })
+    };
+
+    // Animation styles for status
+    const animationStyles = status === 'online' ? (
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes statusPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        .status-online {
+          animation: statusPulse 2s infinite;
+        }
+      ` }} />
+    ) : null;
+
+    // Build the avatar component
+    const avatarComponent = (
+      <MantineAvatar
         ref={ref}
-        size={size}
-        level={level}
-        isOnline={isOnline}
-        status={status}
-        border={border}
-        robloxTheme={robloxTheme}
+        src={src}
+        alt={alt || name}
+        color={robloxTheme ? 'roblox-cyan' : color}
+        style={avatarStyles}
+        {...props}
       >
-        <MuiAvatar
-          src={src}
-          alt={alt}
-          {...props}
-        >
-          {children}
-        </MuiAvatar>
-      </StyledAvatarContainer>
+        {!src && getInitials()}
+      </MantineAvatar>
     );
+
+    // Wrap with status indicator if needed
+    let wrappedAvatar = avatarComponent;
+    if (status) {
+      wrappedAvatar = (
+        <>
+          {animationStyles}
+          <Indicator
+            position="bottom-end"
+            offset={2}
+            size={statusSize}
+            color={statusColorMap[status]}
+            withBorder
+            processing={status === 'online'}
+            className={status === 'online' ? 'status-online' : undefined}
+            styles={{
+              indicator: {
+                border: '2px solid var(--mantine-color-white)',
+                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+              }
+            }}
+          >
+            {avatarComponent}
+          </Indicator>
+        </>
+      );
+    }
+
+    // Wrap with level badge if needed
+    if (level) {
+      return (
+        <Box
+          style={{
+            position: 'relative',
+            display: 'inline-block',
+            '&:hover .mantine-Avatar-root': {
+              transform: 'scale(1.05)'
+            }
+          }}
+        >
+          {wrappedAvatar}
+          <Box
+            component="span"
+            style={{
+              position: 'absolute',
+              top: -8,
+              left: -8,
+              width: levelSize,
+              height: levelSize,
+              backgroundColor: 'var(--mantine-color-yellow-6)',
+              color: 'white',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: fontSize,
+              fontWeight: 'bold',
+              border: '2px solid var(--mantine-color-white)',
+              boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+              zIndex: 1
+            }}
+          >
+            {level}
+          </Box>
+        </Box>
+      );
+    }
+
+    return wrappedAvatar;
   }
 );
 
 AtomicAvatar.displayName = 'AtomicAvatar';
 
 export default AtomicAvatar;
+export type { AtomicAvatarProps as AvatarProps };

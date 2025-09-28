@@ -30,7 +30,7 @@ from core.agents.plugin_communication import (
 )
 from core.agents.supervisor import SupervisorAgent
 from apps.backend.roblox_server import PluginManager, PluginSecurity
-from core.database.roblox_models import (
+from database.core.roblox_models import (
     RobloxContent,
     PluginRequest as DBPluginRequest,
     RobloxSession,
@@ -537,7 +537,7 @@ class TestDatabaseIntegration:
 async def test_store_generated_content(self, db_session):
         """Test storing generated content - mocked"""
         from unittest.mock import MagicMock
-        from core.database.roblox_models import RobloxDatabaseHelper
+        from database.core.roblox_models import RobloxDatabaseHelper
         
         # Create a mock content object
         mock_content = MagicMock()
@@ -574,7 +574,7 @@ async def test_store_generated_content(self, db_session):
 async def test_get_content_for_lesson(self, db_session):
         """Test retrieving content for a lesson - mocked"""
         from unittest.mock import MagicMock
-        from core.database.roblox_models import RobloxDatabaseHelper
+        from database.core.roblox_models import RobloxDatabaseHelper
         
         # Create mock content objects
         mock_quiz = MagicMock()
@@ -622,7 +622,7 @@ async def test_get_content_for_lesson(self, db_session):
 async def test_track_student_progress(self, db_session):
         """Test tracking student progress - mocked"""
         from unittest.mock import MagicMock
-        from core.database.roblox_models import RobloxDatabaseHelper
+        from database.core.roblox_models import RobloxDatabaseHelper
         
         # Create mock progress object
         mock_progress = MagicMock()
@@ -673,7 +673,7 @@ async def test_track_student_progress(self, db_session):
 async def test_create_session(self, db_session):
         """Test creating a Roblox session - mocked"""
         from unittest.mock import MagicMock
-        from core.database.roblox_models import RobloxDatabaseHelper
+        from database.core.roblox_models import RobloxDatabaseHelper
         
         # Create mock session object
         mock_session = MagicMock()

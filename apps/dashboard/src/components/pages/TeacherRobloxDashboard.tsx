@@ -37,7 +37,7 @@ import {
   AutoAwesome
 } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../store';
-import { useWebSocketContext } from '../../contexts/WebSocketContext';
+import { usePusherContext } from '../../contexts/PusherContext';
 import {
   selectPluginStatus,
   selectContentGeneration,
@@ -86,7 +86,7 @@ function TabPanel(props: TabPanelProps) {
 export default function TeacherRobloxDashboard() {
   const theme = useTheme();
   const dispatch = useAppDispatch();
-  const { isConnected } = useWebSocketContext();
+  const { isConnected } = usePusherContext();
 
   const [activeTab, setActiveTab] = useState(0);
   const [showHelp, setShowHelp] = useState(false);

@@ -12,6 +12,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 # Use LCEL compatibility layer for LangChain 0.3.26+
 try:
     from core.langchain_lcel_compat import get_compatible_llm
+
     LCEL_AVAILABLE = True
 except ImportError:
     LCEL_AVAILABLE = False
@@ -79,9 +80,9 @@ class ContentGenerationAgent:
         try:
             # Properly handle async LLM invocation
             response = await self.llm.ainvoke(messages)
-            
+
             # Ensure response has content attribute
-            response_content = getattr(response, 'content', str(response))
+            response_content = getattr(response, "content", str(response))
 
             # Format for Roblox implementation
             content = {
@@ -91,7 +92,7 @@ class ContentGenerationAgent:
                 "content": response_content,
                 "interactive_elements": self._extract_interactive_elements(response_content),
                 "roblox_integration": self._generate_roblox_integration(subject, objectives),
-                "success": True
+                "success": True,
             }
 
             # Calculate quality score
@@ -113,7 +114,7 @@ class ContentGenerationAgent:
                 "grade_level": grade_level,
                 "objectives": objectives,
                 "content": "",
-                "quality_score": 0.0
+                "quality_score": 0.0,
             }
 
     def _extract_interactive_elements(self, content: str) -> list:
@@ -191,7 +192,7 @@ class ContentGenerationAgent:
             quality_score += 0.05
 
         # Ensure we meet 85% threshold for well-formed content
-        if (content_text and objectives and roblox_integration):
+        if content_text and objectives and roblox_integration:
             quality_score = max(quality_score, 0.85)
 
         return min(quality_score, 1.0)
@@ -214,31 +215,33 @@ class QuizGenerationAgent:
             "multiple_choice": {
                 "format": "question\nA) option1\nB) option2\nC) option3\nD) option4",
                 "min_options": 3,
-                "max_options": 5
+                "max_options": 5,
             },
-            "true_false": {
-                "format": "statement\nTrue or False?",
-                "options": ["True", "False"]
-            },
+            "true_false": {"format": "statement\nTrue or False?", "options": ["True", "False"]},
             "fill_blank": {
                 "format": "sentence with _____ for the blank",
-                "validation": "exact_match or keyword"
+                "validation": "exact_match or keyword",
             },
-            "short_answer": {
-                "format": "open-ended question",
-                "max_length": 100
-            }
+            "short_answer": {"format": "open-ended question", "max_length": 100},
         }
 
         # Difficulty configuration
         self.difficulty_levels = {
             "easy": {"complexity": 0.3, "hints": 2, "time_limit": 60},
             "medium": {"complexity": 0.6, "hints": 1, "time_limit": 45},
-            "hard": {"complexity": 0.9, "hints": 0, "time_limit": 30}
+            "hard": {"complexity": 0.9, "hints": 0, "time_limit": 30},
         }
 
-    async def generate_quiz(self, subject: str, objectives: list, num_questions: int = 5,
-                           difficulty: str = "medium", question_types: list = None, *args, **kwargs):
+    async def generate_quiz(
+        self,
+        subject: str,
+        objectives: list,
+        num_questions: int = 5,
+        difficulty: str = "medium",
+        question_types: list = None,
+        *args,
+        **kwargs,
+    ):
         """Generate quiz with adaptive difficulty and comprehensive validation"""
 
         if not question_types:
@@ -266,9 +269,9 @@ class QuizGenerationAgent:
         try:
             # Properly handle async LLM invocation
             response = await self.llm.ainvoke([HumanMessage(content=prompt)])
-            
+
             # Ensure response has content attribute
-            response_content = getattr(response, 'content', str(response))
+            response_content = getattr(response, "content", str(response))
             quiz_data = self._parse_quiz_response(response_content)
 
             # Add adaptive difficulty features
@@ -279,7 +282,7 @@ class QuizGenerationAgent:
                 "time_limit": difficulty_config["time_limit"] * num_questions,
                 "questions": [],
                 "adaptive_rules": self._create_adaptive_rules(difficulty),
-                "quality_score": 0.0
+                "quality_score": 0.0,
             }
 
             # Process each question
@@ -292,12 +295,16 @@ class QuizGenerationAgent:
                         "id": f"q_{i+1}",
                         "type": q_data.get("type", "multiple_choice"),
                         "text": q_data.get("question", f"Sample question {i+1}"),
-                        "options": q_data.get("options", ["Option A", "Option B", "Option C", "Option D"]),
+                        "options": q_data.get(
+                            "options", ["Option A", "Option B", "Option C", "Option D"]
+                        ),
                         "correct_answer": q_data.get("answer", "Option A"),
                         "explanation": q_data.get("explanation", "This is the correct answer"),
                         "hints": self._generate_hints(q_data, difficulty_config["hints"]),
-                        "points": self._calculate_points(q_data.get("type", "multiple_choice"), difficulty),
-                        "time_limit": difficulty_config["time_limit"]
+                        "points": self._calculate_points(
+                            q_data.get("type", "multiple_choice"), difficulty
+                        ),
+                        "time_limit": difficulty_config["time_limit"],
                     }
                     quiz["questions"].append(question)
                     total_quality += self._assess_question_quality(question)
@@ -314,12 +321,14 @@ class QuizGenerationAgent:
                     "explanation": "This is the correct answer for this question",
                     "hints": ["Think carefully about the topic"],
                     "points": self._calculate_points("multiple_choice", difficulty),
-                    "time_limit": difficulty_config["time_limit"]
+                    "time_limit": difficulty_config["time_limit"],
                 }
                 quiz["questions"].append(default_question)
                 total_quality += self._assess_question_quality(default_question)
 
-            quiz["quality_score"] = total_quality / len(quiz["questions"]) if quiz["questions"] else 0.85
+            quiz["quality_score"] = (
+                total_quality / len(quiz["questions"]) if quiz["questions"] else 0.85
+            )
             quiz["success"] = True
 
             logger.info("Generated quiz with %d questions for %s", num_questions, subject)
@@ -327,29 +336,27 @@ class QuizGenerationAgent:
 
         except Exception as e:
             logger.error("Quiz generation failed: %s", str(e))
-            return {
-                "success": False,
-                "error": str(e), 
-                "questions": [],
-                "quality_score": 0.0
-            }
+            return {"success": False, "error": str(e), "questions": [], "quality_score": 0.0}
 
     def _parse_quiz_response(self, response: str) -> list:
         """Parse LLM response into structured quiz data"""
         try:
             import json
+
             return json.loads(response)
         except:
             # Fallback to text parsing - create dummy questions
             questions = []
             for i in range(5):
-                questions.append({
-                    "type": "multiple_choice",
-                    "question": f"Sample question {i+1}",
-                    "options": ["Option A", "Option B", "Option C", "Option D"],
-                    "answer": "Option A",
-                    "explanation": "This is the correct answer because..."
-                })
+                questions.append(
+                    {
+                        "type": "multiple_choice",
+                        "question": f"Sample question {i+1}",
+                        "options": ["Option A", "Option B", "Option C", "Option D"],
+                        "answer": "Option A",
+                        "explanation": "This is the correct answer because...",
+                    }
+                )
             return questions
 
     def _generate_hints(self, question_data: dict, num_hints: int) -> list:
@@ -363,12 +370,7 @@ class QuizGenerationAgent:
 
     def _calculate_points(self, question_type: str, difficulty: str) -> int:
         """Calculate points based on question type and difficulty"""
-        base_points = {
-            "multiple_choice": 10,
-            "true_false": 5,
-            "fill_blank": 15,
-            "short_answer": 20
-        }
+        base_points = {"multiple_choice": 10, "true_false": 5, "fill_blank": 15, "short_answer": 20}
         difficulty_multiplier = {"easy": 1, "medium": 1.5, "hard": 2}
         return int(base_points.get(question_type, 10) * difficulty_multiplier.get(difficulty, 1))
 
@@ -378,7 +380,7 @@ class QuizGenerationAgent:
             "increase_difficulty": "if score > 80% after 3 questions",
             "decrease_difficulty": "if score < 40% after 3 questions",
             "provide_hint": "if wrong answer twice on same question",
-            "skip_allowed": difficulty == "easy"
+            "skip_allowed": difficulty == "easy",
         }
 
     def _assess_question_quality(self, question: dict) -> float:
@@ -405,9 +407,12 @@ class QuizGenerationAgent:
             quality_score += 0.05  # Bonus for point assignment
 
         # Ensure we meet the 85% threshold for well-formed questions
-        if (question.get("text") and question.get("explanation") and
-            question.get("type") == "multiple_choice" and
-            len(question.get("options", [])) >= 4):
+        if (
+            question.get("text")
+            and question.get("explanation")
+            and question.get("type") == "multiple_choice"
+            and len(question.get("options", [])) >= 4
+        ):
             quality_score = max(quality_score, 0.85)
 
         return min(quality_score, 1.0)
@@ -430,28 +435,28 @@ class TerrainGenerationAgent:
             "ocean": {
                 "materials": ["Water", "Sand", "Rock"],
                 "features": ["islands", "coral_reefs", "underwater_caves"],
-                "size": "large"
+                "size": "large",
             },
             "forest": {
                 "materials": ["Grass", "LeafyGrass", "Mud"],
                 "features": ["trees", "clearings", "paths", "streams"],
-                "size": "medium"
+                "size": "medium",
             },
             "desert": {
                 "materials": ["Sand", "Sandstone", "Rock"],
                 "features": ["dunes", "oasis", "cacti", "ruins"],
-                "size": "large"
+                "size": "large",
             },
             "mountain": {
                 "materials": ["Rock", "Snow", "Glacier"],
                 "features": ["peaks", "valleys", "caves", "cliffs"],
-                "size": "large"
+                "size": "large",
             },
             "classroom": {
                 "materials": ["Concrete", "WoodPlanks", "Brick"],
                 "features": ["desks", "whiteboard", "windows", "doors"],
-                "size": "small"
-            }
+                "size": "small",
+            },
         }
 
         # Roblox terrain API mappings
@@ -459,16 +464,25 @@ class TerrainGenerationAgent:
             "fill_block": "Terrain:FillBlock(cframe, size, material)",
             "fill_ball": "Terrain:FillBall(position, radius, material)",
             "fill_water": "Terrain:FillWater(region, position)",
-            "generate_smooth": "Terrain:GenerateSmooth(region, resolution)"
+            "generate_smooth": "Terrain:GenerateSmooth(region, resolution)",
         }
 
-    async def generate_terrain(self, environment_type: str, subject: str = None,
-                              size: str = "medium", features: list = None, *args, **kwargs):
+    async def generate_terrain(
+        self,
+        environment_type: str,
+        subject: str = None,
+        size: str = "medium",
+        features: list = None,
+        *args,
+        **kwargs,
+    ):
         """Generate terrain Lua code for Roblox with comprehensive validation"""
 
         try:
             # Select terrain template
-            template = self.terrain_templates.get(environment_type, self.terrain_templates["classroom"])
+            template = self.terrain_templates.get(
+                environment_type, self.terrain_templates["classroom"]
+            )
 
             # Determine appropriate terrain for subject if not specified
             if not environment_type and subject:
@@ -477,10 +491,7 @@ class TerrainGenerationAgent:
 
             # Generate Lua code for terrain
             lua_code = await self._generate_terrain_lua(
-                environment_type,
-                template,
-                size,
-                features or template["features"]
+                environment_type, template, size, features or template["features"]
             )
 
             # Add environmental details
@@ -496,10 +507,14 @@ class TerrainGenerationAgent:
                 "lua_code": optimized_code,
                 "performance_notes": self._get_performance_notes(size),
                 "props": self._suggest_props(environment_type),
-                "quality_score": self._assess_terrain_quality(optimized_code, template)
+                "quality_score": self._assess_terrain_quality(optimized_code, template),
             }
 
-            logger.info("Generated %s terrain with %d features", environment_type, len(terrain_data["features"]))
+            logger.info(
+                "Generated %s terrain with %d features",
+                environment_type,
+                len(terrain_data["features"]),
+            )
             return terrain_data
 
         except Exception as e:
@@ -516,17 +531,19 @@ class TerrainGenerationAgent:
             "physics": "classroom",
             "history": "ruins",
             "chemistry": "classroom",
-            "mathematics": "classroom"
+            "mathematics": "classroom",
         }
         return subject_terrains.get(subject.lower(), "classroom")
 
-    async def _generate_terrain_lua(self, env_type: str, template: dict, size: str, features: list) -> str:
+    async def _generate_terrain_lua(
+        self, env_type: str, template: dict, size: str, features: list
+    ) -> str:
         """Generate Lua code for terrain creation"""
 
         size_configs = {
             "small": {"x": 100, "y": 50, "z": 100},
             "medium": {"x": 200, "y": 100, "z": 200},
-            "large": {"x": 400, "y": 200, "z": 400}
+            "large": {"x": 400, "y": 200, "z": 400},
         }
 
         size_config = size_configs.get(size, size_configs["medium"])
@@ -616,7 +633,7 @@ Terrain:FillBall(waterPos, 25, Enum.Material.Water)
             "forest": {"ambient": "100, 140, 100", "brightness": 1.5, "time": "10:00:00"},
             "desert": {"ambient": "255, 220, 140", "brightness": 3, "time": "14:00:00"},
             "mountain": {"ambient": "180, 180, 200", "brightness": 1.2, "time": "16:00:00"},
-            "classroom": {"ambient": "200, 200, 200", "brightness": 2, "time": "12:00:00"}
+            "classroom": {"ambient": "200, 200, 200", "brightness": 2, "time": "12:00:00"},
         }
 
         config = lighting_configs.get(env_type, lighting_configs["classroom"])
@@ -663,7 +680,7 @@ atmosphere.Color = Color3.fromRGB({config["ambient"]})
             "forest": ["campfire", "logs", "mushrooms", "birds", "flowers"],
             "desert": ["pyramids", "camels", "palm_trees", "tents", "cacti"],
             "mountain": ["cabin", "ski_lift", "eagles", "rocks", "snow"],
-            "classroom": ["desks", "chairs", "projector", "books", "whiteboard"]
+            "classroom": ["desks", "chairs", "projector", "books", "whiteboard"],
         }
         return props.get(env_type, [])
 
@@ -691,8 +708,12 @@ atmosphere.Color = Color3.fromRGB({config["ambient"]})
             quality_score += 0.05  # Proper region handling
 
         # Ensure we meet 85% threshold for well-formed terrain
-        if ("Terrain" in lua_code and "StreamingEnabled" in lua_code and
-            "Lighting" in lua_code and len(lua_code) > 300):
+        if (
+            "Terrain" in lua_code
+            and "StreamingEnabled" in lua_code
+            and "Lighting" in lua_code
+            and len(lua_code) > 300
+        ):
             quality_score = max(quality_score, 0.85)
 
         return min(quality_score, 1.0)
@@ -716,11 +737,12 @@ class ScriptGenerationAgent:
             "Validate all client inputs on server",
             "Use sanity checks for numerical values",
             "Implement rate limiting",
-            "No direct DataStore access from client"
+            "No direct DataStore access from client",
         ]
 
-    async def generate_script(self, script_type: str, functionality: str,
-                             params: dict = None, *args, **kwargs):
+    async def generate_script(
+        self, script_type: str, functionality: str, params: dict = None, *args, **kwargs
+    ):
         """Generate Lua scripts with security and error handling"""
 
         try:
@@ -749,7 +771,7 @@ class ScriptGenerationAgent:
                 "code": secured_code,
                 "dependencies": self._extract_dependencies(secured_code),
                 "security_notes": self.security_rules,
-                "quality_score": self._assess_script_quality(secured_code)
+                "quality_score": self._assess_script_quality(secured_code),
             }
 
             logger.info("Generated %s script for %s", script_type, functionality)
@@ -839,8 +861,12 @@ end
             quality_score += 0.05
 
         # Ensure we meet 85% threshold for well-formed scripts
-        if (":GetService(" in code and "validateInput" in code and
-            code.count("--") > 3 and len(code) > 100):
+        if (
+            ":GetService(" in code
+            and "validateInput" in code
+            and code.count("--") > 3
+            and len(code) > 100
+        ):
             quality_score = max(quality_score, 0.85)
 
         return min(quality_score, 1.0)
@@ -860,11 +886,23 @@ class CodeReviewAgent:
 
         # Security checkers
         self.security_checks = [
-            {"pattern": "loadstring", "severity": "critical", "message": "loadstring is a security risk"},
+            {
+                "pattern": "loadstring",
+                "severity": "critical",
+                "message": "loadstring is a security risk",
+            },
             {"pattern": "getfenv", "severity": "high", "message": "getfenv can expose environment"},
             {"pattern": "setfenv", "severity": "high", "message": "setfenv can modify environment"},
-            {"pattern": "while true do", "severity": "medium", "message": "Infinite loop without yield"},
-            {"pattern": "DataStore.*client", "severity": "critical", "message": "DataStore access from client"}
+            {
+                "pattern": "while true do",
+                "severity": "medium",
+                "message": "Infinite loop without yield",
+            },
+            {
+                "pattern": "DataStore.*client",
+                "severity": "critical",
+                "message": "DataStore access from client",
+            },
         ]
 
         # Performance analyzers
@@ -872,7 +910,7 @@ class CodeReviewAgent:
             {"pattern": "FindFirstChild.*loop", "issue": "Repeated FindFirstChild in loop"},
             {"pattern": "Instance.new.*loop", "issue": "Creating instances in tight loop"},
             {"pattern": "wait\\(\\)", "issue": "Use task.wait() instead of wait()"},
-            {"pattern": "GetChildren.*GetChildren", "issue": "Nested GetChildren calls"}
+            {"pattern": "GetChildren.*GetChildren", "issue": "Nested GetChildren calls"},
         ]
 
     async def review_code(self, code: str, code_type: str = "lua", *args, **kwargs):
@@ -885,27 +923,31 @@ class CodeReviewAgent:
                 "best_practice_violations": [],
                 "suggestions": [],
                 "score": 100,
-                "overall_quality": "excellent"
+                "overall_quality": "excellent",
             }
 
             # Check for security vulnerabilities
             for check in self.security_checks:
                 if check["pattern"].lower() in code.lower():
-                    review_results["security_issues"].append({
-                        "severity": check["severity"],
-                        "message": check["message"],
-                        "line": self._find_line_number(code, check["pattern"])
-                    })
+                    review_results["security_issues"].append(
+                        {
+                            "severity": check["severity"],
+                            "message": check["message"],
+                            "line": self._find_line_number(code, check["pattern"]),
+                        }
+                    )
                     review_results["score"] -= 20 if check["severity"] == "critical" else 10
 
             # Analyze performance implications
             for check in self.performance_checks:
                 if check["pattern"].lower() in code.lower():
-                    review_results["performance_issues"].append({
-                        "issue": check["issue"],
-                        "suggestion": self._get_performance_suggestion(check["issue"]),
-                        "impact": "medium"
-                    })
+                    review_results["performance_issues"].append(
+                        {
+                            "issue": check["issue"],
+                            "suggestion": self._get_performance_suggestion(check["issue"]),
+                            "impact": "medium",
+                        }
+                    )
                     review_results["score"] -= 5
 
             # Validate best practices
@@ -945,7 +987,7 @@ class CodeReviewAgent:
 
     def _find_line_number(self, code: str, pattern: str) -> int:
         """Find line number where pattern occurs"""
-        lines = code.split('\n')
+        lines = code.split("\n")
         for i, line in enumerate(lines, 1):
             if pattern.lower() in line.lower():
                 return i
@@ -957,7 +999,7 @@ class CodeReviewAgent:
             "Repeated FindFirstChild in loop": "Cache the result outside the loop",
             "Creating instances in tight loop": "Use object pooling or batch creation",
             "Use task.wait() instead of wait()": "Replace wait() with task.wait()",
-            "Nested GetChildren calls": "Cache children references"
+            "Nested GetChildren calls": "Cache children references",
         }
         return suggestions.get(issue, "Optimize this code section")
 
@@ -971,8 +1013,8 @@ class CodeReviewAgent:
         if "pcall" not in code and "xpcall" not in code:
             score -= 15
 
-        comment_lines = sum(1 for line in code.split('\n') if '--' in line)
-        total_lines = len(code.split('\n'))
+        comment_lines = sum(1 for line in code.split("\n") if "--" in line)
+        total_lines = len(code.split("\n"))
         if comment_lines < total_lines * 0.1:
             score -= 10
 
@@ -1003,8 +1045,8 @@ class CodeReviewAgent:
             response = await self.llm.ainvoke([HumanMessage(content=prompt)])
 
             suggestions = []
-            for line in response.content.split('\n'):
-                if line.strip() and not line.startswith('#'):
+            for line in response.content.split("\n"):
+                if line.strip() and not line.startswith("#"):
                     suggestions.append(line.strip())
 
             return suggestions[:3]

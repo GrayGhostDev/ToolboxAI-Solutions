@@ -5,59 +5,55 @@
  * Features include keyboard navigation, screen reader support, and mobile optimization
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import TextField from '@mui/material/TextField';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import CircularProgress from '@mui/material/CircularProgress';
-import Fade from '@mui/material/Fade';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import Alert from '@mui/material/Alert';
-import Tooltip from '@mui/material/Tooltip';
-import InputAdornment from '@mui/material/InputAdornment';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import ListItemText from '@mui/material/ListItemText';
-import { useTheme } from '@mui/material/styles';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import Skeleton from '@mui/material/Skeleton';
-import LinearProgress from '@mui/material/LinearProgress';
-import Badge from '@mui/material/Badge';
-import Collapse from '@mui/material/Collapse';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
+import {
+  Box,
+  Paper,
+  TextInput,
+  ActionIcon,
+  Text,
+  Avatar,
+  Badge,
+  Stack,
+  Loader,
+  Button,
+  Alert,
+  Tooltip,
+  List,
+  Group,
+  Skeleton,
+  Progress,
+  Collapse,
+  Menu,
+  Title,
+  Textarea,
+  notifications
+} from '@mantine/core';
+import { useMantineTheme, useMediaQuery } from '@mantine/hooks';
 
 import {
-  Send,
-  SmartToy,
-  Person,
-  AttachFile,
-  Preview,
-  School,
-  Clear,
-  Refresh,
-  ExpandMore,
-  ExpandLess,
-  AutoAwesome,
-  Code,
-  Mic,
-  MicOff,
-  VolumeUp,
-  VolumeOff,
-  Settings,
-  Accessibility,
-  KeyboardArrowUp,
-  Stop,
-  ContentCopy,
-  Download,
-} from '@mui/icons-material';
+  IconSend,
+  IconRobot,
+  IconUser,
+  IconPaperclip,
+  IconEye,
+  IconSchool,
+  IconX,
+  IconRefresh,
+  IconChevronDown,
+  IconChevronUp,
+  IconSparkles,
+  IconCode,
+  IconMicrophone,
+  IconMicrophoneOff,
+  IconVolume,
+  IconVolumeOff,
+  IconSettings,
+  IconAccessible,
+  IconArrowUp,
+  IconPlayerStop,
+  IconCopy,
+  IconDownload,
+} from '@tabler/icons-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { useAppDispatch } from '../../store';
 import { addNotification } from '../../store/slices/uiSlice';
@@ -87,12 +83,12 @@ interface A11ySettings {
   speechOutput: boolean;
 }
 export default function RobloxAIAssistantEnhanced() {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const dispatch = useAppDispatch();
   // Responsive breakpoints
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
-  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isTablet = useMediaQuery('(max-width: 1024px)');
+  const isDesktop = useMediaQuery('(min-width: 1200px)');
   // State
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -290,19 +286,18 @@ Would you like me to start with a specific subject area or learning objective?`,
     const isUser = message.role === 'user';
     const isLoading = message.metadata?.isLoading;
     return (
-      <ListItem
+      <Box
         key={message.id}
-        sx={{
+        style={{
+          display: 'flex',
           flexDirection: isUser ? 'row-reverse' : 'row',
-          gap: 1,
-          py: 2,
-          px: isMobile ? 1 : 2,
-          '&:hover': {
-            bgcolor: theme.palette.action.hover,
-          },
+          gap: '8px',
+          padding: isMobile ? '8px' : '16px',
+          cursor: 'pointer',
         }}
-        selected={selectedMessageId === message.id}
-        onClick={(e: React.MouseEvent) => () => setSelectedMessageId(message.id)}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.colors.gray[0]}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+        onClick={() => setSelectedMessageId(message.id)}
         onContextMenu={(e) => {
           e.preventDefault();
           setContextMenu({ x: e.clientX, y: e.clientY, messageId: message.id });
@@ -310,257 +305,221 @@ Would you like me to start with a specific subject area or learning objective?`,
         role="article"
         aria-label={`${isUser ? 'Your message' : 'AI response'}: ${message.content.substring(0, 50)}...`}
       >
-        <ListItemAvatar>
-          <Avatar
-            sx={{
-              bgcolor: isUser ? theme.palette.primary.main : theme.palette.secondary.main,
-              width: isMobile ? 32 : 40,
-              height: isMobile ? 32 : 40,
-            }}
-            aria-hidden="true"
-          >
-            {isUser ? <Person /> : <SmartToy />}
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText
-          primary={
-            <Box>
-              <Typography
-                variant={a11ySettings.largeText ? 'body1' : 'body2'}
-                color="text.secondary"
-                gutterBottom
-              >
-                {isUser ? 'You' : 'AI Assistant'}
-                <Chip
-                  label={new Date(message.timestamp).toLocaleTimeString()}
-                  size="small"
-                  sx={{ ml: 1 }}
-                  aria-label={`Sent at ${new Date(message.timestamp).toLocaleTimeString()}`}
-                />
-              </Typography>
-              {isLoading ? (
-                <Box>
-                  <Skeleton variant="text" width="80%" />
-                  <Skeleton variant="text" width="60%" />
-                  <Skeleton variant="text" width="70%" />
-                </Box>
-              ) : (
-                <Typography
-                  variant={a11ySettings.largeText ? 'body1' : 'body2'}
-                  component="div"
-                  sx={{
-                    '& p': { mb: 1 },
-                    '& code': {
-                      bgcolor: 'background.paper',
-                      p: 0.5,
-                      borderRadius: 0.5,
-                      fontFamily: 'monospace',
-                    },
-                  }}
-                >
-                  {message.content}
-                </Typography>
-              )}
-            </Box>
-          }
-          secondary={
-            message.metadata?.error && (
-              <Alert severity="error" sx={{ mt: 1 }}>
-                {message.metadata.error}
-              </Alert>
-            )
-          }
-        />
-      </ListItem>
+        <Avatar
+          color={isUser ? 'blue' : 'grape'}
+          size={isMobile ? 32 : 40}
+          aria-hidden="true"
+        >
+          {isUser ? <IconUser size={20} /> : <IconRobot size={20} />}
+        </Avatar>
+        <Box style={{ flex: 1 }}>
+          <Group align="center" mb="xs">
+            <Text
+              size={a11ySettings.largeText ? 'md' : 'sm'}
+              c="dimmed"
+            >
+              {isUser ? 'You' : 'AI Assistant'}
+            </Text>
+            <Badge
+              size="sm"
+              variant="light"
+              aria-label={`Sent at ${new Date(message.timestamp).toLocaleTimeString()}`}
+            >
+              {new Date(message.timestamp).toLocaleTimeString()}
+            </Badge>
+          </Group>
+          {isLoading ? (
+            <Stack gap="xs">
+              <Skeleton height={16} width="80%" />
+              <Skeleton height={16} width="60%" />
+              <Skeleton height={16} width="70%" />
+            </Stack>
+          ) : (
+            <Text
+              size={a11ySettings.largeText ? 'md' : 'sm'}
+              style={{
+                fontFamily: message.content.includes('```') ? 'monospace' : 'inherit',
+                whiteSpace: 'pre-wrap'
+              }}
+            >
+              {message.content}
+            </Text>
+          )}
+          {message.metadata?.error && (
+            <Alert color="red" mt="sm">
+              {message.metadata.error}
+            </Alert>
+          )}
+        </Box>
+      </Box>
     );
   }, [theme, isMobile, selectedMessageId, a11ySettings.largeText]);
   return (
     <Box
-      sx={{
+      style={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: a11ySettings.highContrast ? 'background.default' : 'background.paper',
+        backgroundColor: a11ySettings.highContrast ? theme.colors.gray[0] : theme.white,
       }}
       role="main"
       aria-label="Roblox AI Assistant Chat Interface"
     >
       {/* Header */}
       <Paper
-        elevation={0}
-        sx={{
-          p: 2,
-          borderBottom: 1,
-          borderColor: 'divider',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+        p="md"
+        style={{
+          borderBottom: `1px solid ${theme.colors.gray[3]}`,
+          borderRadius: 0
         }}
         component="header"
       >
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-            <AutoAwesome />
-          </Avatar>
-          <Box>
-            <Typography variant="h6" component="h1">
-              Roblox AI Assistant
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {isLoading ? 'Generating response...' : 'Ready to help'}
-            </Typography>
-          </Box>
-        </Stack>
-        <Stack direction="row" spacing={1}>
-          <Tooltip title="Accessibility Settings">
-            <IconButton
-              onClick={(e: React.MouseEvent) => () => setA11ySettings(prev => ({ ...prev, speechOutput: !prev.speechOutput }))}
-              aria-label="Toggle speech output"
-            >
-              {a11ySettings.speechOutput ? <VolumeUp /> : <VolumeOff />}
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Toggle Preview">
-            <IconButton
-              onClick={(e: React.MouseEvent) => () => setShowPreview(!showPreview)}
-              aria-label="Toggle preview panel"
-            >
-              <Preview />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Clear Chat">
-            <IconButton
-              onClick={(e: React.MouseEvent) => () => setMessages([])}
-              aria-label="Clear all messages"
-            >
-              <Clear />
-            </IconButton>
-          </Tooltip>
-        </Stack>
+        <Group justify="space-between" align="center">
+          <Group align="center">
+            <Avatar color="blue">
+              <IconSparkles size={20} />
+            </Avatar>
+            <Box>
+              <Title order={3}>
+                Roblox AI Assistant
+              </Title>
+              <Text size="sm" c="dimmed">
+                {isLoading ? 'Generating response...' : 'Ready to help'}
+              </Text>
+            </Box>
+          </Group>
+          <Group>
+            <Tooltip label="Accessibility Settings">
+              <ActionIcon
+                onClick={() => setA11ySettings(prev => ({ ...prev, speechOutput: !prev.speechOutput }))}
+                aria-label="Toggle speech output"
+              >
+                {a11ySettings.speechOutput ? <IconVolume size={18} /> : <IconVolumeOff size={18} />}
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Toggle Preview">
+              <ActionIcon
+                onClick={() => setShowPreview(!showPreview)}
+                aria-label="Toggle preview panel"
+              >
+                <IconEye size={18} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Clear Chat">
+              <ActionIcon
+                onClick={() => setMessages([])}
+                aria-label="Clear all messages"
+              >
+                <IconX size={18} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        </Group>
       </Paper>
       {/* Messages Area */}
       <Box
         ref={messageListRef}
-        sx={{
+        style={{
           flex: 1,
           overflowY: 'auto',
-          p: 2,
+          padding: '16px',
         }}
         role="log"
         aria-live="polite"
         aria-label="Chat messages"
       >
-        <List>
+        <Stack gap="sm">
           {messages.map(renderMessage)}
-        </List>
+        </Stack>
         <div ref={messagesEndRef} />
       </Box>
       {/* Input Area */}
       <Paper
-        elevation={3}
-        sx={{
-          p: 2,
-          borderTop: 1,
-          borderColor: 'divider',
+        p="md"
+        style={{
+          borderTop: `1px solid ${theme.colors.gray[3]}`,
+          borderRadius: 0
         }}
         component="footer"
       >
         {isLoading && (
-          <LinearProgress
-            sx={{ mb: 2 }}
-            aria-label="Loading response"
-          />
+          <Progress mb="md" aria-label="Loading response" />
         )}
-        <Stack direction="row" spacing={1} alignItems="flex-end">
-          <TextField
-            ref={inputRef}
-            fullWidth
-            multiline
-            maxRows={4}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask me to create educational Roblox content..."
-            disabled={isLoading}
-            variant="outlined"
-            InputProps={{
-              sx: {
-                fontSize: a11ySettings.largeText ? '1.125rem' : '1rem',
-              },
-              startAdornment: (
-                <InputAdornment position="start">
-                  <IconButton
-                    onClick={(e: React.MouseEvent) => toggleVoiceInput}
-                    size="small"
-                    color={isListening ? 'primary' : 'default'}
-                    aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
-                  >
-                    {isListening ? <Mic /> : <MicOff />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton size="small" aria-label="Attach file">
-                    <AttachFile />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            aria-label="Message input"
-            aria-describedby="input-helper-text"
-          />
+        <Group align="flex-end">
+          <Box style={{ flex: 1, position: 'relative' }}>
+            <Textarea
+              ref={inputRef}
+              autosize
+              maxRows={4}
+              value={input}
+              onChange={(event) => setInput(event.currentTarget.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask me to create educational Roblox content..."
+              disabled={isLoading}
+              style={{
+                fontSize: a11ySettings.largeText ? '18px' : '16px',
+              }}
+              leftSection={
+                <ActionIcon
+                  onClick={toggleVoiceInput}
+                  size="sm"
+                  color={isListening ? 'blue' : 'gray'}
+                  aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
+                >
+                  {isListening ? <IconMicrophone size={16} /> : <IconMicrophoneOff size={16} />}
+                </ActionIcon>
+              }
+              rightSection={
+                <ActionIcon size="sm" aria-label="Attach file">
+                  <IconPaperclip size={16} />
+                </ActionIcon>
+              }
+              aria-label="Message input"
+              aria-describedby="input-helper-text"
+            />
+          </Box>
           {isLoading ? (
-            <IconButton
-              onClick={(e: React.MouseEvent) => handleCancelRequest}
-              color="error"
-              size="large"
+            <ActionIcon
+              onClick={handleCancelRequest}
+              color="red"
+              size="lg"
               aria-label="Cancel request"
             >
-              <Stop />
-            </IconButton>
+              <IconPlayerStop size={20} />
+            </ActionIcon>
           ) : (
-            <IconButton
-              onClick={(e: React.MouseEvent) => handleSendMessage}
-              color="primary"
-              size="large"
+            <ActionIcon
+              onClick={handleSendMessage}
+              color="blue"
+              size="lg"
               disabled={!input.trim()}
               aria-label="Send message"
             >
-              <Send />
-            </IconButton>
+              <IconSend size={20} />
+            </ActionIcon>
           )}
-        </Stack>
-        <Typography
+        </Group>
+        <Text
           id="input-helper-text"
-          variant="caption"
-          color="text.secondary"
-          sx={{ mt: 1, display: 'block' }}
+          size="xs"
+          c="dimmed"
+          mt="sm"
         >
           Press Enter to send, Shift+Enter for new line
-        </Typography>
+        </Text>
       </Paper>
       {/* Context Menu */}
-      <Menu
-        open={Boolean(contextMenu)}
-        onClose={() => setContextMenu(null)}
-        anchorReference="anchorPosition"
-        anchorPosition={
-          contextMenu ? { top: contextMenu.y, left: contextMenu.x } : undefined
-        }
-      >
-        <MenuItem
-          onClick={(e: React.MouseEvent) => () => {
+      <Menu opened={Boolean(contextMenu)} onClose={() => setContextMenu(null)}>
+        <Menu.Item
+          leftSection={<IconCopy size={16} />}
+          onClick={() => {
             const message = messages.find(m => m.id === contextMenu?.messageId);
             if (message) handleCopyMessage(message.content);
             setContextMenu(null);
           }}
         >
-          <ListItemIcon>
-            <ContentCopy fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Copy</ListItemText>
-        </MenuItem>
+          Copy
+        </Menu.Item>
       </Menu>
     </Box>
   );

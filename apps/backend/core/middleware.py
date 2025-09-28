@@ -17,7 +17,11 @@ from apps.backend.core.security.cors import SecureCORSConfig, CORSMiddlewareWith
 from apps.backend.core.security.headers import SecurityHeadersMiddleware, SecurityHeadersConfig
 from apps.backend.core.security.compression import CompressionMiddleware, CompressionConfig
 from apps.backend.core.errors import ErrorHandlingMiddleware
-from apps.backend.core.versioning import APIVersionMiddleware, create_version_manager, VersionStrategy
+from apps.backend.core.versioning import (
+    APIVersionMiddleware,
+    create_version_manager,
+    VersionStrategy,
+)
 
 # Initialize logger
 logger = logging_manager.get_logger(__name__)
@@ -30,6 +34,7 @@ try:
         BulkheadMiddleware,
     )
     from apps.backend.core.rate_limiter import RateLimitMiddleware, RateLimitConfig
+
     RESILIENCE_AVAILABLE = True
 except ImportError as e:
     logger.warning(f"Resilience middleware not available: {e}")
@@ -55,8 +60,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 "path": request.url.path,
                 "query_params": str(request.query_params),
                 "client_ip": request.client.host,
-                "user_agent": request.headers.get("user-agent", "unknown")
-            }
+                "user_agent": request.headers.get("user-agent", "unknown"),
+            },
         )
 
         try:
@@ -73,8 +78,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                     "request_id": request_id,
                     "status_code": response.status_code,
                     "process_time": process_time,
-                    "response_size": response.headers.get("content-length", "unknown")
-                }
+                    "response_size": response.headers.get("content-length", "unknown"),
+                },
             )
 
             # Add request ID to response headers
@@ -94,8 +99,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                     "request_id": request_id,
                     "process_time": process_time,
                     "error": str(e),
-                    "error_type": type(e).__name__
-                }
+                    "error_type": type(e).__name__,
+                },
             )
 
             raise
@@ -132,8 +137,8 @@ class MetricsMiddleware(BaseHTTPMiddleware):
                         "total_requests": self.request_count,
                         "total_errors": self.error_count,
                         "avg_response_time": avg_response_time,
-                        "error_rate": self.error_count / self.request_count
-                    }
+                        "error_rate": self.error_count / self.request_count,
+                    },
                 )
 
             return response
@@ -168,8 +173,8 @@ def configure_cors_middleware(app: FastAPI) -> None:
                 "X-Request-ID",
                 "X-Process-Time",
                 "X-Rate-Limit-Remaining",
-                "X-Rate-Limit-Reset"
-            ]
+                "X-Rate-Limit-Reset",
+            ],
         )
         logger.info("CORS middleware configured with secure settings")
     except Exception as e:
@@ -192,14 +197,16 @@ def configure_security_middleware(app: FastAPI) -> None:
         security_config = SecurityHeadersConfig(
             csp_policy="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
             hsts_max_age=31536000,
-            frame_options="SAMEORIGIN"
+            frame_options="SAMEORIGIN",
         )
         app.add_middleware(SecurityHeadersMiddleware, config=security_config)
 
         # Trusted host middleware
         app.add_middleware(
             TrustedHostMiddleware,
-            allowed_hosts=["*"] if settings.DEBUG else ["localhost", "127.0.0.1", settings.FASTAPI_HOST]
+            allowed_hosts=(
+                ["*"] if settings.DEBUG else ["localhost", "127.0.0.1", settings.FASTAPI_HOST]
+            ),
         )
 
         logger.info("Security middleware configured")
@@ -210,10 +217,7 @@ def configure_security_middleware(app: FastAPI) -> None:
 def configure_compression_middleware(app: FastAPI) -> None:
     """Configure compression middleware"""
     try:
-        compression_config = CompressionConfig(
-            minimum_size=1000,
-            compression_level=6
-        )
+        compression_config = CompressionConfig(minimum_size=1000, compression_level=6)
         app.add_middleware(CompressionMiddleware, config=compression_config)
         logger.info("Compression middleware configured")
     except Exception as e:
@@ -229,8 +233,7 @@ def configure_resilience_middleware(app: FastAPI) -> None:
     try:
         # Rate limiting
         rate_limit_config = RateLimitConfig(
-            requests_per_minute=settings.RATE_LIMIT_PER_MINUTE,
-            burst_size=100
+            requests_per_minute=settings.RATE_LIMIT_PER_MINUTE, burst_size=100
         )
         app.add_middleware(RateLimitMiddleware, config=rate_limit_config)
 
@@ -248,8 +251,7 @@ def configure_versioning_middleware(app: FastAPI) -> None:
     """Configure API versioning middleware"""
     try:
         version_manager = create_version_manager(
-            default_version="2.0.0",
-            strategy=VersionStrategy.URL_PATH
+            default_version="2.0.0", strategy=VersionStrategy.URL_PATH
         )
         app.add_middleware(APIVersionMiddleware, version_manager=version_manager)
         logger.info("API versioning middleware configured")
@@ -264,26 +266,58 @@ def configure_all_middleware(app: FastAPI) -> None:
     # 1. Error handling (should be first to catch all errors)
     app.add_middleware(ErrorHandlingMiddleware, debug=settings.DEBUG)
 
-    # 2. CORS (early in chain for preflight requests)
+    # 2. API Gateway (routing, versioning, circuit breakers)
+    try:
+        from apps.backend.middleware.api_gateway import APIGatewayMiddleware
+        app.add_middleware(APIGatewayMiddleware)
+        logger.info("API Gateway middleware configured")
+    except ImportError as e:
+        logger.warning(f"API Gateway middleware not available: {e}")
+
+    # 3. Request Validation (security checks, input sanitization)
+    try:
+        from apps.backend.middleware.request_validator import RequestValidatorMiddleware
+        app.add_middleware(RequestValidatorMiddleware)
+        logger.info("Request Validator middleware configured")
+    except ImportError as e:
+        logger.warning(f"Request Validator middleware not available: {e}")
+
+    # 4. CORS (early in chain for preflight requests)
     configure_cors_middleware(app)
 
-    # 3. Security middleware
+    # 5. Security middleware
     configure_security_middleware(app)
 
-    # 4. Logging and correlation ID
+    # 6. Logging and correlation ID
     app.add_middleware(CorrelationIDMiddleware)
     app.add_middleware(RequestLoggingMiddleware)
 
-    # 5. Metrics collection
+    # 7. Metrics collection (including Prometheus)
     app.add_middleware(MetricsMiddleware)
 
-    # 6. Versioning
+    # Add Prometheus middleware if available
+    try:
+        from apps.backend.middleware.prometheus_middleware import PrometheusMiddleware
+        app.add_middleware(PrometheusMiddleware)
+        logger.info("Prometheus middleware configured")
+    except ImportError as e:
+        logger.warning(f"Prometheus middleware not available: {e}")
+
+    # 8. Versioning
     configure_versioning_middleware(app)
 
-    # 7. Compression (should be late in chain)
+    # 9. Response Transformation (should be late for final formatting)
+    try:
+        from apps.backend.middleware.response_transformer import ResponseTransformerMiddleware
+        app.add_middleware(ResponseTransformerMiddleware)
+        logger.info("Response Transformer middleware configured")
+    except ImportError as e:
+        logger.warning(f"Response Transformer middleware not available: {e}")
+
+    # 10. Compression (should be late in chain)
     configure_compression_middleware(app)
 
-    # 8. Resilience (rate limiting, circuit breakers, etc.)
+    # 11. Resilience (rate limiting, circuit breakers, etc.)
     configure_resilience_middleware(app)
 
     logger.info("All middleware configured successfully")
@@ -301,4 +335,11 @@ def get_middleware_status() -> dict:
         "versioning": True,
         "resilience": RESILIENCE_AVAILABLE,
         "error_handling": True,
+        "api_gateway": True,
+        "request_validation": True,
+        "response_transformation": True,
     }
+
+
+# Alias for app_factory compatibility
+register_middleware = configure_all_middleware

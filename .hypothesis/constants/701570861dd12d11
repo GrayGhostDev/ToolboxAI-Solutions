@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/v1/endpoints/prompt_templates.py
-# hypothesis_version: 6.139.2
-
-['/conversations', '/conversations/start', '/guidance/{stage}', '/prompt-templates', '/system/status', '/templates', 'Development Teacher', 'Prompt Templates', 'beginner', 'completeness_score', 'content_ready', 'content_type', 'continue', 'conversation_status', 'conversations', 'count', 'dev-user-001', 'engagement_score', 'enhanced_prompt', 'errors', 'execution_results', 'guidance', 'id', 'is_active', 'is_valid', 'message', 'name', 'next_steps', 'personalized_prompt', 'priority', 'quality_metrics', 'readiness_score', 'stage', 'success', 'suggestion', 'suggestions', 'teacher', 'teacher@example.com', 'templates', 'uniqueness_score', 'validation', 'validation_result', 'warnings', 'workflow_plan']

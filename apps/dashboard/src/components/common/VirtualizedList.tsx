@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import { FixedSizeList as List } from 'react-window';
-import Box, { BoxProps } from '@mui/material/Box';
+import { Box, BoxProps } from '@mantine/core';
 
 export interface VirtualizedListItem {
   id: string | number;
@@ -57,11 +57,13 @@ export const VirtualizedList = memo<VirtualizedListProps>(({
   if (!items.length) {
     return (
       <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height={height}
-        color="text.secondary"
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height,
+          color: 'var(--mantine-color-gray-6)'
+        }}
         {...boxProps}
       >
         No items to display

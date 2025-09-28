@@ -3,54 +3,46 @@
  * Comprehensive monitoring dashboard for all service integrations
  */
 import { memo, useEffect, useState, useMemo } from 'react';
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid';
-import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import Button from '@mui/material/Button';
-import Collapse from '@mui/material/Collapse';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardHeader from '@mui/material/CardHeader';
-import Divider from '@mui/material/Divider';
-import LinearProgress from '@mui/material/LinearProgress';
-import CircularProgress from '@mui/material/CircularProgress';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
-import Badge from '@mui/material/Badge';
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
+import {
+  Box,
+  Paper,
+  Text,
+  Title,
+  Grid,
+  Stack,
+  Badge,
+  ActionIcon,
+  Tooltip,
+  Alert,
+  Button,
+  Collapse,
+  Card,
+  Divider,
+  Progress,
+  Loader,
+  Group,
+  Tabs,
+  Accordion,
+  useMantineTheme,
+  alpha,
+} from '@mantine/core';
 
 import {
-  CheckCircle as HealthyIcon,
-  Error as ErrorIcon,
-  Warning as WarningIcon,
-  Refresh as RefreshIcon,
-  ExpandMore as ExpandIcon,
-  Storage as DatabaseIcon,
-  Api as APIIcon,
-  Hub as AgentIcon,
-  Games as RobloxIcon,
-  Stream as RealtimeIcon,
-  Speed as PerformanceIcon,
-  Timeline as TrendIcon,
-  Notifications as AlertIcon,
-  Info as InfoIcon,
-} from '@mui/icons-material';
+  IconCircleCheck as HealthyIcon,
+  IconX as ErrorIcon,
+  IconAlertTriangle as WarningIcon,
+  IconRefresh as RefreshIcon,
+  IconChevronDown as ExpandIcon,
+  IconDatabase as DatabaseIcon,
+  IconApi as APIIcon,
+  IconNetwork as AgentIcon,
+  IconDeviceGamepad2 as RobloxIcon,
+  IconBroadcast as RealtimeIcon,
+  IconGauge as PerformanceIcon,
+  IconTrendingUp as TrendIcon,
+  IconBell as AlertIcon,
+  IconInfoCircle as InfoIcon,
+} from '@tabler/icons-react';
 
 import { motion } from 'framer-motion';
 import { usePusher } from '@/hooks/usePusher';
@@ -92,7 +84,7 @@ export const IntegrationHealthMonitor = memo<IntegrationHealthMonitorProps>(({
   showDetails = true,
   onIntegrationClick,
 }) => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
@@ -189,26 +181,26 @@ export const IntegrationHealthMonitor = memo<IntegrationHealthMonitorProps>(({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'healthy':
-        return theme.palette.success.main;
+        return theme.colors.green[6];
       case 'degraded':
-        return theme.palette.warning.main;
+        return theme.colors.yellow[6];
       case 'unhealthy':
-        return theme.palette.error.main;
+        return theme.colors.red[6];
       default:
-        return theme.palette.text.secondary;
+        return theme.colors.gray[6];
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'healthy':
-        return <HealthyIcon fontSize="small" />;
+        return <HealthyIcon size={16} />;
       case 'degraded':
-        return <WarningIcon fontSize="small" />;
+        return <WarningIcon size={16} />;
       case 'unhealthy':
-        return <ErrorIcon fontSize="small" />;
+        return <ErrorIcon size={16} />;
       default:
-        return <InfoIcon fontSize="small" />;
+        return <InfoIcon size={16} />;
     }
   };
 
@@ -278,51 +270,51 @@ export const IntegrationHealthMonitor = memo<IntegrationHealthMonitorProps>(({
     return (
       <Card
         key={integrationKey}
-        sx={{
+        padding="md"
+        withBorder
+        style={{
           cursor: onIntegrationClick ? 'pointer' : 'default',
           borderLeft: `4px solid ${statusColor}`,
-          '&:hover': onIntegrationClick
-            ? {
-                backgroundColor: alpha(theme.palette.primary.main, 0.05),
-              }
-            : {},
         }}
         onClick={() => onIntegrationClick?.(integrationKey, health)}
       >
-        <CardHeader
-          avatar={
-            <Box sx={{ color: statusColor }}>
-              {icon}
-            </Box>
-          }
-          title={name}
-          subheader={`Last checked: ${new Date(health.timestamp).toLocaleTimeString()}`}
-          action={
-            <Chip
-              label={status.toUpperCase()}
-              size="small"
-              color={health.healthy ? 'success' : 'error'}
-              icon={getStatusIcon(status)}
-            />
-          }
-        />
-        <CardContent sx={{ pt: 0 }}>
-          <Stack spacing={1}>
-            {Object.entries(health.checks).map(([checkName, checkResult]) => (
-              <Box key={checkName} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Typography variant="body2" color="text.secondary">
-                  {checkName.replace('_', ' ')}
-                </Typography>
-                <Chip
-                  label={checkResult.healthy ? 'OK' : 'ERROR'}
-                  size="small"
-                  color={checkResult.healthy ? 'success' : 'error'}
-                  variant="outlined"
-                />
+        <Stack gap="md">
+          <Group justify="space-between" align="flex-start">
+            <Group gap="md">
+              <Box style={{ color: statusColor }}>
+                {icon}
               </Box>
+              <Stack gap="xs">
+                <Text fw={500}>{name}</Text>
+                <Text size="sm" c="dimmed">
+                  Last checked: {new Date(health.timestamp).toLocaleTimeString()}
+                </Text>
+              </Stack>
+            </Group>
+            <Badge
+              color={health.healthy ? 'green' : 'red'}
+              leftSection={getStatusIcon(status)}
+            >
+              {status.toUpperCase()}
+            </Badge>
+          </Group>
+          <Stack gap="xs">
+            {Object.entries(health.checks).map(([checkName, checkResult]) => (
+              <Group key={checkName} justify="space-between">
+                <Text size="sm" c="dimmed">
+                  {checkName.replace('_', ' ')}
+                </Text>
+                <Badge
+                  size="sm"
+                  color={checkResult.healthy ? 'green' : 'red'}
+                  variant="outline"
+                >
+                  {checkResult.healthy ? 'OK' : 'ERROR'}
+                </Badge>
+              </Group>
             ))}
           </Stack>
-        </CardContent>
+        </Stack>
       </Card>
     );
   };
@@ -331,84 +323,75 @@ export const IntegrationHealthMonitor = memo<IntegrationHealthMonitorProps>(({
     if (!healthOverview) return null;
 
     return (
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Stack spacing={1} alignItems="center">
-                <Typography variant="h4" fontWeight="bold" color={getStatusColor(healthOverview.status)}>
-                  {healthOverview.health_percentage.toFixed(1)}%
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Overall Health
-                </Typography>
-                <LinearProgress
-                  variant="determinate"
-                  value={healthOverview.health_percentage}
-                  sx={{
-                    width: '100%',
-                    height: 8,
-                    borderRadius: 1,
-                    backgroundColor: alpha(getStatusColor(healthOverview.status), 0.2),
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor: getStatusColor(healthOverview.status),
-                    },
-                  }}
-                />
-              </Stack>
-            </CardContent>
+      <Grid>
+        <Grid.Col span={{ base: 12, md: 3 }}>
+          <Card padding="md" withBorder>
+            <Stack gap="xs" align="center">
+              <Text size="xl" fw={700} c={getStatusColor(healthOverview.status)}>
+                {healthOverview.health_percentage.toFixed(1)}%
+              </Text>
+              <Text size="sm" c="dimmed">
+                Overall Health
+              </Text>
+              <Progress
+                value={healthOverview.health_percentage}
+                color={
+                  healthOverview.status === 'healthy'
+                    ? 'green'
+                    : healthOverview.status === 'degraded'
+                    ? 'yellow'
+                    : 'red'
+                }
+                size="sm"
+                style={{ width: '100%' }}
+              />
+            </Stack>
           </Card>
-        </Grid>
+        </Grid.Col>
 
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Stack spacing={1} alignItems="center">
-                <Typography variant="h4" fontWeight="bold" color="success.main">
-                  {healthOverview.healthy_services}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Healthy Services
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  out of {healthOverview.total_services}
-                </Typography>
-              </Stack>
-            </CardContent>
+        <Grid.Col span={{ base: 12, md: 3 }}>
+          <Card padding="md" withBorder>
+            <Stack gap="xs" align="center">
+              <Text size="xl" fw={700} c="green">
+                {healthOverview.healthy_services}
+              </Text>
+              <Text size="sm" c="dimmed">
+                Healthy Services
+              </Text>
+              <Text size="xs" c="dimmed">
+                out of {healthOverview.total_services}
+              </Text>
+            </Stack>
           </Card>
-        </Grid>
+        </Grid.Col>
 
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Stack spacing={1} alignItems="center">
-                <Typography variant="h4" fontWeight="bold" color="primary.main">
-                  {healthOverview.check_duration_ms}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Check Duration (ms)
-                </Typography>
-                <PerformanceIcon color="primary" />
-              </Stack>
-            </CardContent>
+        <Grid.Col span={{ base: 12, md: 3 }}>
+          <Card padding="md" withBorder>
+            <Stack gap="xs" align="center">
+              <Text size="xl" fw={700} c="blue">
+                {healthOverview.check_duration_ms}
+              </Text>
+              <Text size="sm" c="dimmed">
+                Check Duration (ms)
+              </Text>
+              <PerformanceIcon color={theme.colors.blue[6]} />
+            </Stack>
           </Card>
-        </Grid>
+        </Grid.Col>
 
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Stack spacing={1} alignItems="center">
-                <Typography variant="h4" fontWeight="bold">
-                  {Object.keys(healthOverview.integrations).length}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Integration Types
-                </Typography>
-                <TrendIcon color="primary" />
-              </Stack>
-            </CardContent>
+        <Grid.Col span={{ base: 12, md: 3 }}>
+          <Card padding="md" withBorder>
+            <Stack gap="xs" align="center">
+              <Text size="xl" fw={700}>
+                {Object.keys(healthOverview.integrations).length}
+              </Text>
+              <Text size="sm" c="dimmed">
+                Integration Types
+              </Text>
+              <TrendIcon color={theme.colors.blue[6]} />
+            </Stack>
           </Card>
-        </Grid>
+        </Grid.Col>
       </Grid>
     );
   };
@@ -417,128 +400,115 @@ export const IntegrationHealthMonitor = memo<IntegrationHealthMonitorProps>(({
     <MotionPaper
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
     >
       {/* Header */}
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6" fontWeight="bold">
+      <Box p="md" style={{ borderBottom: `1px solid ${theme.colors.gray[3]}` }}>
+        <Group justify="space-between">
+          <Group>
+            <Title order={4}>
               Integration Health Monitor
-            </Typography>
+            </Title>
             {healthOverview && (
-              <Chip
-                label={healthOverview.status.toUpperCase()}
-                size="small"
+              <Badge
                 color={
                   healthOverview.status === 'healthy'
-                    ? 'success'
+                    ? 'green'
                     : healthOverview.status === 'degraded'
-                    ? 'warning'
-                    : 'error'
+                    ? 'yellow'
+                    : 'red'
                 }
-                icon={getStatusIcon(healthOverview.status)}
-              />
+                leftSection={getStatusIcon(healthOverview.status)}
+              >
+                {healthOverview.status.toUpperCase()}
+              </Badge>
             )}
-          </Stack>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Tooltip title="Last updated">
-              <Typography variant="caption" color="text.secondary">
+          </Group>
+          <Group gap="xs">
+            <Tooltip label="Last updated">
+              <Text size="xs" c="dimmed">
                 {lastUpdate.toLocaleTimeString()}
-              </Typography>
+              </Text>
             </Tooltip>
-            <IconButton size="small" onClick={handleRefresh} disabled={loading}>
-              {loading ? <CircularProgress size={20} /> : <RefreshIcon />}
-            </IconButton>
-          </Stack>
-        </Stack>
+            <ActionIcon size="sm" onClick={handleRefresh} disabled={loading}>
+              {loading ? <Loader size={16} /> : <RefreshIcon size={16} />}
+            </ActionIcon>
+          </Group>
+        </Group>
       </Box>
 
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+      <Box style={{ flex: 1, overflow: 'auto' }}>
         {error && (
-          <Alert severity="error" sx={{ m: 2 }}>
-            <AlertTitle>Health Check Error</AlertTitle>
+          <Alert color="red" m="md" title="Health Check Error">
             {error}
           </Alert>
         )}
 
-        {/* Overview Stats */}
-        {healthOverview && (
-          <Accordion
-            expanded={expandedAccordion === 'overview'}
-            onChange={handleAccordionChange('overview')}
-          >
-            <AccordionSummary expandIcon={<ExpandIcon />}>
-              <Typography variant="h6">Overview Statistics</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              {renderOverviewStats()}
-            </AccordionDetails>
-          </Accordion>
-        )}
+        <Accordion multiple defaultValue={['overview']}>
+          {/* Overview Stats */}
+          {healthOverview && (
+            <Accordion.Item value="overview">
+              <Accordion.Control>
+                <Title order={5}>Overview Statistics</Title>
+              </Accordion.Control>
+              <Accordion.Panel>
+                {renderOverviewStats()}
+              </Accordion.Panel>
+            </Accordion.Item>
+          )}
 
-        {/* Integration Details */}
-        {healthOverview && showDetails && (
-          <Accordion
-            expanded={expandedAccordion === 'integrations'}
-            onChange={handleAccordionChange('integrations')}
-          >
-            <AccordionSummary expandIcon={<ExpandIcon />}>
-              <Typography variant="h6">Integration Details</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Grid container spacing={2}>
-                {Object.entries(healthOverview.integrations).map(([key, health]) => (
-                  <Grid item xs={12} lg={6} key={key}>
-                    {renderIntegrationCard(key, health)}
-                  </Grid>
-                ))}
-              </Grid>
-            </AccordionDetails>
-          </Accordion>
-        )}
+          {/* Integration Details */}
+          {healthOverview && showDetails && (
+            <Accordion.Item value="integrations">
+              <Accordion.Control>
+                <Title order={5}>Integration Details</Title>
+              </Accordion.Control>
+              <Accordion.Panel>
+                <Grid>
+                  {Object.entries(healthOverview.integrations).map(([key, health]) => (
+                    <Grid.Col span={{ base: 12, lg: 6 }} key={key}>
+                      {renderIntegrationCard(key, health)}
+                    </Grid.Col>
+                  ))}
+                </Grid>
+              </Accordion.Panel>
+            </Accordion.Item>
+          )}
 
-        {/* Detailed Health by Category */}
-        {Object.keys(detailedHealth).length > 0 && (
-          <Accordion
-            expanded={expandedAccordion === 'detailed'}
-            onChange={handleAccordionChange('detailed')}
-          >
-            <AccordionSummary expandIcon={<ExpandIcon />}>
-              <Typography variant="h6">Detailed Health Checks</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Tabs value={selectedTab} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
-                {Object.keys(detailedHealth).map((integration, index) => (
-                  <Tab
-                    key={integration}
-                    label={getIntegrationName(integration)}
-                    icon={getIntegrationIcon(integration)}
-                  />
-                ))}
-              </Tabs>
+          {/* Detailed Health by Category */}
+          {Object.keys(detailedHealth).length > 0 && (
+            <Accordion.Item value="detailed">
+              <Accordion.Control>
+                <Title order={5}>Detailed Health Checks</Title>
+              </Accordion.Control>
+              <Accordion.Panel>
+                <Tabs value={selectedTab.toString()} onTabChange={(value) => setSelectedTab(parseInt(value || '0'))}>
+                  <Tabs.List>
+                    {Object.keys(detailedHealth).map((integration, index) => (
+                      <Tabs.Tab
+                        key={integration}
+                        value={index.toString()}
+                        leftSection={getIntegrationIcon(integration)}
+                      >
+                        {getIntegrationName(integration)}
+                      </Tabs.Tab>
+                    ))}
+                  </Tabs.List>
 
-              {Object.entries(detailedHealth).map(([integration, health], index) => (
-                <Box
-                  key={integration}
-                  role="tabpanel"
-                  hidden={selectedTab !== index}
-                  sx={{ mt: 2 }}
-                >
-                  {selectedTab === index && (
-                    <Card variant="outlined">
-                      <CardContent>
-                        <pre style={{ fontSize: '0.875rem', overflow: 'auto' }}>
+                  {Object.entries(detailedHealth).map(([integration, health], index) => (
+                    <Tabs.Panel key={integration} value={index.toString()}>
+                      <Card withBorder mt="md">
+                        <pre style={{ fontSize: '0.875rem', overflow: 'auto', margin: 0 }}>
                           {JSON.stringify(health, null, 2)}
                         </pre>
-                      </CardContent>
-                    </Card>
-                  )}
-                </Box>
-              ))}
-            </AccordionDetails>
-          </Accordion>
-        )}
+                      </Card>
+                    </Tabs.Panel>
+                  ))}
+                </Tabs>
+              </Accordion.Panel>
+            </Accordion.Item>
+          )}
+        </Accordion>
       </Box>
     </MotionPaper>
   );

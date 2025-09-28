@@ -32,8 +32,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 # Import the FastAPI app
 from apps.backend.main import app
-from core.database.connection import get_db
-from core.database.models import User, Course, Lesson, Quiz, UserRole
+from database.connection import get_db
+from database.models.models import User, Course, Lesson, Quiz, UserRole
 from apps.backend.api.auth.auth import create_user_token
 
 

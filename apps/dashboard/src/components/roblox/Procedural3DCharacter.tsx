@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Box as ThreeBox, Sphere, Cylinder, Cone } from '@react-three/drei';
-import Box from '@mui/material/Box';
+import { Box } from '@mantine/core';
 import * as THREE from 'three';
 
 // Character type definitions
@@ -292,7 +292,7 @@ export const Procedural3DCharacter: React.FunctionComponent<Procedural3DCharacte
 
   return (
     <Box
-      sx={{
+      style={{
         width: characterSize,
         height: characterSize,
         borderRadius: '50%',

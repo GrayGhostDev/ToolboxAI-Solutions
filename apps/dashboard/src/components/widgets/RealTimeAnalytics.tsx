@@ -1,30 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardHeader from '@mui/material/CardHeader';
-import Grid from '@mui/material/Grid';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import LinearProgress from '@mui/material/LinearProgress';
-import Chip from '@mui/material/Chip';
-import Avatar from '@mui/material/Avatar';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import ListItemText from '@mui/material/ListItemText';
-import Paper from '@mui/material/Paper';
-import Divider from '@mui/material/Divider';
-
+import { Card, Grid, Text, Box, Progress, Badge, Avatar, Stack, Paper, Group, Divider } from '@mantine/core';
 import {
-  TrendingUp,
-  TrendingDown,
-  School,
-  People,
-  Assignment,
-  CheckCircle,
-  Schedule,
-  EmojiEvents,
-} from '@mui/icons-material';
+  IconTrendingUp,
+  IconTrendingDown,
+  IconSchool,
+  IconUsers,
+  IconFileText,
+  IconCheck,
+  IconClock,
+  IconTrophy,
+} from '@tabler/icons-react';
 import { Line, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -39,8 +24,8 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { useWebSocketContext } from '../../contexts/WebSocketContext';
-import useRealTimeData from '../../hooks/useRealTimeData';
+import { usePusherContext } from '../PusherProvider';
+import { pusherClient } from '../../services/pusher-client';
 // Register ChartJS components
 ChartJS.register(
   CategoryScale,
@@ -63,46 +48,42 @@ interface MetricCardProps {
 }
 const MetricCard: React.FunctionComponent<MetricCardProps> = ({ title, value, change, icon, color }) => {
   return (
-    <Card sx={{ height: '100%', position: 'relative', overflow: 'visible' }}>
-      <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography color="textSecondary" gutterBottom variant="caption">
-              {title}
-            </Typography>
-            <Typography variant="h4" component="div">
-              {value}
-            </Typography>
-            {change !== undefined && (
-              <Box display="flex" alignItems="center" mt={1}>
-                {change >= 0 ? (
-                  <TrendingUp color="success" fontSize="small" />
-                ) : (
-                  <TrendingDown color="error" fontSize="small" />
-                )}
-                <Typography
-                  variant="body2"
-                  color={change >= 0 ? 'success.main' : 'error.main'}
-                  ml={0.5}
-                >
-                  {Math.abs(change)}%
-                </Typography>
-              </Box>
-            )}
-          </Box>
-          <Avatar sx={{ bgcolor: color, width: 56, height: 56 }}>
-            {icon}
-          </Avatar>
+    <Card shadow="sm" p="md" h="100%">
+      <Group justify="space-between" align="flex-start">
+        <Box>
+          <Text size="sm" c="dimmed" mb="xs">
+            {title}
+          </Text>
+          <Text size="xl" fw={700}>
+            {value}
+          </Text>
+          {change !== undefined && (
+            <Group gap="xs" mt="xs">
+              {change >= 0 ? (
+                <IconTrendingUp size={16} color="var(--mantine-color-green-6)" />
+              ) : (
+                <IconTrendingDown size={16} color="var(--mantine-color-red-6)" />
+              )}
+              <Text
+                size="sm"
+                c={change >= 0 ? 'green' : 'red'}
+              >
+                {Math.abs(change)}%
+              </Text>
+            </Group>
+          )}
         </Box>
-      </CardContent>
+        <Avatar size={56} color={color}>
+          {icon}
+        </Avatar>
+      </Group>
     </Card>
   );
 };
 const RealTimeAnalytics: React.FunctionComponent<Record<string, any>> = () => {
-  const { isConnected } = useWebSocketContext();
-  const { data: analyticsData, loading } = useRealTimeData<any | Record<string, any>>('analytics', {
-    refreshInterval: 5000,
-  });
+  const { isConnected } = usePusherContext();
+  const [loading, setLoading] = useState(false);
+
   // State for real-time metrics
   const [metrics, setMetrics] = useState({
     activeUsers: 0,
@@ -139,7 +120,7 @@ const RealTimeAnalytics: React.FunctionComponent<Record<string, any>> = () => {
       },
     ],
   });
-  const [recentActivities] = useState([
+  const [recentActivities, setRecentActivities] = useState([
     {
       id: 1,
       user: 'Alice Johnson',
@@ -169,25 +150,66 @@ const RealTimeAnalytics: React.FunctionComponent<Record<string, any>> = () => {
       time: '15 minutes ago',
     },
   ]);
-  // Update metrics when analytics data changes
+
+  // Subscribe to Pusher channels for real-time updates
   useEffect(() => {
-    if (analyticsData && typeof analyticsData === 'object' && !Array.isArray(analyticsData)) {
-      const anyData = analyticsData as any;
-      setMetrics({
-        activeUsers: anyData.activeUsers || Math.floor(Math.random() * 100) + 150,
-        completedLessons: anyData.completedLessons || Math.floor(Math.random() * 50) + 200,
-        averageScore: anyData.averageScore || Math.floor(Math.random() * 20) + 75,
-        engagementRate: anyData.engagementRate || Math.floor(Math.random() * 30) + 65,
+    if (!isConnected) return;
+
+    // Subscribe to analytics channel
+    const analyticsChannel = pusherClient.subscribe('analytics');
+
+    if (analyticsChannel) {
+      // Bind to metric update events
+      pusherClient.bind('analytics', 'metric-update', (data: any) => {
+        console.log('Analytics metrics updated:', data);
+        setMetrics(prev => ({
+          ...prev,
+          ...data.metrics
+        }));
       });
-      // Update charts if new data available
-      if (anyData.activityChart) {
-        setActivityData(anyData.activityChart);
-      }
-      if (anyData.performanceChart) {
-        setPerformanceData(anyData.performanceChart);
-      }
+
+      // Bind to activity chart updates
+      pusherClient.bind('analytics', 'activity-chart-update', (data: any) => {
+        console.log('Activity chart updated:', data);
+        setActivityData(data.chartData);
+      });
+
+      // Bind to performance chart updates
+      pusherClient.bind('analytics', 'performance-chart-update', (data: any) => {
+        console.log('Performance chart updated:', data);
+        setPerformanceData(data.chartData);
+      });
+
+      // Bind to recent activity updates
+      pusherClient.bind('analytics', 'recent-activity-update', (data: any) => {
+        console.log('Recent activity updated:', data);
+        setRecentActivities(prev => [data.activity, ...prev.slice(0, 3)]);
+      });
     }
-  }, [analyticsData]);
+
+    // Cleanup function
+    return () => {
+      if (analyticsChannel) {
+        pusherClient.unbind('analytics', 'metric-update');
+        pusherClient.unbind('analytics', 'activity-chart-update');
+        pusherClient.unbind('analytics', 'performance-chart-update');
+        pusherClient.unbind('analytics', 'recent-activity-update');
+        pusherClient.unsubscribe('analytics');
+      }
+    };
+  }, [isConnected]);
+
+  // Load initial metrics when connected
+  useEffect(() => {
+    if (isConnected) {
+      setMetrics({
+        activeUsers: Math.floor(Math.random() * 100) + 150,
+        completedLessons: Math.floor(Math.random() * 50) + 200,
+        averageScore: Math.floor(Math.random() * 20) + 75,
+        engagementRate: Math.floor(Math.random() * 30) + 65,
+      });
+    }
+  }, [isConnected]);
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -213,140 +235,132 @@ const RealTimeAnalytics: React.FunctionComponent<Record<string, any>> = () => {
     },
   };
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+    <Box p="md">
+      <Text size="xl" fw={700} mb="lg">
         Real-Time Analytics Dashboard
-      </Typography>
-      {loading && <LinearProgress sx={{ mb: 2 }} />}
+      </Text>
+      {loading && <Progress value={100} animated mb="md" />}
       {/* Connection Status */}
-      <Box sx={{ mb: 2 }}>
-        <Chip
-          label={isConnected ? 'Live Data' : 'Offline'}
-          color={isConnected ? 'success' : 'error'}
-          size="small"
-          sx={{ mr: 1 }}
-        />
+      <Group gap="xs" mb="md">
+        <Badge
+          color={isConnected ? 'green' : 'red'}
+          size="sm"
+        >
+          {isConnected ? 'Live Data' : 'Offline'}
+        </Badge>
         {isConnected && (
-          <Chip
-            label="Auto-refresh: 5s"
-            color="primary"
-            variant="outlined"
-            size="small"
-          />
+          <Badge
+            color="blue"
+            variant="outline"
+            size="sm"
+          >
+            Real-time Updates
+          </Badge>
         )}
-      </Box>
+      </Group>
       {/* Metric Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      <Grid mb="lg">
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <MetricCard
             title="Active Users"
             value={metrics.activeUsers}
             change={12}
-            icon={<People />}
-            color="#4caf50"
+            icon={<IconUsers />}
+            color="green"
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <MetricCard
             title="Completed Lessons"
             value={metrics.completedLessons}
             change={8}
-            icon={<CheckCircle />}
-            color="#2196f3"
+            icon={<IconCheck />}
+            color="blue"
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <MetricCard
             title="Average Score"
             value={`${metrics.averageScore}%`}
             change={-2}
-            icon={<School />}
-            color="#ff9800"
+            icon={<IconSchool />}
+            color="orange"
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <MetricCard
             title="Engagement Rate"
             value={`${metrics.engagementRate}%`}
             change={15}
-            icon={<EmojiEvents />}
-            color="#9c27b0"
+            icon={<IconTrophy />}
+            color="violet"
           />
-        </Grid>
+        </Grid.Col>
       </Grid>
       {/* Charts Row */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={8}>
-          <Card>
-            <CardHeader title="Weekly Activity Trend" />
-            <CardContent>
-              <Box sx={{ height: 300 }}>
-                <Line data={activityData} options={chartOptions} />
-              </Box>
-            </CardContent>
+      <Grid mb="lg">
+        <Grid.Col span={{ base: 12, md: 8 }}>
+          <Card shadow="sm" p="md">
+            <Text size="lg" fw={600} mb="md">Weekly Activity Trend</Text>
+            <Box h={300}>
+              <Line data={activityData} options={chartOptions} />
+            </Box>
           </Card>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardHeader title="Subject Performance" />
-            <CardContent>
-              <Box sx={{ height: 300 }}>
-                <Doughnut data={performanceData} options={doughnutOptions} />
-              </Box>
-            </CardContent>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <Card shadow="sm" p="md">
+            <Text size="lg" fw={600} mb="md">Subject Performance</Text>
+            <Box h={300}>
+              <Doughnut data={performanceData} options={doughnutOptions} />
+            </Box>
           </Card>
-        </Grid>
+        </Grid.Col>
       </Grid>
       {/* Recent Activities */}
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Card>
-            <CardHeader title="Recent Student Activities" />
-            <CardContent>
-              <List>
-                {recentActivities.map((activity, index) => (
-                  <React.Fragment key={activity.id}>
-                    <ListItem>
-                      <ListItemAvatar>
-                        <Avatar sx={{ bgcolor: '#2196f3' }}>
-                          {activity.user[0]}
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={activity.user}
-                        secondary={
-                          <React.Fragment>
-                            <Box component="span" sx={{ fontSize: '0.875rem', marginRight: '8px' }}>
+      <Grid>
+        <Grid.Col span={12}>
+          <Card shadow="sm" p="md">
+            <Text size="lg" fw={600} mb="md">Recent Student Activities</Text>
+            <Stack gap="md">
+              {recentActivities.map((activity, index) => (
+                <React.Fragment key={activity.id}>
+                  <Group gap="md" align="flex-start">
+                    <Avatar color="blue" size="md">
+                      {activity.user[0]}
+                    </Avatar>
+                    <Box style={{ flex: 1 }}>
+                      <Group justify="space-between" align="flex-start">
+                        <Box>
+                          <Text fw={500}>{activity.user}</Text>
+                          <Group gap="xs" align="center">
+                            <Text size="sm" c="dimmed">
                               {activity.action}
-                            </Box>
+                            </Text>
                             {activity.score && (
-                              <Chip
-                                label={`${activity.score}%`}
-                                size="small"
-                                color={activity.score >= 80 ? 'success' : 'warning'}
-                                component="span"
-                                sx={{ display: 'inline-flex', verticalAlign: 'middle' }}
-                              />
+                              <Badge
+                                size="sm"
+                                color={activity.score >= 80 ? 'green' : 'yellow'}
+                              >
+                                {activity.score}%
+                              </Badge>
                             )}
-                          </React.Fragment>
-                        }
-                        secondaryTypographyProps={{
-                          component: 'div',
-                          sx: { display: 'flex', alignItems: 'center', gap: 1 }
-                        }}
-                      />
-                      <Typography variant="caption" color="textSecondary">
-                        <Schedule fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
-                        {activity.time}
-                      </Typography>
-                    </ListItem>
-                    {index < recentActivities.length - 1 && <Divider />}
-                  </React.Fragment>
-                ))}
-              </List>
-            </CardContent>
+                          </Group>
+                        </Box>
+                        <Group gap="xs" align="center">
+                          <IconClock size={14} />
+                          <Text size="xs" c="dimmed">
+                            {activity.time}
+                          </Text>
+                        </Group>
+                      </Group>
+                    </Box>
+                  </Group>
+                  {index < recentActivities.length - 1 && <Divider />}
+                </React.Fragment>
+              ))}
+            </Stack>
           </Card>
-        </Grid>
+        </Grid.Col>
       </Grid>
     </Box>
   );

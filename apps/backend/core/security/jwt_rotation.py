@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class JWTKeyPair(BaseModel):
     """JWT key pair with metadata"""
+
     kid: str = Field(description="Key ID")
     secret_key: str = Field(description="Secret key for signing")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -27,6 +28,7 @@ class JWTKeyPair(BaseModel):
 
 class TokenPayload(BaseModel):
     """JWT token payload structure"""
+
     sub: str  # Subject (user ID)
     exp: datetime  # Expiration
     iat: datetime  # Issued at
@@ -46,7 +48,7 @@ class JWTRotationManager:
         key_grace_period: int = 3600,  # 1 hour grace period for old keys
         access_token_expire: int = 900,  # 15 minutes
         refresh_token_expire: int = 604800,  # 7 days
-        algorithm: str = "HS256"
+        algorithm: str = "HS256",
     ):
         self.redis_url = redis_url
         self.redis_client: Optional[redis.Redis] = None
@@ -63,9 +65,7 @@ class JWTRotationManager:
         """Initialize Redis connection and ensure active key exists"""
         try:
             self.redis_client = await redis.from_url(
-                self.redis_url,
-                encoding="utf-8",
-                decode_responses=True
+                self.redis_url, encoding="utf-8", decode_responses=True
             )
 
             # Ensure we have an active key
@@ -102,7 +102,8 @@ class JWTRotationManager:
             new_key = JWTKeyPair(
                 kid=self._generate_key_id(),
                 secret_key=self._generate_secret_key(),
-                expires_at=datetime.now(timezone.utc) + timedelta(seconds=self.key_rotation_interval)
+                expires_at=datetime.now(timezone.utc)
+                + timedelta(seconds=self.key_rotation_interval),
             )
 
             # Store new key in Redis
@@ -110,14 +111,12 @@ class JWTRotationManager:
             await self.redis_client.setex(
                 f"{self.key_prefix}{new_key.kid}",
                 self.key_rotation_interval + self.key_grace_period,
-                key_data
+                key_data,
             )
 
             # Mark as active key
             await self.redis_client.setex(
-                f"{self.key_prefix}active",
-                self.key_rotation_interval,
-                new_key.kid
+                f"{self.key_prefix}active", self.key_rotation_interval, new_key.kid
             )
 
             # If old key exists, keep it for grace period
@@ -126,7 +125,7 @@ class JWTRotationManager:
                 await self.redis_client.setex(
                     f"{self.key_prefix}{old_key.kid}",
                     self.key_grace_period,
-                    old_key.model_dump_json()
+                    old_key.model_dump_json(),
                 )
                 logger.info(f"Rotated keys: {old_key.kid} -> {new_key.kid}")
             else:
@@ -180,16 +179,12 @@ class JWTRotationManager:
             "iat": int(now.timestamp()),
             "jti": access_jti,
             "kid": active_key.kid,
-            "type": "access"
+            "type": "access",
         }
         if scope:
             access_payload["scope"] = scope
 
-        access_token = jwt.encode(
-            access_payload,
-            active_key.secret_key,
-            algorithm=self.algorithm
-        )
+        access_token = jwt.encode(access_payload, active_key.secret_key, algorithm=self.algorithm)
 
         # Create refresh token
         refresh_jti = secrets.token_urlsafe(16)
@@ -199,26 +194,24 @@ class JWTRotationManager:
             "iat": int(now.timestamp()),
             "jti": refresh_jti,
             "kid": active_key.kid,
-            "type": "refresh"
+            "type": "refresh",
         }
         if scope:
             refresh_payload["scope"] = scope
 
-        refresh_token = jwt.encode(
-            refresh_payload,
-            active_key.secret_key,
-            algorithm=self.algorithm
-        )
+        refresh_token = jwt.encode(refresh_payload, active_key.secret_key, algorithm=self.algorithm)
 
         # Store refresh token in Redis for validation
         await self.redis_client.setex(
             f"{self.refresh_prefix}{refresh_jti}",
             self.refresh_token_expire,
-            json.dumps({
-                "user_id": user_id,
-                "kid": active_key.kid,
-                "created_at": datetime.now(timezone.utc).isoformat()
-            })
+            json.dumps(
+                {
+                    "user_id": user_id,
+                    "kid": active_key.kid,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                }
+            ),
         )
 
         return access_token, refresh_token
@@ -247,11 +240,7 @@ class JWTRotationManager:
                 return None
 
             # Verify and decode
-            payload = jwt.decode(
-                token,
-                key.secret_key,
-                algorithms=[self.algorithm]
-            )
+            payload = jwt.decode(token, key.secret_key, algorithms=[self.algorithm])
 
             # Convert timestamps back to datetime objects
             payload_obj = TokenPayload(
@@ -261,7 +250,7 @@ class JWTRotationManager:
                 jti=payload["jti"],
                 kid=payload["kid"],
                 type=payload["type"],
-                scope=payload.get("scope")
+                scope=payload.get("scope"),
             )
 
             return payload_obj
@@ -303,11 +292,7 @@ class JWTRotationManager:
                 return True  # Already expired
 
             # Add to revocation list
-            await self.redis_client.setex(
-                f"{self.revoked_prefix}{payload.jti}",
-                remaining_ttl,
-                "1"
-            )
+            await self.redis_client.setex(f"{self.revoked_prefix}{payload.jti}", remaining_ttl, "1")
 
             # If refresh token, also remove from refresh store
             if payload.type == "refresh":
@@ -351,7 +336,7 @@ class JWTRotationManager:
             "active_key_expires": active_key.expires_at.isoformat() if active_key else None,
             "total_keys": len(all_keys),
             "rotation_interval": self.key_rotation_interval,
-            "grace_period": self.key_grace_period
+            "grace_period": self.key_grace_period,
         }
 
 

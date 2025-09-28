@@ -1,42 +1,36 @@
 /**
  * Roblox Dashboard Header Component
- * 
+ *
  * Futuristic header with character avatars, notifications, and navigation
  * designed for kids with engaging animations and effects
  */
 
 import React, { useState, useEffect } from 'react';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import Badge from '@mui/material/Badge';
-import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
-import Chip from '@mui/material/Chip';
-import Button from '@mui/material/Button';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Divider from '@mui/material/Divider';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import Fade from '@mui/material/Fade';
-import Slide from '@mui/material/Slide';
-import Zoom from '@mui/material/Zoom';
-import Zoom from '@mui/material/Zoom';
 import {
-  Notifications,
-  Settings,
-  Help,
-  AccountCircle,
-  RocketLaunch,
-  Star,
-  EmojiEvents,
-  AutoAwesome,
-  Menu as MenuIcon,
-  Close
-} from '@mui/icons-material';
+  Box,
+  Text,
+  ActionIcon,
+  Badge,
+  Group,
+  Avatar,
+  Menu,
+  Divider,
+  Transition,
+  useMantineTheme,
+  rem
+} from '@mantine/core';
+import {
+  IconBell,
+  IconSettings,
+  IconHelp,
+  IconUser,
+  IconRocket,
+  IconStar,
+  IconTrophy,
+  IconSparkles,
+  IconMenu2,
+  IconX
+} from '@tabler/icons-react';
 import { RobloxCharacterAvatar } from './RobloxCharacterAvatar';
 
 interface Notification {
@@ -115,7 +109,7 @@ export const RobloxDashboardHeader: React.FunctionComponent<RobloxDashboardHeade
   onHelpClick,
   onProfileClick
 }) => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const [notifications, setNotifications] = useState<Notification[]>(SAMPLE_NOTIFICATIONS);
   const [notificationMenuAnchor, setNotificationMenuAnchor] = useState<null | HTMLElement>(null);
   const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null);
@@ -148,258 +142,307 @@ export const RobloxDashboardHeader: React.FunctionComponent<RobloxDashboardHeade
   };
 
   return (
-    <AppBar
-      position="sticky"
-      sx={{
-        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.9)}, ${alpha(theme.palette.secondary.main, 0.9)})`,
+    <Box
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 1000,
+        background: `linear-gradient(135deg, ${theme.fn.rgba(theme.colors.blue[6], 0.9)}, ${theme.fn.rgba(theme.colors.violet[6], 0.9)})`,
         backdropFilter: 'blur(20px)',
-        borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.3)}`,
-        boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.3)}`,
+        borderBottom: `2px solid ${theme.fn.rgba(theme.colors.blue[6], 0.3)}`,
+        boxShadow: `0 8px 32px ${theme.fn.rgba(theme.colors.blue[6], 0.3)}`,
+        padding: rem(16),
+        minHeight: 80
       }}
     >
-      <Toolbar sx={{ minHeight: 80, py: 1 }}>
+      <Group justify="space-between" align="center" h={64}>
         {/* Left Section - Menu & Title */}
-        <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-          <IconButton
-            edge="start"
-            color="inherit"
-            onClick={(e: React.MouseEvent) => onMenuClick}
-            sx={{
-              mr: 2,
-              p: 1,
-              background: alpha('#fff', 0.1),
-              '&:hover': {
-                background: alpha('#fff', 0.2),
-                transform: 'scale(1.1)',
-              },
+        <Group align="center" style={{ flex: 1 }}>
+          <ActionIcon
+            size="lg"
+            variant="subtle"
+            color="white"
+            onClick={onMenuClick}
+            style={{
+              background: theme.fn.rgba('#fff', 0.1),
               transition: 'all 0.3s ease'
             }}
-          >
-            <MenuIcon />
-          </IconButton>
-
-          <Box sx={{ flex: 1 }}>
-            <Fade in={isAnimating} timeout={1000}>
-              <Typography
-                variant="h4"
-                component="h1"
-                sx={{
-                  fontWeight: 800,
-                  background: 'linear-gradient(135deg, #fff, #e0e0e0)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                  mb: 0.5
-                }}
-              >
-                {title}
-              </Typography>
-            </Fade>
-            
-            <Slide in={isAnimating} direction="up" timeout={1500}>
-              <Typography
-                variant="subtitle1"
-                sx={{
-                  color: alpha('#fff', 0.9),
-                  fontWeight: 500,
-                  fontSize: '1.1rem'
-                }}
-              >
-                {subtitle}
-              </Typography>
-            </Slide>
-          </Box>
-        </Box>
-
-        {/* Center Section - Character Avatars */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mx: 4 }}>
-          <Stack direction="row" spacing={2} alignItems="center">
-            {SAMPLE_CHARACTERS.map((character, index) => (
-              <Zoom
-                in={isAnimating}
-                timeout={2000 + index * 200}
-                key={character.name}
-              >
-                <Box>
-                  <RobloxCharacterAvatar
-                    character={character}
-                    size="medium"
-                    animated={true}
-                    onClick={(e: React.MouseEvent) => () => console.log(`Selected ${character.name}`)}
-                  />
-                </Box>
-              </Zoom>
-            ))}
-          </Stack>
-        </Box>
-
-        {/* Right Section - Actions */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {/* Notifications */}
-          <IconButton
-            color="inherit"
-            onClick={(e: React.MouseEvent) => (e) => setNotificationMenuAnchor(e.currentTarget)}
-            sx={{
-              p: 1,
-              background: alpha('#fff', 0.1),
-              '&:hover': {
-                background: alpha('#fff', 0.2),
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.3s ease'
-            }}
-          >
-            <Badge badgeContent={unreadCount} color="error">
-              <Notifications />
-            </Badge>
-          </IconButton>
-
-          {/* Settings */}
-          <IconButton
-            color="inherit"
-            onClick={(e: React.MouseEvent) => onSettingsClick}
-            sx={{
-              p: 1,
-              background: alpha('#fff', 0.1),
-              '&:hover': {
-                background: alpha('#fff', 0.2),
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.3s ease'
-            }}
-          >
-            <Settings />
-          </IconButton>
-
-          {/* Help */}
-          <IconButton
-            color="inherit"
-            onClick={(e: React.MouseEvent) => onHelpClick}
-            sx={{
-              p: 1,
-              background: alpha('#fff', 0.1),
-              '&:hover': {
-                background: alpha('#fff', 0.2),
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.3s ease'
-            }}
-          >
-            <Help />
-          </IconButton>
-
-          {/* Profile */}
-          <IconButton
-            color="inherit"
-            onClick={(e: React.MouseEvent) => (e) => setProfileMenuAnchor(e.currentTarget)}
-            sx={{
-              p: 1,
-              background: alpha('#fff', 0.1),
-              '&:hover': {
-                background: alpha('#fff', 0.2),
-                transform: 'scale(1.1)',
-              },
-              transition: 'all 0.3s ease'
-            }}
-          >
-            <AccountCircle />
-          </IconButton>
-        </Box>
-      </Toolbar>
-
-      {/* Notification Menu */}
-      <Menu
-        anchorEl={notificationMenuAnchor}
-        open={Boolean(notificationMenuAnchor)}
-        onClose={() => setNotificationMenuAnchor(null)}
-        PaperProps={{
-          sx: {
-            background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.05)})`,
-            border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-            backdropFilter: 'blur(20px)',
-            minWidth: 300,
-            maxHeight: 400,
-            overflow: 'auto'
-          }
-        }}
-      >
-        <Box sx={{ p: 2, borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
-            Notifications
-          </Typography>
-        </Box>
-        
-        {notifications.map((notification) => (
-          <MenuItem
-            key={notification.id}
-            onClick={(e: React.MouseEvent) => () => handleNotificationClick(notification)}
-            sx={{
-              py: 2,
-              px: 2,
-              borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-              background: notification.isRead ? 'transparent' : alpha(theme.palette.primary.main, 0.05),
-              '&:hover': {
-                background: alpha(theme.palette.primary.main, 0.1),
+            styles={{
+              root: {
+                '&:hover': {
+                  background: theme.fn.rgba('#fff', 0.2),
+                  transform: 'scale(1.1)',
+                }
               }
             }}
           >
-            <Box sx={{ flex: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  {notification.title}
-                </Typography>
-                {!notification.isRead && (
-                  <Box
-                    sx={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      background: theme.palette.primary.main
-                    }}
-                  />
-                )}
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                {notification.message}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                {notification.timestamp.toLocaleTimeString()}
-              </Typography>
-            </Box>
-          </MenuItem>
-        ))}
-      </Menu>
+            <IconMenu2 size={24} />
+          </ActionIcon>
 
-      {/* Profile Menu */}
-      <Menu
-        anchorEl={profileMenuAnchor}
-        open={Boolean(profileMenuAnchor)}
-        onClose={() => setProfileMenuAnchor(null)}
-        PaperProps={{
-          sx: {
-            background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.05)})`,
-            border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-            backdropFilter: 'blur(20px)',
-            minWidth: 200
-          }
-        }}
-      >
-        <MenuItem onClick={(e: React.MouseEvent) => handleProfileClick}>
-          <AccountCircle sx={{ mr: 2 }} />
-          Profile
-        </MenuItem>
-        <MenuItem onClick={(e: React.MouseEvent) => onSettingsClick}>
-          <Settings sx={{ mr: 2 }} />
-          Settings
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={(e: React.MouseEvent) => onHelpClick}>
-          <Help sx={{ mr: 2 }} />
-          Help & Support
-        </MenuItem>
-      </Menu>
-    </AppBar>
+          <Box style={{ flex: 1 }}>
+            <Transition
+              mounted={isAnimating}
+              transition="fade"
+              duration={1000}
+            >
+              {(styles) => (
+                <Text
+                  size="xl"
+                  fw={800}
+                  style={{
+                    ...styles,
+                    background: 'linear-gradient(135deg, #fff, #e0e0e0)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                    marginBottom: rem(4)
+                  }}
+                >
+                  {title}
+                </Text>
+              )}
+            </Transition>
+
+            <Transition
+              mounted={isAnimating}
+              transition="slide-up"
+              duration={1500}
+            >
+              {(styles) => (
+                <Text
+                  size="lg"
+                  style={{
+                    ...styles,
+                    color: theme.fn.rgba('#fff', 0.9),
+                    fontWeight: 500
+                  }}
+                >
+                  {subtitle}
+                </Text>
+              )}
+            </Transition>
+          </Box>
+        </Group>
+
+        {/* Center Section - Character Avatars */}
+        <Box style={{ display: 'flex', alignItems: 'center', margin: `0 ${rem(32)}` }}>
+          <Group spacing="md" align="center">
+            {SAMPLE_CHARACTERS.map((character, index) => (
+              <Transition
+                key={character.name}
+                mounted={isAnimating}
+                transition="pop"
+                duration={2000 + index * 200}
+              >
+                {(styles) => (
+                  <Box style={styles}>
+                    <RobloxCharacterAvatar
+                      character={character}
+                      size="medium"
+                      animated={true}
+                      onClick={() => console.log(`Selected ${character.name}`)}
+                    />
+                  </Box>
+                )}
+              </Transition>
+            ))}
+          </Group>
+        </Box>
+
+        {/* Right Section - Actions */}
+        <Group spacing="xs" align="center">
+          {/* Notifications */}
+          <Menu
+            shadow="md"
+            width={300}
+            position="bottom-end"
+            opened={Boolean(notificationMenuAnchor)}
+            onChange={(opened) => !opened && setNotificationMenuAnchor(null)}
+          >
+            <Menu.Target>
+              <ActionIcon
+                size="lg"
+                variant="subtle"
+                color="white"
+                onClick={(e) => setNotificationMenuAnchor(e.currentTarget)}
+                style={{
+                  background: theme.fn.rgba('#fff', 0.1),
+                  transition: 'all 0.3s ease'
+                }}
+                styles={{
+                  root: {
+                    '&:hover': {
+                      background: theme.fn.rgba('#fff', 0.2),
+                      transform: 'scale(1.1)',
+                    }
+                  }
+                }}
+              >
+                <Badge count={unreadCount} color="red" size="sm">
+                  <IconBell size={20} />
+                </Badge>
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown
+              style={{
+                background: `linear-gradient(145deg, ${theme.colors.dark[6]}, ${theme.fn.rgba(theme.colors.blue[6], 0.05)})`,
+                border: `1px solid ${theme.fn.rgba(theme.colors.blue[6], 0.2)}`,
+                backdropFilter: 'blur(20px)',
+                maxHeight: 400,
+                overflow: 'auto'
+              }}
+            >
+              <Box p="md" style={{ borderBottom: `1px solid ${theme.fn.rgba(theme.colors.gray[6], 0.1)}` }}>
+                <Text size="lg" fw={600} c={theme.colors.blue[6]}>
+                  Notifications
+                </Text>
+              </Box>
+
+              {notifications.map((notification) => (
+                <Menu.Item
+                  key={notification.id}
+                  onClick={() => handleNotificationClick(notification)}
+                  style={{
+                    padding: rem(16),
+                    borderBottom: `1px solid ${theme.fn.rgba(theme.colors.gray[6], 0.1)}`,
+                    background: notification.isRead ? 'transparent' : theme.fn.rgba(theme.colors.blue[6], 0.05),
+                  }}
+                >
+                  <Box>
+                    <Group spacing="xs" mb="xs">
+                      <Text size="sm" fw={600}>
+                        {notification.title}
+                      </Text>
+                      {!notification.isRead && (
+                        <Box
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            background: theme.colors.blue[6]
+                          }}
+                        />
+                      )}
+                    </Group>
+                    <Text size="sm" c="dimmed">
+                      {notification.message}
+                    </Text>
+                    <Text size="xs" c="dimmed" mt="xs">
+                      {notification.timestamp.toLocaleTimeString()}
+                    </Text>
+                  </Box>
+                </Menu.Item>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
+
+          {/* Settings */}
+          <ActionIcon
+            size="lg"
+            variant="subtle"
+            color="white"
+            onClick={onSettingsClick}
+            style={{
+              background: theme.fn.rgba('#fff', 0.1),
+              transition: 'all 0.3s ease'
+            }}
+            styles={{
+              root: {
+                '&:hover': {
+                  background: theme.fn.rgba('#fff', 0.2),
+                  transform: 'scale(1.1)',
+                }
+              }
+            }}
+          >
+            <IconSettings size={20} />
+          </ActionIcon>
+
+          {/* Help */}
+          <ActionIcon
+            size="lg"
+            variant="subtle"
+            color="white"
+            onClick={onHelpClick}
+            style={{
+              background: theme.fn.rgba('#fff', 0.1),
+              transition: 'all 0.3s ease'
+            }}
+            styles={{
+              root: {
+                '&:hover': {
+                  background: theme.fn.rgba('#fff', 0.2),
+                  transform: 'scale(1.1)',
+                }
+              }
+            }}
+          >
+            <IconHelp size={20} />
+          </ActionIcon>
+
+          {/* Profile */}
+          <Menu
+            shadow="md"
+            width={200}
+            position="bottom-end"
+            opened={Boolean(profileMenuAnchor)}
+            onChange={(opened) => !opened && setProfileMenuAnchor(null)}
+          >
+            <Menu.Target>
+              <ActionIcon
+                size="lg"
+                variant="subtle"
+                color="white"
+                onClick={(e) => setProfileMenuAnchor(e.currentTarget)}
+                style={{
+                  background: theme.fn.rgba('#fff', 0.1),
+                  transition: 'all 0.3s ease'
+                }}
+                styles={{
+                  root: {
+                    '&:hover': {
+                      background: theme.fn.rgba('#fff', 0.2),
+                      transform: 'scale(1.1)',
+                    }
+                  }
+                }}
+              >
+                <IconUser size={20} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown
+              style={{
+                background: `linear-gradient(145deg, ${theme.colors.dark[6]}, ${theme.fn.rgba(theme.colors.blue[6], 0.05)})`,
+                border: `1px solid ${theme.fn.rgba(theme.colors.blue[6], 0.2)}`,
+                backdropFilter: 'blur(20px)'
+              }}
+            >
+              <Menu.Item
+                leftSection={<IconUser size={16} />}
+                onClick={handleProfileClick}
+              >
+                Profile
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconSettings size={16} />}
+                onClick={onSettingsClick}
+              >
+                Settings
+              </Menu.Item>
+              <Divider />
+              <Menu.Item
+                leftSection={<IconHelp size={16} />}
+                onClick={onHelpClick}
+              >
+                Help & Support
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Group>
+      </Group>
+
+    </Box>
   );
 };
 

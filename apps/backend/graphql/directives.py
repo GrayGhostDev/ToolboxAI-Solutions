@@ -29,8 +29,7 @@ class AuthDirective(SchemaDirectiveVisitor):
 
             if not user:
                 raise GraphQLError(
-                    "Authentication required",
-                    extensions={"code": "UNAUTHENTICATED"}
+                    "Authentication required", extensions={"code": "UNAUTHENTICATED"}
                 )
 
             # Check role if specified
@@ -46,12 +45,7 @@ class AuthDirective(SchemaDirectiveVisitor):
                 required_role = str(requires_role).upper()
 
                 # Check role hierarchy
-                role_hierarchy = {
-                    "STUDENT": 0,
-                    "PARENT": 1,
-                    "TEACHER": 2,
-                    "ADMIN": 3
-                }
+                role_hierarchy = {"STUDENT": 0, "PARENT": 1, "TEACHER": 2, "ADMIN": 3}
 
                 user_level = role_hierarchy.get(user_role, -1)
                 required_level = role_hierarchy.get(required_role, 999)
@@ -59,7 +53,7 @@ class AuthDirective(SchemaDirectiveVisitor):
                 if user_level < required_level:
                     raise GraphQLError(
                         f"Insufficient permissions. Required role: {required_role}",
-                        extensions={"code": "FORBIDDEN"}
+                        extensions={"code": "FORBIDDEN"},
                     )
 
             return original_resolver(obj, info, **kwargs)
@@ -107,10 +101,7 @@ class RateLimitDirective(SchemaDirectiveVisitor):
             current_time = time.time()
 
             if rate_limit_key not in self._rate_limits:
-                self._rate_limits[rate_limit_key] = {
-                    "count": 0,
-                    "window_start": current_time
-                }
+                self._rate_limits[rate_limit_key] = {"count": 0, "window_start": current_time}
 
             rate_data = self._rate_limits[rate_limit_key]
 
@@ -128,8 +119,8 @@ class RateLimitDirective(SchemaDirectiveVisitor):
                         "code": "RATE_LIMITED",
                         "max": max_requests,
                         "window": window,
-                        "retry_after": int(remaining_time)
-                    }
+                        "retry_after": int(remaining_time),
+                    },
                 )
 
             # Increment counter
@@ -144,15 +135,11 @@ class RateLimitDirective(SchemaDirectiveVisitor):
         """Parse window string to seconds"""
 
         # Simple parser for formats like "1h", "30m", "60s"
-        unit_multipliers = {
-            "s": 1,
-            "m": 60,
-            "h": 3600,
-            "d": 86400
-        }
+        unit_multipliers = {"s": 1, "m": 60, "h": 3600, "d": 86400}
 
         # Extract number and unit
         import re
+
         match = re.match(r"(\d+)([smhd])", window.lower())
 
         if not match:

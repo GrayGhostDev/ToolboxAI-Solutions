@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/versioning.py
-# hypothesis_version: 6.139.2
-
-[b'deprecated', b'x-api-latest-version', b'x-api-version', b'x-api-version-status', b'x-api-version-strategy', 1.0, ',', '/api/v(\\d+)', '/users', '1.0', '1.0.0', '1.1.0', '2.0', '2.0.0', 'API v1', 'API v2', 'APIVersion', 'Accept', 'X-API-Deprecated', 'X-API-Sunset', 'X-API-Version', 'api_version', 'content_type', 'created', 'data', 'header', 'headers', 'http', 'http.response.start', 'metadata', 'page', 'q=([0-9.]+)', 'query_param', 'response', 'timestamps', 'total', 'true', 'type', 'updated', 'url_path', 'users', 'version', 'version=([0-9.]+)']

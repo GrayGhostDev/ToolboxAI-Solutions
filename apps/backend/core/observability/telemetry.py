@@ -24,13 +24,10 @@ from opentelemetry.sdk.trace import TracerProvider, sampling
 from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
     ConsoleSpanExporter,
-    SimpleSpanProcessor
+    SimpleSpanProcessor,
 )
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import (
-    PeriodicExportingMetricReader,
-    ConsoleMetricExporter
-)
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader, ConsoleMetricExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.semconv.trace import SpanAttributes
@@ -47,12 +44,13 @@ from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapProp
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
 class TelemetryConfig:
     """Configuration for telemetry system"""
+
     service_name: str
     service_version: str = "1.0.0"
     environment: str = "production"
@@ -98,7 +96,7 @@ class AdaptiveSampler(sampling.Sampler):
         base_rate: float = 0.1,
         error_rate: float = 1.0,
         high_latency_threshold_ms: float = 1000,
-        high_latency_rate: float = 0.5
+        high_latency_rate: float = 0.5,
     ):
         self.base_rate = base_rate
         self.error_rate = error_rate
@@ -114,45 +112,42 @@ class AdaptiveSampler(sampling.Sampler):
         name: str,
         kind: SpanKind,
         attributes: Dict[str, Any] = None,
-        links: List = None
+        links: List = None,
     ) -> sampling.SamplingResult:
         """Determine if span should be sampled"""
 
         # Always sample if parent was sampled
         parent_span_context = trace.get_current_span(parent_context).get_span_context()
-        if parent_span_context and parent_span_context.is_valid and parent_span_context.trace_flags.sampled:
+        if (
+            parent_span_context
+            and parent_span_context.is_valid
+            and parent_span_context.trace_flags.sampled
+        ):
             return sampling.SamplingResult(
-                decision=sampling.Decision.RECORD_AND_SAMPLE,
-                attributes=attributes
+                decision=sampling.Decision.RECORD_AND_SAMPLE, attributes=attributes
             )
 
         # Sample errors at higher rate
         if attributes and attributes.get("error", False):
             if trace_id % int(1 / self.error_rate) == 0:
                 return sampling.SamplingResult(
-                    decision=sampling.Decision.RECORD_AND_SAMPLE,
-                    attributes=attributes
+                    decision=sampling.Decision.RECORD_AND_SAMPLE, attributes=attributes
                 )
 
         # Sample high latency operations
         if attributes and attributes.get("latency_ms", 0) > self.high_latency_threshold_ms:
             if trace_id % int(1 / self.high_latency_rate) == 0:
                 return sampling.SamplingResult(
-                    decision=sampling.Decision.RECORD_AND_SAMPLE,
-                    attributes=attributes
+                    decision=sampling.Decision.RECORD_AND_SAMPLE, attributes=attributes
                 )
 
         # Base sampling
         if trace_id % int(1 / self.base_rate) == 0:
             return sampling.SamplingResult(
-                decision=sampling.Decision.RECORD_AND_SAMPLE,
-                attributes=attributes
+                decision=sampling.Decision.RECORD_AND_SAMPLE, attributes=attributes
             )
 
-        return sampling.SamplingResult(
-            decision=sampling.Decision.DROP,
-            attributes=attributes
-        )
+        return sampling.SamplingResult(decision=sampling.Decision.DROP, attributes=attributes)
 
     def get_description(self) -> str:
         return f"AdaptiveSampler(base={self.base_rate}, error={self.error_rate})"
@@ -181,12 +176,14 @@ class TelemetryManager:
         """Initialize telemetry providers"""
 
         # Create resource
-        self.resource = Resource.create({
-            ResourceAttributes.SERVICE_NAME: self.config.service_name,
-            ResourceAttributes.SERVICE_VERSION: self.config.service_version,
-            ResourceAttributes.DEPLOYMENT_ENVIRONMENT: self.config.environment,
-            **self.config.custom_attributes
-        })
+        self.resource = Resource.create(
+            {
+                ResourceAttributes.SERVICE_NAME: self.config.service_name,
+                ResourceAttributes.SERVICE_VERSION: self.config.service_version,
+                ResourceAttributes.DEPLOYMENT_ENVIRONMENT: self.config.environment,
+                **self.config.custom_attributes,
+            }
+        )
 
         if self.config.enable_tracing:
             self._initialize_tracing()
@@ -214,99 +211,71 @@ class TelemetryManager:
             sampler = sampling.AlwaysOn()
 
         # Create tracer provider
-        tracer_provider = TracerProvider(
-            resource=self.resource,
-            sampler=sampler
-        )
+        tracer_provider = TracerProvider(resource=self.resource, sampler=sampler)
 
         # Add exporters
         if self.config.jaeger_endpoint:
             jaeger_exporter = JaegerExporter(
                 agent_host_name=self.config.jaeger_endpoint.split(":")[0],
-                agent_port=int(self.config.jaeger_endpoint.split(":")[1]) if ":" in self.config.jaeger_endpoint else 6831,
+                agent_port=(
+                    int(self.config.jaeger_endpoint.split(":")[1])
+                    if ":" in self.config.jaeger_endpoint
+                    else 6831
+                ),
                 collector_endpoint=None,
                 username=None,
                 password=None,
             )
-            tracer_provider.add_span_processor(
-                BatchSpanProcessor(jaeger_exporter)
-            )
+            tracer_provider.add_span_processor(BatchSpanProcessor(jaeger_exporter))
 
         if self.config.otlp_endpoint:
-            otlp_exporter = OTLPSpanExporter(
-                endpoint=self.config.otlp_endpoint,
-                insecure=True
-            )
-            tracer_provider.add_span_processor(
-                BatchSpanProcessor(otlp_exporter)
-            )
+            otlp_exporter = OTLPSpanExporter(endpoint=self.config.otlp_endpoint, insecure=True)
+            tracer_provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
 
         # Console exporter for debugging
         if logger.isEnabledFor(logging.DEBUG):
-            tracer_provider.add_span_processor(
-                SimpleSpanProcessor(ConsoleSpanExporter())
-            )
+            tracer_provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
 
         # Set global tracer provider
         trace.set_tracer_provider(tracer_provider)
-        self.tracer = trace.get_tracer(
-            self.config.service_name,
-            self.config.service_version
-        )
+        self.tracer = trace.get_tracer(self.config.service_name, self.config.service_version)
 
     def _initialize_metrics(self):
         """Initialize metrics provider and collectors"""
 
         # Create metric reader and exporter
         if self.config.otlp_endpoint:
-            metric_exporter = OTLPMetricExporter(
-                endpoint=self.config.otlp_endpoint,
-                insecure=True
-            )
+            metric_exporter = OTLPMetricExporter(endpoint=self.config.otlp_endpoint, insecure=True)
         else:
             metric_exporter = ConsoleMetricExporter()
 
         metric_reader = PeriodicExportingMetricReader(
             exporter=metric_exporter,
-            export_interval_millis=self.config.metrics_export_interval * 1000
+            export_interval_millis=self.config.metrics_export_interval * 1000,
         )
 
         # Create meter provider
-        meter_provider = MeterProvider(
-            resource=self.resource,
-            metric_readers=[metric_reader]
-        )
+        meter_provider = MeterProvider(resource=self.resource, metric_readers=[metric_reader])
 
         # Set global meter provider
         metrics.set_meter_provider(meter_provider)
-        self.meter = metrics.get_meter(
-            self.config.service_name,
-            self.config.service_version
-        )
+        self.meter = metrics.get_meter(self.config.service_name, self.config.service_version)
 
         # Create common metrics
         self.request_counter = self.meter.create_counter(
-            "http_requests_total",
-            description="Total number of HTTP requests",
-            unit="1"
+            "http_requests_total", description="Total number of HTTP requests", unit="1"
         )
 
         self.request_duration = self.meter.create_histogram(
-            "http_request_duration_seconds",
-            description="HTTP request duration",
-            unit="s"
+            "http_request_duration_seconds", description="HTTP request duration", unit="s"
         )
 
         self.error_counter = self.meter.create_counter(
-            "http_errors_total",
-            description="Total number of HTTP errors",
-            unit="1"
+            "http_errors_total", description="Total number of HTTP errors", unit="1"
         )
 
         self.active_requests = self.meter.create_up_down_counter(
-            "http_active_requests",
-            description="Number of active HTTP requests",
-            unit="1"
+            "http_active_requests", description="Number of active HTTP requests", unit="1"
         )
 
     def _initialize_logging(self):
@@ -334,7 +303,7 @@ class TelemetryManager:
         name: str,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: Dict[str, Any] = None,
-        record_exception: bool = True
+        record_exception: bool = True,
     ):
         """Context manager for tracing operations"""
 
@@ -343,10 +312,7 @@ class TelemetryManager:
             return
 
         with self.tracer.start_as_current_span(
-            name,
-            kind=kind,
-            attributes=attributes or {},
-            record_exception=record_exception
+            name, kind=kind, attributes=attributes or {}, record_exception=record_exception
         ) as span:
             start_time = time.time()
 
@@ -354,9 +320,7 @@ class TelemetryManager:
                 yield span
                 span.set_status(Status(StatusCode.OK))
             except Exception as e:
-                span.set_status(
-                    Status(StatusCode.ERROR, str(e))
-                )
+                span.set_status(Status(StatusCode.ERROR, str(e)))
                 if record_exception:
                     span.record_exception(e)
                 raise
@@ -367,10 +331,7 @@ class TelemetryManager:
 
                 # Update metrics
                 if self.request_duration:
-                    self.request_duration.record(
-                        duration,
-                        attributes={"operation": name}
-                    )
+                    self.request_duration.record(duration, attributes={"operation": name})
 
     @asynccontextmanager
     async def trace_async_operation(
@@ -378,7 +339,7 @@ class TelemetryManager:
         name: str,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: Dict[str, Any] = None,
-        record_exception: bool = True
+        record_exception: bool = True,
     ):
         """Async context manager for tracing operations"""
 
@@ -387,10 +348,7 @@ class TelemetryManager:
             return
 
         with self.tracer.start_as_current_span(
-            name,
-            kind=kind,
-            attributes=attributes or {},
-            record_exception=record_exception
+            name, kind=kind, attributes=attributes or {}, record_exception=record_exception
         ) as span:
             start_time = time.time()
 
@@ -398,9 +356,7 @@ class TelemetryManager:
                 yield span
                 span.set_status(Status(StatusCode.OK))
             except Exception as e:
-                span.set_status(
-                    Status(StatusCode.ERROR, str(e))
-                )
+                span.set_status(Status(StatusCode.ERROR, str(e)))
                 if record_exception:
                     span.record_exception(e)
                 raise
@@ -411,16 +367,13 @@ class TelemetryManager:
 
                 # Update metrics
                 if self.request_duration:
-                    self.request_duration.record(
-                        duration,
-                        attributes={"operation": name}
-                    )
+                    self.request_duration.record(duration, attributes={"operation": name})
 
     def trace_function(
         self,
         name: Optional[str] = None,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: Dict[str, Any] = None
+        attributes: Dict[str, Any] = None,
     ):
         """Decorator for tracing functions"""
 
@@ -430,9 +383,7 @@ class TelemetryManager:
             @wraps(func)
             async def async_wrapper(*args, **kwargs):
                 async with self.trace_async_operation(
-                    operation_name,
-                    kind=kind,
-                    attributes=attributes
+                    operation_name, kind=kind, attributes=attributes
                 ) as span:
                     # Add function arguments as attributes
                     if span and self.config.trace_request_body:
@@ -454,11 +405,7 @@ class TelemetryManager:
 
             @wraps(func)
             def sync_wrapper(*args, **kwargs):
-                with self.trace_operation(
-                    operation_name,
-                    kind=kind,
-                    attributes=attributes
-                ) as span:
+                with self.trace_operation(operation_name, kind=kind, attributes=attributes) as span:
                     # Add function arguments as attributes
                     if span and self.config.trace_request_body:
                         sig = inspect.signature(func)
@@ -497,7 +444,7 @@ class TelemetryManager:
         name: str,
         value: float,
         attributes: Dict[str, Any] = None,
-        metric_type: str = "counter"
+        metric_type: str = "counter",
     ):
         """Record a custom metric"""
 
@@ -507,16 +454,12 @@ class TelemetryManager:
         # Get or create metric instrument
         if metric_type == "counter":
             metric = self.meter.create_counter(
-                name,
-                description=f"Custom counter: {name}",
-                unit="1"
+                name, description=f"Custom counter: {name}", unit="1"
             )
             metric.add(value, attributes=attributes)
         elif metric_type == "histogram":
             metric = self.meter.create_histogram(
-                name,
-                description=f"Custom histogram: {name}",
-                unit="1"
+                name, description=f"Custom histogram: {name}", unit="1"
             )
             metric.record(value, attributes=attributes)
         elif metric_type == "gauge":
@@ -526,7 +469,7 @@ class TelemetryManager:
                 name,
                 description=f"Custom gauge: {name}",
                 unit="1",
-                callback=lambda x: [(value, attributes)]
+                callback=lambda x: [(value, attributes)],
             )
 
     def create_baggage(self, key: str, value: str):
@@ -560,11 +503,13 @@ class TelemetryManager:
                     if name not in self.profile_data:
                         self.profile_data[name] = []
 
-                    self.profile_data[name].append({
-                        "duration": duration,
-                        "memory_delta": memory_delta,
-                        "timestamp": datetime.utcnow().isoformat()
-                    })
+                    self.profile_data[name].append(
+                        {
+                            "duration": duration,
+                            "memory_delta": memory_delta,
+                            "timestamp": datetime.utcnow().isoformat(),
+                        }
+                    )
 
                     # Keep only last 1000 samples
                     if len(self.profile_data[name]) > 1000:
@@ -574,7 +519,9 @@ class TelemetryManager:
                     current_span = trace.get_current_span()
                     if current_span:
                         current_span.set_attribute(f"profile.{name}.duration_ms", duration * 1000)
-                        current_span.set_attribute(f"profile.{name}.memory_delta_mb", memory_delta / 1024 / 1024)
+                        current_span.set_attribute(
+                            f"profile.{name}.memory_delta_mb", memory_delta / 1024 / 1024
+                        )
 
             @wraps(func)
             def sync_wrapper(*args, **kwargs):
@@ -595,11 +542,13 @@ class TelemetryManager:
                     if name not in self.profile_data:
                         self.profile_data[name] = []
 
-                    self.profile_data[name].append({
-                        "duration": duration,
-                        "memory_delta": memory_delta,
-                        "timestamp": datetime.utcnow().isoformat()
-                    })
+                    self.profile_data[name].append(
+                        {
+                            "duration": duration,
+                            "memory_delta": memory_delta,
+                            "timestamp": datetime.utcnow().isoformat(),
+                        }
+                    )
 
                     # Keep only last 1000 samples
                     if len(self.profile_data[name]) > 1000:
@@ -609,7 +558,9 @@ class TelemetryManager:
                     current_span = trace.get_current_span()
                     if current_span:
                         current_span.set_attribute(f"profile.{name}.duration_ms", duration * 1000)
-                        current_span.set_attribute(f"profile.{name}.memory_delta_mb", memory_delta / 1024 / 1024)
+                        current_span.set_attribute(
+                            f"profile.{name}.memory_delta_mb", memory_delta / 1024 / 1024
+                        )
 
             if asyncio.iscoroutinefunction(func):
                 return async_wrapper
@@ -621,6 +572,7 @@ class TelemetryManager:
     def _get_memory_usage(self) -> int:
         """Get current memory usage in bytes"""
         import psutil
+
         process = psutil.Process()
         return process.memory_info().rss
 
@@ -643,15 +595,15 @@ class TelemetryManager:
                 "median": statistics.median(durations),
                 "stdev": statistics.stdev(durations) if len(durations) > 1 else 0,
                 "min": min(durations),
-                "max": max(durations)
+                "max": max(durations),
             },
             "memory": {
                 "mean": statistics.mean(memory_deltas),
                 "median": statistics.median(memory_deltas),
                 "stdev": statistics.stdev(memory_deltas) if len(memory_deltas) > 1 else 0,
                 "min": min(memory_deltas),
-                "max": max(memory_deltas)
-            }
+                "max": max(memory_deltas),
+            },
         }
 
     def shutdown(self):
@@ -667,6 +619,7 @@ class TelemetryManager:
 
 
 # Custom instrumentations for load balancing components
+
 
 class LoadBalancerInstrumentor:
     """Custom instrumentation for load balancing components"""
@@ -685,8 +638,8 @@ class LoadBalancerInstrumentor:
                 "circuit_breaker.call",
                 attributes={
                     "breaker.name": circuit_breaker.name,
-                    "breaker.state": circuit_breaker.state.value
-                }
+                    "breaker.state": circuit_breaker.state.value,
+                },
             ) as span:
                 try:
                     result = await original_call(*args, **kwargs)
@@ -709,11 +662,7 @@ class LoadBalancerInstrumentor:
         @wraps(original_check)
         async def traced_check(identifier: str, endpoint: str = None, **kwargs):
             async with self.telemetry.trace_async_operation(
-                "rate_limiter.check",
-                attributes={
-                    "identifier": identifier,
-                    "endpoint": endpoint
-                }
+                "rate_limiter.check", attributes={"identifier": identifier, "endpoint": endpoint}
             ) as span:
                 result = await original_check(identifier, endpoint, **kwargs)
 
@@ -739,8 +688,8 @@ class LoadBalancerInstrumentor:
                 attributes={
                     "consistency": consistency.value if consistency else None,
                     "for_write": for_write,
-                    "session_id": session_id
-                }
+                    "session_id": session_id,
+                },
             ) as span:
                 async with original_get_session(consistency, session_id, for_write) as session:
                     if span and "routed_to" in session.info:
@@ -763,8 +712,8 @@ class LoadBalancerInstrumentor:
                 attributes={
                     "key": key[:50],  # Truncate key for security
                     "tier": tier.value if tier else None,
-                    "strategy": strategy.value if strategy else None
-                }
+                    "strategy": strategy.value if strategy else None,
+                },
             ) as span:
                 result = await original_get(key, tier, strategy)
 
@@ -778,11 +727,7 @@ class LoadBalancerInstrumentor:
         @wraps(original_set)
         async def traced_set(key: str, entry, tier=None, config=None):
             async with self.telemetry.trace_async_operation(
-                "cache.set",
-                attributes={
-                    "key": key[:50],
-                    "tier": tier.value if tier else None
-                }
+                "cache.set", attributes={"key": key[:50], "tier": tier.value if tier else None}
             ) as span:
                 result = await original_set(key, entry, tier, config)
 

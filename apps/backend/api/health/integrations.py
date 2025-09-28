@@ -38,7 +38,7 @@ async def integration_health_overview() -> Dict[str, Any]:
         check_realtime_integrations(),
         check_agent_integrations(),
         check_roblox_integrations(),
-        return_exceptions=True
+        return_exceptions=True,
     )
 
     results = {}
@@ -53,7 +53,11 @@ async def integration_health_overview() -> Dict[str, Any]:
     total_count = len(results)
     health_percentage = (healthy_count / total_count * 100) if total_count > 0 else 0
 
-    overall_status = "healthy" if health_percentage >= 80 else "degraded" if health_percentage >= 60 else "unhealthy"
+    overall_status = (
+        "healthy"
+        if health_percentage >= 80
+        else "degraded" if health_percentage >= 60 else "unhealthy"
+    )
 
     return {
         "status": overall_status,
@@ -62,7 +66,7 @@ async def integration_health_overview() -> Dict[str, Any]:
         "healthy_services": healthy_count,
         "total_services": total_count,
         "integrations": results,
-        "check_duration_ms": round((time.time() - start_time) * 1000, 2)
+        "check_duration_ms": round((time.time() - start_time) * 1000, 2),
     }
 
 
@@ -112,7 +116,9 @@ async def check_database_integrations() -> Dict[str, Any]:
 
                 # Test table accessibility
                 table_check = await session.execute(
-                    text("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'")
+                    text(
+                        "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'"
+                    )
                 )
                 table_count = table_check.scalar()
 
@@ -129,8 +135,8 @@ async def check_database_integrations() -> Dict[str, Any]:
                     "details": {
                         "public_tables": table_count,
                         "user_count": user_count_val,
-                        "connection": "active"
-                    }
+                        "connection": "active",
+                    },
                 }
         except Exception as e:
             checks["postgresql"] = {"healthy": False, "error": str(e)}
@@ -164,8 +170,8 @@ async def check_database_integrations() -> Dict[str, Any]:
                     "version": info.get("redis_version"),
                     "connected_clients": info.get("connected_clients"),
                     "used_memory_human": info.get("used_memory_human"),
-                    "operations_test": "passed" if test_value == "test_value" else "failed"
-                }
+                    "operations_test": "passed" if test_value == "test_value" else "failed",
+                },
             }
         except Exception as e:
             checks["redis"] = {"healthy": False, "error": str(e)}
@@ -176,7 +182,7 @@ async def check_database_integrations() -> Dict[str, Any]:
             "database_integrations": {
                 "healthy": overall_healthy,
                 "checks": checks,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         }
     except Exception as e:
@@ -194,8 +200,7 @@ async def check_api_integrations() -> Dict[str, Any]:
             async with aiohttp.ClientSession() as session:
                 start_time = time.time()
                 async with session.get(
-                    f"{dashboard_url}/health",
-                    timeout=aiohttp.ClientTimeout(total=5)
+                    f"{dashboard_url}/health", timeout=aiohttp.ClientTimeout(total=5)
                 ) as response:
                     response_time = (time.time() - start_time) * 1000
                     response_data = await response.json()
@@ -204,25 +209,25 @@ async def check_api_integrations() -> Dict[str, Any]:
                         "healthy": response.status == 200,
                         "response_time_ms": round(response_time, 2),
                         "status_code": response.status,
-                        "details": response_data
+                        "details": response_data,
                     }
         except Exception as e:
             checks["dashboard_api"] = {"healthy": False, "error": str(e)}
 
         # Pusher API health
-        if pusher and settings and hasattr(settings, 'PUSHER_APP_ID'):
+        if pusher and settings and hasattr(settings, "PUSHER_APP_ID"):
             try:
                 pusher_client = pusher.Pusher(
                     app_id=settings.PUSHER_APP_ID,
                     key=settings.PUSHER_KEY,
                     secret=settings.PUSHER_SECRET,
                     cluster=settings.PUSHER_CLUSTER,
-                    ssl=True
+                    ssl=True,
                 )
 
                 # Test trigger capability
                 start_time = time.time()
-                result = pusher_client.trigger('test-channel', 'health-check', {'test': True})
+                result = pusher_client.trigger("test-channel", "health-check", {"test": True})
                 response_time = (time.time() - start_time) * 1000
 
                 checks["pusher"] = {
@@ -231,16 +236,19 @@ async def check_api_integrations() -> Dict[str, Any]:
                     "details": {
                         "cluster": settings.PUSHER_CLUSTER,
                         "ssl_enabled": True,
-                        "trigger_test": "passed"
-                    }
+                        "trigger_test": "passed",
+                    },
                 }
             except Exception as e:
                 checks["pusher"] = {"healthy": False, "error": str(e)}
         else:
-            checks["pusher"] = {"healthy": False, "error": "Pusher not configured or library not available"}
+            checks["pusher"] = {
+                "healthy": False,
+                "error": "Pusher not configured or library not available",
+            }
 
         # Clerk Auth API
-        if os.getenv('CLERK_SECRET_KEY'):
+        if os.getenv("CLERK_SECRET_KEY"):
             try:
                 async with aiohttp.ClientSession() as session:
                     headers = {"Authorization": f"Bearer {os.getenv('CLERK_SECRET_KEY')}"}
@@ -248,7 +256,7 @@ async def check_api_integrations() -> Dict[str, Any]:
                     async with session.get(
                         "https://api.clerk.dev/v1/users",
                         headers=headers,
-                        timeout=aiohttp.ClientTimeout(total=5)
+                        timeout=aiohttp.ClientTimeout(total=5),
                     ) as response:
                         response_time = (time.time() - start_time) * 1000
 
@@ -256,10 +264,7 @@ async def check_api_integrations() -> Dict[str, Any]:
                             "healthy": response.status in [200, 401],
                             "response_time_ms": round(response_time, 2),
                             "status_code": response.status,
-                            "details": {
-                                "api_reachable": True,
-                                "auth_configured": True
-                            }
+                            "details": {"api_reachable": True, "auth_configured": True},
                         }
             except Exception as e:
                 checks["clerk"] = {"healthy": False, "error": str(e)}
@@ -267,18 +272,18 @@ async def check_api_integrations() -> Dict[str, Any]:
             checks["clerk"] = {"healthy": False, "error": "Clerk not configured"}
 
         # Supabase API
-        if os.getenv('SUPABASE_URL') and os.getenv('SUPABASE_ANON_KEY'):
+        if os.getenv("SUPABASE_URL") and os.getenv("SUPABASE_ANON_KEY"):
             try:
                 async with aiohttp.ClientSession() as session:
                     headers = {
-                        "apikey": os.getenv('SUPABASE_ANON_KEY'),
-                        "Authorization": f"Bearer {os.getenv('SUPABASE_ANON_KEY')}"
+                        "apikey": os.getenv("SUPABASE_ANON_KEY"),
+                        "Authorization": f"Bearer {os.getenv('SUPABASE_ANON_KEY')}",
                     }
                     start_time = time.time()
                     async with session.get(
                         f"{os.getenv('SUPABASE_URL')}/rest/v1/",
                         headers=headers,
-                        timeout=aiohttp.ClientTimeout(total=5)
+                        timeout=aiohttp.ClientTimeout(total=5),
                     ) as response:
                         response_time = (time.time() - start_time) * 1000
 
@@ -286,10 +291,7 @@ async def check_api_integrations() -> Dict[str, Any]:
                             "healthy": response.status in [200, 404],
                             "response_time_ms": round(response_time, 2),
                             "status_code": response.status,
-                            "details": {
-                                "api_reachable": True,
-                                "url": os.getenv('SUPABASE_URL')
-                            }
+                            "details": {"api_reachable": True, "url": os.getenv("SUPABASE_URL")},
                         }
             except Exception as e:
                 checks["supabase"] = {"healthy": False, "error": str(e)}
@@ -297,7 +299,7 @@ async def check_api_integrations() -> Dict[str, Any]:
             checks["supabase"] = {"healthy": False, "error": "Supabase not configured"}
 
         # OpenAI API
-        if os.getenv('OPENAI_API_KEY'):
+        if os.getenv("OPENAI_API_KEY"):
             try:
                 async with aiohttp.ClientSession() as session:
                     headers = {"Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}"}
@@ -305,7 +307,7 @@ async def check_api_integrations() -> Dict[str, Any]:
                     async with session.get(
                         "https://api.openai.com/v1/models",
                         headers=headers,
-                        timeout=aiohttp.ClientTimeout(total=10)
+                        timeout=aiohttp.ClientTimeout(total=10),
                     ) as response:
                         response_time = (time.time() - start_time) * 1000
 
@@ -315,8 +317,8 @@ async def check_api_integrations() -> Dict[str, Any]:
                             "status_code": response.status,
                             "details": {
                                 "api_reachable": True,
-                                "auth_valid": response.status == 200
-                            }
+                                "auth_valid": response.status == 200,
+                            },
                         }
             except Exception as e:
                 checks["openai"] = {"healthy": False, "error": str(e)}
@@ -329,7 +331,7 @@ async def check_api_integrations() -> Dict[str, Any]:
             "api_integrations": {
                 "healthy": overall_healthy,
                 "checks": checks,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         }
     except Exception as e:
@@ -342,22 +344,22 @@ async def check_realtime_integrations() -> Dict[str, Any]:
         checks = {}
 
         # Pusher Channels
-        if pusher and settings and hasattr(settings, 'PUSHER_APP_ID'):
+        if pusher and settings and hasattr(settings, "PUSHER_APP_ID"):
             try:
                 pusher_client = pusher.Pusher(
                     app_id=settings.PUSHER_APP_ID,
                     key=settings.PUSHER_KEY,
                     secret=settings.PUSHER_SECRET,
                     cluster=settings.PUSHER_CLUSTER,
-                    ssl=True
+                    ssl=True,
                 )
 
                 # Test channel operations
                 test_channels = [
-                    'dashboard-updates',
-                    'content-generation',
-                    'agent-status',
-                    'system-health'
+                    "dashboard-updates",
+                    "content-generation",
+                    "agent-status",
+                    "system-health",
                 ]
 
                 channel_results = {}
@@ -373,8 +375,8 @@ async def check_realtime_integrations() -> Dict[str, Any]:
                     "details": {
                         "cluster": settings.PUSHER_CLUSTER,
                         "channels": channel_results,
-                        "ssl_enabled": True
-                    }
+                        "ssl_enabled": True,
+                    },
                 }
             except Exception as e:
                 checks["pusher_channels"] = {"healthy": False, "error": str(e)}
@@ -386,36 +388,33 @@ async def check_realtime_integrations() -> Dict[str, Any]:
             {"path": "/ws/content", "description": "Content generation updates"},
             {"path": "/ws/roblox", "description": "Roblox environment sync"},
             {"path": "/ws/agent/{agent_id}", "description": "Agent communication"},
-            {"path": "/ws/native", "description": "Test echo endpoint"}
+            {"path": "/ws/native", "description": "Test echo endpoint"},
         ]
 
         checks["websocket_fallback"] = {
             "healthy": True,
-            "details": {
-                "endpoints": websocket_endpoints,
-                "status": "legacy_support_available"
-            }
+            "details": {"endpoints": websocket_endpoints, "status": "legacy_support_available"},
         }
 
         # Test real-time event broadcasting
         try:
-            if pusher and settings and hasattr(settings, 'PUSHER_APP_ID'):
+            if pusher and settings and hasattr(settings, "PUSHER_APP_ID"):
                 pusher_client = pusher.Pusher(
                     app_id=settings.PUSHER_APP_ID,
                     key=settings.PUSHER_KEY,
                     secret=settings.PUSHER_SECRET,
                     cluster=settings.PUSHER_CLUSTER,
-                    ssl=True
+                    ssl=True,
                 )
 
                 test_event = {
                     "type": "health_check",
                     "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "data": {"test": True}
+                    "data": {"test": True},
                 }
 
                 start_time = time.time()
-                result = pusher_client.trigger('system-health', 'test-event', test_event)
+                result = pusher_client.trigger("system-health", "test-event", test_event)
                 broadcast_time = (time.time() - start_time) * 1000
 
                 checks["event_broadcasting"] = {
@@ -424,11 +423,14 @@ async def check_realtime_integrations() -> Dict[str, Any]:
                     "details": {
                         "test_channel": "system-health",
                         "test_event": "test-event",
-                        "broadcast_successful": True
-                    }
+                        "broadcast_successful": True,
+                    },
                 }
             else:
-                checks["event_broadcasting"] = {"healthy": False, "error": "Broadcasting service not available"}
+                checks["event_broadcasting"] = {
+                    "healthy": False,
+                    "error": "Broadcasting service not available",
+                }
         except Exception as e:
             checks["event_broadcasting"] = {"healthy": False, "error": str(e)}
 
@@ -438,7 +440,7 @@ async def check_realtime_integrations() -> Dict[str, Any]:
             "realtime_integrations": {
                 "healthy": overall_healthy,
                 "checks": checks,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         }
     except Exception as e:
@@ -452,6 +454,7 @@ async def check_agent_integrations() -> Dict[str, Any]:
 
         # MCP Server connectivity
         try:
+
             def check_port(host, port, timeout=5):
                 try:
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -461,15 +464,14 @@ async def check_agent_integrations() -> Dict[str, Any]:
                 except Exception:
                     return False
 
-            mcp_healthy = check_port('localhost', 9877)
+            mcp_healthy = check_port("localhost", 9877)
 
             if mcp_healthy:
                 # Try to get health status from MCP server
                 try:
                     async with aiohttp.ClientSession() as session:
                         async with session.get(
-                            "http://localhost:9878/health",
-                            timeout=aiohttp.ClientTimeout(total=5)
+                            "http://localhost:9878/health", timeout=aiohttp.ClientTimeout(total=5)
                         ) as response:
                             if response.status == 200:
                                 mcp_health_data = await response.json()
@@ -477,33 +479,38 @@ async def check_agent_integrations() -> Dict[str, Any]:
                                     "healthy": True,
                                     "port": 9877,
                                     "health_port": 9878,
-                                    "details": mcp_health_data
+                                    "details": mcp_health_data,
                                 }
                             else:
                                 checks["mcp_server"] = {
                                     "healthy": True,
                                     "port": 9877,
                                     "health_port": 9878,
-                                    "details": {"note": "Server running but health endpoint unavailable"}
+                                    "details": {
+                                        "note": "Server running but health endpoint unavailable"
+                                    },
                                 }
                 except Exception:
                     checks["mcp_server"] = {
                         "healthy": True,
                         "port": 9877,
-                        "details": {"note": "Server running, health endpoint not responding"}
+                        "details": {"note": "Server running, health endpoint not responding"},
                     }
             else:
-                checks["mcp_server"] = {"healthy": False, "error": "MCP server not running on port 9877"}
+                checks["mcp_server"] = {
+                    "healthy": False,
+                    "error": "MCP server not running on port 9877",
+                }
         except Exception as e:
             checks["mcp_server"] = {"healthy": False, "error": str(e)}
 
         # Agent Coordinator
         try:
-            coordinator_healthy = check_port('localhost', 8888)
+            coordinator_healthy = check_port("localhost", 8888)
             checks["agent_coordinator"] = {
                 "healthy": coordinator_healthy,
                 "port": 8888,
-                "status": "online" if coordinator_healthy else "offline"
+                "status": "online" if coordinator_healthy else "offline",
             }
         except Exception as e:
             checks["agent_coordinator"] = {"healthy": False, "error": str(e)}
@@ -515,12 +522,14 @@ async def check_agent_integrations() -> Dict[str, Any]:
 
             try:
                 import core.sparc.state_manager
+
                 sparc_modules.append("state_manager")
             except ImportError as e:
                 sparc_errors.append(f"state_manager: {str(e)}")
 
             try:
                 import core.sparc.enhanced_orchestrator
+
                 sparc_modules.append("enhanced_orchestrator")
             except ImportError as e:
                 sparc_errors.append(f"enhanced_orchestrator: {str(e)}")
@@ -529,8 +538,8 @@ async def check_agent_integrations() -> Dict[str, Any]:
                 "healthy": len(sparc_modules) > 0,
                 "details": {
                     "loaded_modules": sparc_modules,
-                    "errors": sparc_errors if sparc_errors else None
-                }
+                    "errors": sparc_errors if sparc_errors else None,
+                },
             }
         except Exception as e:
             checks["sparc_framework"] = {"healthy": False, "error": str(e)}
@@ -542,21 +551,21 @@ async def check_agent_integrations() -> Dict[str, Any]:
 
             try:
                 from core.agents.multi_modal_generator import MultiModalContentAgent
+
                 agent_tests["multi_modal_generator"] = {"importable": True}
             except ImportError as e:
                 agent_tests["multi_modal_generator"] = {"importable": False, "error": str(e)}
 
             try:
                 from core.agents.enhanced_content_pipeline import EnhancedContentPipelineAgent
+
                 agent_tests["enhanced_content_pipeline"] = {"importable": True}
             except ImportError as e:
                 agent_tests["enhanced_content_pipeline"] = {"importable": False, "error": str(e)}
 
             checks["agent_communication"] = {
                 "healthy": any(test.get("importable", False) for test in agent_tests.values()),
-                "details": {
-                    "agent_tests": agent_tests
-                }
+                "details": {"agent_tests": agent_tests},
             }
         except Exception as e:
             checks["agent_communication"] = {"healthy": False, "error": str(e)}
@@ -567,7 +576,7 @@ async def check_agent_integrations() -> Dict[str, Any]:
             "agent_integrations": {
                 "healthy": overall_healthy,
                 "checks": checks,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         }
     except Exception as e:
@@ -581,6 +590,7 @@ async def check_roblox_integrations() -> Dict[str, Any]:
 
         # Flask Bridge Service
         try:
+
             def check_port(host, port, timeout=5):
                 try:
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -590,30 +600,36 @@ async def check_roblox_integrations() -> Dict[str, Any]:
                 except Exception:
                     return False
 
-            flask_healthy = check_port('localhost', 5001)
+            flask_healthy = check_port("localhost", 5001)
 
             if flask_healthy:
                 try:
                     async with aiohttp.ClientSession() as session:
                         async with session.get(
-                            "http://localhost:5001/health",
-                            timeout=aiohttp.ClientTimeout(total=5)
+                            "http://localhost:5001/health", timeout=aiohttp.ClientTimeout(total=5)
                         ) as response:
-                            bridge_health = await response.json() if response.status == 200 else {"status": "unknown"}
+                            bridge_health = (
+                                await response.json()
+                                if response.status == 200
+                                else {"status": "unknown"}
+                            )
 
                             checks["flask_bridge"] = {
                                 "healthy": True,
                                 "port": 5001,
-                                "details": bridge_health
+                                "details": bridge_health,
                             }
                 except Exception:
                     checks["flask_bridge"] = {
                         "healthy": True,
                         "port": 5001,
-                        "details": {"note": "Service running but health endpoint unavailable"}
+                        "details": {"note": "Service running but health endpoint unavailable"},
                     }
             else:
-                checks["flask_bridge"] = {"healthy": False, "error": "Flask bridge not running on port 5001"}
+                checks["flask_bridge"] = {
+                    "healthy": False,
+                    "error": "Flask bridge not running on port 5001",
+                }
         except Exception as e:
             checks["flask_bridge"] = {"healthy": False, "error": str(e)}
 
@@ -624,7 +640,7 @@ async def check_roblox_integrations() -> Dict[str, Any]:
                 "roblox/src/server": os.path.exists("roblox/src/server"),
                 "roblox/src/shared": os.path.exists("roblox/src/shared"),
                 "roblox/scripts": os.path.exists("roblox/scripts"),
-                "roblox/plugins": os.path.exists("roblox/plugins")
+                "roblox/plugins": os.path.exists("roblox/plugins"),
             }
 
             structure_health = sum(roblox_structure.values()) >= 3  # At least 3 core directories
@@ -633,8 +649,8 @@ async def check_roblox_integrations() -> Dict[str, Any]:
                 "healthy": structure_health,
                 "details": {
                     "directory_structure": roblox_structure,
-                    "core_directories_present": sum(roblox_structure.values())
-                }
+                    "core_directories_present": sum(roblox_structure.values()),
+                },
             }
         except Exception as e:
             checks["roblox_structure"] = {"healthy": False, "error": str(e)}
@@ -644,19 +660,28 @@ async def check_roblox_integrations() -> Dict[str, Any]:
             roblox_agents = {}
 
             try:
-                from core.agents.roblox.roblox_content_generation_agent import RobloxContentGenerationAgent
+                from core.agents.roblox.roblox_content_generation_agent import (
+                    RobloxContentGenerationAgent,
+                )
+
                 roblox_agents["content_generation"] = {"available": True}
             except ImportError as e:
                 roblox_agents["content_generation"] = {"available": False, "error": str(e)}
 
             try:
-                from core.agents.roblox.roblox_script_optimization_agent import RobloxScriptOptimizationAgent
+                from core.agents.roblox.roblox_script_optimization_agent import (
+                    RobloxScriptOptimizationAgent,
+                )
+
                 roblox_agents["script_optimization"] = {"available": True}
             except ImportError as e:
                 roblox_agents["script_optimization"] = {"available": False, "error": str(e)}
 
             try:
-                from core.agents.roblox.roblox_security_validation_agent import RobloxSecurityValidationAgent
+                from core.agents.roblox.roblox_security_validation_agent import (
+                    RobloxSecurityValidationAgent,
+                )
+
                 roblox_agents["security_validation"] = {"available": True}
             except ImportError as e:
                 roblox_agents["security_validation"] = {"available": False, "error": str(e)}
@@ -667,8 +692,10 @@ async def check_roblox_integrations() -> Dict[str, Any]:
                 "healthy": agents_healthy,
                 "details": {
                     "agents": roblox_agents,
-                    "available_agents": sum(1 for agent in roblox_agents.values() if agent.get("available", False))
-                }
+                    "available_agents": sum(
+                        1 for agent in roblox_agents.values() if agent.get("available", False)
+                    ),
+                },
             }
         except Exception as e:
             checks["roblox_agents"] = {"healthy": False, "error": str(e)}
@@ -678,15 +705,15 @@ async def check_roblox_integrations() -> Dict[str, Any]:
             # Check if plugin files exist
             plugin_files = {
                 "roblox/plugins/ToolboxAI.rbxmx": os.path.exists("roblox/plugins/ToolboxAI.rbxmx"),
-                "roblox/plugins/init.lua": os.path.exists("roblox/plugins/init.lua")
+                "roblox/plugins/init.lua": os.path.exists("roblox/plugins/init.lua"),
             }
 
             checks["roblox_plugins"] = {
                 "healthy": any(plugin_files.values()),
                 "details": {
                     "plugin_files": plugin_files,
-                    "communication_ready": any(plugin_files.values())
-                }
+                    "communication_ready": any(plugin_files.values()),
+                },
             }
         except Exception as e:
             checks["roblox_plugins"] = {"healthy": False, "error": str(e)}
@@ -697,7 +724,7 @@ async def check_roblox_integrations() -> Dict[str, Any]:
             "roblox_integrations": {
                 "healthy": overall_healthy,
                 "checks": checks,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         }
     except Exception as e:

@@ -97,11 +97,8 @@ const WebSocketDemo = lazy(() =>
     default: module.default
   }))
 );
-const MigrationDemo = lazy(() =>
-  import("./components/pages/MigrationDemo").then(module => ({
-    default: module.default
-  }))
-);
+const HealthCheck = lazy(() => import("./pages/Health"));
+// MigrationDemo removed - not needed in production
 const AgentDashboard = lazy(() =>
   import("./pages/AgentDashboard").then(module => ({
     default: module.default
@@ -369,7 +366,8 @@ export default function AppRoutes() {
       {/* Development Test Routes */}
       <Route path="/websocket-test" element={<WebSocketTest />} />
       <Route path="/websocket-demo" element={<WebSocketDemo />} />
-      <Route path="/migration-demo" element={<MigrationDemo />} />
+      <Route path="/health" element={<HealthCheck />} />
+      {/* Migration demo removed - not needed in production */}
 
       {/* Roblox Environment Creation */}
       <Route

@@ -18,24 +18,28 @@ from toolboxai_settings import settings
 # Import new health check routers
 try:
     from apps.backend.api.health.agent_health import router as agent_health_router
+
     AGENT_HEALTH_AVAILABLE = True
 except ImportError:
     AGENT_HEALTH_AVAILABLE = False
 
 try:
     from apps.backend.api.health.mcp_health import router as mcp_health_router
+
     MCP_HEALTH_AVAILABLE = True
 except ImportError:
     MCP_HEALTH_AVAILABLE = False
 
 try:
     from apps.backend.api.health.queue_health import router as queue_health_router
+
     QUEUE_HEALTH_AVAILABLE = True
 except ImportError:
     QUEUE_HEALTH_AVAILABLE = False
 
 try:
     from apps.backend.api.health.supabase_health import router as supabase_health_router
+
     SUPABASE_HEALTH_AVAILABLE = True
 except ImportError:
     SUPABASE_HEALTH_AVAILABLE = False
@@ -67,11 +71,13 @@ async def check_database_connection(session: AsyncSession) -> Dict[str, Any]:
 
         # Get table count
         table_count_result = await session.execute(
-            text("""
+            text(
+                """
                 SELECT COUNT(*)
                 FROM information_schema.tables
                 WHERE table_schema = 'public'
-            """)
+            """
+            )
         )
         table_count = table_count_result.scalar()
 
@@ -79,14 +85,10 @@ async def check_database_connection(session: AsyncSession) -> Dict[str, Any]:
             "status": "healthy",
             "version": db_version.split()[0] if db_version else "unknown",
             "tables": table_count or 0,
-            "connection": "active"
+            "connection": "active",
         }
     except Exception as e:
-        return {
-            "status": "unhealthy",
-            "error": str(e),
-            "connection": "failed"
-        }
+        return {"status": "unhealthy", "error": str(e), "connection": "failed"}
 
 
 async def check_redis_connection() -> Dict[str, Any]:
@@ -108,14 +110,10 @@ async def check_redis_connection() -> Dict[str, Any]:
             "version": info.get("redis_version", "unknown"),
             "connected_clients": info.get("connected_clients", 0),
             "used_memory_human": info.get("used_memory_human", "unknown"),
-            "connection": "active"
+            "connection": "active",
         }
     except Exception as e:
-        return {
-            "status": "unhealthy",
-            "error": str(e),
-            "connection": "failed"
-        }
+        return {"status": "unhealthy", "error": str(e), "connection": "failed"}
 
 
 @router.get("/health")
@@ -129,23 +127,17 @@ async def health_check() -> Dict[str, Any]:
         "service": "toolboxai-backend",
         "timestamp": datetime.utcnow().isoformat(),
         "version": os.getenv("GIT_COMMIT", "unknown"),
-        "environment": os.getenv("ENVIRONMENT", "development")
+        "environment": os.getenv("ENVIRONMENT", "development"),
     }
 
 
 @router.get("/ready")
-async def readiness_check(
-    session: AsyncSession = Depends(get_async_session)
-) -> Dict[str, Any]:
+async def readiness_check(session: AsyncSession = Depends(get_async_session)) -> Dict[str, Any]:
     """
     Readiness check endpoint.
     Verifies that all dependencies are accessible.
     """
-    checks = {
-        "service": "ready",
-        "timestamp": datetime.utcnow().isoformat(),
-        "checks": {}
-    }
+    checks = {"service": "ready", "timestamp": datetime.utcnow().isoformat(), "checks": {}}
 
     # Check database
     db_status = await check_database_connection(session)
@@ -156,16 +148,10 @@ async def readiness_check(
     checks["checks"]["redis"] = redis_status
 
     # Check if any service is unhealthy
-    all_healthy = all(
-        check.get("status") == "healthy"
-        for check in checks["checks"].values()
-    )
+    all_healthy = all(check.get("status") == "healthy" for check in checks["checks"].values())
 
     if not all_healthy:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=checks
-        )
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=checks)
 
     return checks
 
@@ -179,7 +165,7 @@ async def liveness_check() -> Dict[str, Any]:
     # Check system resources
     cpu_percent = psutil.cpu_percent(interval=1)
     memory = psutil.virtual_memory()
-    disk = psutil.disk_usage('/')
+    disk = psutil.disk_usage("/")
 
     # Define thresholds
     CPU_THRESHOLD = 90.0
@@ -194,19 +180,17 @@ async def liveness_check() -> Dict[str, Any]:
             "memory_percent": memory.percent,
             "disk_percent": disk.percent,
             "memory_available_mb": memory.available / (1024 * 1024),
-            "disk_free_gb": disk.free / (1024 * 1024 * 1024)
+            "disk_free_gb": disk.free / (1024 * 1024 * 1024),
         },
-        "thresholds": {
-            "cpu": CPU_THRESHOLD,
-            "memory": MEMORY_THRESHOLD,
-            "disk": DISK_THRESHOLD
-        }
+        "thresholds": {"cpu": CPU_THRESHOLD, "memory": MEMORY_THRESHOLD, "disk": DISK_THRESHOLD},
     }
 
     # Check if resources are within acceptable limits
-    if (cpu_percent > CPU_THRESHOLD or
-        memory.percent > MEMORY_THRESHOLD or
-        disk.percent > DISK_THRESHOLD):
+    if (
+        cpu_percent > CPU_THRESHOLD
+        or memory.percent > MEMORY_THRESHOLD
+        or disk.percent > DISK_THRESHOLD
+    ):
 
         health_status["status"] = "degraded"
         health_status["warnings"] = []
@@ -225,9 +209,7 @@ async def liveness_check() -> Dict[str, Any]:
 
 
 @router.get("/metrics")
-async def metrics_endpoint(
-    session: AsyncSession = Depends(get_async_session)
-) -> Dict[str, Any]:
+async def metrics_endpoint(session: AsyncSession = Depends(get_async_session)) -> Dict[str, Any]:
     """
     Metrics endpoint for monitoring.
     Returns detailed metrics about the service.
@@ -236,9 +218,7 @@ async def metrics_endpoint(
     db_metrics = {}
     try:
         # Count users
-        user_count = await session.execute(
-            text("SELECT COUNT(*) FROM dashboard_users")
-        )
+        user_count = await session.execute(text("SELECT COUNT(*) FROM dashboard_users"))
         db_metrics["user_count"] = user_count.scalar() or 0
 
         # Count sessions
@@ -248,9 +228,7 @@ async def metrics_endpoint(
         db_metrics["active_sessions"] = session_count.scalar() or 0
 
         # Count content
-        content_count = await session.execute(
-            text("SELECT COUNT(*) FROM educational_content")
-        )
+        content_count = await session.execute(text("SELECT COUNT(*) FROM educational_content"))
         db_metrics["content_count"] = content_count.scalar() or 0
     except Exception as e:
         db_metrics["error"] = str(e)
@@ -265,29 +243,28 @@ async def metrics_endpoint(
             "name": "toolboxai-backend",
             "version": os.getenv("GIT_COMMIT", "unknown"),
             "environment": os.getenv("ENVIRONMENT", "development"),
-            "uptime_seconds": (datetime.utcnow() - datetime.fromtimestamp(process.create_time())).total_seconds()
+            "uptime_seconds": (
+                datetime.utcnow() - datetime.fromtimestamp(process.create_time())
+            ).total_seconds(),
         },
         "system": {
-            "cpu": {
-                "percent": psutil.cpu_percent(interval=1),
-                "count": psutil.cpu_count()
-            },
+            "cpu": {"percent": psutil.cpu_percent(interval=1), "count": psutil.cpu_count()},
             "memory": {
                 "percent": psutil.virtual_memory().percent,
                 "available_mb": psutil.virtual_memory().available / (1024 * 1024),
-                "total_mb": psutil.virtual_memory().total / (1024 * 1024)
+                "total_mb": psutil.virtual_memory().total / (1024 * 1024),
             },
             "disk": {
-                "percent": psutil.disk_usage('/').percent,
-                "free_gb": psutil.disk_usage('/').free / (1024 * 1024 * 1024),
-                "total_gb": psutil.disk_usage('/').total / (1024 * 1024 * 1024)
+                "percent": psutil.disk_usage("/").percent,
+                "free_gb": psutil.disk_usage("/").free / (1024 * 1024 * 1024),
+                "total_gb": psutil.disk_usage("/").total / (1024 * 1024 * 1024),
             },
             "network": {
                 "bytes_sent": network.bytes_sent,
                 "bytes_recv": network.bytes_recv,
                 "packets_sent": network.packets_sent,
-                "packets_recv": network.packets_recv
-            }
+                "packets_recv": network.packets_recv,
+            },
         },
         "application": {
             "database": db_metrics,
@@ -295,7 +272,7 @@ async def metrics_endpoint(
                 "memory_mb": process.memory_info().rss / (1024 * 1024),
                 "cpu_percent": process.cpu_percent(),
                 "num_threads": process.num_threads(),
-                "num_connections": len(process.connections())
-            }
-        }
+                "num_connections": len(process.connections()),
+            },
+        },
     }

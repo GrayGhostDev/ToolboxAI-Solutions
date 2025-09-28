@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import { keyframes } from '@mui/material/styles';
-import { styled } from '@mui/material/styles';
+import { Box, Text } from '@mantine/core';
+
 interface Simple3DIconProps {
   iconName: string;
   size?: 'small' | 'medium' | 'large';
@@ -12,78 +8,7 @@ interface Simple3DIconProps {
   onClick?: () => void;
   description?: string;
 }
-// Animations
-const floatAnimation = keyframes`
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-3px) rotate(2deg); }
-`;
-const pulseAnimation = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-`;
-const glowAnimation = keyframes`
-  0% { box-shadow: 0 0 5px currentColor; }
-  50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
-  100% { box-shadow: 0 0 5px currentColor; }
-`;
-const StyledIconContainer = styled(Box)(({ theme, size }: any) => {
-  const sizeStyles = {
-    small: { width: 60, height: 60, fontSize: '2rem' },
-    medium: { width: 80, height: 80, fontSize: '2.5rem' },
-    large: { width: 100, height: 100, fontSize: '3rem' }
-  };
-  return {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '50%',
-    background: `linear-gradient(145deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-    border: `3px solid ${theme.palette.primary.main}`,
-    boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.3)}`,
-    cursor: 'pointer',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    position: 'relative',
-    overflow: 'hidden',
-    ...sizeStyles[size],
-    '&:hover': {
-      transform: 'translateY(-5px) scale(1.1)',
-      boxShadow: `0 12px 35px ${alpha(theme.palette.primary.main, 0.5)}`,
-      borderColor: theme.palette.secondary.main,
-    },
-    animation: `${floatAnimation} 3s ease-in-out infinite`,
-    '&::before': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: `linear-gradient(45deg, transparent, ${alpha('#fff', 0.2)}, transparent)`,
-      transform: 'translateX(-100%)',
-      transition: 'transform 0.6s ease',
-    },
-    '&:hover::before': {
-      transform: 'translateX(100%)',
-    },
-    '&::after': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: `linear-gradient(135deg, ${alpha('#fff', 0.1)}, transparent, ${alpha('#fff', 0.1)})`,
-      borderRadius: '50%',
-      opacity: 0,
-      transition: 'opacity 0.3s ease',
-    },
-    '&:hover::after': {
-      opacity: 1,
-    },
-  };
-});
+
 // Icon mapping based on the parsed JSON data
 const iconMap: { [key: string]: { emoji: string; color: string; description: string } } = {
   'ABC_CUBE': { emoji: '🧩', color: '#4CAF50', description: 'ABC Learning Cube' },
@@ -113,6 +38,7 @@ const iconMap: { [key: string]: { emoji: string; color: string; description: str
   'REFRESH': { emoji: '🔄', color: '#4CAF50', description: 'Refresh Data' },
   'SPORTS_ESPORTS': { emoji: '🎮', color: '#9C27B0', description: 'Gaming Controller' },
 };
+
 export const Simple3DIcon: React.FunctionComponent<Simple3DIconProps> = ({
   iconName,
   size = 'medium',
@@ -120,28 +46,46 @@ export const Simple3DIcon: React.FunctionComponent<Simple3DIconProps> = ({
   onClick,
   description
 }) => {
-  const theme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const iconData = iconMap[iconName] || iconMap['TROPHY'];
   const displayDescription = description || iconData.description;
+
+  const getSizeStyles = () => {
+    const sizes = {
+      small: { width: 60, height: 60, fontSize: '2rem' },
+      medium: { width: 80, height: 80, fontSize: '2.5rem' },
+      large: { width: 100, height: 100, fontSize: '3rem' }
+    };
+    return sizes[size];
+  };
+
+  const sizeStyles = getSizeStyles();
+
   return (
-    <StyledIconContainer
-      size={size}
-      onClick={(e: React.MouseEvent) => onClick}
+    <Box
+      onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      sx={{
-        background: `linear-gradient(145deg, ${iconData.color}, ${alpha(iconData.color, 0.7)})`,
-        borderColor: iconData.color,
-        boxShadow: `0 8px 25px ${alpha(iconData.color, 0.3)}`,
-        '&:hover': {
-          boxShadow: `0 12px 35px ${alpha(iconData.color, 0.5)}`,
-          borderColor: iconData.color,
-        }
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: '50%',
+        background: `linear-gradient(145deg, ${iconData.color}, ${iconData.color}CC)`,
+        border: `3px solid ${iconData.color}`,
+        boxShadow: `0 8px 25px ${iconData.color}4D`,
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        position: 'relative',
+        overflow: 'hidden',
+        ...sizeStyles,
+        transform: isHovered ? 'translateY(-5px) scale(1.1)' : 'translateY(0) scale(1)',
+        animation: animated ? 'float 3s ease-in-out infinite' : 'none',
       }}
     >
-      <Typography
-        sx={{
+      <Text
+        style={{
           fontSize: 'inherit',
           filter: isHovered ? 'brightness(1.2) contrast(1.1)' : 'none',
           transition: 'all 0.3s ease',
@@ -149,11 +93,12 @@ export const Simple3DIcon: React.FunctionComponent<Simple3DIconProps> = ({
         }}
       >
         {iconData.emoji}
-      </Typography>
-      {displayDescription && (
-        <Typography
-          variant="caption"
-          sx={{
+      </Text>
+
+      {displayDescription && isHovered && (
+        <Text
+          size="xs"
+          style={{
             position: 'absolute',
             bottom: -25,
             left: '50%',
@@ -161,19 +106,26 @@ export const Simple3DIcon: React.FunctionComponent<Simple3DIconProps> = ({
             whiteSpace: 'nowrap',
             fontSize: '0.7rem',
             fontWeight: 600,
-            color: theme.palette.text.primary,
-            background: alpha(theme.palette.background.paper, 0.9),
+            color: 'var(--mantine-color-text)',
+            background: 'var(--mantine-color-white)',
             padding: '2px 8px',
-            borderRadius: 1,
-            border: `1px solid ${alpha(iconData.color, 0.3)}`,
+            borderRadius: 4,
+            border: `1px solid ${iconData.color}4D`,
             opacity: isHovered ? 1 : 0,
             transition: 'opacity 0.3s ease',
             pointerEvents: 'none',
           }}
         >
           {displayDescription}
-        </Typography>
+        </Text>
       )}
-    </StyledIconContainer>
+
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-3px) rotate(2deg); }
+        }
+      `}</style>
+    </Box>
   );
 };

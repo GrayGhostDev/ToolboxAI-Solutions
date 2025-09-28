@@ -17,7 +17,7 @@ from apps.backend.api.auth.auth import get_current_user
 from apps.backend.models.schemas import User
 from apps.backend.services.integration_agents import (
     get_integration_manager,
-    execute_integration_workflow
+    execute_integration_workflow,
 )
 from core.agents.integration import IntegrationPlatform
 
@@ -29,6 +29,7 @@ router = APIRouter(prefix="/integration", tags=["integration"])
 # Request/Response Models
 class AgentStatusResponse(BaseModel):
     """Response model for agent status"""
+
     initialized: bool
     timestamp: str
     agents: Dict[str, Dict[str, Any]]
@@ -37,21 +38,30 @@ class AgentStatusResponse(BaseModel):
 
 class WorkflowCreateRequest(BaseModel):
     """Request model for creating a workflow"""
+
     name: str = Field(..., description="Workflow name")
     description: str = Field(..., description="Workflow description")
     template: Optional[str] = Field(None, description="Template name to use")
-    custom_tasks: Optional[List[Dict[str, Any]]] = Field(None, description="Custom task definitions")
-    parameters: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Workflow parameters")
+    custom_tasks: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Custom task definitions"
+    )
+    parameters: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Workflow parameters"
+    )
 
 
 class WorkflowExecuteRequest(BaseModel):
     """Request model for executing a workflow"""
-    parameters: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Execution parameters")
+
+    parameters: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Execution parameters"
+    )
     async_execution: bool = Field(False, description="Execute asynchronously")
 
 
 class WorkflowResponse(BaseModel):
     """Response model for workflow operations"""
+
     workflow_id: Optional[str]
     success: bool
     output: Optional[Dict[str, Any]]
@@ -61,6 +71,7 @@ class WorkflowResponse(BaseModel):
 
 class SchemaRegistrationRequest(BaseModel):
     """Request model for schema registration"""
+
     schema_name: str = Field(..., description="Schema name")
     schema_type: str = Field("json_schema", description="Schema type (json_schema, protobuf, avro)")
     definition: Dict[str, Any] = Field(..., description="Schema definition")
@@ -70,6 +81,7 @@ class SchemaRegistrationRequest(BaseModel):
 
 class DataSyncRequest(BaseModel):
     """Request model for data synchronization"""
+
     source_platform: str = Field(..., description="Source platform")
     target_platform: str = Field(..., description="Target platform")
     data: Dict[str, Any] = Field(..., description="Data to synchronize")
@@ -78,6 +90,7 @@ class DataSyncRequest(BaseModel):
 
 class EventBroadcastRequest(BaseModel):
     """Request model for broadcasting events"""
+
     channel: str = Field(..., description="Channel name")
     event: str = Field(..., description="Event name")
     data: Any = Field(..., description="Event data")
@@ -85,10 +98,11 @@ class EventBroadcastRequest(BaseModel):
 
 # Endpoints
 
+
 @router.get("/status", response_model=AgentStatusResponse)
 async def get_integration_status(
     agent_name: Optional[str] = Query(None, description="Specific agent name to check"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Get the status of integration agents
@@ -103,17 +117,18 @@ async def get_integration_status(
         overall_health = "healthy"
         if status.get("agents"):
             unhealthy_count = sum(
-                1 for agent in status["agents"].values()
-                if agent.get("status") != "healthy"
+                1 for agent in status["agents"].values() if agent.get("status") != "healthy"
             )
             if unhealthy_count > 0:
-                overall_health = "degraded" if unhealthy_count < len(status["agents"]) / 2 else "unhealthy"
+                overall_health = (
+                    "degraded" if unhealthy_count < len(status["agents"]) / 2 else "unhealthy"
+                )
 
         return AgentStatusResponse(
             initialized=status["initialized"],
             timestamp=status["timestamp"],
             agents=status["agents"],
-            overall_health=overall_health
+            overall_health=overall_health,
         )
 
     except Exception as e:
@@ -122,9 +137,7 @@ async def get_integration_status(
 
 
 @router.get("/agents")
-async def list_available_agents(
-    current_user: User = Depends(get_current_user)
-):
+async def list_available_agents(current_user: User = Depends(get_current_user)):
     """
     List all available integration agents and their capabilities
     """
@@ -135,33 +148,38 @@ async def list_available_agents(
             "api_gateway": {
                 "name": "API Gateway Agent",
                 "description": "Manages API endpoints, versioning, and documentation",
-                "capabilities": ["endpoint_registration", "api_versioning", "openapi_generation", "rate_limiting"]
+                "capabilities": [
+                    "endpoint_registration",
+                    "api_versioning",
+                    "openapi_generation",
+                    "rate_limiting",
+                ],
             },
             "database_sync": {
                 "name": "Database Sync Agent",
                 "description": "Synchronizes data between PostgreSQL and Redis",
-                "capabilities": ["data_sync", "cache_management", "conflict_resolution"]
+                "capabilities": ["data_sync", "cache_management", "conflict_resolution"],
             },
             "ui_sync": {
                 "name": "UI Sync Agent",
                 "description": "Manages real-time UI state synchronization",
-                "capabilities": ["state_sync", "component_updates", "optimistic_updates"]
+                "capabilities": ["state_sync", "component_updates", "optimistic_updates"],
             },
             "realtime_update": {
                 "name": "Realtime Update Agent",
                 "description": "Handles Pusher channels and WebSocket fallback",
-                "capabilities": ["event_broadcast", "channel_management", "message_queue"]
+                "capabilities": ["event_broadcast", "channel_management", "message_queue"],
             },
             "studio_bridge": {
                 "name": "Studio Bridge Agent",
                 "description": "Communicates with Roblox Studio",
-                "capabilities": ["script_sync", "studio_commands", "debug_routing"]
+                "capabilities": ["script_sync", "studio_commands", "debug_routing"],
             },
             "schema_validator": {
                 "name": "Schema Validator Agent",
                 "description": "Validates and transforms data across platforms",
-                "capabilities": ["schema_validation", "data_transformation", "version_migration"]
-            }
+                "capabilities": ["schema_validation", "data_transformation", "version_migration"],
+            },
         }
 
         # Check which agents are actually initialized
@@ -169,13 +187,13 @@ async def list_available_agents(
         for agent_key in agent_info:
             agent_info[agent_key]["initialized"] = agent_key in status.get("agents", {})
             if agent_key in status.get("agents", {}):
-                agent_info[agent_key]["health"] = status["agents"][agent_key].get("status", "unknown")
+                agent_info[agent_key]["health"] = status["agents"][agent_key].get(
+                    "status", "unknown"
+                )
 
-        return JSONResponse(content={
-            "status": "success",
-            "agents": agent_info,
-            "total_agents": len(agent_info)
-        })
+        return JSONResponse(
+            content={"status": "success", "agents": agent_info, "total_agents": len(agent_info)}
+        )
 
     except Exception as e:
         logger.error(f"Error listing agents: {e}")
@@ -186,7 +204,7 @@ async def list_available_agents(
 async def create_workflow(
     request: WorkflowCreateRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Create and optionally execute an integration workflow
@@ -202,7 +220,7 @@ async def create_workflow(
             workflow_description=request.description,
             template=request.template,
             custom_tasks=request.custom_tasks,
-            parameters=request.parameters
+            parameters=request.parameters,
         )
 
         execution_time = (datetime.utcnow() - start_time).total_seconds()
@@ -212,24 +230,18 @@ async def create_workflow(
             success=result["success"],
             output=result.get("output"),
             error=result.get("error"),
-            execution_time=execution_time
+            execution_time=execution_time,
         )
 
     except Exception as e:
         logger.error(f"Error creating workflow: {e}")
         return WorkflowResponse(
-            workflow_id=None,
-            success=False,
-            output=None,
-            error=str(e),
-            execution_time=None
+            workflow_id=None, success=False, output=None, error=str(e), execution_time=None
         )
 
 
 @router.post("/workflow/templates")
-async def list_workflow_templates(
-    current_user: User = Depends(get_current_user)
-):
+async def list_workflow_templates(current_user: User = Depends(get_current_user)):
     """
     List available workflow templates
     """
@@ -242,18 +254,13 @@ async def list_workflow_templates(
                 "generate_content",
                 "store_in_database",
                 "update_frontend",
-                "sync_to_roblox"
-            ]
+                "sync_to_roblox",
+            ],
         },
         "user_sync": {
             "name": "User Synchronization Workflow",
             "description": "Sync user data between backend and frontend",
-            "tasks": [
-                "fetch_user_data",
-                "validate_data",
-                "update_database",
-                "broadcast_update"
-            ]
+            "tasks": ["fetch_user_data", "validate_data", "update_database", "broadcast_update"],
         },
         "roblox_deployment": {
             "name": "Roblox Deployment Workflow",
@@ -262,8 +269,8 @@ async def list_workflow_templates(
                 "prepare_scripts",
                 "validate_scripts",
                 "deploy_to_studio",
-                "verify_deployment"
-            ]
+                "verify_deployment",
+            ],
         },
         "api_migration": {
             "name": "API Migration Workflow",
@@ -272,21 +279,17 @@ async def list_workflow_templates(
                 "analyze_endpoints",
                 "create_new_version",
                 "migrate_schemas",
-                "deprecate_old_endpoints"
-            ]
-        }
+                "deprecate_old_endpoints",
+            ],
+        },
     }
 
-    return JSONResponse(content={
-        "status": "success",
-        "templates": templates
-    })
+    return JSONResponse(content={"status": "success", "templates": templates})
 
 
 @router.post("/schema/register")
 async def register_schema(
-    request: SchemaRegistrationRequest,
-    current_user: User = Depends(get_current_user)
+    request: SchemaRegistrationRequest, current_user: User = Depends(get_current_user)
 ):
     """
     Register a new schema for cross-platform validation
@@ -307,7 +310,7 @@ async def register_schema(
         schema_type_map = {
             "json_schema": SchemaType.JSON_SCHEMA,
             "protobuf": SchemaType.PROTOBUF,
-            "avro": SchemaType.AVRO
+            "avro": SchemaType.AVRO,
         }
 
         schema_type = schema_type_map.get(request.schema_type, SchemaType.JSON_SCHEMA)
@@ -319,14 +322,16 @@ async def register_schema(
             schema_type=schema_type,
             definition=request.definition,
             platform=platform,
-            version=request.version
+            version=request.version,
         )
 
-        return JSONResponse(content={
-            "status": "success",
-            "message": f"Schema '{request.schema_name}' registered successfully",
-            "result": result
-        })
+        return JSONResponse(
+            content={
+                "status": "success",
+                "message": f"Schema '{request.schema_name}' registered successfully",
+                "result": result,
+            }
+        )
 
     except KeyError as e:
         raise HTTPException(status_code=400, detail=f"Invalid platform: {request.platform}")
@@ -339,7 +344,7 @@ async def register_schema(
 async def trigger_data_sync(
     request: DataSyncRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Trigger manual data synchronization between platforms
@@ -351,28 +356,26 @@ async def trigger_data_sync(
         result = await manager.sync_data(
             source_platform=request.source_platform,
             target_platform=request.target_platform,
-            data=request.data
+            data=request.data,
         )
 
         if request.sync_mode == "batch":
             # For batch mode, queue the sync
             background_tasks.add_task(
-                manager.sync_data,
-                request.source_platform,
-                request.target_platform,
-                request.data
+                manager.sync_data, request.source_platform, request.target_platform, request.data
             )
 
-            return JSONResponse(content={
-                "status": "success",
-                "message": "Sync queued for batch processing"
-            })
+            return JSONResponse(
+                content={"status": "success", "message": "Sync queued for batch processing"}
+            )
 
-        return JSONResponse(content={
-            "status": "success" if result["success"] else "error",
-            "output": result.get("output"),
-            "error": result.get("error")
-        })
+        return JSONResponse(
+            content={
+                "status": "success" if result["success"] else "error",
+                "output": result.get("output"),
+                "error": result.get("error"),
+            }
+        )
 
     except Exception as e:
         logger.error(f"Error triggering sync: {e}")
@@ -381,8 +384,7 @@ async def trigger_data_sync(
 
 @router.post("/event/broadcast")
 async def broadcast_event(
-    request: EventBroadcastRequest,
-    current_user: User = Depends(get_current_user)
+    request: EventBroadcastRequest, current_user: User = Depends(get_current_user)
 ):
     """
     Broadcast an event through the realtime update agent
@@ -391,16 +393,18 @@ async def broadcast_event(
         manager = await get_integration_manager()
 
         result = await manager.broadcast_event(
-            channel=request.channel,
-            event=request.event,
-            data=request.data
+            channel=request.channel, event=request.event, data=request.data
         )
 
-        return JSONResponse(content={
-            "status": "success" if result["success"] else "error",
-            "message": "Event broadcast successfully" if result["success"] else result.get("error"),
-            "output": result.get("output")
-        })
+        return JSONResponse(
+            content={
+                "status": "success" if result["success"] else "error",
+                "message": (
+                    "Event broadcast successfully" if result["success"] else result.get("error")
+                ),
+                "output": result.get("output"),
+            }
+        )
 
     except Exception as e:
         logger.error(f"Error broadcasting event: {e}")
@@ -410,7 +414,7 @@ async def broadcast_event(
 @router.get("/metrics")
 async def get_integration_metrics(
     platform: Optional[str] = Query(None, description="Filter by platform"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Get detailed metrics for integration operations
@@ -427,8 +431,8 @@ async def get_integration_metrics(
                 "total_requests": 0,
                 "successful_requests": 0,
                 "failed_requests": 0,
-                "events_processed": 0
-            }
+                "events_processed": 0,
+            },
         }
 
         # Aggregate metrics from all agents
@@ -439,7 +443,9 @@ async def get_integration_metrics(
 
                 # Update totals
                 metrics["totals"]["total_requests"] += agent_metrics.get("total_requests", 0)
-                metrics["totals"]["successful_requests"] += agent_metrics.get("successful_requests", 0)
+                metrics["totals"]["successful_requests"] += agent_metrics.get(
+                    "successful_requests", 0
+                )
                 metrics["totals"]["failed_requests"] += agent_metrics.get("failed_requests", 0)
                 metrics["totals"]["events_processed"] += agent_metrics.get("events_processed", 0)
 
@@ -470,7 +476,7 @@ async def get_integration_metrics(
 @router.post("/health/check")
 async def perform_health_check(
     deep_check: bool = Query(False, description="Perform deep health check"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Perform a health check on all integration components
@@ -481,7 +487,7 @@ async def perform_health_check(
         health_report = {
             "timestamp": datetime.utcnow().isoformat(),
             "status": "healthy",
-            "components": {}
+            "components": {},
         }
 
         # Check each agent
@@ -490,7 +496,7 @@ async def perform_health_check(
         for agent_name, agent_health in status.get("agents", {}).items():
             component_health = {
                 "status": agent_health.get("status", "unknown"),
-                "metrics": agent_health.get("metrics", {})
+                "metrics": agent_health.get("metrics", {}),
             }
 
             if deep_check:
@@ -509,6 +515,7 @@ async def perform_health_check(
             # Check database connectivity
             try:
                 from database.connection import DatabaseManager
+
                 db_manager = DatabaseManager()
                 await db_manager.initialize()
                 health_report["components"]["database"] = {"status": "healthy"}
@@ -520,7 +527,8 @@ async def perform_health_check(
             try:
                 import redis.asyncio as redis
                 from apps.backend.core.config import settings
-                if hasattr(settings, 'REDIS_URL') and settings.REDIS_URL:
+
+                if hasattr(settings, "REDIS_URL") and settings.REDIS_URL:
                     redis_client = await redis.from_url(settings.REDIS_URL)
                     await redis_client.ping()
                     health_report["components"]["redis"] = {"status": "healthy"}
@@ -539,15 +547,15 @@ async def perform_health_check(
             content={
                 "timestamp": datetime.utcnow().isoformat(),
                 "status": "error",
-                "error": str(e)
-            }
+                "error": str(e),
+            },
         )
 
 
 @router.post("/maintenance/cleanup")
 async def cleanup_integration(
     force: bool = Query(False, description="Force cleanup even if agents are busy"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Perform cleanup operations on integration agents
@@ -561,10 +569,7 @@ async def cleanup_integration(
 
         manager = await get_integration_manager()
 
-        cleanup_report = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "cleaned": []
-        }
+        cleanup_report = {"timestamp": datetime.utcnow().isoformat(), "cleaned": []}
 
         # Get current status
         status = await manager.get_agent_status()
@@ -583,8 +588,8 @@ async def cleanup_integration(
                 content={
                     "status": "error",
                     "message": "Some agents are busy processing events",
-                    "busy_agents": busy_agents
-                }
+                    "busy_agents": busy_agents,
+                },
             )
 
         # Perform cleanup on each agent
@@ -596,10 +601,7 @@ async def cleanup_integration(
             except Exception as e:
                 logger.error(f"Error cleaning up agent {agent_name}: {e}")
 
-        return JSONResponse(content={
-            "status": "success",
-            "report": cleanup_report
-        })
+        return JSONResponse(content={"status": "success", "report": cleanup_report})
 
     except HTTPException:
         raise

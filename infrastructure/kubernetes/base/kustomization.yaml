@@ -1,0 +1,126 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: toolboxai-base
+  annotations:
+    config.kubernetes.io/local-config: "true"
+
+# Note: No default namespace set at base level - managed in overlays
+
+# Common Labels
+labels:
+- pairs:
+    app.kubernetes.io/part-of: toolboxai-platform
+    app.kubernetes.io/managed-by: kustomize
+
+# Resources
+resources:
+# Namespaces
+- namespaces/toolboxai.yaml
+
+# Storage
+- storage/persistent-volumes.yaml
+
+# ConfigMaps
+- configmaps/backend.yaml
+- configmaps/postgres.yaml
+- configmaps/redis.yaml
+
+# Secrets
+- secrets/backend.yaml
+- secrets/postgres.yaml
+- secrets/redis.yaml
+
+# RBAC
+- rbac/service-accounts.yaml
+- rbac/roles.yaml
+- rbac/role-bindings.yaml
+
+# Services
+- services/backend.yaml
+- services/postgres.yaml
+- services/redis.yaml
+
+# Deployments and StatefulSets
+- deployments/backend.yaml
+- deployments/postgres.yaml
+- deployments/redis.yaml
+
+# Security
+- security/network-policies.yaml
+- security/pod-security.yaml
+
+# Monitoring
+- monitoring/hpa.yaml
+
+# Ingress
+- ingress/ingress.yaml
+
+# Image Tags (can be overridden in overlays)
+images:
+- name: ghcr.io/toolboxai-solutions/backend
+  newTag: latest
+- name: postgres
+  newTag: 15-alpine
+- name: redis
+  newTag: 7-alpine
+
+# ConfigMap Generator for common configurations
+configMapGenerator:
+- name: common-config
+  literals:
+  - CLUSTER_NAME=toolboxai-cluster
+  - ENVIRONMENT=base
+  - TIMEZONE=UTC
+  - LOG_LEVEL=info
+
+# Secret Generator for common secrets (values will be overridden in overlays)
+secretGenerator:
+- name: common-secrets
+  literals:
+  - ADMIN_PASSWORD=CHANGE_ME
+  type: Opaque
+
+# Resource Transformers
+replicas:
+- name: backend
+  count: 3
+- name: redis
+  count: 1
+
+# Patches (common patches that apply to all environments)
+patches:
+# Add common annotations
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+  patch: |-
+    - op: add
+      path: /metadata/annotations/deployment.kubernetes.io~1revision
+      value: "1"
+
+# Add security context to all pods
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+  patch: |-
+    - op: add
+      path: /spec/template/spec/securityContext/runAsNonRoot
+      value: true
+    - op: add
+      path: /spec/template/spec/securityContext/seccompProfile
+      value:
+        type: RuntimeDefault
+
+# Components (can be used to enable/disable features)
+components:
+# Future: Add Istio service mesh component
+# - ../../components/service-mesh
+
+# Generators
+generators:
+# Future: Add custom generators for CRDs
+# - ../../generators/mcp-resources.yaml

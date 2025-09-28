@@ -1,0 +1,156 @@
+# Prometheus Production Configuration for ToolBoxAI
+# ================================================
+# Enhanced production configuration with security and performance optimizations
+# Updated: 2025-09-26
+
+global:
+  scrape_interval: 30s
+  scrape_timeout: 15s
+  evaluation_interval: 30s
+  external_labels:
+    cluster: 'toolboxai-production'
+    environment: 'production'
+    datacenter: 'cloud'
+
+# Rule files for recording rules and alerts
+rule_files:
+  - "rules/alerts.yml"
+  - "rules/recording_rules.yml"
+
+# Alertmanager configuration for production
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+      timeout: 10s
+      path_prefix: /
+
+# Production scrape configurations - optimized for performance
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 60s
+
+  # ToolBoxAI Backend Application
+  - job_name: 'toolboxai-backend'
+    static_configs:
+      - targets: ['backend:8009']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    relabel_configs:
+      - target_label: service
+        replacement: 'backend'
+      - target_label: environment
+        replacement: 'production'
+
+  # ToolBoxAI Dashboard
+  - job_name: 'toolboxai-dashboard'
+    static_configs:
+      - targets: ['dashboard:80']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'dashboard'
+
+  # MCP Server
+  - job_name: 'mcp-server'
+    static_configs:
+      - targets: ['mcp-server:9877']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'mcp'
+
+  # Agent Coordinator
+  - job_name: 'agent-coordinator'
+    static_configs:
+      - targets: ['agent-coordinator:8888']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'agents'
+
+  # PostgreSQL (via exporter - to be added)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'postgres'
+
+  # Redis (via exporter - to be added)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'redis'
+
+  # Container metrics (cAdvisor)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: service
+        replacement: 'containers'
+
+  # Nginx metrics (to be added)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'nginx'
+
+  # System metrics (node exporter)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'system'
+
+  # Health checks for critical services
+  - job_name: 'blackbox-health'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - http://backend:8009/health
+        - http://mcp-server:9877/health
+        - http://agent-coordinator:8888/health
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+# Enhanced storage configuration for production
+storage:
+  tsdb:
+    retention.time: 30d
+    retention.size: 50GB
+    wal-compression: true
+    min-block-duration: 2h
+    max-block-duration: 25h
+    allow-overlapping-blocks: false
+
+# Feature flags for production
+feature_flags:
+  - "promql-at-modifier"
+  - "remote-write-receiver"

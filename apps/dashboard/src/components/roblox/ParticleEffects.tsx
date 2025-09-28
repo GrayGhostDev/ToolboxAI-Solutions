@@ -7,7 +7,7 @@
 import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Points, PointMaterial } from '@react-three/drei';
-import Box from '@mui/material/Box';
+import { Box } from '@mantine/core';
 import * as THREE from 'three';
 import { robloxColors } from '../../theme/robloxTheme';
 
@@ -216,7 +216,7 @@ export const ParticleEffects: React.FunctionComponent<ParticleEffectsProps> = ({
 
   return (
     <Box
-      sx={{
+      style={{
         position,
         top: 0,
         left: 0,

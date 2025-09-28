@@ -1,33 +1,20 @@
 import * as React from "react";
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Skeleton from '@mui/material/Skeleton';
-import Alert from '@mui/material/Alert';
-import Tooltip from '@mui/material/Tooltip';
-import Paper from '@mui/material/Paper';
-import LinearProgress from '@mui/material/LinearProgress';
-import Avatar from '@mui/material/Avatar';
-import Badge from '@mui/material/Badge';
+import { Card, Text, Title, Box, Stack, Badge, ActionIcon, Skeleton, Alert, Tooltip, Paper, Progress, Avatar } from '@mantine/core';
 
 import { useState, useEffect } from "react";
 import {
-  TrendingUp,
-  TrendingDown,
-  Speed,
-  Warning,
-  CheckCircle,
-  Error,
-  Info,
-  Refresh,
-  Timeline,
-} from "@mui/icons-material";
-import { useTheme } from "@mui/material/styles";
-import { useWebSocketContext } from "../../contexts/WebSocketContext";
+  IconTrendingUp,
+  IconTrendingDown,
+  IconGauge,
+  IconAlertTriangle,
+  IconCircleCheck,
+  IconX,
+  IconInfoCircle,
+  IconRefresh,
+  IconChartLine,
+} from "@tabler/icons-react";
+import { useMantineTheme } from "@mantine/core";
+import { usePusherContext } from "../../contexts/PusherContext";
 import { apiClient } from "../../services/api";
 
 interface PerformanceMetric {
@@ -59,13 +46,13 @@ interface PerformanceIndicatorProps {
   refreshInterval?: number; // in seconds
 }
 
-export function PerformanceIndicator({ 
+export function PerformanceIndicator({
   showSystemHealth = true,
   autoRefresh = true,
-  refreshInterval = 30 
+  refreshInterval = 30
 }: PerformanceIndicatorProps) {
-  const theme = useTheme();
-  const { isConnected, subscribe, unsubscribe } = useWebSocketContext();
+  const theme = useMantineTheme();
+  const { isConnected, subscribeToChannel, unsubscribeFromChannel } = usePusherContext();
   
   const [metrics, setMetrics] = useState<PerformanceMetric[]>([]);
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
@@ -318,12 +305,12 @@ export function PerformanceIndicator({
   useEffect(() => {
     if (!isConnected || !autoRefresh) return;
 
-    const subscriptionId = subscribe('performance_metrics', (message: any) => {
-      if (message.type === 'METRIC_UPDATE') {
-        const { metricId, value, status, trend } = message.payload;
+    const subscriptionId = subscribeToChannel('performance_metrics', {
+      'METRIC_UPDATE': (message: any) => {
+        const { metricId, value, status, trend } = message;
         setMetrics(prevMetrics =>
           prevMetrics.map(metric =>
-            metric.id === metricId 
+            metric.id === metricId
               ? { ...metric, value, status, trend, lastUpdated: new Date().toISOString() }
               : metric
           )
@@ -333,68 +320,64 @@ export function PerformanceIndicator({
     });
 
     return () => {
-      unsubscribe(subscriptionId);
+      unsubscribeFromChannel(subscriptionId);
     };
-  }, [isConnected, autoRefresh, subscribe, unsubscribe]);
+  }, [isConnected, autoRefresh, subscribeToChannel, unsubscribeFromChannel]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "excellent":
-        return theme.palette.success.main;
+        return theme.colors.green[6];
       case "good":
-        return theme.palette.info.main;
+        return theme.colors.blue[6];
       case "warning":
-        return theme.palette.warning.main;
+        return theme.colors.yellow[6];
       case "critical":
-        return theme.palette.error.main;
+        return theme.colors.red[6];
       default:
-        return theme.palette.text.secondary;
+        return theme.colors.gray[6];
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "excellent":
-        return <CheckCircle color="success" />;
+        return <IconCircleCheck color={theme.colors.green[6]} />;
       case "good":
-        return <Info color="info" />;
+        return <IconInfoCircle color={theme.colors.blue[6]} />;
       case "warning":
-        return <Warning color="warning" />;
+        return <IconAlertTriangle color={theme.colors.yellow[6]} />;
       case "critical":
-        return <Error color="error" />;
+        return <IconX color={theme.colors.red[6]} />;
       default:
-        return <Info />;
+        return <IconInfoCircle />;
     }
   };
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case "up":
-        return <TrendingUp color="success" fontSize="small" />;
+        return <IconTrendingUp size={16} color={theme.colors.green[6]} />;
       case "down":
-        return <TrendingDown color="error" fontSize="small" />;
+        return <IconTrendingDown size={16} color={theme.colors.red[6]} />;
       default:
-        return <Timeline color="disabled" fontSize="small" />;
+        return <IconChartLine size={16} color={theme.colors.gray[6]} />;
     }
   };
 
   if (loading) {
     return (
-      <Stack spacing={3}>
+      <Stack gap="lg">
         {showSystemHealth && (
           <Card>
-            <CardContent>
-              <Skeleton variant="text" height={40} />
-              <Skeleton variant="rectangular" height={100} />
-            </CardContent>
+            <Skeleton height={40} mb="md" />
+            <Skeleton height={100} />
           </Card>
         )}
-        <Stack direction="row" spacing={2}>
+        <Stack direction="row" gap="md">
           {[1, 2, 3].map((item) => (
-            <Card key={item} sx={{ flex: 1 }}>
-              <CardContent>
-                <Skeleton variant="rectangular" height={120} />
-              </CardContent>
+            <Card key={item} style={{ flex: 1 }}>
+              <Skeleton height={120} />
             </Card>
           ))}
         </Stack>
@@ -403,180 +386,167 @@ export function PerformanceIndicator({
   }
 
   return (
-    <Stack spacing={3}>
+    <Stack gap="lg">
       {/* System Health Overview */}
       {showSystemHealth && systemHealth && (
         <Card>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                System Health
-              </Typography>
-              <Stack direction="row" spacing={1} alignItems="center">
-                {isConnected && autoRefresh && (
-                  <Chip label="Live" color="success" size="small" />
-                )}
-                <Chip 
-                  label={systemHealth.overall.toUpperCase()} 
-                  color={systemHealth.overall === "healthy" ? "success" : "warning"}
-                  size="small"
-                />
-                <IconButton size="small" onClick={(e: React.MouseEvent) => fetchData}>
-                  <Refresh />
-                </IconButton>
+          <Stack direction="row" justify="space-between" align="center" mb="md">
+            <Title order={3} fw={600}>
+              System Health
+            </Title>
+            <Stack direction="row" gap="xs" align="center">
+              {isConnected && autoRefresh && (
+                <Badge color="green" size="sm">Live</Badge>
+              )}
+              <Badge
+                color={systemHealth.overall === "healthy" ? "green" : "yellow"}
+                size="sm"
+              >
+                {systemHealth.overall.toUpperCase()}
+              </Badge>
+              <ActionIcon size="sm" onClick={(e: React.MouseEvent) => fetchData}>
+                <IconRefresh />
+              </ActionIcon>
+            </Stack>
+          </Stack>
+
+          {error && (
+            <Alert color="yellow" mb="md">
+              Using fallback data: {error}
+            </Alert>
+          )}
+
+          <Stack direction="row" gap="lg">
+            <Box style={{ flex: 1 }}>
+              <Text size="xs" c="dimmed">
+                Uptime
+              </Text>
+              <Title order={2} fw={700} c="green">
+                {systemHealth.uptime.toFixed(1)}%
+              </Title>
+            </Box>
+            <Box style={{ flex: 1 }}>
+              <Text size="xs" c="dimmed">
+                Response Time
+              </Text>
+              <Title order={2} fw={700} c="blue">
+                {systemHealth.responseTime}ms
+              </Title>
+            </Box>
+            <Box style={{ flex: 1 }}>
+              <Text size="xs" c="dimmed">
+                Active Users
+              </Text>
+              <Title order={2} fw={700} c={theme.primaryColor}>
+                {systemHealth.activeUsers.toLocaleString()}
+              </Title>
+            </Box>
+            <Box style={{ flex: 1 }}>
+              <Text size="xs" c="dimmed">
+                Error Rate
+              </Text>
+              <Title order={2} fw={700} c="yellow">
+                {systemHealth.errorRate.toFixed(1)}%
+              </Title>
+            </Box>
+          </Stack>
+
+          <Stack direction="row" gap="md" mt="md">
+            <Box style={{ flex: 1 }}>
+              <Stack direction="row" justify="space-between" align="center" mb="xs">
+                <Text size="xs">Memory Usage</Text>
+                <Text size="xs">{systemHealth.memoryUsage}%</Text>
               </Stack>
-            </Stack>
-            
-            {error && (
-              <Alert severity="warning" sx={{ mb: 2 }}>
-                Using fallback data: {error}
-              </Alert>
-            )}
-
-            <Stack direction="row" spacing={3}>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Uptime
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: "success.main" }}>
-                  {systemHealth.uptime.toFixed(1)}%
-                </Typography>
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Response Time
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: "info.main" }}>
-                  {systemHealth.responseTime}ms
-                </Typography>
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Active Users
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: "primary.main" }}>
-                  {systemHealth.activeUsers.toLocaleString()}
-                </Typography>
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Error Rate
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: "warning.main" }}>
-                  {systemHealth.errorRate.toFixed(1)}%
-                </Typography>
-              </Box>
-            </Stack>
-
-            <Stack direction="row" spacing={2} mt={2}>
-              <Box sx={{ flex: 1 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-                  <Typography variant="caption">Memory Usage</Typography>
-                  <Typography variant="caption">{systemHealth.memoryUsage}%</Typography>
-                </Stack>
-                <LinearProgress
-                  variant="determinate"
-                  value={systemHealth.memoryUsage}
-                  sx={{ 
-                    height: 6, 
-                    borderRadius: 3,
-                    '& .MuiLinearProgress-bar': { 
-                      backgroundColor: systemHealth.memoryUsage > 80 ? 'error.main' : 'primary.main'
-                    }
-                  }}
-                />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-                  <Typography variant="caption">CPU Usage</Typography>
-                  <Typography variant="caption">{systemHealth.cpuUsage}%</Typography>
-                </Stack>
-                <LinearProgress
-                  variant="determinate"
-                  value={systemHealth.cpuUsage}
-                  sx={{ 
-                    height: 6, 
-                    borderRadius: 3,
-                    '& .MuiLinearProgress-bar': { 
-                      backgroundColor: systemHealth.cpuUsage > 80 ? 'error.main' : 'success.main'
-                    }
-                  }}
-                />
-              </Box>
-            </Stack>
-          </CardContent>
+              <Progress
+                value={systemHealth.memoryUsage}
+                h={6}
+                radius="xl"
+                color={systemHealth.memoryUsage > 80 ? "red" : theme.primaryColor}
+              />
+            </Box>
+            <Box style={{ flex: 1 }}>
+              <Stack direction="row" justify="space-between" align="center" mb="xs">
+                <Text size="xs">CPU Usage</Text>
+                <Text size="xs">{systemHealth.cpuUsage}%</Text>
+              </Stack>
+              <Progress
+                value={systemHealth.cpuUsage}
+                h={6}
+                radius="xl"
+                color={systemHealth.cpuUsage > 80 ? "red" : "green"}
+              />
+            </Box>
+          </Stack>
         </Card>
       )}
 
       {/* Performance Metrics */}
-      <Stack direction="row" spacing={2} flexWrap="wrap">
+      <Stack direction="row" gap="md" style={{ flexWrap: "wrap" }}>
         {metrics.map((metric) => (
-          <Card key={metric.id} sx={{ flex: 1, minWidth: 250 }}>
-            <CardContent>
-              <Stack spacing={2}>
-                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      {metric.name}
-                    </Typography>
-                    <Stack direction="row" alignItems="baseline" spacing={1}>
-                      <Typography variant="h4" sx={{ fontWeight: 700, color: getStatusColor(metric.status) }}>
-                        {metric.value.toFixed(metric.unit === "ms" || metric.unit === "/5" ? 1 : 1)}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {metric.unit}
-                      </Typography>
-                    </Stack>
-                  </Box>
-                  <Avatar sx={{ bgcolor: getStatusColor(metric.status) + '20', width: 40, height: 40 }}>
-                    {getStatusIcon(metric.status)}
-                  </Avatar>
+          <Card key={metric.id} style={{ flex: 1, minWidth: 250 }}>
+            <Stack gap="md">
+              <Stack direction="row" justify="space-between" align="flex-start">
+                <Box>
+                  <Text size="xs" c="dimmed">
+                    {metric.name}
+                  </Text>
+                  <Stack direction="row" align="baseline" gap="xs">
+                    <Title order={2} fw={700} style={{ color: getStatusColor(metric.status) }}>
+                      {metric.value.toFixed(metric.unit === "ms" || metric.unit === "/5" ? 1 : 1)}
+                    </Title>
+                    <Text size="xs" c="dimmed">
+                      {metric.unit}
+                    </Text>
+                  </Stack>
+                </Box>
+                <Avatar
+                  size={40}
+                  style={{ backgroundColor: getStatusColor(metric.status) + '20' }}
+                >
+                  {getStatusIcon(metric.status)}
+                </Avatar>
+              </Stack>
+
+              <Box>
+                <Stack direction="row" justify="space-between" align="center" mb="xs">
+                  <Text size="xs">
+                    Target: {metric.target}{metric.unit}
+                  </Text>
+                  <Stack direction="row" align="center" gap="xs">
+                    {getTrendIcon(metric.trend)}
+                    <Text
+                      size="xs"
+                      c={metric.trend === "up" ? "green" : metric.trend === "down" ? "red" : "dimmed"}
+                    >
+                      {metric.trendValue > 0 ? "+" : ""}{metric.trendValue.toFixed(1)}%
+                    </Text>
+                  </Stack>
                 </Stack>
 
-                <Box>
-                  <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-                    <Typography variant="caption">
-                      Target: {metric.target}{metric.unit}
-                    </Typography>
-                    <Stack direction="row" alignItems="center" spacing={0.5}>
-                      {getTrendIcon(metric.trend)}
-                      <Typography 
-                        variant="caption" 
-                        color={metric.trend === "up" ? "success.main" : metric.trend === "down" ? "error.main" : "text.secondary"}
-                      >
-                        {metric.trendValue > 0 ? "+" : ""}{metric.trendValue.toFixed(1)}%
-                      </Typography>
-                    </Stack>
-                  </Stack>
-                  
-                  <LinearProgress
-                    variant="determinate"
-                    value={Math.min((metric.value / metric.target) * 100, 100)}
-                    sx={{ 
-                      height: 6, 
-                      borderRadius: 3,
-                      '& .MuiLinearProgress-bar': { backgroundColor: getStatusColor(metric.status) }
-                    }}
-                  />
-                </Box>
+                <Progress
+                  value={Math.min((metric.value / metric.target) * 100, 100)}
+                  h={6}
+                  radius="xl"
+                  color={getStatusColor(metric.status)}
+                />
+              </Box>
 
-                <Tooltip title={metric.description}>
-                  <Typography variant="caption" color="text.secondary" sx={{ cursor: 'help' }}>
-                    {metric.description}
-                  </Typography>
-                </Tooltip>
-              </Stack>
-            </CardContent>
+              <Tooltip label={metric.description}>
+                <Text size="xs" c="dimmed" style={{ cursor: 'help' }}>
+                  {metric.description}
+                </Text>
+              </Tooltip>
+            </Stack>
           </Card>
         ))}
       </Stack>
 
       {/* Last Update Info */}
-      <Paper sx={{ p: 1 }}>
-        <Typography variant="caption" color="text.secondary" align="center" display="block">
-          Last updated: {lastRefresh.toLocaleTimeString()} 
+      <Paper p="xs">
+        <Text size="xs" c="dimmed" ta="center">
+          Last updated: {lastRefresh.toLocaleTimeString()}
           {autoRefresh && ` • Next update in ${refreshInterval}s`}
-        </Typography>
+        </Text>
       </Paper>
     </Stack>
   );

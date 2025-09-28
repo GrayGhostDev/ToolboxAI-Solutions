@@ -25,17 +25,14 @@ router = APIRouter(
 
 class ClerkWebhookEvent(BaseModel):
     """Clerk webhook event model"""
+
     data: Dict[str, Any]
     object: str
     type: str
     timestamp: int
 
 
-def verify_webhook_signature(
-    payload: bytes,
-    signature: str,
-    secret: str
-) -> bool:
+def verify_webhook_signature(payload: bytes, signature: str, secret: str) -> bool:
     """
     Verify Clerk webhook signature using HMAC
 
@@ -49,17 +46,10 @@ def verify_webhook_signature(
     """
     try:
         # Clerk uses SHA256 HMAC
-        expected_sig = hmac.new(
-            secret.encode(),
-            payload,
-            hashlib.sha256
-        ).hexdigest()
+        expected_sig = hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
 
         # Compare signatures
-        return hmac.compare_digest(
-            expected_sig,
-            signature.replace("sha256=", "")
-        )
+        return hmac.compare_digest(expected_sig, signature.replace("sha256=", ""))
     except Exception as e:
         logger.error(f"Signature verification failed: {e}")
         return False
@@ -87,8 +77,7 @@ async def handle_clerk_webhook(request: Request):
         # Verify signature
         if not verify_webhook_signature(body, signature, WEBHOOK_SECRET):
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid webhook signature"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid webhook signature"
             )
 
         # Parse event
@@ -127,8 +116,7 @@ async def handle_clerk_webhook(request: Request):
     except Exception as e:
         logger.error(f"Webhook processing failed: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Webhook processing failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Webhook processing failed"
         )
 
 
@@ -153,9 +141,7 @@ async def handle_user_created(user_data: Dict[str, Any]):
         # Create user in local database
         async with get_session() as session:
             # Check if user already exists
-            existing = await session.execute(
-                f"SELECT id FROM users WHERE clerk_id = '{user_id}'"
-            )
+            existing = await session.execute(f"SELECT id FROM users WHERE clerk_id = '{user_id}'")
             if existing.scalar():
                 logger.info(f"User {user_id} already exists")
                 return
@@ -170,8 +156,13 @@ async def handle_user_created(user_data: Dict[str, Any]):
                 last_name=user_data.get("last_name", ""),
                 avatar=user_data.get("image_url", ""),
                 is_active=True,
-                email_verified=user_data.get("email_addresses", [{}])[0].get("verification", {}).get("status") == "verified",
-                created_at=datetime.fromisoformat(user_data.get("created_at").replace("Z", "+00:00")),
+                email_verified=user_data.get("email_addresses", [{}])[0]
+                .get("verification", {})
+                .get("status")
+                == "verified",
+                created_at=datetime.fromisoformat(
+                    user_data.get("created_at").replace("Z", "+00:00")
+                ),
             )
 
             session.add(new_user)

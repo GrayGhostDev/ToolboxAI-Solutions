@@ -22,6 +22,7 @@ try:
     from apps.backend.core.lifecycle import register_startup_handlers, register_shutdown_handlers
     from apps.backend.core.middleware import register_middleware
     from apps.backend.api.routers import register_routers
+
     FACTORY_COMPONENTS_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Factory components not yet available: {e}")
@@ -53,8 +54,8 @@ async def application_lifespan(app: FastAPI):
         extra_fields={
             "app_name": settings.APP_NAME,
             "version": settings.APP_VERSION,
-            "environment": settings.ENVIRONMENT
-        }
+            "environment": settings.ENVIRONMENT,
+        },
     )
 
     try:
@@ -91,7 +92,7 @@ def create_app(
     title: Optional[str] = None,
     version: Optional[str] = None,
     testing_mode: bool = False,
-    config_settings: Optional[object] = None
+    config_settings: Optional[object] = None,
 ) -> FastAPI:
     """
     Application factory function to create and configure FastAPI app
@@ -157,7 +158,9 @@ def create_app(
         register_routers(app)
         logger.info("Middleware and routers registered successfully")
     else:
-        logger.warning("Factory components not available - skipping middleware and router registration")
+        logger.warning(
+            "Factory components not available - skipping middleware and router registration"
+        )
 
     logger.info("FastAPI application created and configured successfully")
 
@@ -170,8 +173,4 @@ def create_test_app() -> FastAPI:
 
     This app skips all startup operations and external dependencies.
     """
-    return create_app(
-        skip_lifespan=True,
-        skip_sentry=True,
-        testing_mode=True
-    )
+    return create_app(skip_lifespan=True, skip_sentry=True, testing_mode=True)

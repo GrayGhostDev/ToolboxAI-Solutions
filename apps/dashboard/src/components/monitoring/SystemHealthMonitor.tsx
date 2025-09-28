@@ -3,42 +3,43 @@
  * Real-time monitoring of system health metrics
  */
 import { memo, useEffect, useState, useMemo } from 'react';
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid';
-import Stack from '@mui/material/Stack';
-import LinearProgress from '@mui/material/LinearProgress';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import Button from '@mui/material/Button';
-import Collapse from '@mui/material/Collapse';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
+import {
+  Card,
+  Grid,
+  Stack,
+  Progress,
+  Badge,
+  ActionIcon,
+  Tooltip,
+  Alert,
+  Button,
+  Collapse,
+  List,
+  Group,
+  Text,
+  Title,
+  useMantineTheme,
+  alpha,
+  Paper,
+  Box,
+} from '@mantine/core';
 
 import {
-  Speed as CPUIcon,
-  Memory as MemoryIcon,
-  Storage as StorageIcon,
-  CloudQueue as NetworkIcon,
-  Dataset as DatabaseIcon,
-  Api as APIIcon,
-  CheckCircle as HealthyIcon,
-  Warning as WarningIcon,
-  Error as ErrorIcon,
-  Refresh as RefreshIcon,
-  ExpandMore as ExpandIcon,
-  ExpandLess as CollapseIcon,
-  TrendingUp,
-  TrendingDown,
-} from '@mui/icons-material';
+  IconCpu as CPUIcon,
+  IconMemory as MemoryIcon,
+  IconHdd as StorageIcon,
+  IconCloud as NetworkIcon,
+  IconDatabase as DatabaseIcon,
+  IconApi as APIIcon,
+  IconCircleCheck as HealthyIcon,
+  IconAlertTriangle as WarningIcon,
+  IconX as ErrorIcon,
+  IconRefresh as RefreshIcon,
+  IconChevronDown as ExpandIcon,
+  IconChevronUp as CollapseIcon,
+  IconTrendingUp,
+  IconTrendingDown,
+} from '@tabler/icons-react';
 import { AreaChart, Area, Tooltip as ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 import { usePusher } from '@/hooks/usePusher';
@@ -78,7 +79,7 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
   onMetricClick,
   onServiceClick,
 }) => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const [expanded, setExpanded] = useState(!compact);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -236,28 +237,28 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
     switch (status) {
       case 'healthy':
       case 'online':
-        return theme.palette.success.main;
+        return theme.colors.green[6];
       case 'warning':
       case 'degraded':
-        return theme.palette.warning.main;
+        return theme.colors.yellow[6];
       case 'critical':
       case 'offline':
-        return theme.palette.error.main;
+        return theme.colors.red[6];
       default:
-        return theme.palette.text.secondary;
+        return theme.colors.gray[6];
     }
   };
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'healthy':
       case 'online':
-        return <HealthyIcon fontSize="small" />;
+        return <HealthyIcon size={16} />;
       case 'warning':
       case 'degraded':
-        return <WarningIcon fontSize="small" />;
+        return <WarningIcon size={16} />;
       case 'critical':
       case 'offline':
-        return <ErrorIcon fontSize="small" />;
+        return <ErrorIcon size={16} />;
       default:
         return null;
     }
@@ -291,102 +292,99 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
     <MotionPaper
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+      style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
     >
       {/* Header */}
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6" fontWeight="bold">
+      <Box p="md" style={{ borderBottom: `1px solid ${theme.colors.gray[3]}` }}>
+        <Group justify="space-between">
+          <Group>
+            <Title order={4}>
               System Health
-            </Typography>
-            <Chip
-              label={overallHealth.toUpperCase()}
-              size="small"
+            </Title>
+            <Badge
               color={
                 overallHealth === 'healthy'
-                  ? 'success'
+                  ? 'green'
                   : overallHealth === 'warning'
-                  ? 'warning'
-                  : 'error'
+                  ? 'yellow'
+                  : 'red'
               }
-              icon={getStatusIcon(overallHealth)}
-            />
-          </Stack>
-          <Stack direction="row" spacing={1}>
-            <Tooltip title="Last updated">
-              <Typography variant="caption" color="text.secondary">
+              leftSection={getStatusIcon(overallHealth)}
+            >
+              {overallHealth.toUpperCase()}
+            </Badge>
+          </Group>
+          <Group gap="xs">
+            <Tooltip label="Last updated">
+              <Text size="xs" c="dimmed">
                 {lastUpdate.toLocaleTimeString()}
-              </Typography>
+              </Text>
             </Tooltip>
-            <IconButton size="small" onClick={(e: React.MouseEvent) => handleRefresh} disabled={loading}>
-              <RefreshIcon />
-            </IconButton>
-            <IconButton size="small" onClick={(e: React.MouseEvent) => () => setExpanded(!expanded)}>
-              {expanded ? <CollapseIcon /> : <ExpandIcon />}
-            </IconButton>
-          </Stack>
-        </Stack>
+            <ActionIcon size="sm" onClick={handleRefresh} disabled={loading}>
+              <RefreshIcon size={16} />
+            </ActionIcon>
+            <ActionIcon size="sm" onClick={() => setExpanded(!expanded)}>
+              {expanded ? <CollapseIcon size={16} /> : <ExpandIcon size={16} />}
+            </ActionIcon>
+          </Group>
+        </Group>
       </Box>
       <Collapse in={expanded}>
-        <Box sx={{ p: 2, flex: 1, overflow: 'auto' }}>
+        <Box p="md" style={{ flex: 1, overflow: 'auto' }}>
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert color="red" mb="md">
               {error}
             </Alert>
           )}
           {/* System Metrics */}
-          <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 2 }}>
+          <Text fw={600} mb="md">
             System Metrics
-          </Typography>
-          <Grid container spacing={2} sx={{ mb: 3 }}>
+          </Text>
+          <Grid mb="lg">
             {Object.entries(metrics).map(([key, metric]) => (
-              <Grid item xs={12} sm={6} md={3} key={key}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 2,
+              <Grid.Col span={{ base: 12, sm: 6, md: 3 }} key={key}>
+                <Card
+                  padding="md"
+                  withBorder
+                  style={{
                     cursor: onMetricClick ? 'pointer' : 'default',
                     borderLeft: `4px solid ${getStatusColor(metric.status)}`,
-                    '&:hover': onMetricClick
-                      ? {
-                          backgroundColor: alpha(theme.palette.primary.main, 0.05),
-                        }
-                      : {},
                   }}
-                  onClick={(e: React.MouseEvent) => () => onMetricClick?.(metric)}
+                  onClick={() => onMetricClick?.(metric)}
                 >
-                  <Stack spacing={1}>
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Box sx={{ color: getStatusColor(metric.status) }}>
+                  <Stack gap="xs">
+                    <Group gap="xs">
+                      <Box style={{ color: getStatusColor(metric.status) }}>
                         {getMetricIcon(key)}
                       </Box>
-                      <Typography variant="body2" color="text.secondary">
+                      <Text size="sm" c="dimmed">
                         {metric.name}
-                      </Typography>
-                    </Stack>
-                    <Typography variant="h5" fontWeight="bold">
-                      {metric.value}
-                      <Typography component="span" variant="body2" color="text.secondary">
+                      </Text>
+                    </Group>
+                    <Group gap="xs" align="baseline">
+                      <Text size="xl" fw={700}>
+                        {metric.value}
+                      </Text>
+                      <Text size="sm" c="dimmed">
                         {metric.unit}
-                      </Typography>
-                    </Typography>
+                      </Text>
+                    </Group>
                     {metric.threshold && (
-                      <LinearProgress
-                        variant="determinate"
+                      <Progress
                         value={(metric.value / metric.threshold.critical) * 100}
-                        sx={{
-                          height: 6,
-                          borderRadius: 1,
-                          backgroundColor: alpha(getStatusColor(metric.status), 0.2),
-                          '& .MuiLinearProgress-bar': {
-                            backgroundColor: getStatusColor(metric.status),
-                          },
-                        }}
+                        color={
+                          metric.status === 'healthy'
+                            ? 'green'
+                            : metric.status === 'warning'
+                            ? 'yellow'
+                            : 'red'
+                        }
+                        size="sm"
+                        radius="xs"
                       />
                     )}
                     {showCharts && metric.history && (
-                      <Box sx={{ height: 60, mt: 1 }}>
+                      <Box style={{ height: 60, marginTop: 8 }}>
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart data={metric.history}>
                             <Area
@@ -401,66 +399,62 @@ export const SystemHealthMonitor = memo<SystemHealthMonitorProps>(({
                       </Box>
                     )}
                   </Stack>
-                </Paper>
-              </Grid>
+                </Card>
+              </Grid.Col>
             ))}
           </Grid>
           {/* Service Status */}
-          <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 2 }}>
+          <Text fw={600} mb="md">
             Service Status
-          </Typography>
-          <List sx={{ p: 0 }}>
+          </Text>
+          <Stack gap="xs">
             {services.map(service => (
-              <ListItem
+              <Card
                 key={service.name}
-                {...(onServiceClick ? { component: 'div', role: 'button', tabIndex: 0 } : {})}
-                onClick={() => onServiceClick?.(service)}
-                sx={{
-                  mb: 1,
-                  border: 1,
-                  borderColor: 'divider',
-                  borderRadius: 1,
+                padding="md"
+                withBorder
+                style={{
+                  cursor: onServiceClick ? 'pointer' : 'default',
                   backgroundColor:
                     service.status === 'offline'
-                      ? alpha(theme.palette.error.main, 0.05)
+                      ? alpha(theme.colors.red[6], 0.05)
                       : service.status === 'degraded'
-                      ? alpha(theme.palette.warning.main, 0.05)
+                      ? alpha(theme.colors.yellow[6], 0.05)
                       : 'transparent',
                 }}
+                onClick={() => onServiceClick?.(service)}
               >
-                <ListItemIcon>
-                  <Box sx={{ color: getStatusColor(service.status) }}>
+                <Group gap="md" align="flex-start">
+                  <Box style={{ color: getStatusColor(service.status) }}>
                     {getStatusIcon(service.status)}
                   </Box>
-                </ListItemIcon>
-                <ListItemText
-                  primary={service.name}
-                  secondary={
-                    <Stack direction="row" spacing={2}>
-                      <Typography variant="caption">
+                  <Stack gap="xs" style={{ flex: 1 }}>
+                    <Text fw={500}>{service.name}</Text>
+                    <Group gap="md">
+                      <Text size="xs" c="dimmed">
                         Status: {service.status}
-                      </Typography>
+                      </Text>
                       {service.uptime && (
-                        <Typography variant="caption">
+                        <Text size="xs" c="dimmed">
                           Uptime: {service.uptime}
-                        </Typography>
+                        </Text>
                       )}
                       {service.responseTime && (
-                        <Typography variant="caption">
+                        <Text size="xs" c="dimmed">
                           Response: {service.responseTime}ms
-                        </Typography>
+                        </Text>
                       )}
                       {service.error && (
-                        <Typography variant="caption" color="error">
+                        <Text size="xs" c="red">
                           {service.error}
-                        </Typography>
+                        </Text>
                       )}
-                    </Stack>
-                  }
-                />
-              </ListItem>
+                    </Group>
+                  </Stack>
+                </Group>
+              </Card>
             ))}
-          </List>
+          </Stack>
         </Box>
       </Collapse>
     </MotionPaper>

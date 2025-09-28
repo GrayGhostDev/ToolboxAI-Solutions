@@ -1,46 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardHeader from '@mui/material/CardHeader';
-import Grid from '@mui/material/Grid';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import TextField from '@mui/material/TextField';
-import Chip from '@mui/material/Chip';
-import LinearProgress from '@mui/material/LinearProgress';
-import Alert from '@mui/material/Alert';
-import Stack from '@mui/material/Stack';
-import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Paper from '@mui/material/Paper';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
-import CircularProgress from '@mui/material/CircularProgress';
+import {
+  Card,
+  Text,
+  Title,
+  Grid,
+  Box,
+  Button,
+  Select,
+  TextInput,
+  Badge,
+  Progress,
+  Alert,
+  Stack,
+  Divider,
+  ActionIcon,
+  Tooltip,
+  Paper,
+  Group,
+  Loader,
+} from '@mantine/core';
 
 import {
-  Download,
-  PictureAsPdf,
-  TableChart,
-  Assessment,
-  School,
-  Person,
-  CalendarMonth,
-  Refresh,
-  Email,
-  Schedule,
-  CheckCircle,
-  Warning,
-  Description,
-} from '@mui/icons-material';
+  IconDownload as Download,
+  IconFileTypePdf as PictureAsPdf,
+  IconTable as TableChart,
+  IconClipboard as Assessment,
+  IconSchool as School,
+  IconUser as Person,
+  IconCalendar as CalendarMonth,
+  IconRefresh as Refresh,
+  IconMail as Email,
+  IconClock as Schedule,
+  IconCircleCheck as CheckCircle,
+  IconAlertTriangle as Warning,
+  IconFileText as Description,
+} from '@tabler/icons-react';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';

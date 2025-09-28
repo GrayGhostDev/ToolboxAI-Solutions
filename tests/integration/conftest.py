@@ -307,7 +307,7 @@ async def test_db():
     else:
         try:
             # Use real test database
-            from core.database.connection import DatabaseManager, get_db
+            from database.connection import DatabaseManager, get_db
             
             # Get database URL from environment config
             db_url = env_config.get_database_url() if env_config else "sqlite+aiosqlite:///:memory:"
@@ -315,7 +315,7 @@ async def test_db():
             engine = create_async_engine(db_url, echo=False)
             
             # Create tables
-            from core.database.models import Base
+            from database.models.models import Base
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
             

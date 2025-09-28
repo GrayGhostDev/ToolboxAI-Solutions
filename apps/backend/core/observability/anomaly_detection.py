@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 class AnomalyType(Enum):
     """Types of anomalies that can be detected"""
+
     LATENCY_SPIKE = "latency_spike"
     ERROR_RATE_SPIKE = "error_rate_spike"
     TRAFFIC_ANOMALY = "traffic_anomaly"
@@ -42,6 +43,7 @@ class AnomalyType(Enum):
 
 class AnomalySeverity(Enum):
     """Severity levels for anomalies"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -51,6 +53,7 @@ class AnomalySeverity(Enum):
 @dataclass
 class AnomalyAlert:
     """Represents an anomaly alert"""
+
     id: str
     type: AnomalyType
     severity: AnomalySeverity
@@ -69,26 +72,27 @@ class AnomalyAlert:
     def to_dict(self) -> Dict[str, Any]:
         """Convert alert to dictionary"""
         return {
-            'id': self.id,
-            'type': self.type.value,
-            'severity': self.severity.value,
-            'title': self.title,
-            'description': self.description,
-            'metric_name': self.metric_name,
-            'current_value': self.current_value,
-            'expected_value': self.expected_value,
-            'threshold': self.threshold,
-            'confidence': self.confidence,
-            'correlation_id': self.correlation_id,
-            'trace_id': self.trace_id,
-            'detected_at': self.detected_at.isoformat(),
-            'metadata': self.metadata
+            "id": self.id,
+            "type": self.type.value,
+            "severity": self.severity.value,
+            "title": self.title,
+            "description": self.description,
+            "metric_name": self.metric_name,
+            "current_value": self.current_value,
+            "expected_value": self.expected_value,
+            "threshold": self.threshold,
+            "confidence": self.confidence,
+            "correlation_id": self.correlation_id,
+            "trace_id": self.trace_id,
+            "detected_at": self.detected_at.isoformat(),
+            "metadata": self.metadata,
         }
 
 
 @dataclass
 class MetricDataPoint:
     """Single metric data point"""
+
     timestamp: float
     value: float
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -106,11 +110,9 @@ class TimeSeriesBuffer:
     def add(self, value: float, metadata: Optional[Dict[str, Any]] = None):
         """Add a data point"""
         with self._lock:
-            self._data.append(MetricDataPoint(
-                timestamp=time.time(),
-                value=value,
-                metadata=metadata or {}
-            ))
+            self._data.append(
+                MetricDataPoint(timestamp=time.time(), value=value, metadata=metadata or {})
+            )
             self._cleanup_expired()
 
     def _cleanup_expired(self):
@@ -179,7 +181,9 @@ class StatisticalDetector:
             return False, 0.0
 
     @staticmethod
-    def modified_z_score_detection(values: List[float], threshold: float = 3.5) -> Tuple[bool, float]:
+    def modified_z_score_detection(
+        values: List[float], threshold: float = 3.5
+    ) -> Tuple[bool, float]:
         """Modified Z-score using median absolute deviation"""
         if len(values) < 3:
             return False, 0.0
@@ -202,7 +206,9 @@ class StatisticalDetector:
             return False, 0.0
 
     @staticmethod
-    def interquartile_range_detection(values: List[float], factor: float = 1.5) -> Tuple[bool, float]:
+    def interquartile_range_detection(
+        values: List[float], factor: float = 1.5
+    ) -> Tuple[bool, float]:
         """IQR-based anomaly detection"""
         if len(values) < 5:
             return False, 0.0
@@ -234,7 +240,9 @@ class StatisticalDetector:
             return False, 0.0
 
     @staticmethod
-    def exponential_smoothing_detection(values: List[float], alpha: float = 0.3, threshold: float = 2.0) -> Tuple[bool, float]:
+    def exponential_smoothing_detection(
+        values: List[float], alpha: float = 0.3, threshold: float = 2.0
+    ) -> Tuple[bool, float]:
         """Exponential smoothing based detection"""
         if len(values) < 3:
             return False, 0.0
@@ -269,7 +277,9 @@ class PatternDetector:
     """Pattern-based anomaly detection"""
 
     @staticmethod
-    def sudden_change_detection(values: List[float], min_change_ratio: float = 2.0) -> Tuple[bool, float]:
+    def sudden_change_detection(
+        values: List[float], min_change_ratio: float = 2.0
+    ) -> Tuple[bool, float]:
         """Detect sudden changes in values"""
         if len(values) < 2:
             return False, 0.0
@@ -327,26 +337,28 @@ class AnomalyDetectionEngine:
         self.metrics: Dict[str, TimeSeriesBuffer] = defaultdict(lambda: TimeSeriesBuffer())
         self.alert_callback = alert_callback
         self.detection_config = {
-            'latency': {
-                'threshold_multiplier': 3.0,
-                'min_samples': 10,
-                'detection_methods': ['z_score', 'iqr', 'exponential_smoothing']
+            "latency": {
+                "threshold_multiplier": 3.0,
+                "min_samples": 10,
+                "detection_methods": ["z_score", "iqr", "exponential_smoothing"],
             },
-            'error_rate': {
-                'threshold_multiplier': 2.5,
-                'min_samples': 5,
-                'detection_methods': ['z_score', 'sudden_change']
+            "error_rate": {
+                "threshold_multiplier": 2.5,
+                "min_samples": 5,
+                "detection_methods": ["z_score", "sudden_change"],
             },
-            'traffic': {
-                'threshold_multiplier': 2.0,
-                'min_samples': 10,
-                'detection_methods': ['iqr', 'trend_anomaly']
-            }
+            "traffic": {
+                "threshold_multiplier": 2.0,
+                "min_samples": 10,
+                "detection_methods": ["iqr", "trend_anomaly"],
+            },
         }
         self._alert_history: Dict[str, datetime] = {}
         self._alert_cooldown = 300  # 5 minutes
 
-    def record_metric(self, metric_name: str, value: float, metadata: Optional[Dict[str, Any]] = None):
+    def record_metric(
+        self, metric_name: str, value: float, metadata: Optional[Dict[str, Any]] = None
+    ):
         """Record a metric value"""
         self.metrics[metric_name].add(value, metadata)
 
@@ -364,14 +376,14 @@ class AnomalyDetectionEngine:
 
             # Determine metric category
             category = self._categorize_metric(metric_name)
-            config = self.detection_config.get(category, self.detection_config['latency'])
+            config = self.detection_config.get(category, self.detection_config["latency"])
 
-            if len(values) < config['min_samples']:
+            if len(values) < config["min_samples"]:
                 return
 
             # Run detection algorithms
             anomalies = []
-            for method in config['detection_methods']:
+            for method in config["detection_methods"]:
                 is_anomaly, confidence = await self._run_detection_method(method, values, buffer)
                 if is_anomaly:
                     anomalies.append((method, confidence))
@@ -385,29 +397,31 @@ class AnomalyDetectionEngine:
 
     def _categorize_metric(self, metric_name: str) -> str:
         """Categorize metric by name"""
-        if 'latency' in metric_name.lower() or 'response_time' in metric_name.lower():
-            return 'latency'
-        elif 'error' in metric_name.lower() or 'failure' in metric_name.lower():
-            return 'error_rate'
-        elif 'traffic' in metric_name.lower() or 'requests' in metric_name.lower():
-            return 'traffic'
+        if "latency" in metric_name.lower() or "response_time" in metric_name.lower():
+            return "latency"
+        elif "error" in metric_name.lower() or "failure" in metric_name.lower():
+            return "error_rate"
+        elif "traffic" in metric_name.lower() or "requests" in metric_name.lower():
+            return "traffic"
         else:
-            return 'latency'  # default
+            return "latency"  # default
 
-    async def _run_detection_method(self, method: str, values: List[float], buffer: TimeSeriesBuffer) -> Tuple[bool, float]:
+    async def _run_detection_method(
+        self, method: str, values: List[float], buffer: TimeSeriesBuffer
+    ) -> Tuple[bool, float]:
         """Run a specific detection method"""
         try:
-            if method == 'z_score':
+            if method == "z_score":
                 return StatisticalDetector.z_score_detection(values)
-            elif method == 'modified_z_score':
+            elif method == "modified_z_score":
                 return StatisticalDetector.modified_z_score_detection(values)
-            elif method == 'iqr':
+            elif method == "iqr":
                 return StatisticalDetector.interquartile_range_detection(values)
-            elif method == 'exponential_smoothing':
+            elif method == "exponential_smoothing":
                 return StatisticalDetector.exponential_smoothing_detection(values)
-            elif method == 'sudden_change':
+            elif method == "sudden_change":
                 return PatternDetector.sudden_change_detection(values)
-            elif method == 'trend_anomaly':
+            elif method == "trend_anomaly":
                 timestamps = buffer.get_timestamps()
                 return PatternDetector.trend_anomaly_detection(values, timestamps)
             else:
@@ -417,8 +431,13 @@ class AnomalyDetectionEngine:
             logger.error(f"Error running detection method {method}: {e}")
             return False, 0.0
 
-    async def _create_anomaly_alert(self, metric_name: str, current_value: float,
-                                  anomalies: List[Tuple[str, float]], category: str):
+    async def _create_anomaly_alert(
+        self,
+        metric_name: str,
+        current_value: float,
+        anomalies: List[Tuple[str, float]],
+        category: str,
+    ):
         """Create and emit anomaly alert"""
         # Check cooldown
         alert_key = f"{metric_name}_{category}"
@@ -445,7 +464,7 @@ class AnomalyDetectionEngine:
             severity=severity,
             title=f"Anomaly detected in {metric_name}",
             description=f"Current value {current_value:.2f} deviates significantly from expected {expected_value:.2f}. "
-                       f"Detected by methods: {', '.join(method for method, _ in anomalies)}",
+            f"Detected by methods: {', '.join(method for method, _ in anomalies)}",
             metric_name=metric_name,
             current_value=current_value,
             expected_value=expected_value,
@@ -454,10 +473,10 @@ class AnomalyDetectionEngine:
             correlation_id=context.correlation_id if context else None,
             trace_id=context.trace_id if context else None,
             metadata={
-                'detection_methods': [method for method, _ in anomalies],
-                'confidences': {method: conf for method, conf in anomalies},
-                'category': category
-            }
+                "detection_methods": [method for method, _ in anomalies],
+                "confidences": {method: conf for method, conf in anomalies},
+                "category": category,
+            },
         )
 
         # Update alert history
@@ -474,20 +493,20 @@ class AnomalyDetectionEngine:
         logger.warning(
             f"Anomaly detected: {alert.title}",
             extra={
-                'alert_id': alert.id,
-                'metric_name': metric_name,
-                'current_value': current_value,
-                'expected_value': expected_value,
-                'confidence': max_confidence,
-                'severity': severity.value,
-                'correlation_id': alert.correlation_id,
-                'trace_id': alert.trace_id
-            }
+                "alert_id": alert.id,
+                "metric_name": metric_name,
+                "current_value": current_value,
+                "expected_value": expected_value,
+                "confidence": max_confidence,
+                "severity": severity.value,
+                "correlation_id": alert.correlation_id,
+                "trace_id": alert.trace_id,
+            },
         )
 
     def _calculate_severity(self, confidence: float, category: str) -> AnomalySeverity:
         """Calculate severity based on confidence and category"""
-        if category == 'error_rate':
+        if category == "error_rate":
             if confidence > 10:
                 return AnomalySeverity.CRITICAL
             elif confidence > 5:
@@ -509,9 +528,9 @@ class AnomalyDetectionEngine:
     def _get_anomaly_type(self, category: str) -> AnomalyType:
         """Get anomaly type from category"""
         type_mapping = {
-            'latency': AnomalyType.LATENCY_SPIKE,
-            'error_rate': AnomalyType.ERROR_RATE_SPIKE,
-            'traffic': AnomalyType.TRAFFIC_ANOMALY
+            "latency": AnomalyType.LATENCY_SPIKE,
+            "error_rate": AnomalyType.ERROR_RATE_SPIKE,
+            "traffic": AnomalyType.TRAFFIC_ANOMALY,
         }
         return type_mapping.get(category, AnomalyType.UNUSUAL_PATTERN)
 
@@ -521,21 +540,21 @@ class AnomalyDetectionEngine:
         values = buffer.get_values(seconds)
 
         if not values:
-            return {'error': 'No data available'}
+            return {"error": "No data available"}
 
         try:
             return {
-                'count': len(values),
-                'mean': statistics.mean(values),
-                'median': statistics.median(values),
-                'min': min(values),
-                'max': max(values),
-                'std_dev': statistics.stdev(values) if len(values) > 1 else 0,
-                'latest': values[-1],
-                'time_range_seconds': seconds
+                "count": len(values),
+                "mean": statistics.mean(values),
+                "median": statistics.median(values),
+                "min": min(values),
+                "max": max(values),
+                "std_dev": statistics.stdev(values) if len(values) > 1 else 0,
+                "latest": values[-1],
+                "time_range_seconds": seconds,
             }
         except Exception as e:
-            return {'error': f'Error calculating statistics: {e}'}
+            return {"error": f"Error calculating statistics: {e}"}
 
     def get_all_metrics_summary(self) -> Dict[str, Any]:
         """Get summary for all metrics"""
@@ -587,6 +606,7 @@ anomaly_engine.alert_callback = alert_manager.handle_alert
 # Decorators for automatic metric collection
 def track_latency(metric_name: str):
     """Decorator to track function execution latency"""
+
     def decorator(func):
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
@@ -609,11 +629,13 @@ def track_latency(metric_name: str):
                 anomaly_engine.record_metric(f"{metric_name}_latency", latency)
 
         return async_wrapper if asyncio.iscoroutinefunction(func) else sync_wrapper
+
     return decorator
 
 
 def track_errors(metric_name: str):
     """Decorator to track function errors"""
+
     def decorator(func):
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
@@ -636,18 +658,19 @@ def track_errors(metric_name: str):
                 raise
 
         return async_wrapper if asyncio.iscoroutinefunction(func) else sync_wrapper
+
     return decorator
 
 
 # Export main components
 __all__ = [
-    'AnomalyType',
-    'AnomalySeverity',
-    'AnomalyAlert',
-    'AnomalyDetectionEngine',
-    'AlertManager',
-    'anomaly_engine',
-    'alert_manager',
-    'track_latency',
-    'track_errors'
+    "AnomalyType",
+    "AnomalySeverity",
+    "AnomalyAlert",
+    "AnomalyDetectionEngine",
+    "AlertManager",
+    "anomaly_engine",
+    "alert_manager",
+    "track_latency",
+    "track_errors",
 ]

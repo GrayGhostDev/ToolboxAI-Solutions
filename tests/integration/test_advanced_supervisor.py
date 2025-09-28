@@ -617,7 +617,7 @@ async def test_real_database_workflow(self):
         
         # Skip if database not available
         try:
-            from core.database.connection_manager import db_manager
+            from database.connection_manager import db_manager
             db_manager.initialize()
         except Exception as e:
             pytest.skip(f"Database not available: {e}")

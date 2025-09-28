@@ -1,0 +1,341 @@
+# ============================================
+# PROMETHEUS ALERT RULES
+# ============================================
+# Alert definitions for ToolBoxAI monitoring
+# Updated: 2025-09-26
+# ============================================
+
+groups:
+  # ----------------------------------------
+  # Service Availability Alerts
+  # ----------------------------------------
+  - name: service_availability
+    interval: 30s
+    rules:
+      - alert: BackendDown
+        expr: up{job="fastapi-backend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "FastAPI Backend is down"
+          description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 2 minutes."
+
+      - alert: DashboardDown
+        expr: up{job="dashboard-frontend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: frontend
+        annotations:
+          summary: "Dashboard Frontend is down"
+          description: "Dashboard at {{ $labels.instance }} has been down for more than 2 minutes."
+
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "PostgreSQL Database is down"
+          description: "PostgreSQL database exporter is not responding."
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: cache
+        annotations:
+          summary: "Redis Cache is down"
+          description: "Redis cache service is not responding."
+
+      - alert: CeleryWorkerDown
+        expr: up{job="celery-workers"} == 0
+        for: 5m
+        labels:
+          severity: warning
+          service: celery
+        annotations:
+          summary: "Celery Worker is down"
+          description: "Celery worker {{ $labels.instance }} has been down for more than 5 minutes."
+
+  # ----------------------------------------
+  # Performance Alerts
+  # ----------------------------------------
+  - name: performance
+    interval: 30s
+    rules:
+      - alert: HighCPUUsage
+        expr: |
+          (100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% (current value: {{ $value }}%) on {{ $labels.instance }}."
+
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 90% (current value: {{ $value }}%) on {{ $labels.instance }}."
+
+      - alert: HighDiskUsage
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is below 10% (current available: {{ $value }}%) on {{ $labels.instance }}."
+
+      - alert: APIHighLatency
+        expr: |
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="fastapi-backend"}[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: "API response time is slow"
+          description: "95th percentile of API response time is above 1 second (current: {{ $value }}s)."
+
+  # ----------------------------------------
+  # Database Alerts
+  # ----------------------------------------
+  - name: database
+    interval: 30s
+    rules:
+      - alert: DatabaseConnectionsHigh
+        expr: |
+          pg_stat_database_numbackends{datname="toolboxai"} / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Database connections near limit"
+          description: "PostgreSQL connections are at {{ $value | humanizePercentage }} of maximum."
+
+      - alert: DatabaseSlowQueries
+        expr: |
+          rate(pg_stat_statements_mean_exec_time_seconds[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Database queries are slow"
+          description: "Average query execution time is above 1 second (current: {{ $value }}s)."
+
+      - alert: DatabaseDeadlocks
+        expr: |
+          rate(pg_stat_database_deadlocks[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "Database deadlocks detected"
+          description: "PostgreSQL has {{ $value }} deadlocks per second."
+
+  # ----------------------------------------
+  # Redis Cache Alerts
+  # ----------------------------------------
+  - name: redis
+    interval: 30s
+    rules:
+      - alert: RedisHighMemoryUsage
+        expr: |
+          redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: cache
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis is using {{ $value | humanizePercentage }} of maximum memory."
+
+      - alert: RedisRejectedConnections
+        expr: |
+          rate(redis_rejected_connections_total[5m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+          service: cache
+        annotations:
+          summary: "Redis is rejecting connections"
+          description: "Redis has rejected {{ $value }} connections per second."
+
+      - alert: RedisCacheHitRateLow
+        expr: |
+          redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total) < 0.5
+        for: 10m
+        labels:
+          severity: info
+          service: cache
+        annotations:
+          summary: "Redis cache hit rate is low"
+          description: "Cache hit rate is {{ $value | humanizePercentage }}, consider reviewing cache strategy."
+
+  # ----------------------------------------
+  # Celery Task Queue Alerts
+  # ----------------------------------------
+  - name: celery
+    interval: 30s
+    rules:
+      - alert: CeleryQueueBacklog
+        expr: |
+          celery_queue_length{queue!~"celery"} > 100
+        for: 10m
+        labels:
+          severity: warning
+          service: celery
+        annotations:
+          summary: "Celery queue backlog detected"
+          description: "Queue {{ $labels.queue }} has {{ $value }} pending tasks."
+
+      - alert: CeleryTaskFailureRate
+        expr: |
+          rate(celery_task_failed_total[5m]) / rate(celery_task_sent_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: celery
+        annotations:
+          summary: "High Celery task failure rate"
+          description: "{{ $value | humanizePercentage }} of Celery tasks are failing."
+
+      - alert: CeleryWorkerOffline
+        expr: |
+          celery_worker_up == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: celery
+        annotations:
+          summary: "Celery worker offline"
+          description: "Celery worker {{ $labels.hostname }} is offline."
+
+  # ----------------------------------------
+  # Application-Specific Alerts
+  # ----------------------------------------
+  - name: application
+    interval: 30s
+    rules:
+      - alert: EducationalContentGenerationSlow
+        expr: |
+          histogram_quantile(0.95, rate(content_generation_duration_seconds_bucket[5m])) > 30
+        for: 10m
+        labels:
+          severity: warning
+          service: ai
+        annotations:
+          summary: "Content generation is slow"
+          description: "95th percentile of content generation time is {{ $value }}s (threshold: 30s)."
+
+      - alert: PusherConnectionFailures
+        expr: |
+          rate(pusher_connection_failures_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: realtime
+        annotations:
+          summary: "Pusher connection failures detected"
+          description: "Pusher is experiencing {{ $value }} connection failures per second."
+
+      - alert: RobloxSyncFailures
+        expr: |
+          rate(roblox_sync_failures_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: roblox
+        annotations:
+          summary: "Roblox sync failures detected"
+          description: "Roblox sync is failing at {{ $value }} per second."
+
+      - alert: AuthenticationFailureSpike
+        expr: |
+          rate(auth_failures_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "Authentication failure spike detected"
+          description: "Authentication failures at {{ $value }} per second, possible attack."
+
+  # ----------------------------------------
+  # Container Alerts
+  # ----------------------------------------
+  - name: containers
+    interval: 30s
+    rules:
+      - alert: ContainerRestartingFrequently
+        expr: |
+          rate(container_restart_count[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container restarting frequently"
+          description: "Container {{ $labels.name }} has restarted {{ $value }} times in the last 15 minutes."
+
+      - alert: ContainerHighCPU
+        expr: |
+          rate(container_cpu_usage_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container CPU usage is high"
+          description: "Container {{ $labels.name }} CPU usage is at {{ $value | humanizePercentage }}."
+
+      - alert: ContainerHighMemory
+        expr: |
+          container_memory_usage_bytes / container_spec_memory_limit_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container memory usage is high"
+          description: "Container {{ $labels.name }} memory usage is at {{ $value | humanizePercentage }} of limit."
+
+  # ----------------------------------------
+  # Certificate & Security Alerts
+  # ----------------------------------------
+  - name: security
+    interval: 1h
+    rules:
+      - alert: SSLCertificateExpiringSoon
+        expr: |
+          probe_ssl_earliest_cert_expiry - time() < 7 * 24 * 60 * 60
+        for: 1h
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "SSL certificate expiring soon"
+          description: "SSL certificate for {{ $labels.instance }} expires in {{ $value | humanizeDuration }}."
+
+      - alert: SecurityHeadersMissing
+        expr: |
+          probe_http_header_match{header=~"X-Frame-Options|X-Content-Type-Options|X-XSS-Protection"} == 0
+        for: 1h
+        labels:
+          severity: info
+          service: security
+        annotations:
+          summary: "Security headers missing"
+          description: "Security header {{ $labels.header }} is missing from {{ $labels.instance }}."

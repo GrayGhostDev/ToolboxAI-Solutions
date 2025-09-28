@@ -57,17 +57,17 @@ export interface MockPusherClient {
  * Creates a mock Pusher channel with full functionality
  */
 export function createMockChannel(name: string): MockPusherChannel {
-  const eventHandlers: Record<string, Function[]> = {};
+  const eventHandlers: Record<string, Array<(payload: unknown) => void>> = {};
 
   const channel: MockPusherChannel = {
     name,
-    bind: vi.fn((event: string, callback: Function) => {
+    bind: vi.fn((event: string, callback: (payload: unknown) => void) => {
       if (!eventHandlers[event]) {
         eventHandlers[event] = [];
       }
       eventHandlers[event].push(callback);
     }),
-    unbind: vi.fn((event?: string, callback?: Function) => {
+    unbind: vi.fn((event?: string, callback?: (payload: unknown) => void) => {
       if (event && callback) {
         const handlers = eventHandlers[event] || [];
         const index = handlers.indexOf(callback);
@@ -129,17 +129,17 @@ export function createMockMembers(): MockPusherMembers {
  */
 export function createMockPusherClient(): MockPusherClient {
   const channels: Record<string, MockPusherChannel> = {};
-  const globalEventHandlers: Record<string, Function[]> = {};
+  const globalEventHandlers: Record<string, Array<(payload: unknown) => void>> = {};
 
   const connection: MockPusherConnection = {
     state: 'disconnected',
-    bind: vi.fn((event: string, callback: Function) => {
+    bind: vi.fn((event: string, callback: (payload: unknown) => void) => {
       if (!globalEventHandlers[event]) {
         globalEventHandlers[event] = [];
       }
       globalEventHandlers[event].push(callback);
     }),
-    unbind: vi.fn((event?: string, callback?: Function) => {
+    unbind: vi.fn((event?: string, callback?: (payload: unknown) => void) => {
       if (event && callback) {
         const handlers = globalEventHandlers[event] || [];
         const index = handlers.indexOf(callback);
@@ -165,13 +165,13 @@ export function createMockPusherClient(): MockPusherClient {
     unsubscribe: vi.fn((channelName: string) => {
       delete channels[channelName];
     }),
-    bind: vi.fn((event: string, callback: Function) => {
+    bind: vi.fn((event: string, callback: (payload: unknown) => void) => {
       if (!globalEventHandlers[event]) {
         globalEventHandlers[event] = [];
       }
       globalEventHandlers[event].push(callback);
     }),
-    unbind: vi.fn((event?: string, callback?: Function) => {
+    unbind: vi.fn((event?: string, callback?: (payload: unknown) => void) => {
       if (event && callback) {
         const handlers = globalEventHandlers[event] || [];
         const index = handlers.indexOf(callback);
@@ -236,7 +236,7 @@ export class PusherEventSimulator {
 
   private triggerConnectionEvent(event: string, data?: any): void {
     const handlers = (this.client as any).__globalEventHandlers[event] || [];
-    handlers.forEach((handler: Function) => {
+    handlers.forEach((handler: (payload: unknown) => void) => {
       try {
         handler(data);
       } catch (error) {
@@ -322,8 +322,8 @@ export function createMockPusherService() {
   const channels = new Map<string, any>();
   const subscriptions = new Map<string, Set<any>>();
   let state = WebSocketState.DISCONNECTED;
-  const stateHandlers = new Set<Function>();
-  const errorHandlers = new Set<Function>();
+  const stateHandlers = new Set<(state: unknown) => void>();
+  const errorHandlers = new Set<(err: Error) => void>();
 
   return {
     // Core methods
@@ -341,7 +341,7 @@ export function createMockPusherService() {
       stateHandlers.forEach(handler => handler(state));
     }),
 
-    subscribe: vi.fn().mockImplementation((channelName: string, handler: Function) => {
+    subscribe: vi.fn().mockImplementation((channelName: string, handler: (payload: unknown) => void) => {
       const subscriptionId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       if (!subscriptions.has(channelName)) {
@@ -380,11 +380,11 @@ export function createMockPusherService() {
     // Event handlers
     on: vi.fn(),
     off: vi.fn(),
-    onStateChange: vi.fn((handler: Function) => {
+    onStateChange: vi.fn((handler: (state: unknown) => void) => {
       stateHandlers.add(handler);
       return () => stateHandlers.delete(handler);
     }),
-    onError: vi.fn((handler: Function) => {
+    onError: vi.fn((handler: (err: Error) => void) => {
       errorHandlers.add(handler);
       return () => errorHandlers.delete(handler);
     }),

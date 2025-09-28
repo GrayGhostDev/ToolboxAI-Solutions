@@ -8,8 +8,14 @@ from datetime import datetime
 import asyncio
 
 from .models import (
-    ConversationContext, UserProfile, ContentRequirements, PersonalizationData,
-    UniquenessEnhancement, PromptResponse, FlowDecision, ValidationResult
+    ConversationContext,
+    UserProfile,
+    ContentRequirements,
+    PersonalizationData,
+    UniquenessEnhancement,
+    PromptResponse,
+    FlowDecision,
+    ValidationResult,
 )
 from .conversation_flow import ConversationFlowManager
 from .template_engine import PromptTemplateEngine
@@ -58,9 +64,7 @@ class PromptTemplateIntegration:
         pass
 
     async def start_educational_content_creation(
-        self,
-        user_profile: UserProfile,
-        initial_message: Optional[str] = None
+        self, user_profile: UserProfile, initial_message: Optional[str] = None
     ) -> Tuple[ConversationContext, PromptResponse]:
         """
         Start the educational content creation process with a new conversation
@@ -86,7 +90,7 @@ class PromptTemplateIntegration:
         self,
         conversation_id: str,
         user_input: str,
-        additional_context: Optional[Dict[str, Any]] = None
+        additional_context: Optional[Dict[str, Any]] = None,
     ) -> Tuple[PromptResponse, FlowDecision, Dict[str, Any]]:
         """
         Process user input and provide intelligent response with guidance
@@ -107,9 +111,7 @@ class PromptTemplateIntegration:
 
         # Generate guidance
         guidance = await self.guidance_system.provide_guidance(
-            context,
-            guidance_type="suggestion",
-            specific_area=context.current_stage.value
+            context, guidance_type="suggestion", specific_area=context.current_stage.value
         )
 
         # Validate current state
@@ -123,16 +125,13 @@ class PromptTemplateIntegration:
             "guidance": guidance,
             "validation": validation_result.dict(),
             "next_steps": next_steps,
-            "conversation_status": await self.flow_manager.get_conversation_status(conversation_id)
+            "conversation_status": await self.flow_manager.get_conversation_status(conversation_id),
         }
 
         return prompt_response, flow_decision, response_metadata
 
     async def enhance_content_uniqueness(
-        self,
-        conversation_id: str,
-        uniqueness_factors: List[str],
-        creative_elements: List[str]
+        self, conversation_id: str, uniqueness_factors: List[str], creative_elements: List[str]
     ) -> Dict[str, Any]:
         """
         Enhance content uniqueness based on user preferences
@@ -146,7 +145,7 @@ class PromptTemplateIntegration:
         uniqueness_data = UniquenessEnhancement(
             factors=uniqueness_factors,
             creative_twists=creative_elements,
-            custom_elements={"enhanced": True, "timestamp": datetime.utcnow().isoformat()}
+            custom_elements={"enhanced": True, "timestamp": datetime.utcnow().isoformat()},
         )
 
         # Add to conversation context
@@ -158,13 +157,11 @@ class PromptTemplateIntegration:
         return {
             "enhanced_prompt": enhanced_prompt,
             "uniqueness_score": await self._calculate_uniqueness_score(context),
-            "suggestions": await self._get_uniqueness_suggestions(context)
+            "suggestions": await self._get_uniqueness_suggestions(context),
         }
 
     async def personalize_content(
-        self,
-        conversation_id: str,
-        personalization_data: PersonalizationData
+        self, conversation_id: str, personalization_data: PersonalizationData
     ) -> Dict[str, Any]:
         """
         Personalize content based on user-provided data
@@ -183,13 +180,10 @@ class PromptTemplateIntegration:
         return {
             "personalized_prompt": personalized_prompt,
             "personalization_score": await self._calculate_personalization_score(context),
-            "suggestions": await self._get_personalization_suggestions(context)
+            "suggestions": await self._get_personalization_suggestions(context),
         }
 
-    async def validate_and_optimize(
-        self,
-        conversation_id: str
-    ) -> Dict[str, Any]:
+    async def validate_and_optimize(self, conversation_id: str) -> Dict[str, Any]:
         """
         Validate current conversation state and provide optimization suggestions
         """
@@ -202,7 +196,9 @@ class PromptTemplateIntegration:
         validation_result = await self.validation_system.validate_conversation_context(context)
 
         # Get optimization suggestions
-        optimization_suggestions = await self._get_optimization_suggestions(context, validation_result)
+        optimization_suggestions = await self._get_optimization_suggestions(
+            context, validation_result
+        )
 
         # Calculate quality metrics
         quality_metrics = await self._calculate_quality_metrics(context)
@@ -211,13 +207,10 @@ class PromptTemplateIntegration:
             "validation_result": validation_result.dict(),
             "optimization_suggestions": optimization_suggestions,
             "quality_metrics": quality_metrics,
-            "readiness_score": await self._calculate_readiness_score(context, validation_result)
+            "readiness_score": await self._calculate_readiness_score(context, validation_result),
         }
 
-    async def generate_content_workflow(
-        self,
-        conversation_id: str
-    ) -> Dict[str, Any]:
+    async def generate_content_workflow(self, conversation_id: str) -> Dict[str, Any]:
         """
         Generate a complete content creation workflow based on conversation context
         """
@@ -231,14 +224,13 @@ class PromptTemplateIntegration:
 
         # Execute workflow
         workflow_results = await self.workflow_orchestrator.execute_workflow(
-            workflow_plan.plan_id,
-            progress_callback=self._workflow_progress_callback
+            workflow_plan.plan_id, progress_callback=self._workflow_progress_callback
         )
 
         return {
             "workflow_plan": workflow_plan.dict(),
             "execution_results": workflow_results,
-            "content_ready": workflow_results["status"] == "completed"
+            "content_ready": workflow_results["status"] == "completed",
         }
 
     async def _generate_initial_prompt(self, context: ConversationContext) -> PromptResponse:
@@ -248,10 +240,7 @@ class PromptTemplateIntegration:
         greeting_template = self.template_engine.get_templates_by_stage(context.current_stage)[0]
 
         # Generate prompt
-        prompt_response = self.template_engine.generate_prompt(
-            greeting_template.id,
-            context
-        )
+        prompt_response = self.template_engine.generate_prompt(greeting_template.id, context)
 
         return prompt_response
 
@@ -289,12 +278,17 @@ What specific unique elements would you like to explore further?
 
         # Render template with context data
         from jinja2 import Template
+
         jinja_template = Template(template)
 
         rendered = jinja_template.render(
-            content_type=context.requirements.content_type.value if context.requirements else "educational content",
+            content_type=(
+                context.requirements.content_type.value
+                if context.requirements
+                else "educational content"
+            ),
             uniqueness_factors=", ".join([f.value for f in context.uniqueness.factors]),
-            creative_elements=", ".join(context.uniqueness.creative_twists)
+            creative_elements=", ".join(context.uniqueness.creative_twists),
         )
 
         return rendered
@@ -330,15 +324,24 @@ This personalized approach will make your students feel like the content was cre
 
         # Render template with personalization data
         from jinja2 import Template
+
         jinja_template = Template(template)
 
         rendered = jinja_template.render(
-            content_type=context.requirements.content_type.value if context.requirements else "educational content",
+            content_type=(
+                context.requirements.content_type.value
+                if context.requirements
+                else "educational content"
+            ),
             student_names=", ".join(context.personalization.student_names[:5]),
             school_elements=context.personalization.school_theme or "Your school's unique theme",
             cultural_elements=", ".join(context.personalization.cultural_elements[:3]),
-            visual_elements=", ".join(context.personalization.colors[:3]) if context.personalization.colors else "Custom color scheme",
-            story_elements=", ".join(context.personalization.story_elements[:3])
+            visual_elements=(
+                ", ".join(context.personalization.colors[:3])
+                if context.personalization.colors
+                else "Custom color scheme"
+            ),
+            story_elements=", ".join(context.personalization.story_elements[:3]),
         )
 
         return rendered
@@ -435,9 +438,7 @@ This personalized approach will make your students feel like the content was cre
         return suggestions
 
     async def _get_optimization_suggestions(
-        self,
-        context: ConversationContext,
-        validation_result: ValidationResult
+        self, context: ConversationContext, validation_result: ValidationResult
     ) -> List[str]:
         """Get optimization suggestions based on validation results"""
 
@@ -468,26 +469,24 @@ This personalized approach will make your students feel like the content was cre
             "engagement": validation_result.engagement_score,
             "educational_value": validation_result.educational_value_score,
             "overall_quality": (
-                validation_result.completeness_score * 0.2 +
-                validation_result.uniqueness_score * 0.2 +
-                validation_result.engagement_score * 0.3 +
-                validation_result.educational_value_score * 0.3
-            )
+                validation_result.completeness_score * 0.2
+                + validation_result.uniqueness_score * 0.2
+                + validation_result.engagement_score * 0.3
+                + validation_result.educational_value_score * 0.3
+            ),
         }
 
     async def _calculate_readiness_score(
-        self,
-        context: ConversationContext,
-        validation_result: ValidationResult
+        self, context: ConversationContext, validation_result: ValidationResult
     ) -> float:
         """Calculate readiness score for content generation"""
 
         # Base score from validation
         base_score = (
-            validation_result.completeness_score * 0.4 +
-            validation_result.educational_value_score * 0.3 +
-            validation_result.engagement_score * 0.2 +
-            validation_result.uniqueness_score * 0.1
+            validation_result.completeness_score * 0.4
+            + validation_result.educational_value_score * 0.3
+            + validation_result.engagement_score * 0.2
+            + validation_result.uniqueness_score * 0.1
         )
 
         # Adjust based on conversation progress
@@ -497,7 +496,9 @@ This personalized approach will make your students feel like the content was cre
 
     async def _workflow_progress_callback(self, progress_data: Dict[str, Any]):
         """Callback for workflow progress updates"""
-        logger.info(f"Workflow progress: {progress_data['progress_percentage']:.1f}% - {progress_data.get('current_step', 'Unknown')}")
+        logger.info(
+            f"Workflow progress: {progress_data['progress_percentage']:.1f}% - {progress_data.get('current_step', 'Unknown')}"
+        )
 
     async def get_conversation_analytics(self, conversation_id: str) -> Dict[str, Any]:
         """Get analytics for a conversation"""
@@ -518,7 +519,7 @@ This personalized approach will make your students feel like the content was cre
             "data_points_collected": len(context.collected_data),
             "quality_metrics": quality_metrics,
             "validation_summary": await self.validation_system.get_validation_summary(context),
-            "readiness_score": await self._calculate_readiness_score(context, validation_result)
+            "readiness_score": await self._calculate_readiness_score(context, validation_result),
         }
 
     async def cleanup_conversation(self, conversation_id: str) -> bool:
@@ -546,17 +547,8 @@ This personalized approach will make your students feel like the content was cre
                 "template_engine": "active",
                 "guidance_system": "active",
                 "validation_system": "active",
-                "workflow_orchestrator": "active"
+                "workflow_orchestrator": "active",
             },
             "templates_loaded": len(self.template_engine.get_all_templates()),
-            "system_health": "healthy" if self.is_initialized else "initializing"
+            "system_health": "healthy" if self.is_initialized else "initializing",
         }
-
-
-
-
-
-
-
-
-

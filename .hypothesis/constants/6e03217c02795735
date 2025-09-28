@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/agents/agent_classes.py
-# hypothesis_version: 6.139.2
-
-[0.7, 'activity', 'build', 'building', 'calculate', 'classroom', 'collection', 'content', 'create', 'discover', 'environment_type', 'explanation', 'exploration', 'explore', 'game', 'game_mechanics', 'geography', 'gpt-3.5-turbo', 'grade_level', 'history', 'interactive_elements', 'laboratory', 'language', 'lesson', 'lesson_display', 'library', 'math', 'objectives', 'progress_tracker', 'puzzle_solving', 'puzzle_world', 'quiz', 'reward_system', 'roblox_integration', 'science', 'solve', 'subject', 'time_machine', 'ui_elements', 'world_map']

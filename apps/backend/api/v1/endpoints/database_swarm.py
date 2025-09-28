@@ -27,7 +27,7 @@ from core.agents.database import (
     DatabaseSupervisorAgent,
     DatabaseOperation,
     DatabaseHealth,
-    run_database_workflow
+    run_database_workflow,
 )
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.models.schemas import User
@@ -44,16 +44,21 @@ _supervisor_instance: Optional[DatabaseSupervisorAgent] = None
 
 # Pydantic models for API requests/responses
 
+
 class DatabaseWorkflowRequest(BaseModel):
     """Request model for database workflow execution."""
+
     operation: str = Field(..., description="Natural language or structured database operation")
-    priority: str = Field(default="medium", description="Priority level: critical, high, medium, low, background")
+    priority: str = Field(
+        default="medium", description="Priority level: critical, high, medium, low, background"
+    )
     params: Dict[str, Any] = Field(default_factory=dict, description="Additional parameters")
     thread_id: Optional[str] = Field(default=None, description="Thread ID for stateful execution")
 
 
 class DatabaseCommandRequest(BaseModel):
     """Request model for specific database commands."""
+
     command_type: DatabaseOperation = Field(..., description="Type of database operation")
     aggregate_type: str = Field(..., description="Type of aggregate/entity")
     aggregate_id: Optional[UUID] = Field(None, description="ID of the aggregate")
@@ -63,6 +68,7 @@ class DatabaseCommandRequest(BaseModel):
 
 class EventRequest(BaseModel):
     """Request model for appending events."""
+
     event_type: str = Field(..., description="Type of event")
     aggregate_type: str = Field(..., description="Type of aggregate")
     aggregate_id: UUID = Field(..., description="Aggregate ID")
@@ -72,6 +78,7 @@ class EventRequest(BaseModel):
 
 class QueryRequest(BaseModel):
     """Request model for database queries."""
+
     query: str = Field(..., description="SQL query or natural language query")
     params: Dict[str, Any] = Field(default_factory=dict, description="Query parameters")
     optimize: bool = Field(default=True, description="Whether to optimize the query")
@@ -79,14 +86,20 @@ class QueryRequest(BaseModel):
 
 class BackupRequest(BaseModel):
     """Request model for backup operations."""
-    backup_type: str = Field(default="full", description="Type of backup: full, incremental, differential")
-    targets: List[str] = Field(default_factory=list, description="Specific tables/schemas to backup")
+
+    backup_type: str = Field(
+        default="full", description="Type of backup: full, incremental, differential"
+    )
+    targets: List[str] = Field(
+        default_factory=list, description="Specific tables/schemas to backup"
+    )
     compression: bool = Field(default=True, description="Whether to compress the backup")
     encryption: bool = Field(default=True, description="Whether to encrypt the backup")
 
 
 class MigrationRequest(BaseModel):
     """Request model for schema migrations."""
+
     migration_name: str = Field(..., description="Name of the migration")
     direction: str = Field(default="up", description="Migration direction: up or down")
     target_version: Optional[int] = Field(None, description="Target schema version")
@@ -95,6 +108,7 @@ class MigrationRequest(BaseModel):
 
 class MonitoringRequest(BaseModel):
     """Request model for monitoring queries."""
+
     metric_type: str = Field(..., description="Type of metric to retrieve")
     time_range: str = Field(default="1h", description="Time range for metrics")
     aggregation: str = Field(default="avg", description="Aggregation method")
@@ -102,6 +116,7 @@ class MonitoringRequest(BaseModel):
 
 class WorkflowResponse(BaseModel):
     """Response model for workflow execution."""
+
     success: bool
     workflow_id: Optional[str] = None
     result: Optional[Dict[str, Any]] = None
@@ -112,6 +127,7 @@ class WorkflowResponse(BaseModel):
 
 class AgentStatusResponse(BaseModel):
     """Response model for agent status."""
+
     supervisor: Dict[str, Any]
     agents: Dict[str, Dict[str, Any]]
     overall_health: str
@@ -121,6 +137,7 @@ class AgentStatusResponse(BaseModel):
 
 class EventResponse(BaseModel):
     """Response model for event operations."""
+
     event_id: UUID
     event_version: int
     aggregate_id: UUID
@@ -129,13 +146,13 @@ class EventResponse(BaseModel):
 
 # Helper functions
 
+
 async def get_workflow_instance() -> DatabaseWorkflow:
     """Get or create workflow instance."""
     global _workflow_instance
     if _workflow_instance is None:
         _workflow_instance = DatabaseWorkflow(
-            database_url=settings.DATABASE_URL,
-            redis_url=settings.REDIS_URL
+            database_url=settings.DATABASE_URL, redis_url=settings.REDIS_URL
         )
         await _workflow_instance.initialize()
     return _workflow_instance
@@ -146,9 +163,9 @@ async def get_supervisor_instance() -> DatabaseSupervisorAgent:
     global _supervisor_instance
     if _supervisor_instance is None:
         from core.agents.database import DatabaseAgentConfig
+
         config = DatabaseAgentConfig(
-            database_url=settings.DATABASE_URL,
-            redis_url=settings.REDIS_URL
+            database_url=settings.DATABASE_URL, redis_url=settings.REDIS_URL
         )
         _supervisor_instance = DatabaseSupervisorAgent(config)
         await _supervisor_instance.initialize()
@@ -157,11 +174,12 @@ async def get_supervisor_instance() -> DatabaseSupervisorAgent:
 
 # API Endpoints
 
+
 @router.post("/workflow/execute", response_model=WorkflowResponse)
 async def execute_workflow(
     request: DatabaseWorkflowRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Execute a database workflow using natural language or structured commands.
@@ -180,10 +198,7 @@ async def execute_workflow(
 
         # Execute workflow
         start_time = datetime.utcnow()
-        result = await workflow.execute(
-            request=request.operation,
-            thread_id=thread_id
-        )
+        result = await workflow.execute(request=request.operation, thread_id=thread_id)
         execution_time = (datetime.utcnow() - start_time).total_seconds()
 
         return WorkflowResponse(
@@ -194,8 +209,8 @@ async def execute_workflow(
             metadata={
                 "user_id": str(current_user.id),
                 "priority": request.priority,
-                "timestamp": datetime.utcnow().isoformat()
-            }
+                "timestamp": datetime.utcnow().isoformat(),
+            },
         )
 
     except Exception as e:
@@ -204,10 +219,7 @@ async def execute_workflow(
 
 
 @router.get("/workflow/state/{thread_id}")
-async def get_workflow_state(
-    thread_id: str,
-    current_user: User = Depends(get_current_user)
-):
+async def get_workflow_state(thread_id: str, current_user: User = Depends(get_current_user)):
     """Get the current state of a workflow execution."""
     try:
         workflow = await get_workflow_instance()
@@ -216,11 +228,7 @@ async def get_workflow_state(
         if state is None:
             raise HTTPException(status_code=404, detail="Workflow not found")
 
-        return {
-            "thread_id": thread_id,
-            "state": state,
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        return {"thread_id": thread_id, "state": state, "timestamp": datetime.utcnow().isoformat()}
 
     except HTTPException:
         raise
@@ -230,18 +238,14 @@ async def get_workflow_state(
 
 
 @router.get("/agents/status", response_model=AgentStatusResponse)
-async def get_agents_status(
-    current_user: User = Depends(get_current_user)
-):
+async def get_agents_status(current_user: User = Depends(get_current_user)):
     """Get the status of all database agents."""
     try:
         supervisor = await get_supervisor_instance()
         status = await supervisor.get_agent_status()
 
         # Determine overall health
-        agent_healths = [
-            agent["health"] for agent in status["agents"].values()
-        ]
+        agent_healths = [agent["health"] for agent in status["agents"].values()]
         if any(h == "critical" for h in agent_healths):
             overall_health = "critical"
         elif any(h == "degraded" for h in agent_healths):
@@ -254,7 +258,7 @@ async def get_agents_status(
             agents=status["agents"],
             overall_health=overall_health,
             active_workflows=status["supervisor"]["active_workflows"],
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
     except Exception as e:
@@ -266,7 +270,7 @@ async def get_agents_status(
 async def append_event(
     request: EventRequest,
     db: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Append an event to the event store."""
     try:
@@ -285,17 +289,16 @@ async def append_event(
             "metadata": {
                 **request.metadata,
                 "user_id": str(current_user.id),
-                "timestamp": datetime.utcnow().isoformat()
-            }
+                "timestamp": datetime.utcnow().isoformat(),
+            },
         }
 
         # Append event
         from core.agents.base_agent import AgentState
-        state = AgentState({
-            "task": "append_event",
-            "operation": DatabaseOperation.QUERY,
-            "params": event_data
-        })
+
+        state = AgentState(
+            {"task": "append_event", "operation": DatabaseOperation.QUERY, "params": event_data}
+        )
 
         result = await event_agent.process(state)
 
@@ -306,7 +309,7 @@ async def append_event(
             event_id=result.data["event_id"],
             event_version=result.data["event_version"],
             aggregate_id=request.aggregate_id,
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
 
     except HTTPException:
@@ -321,7 +324,7 @@ async def replay_events(
     aggregate_id: UUID,
     from_version: int = Query(0, ge=0),
     to_version: Optional[int] = Query(None, ge=0),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Replay events for an aggregate."""
     try:
@@ -333,15 +336,18 @@ async def replay_events(
 
         # Replay events
         from core.agents.base_agent import AgentState
-        state = AgentState({
-            "task": "replay_events",
-            "operation": DatabaseOperation.QUERY,
-            "params": {
-                "aggregate_id": str(aggregate_id),
-                "from_version": from_version,
-                "to_version": to_version
+
+        state = AgentState(
+            {
+                "task": "replay_events",
+                "operation": DatabaseOperation.QUERY,
+                "params": {
+                    "aggregate_id": str(aggregate_id),
+                    "from_version": from_version,
+                    "to_version": to_version,
+                },
             }
-        })
+        )
 
         result = await event_agent.process(state)
 
@@ -353,7 +359,7 @@ async def replay_events(
             "events": result.data["events"],
             "count": len(result.data["events"]),
             "from_version": from_version,
-            "to_version": to_version or result.data.get("latest_version")
+            "to_version": to_version or result.data.get("latest_version"),
         }
 
     except HTTPException:
@@ -364,10 +370,7 @@ async def replay_events(
 
 
 @router.post("/query/optimize")
-async def optimize_query(
-    request: QueryRequest,
-    current_user: User = Depends(get_current_user)
-):
+async def optimize_query(request: QueryRequest, current_user: User = Depends(get_current_user)):
     """Optimize a database query."""
     try:
         supervisor = await get_supervisor_instance()
@@ -378,15 +381,18 @@ async def optimize_query(
 
         # Optimize query
         from core.agents.base_agent import AgentState
-        state = AgentState({
-            "task": "optimize_query",
-            "operation": DatabaseOperation.OPTIMIZE,
-            "params": {
-                "query": request.query,
-                "params": request.params,
-                "auto_optimize": request.optimize
+
+        state = AgentState(
+            {
+                "task": "optimize_query",
+                "operation": DatabaseOperation.OPTIMIZE,
+                "params": {
+                    "query": request.query,
+                    "params": request.params,
+                    "auto_optimize": request.optimize,
+                },
             }
-        })
+        )
 
         result = await query_agent.process(state)
 
@@ -398,7 +404,7 @@ async def optimize_query(
             "optimized_query": result.data.get("optimized_query"),
             "improvements": result.data.get("improvements", []),
             "estimated_improvement": result.data.get("estimated_improvement"),
-            "execution_plan": result.data.get("execution_plan")
+            "execution_plan": result.data.get("execution_plan"),
         }
 
     except HTTPException:
@@ -412,7 +418,7 @@ async def optimize_query(
 async def create_backup(
     request: BackupRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Create a database backup."""
     try:
@@ -424,17 +430,20 @@ async def create_backup(
 
         # Create backup
         from core.agents.base_agent import AgentState
-        state = AgentState({
-            "task": "create_backup",
-            "operation": DatabaseOperation.BACKUP,
-            "params": {
-                "backup_type": request.backup_type,
-                "targets": request.targets,
-                "compression": request.compression,
-                "encryption": request.encryption,
-                "user_id": str(current_user.id)
+
+        state = AgentState(
+            {
+                "task": "create_backup",
+                "operation": DatabaseOperation.BACKUP,
+                "params": {
+                    "backup_type": request.backup_type,
+                    "targets": request.targets,
+                    "compression": request.compression,
+                    "encryption": request.encryption,
+                    "user_id": str(current_user.id),
+                },
             }
-        })
+        )
 
         # Execute in background
         async def run_backup():
@@ -446,7 +455,7 @@ async def create_backup(
             "message": "Backup initiated",
             "backup_type": request.backup_type,
             "status": "processing",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     except HTTPException:
@@ -458,8 +467,7 @@ async def create_backup(
 
 @router.post("/migration/execute")
 async def execute_migration(
-    request: MigrationRequest,
-    current_user: User = Depends(get_current_user)
+    request: MigrationRequest, current_user: User = Depends(get_current_user)
 ):
     """Execute a database migration."""
     try:
@@ -471,16 +479,19 @@ async def execute_migration(
 
         # Execute migration
         from core.agents.base_agent import AgentState
-        state = AgentState({
-            "task": "execute_migration",
-            "operation": DatabaseOperation.MIGRATION,
-            "params": {
-                "migration_name": request.migration_name,
-                "direction": request.direction,
-                "target_version": request.target_version,
-                "dry_run": request.dry_run
+
+        state = AgentState(
+            {
+                "task": "execute_migration",
+                "operation": DatabaseOperation.MIGRATION,
+                "params": {
+                    "migration_name": request.migration_name,
+                    "direction": request.direction,
+                    "target_version": request.target_version,
+                    "dry_run": request.dry_run,
+                },
             }
-        })
+        )
 
         result = await schema_agent.process(state)
 
@@ -493,7 +504,7 @@ async def execute_migration(
             "success": result.success,
             "changes": result.data.get("changes", []),
             "new_version": result.data.get("new_version"),
-            "dry_run": request.dry_run
+            "dry_run": request.dry_run,
         }
 
     except HTTPException:
@@ -507,7 +518,7 @@ async def execute_migration(
 async def get_monitoring_metrics(
     metric_type: str = Query(..., description="Type of metric"),
     time_range: str = Query("1h", description="Time range"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Get database monitoring metrics."""
     try:
@@ -519,14 +530,14 @@ async def get_monitoring_metrics(
 
         # Get metrics
         from core.agents.base_agent import AgentState
-        state = AgentState({
-            "task": "get_metrics",
-            "operation": DatabaseOperation.MONITOR,
-            "params": {
-                "metric_type": metric_type,
-                "time_range": time_range
+
+        state = AgentState(
+            {
+                "task": "get_metrics",
+                "operation": DatabaseOperation.MONITOR,
+                "params": {"metric_type": metric_type, "time_range": time_range},
             }
-        })
+        )
 
         result = await monitor_agent.process(state)
 
@@ -537,7 +548,7 @@ async def get_monitoring_metrics(
             "metric_type": metric_type,
             "time_range": time_range,
             "metrics": result.data.get("metrics", {}),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     except HTTPException:
@@ -550,7 +561,7 @@ async def get_monitoring_metrics(
 @router.post("/cache/invalidate")
 async def invalidate_cache(
     pattern: str = Query(..., description="Cache key pattern to invalidate"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Invalidate cache entries matching a pattern."""
     try:
@@ -562,13 +573,14 @@ async def invalidate_cache(
 
         # Invalidate cache
         from core.agents.base_agent import AgentState
-        state = AgentState({
-            "task": "invalidate_cache",
-            "operation": DatabaseOperation.CACHE,
-            "params": {
-                "pattern": pattern
+
+        state = AgentState(
+            {
+                "task": "invalidate_cache",
+                "operation": DatabaseOperation.CACHE,
+                "params": {"pattern": pattern},
             }
-        })
+        )
 
         result = await cache_agent.process(state)
 
@@ -578,7 +590,7 @@ async def invalidate_cache(
         return {
             "pattern": pattern,
             "invalidated_count": result.data.get("invalidated_count", 0),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     except HTTPException:
@@ -595,15 +607,8 @@ async def health_check():
         supervisor = await get_supervisor_instance()
         health = await supervisor.check_health()
 
-        return {
-            "status": health.value,
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        return {"status": health.value, "timestamp": datetime.utcnow().isoformat()}
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        return {
-            "status": "critical",
-            "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        return {"status": "critical", "error": str(e), "timestamp": datetime.utcnow().isoformat()}

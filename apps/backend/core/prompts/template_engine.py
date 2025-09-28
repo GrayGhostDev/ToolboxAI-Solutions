@@ -11,9 +11,15 @@ from jinja2 import Template, Environment, BaseLoader
 from langchain_core.prompts import PromptTemplate as LangChainPromptTemplate
 
 from .models import (
-    PromptTemplate, ConversationContext, PromptResponse,
-    UserProfile, ContentRequirements, PersonalizationData,
-    UniquenessEnhancement, ConversationStage, ContentType
+    PromptTemplate,
+    ConversationContext,
+    PromptResponse,
+    UserProfile,
+    ContentRequirements,
+    PersonalizationData,
+    UniquenessEnhancement,
+    ConversationStage,
+    ContentType,
 )
 
 logger = logging.getLogger(__name__)
@@ -52,7 +58,7 @@ Let's start by understanding what you'd like to create. I can help you build:
 """,
             next_stages=[ConversationStage.DISCOVERY],
             agent_assignments=["content_agent"],
-            priority=1
+            priority=1,
         )
 
         # Discovery Stage Templates
@@ -85,7 +91,7 @@ The more I know about your students, the more personalized and engaging I can ma
             variables=["content_type", "grade_level_options", "subject_areas"],
             next_stages=[ConversationStage.REQUIREMENTS],
             agent_assignments=["content_agent", "personalization_agent"],
-            priority=2
+            priority=2,
         )
 
         # Requirements Stage Templates
@@ -126,7 +132,7 @@ The more details you provide, the more unique and tailored this will be!
             variables=["content_type"],
             next_stages=[ConversationStage.PERSONALIZATION],
             agent_assignments=["requirements_agent", "design_agent"],
-            priority=3
+            priority=3,
         )
 
         # Personalization Stage Templates
@@ -167,7 +173,7 @@ This is where we transform a standard lesson into something truly special and me
             variables=["local_landmarks", "school_mascot"],
             next_stages=[ConversationStage.CONTENT_DESIGN],
             agent_assignments=["personalization_agent", "creativity_agent"],
-            priority=4
+            priority=4,
         )
 
         # Content Design Stage Templates
@@ -208,13 +214,17 @@ Based on everything you've shared, here's what I'm envisioning:
 Once you're happy with the design, I'll start building this amazing experience for your students!
 """,
             variables=[
-                "content_concept", "content_structure", "interactive_elements",
-                "character_integration", "personalization_features",
-                "visual_style", "assessment_approach"
+                "content_concept",
+                "content_structure",
+                "interactive_elements",
+                "character_integration",
+                "personalization_features",
+                "visual_style",
+                "assessment_approach",
             ],
             next_stages=[ConversationStage.UNIQUENESS_ENHANCEMENT, ConversationStage.GENERATION],
             agent_assignments=["design_agent", "content_agent", "creativity_agent"],
-            priority=5
+            priority=5,
         )
 
         # Uniqueness Enhancement Templates
@@ -255,7 +265,7 @@ I want to ensure your educational experience stands out and creates lasting memo
 """,
             next_stages=[ConversationStage.VALIDATION],
             agent_assignments=["creativity_agent", "uniqueness_agent"],
-            priority=6
+            priority=6,
         )
 
         # Validation Stage Templates
@@ -294,7 +304,7 @@ Let me verify that your educational experience meets all the best practices:
             variables=["grade_level"],
             next_stages=[ConversationStage.GENERATION],
             agent_assignments=["validation_agent", "quality_agent"],
-            priority=7
+            priority=7,
         )
 
         # Generation Stage Templates
@@ -322,12 +332,17 @@ I'm now creating your personalized {{ content_type }} with all the special eleme
 I'll keep you updated as I build each component. This is going to be amazing! 🎉
 """,
             variables=[
-                "content_type", "progress_status", "estimated_time",
-                "creation_details", "uniqueness_score", "engagement_level", "educational_value"
+                "content_type",
+                "progress_status",
+                "estimated_time",
+                "creation_details",
+                "uniqueness_score",
+                "engagement_level",
+                "educational_value",
             ],
             next_stages=[ConversationStage.REVIEW],
             agent_assignments=["generation_agent", "all_agents"],
-            priority=8
+            priority=8,
         )
 
         # Review Stage Templates
@@ -366,12 +381,16 @@ Here's what I've created for you:
 This is going to be an unforgettable learning experience for your students! 🌟
 """,
             variables=[
-                "content_overview", "key_features", "student_experience",
-                "learning_outcomes", "unique_elements", "usage_instructions"
+                "content_overview",
+                "key_features",
+                "student_experience",
+                "learning_outcomes",
+                "unique_elements",
+                "usage_instructions",
             ],
             next_stages=[ConversationStage.DEPLOYMENT],
             agent_assignments=["review_agent", "presentation_agent"],
-            priority=9
+            priority=9,
         )
 
     def get_template(self, template_id: str) -> Optional[PromptTemplate]:
@@ -386,7 +405,7 @@ This is going to be an unforgettable learning experience for your students! 🌟
         self,
         template_id: str,
         context: ConversationContext,
-        additional_vars: Optional[Dict[str, Any]] = None
+        additional_vars: Optional[Dict[str, Any]] = None,
     ) -> PromptResponse:
         """Generate a personalized prompt using a template"""
 
@@ -415,14 +434,14 @@ This is going to be an unforgettable learning experience for your students! 🌟
             suggested_actions=self._generate_suggested_actions(template, context),
             agent_triggers=self._generate_agent_triggers(template, context),
             confidence_score=confidence_score,
-            validation_results=validation_results
+            validation_results=validation_results,
         )
 
     def _prepare_variables(
         self,
         template: PromptTemplate,
         context: ConversationContext,
-        additional_vars: Optional[Dict[str, Any]] = None
+        additional_vars: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Prepare variables for template rendering"""
 
@@ -430,65 +449,87 @@ This is going to be an unforgettable learning experience for your students! 🌟
 
         # Add user profile data
         if context.user_profile:
-            variables.update({
-                "user_role": context.user_profile.role,
-                "experience_level": context.user_profile.experience_level,
-                "interests": context.user_profile.interests,
-                "cultural_background": context.user_profile.cultural_background
-            })
+            variables.update(
+                {
+                    "user_role": context.user_profile.role,
+                    "experience_level": context.user_profile.experience_level,
+                    "interests": context.user_profile.interests,
+                    "cultural_background": context.user_profile.cultural_background,
+                }
+            )
 
         # Add content requirements
         if context.requirements:
-            variables.update({
-                "content_type": context.requirements.content_type.value,
-                "subject_area": context.requirements.subject_area.value,
-                "grade_level": context.requirements.grade_level.value,
-                "learning_objectives": context.requirements.learning_objectives,
-                "engagement_level": context.requirements.engagement_level.value
-            })
+            variables.update(
+                {
+                    "content_type": context.requirements.content_type.value,
+                    "subject_area": context.requirements.subject_area.value,
+                    "grade_level": context.requirements.grade_level.value,
+                    "learning_objectives": context.requirements.learning_objectives,
+                    "engagement_level": context.requirements.engagement_level.value,
+                }
+            )
 
         # Add personalization data
         if context.personalization:
-            variables.update({
-                "student_names": context.personalization.student_names,
-                "local_landmarks": context.personalization.local_landmarks,
-                "cultural_elements": context.personalization.cultural_elements,
-                "school_theme": context.personalization.school_theme,
-                "mascot": context.personalization.mascot,
-                "colors": context.personalization.colors
-            })
+            variables.update(
+                {
+                    "student_names": context.personalization.student_names,
+                    "local_landmarks": context.personalization.local_landmarks,
+                    "cultural_elements": context.personalization.cultural_elements,
+                    "school_theme": context.personalization.school_theme,
+                    "mascot": context.personalization.mascot,
+                    "colors": context.personalization.colors,
+                }
+            )
 
         # Add uniqueness data
         if context.uniqueness:
-            variables.update({
-                "uniqueness_factors": [f.value for f in context.uniqueness.factors],
-                "custom_elements": context.uniqueness.custom_elements,
-                "creative_twists": context.uniqueness.creative_twists
-            })
+            variables.update(
+                {
+                    "uniqueness_factors": [f.value for f in context.uniqueness.factors],
+                    "custom_elements": context.uniqueness.custom_elements,
+                    "creative_twists": context.uniqueness.creative_twists,
+                }
+            )
 
         # Add conversation data
-        variables.update({
-            "conversation_id": context.conversation_id,
-            "current_stage": context.current_stage.value,
-            "collected_data": context.collected_data
-        })
+        variables.update(
+            {
+                "conversation_id": context.conversation_id,
+                "current_stage": context.current_stage.value,
+                "collected_data": context.collected_data,
+            }
+        )
 
         # Add any additional variables
         if additional_vars:
             variables.update(additional_vars)
 
         # Add default values for common variables
-        variables.setdefault("grade_level_options", [
-            "Pre-K", "K-2", "3-5", "Middle School", "High School", "College"
-        ])
-        variables.setdefault("subject_areas", [
-            "Science", "Math", "Language Arts", "Social Studies",
-            "Art", "Music", "Physical Education", "Computer Science"
-        ])
+        variables.setdefault(
+            "grade_level_options",
+            ["Pre-K", "K-2", "3-5", "Middle School", "High School", "College"],
+        )
+        variables.setdefault(
+            "subject_areas",
+            [
+                "Science",
+                "Math",
+                "Language Arts",
+                "Social Studies",
+                "Art",
+                "Music",
+                "Physical Education",
+                "Computer Science",
+            ],
+        )
 
         return variables
 
-    def _validate_generated_content(self, content: str, template: PromptTemplate) -> Dict[str, bool]:
+    def _validate_generated_content(
+        self, content: str, template: PromptTemplate
+    ) -> Dict[str, bool]:
         """Validate the generated content against template rules"""
         results = {}
 
@@ -501,11 +542,15 @@ This is going to be an unforgettable learning experience for your students! 🌟
 
         # Check for educational elements
         educational_keywords = ["learn", "teach", "understand", "skill", "knowledge", "education"]
-        results["educational_focus"] = any(keyword in content.lower() for keyword in educational_keywords)
+        results["educational_focus"] = any(
+            keyword in content.lower() for keyword in educational_keywords
+        )
 
         # Check for engagement elements
         engagement_keywords = ["fun", "interactive", "game", "exciting", "engaging", "adventure"]
-        results["engagement_focus"] = any(keyword in content.lower() for keyword in engagement_keywords)
+        results["engagement_focus"] = any(
+            keyword in content.lower() for keyword in engagement_keywords
+        )
 
         return results
 
@@ -513,12 +558,16 @@ This is going to be an unforgettable learning experience for your students! 🌟
         self,
         context: ConversationContext,
         template: PromptTemplate,
-        validation_results: Dict[str, bool]
+        validation_results: Dict[str, bool],
     ) -> float:
         """Calculate confidence score for the generated prompt"""
 
         # Base score from validation results
-        validation_score = sum(validation_results.values()) / len(validation_results) if validation_results else 0.5
+        validation_score = (
+            sum(validation_results.values()) / len(validation_results)
+            if validation_results
+            else 0.5
+        )
 
         # Context completeness score
         context_completeness = 0.0
@@ -535,64 +584,82 @@ This is going to be an unforgettable learning experience for your students! 🌟
         priority_adjustment = template.priority / 10.0
 
         # Calculate final confidence score
-        confidence = (validation_score * 0.4 + context_completeness * 0.4 + priority_adjustment * 0.2)
+        confidence = validation_score * 0.4 + context_completeness * 0.4 + priority_adjustment * 0.2
 
         return min(max(confidence, 0.0), 1.0)
 
-    def _generate_next_questions(self, template: PromptTemplate, context: ConversationContext) -> List[str]:
+    def _generate_next_questions(
+        self, template: PromptTemplate, context: ConversationContext
+    ) -> List[str]:
         """Generate follow-up questions based on template and context"""
         questions = []
 
         if template.stage == ConversationStage.DISCOVERY:
-            questions.extend([
-                "What grade level are you teaching?",
-                "How many students will participate?",
-                "What's the main learning objective?",
-                "What subjects are you most interested in?"
-            ])
+            questions.extend(
+                [
+                    "What grade level are you teaching?",
+                    "How many students will participate?",
+                    "What's the main learning objective?",
+                    "What subjects are you most interested in?",
+                ]
+            )
         elif template.stage == ConversationStage.REQUIREMENTS:
-            questions.extend([
-                "How long should this experience be?",
-                "What level of interactivity do you want?",
-                "Are there any specific activities you'd like included?",
-                "Do you have any accessibility requirements?"
-            ])
+            questions.extend(
+                [
+                    "How long should this experience be?",
+                    "What level of interactivity do you want?",
+                    "Are there any specific activities you'd like included?",
+                    "Do you have any accessibility requirements?",
+                ]
+            )
         elif template.stage == ConversationStage.PERSONALIZATION:
-            questions.extend([
-                "What are your students currently interested in?",
-                "Are there any local landmarks or references we could include?",
-                "What makes your school or class unique?",
-                "Are there any cultural elements to incorporate?"
-            ])
+            questions.extend(
+                [
+                    "What are your students currently interested in?",
+                    "Are there any local landmarks or references we could include?",
+                    "What makes your school or class unique?",
+                    "Are there any cultural elements to incorporate?",
+                ]
+            )
 
         return questions[:3]  # Limit to 3 questions
 
-    def _generate_suggested_actions(self, template: PromptTemplate, context: ConversationContext) -> List[str]:
+    def _generate_suggested_actions(
+        self, template: PromptTemplate, context: ConversationContext
+    ) -> List[str]:
         """Generate suggested actions based on template and context"""
         actions = []
 
         if template.stage == ConversationStage.GREETING:
-            actions.extend([
-                "Choose a content type to get started",
-                "Browse example educational experiences",
-                "Learn about available features"
-            ])
+            actions.extend(
+                [
+                    "Choose a content type to get started",
+                    "Browse example educational experiences",
+                    "Learn about available features",
+                ]
+            )
         elif template.stage == ConversationStage.CONTENT_DESIGN:
-            actions.extend([
-                "Preview the design concept",
-                "Adjust specific elements",
-                "Add more personalization features"
-            ])
+            actions.extend(
+                [
+                    "Preview the design concept",
+                    "Adjust specific elements",
+                    "Add more personalization features",
+                ]
+            )
         elif template.stage == ConversationStage.REVIEW:
-            actions.extend([
-                "Preview the complete experience",
-                "Make final adjustments",
-                "Deploy to your students"
-            ])
+            actions.extend(
+                [
+                    "Preview the complete experience",
+                    "Make final adjustments",
+                    "Deploy to your students",
+                ]
+            )
 
         return actions[:3]  # Limit to 3 actions
 
-    def _generate_agent_triggers(self, template: PromptTemplate, context: ConversationContext) -> List[str]:
+    def _generate_agent_triggers(
+        self, template: PromptTemplate, context: ConversationContext
+    ) -> List[str]:
         """Generate agent triggers based on template and context"""
         triggers = []
 
@@ -615,16 +682,12 @@ This is going to be an unforgettable learning experience for your students! 🌟
         stage: ConversationStage,
         template_text: str,
         variables: List[str] = None,
-        **kwargs
+        **kwargs,
     ) -> PromptTemplate:
         """Create a custom prompt template"""
 
         template = PromptTemplate(
-            name=name,
-            stage=stage,
-            template_text=template_text,
-            variables=variables or [],
-            **kwargs
+            name=name, stage=stage, template_text=template_text, variables=variables or [], **kwargs
         )
 
         self.templates[template.id] = template
@@ -652,12 +715,3 @@ This is going to be an unforgettable learning experience for your students! 🌟
     def get_templates_by_priority(self, min_priority: int = 1) -> List[PromptTemplate]:
         """Get templates with minimum priority"""
         return [t for t in self.templates.values() if t.priority >= min_priority and t.is_active]
-
-
-
-
-
-
-
-
-

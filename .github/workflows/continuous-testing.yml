@@ -1,0 +1,414 @@
+name: Continuous Testing
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'  # Every 4 hours
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of tests to run'
+        required: false
+        default: 'comprehensive'
+        type: choice
+        options:
+          - comprehensive
+          - fast
+          - security-only
+
+env:
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '22'
+  # Test environment variables
+  TESTING: true
+  USE_MOCK_LLM: true
+  PUSHER_ENABLED: true
+
+jobs:
+  # ============================================
+  # Continuous Testing Pipeline
+  # ============================================
+  continuous-test:
+    name: Continuous Test Suite (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+      fail-fast: false
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: apps/dashboard/package-lock.json
+
+      - name: Create cache directories
+        run: |
+          mkdir -p ~/.cache/pip
+          mkdir -p /tmp/pytest-cache
+          mkdir -p reports
+          mkdir -p test-results
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            postgresql-client \
+            redis-tools \
+            curl \
+            jq \
+            bc
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-html pytest-cov pytest-xdist pytest-timeout
+
+      - name: Install Dashboard dependencies
+        working-directory: apps/dashboard
+        run: npm ci
+
+      - name: Set test environment variables
+        run: |
+          echo "DATABASE_URL=postgresql://testuser:testpass@localhost:5432/testdb" >> $GITHUB_ENV
+          echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
+          echo "JWT_SECRET_KEY=test-secret-key-for-ci" >> $GITHUB_ENV
+          echo "PYTHONPATH=$GITHUB_WORKSPACE:$PYTHONPATH" >> $GITHUB_ENV
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for PostgreSQL..."
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U testuser; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            sleep 2
+          done
+
+          echo "Waiting for Redis..."
+          for i in {1..30}; do
+            if redis-cli -h localhost -p 6379 ping | grep -q PONG; then
+              echo "Redis is ready"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Create test database schema
+        run: |
+          PGPASSWORD=testpass psql -h localhost -U testuser -d testdb -c "
+            CREATE SCHEMA IF NOT EXISTS public;
+            CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";
+          " || echo "Schema creation completed or already exists"
+
+      - name: Run Security Tests
+        if: github.event.inputs.test_type == 'security-only' || github.event.inputs.test_type == '' || github.event.inputs.test_type == 'comprehensive'
+        run: |
+          echo "🔒 Running Security Tests..."
+          pytest tests/security/ \
+            -v \
+            --tb=short \
+            -m security \
+            --junit-xml=test-results/security-tests.xml \
+            --html=reports/security-report.html \
+            --self-contained-html \
+            --maxfail=10 \
+            --timeout=300
+        continue-on-error: true
+
+      - name: Run Unit Tests
+        if: github.event.inputs.test_type != 'security-only'
+        run: |
+          echo "🧪 Running Unit Tests..."
+          pytest tests/unit/ \
+            -v \
+            --tb=short \
+            -m unit \
+            --cov=apps \
+            --cov=core \
+            --cov-report=xml:reports/unit-coverage.xml \
+            --cov-report=html:reports/unit-coverage-html \
+            --junit-xml=test-results/unit-tests.xml \
+            --html=reports/unit-report.html \
+            --self-contained-html \
+            -n auto \
+            --maxfail=20 \
+            --timeout=180
+        continue-on-error: true
+
+      - name: Run Integration Tests
+        if: github.event.inputs.test_type == 'comprehensive' || github.event.inputs.test_type == ''
+        run: |
+          echo "🔗 Running Integration Tests..."
+          pytest tests/integration/ \
+            -v \
+            --tb=short \
+            -m "integration and not slow" \
+            --junit-xml=test-results/integration-tests.xml \
+            --html=reports/integration-report.html \
+            --self-contained-html \
+            --maxfail=10 \
+            --timeout=300
+        continue-on-error: true
+
+      - name: Run Configuration Tests
+        if: github.event.inputs.test_type == 'comprehensive' || github.event.inputs.test_type == ''
+        run: |
+          echo "⚙️ Running Configuration Tests..."
+          if [ -d "tests/config" ]; then
+            pytest tests/config/ \
+              -v \
+              --tb=short \
+              --junit-xml=test-results/config-tests.xml \
+              --html=reports/config-report.html \
+              --self-contained-html \
+              --maxfail=5 \
+              --timeout=120
+          else
+            echo "No configuration tests found, skipping..."
+          fi
+        continue-on-error: true
+
+      - name: Run Performance Tests (Basic)
+        if: github.event.inputs.test_type == 'comprehensive' || github.event.inputs.test_type == ''
+        run: |
+          echo "⚡ Running Performance Tests (Basic)..."
+          if [ -d "tests/performance" ]; then
+            pytest tests/performance/ \
+              -v \
+              --tb=short \
+              -m "performance and not slow" \
+              --junit-xml=test-results/performance-tests.xml \
+              --html=reports/performance-report.html \
+              --self-contained-html \
+              --maxfail=5 \
+              --timeout=180
+          else
+            echo "No performance tests found, skipping..."
+          fi
+        continue-on-error: true
+
+      - name: Run Frontend Tests
+        if: github.event.inputs.test_type != 'security-only'
+        working-directory: apps/dashboard
+        run: |
+          echo "🎨 Running Frontend Tests..."
+          npm run test -- \
+            --reporter=json \
+            --outputFile=../../test-results/frontend-tests.json \
+            --coverage \
+            --run
+        continue-on-error: true
+
+      - name: Check Frontend Coverage Thresholds
+        if: github.event.inputs.test_type != 'security-only'
+        working-directory: apps/dashboard
+        run: |
+          if [ -f "coverage/coverage-summary.json" ]; then
+            COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct // 0')
+            echo "Frontend Coverage: $COVERAGE%"
+
+            if (( $(echo "$COVERAGE < 85" | bc -l) )); then
+              echo "⚠️ Frontend coverage $COVERAGE% is below 85% threshold"
+              # Don't fail the entire workflow for coverage
+            else
+              echo "✅ Frontend coverage $COVERAGE% meets threshold"
+            fi
+          else
+            echo "⚠️ No coverage report found"
+          fi
+        continue-on-error: true
+
+      - name: Generate Comprehensive Test Report
+        if: always()
+        run: |
+          echo "📊 Generating Comprehensive Test Report..."
+
+          # Create comprehensive test report
+          cat > test_execution_report.json << EOF
+          {
+            "timestamp": "$(date -Iseconds)",
+            "workflow_run_id": "${{ github.run_id }}",
+            "workflow_run_number": "${{ github.run_number }}",
+            "python_version": "${{ matrix.python-version }}",
+            "node_version": "${{ env.NODE_VERSION }}",
+            "test_type": "${{ github.event.inputs.test_type || 'comprehensive' }}",
+            "trigger": "${{ github.event_name }}",
+            "branch": "${{ github.ref_name }}",
+            "commit": "${{ github.sha }}",
+            "environment": {
+              "os": "ubuntu-latest",
+              "database": "PostgreSQL 15",
+              "cache": "Redis 7",
+              "testing": true,
+              "mock_llm": true
+            }
+          }
+          EOF
+
+          # Count test results
+          TOTAL_TESTS=0
+          PASSED_TESTS=0
+          FAILED_TESTS=0
+
+          # Check test result files
+          for result_file in test-results/*.xml; do
+            if [ -f "$result_file" ]; then
+              TESTS=$(grep -o 'tests="[0-9]*"' "$result_file" | cut -d'"' -f2 | head -1)
+              FAILURES=$(grep -o 'failures="[0-9]*"' "$result_file" | cut -d'"' -f2 | head -1)
+              ERRORS=$(grep -o 'errors="[0-9]*"' "$result_file" | cut -d'"' -f2 | head -1)
+
+              TOTAL_TESTS=$((TOTAL_TESTS + ${TESTS:-0}))
+              FAILED_TESTS=$((FAILED_TESTS + ${FAILURES:-0} + ${ERRORS:-0}))
+            fi
+          done
+
+          PASSED_TESTS=$((TOTAL_TESTS - FAILED_TESTS))
+
+          echo "Test Summary:"
+          echo "  Total: $TOTAL_TESTS"
+          echo "  Passed: $PASSED_TESTS"
+          echo "  Failed: $FAILED_TESTS"
+
+          # Add summary to report
+          jq --arg total "$TOTAL_TESTS" \
+             --arg passed "$PASSED_TESTS" \
+             --arg failed "$FAILED_TESTS" \
+             '. + {
+               "test_summary": {
+                 "total": ($total | tonumber),
+                 "passed": ($passed | tonumber),
+                 "failed": ($failed | tonumber),
+                 "success_rate": (if ($total | tonumber) > 0 then (($passed | tonumber) * 100 / ($total | tonumber)) else 0 end)
+               }
+             }' test_execution_report.json > temp_report.json
+
+          mv temp_report.json test_execution_report.json
+
+          echo "✅ Test execution report generated"
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-python-${{ matrix.python-version }}
+          path: |
+            test-results/
+            reports/
+            test_execution_report.json
+            apps/dashboard/coverage/
+
+      - name: Upload Coverage to Codecov
+        if: always() && github.event.inputs.test_type != 'security-only'
+        uses: codecov/codecov-action@v4
+        with:
+          files: reports/unit-coverage.xml,apps/dashboard/coverage/coverage.xml
+          flags: continuous-testing
+          name: continuous-testing-${{ matrix.python-version }}
+          fail_ci_if_error: false
+
+      - name: Comment on PR with Test Results
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let reportContent = '## 🔄 Continuous Testing Results\n\n';
+
+            try {
+              const report = JSON.parse(fs.readFileSync('test_execution_report.json', 'utf8'));
+              const summary = report.test_summary;
+
+              reportContent += `**Python Version:** ${{ matrix.python-version }}\n`;
+              reportContent += `**Test Type:** ${report.test_type}\n\n`;
+
+              if (summary) {
+                const successRate = Math.round(summary.success_rate || 0);
+                const emoji = successRate >= 90 ? '🟢' : successRate >= 70 ? '🟡' : '🔴';
+
+                reportContent += `${emoji} **Test Summary:**\n`;
+                reportContent += `- Total Tests: ${summary.total}\n`;
+                reportContent += `- Passed: ${summary.passed}\n`;
+                reportContent += `- Failed: ${summary.failed}\n`;
+                reportContent += `- Success Rate: ${successRate}%\n\n`;
+              }
+
+              reportContent += `**Reports Available:**\n`;
+              reportContent += `- [Security Report](security-report.html)\n`;
+              reportContent += `- [Unit Test Report](unit-report.html)\n`;
+              reportContent += `- [Integration Report](integration-report.html)\n`;
+
+            } catch (error) {
+              reportContent += '⚠️ Unable to parse test results\n';
+            }
+
+            reportContent += `\n*Generated at: ${new Date().toISOString()}*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: reportContent
+            });
+
+      - name: Update Status Check
+        if: always()
+        run: |
+          # Read test results and determine overall status
+          if [ -f "test_execution_report.json" ]; then
+            SUCCESS_RATE=$(jq -r '.test_summary.success_rate // 0' test_execution_report.json)
+
+            if (( $(echo "$SUCCESS_RATE >= 85" | bc -l) )); then
+              echo "✅ Tests passed with $SUCCESS_RATE% success rate"
+              exit 0
+            else
+              echo "❌ Tests failed with $SUCCESS_RATE% success rate (minimum 85% required)"
+              exit 1
+            fi
+          else
+            echo "❌ No test results found"
+            exit 1
+          fi

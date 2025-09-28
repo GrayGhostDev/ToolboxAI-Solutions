@@ -1,35 +1,38 @@
 import * as React from "react";
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Avatar from '@mui/material/Avatar';
-import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import TextField from '@mui/material/TextField';
-import InputAdornment from '@mui/material/InputAdornment';
-import Box from '@mui/material/Box';
-
+import {
+  Card,
+  Text,
+  Title,
+  Table,
+  Avatar,
+  Stack,
+  Badge,
+  SegmentedControl,
+  TextInput,
+  Box,
+  Group,
+  SimpleGrid,
+  Paper,
+  Progress,
+  ActionIcon,
+  Tooltip,
+  ScrollArea
+} from '@mantine/core';
+import {
+  IconSearch,
+  IconTrendingUp,
+  IconTrendingDown,
+  IconMinus,
+  IconTrophy,
+  IconFlame,
+  IconStar,
+  IconMedal,
+  IconCrown
+} from '@tabler/icons-react';
 import { useEffect } from "react";
-import Grid2 from "@mui/material/Unstable_Grid2";
-import SearchIcon from "@mui/icons-material/Search";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import TrendingDownIcon from "@mui/icons-material/TrendingDown";
-import RemoveIcon from "@mui/icons-material/Remove";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import WhatshotIcon from "@mui/icons-material/Whatshot";
-import StarIcon from "@mui/icons-material/Star";
 import { useAppSelector, useAppDispatch } from "../../store";
 import { fetchLeaderboard, setLeaderboard } from "../../store/slices/gamificationSlice";
-// import { wsService } from "../../services/ws";
-import { sendWebSocketMessage, subscribeToChannel, unsubscribeFromChannel } from "../../services/websocket";
+import { pusherService } from "../../services/pusher";
 import { WebSocketMessageType } from "../../types/websocket";
 
 export default function Leaderboard() {
@@ -37,38 +40,39 @@ export default function Leaderboard() {
   const currentUserId = useAppSelector((s) => s.user.userId);
   const currentClassId = useAppSelector((s) => s.user.classIds?.[0]);
   const { leaderboard, loading } = useAppSelector((s) => s.gamification);
-  
+
   const [timeframe, setTimeframe] = React.useState<"daily" | "weekly" | "monthly" | "all">("weekly");
   const [searchTerm, setSearchTerm] = React.useState("");
 
   // Fetch leaderboard on mount and when timeframe changes
   useEffect(() => {
-    dispatch(fetchLeaderboard({ classId: currentClassId, timeframe }));
+    if (currentClassId) {
+      dispatch(fetchLeaderboard({ classId: currentClassId, timeframe }));
+    }
   }, [dispatch, currentClassId, timeframe]);
 
-  // Setup WebSocket listeners for real-time updates
+  // Setup Pusher listeners for real-time updates
   useEffect(() => {
     // Request initial leaderboard from realtime channel via server-triggered event
-    void sendWebSocketMessage(WebSocketMessageType.REQUEST_LEADERBOARD, { classId: currentClassId }, { channel: 'public' });
+    void pusherService.send(WebSocketMessageType.REQUEST_LEADERBOARD, { classId: currentClassId }, { channel: 'public' });
 
     // Unified handler for all public channel messages
     const handlePublicLeaderboardMessage = (message: any) => {
       switch (message.type) {
         case WebSocketMessageType.LEADERBOARD_UPDATE: {
-          const data = message.payload || message;
-          dispatch(setLeaderboard(data.leaderboard || []));
+          dispatch(setLeaderboard(message.data));
           break;
         }
-        case WebSocketMessageType.XP_GAINED:
-        case WebSocketMessageType.BADGE_EARNED:
-          // Refresh leaderboard when XP is gained or badge is earned
+        case WebSocketMessageType.XP_GAINED: {
+          // Refresh leaderboard when someone gains XP
           dispatch(fetchLeaderboard({ classId: currentClassId, timeframe }));
           break;
+        }
       }
     };
 
     // Single subscription to public channel
-    const subscriptionId = subscribeToChannel(
+    const subscriptionId = pusherService.subscribe(
       'public',
       handlePublicLeaderboardMessage,
       (msg) =>
@@ -79,316 +83,281 @@ export default function Leaderboard() {
 
     // Cleanup
     return () => {
-      unsubscribeFromChannel(subscriptionId);
+      pusherService.unsubscribe(subscriptionId);
     };
   }, [dispatch, currentClassId, timeframe]);
 
-  const handleTimeframeChange = (
-    event: React.MouseEvent<HTMLElement>,
-    newTimeframe: "daily" | "weekly" | "monthly" | "all" | null
-  ) => {
-    void event;
-    if (newTimeframe !== null) {
-      setTimeframe(newTimeframe);
+  const handleTimeframeChange = (value: string | null) => {
+    if (value) {
+      setTimeframe(value as "daily" | "weekly" | "monthly" | "all");
     }
   };
 
+  // Filter leaderboard based on search term
+  const filteredLeaderboard = React.useMemo(() => {
+    if (!leaderboard) return [];
+    if (!searchTerm) return leaderboard;
+
+    return leaderboard.filter(entry =>
+      entry.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.username?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [leaderboard, searchTerm]);
+
+  // Get rank icon
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
-        return <EmojiEventsIcon sx={{ color: "#FFD700", fontSize: 28 }} />;
+        return <IconCrown size={20} color="gold" />;
       case 2:
-        return <EmojiEventsIcon sx={{ color: "#C0C0C0", fontSize: 24 }} />;
+        return <IconMedal size={20} color="silver" />;
       case 3:
-        return <EmojiEventsIcon sx={{ color: "#CD7F32", fontSize: 20 }} />;
+        return <IconMedal size={20} color="#CD7F32" />;
       default:
-        return null;
+        return <IconStar size={16} color="gray" />;
     }
   };
 
-  const getTrendIcon = (change: number) => {
-    if (change > 0) {
-      return (
-        <Chip
-          icon={<TrendingUpIcon />}
-          label={`+${change}`}
-          size="small"
-          color="success"
-          sx={{ height: 20 }}
-        />
-      );
-    } else if (change < 0) {
-      return (
-        <Chip
-          icon={<TrendingDownIcon />}
-          label={change}
-          size="small"
-          color="error"
-          sx={{ height: 20 }}
-        />
-      );
-    } else {
-      return (
-        <Chip
-          icon={<RemoveIcon />}
-          label="—"
-          size="small"
-          sx={{ height: 20 }}
-        />
-      );
-    }
+  // Get trend icon
+  const getTrendIcon = (trend: number) => {
+    if (trend > 0) return <IconTrendingUp size={16} color="green" />;
+    if (trend < 0) return <IconTrendingDown size={16} color="red" />;
+    return <IconMinus size={16} color="gray" />;
   };
-
-  // Ensure leaderboard is always an array
-  const leaderboardArray = Array.isArray(leaderboard) ? leaderboard : [];
-  const filteredLeaderboard = leaderboardArray.filter((entry: any) =>
-    entry.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    entry.className?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
-    <Grid2 container spacing={3}>
-      {/* Header */}
-      <Grid2 xs={12}>
-        <Card>
-          <CardContent>
-            <Stack
-              direction={{ xs: "column", md: "row" }}
-              justifyContent="space-between"
-              alignItems={{ xs: "flex-start", md: "center" }}
-              gap={2}
-            >
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                Leaderboard
-              </Typography>
-              <Stack direction={{ xs: "column", sm: "row" }} gap={2}>
-                <TextField
-                  size="small"
-                  placeholder="Search students..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  sx={{ minWidth: 200 }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-                <ToggleButtonGroup
-                  value={timeframe}
-                  exclusive
-                  onChange={handleTimeframeChange}
-                  aria-label="timeframe"
-                  size="small"
-                >
-                  <ToggleButton value="daily" aria-label="daily">
-                    Daily
-                  </ToggleButton>
-                  <ToggleButton value="weekly" aria-label="weekly">
-                    Weekly
-                  </ToggleButton>
-                  <ToggleButton value="monthly" aria-label="monthly">
-                    Monthly
-                  </ToggleButton>
-                  <ToggleButton value="all" aria-label="all time">
-                    All Time
-                  </ToggleButton>
-                </ToggleButtonGroup>
-              </Stack>
-            </Stack>
-          </CardContent>
-        </Card>
-      </Grid2>
+    <Box p="xl">
+      <Stack gap="lg">
+        {/* Header */}
+        <Group justify="space-between" align="center">
+          <Title order={2}>
+            <Group gap="sm">
+              <IconTrophy size={28} color="var(--mantine-color-yellow-6)" />
+              Class Leaderboard
+            </Group>
+          </Title>
 
-      {/* Top 3 Podium */}
-      <Grid2 xs={12}>
-        <Card sx={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
-          <CardContent>
-            <Stack
-              direction={{ xs: "column", md: "row" }}
-              justifyContent="center"
-              alignItems="flex-end"
-              gap={3}
-              sx={{ py: 2 }}
-            >
-              {/* 2nd Place */}
-              {leaderboard?.[1] && (
-                <Box sx={{ textAlign: "center", order: { xs: 2, md: 1 } }}>
-                  <Stack alignItems="center" spacing={1}>
-                    <Typography variant="h4" sx={{ color: "white", opacity: 0.9 }}>
-                      2nd
-                    </Typography>
+          <Group gap="md">
+            <SegmentedControl
+              value={timeframe}
+              onChange={handleTimeframeChange}
+              data={[
+                { label: 'Daily', value: 'daily' },
+                { label: 'Weekly', value: 'weekly' },
+                { label: 'Monthly', value: 'monthly' },
+                { label: 'All Time', value: 'all' }
+              ]}
+            />
+          </Group>
+        </Group>
+
+        {/* Search and Stats */}
+        <Group justify="space-between">
+          <TextInput
+            placeholder="Search students..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            leftSection={<IconSearch size={16} />}
+            style={{ minWidth: 300 }}
+          />
+
+          <Group gap="md">
+            <Paper p="sm" withBorder>
+              <Group gap="xs">
+                <IconFlame size={16} color="orange" />
+                <Text size="sm" fw={500}>
+                  {filteredLeaderboard.length} Students
+                </Text>
+              </Group>
+            </Paper>
+          </Group>
+        </Group>
+
+        {/* Top 3 Podium */}
+        {filteredLeaderboard.length >= 3 && (
+          <Card withBorder>
+            <Card.Section p="md" withBorder>
+              <Title order={4} ta="center">🏆 Top Performers</Title>
+            </Card.Section>
+
+            <SimpleGrid cols={3} p="md">
+              {filteredLeaderboard.slice(0, 3).map((entry, index) => (
+                <Paper key={entry.userId} p="md" withBorder ta="center">
+                  <Stack gap="sm" align="center">
+                    {getRankIcon(index + 1)}
                     <Avatar
-                      src={leaderboard[1].avatarUrl}
-                      sx={{ width: 80, height: 80, border: "3px solid #C0C0C0" }}
+                      src={entry.avatarUrl}
+                      alt={entry.displayName}
+                      size="lg"
+                      style={{
+                        border: index === 0 ? '3px solid gold' :
+                               index === 1 ? '3px solid silver' :
+                               '3px solid #CD7F32'
+                      }}
                     />
-                    <Typography variant="subtitle1" sx={{ color: "white", fontWeight: 600 }}>
-                      {leaderboard[1].displayName}
-                    </Typography>
-                    <Typography variant="h6" sx={{ color: "white" }}>
-                      {leaderboard[1].xp?.toLocaleString() || 0} XP
-                    </Typography>
+                    <Stack gap={4} align="center">
+                      <Text fw={600} size="sm">{entry.displayName}</Text>
+                      <Text size="xl" fw={700} c={
+                        index === 0 ? 'yellow' :
+                        index === 1 ? 'gray' :
+                        'orange'
+                      }>
+                        {entry.totalXP.toLocaleString()} XP
+                      </Text>
+                      <Badge variant="outline" size="sm">
+                        Level {entry.level}
+                      </Badge>
+                    </Stack>
                   </Stack>
-                </Box>
-              )}
+                </Paper>
+              ))}
+            </SimpleGrid>
+          </Card>
+        )}
 
-              {/* 1st Place */}
-              {leaderboard?.[0] && (
-                <Box sx={{ textAlign: "center", order: { xs: 1, md: 2 } }}>
-                  <Stack alignItems="center" spacing={1}>
-                    <EmojiEventsIcon sx={{ color: "#FFD700", fontSize: 48 }} />
-                    <Avatar
-                      src={leaderboard[0].avatarUrl}
-                      sx={{ width: 100, height: 100, border: "3px solid #FFD700" }}
-                    />
-                    <Typography variant="h6" sx={{ color: "white", fontWeight: 700 }}>
-                      {leaderboard[0].displayName}
-                    </Typography>
-                    <Typography variant="h5" sx={{ color: "white", fontWeight: 600 }}>
-                      {leaderboard[0].xp?.toLocaleString() || 0} XP
-                    </Typography>
-                  </Stack>
-                </Box>
-              )}
+        {/* Full Leaderboard Table */}
+        <Card withBorder>
+          <Card.Section p="md" withBorder>
+            <Title order={4}>Full Rankings</Title>
+          </Card.Section>
 
-              {/* 3rd Place */}
-              {leaderboard?.[2] && (
-                <Box sx={{ textAlign: "center", order: 3 }}>
-                  <Stack alignItems="center" spacing={1}>
-                    <Typography variant="h4" sx={{ color: "white", opacity: 0.9 }}>
-                      3rd
-                    </Typography>
-                    <Avatar
-                      src={leaderboard[2].avatarUrl}
-                      sx={{ width: 80, height: 80, border: "3px solid #CD7F32" }}
-                    />
-                    <Typography variant="subtitle1" sx={{ color: "white", fontWeight: 600 }}>
-                      {leaderboard[2].displayName}
-                    </Typography>
-                    <Typography variant="h6" sx={{ color: "white" }}>
-                      {leaderboard[2].xp?.toLocaleString() || 0} XP
-                    </Typography>
-                  </Stack>
-                </Box>
-              )}
-            </Stack>
-          </CardContent>
-        </Card>
-      </Grid2>
-
-      {/* Full Leaderboard Table */}
-      <Grid2 xs={12}>
-        <Card>
-          <CardContent sx={{ p: 0 }}>
-            <TableContainer>
-              <Table aria-label="leaderboard table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Rank</TableCell>
-                    <TableCell>Student</TableCell>
-                    <TableCell>Class</TableCell>
-                    <TableCell align="center">Level</TableCell>
-                    <TableCell align="center">XP</TableCell>
-                    <TableCell align="center">Badges</TableCell>
-                    <TableCell align="center">Streak</TableCell>
-                    <TableCell align="center">Trend</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={8} align="center">
+          <ScrollArea>
+            <Table striped highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Rank</Table.Th>
+                  <Table.Th>Student</Table.Th>
+                  <Table.Th>Level</Table.Th>
+                  <Table.Th>XP</Table.Th>
+                  <Table.Th>Progress</Table.Th>
+                  <Table.Th>Trend</Table.Th>
+                  <Table.Th>Badges</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {loading ? (
+                  <Table.Tr>
+                    <Table.Td colSpan={7}>
+                      <Text ta="center" py="xl" c="dimmed">
                         Loading leaderboard...
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredLeaderboard.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} align="center">
+                      </Text>
+                    </Table.Td>
+                  </Table.Tr>
+                ) : filteredLeaderboard.length === 0 ? (
+                  <Table.Tr>
+                    <Table.Td colSpan={7}>
+                      <Text ta="center" py="xl" c="dimmed">
                         No students found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredLeaderboard.map((entry: any) => (
-                      <TableRow
-                        key={entry.userId || entry.studentId || entry.id}
-                        hover
-                        sx={{
-                          bgcolor: entry.studentId === currentUserId ? "action.selected" : undefined,
-                        }}
-                      >
-                        <TableCell>
-                          <Stack direction="row" alignItems="center" spacing={1}>
-                            {getRankIcon(entry.rank)}
-                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                              #{entry.rank}
-                            </Typography>
-                          </Stack>
-                        </TableCell>
-                        <TableCell>
-                          <Stack direction="row" alignItems="center" spacing={2}>
-                            <Avatar src={entry.avatarUrl} />
-                            <Box>
-                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                {entry.displayName}
-                              </Typography>
-                              {(entry.userId === currentUserId || entry.studentId === currentUserId) && (
-                                <Chip
-                                  label="You"
-                                  size="small"
-                                  color="primary"
-                                  sx={{ ml: 1, height: 20 }}
-                                />
-                              )}
-                            </Box>
-                          </Stack>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" color="text.secondary">
-                            {entry.className}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            label={`Lvl ${entry.level}`}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
+                      </Text>
+                    </Table.Td>
+                  </Table.Tr>
+                ) : (
+                  filteredLeaderboard.map((entry, index) => (
+                    <Table.Tr
+                      key={entry.userId}
+                      style={{
+                        backgroundColor: entry.userId === currentUserId ?
+                          'var(--mantine-color-blue-0)' : undefined
+                      }}
+                    >
+                      <Table.Td>
+                        <Group gap="xs">
+                          {getRankIcon(index + 1)}
+                          <Text fw={600}>#{index + 1}</Text>
+                        </Group>
+                      </Table.Td>
+
+                      <Table.Td>
+                        <Group gap="sm">
+                          <Avatar
+                            src={entry.avatarUrl}
+                            alt={entry.displayName}
+                            size="sm"
                           />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {entry.xp.toLocaleString()}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Stack direction="row" justifyContent="center" alignItems="center" spacing={0.5}>
-                            <StarIcon sx={{ fontSize: 16, color: "warning.main" }} />
-                            <Typography variant="body2">{entry.badgesCount || entry.badgeCount || 0}</Typography>
+                          <Stack gap={2}>
+                            <Text fw={500} size="sm">{entry.displayName}</Text>
+                            {entry.username && (
+                              <Text size="xs" c="dimmed">@{entry.username}</Text>
+                            )}
                           </Stack>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Stack direction="row" justifyContent="center" alignItems="center" spacing={0.5}>
-                            <WhatshotIcon
-                              sx={{
-                                fontSize: 16,
-                                color: entry.streakDays > 7 ? "error.main" : "text.secondary",
-                              }}
-                            />
-                            <Typography variant="body2">{entry.streakDays}d</Typography>
-                          </Stack>
-                        </TableCell>
-                        <TableCell align="center">{getTrendIcon(entry.change)}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CardContent>
+                        </Group>
+                      </Table.Td>
+
+                      <Table.Td>
+                        <Badge variant="outline" color="blue">
+                          Level {entry.level}
+                        </Badge>
+                      </Table.Td>
+
+                      <Table.Td>
+                        <Text fw={600}>{entry.totalXP.toLocaleString()}</Text>
+                      </Table.Td>
+
+                      <Table.Td>
+                        <Stack gap={4}>
+                          <Progress
+                            value={entry.progressPercentage}
+                            size="sm"
+                            color="blue"
+                          />
+                          <Text size="xs" c="dimmed">
+                            {entry.progressPercentage}% complete
+                          </Text>
+                        </Stack>
+                      </Table.Td>
+
+                      <Table.Td>
+                        <Group gap="xs">
+                          {getTrendIcon(entry.weeklyChange || 0)}
+                          <Text
+                            size="sm"
+                            c={
+                              (entry.weeklyChange || 0) > 0 ? 'green' :
+                              (entry.weeklyChange || 0) < 0 ? 'red' : 'gray'
+                            }
+                          >
+                            {entry.weeklyChange > 0 ? '+' : ''}{entry.weeklyChange || 0}
+                          </Text>
+                        </Group>
+                      </Table.Td>
+
+                      <Table.Td>
+                        <Group gap="xs">
+                          {entry.badges?.slice(0, 3).map((badge, i) => (
+                            <Tooltip key={i} label={badge.name}>
+                              <Badge size="xs" variant="filled" color="yellow">
+                                {badge.emoji || '🏆'}
+                              </Badge>
+                            </Tooltip>
+                          ))}
+                          {(entry.badges?.length || 0) > 3 && (
+                            <Badge size="xs" variant="outline">
+                              +{(entry.badges?.length || 0) - 3}
+                            </Badge>
+                          )}
+                        </Group>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))
+                )}
+              </Table.Tbody>
+            </Table>
+          </ScrollArea>
         </Card>
-      </Grid2>
-    </Grid2>
+
+        {/* Current User Highlight */}
+        {currentUserId && (
+          <Alert color="blue" title="Your Position">
+            <Text size="sm">
+              {(() => {
+                const userIndex = filteredLeaderboard.findIndex(entry => entry.userId === currentUserId);
+                if (userIndex === -1) return "You're not in the current leaderboard";
+                return `You're ranked #${userIndex + 1} with ${filteredLeaderboard[userIndex].totalXP.toLocaleString()} XP`;
+              })()}
+            </Text>
+          </Alert>
+        )}
+      </Stack>
+    </Box>
   );
 }

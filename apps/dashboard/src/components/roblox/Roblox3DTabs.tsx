@@ -1,14 +1,6 @@
 import React from 'react';
-import Box from '@mui/material/Box';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import { keyframes } from '@mui/material/styles';
-import { styled } from '@mui/material/styles';
-import Typography from '@mui/material/Typography';
-import Badge from '@mui/material/Badge';
-import Badge from '@mui/material/Badge';
+import { Box, Tabs, Text, Badge, useMantineTheme, createStyles, keyframes } from '@mantine/core';
+
 interface TabItem {
   id: string;
   label: string;
@@ -17,6 +9,7 @@ interface TabItem {
   disabled?: boolean;
   tooltip?: string;
 }
+
 interface Roblox3DTabsProps {
   tabs: TabItem[];
   value: number;
@@ -27,139 +20,137 @@ interface Roblox3DTabsProps {
   animated?: boolean;
   glowEffect?: boolean;
 }
+
 // Animations
-const floatAnimation = keyframes`
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-2px) rotate(1deg); }
-`;
-const pulseAnimation = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-`;
-const glowAnimation = keyframes`
-  0% { box-shadow: 0 0 5px currentColor; }
-  50% { box-shadow: 0 0 15px currentColor, 0 0 25px currentColor; }
-  100% { box-shadow: 0 0 5px currentColor; }
-`;
-const shimmerAnimation = keyframes`
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-`;
-const StyledTabs = styled(Tabs)(({ theme, orientation, animated }: any) => ({
-  '& .MuiTabs-indicator': {
-    background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-    height: 4,
-    borderRadius: 2,
-    boxShadow: `0 0 10px ${alpha(theme.palette.primary.main, 0.5)}`,
-    ...(orientation === 'vertical' && {
-      width: 4,
-      height: 'auto',
-      left: 0,
-      right: 'auto',
-    }),
-  },
-  '& .MuiTabs-flexContainer': {
-    gap: 8,
-    ...(orientation === 'vertical' && {
-      flexDirection: 'column',
-      alignItems: 'stretch',
-    }),
-  },
-}));
-const StyledTab = styled(Tab)(({ theme, size, animated, glowEffect }: any) => {
+const floatAnimation = keyframes({
+  '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+  '50%': { transform: 'translateY(-2px) rotate(1deg)' }
+});
+
+const pulseAnimation = keyframes({
+  '0%': { transform: 'scale(1)' },
+  '50%': { transform: 'scale(1.05)' },
+  '100%': { transform: 'scale(1)' }
+});
+
+const glowAnimation = keyframes({
+  '0%': { boxShadow: '0 0 5px currentColor' },
+  '50%': { boxShadow: '0 0 15px currentColor, 0 0 25px currentColor' },
+  '100%': { boxShadow: '0 0 5px currentColor' }
+});
+
+const shimmerAnimation = keyframes({
+  '0%': { transform: 'translateX(-100%)' },
+  '100%': { transform: 'translateX(100%)' }
+});
+
+const useStyles = createStyles((theme, { orientation, animated, size, glowEffect }: any) => {
   const sizeStyles = {
     small: { minHeight: 40, padding: '8px 16px', fontSize: '0.875rem' },
     medium: { minHeight: 48, padding: '12px 20px', fontSize: '1rem' },
     large: { minHeight: 56, padding: '16px 24px', fontSize: '1.125rem' }
   };
+
   return {
-    position: 'relative',
-    background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.05)})`,
-    border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-    borderRadius: 12,
-    margin: '4px',
-    textTransform: 'none',
-    fontWeight: 600,
-    color: theme.palette.text.primary,
-    overflow: 'hidden',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.1)}`,
-    ...sizeStyles[size],
-    '&:hover': {
-      transform: 'translateY(-2px) scale(1.02)',
-      background: `linear-gradient(145deg, ${alpha(theme.palette.primary.main, 0.1)}, ${alpha(theme.palette.secondary.main, 0.05)})`,
-      borderColor: theme.palette.primary.main,
-      boxShadow: `0 4px 15px ${alpha(theme.palette.primary.main, 0.3)}`,
-      color: theme.palette.primary.main,
+    tabsList: {
+      gap: theme.spacing.xs,
+      ...(orientation === 'vertical' && {
+        flexDirection: 'column',
+        alignItems: 'stretch',
+      }),
     },
-    '&.Mui-selected': {
-      background: `linear-gradient(145deg, ${theme.palette.primary.main}, ${alpha(theme.palette.primary.main, 0.8)})`,
-      color: 'white',
-      borderColor: theme.palette.primary.main,
-      boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
-      transform: 'translateY(-1px)',
-    },
-    '&.Mui-disabled': {
-      background: `linear-gradient(145deg, ${theme.palette.grey[800]}, ${theme.palette.grey[900]})`,
-      borderColor: theme.palette.grey[600],
-      color: theme.palette.grey[500],
-      boxShadow: 'none',
-      transform: 'none',
-    },
-    ...(animated && {
-      animation: `${floatAnimation} 4s ease-in-out infinite`,
-    }),
-    ...(glowEffect && {
-      '&::before': {
+
+    tab: {
+      position: 'relative',
+      background: `linear-gradient(145deg, ${theme.colors.gray[0]}, ${theme.colors.blue[0]})`,
+      border: `2px solid ${theme.colors.blue[2]}`,
+      borderRadius: theme.radius.sm,
+      margin: theme.spacing.xs / 2,
+      textTransform: 'none',
+      fontWeight: 600,
+      color: theme.colors.gray[7],
+      overflow: 'hidden',
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      boxShadow: `0 2px 8px ${theme.colors.blue[1]}`,
+      ...sizeStyles[size],
+
+      '&:hover': {
+        transform: 'translateY(-2px) scale(1.02)',
+        background: `linear-gradient(145deg, ${theme.colors.blue[1]}, ${theme.colors.violet[0]})`,
+        borderColor: theme.colors.blue[4],
+        boxShadow: `0 4px 15px ${theme.colors.blue[3]}`,
+        color: theme.colors.blue[6],
+      },
+
+      '&[data-active]': {
+        background: `linear-gradient(145deg, ${theme.colors.blue[6]}, ${theme.colors.blue[5]})`,
+        color: 'white',
+        borderColor: theme.colors.blue[6],
+        boxShadow: `0 4px 20px ${theme.colors.blue[4]}`,
+        transform: 'translateY(-1px)',
+      },
+
+      '&[disabled]': {
+        background: `linear-gradient(145deg, ${theme.colors.gray[8]}, ${theme.colors.gray[9]})`,
+        borderColor: theme.colors.gray[6],
+        color: theme.colors.gray[5],
+        boxShadow: 'none',
+        transform: 'none',
+      },
+
+      ...(animated && {
+        animation: `${floatAnimation} 4s ease-in-out infinite`,
+      }),
+
+      ...(glowEffect && {
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent)`,
+          transform: 'translateX(-100%)',
+          transition: 'transform 0.6s ease',
+        },
+        '&:hover::before': {
+          transform: 'translateX(100%)',
+        },
+      }),
+
+      '&::after': {
         content: '""',
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        background: `linear-gradient(45deg, transparent, ${alpha('#fff', 0.1)}, transparent)`,
-        transform: 'translateX(-100%)',
-        transition: 'transform 0.6s ease',
+        background: `linear-gradient(135deg, rgba(255,255,255,0.05), transparent, rgba(255,255,255,0.05))`,
+        borderRadius: 'inherit',
+        opacity: 0,
+        transition: 'opacity 0.3s ease',
       },
-      '&:hover::before': {
-        transform: 'translateX(100%)',
+
+      '&:hover::after': {
+        opacity: 1,
       },
-    }),
-    '&::after': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: `linear-gradient(135deg, ${alpha('#fff', 0.05)}, transparent, ${alpha('#fff', 0.05)})`,
-      borderRadius: 'inherit',
-      opacity: 0,
-      transition: 'opacity 0.3s ease',
     },
-    '&:hover::after': {
-      opacity: 1,
-    },
+
+    iconContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+      transition: 'all 0.3s ease',
+
+      '[data-active] &': {
+        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3)) brightness(1.2)',
+      }
+    }
   };
 });
-const IconContainer = styled(Box)(({ theme, size, isSelected }: any) => {
-  const sizeStyles = {
-    small: { width: 16, height: 16 },
-    medium: { width: 20, height: 20 },
-    large: { width: 24, height: 24 }
-  };
-  return {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...sizeStyles[size],
-    filter: isSelected 
-      ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3)) brightness(1.2)' 
-      : 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
-    transition: 'all 0.3s ease',
-  };
-});
+
 // Map icon names to their image paths
 const iconImageMap: { [key: string]: string } = {
   'ABC_CUBE': '/images/png/3d_icon_ABC_CUBE_1.png',
@@ -183,6 +174,7 @@ const iconImageMap: { [key: string]: string } = {
   'TRIANGLE_RULER': '/images/png/3d_icon_TRIANGLE_RULER_1.png',
   'TROPHY': '/images/png/3d_icon_TROPHY_1.png',
 };
+
 export const Roblox3DTabs: React.FunctionComponent<Roblox3DTabsProps> = ({
   tabs,
   value,
@@ -193,32 +185,42 @@ export const Roblox3DTabs: React.FunctionComponent<Roblox3DTabsProps> = ({
   animated = true,
   glowEffect = true,
 }) => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
+  const { classes } = useStyles({ orientation, animated, size, glowEffect });
+
+  const sizeMap = {
+    small: { width: 16, height: 16 },
+    medium: { width: 20, height: 20 },
+    large: { width: 24, height: 24 }
+  };
+
+  const iconSize = sizeMap[size];
+
   return (
-    <StyledTabs
-      value={value}
-      onChange={onChange}
+    <Tabs
+      value={value.toString()}
+      onTabChange={(val) => onChange(null as any, parseInt(val || '0'))}
       orientation={orientation}
       variant={variant}
-      animated={animated}
-      sx={{
-        '& .MuiTabs-scrollButtons': {
-          color: theme.palette.primary.main,
-          '&.Mui-disabled': {
-            color: theme.palette.grey[500],
-          },
-        },
+      classNames={{
+        list: classes.tabsList,
+        tab: classes.tab
       }}
     >
-      {tabs.map((tab, index) => {
-        const isSelected = value === index;
-        const iconPath = iconImageMap[tab.iconName] || iconImageMap['TROPHY'];
-        return (
-          <StyledTab
-            key={tab.id}
-            label={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <IconContainer size={size} isSelected={isSelected}>
+      <Tabs.List>
+        {tabs.map((tab, index) => {
+          const isSelected = value === index;
+          const iconPath = iconImageMap[tab.iconName] || iconImageMap['TROPHY'];
+
+          return (
+            <Tabs.Tab
+              key={tab.id}
+              value={index.toString()}
+              disabled={tab.disabled}
+              title={tab.tooltip}
+            >
+              <Box style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.xs }}>
+                <Box className={classes.iconContainer} style={iconSize}>
                   <img
                     src={iconPath}
                     alt={tab.iconName}
@@ -228,45 +230,39 @@ export const Roblox3DTabs: React.FunctionComponent<Roblox3DTabsProps> = ({
                       objectFit: 'contain',
                     }}
                   />
-                </IconContainer>
-                <Typography
-                  variant="button"
-                  sx={{
-                    fontWeight: 600,
+                </Box>
+                <Text
+                  weight={600}
+                  style={{
                     textShadow: isSelected ? '0 1px 2px rgba(0,0,0,0.3)' : 'none',
                     transition: 'all 0.3s ease',
                   }}
                 >
                   {tab.label}
-                </Typography>
+                </Text>
                 {tab.badge && tab.badge > 0 && (
                   <Badge
-                    badgeContent={tab.badge}
-                    color="error"
-                    sx={{
-                      '& .MuiBadge-badge': {
-                        background: `linear-gradient(135deg, ${theme.palette.error.main}, ${theme.palette.warning.main})`,
-                        color: 'white',
-                        fontWeight: 700,
-                        fontSize: '0.7rem',
-                        minWidth: 18,
-                        height: 18,
-                        borderRadius: 9,
-                        boxShadow: `0 0 10px ${alpha(theme.palette.error.main, 0.5)}`,
-                      },
+                    color="red"
+                    size="sm"
+                    style={{
+                      background: `linear-gradient(135deg, ${theme.colors.red[6]}, ${theme.colors.orange[6]})`,
+                      color: 'white',
+                      fontWeight: 700,
+                      fontSize: '0.7rem',
+                      minWidth: 18,
+                      height: 18,
+                      borderRadius: 9,
+                      boxShadow: `0 0 10px ${theme.colors.red[5]}`,
                     }}
-                  />
+                  >
+                    {tab.badge}
+                  </Badge>
                 )}
               </Box>
-            }
-            disabled={tab.disabled}
-            size={size}
-            animated={animated}
-            glowEffect={glowEffect}
-            title={tab.tooltip}
-          />
-        );
-      })}
-    </StyledTabs>
+            </Tabs.Tab>
+          );
+        })}
+      </Tabs.List>
+    </Tabs>
   );
 };

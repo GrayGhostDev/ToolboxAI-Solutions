@@ -1,32 +1,34 @@
 import * as React from "react";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import IconButton from "@mui/material/IconButton";
-import Badge from "@mui/material/Badge";
-import Avatar from "@mui/material/Avatar";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import FormControl from "@mui/material/FormControl";
-import Tooltip from "@mui/material/Tooltip";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import MenuIcon from "@mui/icons-material/Menu";
-import LanguageIcon from "@mui/icons-material/Language";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
-import LightModeIcon from "@mui/icons-material/LightMode";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import LogoutIcon from "@mui/icons-material/Logout";
-import SettingsIcon from "@mui/icons-material/Settings";
+import {
+  Paper,
+  Group,
+  Text,
+  ActionIcon,
+  Select,
+  Menu,
+  Tooltip,
+  Indicator,
+  Box
+} from "@mantine/core";
+import {
+  IconBell,
+  IconMenu2,
+  IconLanguage,
+  IconMoon,
+  IconSun,
+  IconUser,
+  IconLogout,
+  IconSettings
+} from "@tabler/icons-react";
 import { UserRole } from "../../types";
 import { useAppDispatch, useAppSelector } from "../../store";
 import { toggleSidebar, setTheme, setLanguage } from "../../store/slices/uiSlice";
 import { setRole, signOut } from "../../store/slices/userSlice";
 import { useNavigate } from "react-router-dom";
 import { LANGUAGES } from "../../config";
-// import { wsService } from "../../services/ws";
-import { disconnectWebSocket } from "../../services/websocket";
+import { pusherService } from "../../services/pusher";
 import ConnectionStatus from "../widgets/ConnectionStatus";
+import AtomicAvatar from "../atomic/atoms/Avatar";
 
 export default function Topbar() {
   const dispatch = useAppDispatch();
@@ -37,214 +39,220 @@ export default function Topbar() {
   const theme = useAppSelector((s) => s.ui.theme);
   const language = useAppSelector((s) => s.ui.language);
   const notifications = useAppSelector((s) => s.ui.notifications);
-  
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [notifAnchor, setNotifAnchor] = React.useState<null | HTMLElement>(null);
-
-  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleProfileMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleNotificationOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setNotifAnchor(event.currentTarget);
-  };
-
-  const handleNotificationClose = () => {
-    setNotifAnchor(null);
-  };
 
   const handleSignOut = () => {
-    // Disconnect WebSocket before signing out
-    disconnectWebSocket();
+    // Disconnect Pusher before signing out
+    pusherService.disconnect('User signed out');
     dispatch(signOut());
-    handleProfileMenuClose();
     navigate("/");
   };
 
   const handleSettings = () => {
-    handleProfileMenuClose();
     navigate("/settings");
   };
 
   return (
-    <AppBar
-      elevation={0}
-      position="fixed"
-      sx={{
+    <Paper
+      h={64}
+      style={{
         backdropFilter: "blur(8px)",
         background: theme === "dark"
           ? "linear-gradient(90deg, rgba(10, 10, 10, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%)"
           : "linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 245, 255, 0.95) 100%)",
-        color: theme === "dark" ? "white" : "#1a1a2e",
-        borderBottom: "2px solid #00bcd4",
+        borderBottom: "2px solid var(--mantine-color-cyan-6)",
         boxShadow: "0 4px 20px rgba(0, 188, 212, 0.3)",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 101,
+        display: "flex",
+        alignItems: "center"
       }}
     >
-      <Toolbar sx={{ gap: 2 }}>
-        <IconButton
-          aria-label="Toggle navigation"
-          onClick={(e: React.MouseEvent) => () => dispatch(toggleSidebar())}
-          edge="start"
-          sx={{ color: theme === "dark" ? "white" : "#1a1a2e" }}
-        >
-          <MenuIcon />
-        </IconButton>
-        
-        <Typography 
-          variant="h6" 
-          sx={{ 
-            flexGrow: 1, 
-            fontWeight: 700,
-            background: "linear-gradient(135deg, #00bcd4, #e91e63)",
-            backgroundClip: "text",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            textShadow: "0 0 10px rgba(0, 188, 212, 0.5)"
-          }}
-        >
-          🚀 Space Station Dashboard
-        </Typography>
+      <Group style={{ height: "100%", paddingInline: "1rem", width: "100%" }} justify="space-between">
+        <Group gap="md">
+          {/* Menu Toggle */}
+          <ActionIcon
+            onClick={() => dispatch(toggleSidebar())}
+            variant="subtle"
+            size="lg"
+            aria-label="Toggle navigation"
+            color={theme === "dark" ? "gray" : "dark"}
+          >
+            <IconMenu2 size={20} />
+          </ActionIcon>
 
-        {/* Role Selector */}
-        <FormControl size="small" sx={{ minWidth: 100 }}>
-          <Select
-            value={role}
-            onChange={(e) => dispatch(setRole(e.target.value as UserRole))}
-            aria-label="Select role"
-            sx={{ 
-              fontSize: "0.875rem",
-              background: "linear-gradient(135deg, rgba(0, 188, 212, 0.1), rgba(233, 30, 99, 0.1))",
-              border: "1px solid rgba(0, 188, 212, 0.3)",
-              borderRadius: 2,
-              color: "white",
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(0, 188, 212, 0.3)",
-              },
-              "&:hover .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(0, 188, 212, 0.6)",
-              },
-              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                borderColor: "#00bcd4",
-              },
+          {/* Logo/Title */}
+          <Text
+            size="lg"
+            fw={700}
+            style={{
+              background: "linear-gradient(135deg, #00bcd4, #e91e63)",
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              textShadow: "0 0 10px rgba(0, 188, 212, 0.5)"
             }}
           >
-            {(["admin", "teacher", "student", "parent"] as UserRole[]).map((r) => (
-              <MenuItem key={r} value={r}>
-                {r.charAt(0).toUpperCase() + r.slice(1)}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+            🚀 Space Station Dashboard
+          </Text>
+        </Group>
 
-        {/* Connection Status */}
-        <ConnectionStatus showLabel={true} size="small" />
+        <Group gap="md">
+          {/* Role Selector */}
+          <Select
+            value={role}
+            onChange={(value) => value && dispatch(setRole(value as UserRole))}
+            data={[
+              { value: "admin", label: "Admin" },
+              { value: "teacher", label: "Teacher" },
+              { value: "student", label: "Student" },
+              { value: "parent", label: "Parent" }
+            ]}
+            size="sm"
+            styles={{
+              input: {
+                fontSize: "0.875rem",
+                background: "linear-gradient(135deg, rgba(0, 188, 212, 0.1), rgba(233, 30, 99, 0.1))",
+                border: "1px solid rgba(0, 188, 212, 0.3)",
+                color: theme === "dark" ? "white" : "#1a1a2e",
+                "&:focus": {
+                  borderColor: "#00bcd4",
+                },
+              },
+            }}
+            aria-label="Select role"
+          />
 
-        {/* Language Selector */}
-        <Tooltip title="Change language">
-          <FormControl size="small">
-            <Select
-              value={language}
-              onChange={(e) => dispatch(setLanguage(e.target.value))}
-              renderValue={() => <LanguageIcon fontSize="small" />}
-              sx={{ minWidth: 40 }}
-            >
+          {/* Connection Status */}
+          <ConnectionStatus showLabel={true} size="small" />
+
+          {/* Language Selector */}
+          <Menu shadow="md" width={200}>
+            <Menu.Target>
+              <Tooltip label="Change language">
+                <ActionIcon
+                  variant="subtle"
+                  size="lg"
+                  aria-label="Language selector"
+                  color={theme === "dark" ? "gray" : "dark"}
+                >
+                  <IconLanguage size={20} />
+                </ActionIcon>
+              </Tooltip>
+            </Menu.Target>
+            <Menu.Dropdown>
               {LANGUAGES.map((lang) => (
-                <MenuItem key={lang.code} value={lang.code}>
+                <Menu.Item
+                  key={lang.code}
+                  onClick={() => dispatch(setLanguage(lang.code))}
+                  style={{
+                    fontWeight: language === lang.code ? 600 : 400
+                  }}
+                >
                   {lang.name}
-                </MenuItem>
+                </Menu.Item>
               ))}
-            </Select>
-          </FormControl>
-        </Tooltip>
+            </Menu.Dropdown>
+          </Menu>
 
-        {/* Theme Toggle */}
-        <Tooltip title="Toggle theme">
-          <IconButton
-            onClick={(e: React.MouseEvent) => () => dispatch(setTheme(theme === "light" ? "dark" : "light"))}
-            aria-label="Toggle theme"
-            sx={{ color: theme === "dark" ? "white" : "#1a1a2e" }}
-          >
-            {theme === "light" ? <DarkModeIcon /> : <LightModeIcon />}
-          </IconButton>
-        </Tooltip>
+          {/* Theme Toggle */}
+          <Tooltip label="Toggle theme">
+            <ActionIcon
+              onClick={() => dispatch(setTheme(theme === "light" ? "dark" : "light"))}
+              variant="subtle"
+              size="lg"
+              aria-label="Toggle theme"
+              color={theme === "dark" ? "gray" : "dark"}
+            >
+              {theme === "light" ? <IconMoon size={20} /> : <IconSun size={20} />}
+            </ActionIcon>
+          </Tooltip>
 
-        {/* Notifications */}
-        <Tooltip title="Notifications">
-          <IconButton
-            aria-label="Notifications"
-            onClick={(e: React.MouseEvent) => handleNotificationOpen}
-            sx={{ color: theme === "dark" ? "white" : "#1a1a2e" }}
-          >
-            <Badge badgeContent={notifications.length} color="error">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
-        </Tooltip>
+          {/* Notifications */}
+          <Menu shadow="md" width={320}>
+            <Menu.Target>
+              <Tooltip label="Notifications">
+                <Indicator
+                  label={notifications.length}
+                  size={16}
+                  color="red"
+                  disabled={notifications.length === 0}
+                >
+                  <ActionIcon
+                    variant="subtle"
+                    size="lg"
+                    aria-label="Notifications"
+                    color={theme === "dark" ? "gray" : "dark"}
+                  >
+                    <IconBell size={20} />
+                  </ActionIcon>
+                </Indicator>
+              </Tooltip>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Label>Notifications</Menu.Label>
+              {notifications.length === 0 ? (
+                <Menu.Item disabled>
+                  <Text size="sm" c="dimmed">
+                    No new notifications
+                  </Text>
+                </Menu.Item>
+              ) : (
+                notifications.map((notif) => (
+                  <Menu.Item key={notif?.id || Math.random()}>
+                    <Text size="sm">{notif?.message}</Text>
+                  </Menu.Item>
+                ))
+              )}
+            </Menu.Dropdown>
+          </Menu>
 
-        {/* Profile Menu */}
-        <Tooltip title="Profile menu">
-          <IconButton onClick={(e: React.MouseEvent) => handleProfileMenuOpen} sx={{ p: 0.5 }}>
-            {avatarUrl ? (
-              <Avatar src={avatarUrl} alt={displayName || "User"} sx={{ width: 32, height: 32 }} />
-            ) : (
-              <AccountCircleIcon />
-            )}
-          </IconButton>
-        </Tooltip>
-
-        {/* Profile Dropdown Menu */}
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleProfileMenuClose}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          transformOrigin={{ vertical: "top", horizontal: "right" }}
-        >
-          <MenuItem disabled>
-            <Typography variant="body2" color="text.secondary">
-              {displayName || "Guest User"}
-            </Typography>
-          </MenuItem>
-          <MenuItem onClick={(e: React.MouseEvent) => handleSettings}>
-            <SettingsIcon fontSize="small" sx={{ mr: 1 }} />
-            Settings
-          </MenuItem>
-          <MenuItem onClick={(e: React.MouseEvent) => handleSignOut}>
-            <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
-            Sign Out
-          </MenuItem>
-        </Menu>
-
-        {/* Notification Dropdown */}
-        <Menu
-          anchorEl={notifAnchor}
-          open={Boolean(notifAnchor)}
-          onClose={handleNotificationClose}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          transformOrigin={{ vertical: "top", horizontal: "right" }}
-          PaperProps={{
-            sx: { width: 320, maxHeight: 400 }
-          }}
-        >
-          {notifications.length === 0 ? (
-            <MenuItem disabled>
-              <Typography variant="body2" color="text.secondary">
-                No new notifications
-              </Typography>
-            </MenuItem>
-          ) : (
-            notifications.map((notif) => (
-              <MenuItem key={notif?.id || Math.random()} onClick={(e: React.MouseEvent) => handleNotificationClose}>
-                <Typography variant="body2">{notif?.message}</Typography>
-              </MenuItem>
-            ))
-          )}
-        </Menu>
-      </Toolbar>
-    </AppBar>
+          {/* Profile Menu */}
+          <Menu shadow="md" width={200}>
+            <Menu.Target>
+              <Tooltip label="Profile menu">
+                <Box style={{ cursor: "pointer" }}>
+                  {avatarUrl ? (
+                    <AtomicAvatar
+                      src={avatarUrl}
+                      alt={displayName || "User"}
+                      size="sm"
+                      border={false}
+                    />
+                  ) : (
+                    <ActionIcon
+                      variant="subtle"
+                      size="lg"
+                      color={theme === "dark" ? "gray" : "dark"}
+                    >
+                      <IconUser size={20} />
+                    </ActionIcon>
+                  )}
+                </Box>
+              </Tooltip>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Label>{displayName || "Guest User"}</Menu.Label>
+              <Menu.Item
+                leftSection={<IconSettings size={16} />}
+                onClick={handleSettings}
+              >
+                Settings
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item
+                color="red"
+                leftSection={<IconLogout size={16} />}
+                onClick={handleSignOut}
+              >
+                Sign Out
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Group>
+      </Group>
+    </Paper>
   );
 }

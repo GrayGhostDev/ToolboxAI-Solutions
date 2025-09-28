@@ -7,18 +7,22 @@ from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from passlib.context import CryptContext
+
 from pydantic import BaseModel
 
 from apps.backend.core.security.jwt_handler import (
     Token, TokenData, create_access_token, get_current_user
 )
 
+# Use direct bcrypt implementation (2025 best practice)
+from apps.backend.core.security.bcrypt_handler import BcryptHandler
+
 # Configuration from environment
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Password hashing using direct bcrypt with SHA-256 pre-hashing
+# This avoids passlib compatibility issues while following OWASP recommendations
+bcrypt_handler = BcryptHandler(rounds=12)
 
 # Router setup
 auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -34,39 +38,40 @@ fake_users_db = {
     "admin@toolboxai.com": {
         "username": "admin",
         "email": "admin@toolboxai.com",
-        "hashed_password": pwd_context.hash("Admin123!"),
+        "hashed_password": bcrypt_handler.hash_password("Admin123!"),
         "role": "admin"
     },
     "jane.smith@school.edu": {
         "username": "jane_smith",
         "email": "jane.smith@school.edu",
-        "hashed_password": pwd_context.hash("Teacher123!"),
+        "hashed_password": bcrypt_handler.hash_password("Teacher123!"),
         "role": "teacher"
     },
     "alex.johnson@student.edu": {
         "username": "alex_johnson",
         "email": "alex.johnson@student.edu",
-        "hashed_password": pwd_context.hash("Student123!"),
+        "hashed_password": bcrypt_handler.hash_password("Student123!"),
         "role": "student"
     },
     # Keep old test users for backwards compatibility
     "test_teacher": {
         "username": "test_teacher",
         "email": "test_teacher@test.com",
-        "hashed_password": pwd_context.hash("TestPass123!"),
+        "hashed_password": bcrypt_handler.hash_password("TestPass123!"),
         "role": "teacher"
     },
     "test_student": {
         "username": "test_student",
         "email": "test_student@test.com",
-        "hashed_password": pwd_context.hash("StudentPass123!"),
+        "hashed_password": bcrypt_handler.hash_password("StudentPass123!"),
         "role": "student"
     }
 }
 
 def verify_password(plain_password, hashed_password):
     """Verify a password against its hash"""
-    return pwd_context.verify(plain_password, hashed_password)
+    # Direct bcrypt with SHA-256 pre-hashing handles any length password
+    return bcrypt_handler.verify_password(plain_password, hashed_password)
 
 def authenticate_user(username: Optional[str], email: Optional[str], password: str):
     """Authenticate a user by username or email"""

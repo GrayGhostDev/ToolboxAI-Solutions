@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 # Create router for reports endpoints
 reports_router = APIRouter(tags=["Reports"])
 
+
 @reports_router.get("/")
 async def get_reports(
     current_user: User = Depends(get_current_user),
@@ -24,12 +25,12 @@ async def get_reports(
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
     limit: int = Query(default=10, le=100),
-    offset: int = Query(default=0, ge=0)
+    offset: int = Query(default=0, ge=0),
 ) -> List[Dict[str, Any]]:
     """Get available reports based on user role and filters."""
-    
+
     role = current_user.role.lower()
-    
+
     # Try to get real data from database
     try:
         if role == "teacher":
@@ -46,10 +47,11 @@ async def get_reports(
                 LIMIT $6 OFFSET $7
             """
             async with db_service.pool.acquire() as conn:
-                rows = await conn.fetch(query, current_user.id, report_type, class_id, 
-                                      date_from, date_to, limit, offset)
+                rows = await conn.fetch(
+                    query, current_user.id, report_type, class_id, date_from, date_to, limit, offset
+                )
                 return [dict(row) for row in rows]
-                
+
         elif role == "student":
             query = """
                 SELECT r.id, r.title, r.report_type, r.description, r.created_at,
@@ -65,9 +67,11 @@ async def get_reports(
                 LIMIT $4 OFFSET $5
             """
             async with db_service.pool.acquire() as conn:
-                rows = await conn.fetch(query, current_user.id, report_type, class_id, limit, offset)
+                rows = await conn.fetch(
+                    query, current_user.id, report_type, class_id, limit, offset
+                )
                 return [dict(row) for row in rows]
-                
+
         elif role == "admin":
             query = """
                 SELECT r.*, c.name as class_name, c.subject,
@@ -83,9 +87,11 @@ async def get_reports(
                 LIMIT $5 OFFSET $6
             """
             async with db_service.pool.acquire() as conn:
-                rows = await conn.fetch(query, report_type, class_id, date_from, date_to, limit, offset)
+                rows = await conn.fetch(
+                    query, report_type, class_id, date_from, date_to, limit, offset
+                )
                 return [dict(row) for row in rows]
-                
+
         elif role == "parent":
             query = """
                 SELECT DISTINCT r.id, r.title, r.report_type, r.description, r.created_at,
@@ -105,10 +111,10 @@ async def get_reports(
             async with db_service.pool.acquire() as conn:
                 rows = await conn.fetch(query, current_user.id, report_type, limit, offset)
                 return [dict(row) for row in rows]
-                
+
     except Exception as e:
         logger.warning(f"Failed to fetch reports from database: {e}. Using fallback data.")
-    
+
     # Fallback sample data
     if role == "teacher":
         return [
@@ -119,7 +125,7 @@ async def get_reports(
                 "report_type": "performance",
                 "description": "Weekly performance analysis for Mathematics 101",
                 "created_at": "2025-01-08T09:00:00",
-                "status": "completed"
+                "status": "completed",
             },
             {
                 "id": 2,
@@ -128,7 +134,7 @@ async def get_reports(
                 "report_type": "assessment",
                 "description": "Detailed analysis of recent quiz results",
                 "created_at": "2025-01-07T14:30:00",
-                "status": "completed"
+                "status": "completed",
             },
             {
                 "id": 3,
@@ -137,8 +143,8 @@ async def get_reports(
                 "report_type": "engagement",
                 "description": "Student participation and engagement metrics",
                 "created_at": "2025-01-06T11:15:00",
-                "status": "completed"
-            }
+                "status": "completed",
+            },
         ]
     elif role == "student":
         return [
@@ -149,7 +155,7 @@ async def get_reports(
                 "subject": "Mathematics",
                 "report_type": "progress",
                 "description": "Personal progress summary for this semester",
-                "created_at": "2025-01-08T09:00:00"
+                "created_at": "2025-01-08T09:00:00",
             },
             {
                 "id": 4,
@@ -158,8 +164,8 @@ async def get_reports(
                 "subject": "Science",
                 "report_type": "achievement",
                 "description": "Summary of completed experiments and projects",
-                "created_at": "2025-01-05T16:00:00"
-            }
+                "created_at": "2025-01-05T16:00:00",
+            },
         ]
     elif role == "admin":
         return [
@@ -171,7 +177,7 @@ async def get_reports(
                 "report_type": "performance",
                 "description": "Comprehensive performance analysis across all classes",
                 "created_at": "2025-01-08T08:00:00",
-                "status": "completed"
+                "status": "completed",
             },
             {
                 "id": 5,
@@ -181,8 +187,8 @@ async def get_reports(
                 "report_type": "teacher_analysis",
                 "description": "Analysis of teaching effectiveness and student outcomes",
                 "created_at": "2025-01-07T10:00:00",
-                "status": "completed"
-            }
+                "status": "completed",
+            },
         ]
     elif role == "parent":
         return [
@@ -194,22 +200,23 @@ async def get_reports(
                 "subject": "Mathematics",
                 "report_type": "progress",
                 "description": "Monthly progress summary for Alex Johnson",
-                "created_at": "2025-01-08T09:00:00"
+                "created_at": "2025-01-08T09:00:00",
             }
         ]
-    
+
     return []
+
 
 @reports_router.get("/templates")
 async def get_report_templates(
     current_user: User = Depends(get_current_user),
     popular_only: bool = Query(default=False),
-    category: Optional[str] = None
+    category: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """Get available report templates."""
-    
+
     role = current_user.role.lower()
-    
+
     # Try to get real data from database
     try:
         query = """
@@ -225,10 +232,10 @@ async def get_report_templates(
         async with db_service.pool.acquire() as conn:
             rows = await conn.fetch(query, [role], popular_only, category)
             return [dict(row) for row in rows]
-            
+
     except Exception as e:
         logger.warning(f"Failed to fetch report templates: {e}. Using fallback data.")
-    
+
     # Fallback sample data - filter by popular_only if requested
     templates = [
         {
@@ -239,7 +246,7 @@ async def get_report_templates(
             "is_popular": True,
             "usage_count": 45,
             "available_to": ["teacher", "admin"],
-            "fields": ["class_id", "date_range", "metrics"]
+            "fields": ["class_id", "date_range", "metrics"],
         },
         {
             "id": 2,
@@ -249,7 +256,7 @@ async def get_report_templates(
             "is_popular": True,
             "usage_count": 38,
             "available_to": ["teacher", "parent", "admin"],
-            "fields": ["student_id", "subject", "date_range"]
+            "fields": ["student_id", "subject", "date_range"],
         },
         {
             "id": 3,
@@ -259,7 +266,7 @@ async def get_report_templates(
             "is_popular": True,
             "usage_count": 32,
             "available_to": ["teacher", "admin"],
-            "fields": ["assessment_id", "analysis_type"]
+            "fields": ["assessment_id", "analysis_type"],
         },
         {
             "id": 4,
@@ -269,7 +276,7 @@ async def get_report_templates(
             "is_popular": False,
             "usage_count": 18,
             "available_to": ["teacher", "admin"],
-            "fields": ["class_id", "date_range", "students"]
+            "fields": ["class_id", "date_range", "students"],
         },
         {
             "id": 5,
@@ -279,32 +286,32 @@ async def get_report_templates(
             "is_popular": False,
             "usage_count": 12,
             "available_to": ["admin"],
-            "fields": ["class_id", "subject", "grade_level"]
-        }
+            "fields": ["class_id", "subject", "grade_level"],
+        },
     ]
-    
+
     # Filter by role access
     templates = [t for t in templates if role in t["available_to"]]
-    
+
     # Filter by popular only if requested
     if popular_only:
         templates = [t for t in templates if t["is_popular"]]
-    
+
     # Filter by category if specified
     if category:
         templates = [t for t in templates if t["category"] == category]
-    
+
     return templates
+
 
 @reports_router.get("/stats/overview")
 async def get_overview_statistics(
-    current_user: User = Depends(get_current_user),
-    date_range: Optional[str] = "30d"
+    current_user: User = Depends(get_current_user), date_range: Optional[str] = "30d"
 ) -> Dict[str, Any]:
     """Get overview statistics based on user role."""
-    
+
     role = current_user.role.lower()
-    
+
     # Try to get real data from database
     try:
         if role == "teacher":
@@ -328,7 +335,7 @@ async def get_overview_statistics(
                 row = await conn.fetchrow(query, current_user.id)
                 if row:
                     return dict(row)
-                    
+
         elif role == "student":
             # Get student's performance statistics
             query = """
@@ -350,7 +357,7 @@ async def get_overview_statistics(
                 row = await conn.fetchrow(query, current_user.id)
                 if row:
                     return dict(row)
-                    
+
         elif role == "admin":
             # Get system-wide statistics
             query = """
@@ -373,7 +380,7 @@ async def get_overview_statistics(
                 row = await conn.fetchrow(query)
                 if row:
                     return dict(row)
-                    
+
         elif role == "parent":
             # Get statistics for parent's children
             query = """
@@ -395,10 +402,10 @@ async def get_overview_statistics(
                 row = await conn.fetchrow(query, current_user.id)
                 if row:
                     return dict(row)
-                    
+
     except Exception as e:
         logger.warning(f"Failed to fetch overview statistics: {e}. Using fallback data.")
-    
+
     # Fallback sample data
     if role == "teacher":
         return {
@@ -409,13 +416,7 @@ async def get_overview_statistics(
             "completed_lessons": 156,
             "active_assignments": 8,
             "recent_submissions": 24,
-            "grade_distribution": {
-                "A": 28,
-                "B": 32,
-                "C": 18,
-                "D": 4,
-                "F": 0
-            }
+            "grade_distribution": {"A": 28, "B": 32, "C": 18, "D": 4, "F": 0},
         }
     elif role == "student":
         return {
@@ -427,7 +428,7 @@ async def get_overview_statistics(
             "total_xp": 2850,
             "current_streak": 7,
             "upcoming_deadlines": 3,
-            "achievement_badges": 12
+            "achievement_badges": 12,
         }
     elif role == "admin":
         return {
@@ -441,7 +442,7 @@ async def get_overview_statistics(
             "system_average_score": 83.7,
             "total_submissions": 12847,
             "active_sessions": 234,
-            "server_uptime": "99.8%"
+            "server_uptime": "99.8%",
         }
     elif role == "parent":
         return {
@@ -452,20 +453,20 @@ async def get_overview_statistics(
             "completed_lessons": 84,
             "upcoming_events": 5,
             "recent_achievements": 8,
-            "communication_unread": 2
+            "communication_unread": 2,
         }
-    
+
     return {}
+
 
 @reports_router.get("/{report_id}")
 async def get_report_details(
-    report_id: int,
-    current_user: User = Depends(get_current_user)
+    report_id: int, current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Get detailed information about a specific report."""
-    
+
     role = current_user.role.lower()
-    
+
     try:
         # Get report details with access control
         query = """
@@ -480,20 +481,24 @@ async def get_report_details(
             row = await conn.fetchrow(query, report_id)
             if row:
                 report = dict(row)
-                
+
                 # Check access permissions
                 if role == "student" and report.get("visibility") not in ["public", "students"]:
-                    raise HTTPException(status_code=403, detail="Not authorized to view this report")
+                    raise HTTPException(
+                        status_code=403, detail="Not authorized to view this report"
+                    )
                 elif role == "parent" and report.get("visibility") not in ["public", "parents"]:
-                    raise HTTPException(status_code=403, detail="Not authorized to view this report")
-                    
+                    raise HTTPException(
+                        status_code=403, detail="Not authorized to view this report"
+                    )
+
                 return report
-                
+
     except HTTPException:
         raise
     except Exception as e:
         logger.warning(f"Failed to fetch report details: {e}")
-    
+
     # Fallback sample data
     return {
         "id": report_id,
@@ -509,48 +514,48 @@ async def get_report_details(
                 "total_students": 28,
                 "average_score": 84.2,
                 "completion_rate": 89.3,
-                "improvement_trend": "+5.2%"
+                "improvement_trend": "+5.2%",
             },
             "metrics": [
                 {"name": "Class Average", "value": 84.2, "trend": "up"},
                 {"name": "Completion Rate", "value": 89.3, "trend": "up"},
                 {"name": "Participation", "value": 92.1, "trend": "stable"},
-                {"name": "Assignment Submission", "value": 87.5, "trend": "up"}
+                {"name": "Assignment Submission", "value": 87.5, "trend": "up"},
             ],
             "charts": {
                 "score_distribution": [
                     {"range": "90-100", "count": 10},
                     {"range": "80-89", "count": 12},
                     {"range": "70-79", "count": 5},
-                    {"range": "60-69", "count": 1}
+                    {"range": "60-69", "count": 1},
                 ],
                 "weekly_progress": [
                     {"week": "Week 1", "average": 78.5},
                     {"week": "Week 2", "average": 81.2},
                     {"week": "Week 3", "average": 83.7},
-                    {"week": "Week 4", "average": 84.2}
-                ]
-            }
+                    {"week": "Week 4", "average": 84.2},
+                ],
+            },
         },
         "recommendations": [
             "Consider additional practice sessions for students scoring below 75%",
             "Implement peer tutoring program for struggling students",
-            "Continue current teaching methods as they show positive trends"
-        ]
+            "Continue current teaching methods as they show positive trends",
+        ],
     }
+
 
 @reports_router.post("/")
 async def create_report(
-    report_data: Dict[str, Any],
-    current_user: User = Depends(get_current_user)
+    report_data: Dict[str, Any], current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Create a new report (teachers and admins only)."""
-    
+
     role = current_user.role.lower()
-    
+
     if role not in ["teacher", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized to generate reports")
-    
+
     try:
         query = """
             INSERT INTO reports (title, description, report_type, class_id, 
@@ -567,27 +572,28 @@ async def create_report(
                 report_data.get("class_id"),
                 report_data.get("parameters", {}),
                 report_data.get("visibility", "private"),
-                current_user.id
+                current_user.id,
             )
             return dict(row)
-            
+
     except Exception as e:
         logger.error(f"Failed to generate report: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate report")
+
 
 @reports_router.get("/analytics/engagement")
 async def get_engagement_analytics(
     current_user: User = Depends(get_current_user),
     class_id: Optional[int] = None,
-    time_period: str = Query(default="7d")
+    time_period: str = Query(default="7d"),
 ) -> Dict[str, Any]:
     """Get student engagement analytics (teachers and admins only)."""
-    
+
     role = current_user.role.lower()
-    
+
     if role not in ["teacher", "admin"]:
         raise HTTPException(status_code=403, detail="Not authorized to view analytics")
-    
+
     # Fallback sample data
     return {
         "time_period": time_period,
@@ -596,13 +602,13 @@ async def get_engagement_analytics(
             "daily_active_students": 24,
             "average_session_duration": 32.5,
             "total_interactions": 1847,
-            "participation_rate": 85.7
+            "participation_rate": 85.7,
         },
         "activity_breakdown": {
             "lessons_viewed": 156,
             "assessments_completed": 42,
             "discussions_participated": 28,
-            "resources_accessed": 89
+            "resources_accessed": 89,
         },
         "trends": {
             "weekly_engagement": [
@@ -610,20 +616,20 @@ async def get_engagement_analytics(
                 {"day": "Tuesday", "active_students": 24, "avg_duration": 28.7},
                 {"day": "Wednesday", "active_students": 28, "avg_duration": 42.1},
                 {"day": "Thursday", "active_students": 22, "avg_duration": 31.5},
-                {"day": "Friday", "active_students": 25, "avg_duration": 29.8}
+                {"day": "Friday", "active_students": 25, "avg_duration": 29.8},
             ]
         },
         "top_performers": [
             {"student_name": "Alex Johnson", "engagement_score": 95.2},
             {"student_name": "Maria Garcia", "engagement_score": 89.7},
-            {"student_name": "David Lee", "engagement_score": 87.3}
-        ]
+            {"student_name": "David Lee", "engagement_score": 87.3},
+        ],
     }
+
 
 @reports_router.post("/generate")
 async def generate_report(
-    report_data: Dict[str, Any],
-    current_user: User = Depends(get_current_user)
+    report_data: Dict[str, Any], current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Generate a new report - alias for create_report for frontend compatibility."""
 
@@ -633,14 +639,23 @@ async def generate_report(
         raise HTTPException(status_code=403, detail="Not authorized to generate reports")
 
     # Validate report type
-    valid_report_types = ["user_activity", "performance", "engagement", "content_analytics", "compliance"]
+    valid_report_types = [
+        "user_activity",
+        "performance",
+        "engagement",
+        "content_analytics",
+        "compliance",
+    ]
     report_type = report_data.get("report_type")
 
     if not report_type or report_type not in valid_report_types:
-        raise HTTPException(status_code=422, detail=f"Invalid report type. Must be one of: {valid_report_types}")
+        raise HTTPException(
+            status_code=422, detail=f"Invalid report type. Must be one of: {valid_report_types}"
+        )
 
     # Generate a report ID
     import uuid
+
     report_id = f"report_{uuid.uuid4().hex[:12]}"
 
     # Calculate estimated completion time based on report type
@@ -649,10 +664,12 @@ async def generate_report(
         "performance": 10,
         "engagement": 8,
         "content_analytics": 15,
-        "compliance": 12
+        "compliance": 12,
     }
 
-    estimated_completion = datetime.now() + timedelta(minutes=completion_minutes.get(report_type, 10))
+    estimated_completion = datetime.now() + timedelta(
+        minutes=completion_minutes.get(report_type, 10)
+    )
 
     return {
         "success": True,
@@ -661,13 +678,13 @@ async def generate_report(
         "report_type": report_type,
         "estimated_completion": estimated_completion.isoformat(),
         "created_by": current_user.id,
-        "parameters": report_data
+        "parameters": report_data,
     }
+
 
 @reports_router.get("/status/{report_id}")
 async def get_report_status(
-    report_id: str,
-    current_user: User = Depends(get_current_user)
+    report_id: str, current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Get the status of a specific report"""
 
@@ -703,7 +720,7 @@ async def get_report_status(
         "status": status,
         "progress": progress,
         "created_at": (datetime.now() - timedelta(minutes=15)).isoformat(),
-        "updated_at": datetime.now().isoformat()
+        "updated_at": datetime.now().isoformat(),
     }
 
     if download_url:
@@ -716,11 +733,9 @@ async def get_report_status(
 
     return response
 
+
 @reports_router.get("/download/{report_id}")
-async def download_report(
-    report_id: str,
-    current_user: User = Depends(get_current_user)
-) -> Any:
+async def download_report(report_id: str, current_user: User = Depends(get_current_user)) -> Any:
     """Download a completed report"""
 
     from fastapi.responses import Response
@@ -747,10 +762,9 @@ async def download_report(
     return Response(
         content=csv_data,
         media_type="text/csv; charset=utf-8",
-        headers={
-            "Content-Disposition": f"attachment; filename=report_{report_id}.csv"
-        }
+        headers={"Content-Disposition": f"attachment; filename=report_{report_id}.csv"},
     )
+
 
 # Export standardized router name
 router = reports_router

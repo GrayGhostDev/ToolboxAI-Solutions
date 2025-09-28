@@ -1,128 +1,147 @@
 /**
- * WebSocket channel subscription hook
- * Manages subscriptions to specific channels
+ * WebSocket Channel Hook (Pusher Implementation)
+ * Provides channel subscription management using Pusher service
+ * Updated for 2025 standards
  */
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { useWebSocket } from './useWebSocket';
-import { WebSocketChannel } from '../../types/websocket';
+import { useEffect, useCallback, useState } from 'react';
+import { pusherService } from '../../services/pusher';
+import { WebSocketChannel, WebSocketEventHandler, WebSocketMessage } from '../../types/websocket';
 
 export interface UseWebSocketChannelOptions {
-  enabled?: boolean;
   autoSubscribe?: boolean;
-  onMessage?: (message: any) => void;
-  onSubscribe?: (subscriptionId: string) => void;
-  onUnsubscribe?: (subscriptionId: string) => void;
+  filter?: (message: WebSocketMessage) => boolean;
+  onSubscribed?: () => void;
+  onUnsubscribed?: () => void;
+  onError?: (error: Error) => void;
 }
 
 export interface UseWebSocketChannelReturn {
-  subscriptionId: string | null;
   isSubscribed: boolean;
-  messages: any[];
+  messages: WebSocketMessage[];
   subscribe: () => void;
   unsubscribe: () => void;
   clearMessages: () => void;
 }
 
 export function useWebSocketChannel(
-  channel: WebSocketChannel,
+  channel: WebSocketChannel | string,
+  handler: WebSocketEventHandler,
   options: UseWebSocketChannelOptions = {}
 ): UseWebSocketChannelReturn {
-  const { subscribe, unsubscribe, isConnected } = useWebSocket();
-  const {
-    enabled = true,
-    autoSubscribe = true,
-    onMessage,
-    onSubscribe,
-    onUnsubscribe
-  } = options;
-  
+  const { autoSubscribe = true, filter, onSubscribed, onUnsubscribed, onError } = options;
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [messages, setMessages] = useState<WebSocketMessage[]>([]);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
-  
-  // Store callbacks in refs
-  const onMessageRef = useRef(onMessage);
-  const onSubscribeRef = useRef(onSubscribe);
-  const onUnsubscribeRef = useRef(onUnsubscribe);
-  
-  onMessageRef.current = onMessage;
-  onSubscribeRef.current = onSubscribe;
-  onUnsubscribeRef.current = onUnsubscribe;
-  
-  // Handle message callback
-  const handleMessage = useCallback((message: any) => {
-    setMessages(prev => [...prev, message]);
-    if (onMessageRef.current) {
-      onMessageRef.current(message);
+
+  const subscribe = useCallback(() => {
+    try {
+      const id = pusherService.subscribe(
+        channel as string,
+        (message: WebSocketMessage) => {
+          // Store message in history
+          setMessages(prev => [...prev, message]);
+          // Call the handler
+          handler(message);
+        },
+        filter
+      );
+      
+      setSubscriptionId(id);
+      setIsSubscribed(true);
+      onSubscribed?.();
+    } catch (error) {
+      onError?.(error as Error);
     }
-  }, []);
-  
-  // Subscribe to channel
-  const subscribeToChannel = useCallback(() => {
-    if (!isConnected || subscriptionId) return;
-    
-    const id = subscribe(channel, handleMessage);
-    setSubscriptionId(id);
-    
-    if (onSubscribeRef.current) {
-      onSubscribeRef.current(id);
+  }, [channel, handler, filter, onSubscribed, onError]);
+
+  const unsubscribe = useCallback(() => {
+    if (subscriptionId) {
+      pusherService.unsubscribe(subscriptionId);
+      setSubscriptionId(null);
+      setIsSubscribed(false);
+      onUnsubscribed?.();
     }
-  }, [channel, subscribe, handleMessage, isConnected, subscriptionId]);
-  
-  // Unsubscribe from channel
-  const unsubscribeFromChannel = useCallback(() => {
-    if (!subscriptionId) return;
-    
-    unsubscribe(subscriptionId);
-    const oldId = subscriptionId;
-    setSubscriptionId(null);
-    
-    if (onUnsubscribeRef.current) {
-      onUnsubscribeRef.current(oldId);
-    }
-  }, [unsubscribe, subscriptionId]);
-  
-  // Clear messages
+  }, [subscriptionId, onUnsubscribed]);
+
   const clearMessages = useCallback(() => {
     setMessages([]);
   }, []);
-  
-  // Auto-subscribe effect
+
   useEffect(() => {
-    if (!enabled || !isConnected || !autoSubscribe) return;
-    
-    subscribeToChannel();
-    
+    if (autoSubscribe) {
+      subscribe();
+    }
+
     return () => {
-      if (subscriptionId) {
-        unsubscribeFromChannel();
-      }
+      unsubscribe();
     };
-  }, [enabled, isConnected, autoSubscribe]);
-  
+  }, [autoSubscribe, subscribe, unsubscribe]);
+
   return {
-    subscriptionId,
-    isSubscribed: !!subscriptionId,
+    isSubscribed,
     messages,
-    subscribe: subscribeToChannel,
-    unsubscribe: unsubscribeFromChannel,
-    clearMessages
+    subscribe,
+    unsubscribe,
+    clearMessages,
   };
 }
 
-/**
- * Hook for subscribing to multiple channels
- */
 export function useWebSocketChannels(
-  channels: WebSocketChannel[],
-  options: Omit<UseWebSocketChannelOptions, 'autoSubscribe'> = {}
-): Record<WebSocketChannel, UseWebSocketChannelReturn> {
-  const results: Record<string, UseWebSocketChannelReturn> = {};
-  
-  channels.forEach(channel => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    results[channel] = useWebSocketChannel(channel, { ...options, autoSubscribe: true });
-  });
-  
-  return results as Record<WebSocketChannel, UseWebSocketChannelReturn>;
+  channels: (WebSocketChannel | string)[],
+  handlers: Record<string, WebSocketEventHandler>,
+  options: UseWebSocketChannelOptions = {}
+) {
+  const [subscriptions, setSubscriptions] = useState<Record<string, string>>({});
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const subscribe = useCallback(() => {
+    const newSubscriptions: Record<string, string> = {};
+    
+    channels.forEach(channel => {
+      const handler = handlers[channel as string];
+      if (handler) {
+        try {
+          const id = pusherService.subscribe(
+            channel as string,
+            handler,
+            options.filter
+          );
+          newSubscriptions[channel as string] = id;
+        } catch (error) {
+          options.onError?.(error as Error);
+        }
+      }
+    });
+
+    setSubscriptions(newSubscriptions);
+    setIsSubscribed(Object.keys(newSubscriptions).length > 0);
+    options.onSubscribed?.();
+  }, [channels, handlers, options]);
+
+  const unsubscribe = useCallback(() => {
+    Object.values(subscriptions).forEach(id => {
+      pusherService.unsubscribe(id);
+    });
+    setSubscriptions({});
+    setIsSubscribed(false);
+    options.onUnsubscribed?.();
+  }, [subscriptions, options]);
+
+  useEffect(() => {
+    if (options.autoSubscribe !== false) {
+      subscribe();
+    }
+
+    return () => {
+      unsubscribe();
+    };
+  }, [subscribe, unsubscribe, options.autoSubscribe]);
+
+  return {
+    isSubscribed,
+    subscriptions,
+    subscribe,
+    unsubscribe,
+  };
 }

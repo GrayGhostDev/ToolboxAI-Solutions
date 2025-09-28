@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/mcp/context_manager.py
-# hypothesis_version: 6.139.2
-
-[0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0, 128000, '/', 'URI cannot be empty', '_cleanup_handlers', '_temp_segments', 'categories', 'category', 'content', 'file', 'file://', 'gpt-4', 'history', 'http', 'http://', 'https', 'https://', 'id', 'importance', 'knowledge', 'max_tokens', 'mcp', 'mcp://', 'r', 'resource', 'resource://', 'segments', 'source', 'stats', 'system', 'timestamp', 'tokens', 'total_segments', 'total_tokens', 'user', 'utf-8', 'utilization', 'w', 'workspace']

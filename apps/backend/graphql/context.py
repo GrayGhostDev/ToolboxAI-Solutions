@@ -13,8 +13,7 @@ from .dataloaders import create_loaders
 
 
 async def get_context(
-    request: Request,
-    db: AsyncSession = Depends(get_async_session)
+    request: Request, db: AsyncSession = Depends(get_async_session)
 ) -> Dict[str, Any]:
     """
     Create GraphQL context with request-scoped dependencies
@@ -33,11 +32,13 @@ async def get_context(
     if auth_header:
         try:
             from apps.backend.api.auth.auth import decode_token
+
             token = auth_header.split(" ")[1] if " " in auth_header else auth_header
             user_data = decode_token(token)
             if user_data:
                 # Load user from database
                 from database.models import User
+
                 user = await db.get(User, user_data.get("sub"))
         except Exception:
             pass  # Invalid token, continue without user

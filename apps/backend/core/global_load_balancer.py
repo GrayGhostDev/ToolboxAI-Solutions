@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 class RoutingPolicy(Enum):
     """Traffic routing policies"""
+
     GEOPROXIMITY = "geoproximity"  # Route to nearest location
     WEIGHTED = "weighted"  # Distribute by weights
     LATENCY = "latency"  # Route to lowest latency
@@ -39,6 +40,7 @@ class RoutingPolicy(Enum):
 
 class HealthCheckType(Enum):
     """Health check types"""
+
     HTTP = "http"
     HTTPS = "https"
     TCP = "tcp"
@@ -47,6 +49,7 @@ class HealthCheckType(Enum):
 
 class RegionCode(Enum):
     """Cloud provider region codes"""
+
     # AWS Regions
     US_EAST_1 = "us-east-1"  # N. Virginia
     US_WEST_1 = "us-west-1"  # N. California
@@ -61,6 +64,7 @@ class RegionCode(Enum):
 @dataclass
 class HealthCheck:
     """Health check configuration"""
+
     endpoint: str
     type: HealthCheckType
     interval: int = 30
@@ -75,6 +79,7 @@ class HealthCheck:
 @dataclass
 class EndpointHealth:
     """Health status of an endpoint"""
+
     endpoint: str
     region: RegionCode
     healthy: bool = True
@@ -89,6 +94,7 @@ class EndpointHealth:
 @dataclass
 class TrafficPolicy:
     """Traffic distribution policy"""
+
     policy_type: RoutingPolicy
     endpoints: List[str]
     weights: Optional[Dict[str, int]] = None
@@ -100,6 +106,7 @@ class TrafficPolicy:
 @dataclass
 class GeographicLocation:
     """Geographic coordinates"""
+
     latitude: float
     longitude: float
     city: Optional[str] = None
@@ -110,6 +117,7 @@ class GeographicLocation:
 @dataclass
 class Region:
     """Represents a deployment region"""
+
     code: RegionCode
     name: str
     location: GeographicLocation
@@ -123,6 +131,7 @@ class Region:
 @dataclass
 class GlobalMetrics:
     """Global load balancer metrics"""
+
     total_requests: int = 0
     requests_by_region: Dict[str, int] = field(default_factory=dict)
     average_latency_ms: float = 0
@@ -155,7 +164,7 @@ class GeoIPResolver:
                 longitude=response.location.longitude,
                 city=response.city.name,
                 country=response.country.iso_code,
-                continent=response.continent.code
+                continent=response.continent.code,
             )
         except geoip2.errors.AddressNotFoundError:
             return None
@@ -183,15 +192,12 @@ class LatencyProber:
                     return (time.time() - start) * 1000
         except Exception:
             pass
-        return float('inf')
+        return float("inf")
 
     @staticmethod
     async def measure_all(endpoints: List[str]) -> Dict[str, float]:
         """Measure latency to all endpoints"""
-        tasks = [
-            LatencyProber.measure_latency(endpoint)
-            for endpoint in endpoints
-        ]
+        tasks = [LatencyProber.measure_latency(endpoint) for endpoint in endpoints]
         results = await asyncio.gather(*tasks)
         return dict(zip(endpoints, results))
 
@@ -206,7 +212,7 @@ class GlobalLoadBalancer:
         health_check_config: HealthCheck,
         enable_geo_routing: bool = True,
         enable_health_checks: bool = True,
-        dns_ttl: int = 60
+        dns_ttl: int = 60,
     ):
         self.regions = {r.code: r for r in regions}
         self.policy = policy
@@ -220,8 +226,7 @@ class GlobalLoadBalancer:
         for region in regions:
             for endpoint in region.endpoints:
                 self.endpoint_health[endpoint] = EndpointHealth(
-                    endpoint=endpoint,
-                    region=region.code
+                    endpoint=endpoint, region=region.code
                 )
 
         # GeoIP resolver
@@ -248,17 +253,11 @@ class GlobalLoadBalancer:
         logger.info("Starting global load balancer with %d regions", len(self.regions))
 
         if self.enable_health_checks:
-            self.tasks.append(
-                asyncio.create_task(self._health_check_loop())
-            )
+            self.tasks.append(asyncio.create_task(self._health_check_loop()))
 
-        self.tasks.append(
-            asyncio.create_task(self._metrics_collector())
-        )
+        self.tasks.append(asyncio.create_task(self._metrics_collector()))
 
-        self.tasks.append(
-            asyncio.create_task(self._capacity_manager())
-        )
+        self.tasks.append(asyncio.create_task(self._capacity_manager()))
 
         logger.info("Global load balancer started")
 
@@ -273,12 +272,7 @@ class GlobalLoadBalancer:
 
         logger.info("Global load balancer stopped")
 
-    async def route(
-        self,
-        client_ip: str,
-        path: str = "/",
-        method: str = "GET"
-    ) -> List[str]:
+    async def route(self, client_ip: str, path: str = "/", method: str = "GET") -> List[str]:
         """Route request to optimal endpoints"""
         start_time = time.time()
 
@@ -303,10 +297,7 @@ class GlobalLoadBalancer:
             return []
 
         # Apply routing policy
-        selected_endpoints = await self._apply_routing_policy(
-            healthy_endpoints,
-            client_location
-        )
+        selected_endpoints = await self._apply_routing_policy(healthy_endpoints, client_location)
 
         # Cache routing decision
         self.routing_cache[cache_key] = (selected_endpoints, datetime.utcnow())
@@ -332,10 +323,7 @@ class GlobalLoadBalancer:
 
     def _get_healthy_endpoints(self) -> List[str]:
         """Get list of healthy endpoints"""
-        return [
-            endpoint for endpoint, health in self.endpoint_health.items()
-            if health.healthy
-        ]
+        return [endpoint for endpoint, health in self.endpoint_health.items() if health.healthy]
 
     def _get_endpoint_region(self, endpoint: str) -> Optional[RegionCode]:
         """Get region for an endpoint"""
@@ -345,9 +333,7 @@ class GlobalLoadBalancer:
         return None
 
     async def _apply_routing_policy(
-        self,
-        endpoints: List[str],
-        client_location: Optional[GeographicLocation]
+        self, endpoints: List[str], client_location: Optional[GeographicLocation]
     ) -> List[str]:
         """Apply routing policy to select endpoints"""
 
@@ -367,14 +353,12 @@ class GlobalLoadBalancer:
             return self._route_failover(endpoints)
 
         elif self.policy.policy_type == RoutingPolicy.MULTIVALUE:
-            return endpoints[:self.policy.max_endpoints]
+            return endpoints[: self.policy.max_endpoints]
 
         return endpoints[:1]  # Default to first endpoint
 
     async def _route_geoproximity(
-        self,
-        endpoints: List[str],
-        client_location: Optional[GeographicLocation]
+        self, endpoints: List[str], client_location: Optional[GeographicLocation]
     ) -> List[str]:
         """Route based on geographic proximity"""
         if not client_location:
@@ -391,15 +375,15 @@ class GlobalLoadBalancer:
                     client_location.latitude,
                     client_location.longitude,
                     region.location.latitude,
-                    region.location.longitude
+                    region.location.longitude,
                 )
                 distances[endpoint] = distance
 
         # Sort by distance
-        sorted_endpoints = sorted(endpoints, key=lambda e: distances.get(e, float('inf')))
+        sorted_endpoints = sorted(endpoints, key=lambda e: distances.get(e, float("inf")))
 
         # Return closest endpoints
-        return sorted_endpoints[:self.policy.max_endpoints]
+        return sorted_endpoints[: self.policy.max_endpoints]
 
     async def _route_latency(self, endpoints: List[str]) -> List[str]:
         """Route based on measured latency"""
@@ -407,25 +391,24 @@ class GlobalLoadBalancer:
         latencies = await self.prober.measure_all(endpoints)
 
         # Sort by latency
-        sorted_endpoints = sorted(endpoints, key=lambda e: latencies.get(e, float('inf')))
+        sorted_endpoints = sorted(endpoints, key=lambda e: latencies.get(e, float("inf")))
 
         # Return lowest latency endpoints
-        return sorted_endpoints[:self.policy.max_endpoints]
+        return sorted_endpoints[: self.policy.max_endpoints]
 
     def _route_weighted(self, endpoints: List[str]) -> List[str]:
         """Route based on configured weights"""
         if not self.policy.weights:
-            return endpoints[:self.policy.max_endpoints]
+            return endpoints[: self.policy.max_endpoints]
 
         # Sort by weight
         sorted_endpoints = sorted(
-            endpoints,
-            key=lambda e: self.policy.weights.get(e, 1),
-            reverse=True
+            endpoints, key=lambda e: self.policy.weights.get(e, 1), reverse=True
         )
 
         # Apply weighted random selection
         import random
+
         weighted_endpoints = []
         remaining = list(sorted_endpoints)
 
@@ -443,7 +426,7 @@ class GlobalLoadBalancer:
     def _route_cost_optimized(self, endpoints: List[str]) -> List[str]:
         """Route to minimize cost while maintaining performance"""
         if not self.policy.cost_per_request:
-            return endpoints[:self.policy.max_endpoints]
+            return endpoints[: self.policy.max_endpoints]
 
         # Calculate cost-performance score
         scores = {}
@@ -455,12 +438,12 @@ class GlobalLoadBalancer:
             if health.availability > 0:
                 scores[endpoint] = cost / (health.availability / 100)
             else:
-                scores[endpoint] = float('inf')
+                scores[endpoint] = float("inf")
 
         # Sort by cost-performance score
-        sorted_endpoints = sorted(endpoints, key=lambda e: scores.get(e, float('inf')))
+        sorted_endpoints = sorted(endpoints, key=lambda e: scores.get(e, float("inf")))
 
-        return sorted_endpoints[:self.policy.max_endpoints]
+        return sorted_endpoints[: self.policy.max_endpoints]
 
     def _route_failover(self, endpoints: List[str]) -> List[str]:
         """Route with failover priority"""
@@ -475,19 +458,16 @@ class GlobalLoadBalancer:
         # All primaries failed, return any healthy endpoint
         return endpoints[:1] if endpoints else []
 
-    def _calculate_distance(
-        self,
-        lat1: float, lon1: float,
-        lat2: float, lon2: float
-    ) -> float:
+    def _calculate_distance(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         """Calculate distance between two points using Haversine formula"""
         R = 6371  # Earth's radius in kilometers
 
         dlat = math.radians(lat2 - lat1)
         dlon = math.radians(lon2 - lon1)
-        a = (math.sin(dlat / 2) ** 2 +
-             math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
-             math.sin(dlon / 2) ** 2)
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
+        )
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
         return R * c
@@ -496,10 +476,7 @@ class GlobalLoadBalancer:
         """Continuously monitor endpoint health"""
         while True:
             try:
-                tasks = [
-                    self._check_endpoint_health(endpoint)
-                    for endpoint in self.endpoint_health
-                ]
+                tasks = [self._check_endpoint_health(endpoint) for endpoint in self.endpoint_health]
                 await asyncio.gather(*tasks, return_exceptions=True)
                 await asyncio.sleep(self.health_check_config.interval)
 
@@ -571,18 +548,21 @@ class GlobalLoadBalancer:
             try:
                 for region_code, region in self.regions.items():
                     # Calculate current load percentage
-                    load_percentage = (region.current_load / region.capacity * 100
-                                     if region.capacity > 0 else 0)
+                    load_percentage = (
+                        region.current_load / region.capacity * 100 if region.capacity > 0 else 0
+                    )
 
                     # Auto-scaling logic
                     if load_percentage > 80:
-                        logger.warning("Region %s at %.1f%% capacity",
-                                     region_code.value, load_percentage)
+                        logger.warning(
+                            "Region %s at %.1f%% capacity", region_code.value, load_percentage
+                        )
                         # Trigger scale-up (would integrate with cloud provider APIs)
 
                     elif load_percentage < 20 and len(region.endpoints) > 1:
-                        logger.info("Region %s underutilized at %.1f%%",
-                                  region_code.value, load_percentage)
+                        logger.info(
+                            "Region %s underutilized at %.1f%%", region_code.value, load_percentage
+                        )
                         # Consider scale-down
 
                     # Update regional metrics
@@ -603,27 +583,29 @@ class GlobalLoadBalancer:
                 # Calculate overall health
                 healthy_count = sum(1 for h in self.endpoint_health.values() if h.healthy)
                 total_count = len(self.endpoint_health)
-                health_percentage = (healthy_count / total_count * 100
-                                    if total_count > 0 else 0)
+                health_percentage = healthy_count / total_count * 100 if total_count > 0 else 0
 
                 # Calculate average availability
                 avg_availability = (
                     sum(h.availability for h in self.endpoint_health.values()) / total_count
-                    if total_count > 0 else 0
+                    if total_count > 0
+                    else 0
                 )
 
                 # Estimate cost
                 total_requests = self.metrics.total_requests
                 self.metrics.estimated_cost = sum(
-                    (count / 1_000_000) * self.regions.get(
-                        RegionCode(region), Region(
+                    (count / 1_000_000)
+                    * self.regions.get(
+                        RegionCode(region),
+                        Region(
                             code=RegionCode.US_EAST_1,
                             name="Unknown",
                             location=GeographicLocation(0, 0),
                             endpoints=[],
                             capacity=0,
-                            cost_per_million=1.0
-                        )
+                            cost_per_million=1.0,
+                        ),
                     ).cost_per_million
                     for region, count in self.metrics.requests_by_region.items()
                 )
@@ -631,14 +613,18 @@ class GlobalLoadBalancer:
                 logger.info(
                     "Global LB metrics: requests=%d, healthy=%.1f%%, "
                     "availability=%.1f%%, latency=%.1fms, cost=$%.2f",
-                    total_requests, health_percentage, avg_availability,
-                    self.metrics.average_latency_ms, self.metrics.estimated_cost
+                    total_requests,
+                    health_percentage,
+                    avg_availability,
+                    self.metrics.average_latency_ms,
+                    self.metrics.estimated_cost,
                 )
 
                 # Log regional distribution
                 if self.metrics.requests_by_region:
-                    logger.info("Regional distribution: %s",
-                              json.dumps(self.metrics.requests_by_region))
+                    logger.info(
+                        "Regional distribution: %s", json.dumps(self.metrics.requests_by_region)
+                    )
 
                 await asyncio.sleep(60)  # Log every minute
 
@@ -653,14 +639,15 @@ class GlobalLoadBalancer:
         total = self.metrics.total_requests
         if total > 0:
             self.metrics.average_latency_ms = (
-                (self.metrics.average_latency_ms * (total - 1) + latency_ms) / total
-            )
+                self.metrics.average_latency_ms * (total - 1) + latency_ms
+            ) / total
 
     def _clean_routing_cache(self):
         """Clean expired entries from routing cache"""
         now = datetime.utcnow()
         expired_keys = [
-            key for key, (_, cached_time) in self.routing_cache.items()
+            key
+            for key, (_, cached_time) in self.routing_cache.items()
             if now - cached_time > timedelta(seconds=self.cache_ttl * 2)
         ]
         for key in expired_keys:
@@ -690,20 +677,23 @@ class GlobalLoadBalancer:
             "failovers": self.metrics.failovers,
             "errors": self.metrics.errors,
             "cache_hits": self.metrics.cache_hits,
-            "cache_hit_rate": (self.metrics.cache_hits / self.metrics.total_requests * 100
-                             if self.metrics.total_requests > 0 else 0),
+            "cache_hit_rate": (
+                self.metrics.cache_hits / self.metrics.total_requests * 100
+                if self.metrics.total_requests > 0
+                else 0
+            ),
             "estimated_cost": self.metrics.estimated_cost,
             "endpoint_health": {
                 endpoint: {
                     "healthy": health.healthy,
                     "latency_ms": health.latency_ms,
                     "availability": health.availability,
-                    "region": health.region.value
+                    "region": health.region.value,
                 }
                 for endpoint, health in self.endpoint_health.items()
             },
             "healthy_endpoints": sum(1 for h in self.endpoint_health.values() if h.healthy),
-            "total_endpoints": len(self.endpoint_health)
+            "total_endpoints": len(self.endpoint_health),
         }
 
 
@@ -724,7 +714,7 @@ class DNSRouter:
         for endpoint in endpoints:
             try:
                 # Resolve endpoint hostname to IP
-                result = await self.load_balancer.dns_resolver.query(endpoint, 'A')
+                result = await self.load_balancer.dns_resolver.query(endpoint, "A")
                 for rdata in result:
                     ips.append(rdata.address)
             except Exception as e:
@@ -741,7 +731,7 @@ class DNSRouter:
             "Type": "A",
             "SetIdentifier": "Dynamic",
             "TTL": self.load_balancer.dns_ttl,
-            "ResourceRecords": [{"Value": ip} for ip in asyncio.run(
-                self.resolve(query, client_ip)
-            )]
+            "ResourceRecords": [
+                {"Value": ip} for ip in asyncio.run(self.resolve(query, client_ip))
+            ],
         }

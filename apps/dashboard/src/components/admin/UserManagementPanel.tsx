@@ -4,63 +4,53 @@
  * Comprehensive user management interface for administrators
  */
 import React, { memo, useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import TablePagination from '@mui/material/TablePagination';
-import IconButton from '@mui/material/IconButton';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import Avatar from '@mui/material/Avatar';
-import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
-import InputAdornment from '@mui/material/InputAdornment';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import Switch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Alert from '@mui/material/Alert';
-import Tooltip from '@mui/material/Tooltip';
-import Checkbox from '@mui/material/Checkbox';
-import LinearProgress from '@mui/material/LinearProgress';
-import Badge from '@mui/material/Badge';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
+import {
+  Box,
+  Paper,
+  Text,
+  Title,
+  Table,
+  ActionIcon,
+  Button,
+  Badge,
+  Avatar,
+  Stack,
+  TextInput,
+  Menu,
+  Modal,
+  Select,
+  Switch,
+  Alert,
+  Tooltip,
+  Checkbox,
+  Progress,
+  Group,
+  useMantineTheme,
+  alpha,
+  Pagination,
+} from '@mantine/core';
 
 import {
-  Search as SearchIcon,
-  FilterList as FilterIcon,
-  MoreVert as MoreIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Block as BlockIcon,
-  CheckCircle as ActiveIcon,
-  Cancel as InactiveIcon,
-  PersonAdd as AddUserIcon,
-  Download as ExportIcon,
-  Upload as ImportIcon,
-  Send as SendIcon,
-  Lock as ResetPasswordIcon,
-  AdminPanelSettings as AdminIcon,
-  School as TeacherIcon,
-  Person as StudentIcon,
-  Groups as GroupIcon,
-  Email as EmailIcon,
-  Phone as PhoneIcon,
-} from '@mui/icons-material';
+  IconSearch as SearchIcon,
+  IconFilter as FilterIcon,
+  IconDots as MoreIcon,
+  IconEdit as EditIcon,
+  IconTrash as DeleteIcon,
+  IconBan as BlockIcon,
+  IconCircleCheck as ActiveIcon,
+  IconX as InactiveIcon,
+  IconUserPlus as AddUserIcon,
+  IconDownload as ExportIcon,
+  IconUpload as ImportIcon,
+  IconSend as SendIcon,
+  IconLock as ResetPasswordIcon,
+  IconSettings as AdminIcon,
+  IconSchool as TeacherIcon,
+  IconUser as StudentIcon,
+  IconUsers as GroupIcon,
+  IconMail as EmailIcon,
+  IconPhone as PhoneIcon,
+} from '@tabler/icons-react';
 import { format } from 'date-fns';
 import { User, UserRole } from '@/types';
 export interface ExtendedUser extends User {

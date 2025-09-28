@@ -1,0 +1,45 @@
+{
+  "enabled": true,
+  "rollout_percentage": 10.0,
+  "metrics": {
+    "request_distribution": {
+      "gpt_4_1": 90.0,
+      "gpt_5": 10.0
+    },
+    "performance_thresholds": {
+      "max_latency_ms": 5000,
+      "error_rate_threshold": 0.05,
+      "fallback_trigger_threshold": 0.1
+    },
+    "alerting": {
+      "channels": [
+        "slack",
+        "email",
+        "pagerduty"
+      ],
+      "conditions": [
+        "error_rate > 5%",
+        "fallback_rate > 10%",
+        "p99_latency > 5000ms"
+      ]
+    }
+  },
+  "dashboards": {
+    "grafana": "https://monitoring.toolboxai.com/d/gpt-migration",
+    "datadog": "https://app.datadoghq.com/dashboard/gpt-migration"
+  },
+  "logs": {
+    "structured_logging": true,
+    "log_level": "INFO",
+    "retention_days": 30
+  },
+  "rollback_triggers": {
+    "auto_rollback": true,
+    "conditions": [
+      "error_rate > 10%",
+      "customer_complaints > 5",
+      "critical_failure_detected"
+    ]
+  },
+  "configured_at": "2025-09-21T03:26:31.729504"
+}

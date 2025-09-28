@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/prompts/__init__.py
-# hypothesis_version: 6.139.2
-
-['1.0.0', 'PromptTemplateEngine', 'UserGuidanceSystem', 'WorkflowOrchestrator']

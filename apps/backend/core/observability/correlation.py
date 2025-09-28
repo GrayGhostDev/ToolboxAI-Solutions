@@ -30,23 +30,28 @@ from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapProp
 logger = logging.getLogger(__name__)
 
 # Context variables for correlation tracking
-correlation_id_var: contextvars.ContextVar[str] = contextvars.ContextVar('correlation_id', default='')
-trace_id_var: contextvars.ContextVar[str] = contextvars.ContextVar('trace_id', default='')
-span_id_var: contextvars.ContextVar[str] = contextvars.ContextVar('span_id', default='')
-user_id_var: contextvars.ContextVar[str] = contextvars.ContextVar('user_id', default='')
-request_type_var: contextvars.ContextVar[str] = contextvars.ContextVar('request_type', default='http')
+correlation_id_var: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "correlation_id", default=""
+)
+trace_id_var: contextvars.ContextVar[str] = contextvars.ContextVar("trace_id", default="")
+span_id_var: contextvars.ContextVar[str] = contextvars.ContextVar("span_id", default="")
+user_id_var: contextvars.ContextVar[str] = contextvars.ContextVar("user_id", default="")
+request_type_var: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "request_type", default="http"
+)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
 class CorrelationContext:
     """Correlation context containing all tracking information"""
+
     correlation_id: str
     trace_id: str
     span_id: str
     user_id: Optional[str] = None
-    request_type: str = 'http'
+    request_type: str = "http"
     parent_correlation_id: Optional[str] = None
     session_id: Optional[str] = None
     client_ip: Optional[str] = None
@@ -57,45 +62,45 @@ class CorrelationContext:
     def to_headers(self) -> Dict[str, str]:
         """Convert context to HTTP headers"""
         headers = {
-            'X-Correlation-ID': self.correlation_id,
-            'X-Trace-ID': self.trace_id,
-            'X-Span-ID': self.span_id,
-            'X-Request-Type': self.request_type
+            "X-Correlation-ID": self.correlation_id,
+            "X-Trace-ID": self.trace_id,
+            "X-Span-ID": self.span_id,
+            "X-Request-Type": self.request_type,
         }
 
         if self.user_id:
-            headers['X-User-ID'] = self.user_id
+            headers["X-User-ID"] = self.user_id
         if self.parent_correlation_id:
-            headers['X-Parent-Correlation-ID'] = self.parent_correlation_id
+            headers["X-Parent-Correlation-ID"] = self.parent_correlation_id
         if self.session_id:
-            headers['X-Session-ID'] = self.session_id
+            headers["X-Session-ID"] = self.session_id
 
         return headers
 
     def to_baggage(self) -> Dict[str, str]:
         """Convert context to OpenTelemetry baggage"""
         baggage_data = {
-            'correlation.id': self.correlation_id,
-            'correlation.type': self.request_type
+            "correlation.id": self.correlation_id,
+            "correlation.type": self.request_type,
         }
 
         if self.user_id:
-            baggage_data['correlation.user_id'] = self.user_id
+            baggage_data["correlation.user_id"] = self.user_id
         if self.session_id:
-            baggage_data['correlation.session_id'] = self.session_id
+            baggage_data["correlation.session_id"] = self.session_id
 
         return baggage_data
 
     def to_log_extra(self) -> Dict[str, Any]:
         """Convert context to logging extra fields"""
         return {
-            'correlation_id': self.correlation_id,
-            'trace_id': self.trace_id,
-            'span_id': self.span_id,
-            'user_id': self.user_id,
-            'request_type': self.request_type,
-            'session_id': self.session_id,
-            'client_ip': self.client_ip
+            "correlation_id": self.correlation_id,
+            "trace_id": self.trace_id,
+            "span_id": self.span_id,
+            "user_id": self.user_id,
+            "request_type": self.request_type,
+            "session_id": self.session_id,
+            "client_ip": self.client_ip,
         }
 
 
@@ -115,6 +120,7 @@ class CorrelationStore:
 
     def _start_cleanup(self):
         """Start background cleanup task"""
+
         def cleanup_worker():
             while True:
                 try:
@@ -173,7 +179,8 @@ class CorrelationStore:
         """Get all child correlation contexts"""
         with self._lock:
             return [
-                ctx for ctx in self._store.values()
+                ctx
+                for ctx in self._store.values()
                 if ctx.parent_correlation_id == parent_correlation_id
             ]
 
@@ -228,9 +235,9 @@ class CorrelationManager:
         """Create correlation context from HTTP request"""
         # Extract or generate correlation ID
         correlation_id = (
-            request.headers.get('x-correlation-id') or
-            request.headers.get('x-request-id') or
-            self.generate_correlation_id()
+            request.headers.get("x-correlation-id")
+            or request.headers.get("x-request-id")
+            or self.generate_correlation_id()
         )
 
         # Extract trace context
@@ -242,25 +249,25 @@ class CorrelationManager:
         span_id = f"{current_span.get_span_context().span_id:016x}" if current_span else ""
 
         # Extract additional context
-        user_id = request.headers.get('x-user-id')
-        session_id = request.headers.get('x-session-id')
-        parent_correlation_id = request.headers.get('x-parent-correlation-id')
+        user_id = request.headers.get("x-user-id")
+        session_id = request.headers.get("x-session-id")
+        parent_correlation_id = request.headers.get("x-parent-correlation-id")
 
         context = CorrelationContext(
             correlation_id=correlation_id,
             trace_id=trace_id,
             span_id=span_id,
             user_id=user_id,
-            request_type='http',
+            request_type="http",
             parent_correlation_id=parent_correlation_id,
             session_id=session_id,
             client_ip=request.client.host if request.client else None,
-            user_agent=request.headers.get('user-agent'),
+            user_agent=request.headers.get("user-agent"),
             metadata={
-                'method': request.method,
-                'path': str(request.url.path),
-                'query_params': str(request.query_params)
-            }
+                "method": request.method,
+                "path": str(request.url.path),
+                "query_params": str(request.query_params),
+            },
         )
 
         return context
@@ -270,9 +277,9 @@ class CorrelationManager:
         # Extract or generate correlation ID
         headers = dict(websocket.headers)
         correlation_id = (
-            headers.get('x-correlation-id') or
-            headers.get('x-request-id') or
-            self.generate_correlation_id()
+            headers.get("x-correlation-id")
+            or headers.get("x-request-id")
+            or self.generate_correlation_id()
         )
 
         # Extract trace context
@@ -287,24 +294,23 @@ class CorrelationManager:
             correlation_id=correlation_id,
             trace_id=trace_id,
             span_id=span_id,
-            user_id=headers.get('x-user-id'),
-            request_type='websocket',
-            parent_correlation_id=headers.get('x-parent-correlation-id'),
-            session_id=headers.get('x-session-id'),
+            user_id=headers.get("x-user-id"),
+            request_type="websocket",
+            parent_correlation_id=headers.get("x-parent-correlation-id"),
+            session_id=headers.get("x-session-id"),
             client_ip=websocket.client.host if websocket.client else None,
-            user_agent=headers.get('user-agent'),
-            metadata={
-                'path': str(websocket.url.path),
-                'query_params': str(websocket.query_params)
-            }
+            user_agent=headers.get("user-agent"),
+            metadata={"path": str(websocket.url.path), "query_params": str(websocket.query_params)},
         )
 
         return context
 
-    def create_child_context(self,
-                           parent_context: CorrelationContext,
-                           operation_name: str,
-                           request_type: str = 'async_task') -> CorrelationContext:
+    def create_child_context(
+        self,
+        parent_context: CorrelationContext,
+        operation_name: str,
+        request_type: str = "async_task",
+    ) -> CorrelationContext:
         """Create a child correlation context for async operations"""
         child_correlation_id = self.generate_correlation_id()
 
@@ -323,10 +329,7 @@ class CorrelationManager:
             session_id=parent_context.session_id,
             client_ip=parent_context.client_ip,
             user_agent=parent_context.user_agent,
-            metadata={
-                'operation': operation_name,
-                'parent_type': parent_context.request_type
-            }
+            metadata={"operation": operation_name, "parent_type": parent_context.request_type},
         )
 
         return child_context
@@ -342,7 +345,7 @@ class CorrelationManager:
         correlation_token = correlation_id_var.set(context.correlation_id)
         trace_token = trace_id_var.set(context.trace_id)
         span_token = span_id_var.set(context.span_id)
-        user_token = user_id_var.set(context.user_id or '')
+        user_token = user_id_var.set(context.user_id or "")
         type_token = request_type_var.set(context.request_type)
 
         # Set OpenTelemetry baggage
@@ -416,9 +419,9 @@ class CorrelationManager:
     def get_metrics(self) -> Dict[str, Any]:
         """Get correlation metrics"""
         return {
-            'active_correlations': len(self._active_correlations),
-            'total_stored': len(_correlation_store._store),
-            'correlation_types': dict(self._correlation_metrics)
+            "active_correlations": len(self._active_correlations),
+            "total_stored": len(_correlation_store._store),
+            "correlation_types": dict(self._correlation_metrics),
         }
 
 
@@ -445,7 +448,7 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
                 # Log completion
                 logger.info(
                     f"Request completed: {request.method} {request.url.path}",
-                    extra=context.to_log_extra()
+                    extra=context.to_log_extra(),
                 )
 
                 return response
@@ -454,13 +457,14 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
                 # Log error with correlation context
                 logger.error(
                     f"Request failed: {request.method} {request.url.path} - {str(e)}",
-                    extra=context.to_log_extra()
+                    extra=context.to_log_extra(),
                 )
                 raise
 
 
 def correlate_async_task(operation_name: str):
     """Decorator to correlate async tasks with parent context"""
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         async def wrapper(*args, **kwargs) -> T:
@@ -469,7 +473,7 @@ def correlate_async_task(operation_name: str):
             if parent_context:
                 # Create child context
                 child_context = correlation_manager.create_child_context(
-                    parent_context, operation_name, 'async_task'
+                    parent_context, operation_name, "async_task"
                 )
 
                 # Execute with child context
@@ -480,11 +484,13 @@ def correlate_async_task(operation_name: str):
                 return await func(*args, **kwargs)
 
         return wrapper
+
     return decorator
 
 
 def correlate_sync_task(operation_name: str):
     """Decorator to correlate sync tasks with parent context"""
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(*args, **kwargs) -> T:
@@ -493,7 +499,7 @@ def correlate_sync_task(operation_name: str):
             if parent_context:
                 # Create child context
                 child_context = correlation_manager.create_child_context(
-                    parent_context, operation_name, 'sync_task'
+                    parent_context, operation_name, "sync_task"
                 )
 
                 # Execute with child context
@@ -504,6 +510,7 @@ def correlate_sync_task(operation_name: str):
                 return func(*args, **kwargs)
 
         return wrapper
+
     return decorator
 
 
@@ -521,10 +528,7 @@ class WebSocketCorrelationManager:
         # Store in global store
         _correlation_store.store(context)
 
-        logger.info(
-            f"WebSocket connected: {websocket.url.path}",
-            extra=context.to_log_extra()
-        )
+        logger.info(f"WebSocket connected: {websocket.url.path}", extra=context.to_log_extra())
 
         return context
 
@@ -534,7 +538,7 @@ class WebSocketCorrelationManager:
         if context:
             logger.info(
                 f"WebSocket disconnected: {context.metadata.get('path', 'unknown')}",
-                extra=context.to_log_extra()
+                extra=context.to_log_extra(),
             )
 
     def get_connection_context(self, correlation_id: str) -> Optional[CorrelationContext]:
@@ -549,19 +553,23 @@ websocket_correlation_manager = WebSocketCorrelationManager()
 # Utility functions for easy access
 def get_correlation_id() -> str:
     """Get current correlation ID"""
-    return correlation_id_var.get('')
+    return correlation_id_var.get("")
+
 
 def get_trace_id() -> str:
     """Get current trace ID"""
-    return trace_id_var.get('')
+    return trace_id_var.get("")
+
 
 def get_user_id() -> str:
     """Get current user ID"""
-    return user_id_var.get('')
+    return user_id_var.get("")
+
 
 def get_correlation_context() -> Optional[CorrelationContext]:
     """Get current correlation context"""
     return correlation_manager.get_current_correlation()
+
 
 def log_with_correlation(level: int, message: str, **kwargs):
     """Log message with correlation context"""
@@ -574,17 +582,17 @@ def log_with_correlation(level: int, message: str, **kwargs):
 
 # Export main components
 __all__ = [
-    'CorrelationContext',
-    'CorrelationManager',
-    'CorrelationMiddleware',
-    'WebSocketCorrelationManager',
-    'correlate_async_task',
-    'correlate_sync_task',
-    'correlation_manager',
-    'websocket_correlation_manager',
-    'get_correlation_id',
-    'get_trace_id',
-    'get_user_id',
-    'get_correlation_context',
-    'log_with_correlation'
+    "CorrelationContext",
+    "CorrelationManager",
+    "CorrelationMiddleware",
+    "WebSocketCorrelationManager",
+    "correlate_async_task",
+    "correlate_sync_task",
+    "correlation_manager",
+    "websocket_correlation_manager",
+    "get_correlation_id",
+    "get_trace_id",
+    "get_user_id",
+    "get_correlation_context",
+    "log_with_correlation",
 ]

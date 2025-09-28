@@ -1,10 +1,7 @@
 import * as React from "react";
 import { useAppSelector } from "../../store";
 import { UserRole } from "../../types";
-import Typography from "@mui/material/Typography";
-import Alert from "@mui/material/Alert";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
+import { Text, Alert, Box, Button } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 
 interface Props {
@@ -20,11 +17,11 @@ export default function RoleGuard({ allow, children, fallback }: Props) {
 
   if (!isAuthenticated) {
     return (
-      <Box sx={{ p: 4, textAlign: "center" }}>
-        <Alert severity="warning" sx={{ mb: 2 }}>
+      <Box p={32} style={{ textAlign: "center" }}>
+        <Alert color="yellow" mb={16}>
           You must be logged in to access this page.
         </Alert>
-        <Button variant="contained" onClick={(e: React.MouseEvent) => () => navigate("/login")}>
+        <Button onClick={() => navigate("/login")}>
           Sign In
         </Button>
       </Box>
@@ -37,17 +34,17 @@ export default function RoleGuard({ allow, children, fallback }: Props) {
     }
 
     return (
-      <Box sx={{ p: 4, textAlign: "center" }}>
-        <Alert severity="error" sx={{ mb: 2 }}>
-          <Typography variant="h6" gutterBottom>
+      <Box p={32} style={{ textAlign: "center" }}>
+        <Alert color="red" mb={16}>
+          <Text size="lg" fw={600} mb={8}>
             Access Denied
-          </Typography>
-          <Typography variant="body2">
+          </Text>
+          <Text size="sm">
             You don't have permission to access this section. This page is only available for:{" "}
             {allow.join(", ")}.
-          </Typography>
+          </Text>
         </Alert>
-        <Button variant="contained" onClick={(e: React.MouseEvent) => () => navigate("/")}>
+        <Button onClick={() => navigate("/")}>
           Go to Dashboard
         </Button>
       </Box>

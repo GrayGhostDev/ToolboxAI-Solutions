@@ -36,7 +36,7 @@ class AutoReleaser:
         if GITHUB_AVAILABLE and os.getenv('GITHUB_TOKEN'):
             self.github = Github(os.getenv('GITHUB_TOKEN'))
             try:
-                self.repo = self.github.get_repo('ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment')
+                self.repo = self.github.get_repo('ToolBoxAI-Solutions/ToolboxAI-Solutions')
             except Exception as e:
                 print(f"⚠️  Could not access GitHub repo: {e}")
         

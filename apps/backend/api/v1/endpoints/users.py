@@ -19,6 +19,7 @@ parent_router = APIRouter(prefix="/api/parent", tags=["Parent"])
 
 # ==================== ADMIN ENDPOINTS ====================
 
+
 @admin_router.get("/stats/users")
 async def get_user_statistics(current_user: User = Depends(require_role("admin"))):
     """Get user statistics for admin dashboard"""
@@ -27,15 +28,11 @@ async def get_user_statistics(current_user: User = Depends(require_role("admin")
         "active_users": 1245,
         "new_users_today": 23,
         "new_users_week": 145,
-        "by_role": {
-            "teachers": 87,
-            "students": 1324,
-            "parents": 98,
-            "admins": 14
-        },
+        "by_role": {"teachers": 87, "students": 1324, "parents": 98, "admins": 14},
         "growth_rate": 12.5,
-        "active_sessions": 342
+        "active_sessions": 342,
     }
+
 
 @admin_router.get("/health")
 async def get_system_health(current_user: User = Depends(require_role("admin"))):
@@ -51,10 +48,11 @@ async def get_system_health(current_user: User = Depends(require_role("admin")))
             "database": "operational",
             "redis": "operational",
             "websocket": "operational",
-            "roblox_bridge": "operational"
+            "roblox_bridge": "operational",
         },
-        "uptime": "14d 3h 25m"
+        "uptime": "14d 3h 25m",
     }
+
 
 @admin_router.get("/activity")
 async def get_recent_activity(current_user: User = Depends(require_role("admin"))):
@@ -65,23 +63,24 @@ async def get_recent_activity(current_user: User = Depends(require_role("admin")
             "type": "user_registration",
             "message": "New teacher registered: Emily Johnson",
             "timestamp": datetime.now(timezone.utc) - timedelta(minutes=5),
-            "severity": "info"
+            "severity": "info",
         },
         {
             "id": 2,
             "type": "content_generation",
             "message": "100 new Roblox worlds generated today",
             "timestamp": datetime.now(timezone.utc) - timedelta(minutes=15),
-            "severity": "success"
+            "severity": "success",
         },
         {
             "id": 3,
             "type": "system_update",
             "message": "System backup completed successfully",
             "timestamp": datetime.now(timezone.utc) - timedelta(hours=1),
-            "severity": "info"
-        }
+            "severity": "info",
+        },
     ]
+
 
 @admin_router.get("/revenue")
 async def get_revenue_analytics(current_user: User = Depends(require_role("admin"))):
@@ -90,18 +89,15 @@ async def get_revenue_analytics(current_user: User = Depends(require_role("admin
         "monthly_revenue": 48500,
         "yearly_revenue": 425000,
         "growth_percentage": 23.5,
-        "subscription_breakdown": {
-            "basic": 320,
-            "premium": 180,
-            "enterprise": 25
-        },
+        "subscription_breakdown": {"basic": 320, "premium": 180, "enterprise": 25},
         "chart_data": [
             {"month": "Jan", "revenue": 35000},
             {"month": "Feb", "revenue": 38000},
             {"month": "Mar", "revenue": 42000},
-            {"month": "Apr", "revenue": 48500}
-        ]
+            {"month": "Apr", "revenue": 48500},
+        ],
     }
+
 
 @admin_router.get("/support/queue")
 async def get_support_queue(current_user: User = Depends(require_role("admin"))):
@@ -113,7 +109,7 @@ async def get_support_queue(current_user: User = Depends(require_role("admin")))
             "priority": "high",
             "status": "open",
             "created": datetime.now(timezone.utc) - timedelta(hours=2),
-            "user": "sarah_student"
+            "user": "sarah_student",
         },
         {
             "id": "TICKET-002",
@@ -121,9 +117,10 @@ async def get_support_queue(current_user: User = Depends(require_role("admin")))
             "priority": "medium",
             "status": "in_progress",
             "created": datetime.now(timezone.utc) - timedelta(hours=5),
-            "user": "john_teacher"
-        }
+            "user": "john_teacher",
+        },
     ]
+
 
 @admin_router.get("/metrics")
 async def get_server_metrics(current_user: User = Depends(require_role("admin"))):
@@ -134,8 +131,9 @@ async def get_server_metrics(current_user: User = Depends(require_role("admin"))
         "error_rate": 0.02,
         "cache_hit_rate": 0.85,
         "database_connections": 45,
-        "websocket_connections": 234
+        "websocket_connections": 234,
     }
+
 
 @admin_router.get("/compliance/status")
 async def get_compliance_status(current_user: User = Depends(require_role("admin"))):
@@ -146,10 +144,12 @@ async def get_compliance_status(current_user: User = Depends(require_role("admin
         "gdpr": {"status": "compliant", "last_audit": "2024-12-10"},
         "ada": {"status": "compliant", "last_audit": "2024-11-20"},
         "next_audit": "2025-02-01",
-        "pending_issues": 0
+        "pending_issues": 0,
     }
 
+
 # ==================== TEACHER ENDPOINTS ====================
+
 
 @teacher_router.get("/classes/today")
 async def get_todays_classes(current_user: User = Depends(require_role("teacher"))):
@@ -165,7 +165,7 @@ async def get_todays_classes(current_user: User = Depends(require_role("teacher"
                 "time": "9:00 AM",
                 "students": 25,
                 "room": "Room 201",
-                "status": "completed"
+                "status": "completed",
             },
             {
                 "id": "CLASS-002",
@@ -173,7 +173,7 @@ async def get_todays_classes(current_user: User = Depends(require_role("teacher"
                 "time": "10:30 AM",
                 "students": 28,
                 "room": "Lab 3",
-                "status": "completed"
+                "status": "completed",
             },
             {
                 "id": "CLASS-003",
@@ -181,7 +181,7 @@ async def get_todays_classes(current_user: User = Depends(require_role("teacher"
                 "time": "1:00 PM",
                 "students": 22,
                 "room": "Room 201",
-                "status": "upcoming"
+                "status": "upcoming",
             },
             {
                 "id": "CLASS-004",
@@ -189,10 +189,11 @@ async def get_todays_classes(current_user: User = Depends(require_role("teacher"
                 "time": "3:00 PM",
                 "students": 30,
                 "room": "Library",
-                "status": "upcoming"
-            }
-        ]
+                "status": "upcoming",
+            },
+        ],
     }
+
 
 @teacher_router.get("/progress")
 async def get_class_progress(current_user: User = Depends(require_role("teacher"))):
@@ -207,9 +208,10 @@ async def get_class_progress(current_user: User = Depends(require_role("teacher"
             {"week": "W1", "score": 72},
             {"week": "W2", "score": 75},
             {"week": "W3", "score": 77},
-            {"week": "W4", "score": 78.5}
-        ]
+            {"week": "W4", "score": 78.5},
+        ],
     }
+
 
 @teacher_router.get("/grades/pending")
 async def get_pending_grades(current_user: User = Depends(require_role("teacher"))):
@@ -221,7 +223,7 @@ async def get_pending_grades(current_user: User = Depends(require_role("teacher"
             "class": "Math 101",
             "submissions": 23,
             "due_date": datetime.now(timezone.utc) - timedelta(days=1),
-            "priority": "high"
+            "priority": "high",
         },
         {
             "id": "ASSGN-002",
@@ -229,9 +231,10 @@ async def get_pending_grades(current_user: User = Depends(require_role("teacher"
             "class": "Science 202",
             "submissions": 18,
             "due_date": datetime.now(timezone.utc) - timedelta(days=2),
-            "priority": "medium"
-        }
+            "priority": "medium",
+        },
     ]
+
 
 @teacher_router.get("/calendar")
 async def get_teacher_calendar(current_user: User = Depends(require_role("teacher"))):
@@ -242,22 +245,23 @@ async def get_teacher_calendar(current_user: User = Depends(require_role("teache
                 "id": 1,
                 "title": "Faculty Meeting",
                 "date": datetime.now(timezone.utc) + timedelta(days=1),
-                "type": "meeting"
+                "type": "meeting",
             },
             {
                 "id": 2,
                 "title": "Parent-Teacher Conference",
                 "date": datetime.now(timezone.utc) + timedelta(days=3),
-                "type": "conference"
+                "type": "conference",
             },
             {
                 "id": 3,
                 "title": "Quiz - Chapter 6",
                 "date": datetime.now(timezone.utc) + timedelta(days=5),
-                "type": "assessment"
-            }
+                "type": "assessment",
+            },
         ]
     }
+
 
 @teacher_router.get("/submissions")
 async def get_recent_submissions(current_user: User = Depends(require_role("teacher"))):
@@ -268,7 +272,7 @@ async def get_recent_submissions(current_user: User = Depends(require_role("teac
             "student": "Sarah Johnson",
             "assignment": "Math Homework #12",
             "submitted": datetime.now(timezone.utc) - timedelta(hours=2),
-            "status": "pending_review"
+            "status": "pending_review",
         },
         {
             "id": 2,
@@ -276,11 +280,13 @@ async def get_recent_submissions(current_user: User = Depends(require_role("teac
             "assignment": "Science Project",
             "submitted": datetime.now(timezone.utc) - timedelta(hours=5),
             "status": "graded",
-            "score": 92
-        }
+            "score": 92,
+        },
     ]
 
+
 # ==================== STUDENT ENDPOINTS ====================
+
 
 @student_router.get("/xp")
 async def get_student_xp(current_user: User = Depends(require_role("student"))):
@@ -293,11 +299,24 @@ async def get_student_xp(current_user: User = Depends(require_role("student"))):
         "rank_in_class": 5,
         "rank_in_school": 42,
         "recent_xp_gains": [
-            {"source": "Quiz completion", "xp": 100, "date": datetime.now(timezone.utc) - timedelta(hours=2)},
-            {"source": "Perfect attendance", "xp": 50, "date": datetime.now(timezone.utc) - timedelta(days=1)},
-            {"source": "Roblox challenge", "xp": 200, "date": datetime.now(timezone.utc) - timedelta(days=2)}
-        ]
+            {
+                "source": "Quiz completion",
+                "xp": 100,
+                "date": datetime.now(timezone.utc) - timedelta(hours=2),
+            },
+            {
+                "source": "Perfect attendance",
+                "xp": 50,
+                "date": datetime.now(timezone.utc) - timedelta(days=1),
+            },
+            {
+                "source": "Roblox challenge",
+                "xp": 200,
+                "date": datetime.now(timezone.utc) - timedelta(days=2),
+            },
+        ],
     }
+
 
 @student_router.get("/assignments/due")
 async def get_assignments_due(current_user: User = Depends(require_role("student"))):
@@ -310,7 +329,7 @@ async def get_assignments_due(current_user: User = Depends(require_role("student
             "due_date": datetime.now(timezone.utc) + timedelta(days=2),
             "estimated_time": "45 minutes",
             "priority": "high",
-            "xp_reward": 150
+            "xp_reward": 150,
         },
         {
             "id": "HW-002",
@@ -319,9 +338,10 @@ async def get_assignments_due(current_user: User = Depends(require_role("student
             "due_date": datetime.now(timezone.utc) + timedelta(days=4),
             "estimated_time": "1 hour",
             "priority": "medium",
-            "xp_reward": 200
-        }
+            "xp_reward": 200,
+        },
     ]
+
 
 @student_router.get("/achievements/recent")
 async def get_recent_achievements(current_user: User = Depends(require_role("student"))):
@@ -333,7 +353,7 @@ async def get_recent_achievements(current_user: User = Depends(require_role("stu
             "description": "Complete 5 lessons in one day",
             "icon": "🚀",
             "earned_date": datetime.now(timezone.utc) - timedelta(days=1),
-            "xp_bonus": 100
+            "xp_bonus": 100,
         },
         {
             "id": 2,
@@ -341,9 +361,10 @@ async def get_recent_achievements(current_user: User = Depends(require_role("stu
             "description": "100% attendance for a week",
             "icon": "⭐",
             "earned_date": datetime.now(timezone.utc) - timedelta(days=3),
-            "xp_bonus": 150
-        }
+            "xp_bonus": 150,
+        },
     ]
+
 
 @student_router.get("/rank")
 async def get_student_rank(current_user: User = Depends(require_role("student"))):
@@ -353,8 +374,9 @@ async def get_student_rank(current_user: User = Depends(require_role("student"))
         "total_students": 28,
         "percentile": 82,
         "trend": "improving",
-        "change_from_last_week": 2
+        "change_from_last_week": 2,
     }
+
 
 @student_router.get("/path")
 async def get_learning_path(current_user: User = Depends(require_role("student"))):
@@ -365,8 +387,9 @@ async def get_learning_path(current_user: User = Depends(require_role("student")
         "completed_lessons": 13,
         "total_lessons": 20,
         "next_lesson": "Solving Equations",
-        "estimated_completion": datetime.now(timezone.utc) + timedelta(days=7)
+        "estimated_completion": datetime.now(timezone.utc) + timedelta(days=7),
     }
+
 
 @student_router.get("/roblox/worlds")
 async def get_available_worlds(current_user: User = Depends(require_role("student"))):
@@ -379,7 +402,7 @@ async def get_available_worlds(current_user: User = Depends(require_role("studen
             "difficulty": "medium",
             "xp_reward": 300,
             "estimated_time": "30 minutes",
-            "players_online": 45
+            "players_online": 45,
         },
         {
             "id": "WORLD-002",
@@ -388,11 +411,13 @@ async def get_available_worlds(current_user: User = Depends(require_role("studen
             "difficulty": "easy",
             "xp_reward": 200,
             "estimated_time": "20 minutes",
-            "players_online": 67
-        }
+            "players_online": 67,
+        },
     ]
 
+
 # ==================== PARENT ENDPOINTS ====================
+
 
 @parent_router.get("/children/overview")
 async def get_children_overview(current_user: User = Depends(require_role("parent"))):
@@ -406,7 +431,7 @@ async def get_children_overview(current_user: User = Depends(require_role("paren
                 "school": "Lincoln Middle School",
                 "overall_grade": "B+",
                 "attendance": 96,
-                "recent_activity": "Completed Math Quiz - Score: 88%"
+                "recent_activity": "Completed Math Quiz - Score: 88%",
             },
             {
                 "id": "CHILD-002",
@@ -415,10 +440,11 @@ async def get_children_overview(current_user: User = Depends(require_role("paren
                 "school": "Lincoln Elementary",
                 "overall_grade": "A-",
                 "attendance": 98,
-                "recent_activity": "Earned 'Star Student' badge"
-            }
+                "recent_activity": "Earned 'Star Student' badge",
+            },
         ]
     }
+
 
 @parent_router.get("/grades/recent")
 async def get_recent_grades(current_user: User = Depends(require_role("parent"))):
@@ -430,7 +456,7 @@ async def get_recent_grades(current_user: User = Depends(require_role("parent"))
             "grade": "B+",
             "score": 88,
             "date": datetime.now(timezone.utc) - timedelta(days=2),
-            "teacher_comment": "Good improvement!"
+            "teacher_comment": "Good improvement!",
         },
         {
             "child": "Mike Johnson",
@@ -438,9 +464,10 @@ async def get_recent_grades(current_user: User = Depends(require_role("parent"))
             "grade": "A",
             "score": 95,
             "date": datetime.now(timezone.utc) - timedelta(days=3),
-            "teacher_comment": "Excellent work!"
-        }
+            "teacher_comment": "Excellent work!",
+        },
     ]
+
 
 @parent_router.get("/events")
 async def get_upcoming_events(current_user: User = Depends(require_role("parent"))):
@@ -451,16 +478,17 @@ async def get_upcoming_events(current_user: User = Depends(require_role("parent"
             "title": "Parent-Teacher Conference",
             "date": datetime.now(timezone.utc) + timedelta(days=5),
             "location": "School Auditorium",
-            "type": "conference"
+            "type": "conference",
         },
         {
             "id": 2,
             "title": "Science Fair",
             "date": datetime.now(timezone.utc) + timedelta(days=10),
             "location": "Gymnasium",
-            "type": "event"
-        }
+            "type": "event",
+        },
     ]
+
 
 @parent_router.get("/attendance/summary")
 async def get_attendance_summary(current_user: User = Depends(require_role("parent"))):
@@ -471,16 +499,17 @@ async def get_attendance_summary(current_user: User = Depends(require_role("pare
             "absent": 7,
             "tardy": 3,
             "percentage": 96,
-            "trend": "stable"
+            "trend": "stable",
         },
         "Mike Johnson": {
             "present": 176,
             "absent": 3,
             "tardy": 1,
             "percentage": 98,
-            "trend": "improving"
-        }
+            "trend": "improving",
+        },
     }
+
 
 @parent_router.get("/progress/chart")
 async def get_progress_chart(current_user: User = Depends(require_role("parent"))):
@@ -490,15 +519,16 @@ async def get_progress_chart(current_user: User = Depends(require_role("parent")
             "math": [85, 87, 88, 88],
             "science": [90, 89, 91, 92],
             "english": [82, 84, 85, 86],
-            "history": [88, 88, 89, 90]
+            "history": [88, 88, 89, 90],
         },
         "Mike Johnson": {
             "math": [92, 93, 94, 95],
             "science": [94, 95, 95, 96],
             "english": [89, 90, 91, 91],
-            "art": [95, 96, 96, 97]
-        }
+            "art": [95, 96, 96, 97],
+        },
     }
+
 
 # Create a main router that combines all user routers
 router = APIRouter()
@@ -506,6 +536,7 @@ router.include_router(admin_router)
 router.include_router(teacher_router)
 router.include_router(student_router)
 router.include_router(parent_router)
+
 
 # Function to register all user routers
 def register_user_routers(app):

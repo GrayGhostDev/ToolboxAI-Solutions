@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/database/roblox_models.py
-# hypothesis_version: 6.139.2
-
-[0.0, 100, 'AgentTask', 'Base', 'PluginRequest', 'QuizTemplate', 'RobloxAchievement', 'RobloxContent', 'RobloxDatabaseHelper', 'RobloxDeployment', 'RobloxQuizResult', 'RobloxSession', 'RobloxTemplate', 'StudentProgress', 'TerrainTemplate', 'User', 'active', 'agent_tasks', 'agent_tasks.id', 'category', 'completed', 'config', 'created_at', 'event_type', 'extend_existing', 'grade_level', 'idx_agent_task_type', 'medium', 'milestones', 'model', 'parent_task', 'pending', 'percentage', 'plugin_requests', 'quiz', 'quiz_templates', 'quiz_type', 'roblox_content.id', 'script', 'script_type', 'status', 'subject', 'terrain', 'terrain_templates', 'terrain_type', 'time_spent', 'ui', 'user_id', 'users.id']

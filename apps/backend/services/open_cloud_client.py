@@ -16,8 +16,10 @@ from apps.backend.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class AssetType(str, Enum):
     """Roblox asset types for Open Cloud API"""
+
     MODEL = "Model"
     DECAL = "Decal"
     AUDIO = "Audio"
@@ -27,21 +29,27 @@ class AssetType(str, Enum):
     FONT_FAMILY = "FontFamily"
     VIDEO = "Video"
 
+
 class CreationContext(BaseModel):
     """Asset creation context"""
+
     creator_type: str = Field(default="User", description="Creator type (User or Group)")
     creator_id: str = Field(..., description="Creator ID")
     expected_price: int = Field(default=0, description="Expected price (0 for free)")
 
+
 class AssetDescription(BaseModel):
     """Asset description for creation"""
+
     asset_type: AssetType
     display_name: str = Field(..., max_length=50)
     description: str = Field(..., max_length=1000)
     creation_context: CreationContext
 
+
 class DataStoreEntry(BaseModel):
     """DataStore entry model"""
+
     key: str
     value: Any
     metadata: Optional[Dict[str, Any]] = None
@@ -50,16 +58,21 @@ class DataStoreEntry(BaseModel):
     updated_time: Optional[datetime] = None
     version: Optional[str] = None
 
+
 class MessagingServiceMessage(BaseModel):
     """Message for Universe Messaging Service"""
+
     topic: str
     message: Dict[str, Any]
 
+
 class PlacePublishRequest(BaseModel):
     """Request to publish a place"""
+
     universe_id: str
     place_id: str
     version_type: str = Field(default="Published", description="Published or Saved")
+
 
 class OpenCloudAPIClient:
     """
@@ -68,13 +81,10 @@ class OpenCloudAPIClient:
     """
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or getattr(settings, 'ROBLOX_API_KEY', '')
+        self.api_key = api_key or getattr(settings, "ROBLOX_API_KEY", "")
         self.base_url = "https://apis.roblox.com"
         self.session: Optional[aiohttp.ClientSession] = None
-        self.headers = {
-            "x-api-key": self.api_key,
-            "Content-Type": "application/json"
-        }
+        self.headers = {"x-api-key": self.api_key, "Content-Type": "application/json"}
 
     async def __aenter__(self):
         """Async context manager entry"""
@@ -112,25 +122,29 @@ class OpenCloudAPIClient:
             "description": asset.description,
             "creationContext": {
                 "creator": {
-                    "userId": asset.creation_context.creator_id
-                    if asset.creation_context.creator_type == "User"
-                    else None,
-                    "groupId": asset.creation_context.creator_id
-                    if asset.creation_context.creator_type == "Group"
-                    else None
+                    "userId": (
+                        asset.creation_context.creator_id
+                        if asset.creation_context.creator_type == "User"
+                        else None
+                    ),
+                    "groupId": (
+                        asset.creation_context.creator_id
+                        if asset.creation_context.creator_type == "Group"
+                        else None
+                    ),
                 },
-                "expectedPrice": asset.creation_context.expected_price
-            }
+                "expectedPrice": asset.creation_context.expected_price,
+            },
         }
 
-        form_data.add_field('request', json.dumps(config), content_type='application/json')
-        form_data.add_field('fileContent', file_content, filename='asset.rbxm')
+        form_data.add_field("request", json.dumps(config), content_type="application/json")
+        form_data.add_field("fileContent", file_content, filename="asset.rbxm")
 
         try:
             async with self.session.post(
                 f"{self.base_url}/cloud/v2/assets",
                 data=form_data,
-                headers={"x-api-key": self.api_key}  # Don't include Content-Type for multipart
+                headers={"x-api-key": self.api_key},  # Don't include Content-Type for multipart
             ) as response:
                 if response.status != 200:
                     error_text = await response.text()
@@ -160,13 +174,13 @@ class OpenCloudAPIClient:
             self.session = aiohttp.ClientSession()
 
         form_data = aiohttp.FormData()
-        form_data.add_field('fileContent', file_content, filename='asset.rbxm')
+        form_data.add_field("fileContent", file_content, filename="asset.rbxm")
 
         try:
             async with self.session.patch(
                 f"{self.base_url}/cloud/v2/assets/{asset_id}",
                 data=form_data,
-                headers={"x-api-key": self.api_key}
+                headers={"x-api-key": self.api_key},
             ) as response:
                 if response.status != 200:
                     error_text = await response.text()
@@ -196,8 +210,7 @@ class OpenCloudAPIClient:
 
         try:
             async with self.session.get(
-                f"{self.base_url}/cloud/v2/assets/{asset_id}",
-                headers=self.headers
+                f"{self.base_url}/cloud/v2/assets/{asset_id}", headers=self.headers
             ) as response:
                 if response.status != 200:
                     error_text = await response.text()
@@ -213,11 +226,7 @@ class OpenCloudAPIClient:
     # ==================== DataStore v2 ====================
 
     async def get_datastore_entry(
-        self,
-        universe_id: str,
-        datastore_name: str,
-        key: str,
-        scope: str = "global"
+        self, universe_id: str, datastore_name: str, key: str, scope: str = "global"
     ) -> DataStoreEntry:
         """
         Get entry from DataStore
@@ -238,7 +247,7 @@ class OpenCloudAPIClient:
             async with self.session.get(
                 f"{self.base_url}/cloud/v2/universes/{universe_id}/data-stores/{datastore_name}/entries/{key}",
                 params={"scope": scope},
-                headers=self.headers
+                headers=self.headers,
             ) as response:
                 if response.status == 404:
                     return None
@@ -255,7 +264,7 @@ class OpenCloudAPIClient:
                     user_ids=data.get("userIds"),
                     created_time=data.get("createdTime"),
                     updated_time=data.get("updatedTime"),
-                    version=data.get("version")
+                    version=data.get("version"),
                 )
 
         except Exception as e:
@@ -263,11 +272,7 @@ class OpenCloudAPIClient:
             raise
 
     async def set_datastore_entry(
-        self,
-        universe_id: str,
-        datastore_name: str,
-        entry: DataStoreEntry,
-        scope: str = "global"
+        self, universe_id: str, datastore_name: str, entry: DataStoreEntry, scope: str = "global"
     ) -> Dict[str, Any]:
         """
         Set entry in DataStore
@@ -287,7 +292,7 @@ class OpenCloudAPIClient:
         payload = {
             "value": entry.value,
             "userIds": entry.user_ids or [],
-            "metadata": entry.metadata or {}
+            "metadata": entry.metadata or {},
         }
 
         try:
@@ -295,7 +300,7 @@ class OpenCloudAPIClient:
                 f"{self.base_url}/cloud/v2/universes/{universe_id}/data-stores/{datastore_name}/entries/{entry.key}",
                 params={"scope": scope},
                 json=payload,
-                headers=self.headers
+                headers=self.headers,
             ) as response:
                 if response.status not in [200, 201]:
                     error_text = await response.text()
@@ -311,11 +316,7 @@ class OpenCloudAPIClient:
             raise
 
     async def delete_datastore_entry(
-        self,
-        universe_id: str,
-        datastore_name: str,
-        key: str,
-        scope: str = "global"
+        self, universe_id: str, datastore_name: str, key: str, scope: str = "global"
     ) -> bool:
         """
         Delete entry from DataStore
@@ -336,7 +337,7 @@ class OpenCloudAPIClient:
             async with self.session.delete(
                 f"{self.base_url}/cloud/v2/universes/{universe_id}/data-stores/{datastore_name}/entries/{key}",
                 params={"scope": scope},
-                headers=self.headers
+                headers=self.headers,
             ) as response:
                 if response.status != 204:
                     error_text = await response.text()
@@ -358,7 +359,7 @@ class OpenCloudAPIClient:
         datastore_name: str,
         scope: str = "global",
         order: str = "desc",
-        limit: int = 10
+        limit: int = 10,
     ) -> List[DataStoreEntry]:
         """
         Get entries from Ordered DataStore (for leaderboards)
@@ -380,7 +381,7 @@ class OpenCloudAPIClient:
             async with self.session.get(
                 f"{self.base_url}/cloud/v2/universes/{universe_id}/ordered-data-stores/{datastore_name}/entries",
                 params={"scope": scope, "order": order, "limit": limit},
-                headers=self.headers
+                headers=self.headers,
             ) as response:
                 if response.status != 200:
                     error_text = await response.text()
@@ -390,11 +391,13 @@ class OpenCloudAPIClient:
                 data = await response.json()
                 entries = []
                 for item in data.get("entries", []):
-                    entries.append(DataStoreEntry(
-                        key=item.get("key"),
-                        value=item.get("value"),
-                        metadata=item.get("metadata")
-                    ))
+                    entries.append(
+                        DataStoreEntry(
+                            key=item.get("key"),
+                            value=item.get("value"),
+                            metadata=item.get("metadata"),
+                        )
+                    )
 
                 return entries
 
@@ -405,9 +408,7 @@ class OpenCloudAPIClient:
     # ==================== Universe Messaging Service ====================
 
     async def publish_message(
-        self,
-        universe_id: str,
-        message: MessagingServiceMessage
+        self, universe_id: str, message: MessagingServiceMessage
     ) -> Dict[str, Any]:
         """
         Publish message to Universe Messaging Service
@@ -424,14 +425,14 @@ class OpenCloudAPIClient:
 
         payload = {
             "topic": message.topic,
-            "message": json.dumps(message.message)  # Message must be JSON string
+            "message": json.dumps(message.message),  # Message must be JSON string
         }
 
         try:
             async with self.session.post(
                 f"{self.base_url}/cloud/v2/universes/{universe_id}/messaging-service/publish",
                 json=payload,
-                headers=self.headers
+                headers=self.headers,
             ) as response:
                 if response.status != 200:
                     error_text = await response.text()
@@ -461,15 +462,13 @@ class OpenCloudAPIClient:
         if not self.session:
             self.session = aiohttp.ClientSession()
 
-        payload = {
-            "versionType": request.version_type
-        }
+        payload = {"versionType": request.version_type}
 
         try:
             async with self.session.post(
                 f"{self.base_url}/cloud/v2/universes/{request.universe_id}/places/{request.place_id}/versions",
                 json=payload,
-                headers=self.headers
+                headers=self.headers,
             ) as response:
                 if response.status != 200:
                     error_text = await response.text()
@@ -487,8 +486,7 @@ class OpenCloudAPIClient:
     # ==================== Batch Operations ====================
 
     async def batch_create_assets(
-        self,
-        assets: List[tuple[AssetDescription, bytes]]
+        self, assets: List[tuple[AssetDescription, bytes]]
     ) -> List[Dict[str, Any]]:
         """
         Create multiple assets in batch
@@ -511,10 +509,7 @@ class OpenCloudAPIClient:
         return results
 
     async def batch_set_datastore_entries(
-        self,
-        universe_id: str,
-        datastore_name: str,
-        entries: List[DataStoreEntry]
+        self, universe_id: str, datastore_name: str, entries: List[DataStoreEntry]
     ) -> List[Dict[str, Any]]:
         """
         Set multiple datastore entries in batch
@@ -530,15 +525,14 @@ class OpenCloudAPIClient:
         results = []
         for entry in entries:
             try:
-                result = await self.set_datastore_entry(
-                    universe_id, datastore_name, entry
-                )
+                result = await self.set_datastore_entry(universe_id, datastore_name, entry)
                 results.append(result)
             except Exception as e:
                 logger.error(f"Failed to set entry {entry.key}: {e}")
                 results.append({"error": str(e), "key": entry.key})
 
         return results
+
 
 # Global instance
 open_cloud_client = OpenCloudAPIClient()

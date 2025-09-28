@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 # Path to GraphQL schema files
 SCHEMA_PATH = Path(__file__).parent.parent.parent.parent / "schema"
 
+
 def load_graphql_schema():
     """Load GraphQL schema from .graphql files"""
     try:
@@ -67,7 +68,7 @@ def create_graphql_schema():
         directives={
             "auth": AuthDirective,
             "rateLimit": RateLimitDirective,
-        }
+        },
     )
 
     logger.info("GraphQL schema created successfully")
@@ -78,13 +79,12 @@ def error_formatter(error: Exception, debug: bool = False) -> Dict[str, Any]:
     """Format GraphQL errors for response"""
     formatted = {
         "message": str(error),
-        "extensions": {
-            "code": getattr(error, "code", "INTERNAL_ERROR")
-        }
+        "extensions": {"code": getattr(error, "code", "INTERNAL_ERROR")},
     }
 
     if debug:
         import traceback
+
         formatted["extensions"]["traceback"] = traceback.format_exc()
 
     return formatted

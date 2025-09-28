@@ -20,13 +20,13 @@ from core.agents.master_orchestrator import (
     OrchestratorConfig,
     AgentSystemType,
     TaskPriority,
-    TaskStatus
+    TaskStatus,
 )
 from core.agents.agent_registry import AgentRegistry, AgentFactory
 from core.agents.worktree_coordinator import (
     WorktreeAgentCoordinator,
     WorktreeTaskType,
-    TaskDistributionStrategy as DistributionStrategy
+    TaskDistributionStrategy as DistributionStrategy,
 )
 from core.agents.github_agents.resource_monitor_agent import ResourceMonitorAgent
 
@@ -45,8 +45,10 @@ _resource_monitor: Optional[ResourceMonitorAgent] = None
 
 # =================== Pydantic Models ===================
 
+
 class TaskSubmission(BaseModel):
     """Request model for task submission."""
+
     agent_type: AgentSystemType
     task_data: Dict[str, Any]
     priority: TaskPriority = TaskPriority.MEDIUM
@@ -55,6 +57,7 @@ class TaskSubmission(BaseModel):
 
 class TaskResponse(BaseModel):
     """Response model for task operations."""
+
     task_id: str
     status: TaskStatus
     agent_type: str
@@ -65,6 +68,7 @@ class TaskResponse(BaseModel):
 
 class AgentInfo(BaseModel):
     """Information about a registered agent."""
+
     name: str
     category: str
     description: str
@@ -75,6 +79,7 @@ class AgentInfo(BaseModel):
 
 class SystemStatus(BaseModel):
     """Overall system status."""
+
     orchestrator: Dict[str, Any]
     agents: Dict[str, int]
     tasks: Dict[str, int]
@@ -84,6 +89,7 @@ class SystemStatus(BaseModel):
 
 class WorktreeTask(BaseModel):
     """Request model for worktree task distribution."""
+
     task_type: WorktreeTaskType
     description: str
     requirements: List[str] = Field(default_factory=list)
@@ -93,6 +99,7 @@ class WorktreeTask(BaseModel):
 
 # =================== Initialization ===================
 
+
 async def get_orchestrator() -> MasterOrchestrator:
     """Get or create the orchestrator instance."""
     global _orchestrator
@@ -101,7 +108,7 @@ async def get_orchestrator() -> MasterOrchestrator:
             max_agents_per_type=5,
             enable_health_checks=True,
             health_check_interval=30,
-            enable_metrics=True
+            enable_metrics=True,
         )
         _orchestrator = MasterOrchestrator(config)
         await _orchestrator.start()
@@ -144,6 +151,7 @@ async def get_resource_monitor() -> ResourceMonitorAgent:
     global _resource_monitor
     if _resource_monitor is None:
         from core.agents.base_agent import AgentConfig
+
         config = AgentConfig(name="ResourceMonitor")
         _resource_monitor = ResourceMonitorAgent(config)
         logger.info("Resource Monitor initialized")
@@ -152,11 +160,12 @@ async def get_resource_monitor() -> ResourceMonitorAgent:
 
 # =================== API Endpoints ===================
 
+
 @router.post("/submit", response_model=TaskResponse)
 async def submit_task(
     submission: TaskSubmission,
     background_tasks: BackgroundTasks,
-    orchestrator: MasterOrchestrator = Depends(get_orchestrator)
+    orchestrator: MasterOrchestrator = Depends(get_orchestrator),
 ) -> TaskResponse:
     """
     Submit a task to the orchestrator for processing.
@@ -167,7 +176,7 @@ async def submit_task(
         task_id = await orchestrator.submit_task(
             agent_type=submission.agent_type,
             task_data=submission.task_data,
-            priority=submission.priority
+            priority=submission.priority,
         )
 
         # Get task status
@@ -178,7 +187,7 @@ async def submit_task(
             status=status.get("status", TaskStatus.PENDING),
             agent_type=submission.agent_type.value,
             created_at=datetime.now(),
-            message=f"Task {task_id} submitted successfully"
+            message=f"Task {task_id} submitted successfully",
         )
 
     except Exception as e:
@@ -188,8 +197,7 @@ async def submit_task(
 
 @router.get("/status/{task_id}", response_model=TaskResponse)
 async def get_task_status(
-    task_id: str,
-    orchestrator: MasterOrchestrator = Depends(get_orchestrator)
+    task_id: str, orchestrator: MasterOrchestrator = Depends(get_orchestrator)
 ) -> TaskResponse:
     """
     Get the status of a submitted task.
@@ -206,7 +214,7 @@ async def get_task_status(
             agent_type=status.get("agent_type", "unknown"),
             created_at=status.get("created_at", datetime.now()),
             message=status.get("message"),
-            result=status.get("result")
+            result=status.get("result"),
         )
 
     except HTTPException:
@@ -218,8 +226,7 @@ async def get_task_status(
 
 @router.get("/agents", response_model=List[AgentInfo])
 async def list_agents(
-    category: Optional[str] = None,
-    registry: AgentRegistry = Depends(get_registry)
+    category: Optional[str] = None, registry: AgentRegistry = Depends(get_registry)
 ) -> List[AgentInfo]:
     """
     List all registered agents, optionally filtered by category.
@@ -231,14 +238,16 @@ async def list_agents(
             if category and metadata.category.value != category:
                 continue
 
-            agents.append(AgentInfo(
-                name=name,
-                category=metadata.category.value,
-                description=metadata.description,
-                capabilities=[cap.value for cap in metadata.capabilities],
-                status="available",  # All registered agents are considered available
-                metrics={}  # No per-agent metrics in metadata
-            ))
+            agents.append(
+                AgentInfo(
+                    name=name,
+                    category=metadata.category.value,
+                    description=metadata.description,
+                    capabilities=[cap.value for cap in metadata.capabilities],
+                    status="available",  # All registered agents are considered available
+                    metrics={},  # No per-agent metrics in metadata
+                )
+            )
 
         return agents
 
@@ -251,7 +260,7 @@ async def list_agents(
 async def get_system_status(
     orchestrator: MasterOrchestrator = Depends(get_orchestrator),
     registry: AgentRegistry = Depends(get_registry),
-    resource_monitor: ResourceMonitorAgent = Depends(get_resource_monitor)
+    resource_monitor: ResourceMonitorAgent = Depends(get_resource_monitor),
 ) -> SystemStatus:
     """
     Get comprehensive system status including orchestrator, agents, and resources.
@@ -271,7 +280,7 @@ async def get_system_status(
             "pending": orch_stats.get("queued_tasks", 0),
             "active": orch_stats.get("active_tasks", 0),
             "completed": orch_stats.get("completed_tasks", 0),
-            "failed": orch_stats.get("failed_tasks", 0)
+            "failed": orch_stats.get("failed_tasks", 0),
         }
 
         # Get resource snapshot
@@ -282,11 +291,11 @@ async def get_system_status(
             orchestrator={
                 "is_running": orchestrator.is_running,
                 "uptime": orch_stats.get("uptime", 0),
-                "total_processed": orch_stats.get("total_tasks_processed", 0)
+                "total_processed": orch_stats.get("total_tasks_processed", 0),
             },
             agents=agent_counts,
             tasks=task_stats,
-            resources=resources.get("snapshot", {})
+            resources=resources.get("snapshot", {}),
         )
 
     except Exception as e:
@@ -296,8 +305,7 @@ async def get_system_status(
 
 @router.post("/worktree/distribute", response_model=TaskResponse)
 async def distribute_worktree_task(
-    task: WorktreeTask,
-    coordinator: WorktreeAgentCoordinator = Depends(get_worktree_coordinator)
+    task: WorktreeTask, coordinator: WorktreeAgentCoordinator = Depends(get_worktree_coordinator)
 ) -> TaskResponse:
     """
     Distribute a task across available worktrees.
@@ -308,7 +316,7 @@ async def distribute_worktree_task(
             description=task.description,
             requirements=task.requirements,
             files=task.files,
-            strategy=task.strategy
+            strategy=task.strategy,
         )
 
         return TaskResponse(
@@ -316,7 +324,7 @@ async def distribute_worktree_task(
             status=TaskStatus.DISTRIBUTED,
             agent_type="worktree",
             created_at=datetime.now(),
-            message=f"Task distributed to worktrees using {task.strategy.value} strategy"
+            message=f"Task distributed to worktrees using {task.strategy.value} strategy",
         )
 
     except Exception as e:
@@ -326,7 +334,7 @@ async def distribute_worktree_task(
 
 @router.get("/worktree/sessions")
 async def get_worktree_sessions(
-    coordinator: WorktreeAgentCoordinator = Depends(get_worktree_coordinator)
+    coordinator: WorktreeAgentCoordinator = Depends(get_worktree_coordinator),
 ) -> Dict[str, Any]:
     """
     Get information about active worktree sessions.
@@ -341,7 +349,7 @@ async def get_worktree_sessions(
 
 @router.get("/resources/monitor")
 async def monitor_resources(
-    monitor: ResourceMonitorAgent = Depends(get_resource_monitor)
+    monitor: ResourceMonitorAgent = Depends(get_resource_monitor),
 ) -> Dict[str, Any]:
     """
     Get current resource utilization snapshot.
@@ -363,7 +371,7 @@ async def monitor_resources(
 
 @router.get("/resources/alerts")
 async def get_resource_alerts(
-    monitor: ResourceMonitorAgent = Depends(get_resource_monitor)
+    monitor: ResourceMonitorAgent = Depends(get_resource_monitor),
 ) -> Dict[str, Any]:
     """
     Get active resource alerts.
@@ -385,7 +393,7 @@ async def get_resource_alerts(
 
 @router.post("/resources/optimize")
 async def optimize_resources(
-    monitor: ResourceMonitorAgent = Depends(get_resource_monitor)
+    monitor: ResourceMonitorAgent = Depends(get_resource_monitor),
 ) -> Dict[str, Any]:
     """
     Apply resource optimization recommendations.
@@ -407,7 +415,7 @@ async def optimize_resources(
 
 @router.delete("/shutdown")
 async def shutdown_orchestrator(
-    orchestrator: MasterOrchestrator = Depends(get_orchestrator)
+    orchestrator: MasterOrchestrator = Depends(get_orchestrator),
 ) -> Dict[str, str]:
     """
     Gracefully shutdown the orchestrator.
@@ -432,6 +440,7 @@ async def shutdown_orchestrator(
 
 # =================== WebSocket Endpoint (Optional) ===================
 
+
 @router.websocket("/ws")
 async def websocket_endpoint(websocket):
     """
@@ -452,11 +461,9 @@ async def websocket_endpoint(websocket):
                 while True:
                     status = await orchestrator.get_task_status(task_id)
                     if status:
-                        await websocket.send_json({
-                            "type": "status_update",
-                            "task_id": task_id,
-                            "status": status
-                        })
+                        await websocket.send_json(
+                            {"type": "status_update", "task_id": task_id, "status": status}
+                        )
 
                         if status.get("status") in [TaskStatus.COMPLETED, TaskStatus.FAILED]:
                             break

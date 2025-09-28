@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 class CacheTier(Enum):
     """Cache tier levels"""
+
     EDGE = "edge"  # CDN edge locations
     REGIONAL = "regional"  # Regional cache clusters
     ORIGIN = "origin"  # Origin server cache
@@ -39,6 +40,7 @@ class CacheTier(Enum):
 
 class CacheStrategy(Enum):
     """Caching strategies"""
+
     CACHE_FIRST = "cache_first"  # Try cache first, fallback to origin
     CACHE_ONLY = "cache_only"  # Only serve from cache, error if miss
     NETWORK_FIRST = "network_first"  # Try origin first, cache response
@@ -48,6 +50,7 @@ class CacheStrategy(Enum):
 
 class InvalidationScope(Enum):
     """Cache invalidation scopes"""
+
     EXACT = "exact"  # Invalidate exact key
     PREFIX = "prefix"  # Invalidate all keys with prefix
     TAG = "tag"  # Invalidate all keys with tag
@@ -58,6 +61,7 @@ class InvalidationScope(Enum):
 @dataclass
 class CacheConfig:
     """Cache configuration"""
+
     ttl_seconds: int = 3600
     max_age: int = 3600
     s_maxage: int = 86400  # Shared cache max age
@@ -73,6 +77,7 @@ class CacheConfig:
 @dataclass
 class CacheEntry:
     """Represents a cached item"""
+
     key: str
     value: bytes
     content_type: str
@@ -90,6 +95,7 @@ class CacheEntry:
 @dataclass
 class CacheMetrics:
     """Cache performance metrics"""
+
     hits: int = 0
     misses: int = 0
     evictions: int = 0
@@ -123,18 +129,13 @@ class CloudflareCDN(CDNProvider):
         self.zone_id = zone_id
         self.api_token = api_token
         self.base_url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}"
-        self.headers = {
-            "Authorization": f"Bearer {api_token}",
-            "Content-Type": "application/json"
-        }
+        self.headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
 
     async def purge(self, urls: List[str]):
         """Purge URLs from Cloudflare cache"""
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self.base_url}/purge_cache",
-                headers=self.headers,
-                json={"files": urls}
+                f"{self.base_url}/purge_cache", headers=self.headers, json={"files": urls}
             )
             response.raise_for_status()
             return response.json()
@@ -142,18 +143,14 @@ class CloudflareCDN(CDNProvider):
     async def warm(self, urls: List[str]):
         """Pre-warm Cloudflare cache"""
         async with httpx.AsyncClient() as client:
-            tasks = [
-                client.get(url, headers={"CF-Cache-Warmup": "1"})
-                for url in urls
-            ]
+            tasks = [client.get(url, headers={"CF-Cache-Warmup": "1"}) for url in urls]
             await asyncio.gather(*tasks, return_exceptions=True)
 
     async def get_metrics(self) -> dict:
         """Get Cloudflare analytics"""
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{self.base_url}/analytics/dashboard",
-                headers=self.headers
+                f"{self.base_url}/analytics/dashboard", headers=self.headers
             )
             response.raise_for_status()
             return response.json()
@@ -165,9 +162,7 @@ class CloudFrontCDN(CDNProvider):
     def __init__(self, distribution_id: str, aws_access_key: str, aws_secret_key: str):
         self.distribution_id = distribution_id
         self.client = boto3.client(
-            'cloudfront',
-            aws_access_key_id=aws_access_key,
-            aws_secret_access_key=aws_secret_key
+            "cloudfront", aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key
         )
 
     async def purge(self, urls: List[str]):
@@ -176,14 +171,11 @@ class CloudFrontCDN(CDNProvider):
             response = self.client.create_invalidation(
                 DistributionId=self.distribution_id,
                 InvalidationBatch={
-                    'Paths': {
-                        'Quantity': len(urls),
-                        'Items': urls
-                    },
-                    'CallerReference': str(time.time())
-                }
+                    "Paths": {"Quantity": len(urls), "Items": urls},
+                    "CallerReference": str(time.time()),
+                },
             )
-            return response['Invalidation']
+            return response["Invalidation"]
         except ClientError as e:
             logger.error("CloudFront invalidation failed: %s", e)
             raise
@@ -191,26 +183,21 @@ class CloudFrontCDN(CDNProvider):
     async def warm(self, urls: List[str]):
         """Pre-warm CloudFront cache"""
         async with httpx.AsyncClient() as client:
-            tasks = [
-                client.get(url, headers={"X-Cache-Warmup": "1"})
-                for url in urls
-            ]
+            tasks = [client.get(url, headers={"X-Cache-Warmup": "1"}) for url in urls]
             await asyncio.gather(*tasks, return_exceptions=True)
 
     async def get_metrics(self) -> dict:
         """Get CloudFront metrics from CloudWatch"""
-        cloudwatch = boto3.client('cloudwatch')
+        cloudwatch = boto3.client("cloudwatch")
         try:
             response = cloudwatch.get_metric_statistics(
-                Namespace='AWS/CloudFront',
-                MetricName='Requests',
-                Dimensions=[
-                    {'Name': 'DistributionId', 'Value': self.distribution_id}
-                ],
+                Namespace="AWS/CloudFront",
+                MetricName="Requests",
+                Dimensions=[{"Name": "DistributionId", "Value": self.distribution_id}],
                 StartTime=datetime.utcnow() - timedelta(hours=1),
                 EndTime=datetime.utcnow(),
                 Period=300,
-                Statistics=['Sum', 'Average']
+                Statistics=["Sum", "Average"],
             )
             return response
         except ClientError as e:
@@ -227,7 +214,7 @@ class EdgeCache:
         cdn_provider: Optional[CDNProvider] = None,
         default_ttl: int = 3600,
         max_cache_size_mb: int = 1024,
-        enable_compression: bool = True
+        enable_compression: bool = True,
     ):
         self.redis_url = redis_url
         self.cdn_provider = cdn_provider
@@ -239,9 +226,7 @@ class EdgeCache:
         self.redis_clients: Dict[CacheTier, aioredis.Redis] = {}
 
         # Cache metrics per tier
-        self.metrics: Dict[CacheTier, CacheMetrics] = {
-            tier: CacheMetrics() for tier in CacheTier
-        }
+        self.metrics: Dict[CacheTier, CacheMetrics] = {tier: CacheMetrics() for tier in CacheTier}
 
         # Cache key patterns
         self.key_patterns: Dict[str, str] = {}
@@ -255,17 +240,14 @@ class EdgeCache:
         for tier in CacheTier:
             db_num = list(CacheTier).index(tier)
             self.redis_clients[tier] = await aioredis.from_url(
-                self.redis_url,
-                db=db_num,
-                encoding="utf-8",
-                decode_responses=False
+                self.redis_url, db=db_num, encoding="utf-8", decode_responses=False
             )
 
         # Start background tasks
         self.tasks = [
             asyncio.create_task(self._metrics_collector()),
             asyncio.create_task(self._cache_warmer()),
-            asyncio.create_task(self._eviction_manager())
+            asyncio.create_task(self._eviction_manager()),
         ]
 
         logger.info("Edge cache system initialized")
@@ -277,12 +259,10 @@ class EdgeCache:
         await asyncio.gather(*self.tasks, return_exceptions=True)
 
         for client in self.redis_clients.values():
-            await client.close()
+            await client.aclose()
 
     def _generate_cache_key(
-        self,
-        request: Request,
-        vary_headers: Optional[List[str]] = None
+        self, request: Request, vary_headers: Optional[List[str]] = None
     ) -> str:
         """Generate cache key from request"""
         # Base key from URL
@@ -290,7 +270,7 @@ class EdgeCache:
             request.url.scheme,
             request.url.netloc,
             request.url.path,
-            str(sorted(request.url.query or ""))
+            str(sorted(request.url.query or "")),
         ]
 
         # Add vary headers
@@ -313,7 +293,7 @@ class EdgeCache:
         self,
         key: str,
         tier: CacheTier = CacheTier.EDGE,
-        strategy: CacheStrategy = CacheStrategy.CACHE_FIRST
+        strategy: CacheStrategy = CacheStrategy.CACHE_FIRST,
     ) -> Optional[CacheEntry]:
         """Get item from cache"""
         start_time = time.time()
@@ -336,7 +316,7 @@ class EdgeCache:
                     tags=set(entry_dict.get("tags", [])),
                     hit_count=entry_dict.get("hit_count", 0),
                     compressed=entry_dict.get("compressed", False),
-                    size_bytes=entry_dict.get("size_bytes", 0)
+                    size_bytes=entry_dict.get("size_bytes", 0),
                 )
 
                 # Check expiration
@@ -396,7 +376,7 @@ class EdgeCache:
         key: str,
         entry: Union[CacheEntry, bytes],
         tier: CacheTier = CacheTier.EDGE,
-        config: Optional[CacheConfig] = None
+        config: Optional[CacheConfig] = None,
     ) -> bool:
         """Set item in cache"""
         try:
@@ -411,12 +391,13 @@ class EdgeCache:
                     created_at=datetime.utcnow(),
                     expires_at=datetime.utcnow() + timedelta(seconds=config.ttl_seconds),
                     etag=self._generate_etag(entry),
-                    size_bytes=len(entry)
+                    size_bytes=len(entry),
                 )
 
             # Compress if enabled and beneficial
             if self.enable_compression and entry.size_bytes > 1024:
                 import gzip
+
                 compressed = gzip.compress(entry.value)
                 if len(compressed) < entry.size_bytes * 0.9:  # At least 10% compression
                     entry.value = compressed
@@ -435,7 +416,7 @@ class EdgeCache:
                 "tags": list(entry.tags),
                 "hit_count": entry.hit_count,
                 "compressed": entry.compressed,
-                "size_bytes": entry.size_bytes
+                "size_bytes": entry.size_bytes,
             }
 
             # Calculate TTL
@@ -444,11 +425,7 @@ class EdgeCache:
                 return False
 
             # Store in cache
-            await self.redis_clients[tier].setex(
-                key,
-                ttl,
-                json.dumps(entry_dict)
-            )
+            await self.redis_clients[tier].setex(key, ttl, json.dumps(entry_dict))
 
             # Update metrics
             self.metrics[tier].bytes_stored += entry.size_bytes
@@ -466,11 +443,7 @@ class EdgeCache:
             self.metrics[tier].error_count += 1
             return False
 
-    async def delete(
-        self,
-        key: str,
-        tier: Optional[CacheTier] = None
-    ):
+    async def delete(self, key: str, tier: Optional[CacheTier] = None):
         """Delete item from cache"""
         tiers = [tier] if tier else list(CacheTier)
 
@@ -482,10 +455,7 @@ class EdgeCache:
                 logger.error("Cache delete error for %s in %s: %s", key, t, e)
 
     async def invalidate(
-        self,
-        scope: InvalidationScope,
-        value: str,
-        tier: Optional[CacheTier] = None
+        self, scope: InvalidationScope, value: str, tier: Optional[CacheTier] = None
     ):
         """Invalidate cache entries"""
         tiers = [tier] if tier else list(CacheTier)
@@ -531,18 +501,19 @@ class EdgeCache:
                 if keys_to_delete:
                     # Decode bytes keys if necessary
                     decoded_keys = [
-                        k.decode() if isinstance(k, bytes) else k
-                        for k in keys_to_delete
+                        k.decode() if isinstance(k, bytes) else k for k in keys_to_delete
                     ]
                     await self.redis_clients[t].delete(*decoded_keys)
                     self.metrics[t].invalidations += len(decoded_keys)
                     logger.info("Invalidated %d keys in tier %s", len(decoded_keys), t)
 
                 # CDN invalidation
-                if t == CacheTier.EDGE and self.cdn_provider and scope in [
-                    InvalidationScope.EXACT, InvalidationScope.PREFIX
-                ]:
-                    urls = [f"/{k.split(':')[1]}" for k in decoded_keys if ':' in k]
+                if (
+                    t == CacheTier.EDGE
+                    and self.cdn_provider
+                    and scope in [InvalidationScope.EXACT, InvalidationScope.PREFIX]
+                ):
+                    urls = [f"/{k.split(':')[1]}" for k in decoded_keys if ":" in k]
                     if urls:
                         await self.cdn_provider.purge(urls)
 
@@ -567,12 +538,14 @@ class EdgeCache:
                         entry = CacheEntry(
                             key=key,
                             value=response.content,
-                            content_type=response.headers.get("content-type", "application/octet-stream"),
+                            content_type=response.headers.get(
+                                "content-type", "application/octet-stream"
+                            ),
                             headers=dict(response.headers),
                             created_at=datetime.utcnow(),
                             expires_at=datetime.utcnow() + timedelta(seconds=self.default_ttl),
                             etag=self._generate_etag(response.content),
-                            size_bytes=len(response.content)
+                            size_bytes=len(response.content),
                         )
                         await self.set(key, entry, tier)
                 except Exception as e:
@@ -598,8 +571,8 @@ class EdgeCache:
         total = metrics.hits + metrics.misses
         if total > 0:
             metrics.average_latency_ms = (
-                (metrics.average_latency_ms * (total - 1) + latency_ms) / total
-            )
+                metrics.average_latency_ms * (total - 1) + latency_ms
+            ) / total
 
     async def _metrics_collector(self):
         """Collect cache metrics periodically"""
@@ -611,14 +584,21 @@ class EdgeCache:
 
                     # Log metrics
                     metrics = self.metrics[tier]
-                    hit_rate = (metrics.hits / (metrics.hits + metrics.misses) * 100
-                              if metrics.hits + metrics.misses > 0 else 0)
+                    hit_rate = (
+                        metrics.hits / (metrics.hits + metrics.misses) * 100
+                        if metrics.hits + metrics.misses > 0
+                        else 0
+                    )
 
                     logger.info(
                         "Cache metrics [%s]: hit_rate=%.2f%%, hits=%d, misses=%d, "
                         "bytes_served=%d, latency=%.2fms",
-                        tier.value, hit_rate, metrics.hits, metrics.misses,
-                        metrics.bytes_served, metrics.average_latency_ms
+                        tier.value,
+                        hit_rate,
+                        metrics.hits,
+                        metrics.misses,
+                        metrics.bytes_served,
+                        metrics.average_latency_ms,
                     )
 
                 await asyncio.sleep(60)  # Collect every minute
@@ -671,14 +651,17 @@ class EdgeCache:
             tier.value: {
                 "hits": metrics.hits,
                 "misses": metrics.misses,
-                "hit_rate": (metrics.hits / (metrics.hits + metrics.misses) * 100
-                           if metrics.hits + metrics.misses > 0 else 0),
+                "hit_rate": (
+                    metrics.hits / (metrics.hits + metrics.misses) * 100
+                    if metrics.hits + metrics.misses > 0
+                    else 0
+                ),
                 "evictions": metrics.evictions,
                 "invalidations": metrics.invalidations,
                 "bytes_served": metrics.bytes_served,
                 "bytes_stored": metrics.bytes_stored,
                 "average_latency_ms": metrics.average_latency_ms,
-                "errors": metrics.error_count
+                "errors": metrics.error_count,
             }
             for tier, metrics in self.metrics.items()
         }
@@ -698,10 +681,7 @@ class EdgeCacheMiddleware:
             return await call_next(request)
 
         # Generate cache key
-        cache_key = self.cache._generate_cache_key(
-            request,
-            self.config.vary_headers
-        )
+        cache_key = self.cache._generate_cache_key(request, self.config.vary_headers)
 
         # Check cache
         cache_entry = await self.cache.get(cache_key)
@@ -720,13 +700,10 @@ class EdgeCacheMiddleware:
             content = cache_entry.value
             if cache_entry.compressed:
                 import gzip
+
                 content = gzip.decompress(content)
 
-            return Response(
-                content=content,
-                media_type=cache_entry.content_type,
-                headers=headers
-            )
+            return Response(content=content, media_type=cache_entry.content_type, headers=headers)
 
         # Cache miss - call origin
         response = await call_next(request)
@@ -748,7 +725,7 @@ class EdgeCacheMiddleware:
                 expires_at=datetime.utcnow() + timedelta(seconds=self.config.ttl_seconds),
                 etag=self.cache._generate_etag(body),
                 tags=set(self.config.surrogate_keys),
-                size_bytes=len(body)
+                size_bytes=len(body),
             )
 
             # Store in cache
@@ -764,7 +741,7 @@ class EdgeCacheMiddleware:
                 content=body,
                 status_code=response.status_code,
                 headers=dict(response.headers),
-                media_type=response.media_type
+                media_type=response.media_type,
             )
 
         return response
@@ -792,11 +769,10 @@ class EdgeCacheMiddleware:
 
 # Decorator for caching specific endpoints
 def edge_cache(
-    ttl: int = 3600,
-    tags: List[str] = None,
-    strategy: CacheStrategy = CacheStrategy.CACHE_FIRST
+    ttl: int = 3600, tags: List[str] = None, strategy: CacheStrategy = CacheStrategy.CACHE_FIRST
 ):
     """Decorator for caching endpoint responses"""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -831,11 +807,12 @@ def edge_cache(
                     expires_at=datetime.utcnow() + timedelta(seconds=ttl),
                     etag=cache._generate_etag(json.dumps(result).encode()),
                     tags=set(tags) if tags else set(),
-                    size_bytes=len(json.dumps(result))
+                    size_bytes=len(json.dumps(result)),
                 )
                 await cache.set(cache_key, entry)
 
             return result
 
         return wrapper
+
     return decorator

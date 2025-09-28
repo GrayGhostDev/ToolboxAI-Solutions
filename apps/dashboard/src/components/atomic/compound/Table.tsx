@@ -6,8 +6,8 @@
  */
 
 import React, { createContext, useContext, forwardRef } from 'react';
-import { styled } from '@mui/material/styles';
-import { AtomicBox, AtomicText, AtomicCheckbox } from '../atoms';
+import { Table as MantineTable, TableProps as MantineTableProps, Box } from '@mantine/core';
+import { AtomicText } from '../atoms';
 import { designTokens } from '../../../theme/designTokens';
 
 // Table Context
@@ -36,83 +36,6 @@ export interface TableProps {
   robloxTheme?: boolean;
 }
 
-// Styled Components
-const StyledTable = styled('table')<TableContextValue>(({
-  theme,
-  size = 'md',
-  variant = 'default',
-  robloxTheme = true
-}) => {
-  const sizeMap = {
-    sm: { padding: designTokens.spacing[1.5] },
-    md: { padding: designTokens.spacing[2] },
-    lg: { padding: designTokens.spacing[3] }
-  };
-
-  const baseStyles = {
-    width: '100%',
-    borderCollapse: 'collapse' as const,
-    fontSize: designTokens.typography.fontSize.sm[0],
-
-    '& th, & td': {
-      padding: sizeMap[size].padding,
-      textAlign: 'left' as const,
-      borderBottom: `1px solid ${theme.palette.divider}`
-    },
-
-    '& th': {
-      fontWeight: designTokens.typography.fontWeight.semibold,
-      color: theme.palette.text.primary,
-      backgroundColor: theme.palette.background.default
-    }
-  };
-
-  switch (variant) {
-    case 'striped':
-      return {
-        ...baseStyles,
-        '& tbody tr:nth-of-type(even)': {
-          backgroundColor: theme.palette.action.hover
-        }
-      };
-
-    case 'bordered':
-      return {
-        ...baseStyles,
-        border: `1px solid ${theme.palette.divider}`,
-
-        '& th, & td': {
-          ...baseStyles['& th, & td'],
-          border: `1px solid ${theme.palette.divider}`
-        }
-      };
-
-    case 'roblox':
-      return {
-        ...baseStyles,
-        border: `2px solid ${robloxTheme ? '#E2231A' : theme.palette.primary.main}`,
-        borderRadius: designTokens.borderRadius.lg,
-        overflow: 'hidden',
-
-        '& th': {
-          ...baseStyles['& th'],
-          backgroundColor: robloxTheme ? 'rgba(226, 35, 26, 0.1)' : theme.palette.primary.light,
-          borderBottom: `2px solid ${robloxTheme ? '#E2231A' : theme.palette.primary.main}`
-        }
-      };
-
-    default:
-      return baseStyles;
-  }
-});
-
-const StyledTableContainer = styled(AtomicBox)(({ theme }) => ({
-  width: '100%',
-  overflowX: 'auto',
-  borderRadius: designTokens.borderRadius.lg,
-  border: `1px solid ${theme.palette.divider}`
-}));
-
 // Table Root Component
 const TableRoot = forwardRef<HTMLTableElement, TableProps>(
   (
@@ -135,19 +58,101 @@ const TableRoot = forwardRef<HTMLTableElement, TableProps>(
       robloxTheme
     };
 
+    // Get Mantine size
+    const getMantineSize = () => {
+      switch (size) {
+        case 'sm': return 'sm';
+        case 'lg': return 'lg';
+        default: return 'md';
+      }
+    };
+
+    // Get table styles based on variant
+    const getTableStyles = () => {
+      const baseStyles = {
+        fontSize: designTokens.typography.fontSize.sm[0],
+      };
+
+      switch (variant) {
+        case 'striped':
+          return {
+            ...baseStyles,
+            '& tbody tr:nth-of-type(even) td': {
+              backgroundColor: 'var(--mantine-color-gray-1)'
+            }
+          };
+
+        case 'bordered':
+          return {
+            ...baseStyles,
+            border: '1px solid var(--mantine-color-gray-4)',
+            '& th, & td': {
+              border: '1px solid var(--mantine-color-gray-4)'
+            }
+          };
+
+        case 'roblox':
+          return {
+            ...baseStyles,
+            border: `2px solid ${robloxTheme ? '#E2231A' : 'var(--mantine-color-blue-6)'}`,
+            borderRadius: designTokens.borderRadius.lg,
+            overflow: 'hidden',
+            '& thead th': {
+              backgroundColor: robloxTheme ? 'rgba(226, 35, 26, 0.1)' : 'var(--mantine-color-blue-1)',
+              borderBottom: `2px solid ${robloxTheme ? '#E2231A' : 'var(--mantine-color-blue-6)'}`
+            }
+          };
+
+        default:
+          return baseStyles;
+      }
+    };
+
+    // Generate CSS for special variants
+    const getSpecialCSS = () => {
+      if (variant === 'roblox') {
+        return `
+          .roblox-table {
+            overflow: hidden;
+          }
+          .roblox-table thead th {
+            background-color: ${robloxTheme ? 'rgba(226, 35, 26, 0.1)' : 'var(--mantine-color-blue-1)'};
+            border-bottom: 2px solid ${robloxTheme ? '#E2231A' : 'var(--mantine-color-blue-6)'};
+          }
+        `;
+      }
+      return '';
+    };
+
     return (
       <TableContext.Provider value={contextValue}>
-        <StyledTableContainer>
-          <StyledTable
+        {variant === 'roblox' && (
+          <style dangerouslySetInnerHTML={{ __html: getSpecialCSS() }} />
+        )}
+
+        <Box
+          style={{
+            width: '100%',
+            overflowX: 'auto',
+            borderRadius: designTokens.borderRadius.lg,
+            ...(variant !== 'roblox' && variant !== 'bordered' && {
+              border: '1px solid var(--mantine-color-gray-4)'
+            })
+          }}
+        >
+          <MantineTable
             ref={ref}
-            size={size}
-            variant={variant}
-            robloxTheme={robloxTheme}
+            size={getMantineSize()}
+            striped={variant === 'striped'}
+            withTableBorder={variant === 'bordered'}
+            withColumnBorders={variant === 'bordered'}
+            style={getTableStyles()}
+            className={variant === 'roblox' ? 'roblox-table' : undefined}
             {...props}
           >
             {children}
-          </StyledTable>
-        </StyledTableContainer>
+          </MantineTable>
+        </Box>
       </TableContext.Provider>
     );
   }
@@ -161,9 +166,9 @@ interface TableHeaderProps {
 const TableHeader = forwardRef<HTMLTableSectionElement, TableHeaderProps>(
   ({ children, ...props }, ref) => {
     return (
-      <thead ref={ref} {...props}>
+      <MantineTable.Thead ref={ref} {...props}>
         {children}
-      </thead>
+      </MantineTable.Thead>
     );
   }
 );
@@ -176,9 +181,9 @@ interface TableBodyProps {
 const TableBody = forwardRef<HTMLTableSectionElement, TableBodyProps>(
   ({ children, ...props }, ref) => {
     return (
-      <tbody ref={ref} {...props}>
+      <MantineTable.Tbody ref={ref} {...props}>
         {children}
-      </tbody>
+      </MantineTable.Tbody>
     );
   }
 );
@@ -190,40 +195,48 @@ interface TableRowProps {
   onClick?: () => void;
 }
 
-const StyledTableRow = styled('tr')<{ selectable?: boolean; selected?: boolean }>(({
-  theme,
-  selectable,
-  selected
-}) => ({
-  transition: `background-color ${designTokens.animation.duration.fast} ${designTokens.animation.easing.inOut}`,
-
-  ...(selectable && {
-    cursor: 'pointer',
-
-    '&:hover': {
-      backgroundColor: theme.palette.action.hover
-    }
-  }),
-
-  ...(selected && {
-    backgroundColor: theme.palette.action.selected
-  })
-}));
-
 const TableRow = forwardRef<HTMLTableRowElement, TableRowProps>(
   ({ children, selected = false, onClick, ...props }, ref) => {
     const { selectable } = useTableContext();
 
+    const getRowStyles = () => {
+      const baseStyles: React.CSSProperties = {
+        transition: `background-color ${designTokens.animation.duration.fast} ${designTokens.animation.easing.inOut}`,
+      };
+
+      if (selectable) {
+        baseStyles.cursor = 'pointer';
+      }
+
+      if (selected) {
+        baseStyles.backgroundColor = 'var(--mantine-color-blue-1)';
+      }
+
+      return baseStyles;
+    };
+
+    const getHoverStyles = () => {
+      if (!selectable) return {};
+
+      return {
+        '&:hover': {
+          backgroundColor: 'var(--mantine-color-gray-1)'
+        }
+      };
+    };
+
     return (
-      <StyledTableRow
+      <MantineTable.Tr
         ref={ref}
-        selectable={selectable}
-        selected={selected}
-        onClick={(e: React.MouseEvent) => onClick}
+        style={getRowStyles()}
+        styles={{
+          root: getHoverStyles()
+        }}
+        onClick={onClick}
         {...props}
       >
         {children}
-      </StyledTableRow>
+      </MantineTable.Tr>
     );
   }
 );
@@ -238,16 +251,6 @@ interface TableCellProps {
   align?: 'left' | 'center' | 'right';
   width?: string | number;
 }
-
-const StyledTableCell = styled('td')<TableCellProps>(({
-  align = 'left',
-  width
-}) => ({
-  textAlign: align,
-  ...(width && {
-    width: typeof width === 'number' ? `${width}px` : width
-  })
-}));
 
 const TableCell = forwardRef<HTMLTableCellElement, TableCellProps>(
   (
@@ -272,23 +275,35 @@ const TableCell = forwardRef<HTMLTableCellElement, TableCellProps>(
       }
     };
 
+    const getCellStyles = () => {
+      const baseStyles: React.CSSProperties = {
+        textAlign: align,
+        cursor: isSortable ? 'pointer' : 'default'
+      };
+
+      if (width) {
+        baseStyles.width = typeof width === 'number' ? `${width}px` : width;
+      }
+
+      return baseStyles;
+    };
+
+    const CellComponent = Component === 'th' ? MantineTable.Th : MantineTable.Td;
+
     return (
-      <StyledTableCell
+      <CellComponent
         ref={ref}
-        as={Component}
-        align={align}
-        width={width}
-        onClick={(e: React.MouseEvent) => isSortable ? handleSort : undefined}
-        style={{
-          cursor: isSortable ? 'pointer' : 'default'
-        }}
+        style={getCellStyles()}
+        onClick={isSortable ? handleSort : undefined}
         {...props}
       >
         {isSortable ? (
-          <AtomicBox
-            display="flex"
-            alignItems="center"
-            justifyContent={align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start'}
+          <Box
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start'
+            }}
           >
             {children}
             {sorted && (
@@ -296,11 +311,11 @@ const TableCell = forwardRef<HTMLTableCellElement, TableCellProps>(
                 {sorted === 'asc' ? '↑' : '↓'}
               </AtomicText>
             )}
-          </AtomicBox>
+          </Box>
         ) : (
           children
         )}
-      </StyledTableCell>
+      </CellComponent>
     );
   }
 );

@@ -31,9 +31,7 @@ try:
     BROTLI_AVAILABLE = True
 except ImportError:
     BROTLI_AVAILABLE = False
-    logger.warning(
-        "Brotli compression not available. Install 'brotli' package for support."
-    )
+    logger.warning("Brotli compression not available. Install 'brotli' package for support.")
 
 
 class CompressionConfig:
@@ -229,9 +227,7 @@ class CompressionMiddleware(BaseHTTPMiddleware):
         """Process request and potentially compress response"""
 
         # Check if path is excluded
-        if any(
-            request.url.path.startswith(path) for path in self.config.excluded_paths
-        ):
+        if any(request.url.path.startswith(path) for path in self.config.excluded_paths):
             return await call_next(request)
 
         # Check if user agent is excluded
@@ -318,10 +314,10 @@ class CompressionMiddleware(BaseHTTPMiddleware):
         try:
             # Read response body
             body = b""
-            if hasattr(response, 'body_iterator'):
+            if hasattr(response, "body_iterator"):
                 async for chunk in response.body_iterator:
                     body += chunk
-            elif hasattr(response, 'body'):
+            elif hasattr(response, "body"):
                 body = response.body if isinstance(response.body, bytes) else response.body.encode()
             else:
                 # If no body is available, return the response as-is
@@ -333,43 +329,33 @@ class CompressionMiddleware(BaseHTTPMiddleware):
 
             # Compress body
             if encoding == "gzip":
-                compressed = self.encoder.gzip_compress(
-                    body, self.config.compression_level
-                )
+                compressed = self.encoder.gzip_compress(body, self.config.compression_level)
             elif encoding == "deflate":
-                compressed = self.encoder.deflate_compress(
-                    body, self.config.compression_level
-                )
+                compressed = self.encoder.deflate_compress(body, self.config.compression_level)
             elif encoding == "br":
-                compressed = self.encoder.brotli_compress(
-                    body, self.config.compression_level
-                )
+                compressed = self.encoder.brotli_compress(body, self.config.compression_level)
             else:
                 return response
 
             # Calculate compression ratio
             original_size = len(body)
             compressed_size = len(compressed)
-            ratio = (
-                (1 - compressed_size / original_size) * 100 if original_size > 0 else 0
-            )
+            ratio = (1 - compressed_size / original_size) * 100 if original_size > 0 else 0
 
             # Only use compression if it's beneficial
             if compressed_size >= original_size:
-                logger.debug(
-                    f"Compression not beneficial for response ({ratio:.1f}% increase)"
-                )
+                logger.debug(f"Compression not beneficial for response ({ratio:.1f}% increase)")
                 return response
 
             # Create new response with compressed body
             # For Starlette Response objects, we need to return a new Response
             from starlette.responses import Response as StarletteResponse
-            
+
             new_response = StarletteResponse(
                 content=compressed,
                 status_code=response.status_code,
                 headers=dict(response.headers),
-                media_type=response.headers.get("content-type")
+                media_type=response.headers.get("content-type"),
             )
             new_response.headers["content-encoding"] = encoding
             new_response.headers["content-length"] = str(compressed_size)
@@ -380,7 +366,7 @@ class CompressionMiddleware(BaseHTTPMiddleware):
             logger.debug(
                 f"Compressed response with {encoding}: {original_size} -> {compressed_size} ({ratio:.1f}% reduction)"
             )
-            
+
             return new_response
 
         except Exception as e:
@@ -412,9 +398,7 @@ class StreamingCompressionMiddleware:
         if BROTLI_AVAILABLE:
             available.insert(0, "br")
 
-        encoding = self.parser.negotiate(
-            accept_encoding, available, self.config.prefer_brotli
-        )
+        encoding = self.parser.negotiate(accept_encoding, available, self.config.prefer_brotli)
 
         if not encoding:
             await self.app(scope, receive, send)
@@ -452,9 +436,7 @@ class StreamingCompressionMiddleware:
                             -zlib.MAX_WBITS,
                         )
                     elif encoding == "br" and BROTLI_AVAILABLE:
-                        quality = min(
-                            11, max(0, int(self.config.compression_level * 11 / 9))
-                        )
+                        quality = min(11, max(0, int(self.config.compression_level * 11 / 9)))
                         compressor = brotli.Compressor(quality=quality)
 
             elif message["type"] == "http.response.body":
@@ -486,9 +468,7 @@ def create_compression_middleware(
 ) -> BaseHTTPMiddleware:
     """Create compression middleware with configuration"""
 
-    config = CompressionConfig(
-        minimum_size=minimum_size, compression_level=compression_level
-    )
+    config = CompressionConfig(minimum_size=minimum_size, compression_level=compression_level)
 
     if streaming:
         return StreamingCompressionMiddleware(app=app, config=config)

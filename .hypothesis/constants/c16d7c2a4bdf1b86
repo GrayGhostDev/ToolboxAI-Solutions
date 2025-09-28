@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/security/jwt_rotation.py
-# hypothesis_version: 6.139.2
-
-[900, 3600, 86400, 604800, '1', 'HS256', 'Key ID', 'Key expiration time', 'Token missing kid', 'access', 'active', 'active_key_expires', 'active_key_id', 'created_at', 'exp', 'grace_period', 'iat', 'jti', 'jwt:keys:', 'jwt:refresh:', 'jwt:revoked:', 'kid', 'refresh', 'rotation_interval', 'scope', 'sub', 'total_keys', 'type', 'user_id', 'utf-8']

@@ -27,31 +27,21 @@ from core.agents.enhanced_content_pipeline import (
     EnhancedContentPipeline,
     PipelineState,
     PipelineStage,
-    ContentRequest
+    ContentRequest,
 )
 from core.agents.content_quality_validator import (
     ContentQualityValidator,
     ValidationReport,
-    QualityDimension
+    QualityDimension,
 )
 from core.agents.adaptive_learning_engine import (
     AdaptiveLearningEngine,
     LearningProfile,
-    DifficultyLevel
+    DifficultyLevel,
 )
-from core.agents.multi_modal_generator import (
-    MultiModalGenerator,
-    ContentModality,
-    GeneratedContent
-)
-from apps.backend.services.websocket_pipeline_manager import (
-    websocket_pipeline_manager
-)
-from database.models import (
-    EnhancedContentGeneration,
-    ContentQualityMetrics,
-    LearningProfiles
-)
+from core.agents.multi_modal_generator import MultiModalGenerator, ContentModality, GeneratedContent
+from apps.backend.services.websocket_pipeline_manager import websocket_pipeline_manager
+from database.models import EnhancedContentGeneration, ContentQualityMetrics, LearningProfiles
 from database.connection import get_async_session
 
 logger = logging.getLogger(__name__)
@@ -59,6 +49,7 @@ logger = logging.getLogger(__name__)
 
 class RobloxAssetType(str, Enum):
     """Types of assets that can be generated for Roblox"""
+
     SCRIPT = "Script"
     LOCAL_SCRIPT = "LocalScript"
     MODULE_SCRIPT = "ModuleScript"
@@ -74,6 +65,7 @@ class RobloxAssetType(str, Enum):
 
 class RobloxContentType(str, Enum):
     """Types of educational content for Roblox"""
+
     LESSON = "lesson"
     QUIZ = "quiz"
     INTERACTIVE_ACTIVITY = "interactive_activity"
@@ -87,6 +79,7 @@ class RobloxContentType(str, Enum):
 @dataclass
 class RobloxAsset:
     """Represents a single Roblox asset"""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     name: str = ""
     type: RobloxAssetType = RobloxAssetType.SCRIPT
@@ -167,27 +160,51 @@ local {module_name} = {{}}
 {public_functions}
 
 return {module_name}
-"""
+""",
         }
 
     def _setup_validators(self) -> Dict[str, Any]:
         """Set up Luau syntax validators"""
         return {
             "keywords": [
-                "local", "function", "end", "if", "then", "else", "elseif",
-                "for", "while", "do", "repeat", "until", "return", "break",
-                "continue", "and", "or", "not", "nil", "true", "false"
+                "local",
+                "function",
+                "end",
+                "if",
+                "then",
+                "else",
+                "elseif",
+                "for",
+                "while",
+                "do",
+                "repeat",
+                "until",
+                "return",
+                "break",
+                "continue",
+                "and",
+                "or",
+                "not",
+                "nil",
+                "true",
+                "false",
             ],
             "reserved_globals": [
-                "game", "workspace", "script", "shared", "plugin",
-                "_G", "_VERSION", "tick", "time", "wait"
-            ]
+                "game",
+                "workspace",
+                "script",
+                "shared",
+                "plugin",
+                "_G",
+                "_VERSION",
+                "tick",
+                "time",
+                "wait",
+            ],
         }
 
     async def generate_script(
-        self,
-        content: Dict[str, Any],
-        script_type: RobloxAssetType
+        self, content: Dict[str, Any], script_type: RobloxAssetType
     ) -> RobloxAsset:
         """Generate a Luau script from AI content"""
 
@@ -225,7 +242,7 @@ return {module_name}
             event_handlers="",  # Will be filled for interactive scripts
             constants="",
             private_functions="",
-            public_functions=""
+            public_functions="",
         )
 
         # Validate generated script
@@ -240,13 +257,13 @@ return {module_name}
             content=script_content,
             properties={
                 "Disabled": False,
-                "RunContext": "Server" if script_type == RobloxAssetType.SCRIPT else "Client"
+                "RunContext": "Server" if script_type == RobloxAssetType.SCRIPT else "Client",
             },
             metadata={
                 "generated_at": datetime.now(timezone.utc).isoformat(),
                 "ai_model": "enhanced_pipeline",
-                "quality_score": content.get("quality_score", 0)
-            }
+                "quality_score": content.get("quality_score", 0),
+            },
         )
 
     async def _convert_to_luau(self, logic: str) -> str:
@@ -281,45 +298,51 @@ return {module_name}
             luau_code = luau_code.replace(py_syntax, lua_syntax)
 
         # Add 'local' to variable declarations
-        lines = luau_code.split('\n')
+        lines = luau_code.split("\n")
         processed_lines = []
         for line in lines:
-            if '=' in line and not line.strip().startswith('local') and not line.strip().startswith('--'):
+            if (
+                "=" in line
+                and not line.strip().startswith("local")
+                and not line.strip().startswith("--")
+            ):
                 # Check if it's a variable assignment
-                if not any(keyword in line for keyword in ['function', 'if', 'then', 'else']):
-                    line = 'local ' + line.strip()
+                if not any(keyword in line for keyword in ["function", "if", "then", "else"]):
+                    line = "local " + line.strip()
             processed_lines.append(line)
 
-        return '\n'.join(processed_lines)
+        return "\n".join(processed_lines)
 
     async def _validate_luau_syntax(self, script: str) -> Tuple[bool, List[str]]:
         """Validate Luau syntax"""
         errors = []
 
         # Check for balanced brackets
-        open_brackets = script.count('{')
-        close_brackets = script.count('}')
+        open_brackets = script.count("{")
+        close_brackets = script.count("}")
         if open_brackets != close_brackets:
             errors.append(f"Unbalanced brackets: {open_brackets} open, {close_brackets} close")
 
         # Check for balanced parentheses
-        open_parens = script.count('(')
-        close_parens = script.count(')')
+        open_parens = script.count("(")
+        close_parens = script.count(")")
         if open_parens != close_parens:
             errors.append(f"Unbalanced parentheses: {open_parens} open, {close_parens} close")
 
         # Check for 'end' statements
-        function_count = script.count('function')
-        if_count = script.count('if ') + script.count('if(')
-        for_count = script.count('for ')
-        while_count = script.count('while ')
-        do_count = script.count('do\n') + script.count('do ')
+        function_count = script.count("function")
+        if_count = script.count("if ") + script.count("if(")
+        for_count = script.count("for ")
+        while_count = script.count("while ")
+        do_count = script.count("do\n") + script.count("do ")
 
         expected_ends = function_count + if_count + for_count + while_count + do_count
-        actual_ends = script.count('end')
+        actual_ends = script.count("end")
 
         if expected_ends != actual_ends:
-            errors.append(f"Mismatched 'end' statements: expected {expected_ends}, found {actual_ends}")
+            errors.append(
+                f"Mismatched 'end' statements: expected {expected_ends}, found {actual_ends}"
+            )
 
         return len(errors) == 0, errors
 
@@ -339,8 +362,8 @@ return {module_name}
     def _sanitize_module_name(self, title: str) -> str:
         """Convert title to valid Luau module name"""
         # Remove special characters and convert to PascalCase
-        words = re.findall(r'\w+', title)
-        return ''.join(word.capitalize() for word in words)
+        words = re.findall(r"\w+", title)
+        return "".join(word.capitalize() for word in words)
 
     async def _generate_imports(self, content: Dict[str, Any]) -> str:
         """Generate import statements"""
@@ -351,7 +374,7 @@ return {module_name}
             imports.append("local HttpService = game:GetService('HttpService')")
         if content.get("uses_messaging"):
             imports.append("local MessagingService = game:GetService('MessagingService')")
-        return '\n'.join(imports)
+        return "\n".join(imports)
 
     async def _generate_properties(self, content: Dict[str, Any]) -> str:
         """Generate class properties"""
@@ -366,21 +389,21 @@ return {module_name}
             elif isinstance(value, bool):
                 prop_lines.append(f'{module_name}.{name} = {"true" if value else "false"}')
             else:
-                prop_lines.append(f'{module_name}.{name} = {value}')
+                prop_lines.append(f"{module_name}.{name} = {value}")
 
-        return '\n'.join(prop_lines)
+        return "\n".join(prop_lines)
 
     async def _generate_parameters(self, content: Dict[str, Any]) -> str:
         """Generate constructor parameters"""
         params = content.get("constructor_params", [])
-        return ', '.join(params) if params else ""
+        return ", ".join(params) if params else ""
 
     async def _generate_initialization(self, content: Dict[str, Any]) -> str:
         """Generate initialization code"""
         init_code = content.get("initialization", [])
         if not init_code:
             return "-- No initialization required"
-        return '\n    '.join(init_code)
+        return "\n    ".join(init_code)
 
     async def _generate_methods(self, content: Dict[str, Any]) -> str:
         """Generate class methods"""
@@ -390,12 +413,14 @@ return {module_name}
 
         method_code = []
         for method in methods:
-            method_code.append(f"""
+            method_code.append(
+                f"""
 function {module_name}:{method['name']}({', '.join(method.get('params', []))})
     {method.get('body', '-- Method implementation')}
-end""")
+end"""
+            )
 
-        return '\n'.join(method_code)
+        return "\n".join(method_code)
 
 
 class RobloxAssetConverter:
@@ -416,39 +441,31 @@ class RobloxAssetConverter:
                     "Material": "Plastic",
                     "Size": [4, 1, 2],
                     "Position": [0, 5, 0],
-                    "BrickColor": "Medium stone grey"
-                }
+                    "BrickColor": "Medium stone grey",
+                },
             },
             "gui": {
                 "ClassName": "ScreenGui",
-                "Properties": {
-                    "ResetOnSpawn": False,
-                    "DisplayOrder": 0
-                }
+                "Properties": {"ResetOnSpawn": False, "DisplayOrder": 0},
             },
             "sound": {
                 "ClassName": "Sound",
-                "Properties": {
-                    "Volume": 0.5,
-                    "Pitch": 1,
-                    "Looped": False
-                }
-            }
+                "Properties": {"Volume": 0.5, "Pitch": 1, "Looped": False},
+            },
         }
 
     async def convert_to_roblox_asset(
-        self,
-        content: GeneratedContent,
-        asset_type: RobloxAssetType
+        self, content: GeneratedContent, asset_type: RobloxAssetType
     ) -> RobloxAsset:
         """Convert generated content to Roblox asset"""
 
-        if asset_type in [RobloxAssetType.SCRIPT, RobloxAssetType.LOCAL_SCRIPT, RobloxAssetType.MODULE_SCRIPT]:
+        if asset_type in [
+            RobloxAssetType.SCRIPT,
+            RobloxAssetType.LOCAL_SCRIPT,
+            RobloxAssetType.MODULE_SCRIPT,
+        ]:
             # Generate Luau script
-            return await self.script_generator.generate_script(
-                content.to_dict(),
-                asset_type
-            )
+            return await self.script_generator.generate_script(content.to_dict(), asset_type)
 
         elif asset_type == RobloxAssetType.MODEL:
             return await self._create_model_asset(content)
@@ -465,8 +482,7 @@ class RobloxAssetConverter:
         else:
             # Default to script
             return await self.script_generator.generate_script(
-                content.to_dict(),
-                RobloxAssetType.SCRIPT
+                content.to_dict(), RobloxAssetType.SCRIPT
             )
 
     async def _create_model_asset(self, content: GeneratedContent) -> RobloxAsset:
@@ -474,7 +490,7 @@ class RobloxAssetConverter:
         model_data = {
             "ClassName": "Model",
             "Name": content.title or "GeneratedModel",
-            "Children": []
+            "Children": [],
         }
 
         # Add parts based on content
@@ -488,7 +504,7 @@ class RobloxAssetConverter:
             type=RobloxAssetType.MODEL,
             content=json.dumps(model_data, indent=2),
             properties={"PrimaryPart": None},
-            metadata={"component_count": len(model_data["Children"])}
+            metadata={"component_count": len(model_data["Children"])},
         )
 
     async def _create_part_from_spec(self, spec: Dict[str, Any]) -> Dict[str, Any]:
@@ -524,7 +540,7 @@ class RobloxAssetConverter:
             type=RobloxAssetType.GUI,
             content=json.dumps(gui_data, indent=2),
             parent_path="game.Players.LocalPlayer.PlayerGui",
-            metadata={"element_count": len(gui_data["Children"])}
+            metadata={"element_count": len(gui_data["Children"])},
         )
 
     async def _create_gui_element(self, element: Dict[str, Any]) -> Dict[str, Any]:
@@ -539,8 +555,8 @@ class RobloxAssetConverter:
                 "Text": element.get("text", ""),
                 "TextScaled": True,
                 "BackgroundColor3": element.get("bg_color", [255, 255, 255]),
-                "TextColor3": element.get("text_color", [0, 0, 0])
-            }
+                "TextColor3": element.get("text_color", [0, 0, 0]),
+            },
         }
 
         return gui_element
@@ -560,7 +576,7 @@ class RobloxAssetConverter:
             type=RobloxAssetType.SOUND,
             content=json.dumps(sound_data, indent=2),
             parent_path="game.Workspace",
-            metadata={"duration": content.audio_narration.get("duration", 0)}
+            metadata={"duration": content.audio_narration.get("duration", 0)},
         )
 
     async def _create_part_asset(self, content: GeneratedContent) -> RobloxAsset:
@@ -583,7 +599,7 @@ class RobloxAssetConverter:
             type=RobloxAssetType.PART,
             content=json.dumps(part_data, indent=2),
             parent_path="game.Workspace",
-            metadata={"physics_enabled": True}
+            metadata={"physics_enabled": True},
         )
 
 
@@ -603,7 +619,7 @@ class RobloxContentBridge:
         request: ContentRequest,
         content_type: RobloxContentType,
         user_id: str,
-        session: AsyncSession
+        session: AsyncSession,
     ) -> Dict[str, Any]:
         """Generate Roblox content using enhanced pipeline"""
 
@@ -615,14 +631,12 @@ class RobloxContentBridge:
             pipeline_id=pipeline_id,
             stage=PipelineStage.IDEATION,
             progress=0,
-            message="Starting Roblox content generation"
+            message="Starting Roblox content generation",
         )
 
         try:
             # Get user's learning profile
-            learning_profile = await self.learning_engine.get_learning_profile(
-                user_id, session
-            )
+            learning_profile = await self.learning_engine.get_learning_profile(user_id, session)
 
             # Adjust request based on learning profile
             if learning_profile:
@@ -633,7 +647,7 @@ class RobloxContentBridge:
                 pipeline_id=pipeline_id,
                 stage=PipelineStage.GENERATION,
                 progress=20,
-                message="Generating educational content"
+                message="Generating educational content",
             )
 
             pipeline_result = await self.pipeline.run(request, user_id, session)
@@ -643,61 +657,48 @@ class RobloxContentBridge:
                 pipeline_id=pipeline_id,
                 stage=PipelineStage.VALIDATION,
                 progress=40,
-                message="Validating Roblox compatibility"
+                message="Validating Roblox compatibility",
             )
 
             validation_report = await self._validate_for_roblox(pipeline_result)
 
             if validation_report.overall_score < 0.7:
                 # Content needs improvement
-                pipeline_result = await self._improve_content(
-                    pipeline_result,
-                    validation_report
-                )
+                pipeline_result = await self._improve_content(pipeline_result, validation_report)
 
             # Convert to Roblox assets
             await websocket_pipeline_manager.update_pipeline_state(
                 pipeline_id=pipeline_id,
                 stage=PipelineStage.OPTIMIZATION,
                 progress=60,
-                message="Converting to Roblox assets"
+                message="Converting to Roblox assets",
             )
 
-            roblox_assets = await self._convert_to_roblox_assets(
-                pipeline_result,
-                content_type
-            )
+            roblox_assets = await self._convert_to_roblox_assets(pipeline_result, content_type)
 
             # Package for deployment
             await websocket_pipeline_manager.update_pipeline_state(
                 pipeline_id=pipeline_id,
                 stage=PipelineStage.DEPLOYMENT,
                 progress=80,
-                message="Packaging for Roblox Studio"
+                message="Packaging for Roblox Studio",
             )
 
             package = await self._package_assets(roblox_assets)
 
             # Save to database
             await self._save_generation(
-                pipeline_id=pipeline_id,
-                user_id=user_id,
-                content=package,
-                session=session
+                pipeline_id=pipeline_id, user_id=user_id, content=package, session=session
             )
 
             # Complete pipeline
             await websocket_pipeline_manager.send_completion(
                 pipeline_id=pipeline_id,
-                result={
-                    "success": True,
-                    "assets": len(roblox_assets),
-                    "package_id": package["id"]
-                },
+                result={"success": True, "assets": len(roblox_assets), "package_id": package["id"]},
                 metrics={
                     "generation_time": package.get("generation_time", 0),
-                    "quality_score": validation_report.overall_score
-                }
+                    "quality_score": validation_report.overall_score,
+                },
             )
 
             return {
@@ -709,8 +710,8 @@ class RobloxContentBridge:
                 "metadata": {
                     "content_type": content_type.value,
                     "generated_at": datetime.now(timezone.utc).isoformat(),
-                    "quality_score": validation_report.overall_score
-                }
+                    "quality_score": validation_report.overall_score,
+                },
             }
 
         except Exception as e:
@@ -718,14 +719,12 @@ class RobloxContentBridge:
             await websocket_pipeline_manager.send_error(
                 pipeline_id=pipeline_id,
                 error_message=str(e),
-                error_details={"type": type(e).__name__}
+                error_details={"type": type(e).__name__},
             )
             raise
 
     async def _personalize_request(
-        self,
-        request: ContentRequest,
-        profile: LearningProfile
+        self, request: ContentRequest, profile: LearningProfile
     ) -> ContentRequest:
         """Personalize content request based on learning profile"""
 
@@ -742,17 +741,14 @@ class RobloxContentBridge:
 
         return request
 
-    async def _validate_for_roblox(
-        self,
-        content: Dict[str, Any]
-    ) -> ValidationReport:
+    async def _validate_for_roblox(self, content: Dict[str, Any]) -> ValidationReport:
         """Validate content for Roblox compatibility"""
 
         # Run standard validation
         report = await self.validator.validate_content(
             content=content,
             content_type="roblox_experience",
-            target_age=content.get("target_age", 10)
+            target_age=content.get("target_age", 10),
         )
 
         # Add Roblox-specific checks
@@ -760,27 +756,33 @@ class RobloxContentBridge:
 
         # Check for inappropriate content
         if await self._contains_inappropriate_content(content):
-            roblox_issues.append({
-                "dimension": "safety",
-                "issue": "Content may violate Roblox community standards",
-                "severity": "high"
-            })
+            roblox_issues.append(
+                {
+                    "dimension": "safety",
+                    "issue": "Content may violate Roblox community standards",
+                    "severity": "high",
+                }
+            )
 
         # Check script complexity
         if await self._is_too_complex(content):
-            roblox_issues.append({
-                "dimension": "technical",
-                "issue": "Script complexity may cause performance issues",
-                "severity": "medium"
-            })
+            roblox_issues.append(
+                {
+                    "dimension": "technical",
+                    "issue": "Script complexity may cause performance issues",
+                    "severity": "medium",
+                }
+            )
 
         # Check asset limits
         if await self._exceeds_asset_limits(content):
-            roblox_issues.append({
-                "dimension": "technical",
-                "issue": "Content exceeds Roblox asset limits",
-                "severity": "high"
-            })
+            roblox_issues.append(
+                {
+                    "dimension": "technical",
+                    "issue": "Content exceeds Roblox asset limits",
+                    "severity": "high",
+                }
+            )
 
         # Add issues to report
         report.issues.extend(roblox_issues)
@@ -794,9 +796,7 @@ class RobloxContentBridge:
     async def _contains_inappropriate_content(self, content: Dict[str, Any]) -> bool:
         """Check for content that violates Roblox standards"""
         # Simplified check - in production, use more sophisticated filtering
-        inappropriate_terms = [
-            "violence", "adult", "gambling", "dating"
-        ]
+        inappropriate_terms = ["violence", "adult", "gambling", "dating"]
 
         content_text = json.dumps(content).lower()
         return any(term in content_text for term in inappropriate_terms)
@@ -822,9 +822,7 @@ class RobloxContentBridge:
         return False
 
     async def _improve_content(
-        self,
-        content: Dict[str, Any],
-        validation_report: ValidationReport
+        self, content: Dict[str, Any], validation_report: ValidationReport
     ) -> Dict[str, Any]:
         """Improve content based on validation report"""
 
@@ -859,9 +857,7 @@ class RobloxContentBridge:
         return content
 
     async def _convert_to_roblox_assets(
-        self,
-        content: Dict[str, Any],
-        content_type: RobloxContentType
+        self, content: Dict[str, Any], content_type: RobloxContentType
     ) -> List[RobloxAsset]:
         """Convert content to Roblox assets"""
 
@@ -869,16 +865,14 @@ class RobloxContentBridge:
 
         # Create main script
         main_script = await self.asset_converter.convert_to_roblox_asset(
-            GeneratedContent.from_dict(content),
-            RobloxAssetType.SCRIPT
+            GeneratedContent.from_dict(content), RobloxAssetType.SCRIPT
         )
         assets.append(main_script)
 
         # Create UI if needed
         if content_type in [RobloxContentType.QUIZ, RobloxContentType.TUTORIAL]:
             gui_asset = await self.asset_converter.convert_to_roblox_asset(
-                GeneratedContent.from_dict(content),
-                RobloxAssetType.GUI
+                GeneratedContent.from_dict(content), RobloxAssetType.GUI
             )
             assets.append(gui_asset)
 
@@ -886,8 +880,7 @@ class RobloxContentBridge:
         if content.get("models"):
             for model_data in content["models"]:
                 model_asset = await self.asset_converter.convert_to_roblox_asset(
-                    GeneratedContent.from_dict(model_data),
-                    RobloxAssetType.MODEL
+                    GeneratedContent.from_dict(model_data), RobloxAssetType.MODEL
                 )
                 assets.append(model_asset)
 
@@ -895,8 +888,7 @@ class RobloxContentBridge:
         if content.get("audio"):
             for audio_data in content["audio"]:
                 sound_asset = await self.asset_converter.convert_to_roblox_asset(
-                    GeneratedContent.from_dict(audio_data),
-                    RobloxAssetType.SOUND
+                    GeneratedContent.from_dict(audio_data), RobloxAssetType.SOUND
                 )
                 assets.append(sound_asset)
 
@@ -912,11 +904,7 @@ class RobloxContentBridge:
             "version": "1.0.0",
             "created_at": datetime.now(timezone.utc).isoformat(),
             "assets": [],
-            "manifest": {
-                "entry_point": None,
-                "dependencies": [],
-                "metadata": {}
-            }
+            "manifest": {"entry_point": None, "dependencies": [], "metadata": {}},
         }
 
         for asset in assets:
@@ -927,7 +915,7 @@ class RobloxContentBridge:
                 "content": asset.content,
                 "properties": asset.properties,
                 "parent_path": asset.parent_path,
-                "metadata": asset.metadata
+                "metadata": asset.metadata,
             }
             package["assets"].append(asset_data)
 
@@ -943,11 +931,7 @@ class RobloxContentBridge:
         return package
 
     async def _save_generation(
-        self,
-        pipeline_id: str,
-        user_id: str,
-        content: Dict[str, Any],
-        session: AsyncSession
+        self, pipeline_id: str, user_id: str, content: Dict[str, Any], session: AsyncSession
     ) -> None:
         """Save generation to database"""
 
@@ -961,18 +945,14 @@ class RobloxContentBridge:
             generation_time=content.get("generation_time", 0),
             metadata={
                 "asset_count": len(content.get("assets", [])),
-                "package_id": content.get("id")
-            }
+                "package_id": content.get("id"),
+            },
         )
 
         session.add(generation)
         await session.commit()
 
-    async def deploy_to_studio(
-        self,
-        package_id: str,
-        studio_session_id: str
-    ) -> Dict[str, Any]:
+    async def deploy_to_studio(self, package_id: str, studio_session_id: str) -> Dict[str, Any]:
         """Deploy package directly to Roblox Studio"""
 
         # This would integrate with Roblox Studio plugin
@@ -986,8 +966,8 @@ class RobloxContentBridge:
                 "1. Open the ToolboxAI plugin in Roblox Studio",
                 "2. Click 'Import Package'",
                 f"3. Enter package ID: {package_id}",
-                "4. Click 'Deploy' to add assets to your game"
-            ]
+                "4. Click 'Deploy' to add assets to your game",
+            ],
         }
 
 

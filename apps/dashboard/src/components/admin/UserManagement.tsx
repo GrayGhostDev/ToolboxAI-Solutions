@@ -61,7 +61,7 @@ import { useTheme } from "@mui/material/styles";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { useWebSocketContext } from "../../contexts/WebSocketContext";
+import { usePusherContext } from "../../contexts/PusherContext";
 import { useAppDispatch } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
 import { 
@@ -102,7 +102,7 @@ export function UserManagement({
 }: UserManagementProps) {
   const theme = useTheme();
   const dispatch = useAppDispatch();
-  const { isConnected, subscribe, unsubscribe } = useWebSocketContext();
+  const { isConnected, subscribeToChannel, unsubscribeFromChannel } = usePusherContext();
   
   const [users, setUsers] = useState<UserWithStats[]>([]);
   const [schools, setSchools] = useState<any[]>([]);
@@ -213,26 +213,28 @@ export function UserManagement({
   useEffect(() => {
     if (!isConnected) return;
 
-    const subscriptionId = subscribe('user_management', (message: any) => {
-      if (message.type === 'USER_UPDATED') {
+    const subscriptionId = subscribeToChannel('user_management', {
+      'USER_UPDATED': (message: any) => {
         setUsers(prevUsers =>
           prevUsers.map(user =>
-            user.id === message.payload.userId
-              ? { ...user, ...message.payload.updates }
+            user.id === message.userId
+              ? { ...user, ...message.updates }
               : user
           )
         );
-      } else if (message.type === 'USER_CREATED') {
-        setUsers(prevUsers => [message.payload.user, ...prevUsers]);
-      } else if (message.type === 'USER_DELETED') {
-        setUsers(prevUsers => prevUsers.filter(user => user.id !== message.payload.userId));
+      },
+      'USER_CREATED': (message: any) => {
+        setUsers(prevUsers => [message.user, ...prevUsers]);
+      },
+      'USER_DELETED': (message: any) => {
+        setUsers(prevUsers => prevUsers.filter(user => user.id !== message.userId));
       }
     });
 
     return () => {
-      unsubscribe(subscriptionId);
+      unsubscribeFromChannel(subscriptionId);
     };
-  }, [isConnected, subscribe, unsubscribe]);
+  }, [isConnected, subscribeToChannel, unsubscribeFromChannel]);
 
   // Filter users based on current tab and filters
   const filteredUsers = React.useMemo(() => {

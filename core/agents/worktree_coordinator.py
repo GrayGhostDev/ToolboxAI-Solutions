@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from core.agents.base_agent import BaseAgent, AgentConfig, TaskResult
-from core.agents.github_agents.worktree_orchestrator_agent import WorktreeOrchestratorAgent
+# from core.agents.github_agents.worktree_orchestrator_agent import WorktreeOrchestratorAgent  # Archived - now in orchestration module
 from core.agents.github_agents.session_manager_agent import SessionManagerAgent
 # Import only the enums to avoid circular dependency
 from enum import Enum

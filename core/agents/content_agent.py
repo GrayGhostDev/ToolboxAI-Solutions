@@ -67,7 +67,8 @@ except ImportError as e:
 
 # Import MCP context management
 try:
-    import websockets
+    # WebSocket replaced with Pusher for real-time communication
+    # from apps.backend.services.pusher import trigger_event as pusher_trigger
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False

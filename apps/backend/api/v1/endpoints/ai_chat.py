@@ -4,7 +4,15 @@ Provides a conversational AI interface to help teachers create Roblox educationa
 Integrates with LangChain/LangGraph for intelligent content generation and guidance.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, BackgroundTasks, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
+    BackgroundTasks,
+    status,
+)
 from fastapi.responses import StreamingResponse
 from typing import Dict, Any, List, Optional, AsyncGenerator
 from datetime import datetime
@@ -27,7 +35,9 @@ try:
     # from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
     # from langgraph.checkpoint.sqlite import SqliteSaver
     LANGCHAIN_AVAILABLE = False
-    logging.warning("LangChain temporarily disabled due to Pydantic v2 compatibility. Using direct OpenAI API.")
+    logging.warning(
+        "LangChain temporarily disabled due to Pydantic v2 compatibility. Using direct OpenAI API."
+    )
 except ImportError as e:
     logging.warning(f"LangChain imports failed: {e}. Will use direct API.")
     LANGCHAIN_AVAILABLE = False
@@ -39,6 +49,7 @@ except ImportError as e:
 try:
     import anthropic
     from anthropic import Anthropic, AsyncAnthropic
+
     ANTHROPIC_AVAILABLE = True
 except ImportError:
     logging.warning("Anthropic library not available")
@@ -49,6 +60,7 @@ except ImportError:
 try:
     import openai
     from openai import OpenAI, AsyncOpenAI
+
     OPENAI_AVAILABLE = True
 except ImportError:
     logging.warning("OpenAI library not available")
@@ -66,11 +78,14 @@ except ImportError:
         # Fallback for development
         def get_current_user():
             from pydantic import BaseModel
+
             class MockUser(BaseModel):
                 email: str = "test@example.com"
                 role: str = "teacher"
                 id: Optional[str] = "test_user_id"
+
             return MockUser()
+
 
 # Model imports
 try:
@@ -91,6 +106,7 @@ except ImportError:
             timestamp: datetime = Field(default_factory=datetime.utcnow)
             request_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
 
+
 logger = logging.getLogger(__name__)
 
 # =============================================================================
@@ -98,13 +114,18 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 import os
+
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Latest models as of 2025
 # Anthropic Claude Models
-ANTHROPIC_MODEL_OPUS = "claude-opus-4-1-20250805"  # Most capable Claude model ($15/$75 per M tokens)
-ANTHROPIC_MODEL_SONNET = "claude-sonnet-4-20250514"  # Balanced performance/cost ($3/$15 per M tokens)
+ANTHROPIC_MODEL_OPUS = (
+    "claude-opus-4-1-20250805"  # Most capable Claude model ($15/$75 per M tokens)
+)
+ANTHROPIC_MODEL_SONNET = (
+    "claude-sonnet-4-20250514"  # Balanced performance/cost ($3/$15 per M tokens)
+)
 # Allow environment variable override
 ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", ANTHROPIC_MODEL_OPUS)  # Default to Opus
 
@@ -119,9 +140,11 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", OPENAI_MODEL_4O)  # Default to GPT-4o
 MAX_CONVERSATION_LENGTH = 100  # Maximum messages in a conversation
 CHECKPOINT_DIR = "/tmp/langgraph_checkpoints"  # Directory for conversation persistence
 
+
 # Educational content stages
 class ContentStage(str, Enum):
     """8-stage educational content creation flow"""
+
     INTENT = "intent_understanding"
     REQUIREMENTS = "requirements_gathering"
     PLANNING = "content_planning"
@@ -131,24 +154,31 @@ class ContentStage(str, Enum):
     DEPLOYMENT = "deployment_preparation"
     DELIVERY = "final_delivery"
 
+
 # =============================================================================
 # ENUMS & MODELS
 # =============================================================================
 
+
 class MessageRole(str, Enum):
     """Message roles in conversation"""
+
     USER = "user"
     ASSISTANT = "assistant"
     SYSTEM = "system"
 
+
 class ConversationStatus(str, Enum):
     """Conversation status"""
+
     ACTIVE = "active"
     ARCHIVED = "archived"
     GENERATING = "generating"
 
+
 class IntentType(str, Enum):
     """User intent classification"""
+
     CREATE_LESSON = "create_lesson"
     DESIGN_ENVIRONMENT = "design_environment"
     GENERATE_QUIZ = "generate_quiz"
@@ -158,33 +188,41 @@ class IntentType(str, Enum):
     DEPLOY = "deploy"
     UNCLEAR = "unclear"
 
+
 # Request/Response Models
 class CreateConversationRequest(BaseModel):
     """Create new conversation"""
+
     title: Optional[str] = Field(None, description="Conversation title")
     context: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Initial context")
 
+
 class SendMessageRequest(BaseModel):
     """Send message in conversation"""
+
     message: str = Field(..., min_length=1, max_length=5000, description="User message")
     attachments: Optional[List[Dict[str, Any]]] = Field(None, description="File attachments")
 
-    @field_validator('message')
+    @field_validator("message")
     def validate_message(cls, v):
         if not v.strip():
-            raise ValueError('Message cannot be empty')
+            raise ValueError("Message cannot be empty")
         return v.strip()
+
 
 class MessageResponse(BaseModel):
     """Single message in conversation"""
+
     id: str = Field(..., description="Message ID")
     role: MessageRole = Field(..., description="Message role")
     content: str = Field(..., description="Message content")
     timestamp: datetime = Field(..., description="Message timestamp")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
 
+
 class ConversationResponse(BaseModel):
     """Conversation with messages"""
+
     id: str = Field(..., description="Conversation ID")
     title: str = Field(..., description="Conversation title")
     status: ConversationStatus = Field(..., description="Conversation status")
@@ -193,23 +231,29 @@ class ConversationResponse(BaseModel):
     messages: List[MessageResponse] = Field(..., description="Conversation messages")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Conversation metadata")
 
+
 class StreamingToken(BaseModel):
     """Streaming response token"""
+
     token: str = Field(..., description="Token text")
     is_final: bool = Field(default=False, description="Is this the final token")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Token metadata")
+
 
 # =============================================================================
 # LANGGRAPH STATE & WORKFLOW
 # =============================================================================
 
+
 class ConversationState(BaseModel):
     """State for LangGraph conversation workflow"""
+
     messages: List[Dict[str, Any]] = Field(default_factory=list)
     intent: Optional[IntentType] = None
     context: Dict[str, Any] = Field(default_factory=dict)
     current_task: Optional[str] = None
     generated_content: Optional[Dict[str, Any]] = None
+
 
 class RobloxAssistantGraph:
     """LangGraph workflow for Roblox educational assistant"""
@@ -249,7 +293,9 @@ class RobloxAssistantGraph:
                 self.openai_client = OpenAI(api_key=openai_key)
                 self.async_openai_client = AsyncOpenAI(api_key=openai_key)
                 clients_initialized.append(f"OpenAI ({OPENAI_MODEL})")
-                logger.info(f"Initialized OpenAI ({OPENAI_MODEL}) as {'fallback' if self.async_anthropic_client else 'primary'} LLM")
+                logger.info(
+                    f"Initialized OpenAI ({OPENAI_MODEL}) as {'fallback' if self.async_anthropic_client else 'primary'} LLM"
+                )
             except Exception as e:
                 logger.warning(f"Failed to initialize OpenAI: {e}")
 
@@ -262,7 +308,7 @@ class RobloxAssistantGraph:
                         model=ANTHROPIC_MODEL,
                         streaming=True,
                         temperature=0.7,
-                        max_tokens=4096
+                        max_tokens=4096,
                     )
                     self._build_graph()
                     clients_initialized.append("LangChain + Anthropic")
@@ -272,10 +318,7 @@ class RobloxAssistantGraph:
             if openai_key and ChatOpenAI and not self.llm:
                 try:
                     self.llm = ChatOpenAI(
-                        api_key=openai_key,
-                        model=OPENAI_MODEL,
-                        streaming=True,
-                        temperature=0.7
+                        api_key=openai_key, model=OPENAI_MODEL, streaming=True, temperature=0.7
                     )
                     self._build_graph()
                     clients_initialized.append("LangChain + OpenAI")
@@ -385,7 +428,7 @@ class RobloxAssistantGraph:
         state.generated_content = {
             "type": state.intent.value if state.intent else "general",
             "status": "generating",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         if not self.llm:
@@ -394,7 +437,11 @@ class RobloxAssistantGraph:
             return state
 
         # Call Roblox content generation API if appropriate intent
-        if state.intent in [IntentType.CREATE_LESSON, IntentType.DESIGN_ENVIRONMENT, IntentType.GENERATE_QUIZ]:
+        if state.intent in [
+            IntentType.CREATE_LESSON,
+            IntentType.DESIGN_ENVIRONMENT,
+            IntentType.GENERATE_QUIZ,
+        ]:
             try:
                 # Import here to avoid circular imports
                 from httpx import AsyncClient
@@ -404,7 +451,7 @@ class RobloxAssistantGraph:
                 content_type_map = {
                     IntentType.CREATE_LESSON: "lesson",
                     IntentType.DESIGN_ENVIRONMENT: "environment",
-                    IntentType.GENERATE_QUIZ: "quiz"
+                    IntentType.GENERATE_QUIZ: "quiz",
                 }
 
                 # Extract parameters from conversation
@@ -423,11 +470,13 @@ class RobloxAssistantGraph:
                             "description": last_message,
                             "ai_assistance": True,
                             "include_quiz": state.intent == IntentType.GENERATE_QUIZ,
-                            "terrain_type": "educational_playground" if state.intent == IntentType.DESIGN_ENVIRONMENT else None
+                            "terrain_type": (
+                                "educational_playground"
+                                if state.intent == IntentType.DESIGN_ENVIRONMENT
+                                else None
+                            ),
                         },
-                        headers={
-                            "Authorization": f"Bearer {state.context.get('auth_token', '')}"
-                        }
+                        headers={"Authorization": f"Bearer {state.context.get('auth_token', '')}"},
                     )
 
                     if response.status_code in [200, 201, 202]:
@@ -453,7 +502,7 @@ class RobloxAssistantGraph:
             state.generated_content["preview"] = {
                 "available": True,
                 "type": "3d_environment",
-                "data": {}  # Placeholder for 3D preview data
+                "data": {},  # Placeholder for 3D preview data
             }
 
         return state
@@ -463,7 +512,9 @@ class RobloxAssistantGraph:
         # Format the response for the user
         return state
 
-    async def process_message(self, conversation_id: str, message: str) -> AsyncGenerator[str, None]:
+    async def process_message(
+        self, conversation_id: str, message: str
+    ) -> AsyncGenerator[str, None]:
         """Process a message and stream response with full context and automatic fallback"""
         try:
             # Get conversation history
@@ -472,7 +523,7 @@ class RobloxAssistantGraph:
                     "messages": [],
                     "stage": ContentStage.INTENT,
                     "context": {},
-                    "requirements": {}
+                    "requirements": {},
                 }
 
             memory = self.conversation_memory[conversation_id]
@@ -480,24 +531,25 @@ class RobloxAssistantGraph:
 
             # Extract context from ENTIRE conversation history
             import re
+
             full_conversation = " ".join([msg["content"].lower() for msg in memory["messages"]])
             current_message_lower = message.lower()
 
             # Enhanced grade extraction (handles "4th grade", "4th grader", "grade 4", etc.)
             grade_patterns = [
-                (r'(kindergarten|k-\d|k\d)', 'kindergarten'),
-                (r'(1st|first|grade 1)\s*(?:grade|grader)?', '1st grade'),
-                (r'(2nd|second|grade 2)\s*(?:grade|grader)?', '2nd grade'),
-                (r'(3rd|third|grade 3)\s*(?:grade|grader)?', '3rd grade'),
-                (r'(4th|fourth|grade 4)\s*(?:grade|grader)?', '4th grade'),
-                (r'(5th|fifth|grade 5)\s*(?:grade|grader)?', '5th grade'),
-                (r'(6th|sixth|grade 6)\s*(?:grade|grader)?', '6th grade'),
-                (r'(7th|seventh|grade 7)\s*(?:grade|grader)?', '7th grade'),
-                (r'(8th|eighth|grade 8)\s*(?:grade|grader)?', '8th grade'),
-                (r'(9th|ninth|grade 9)\s*(?:grade|grader)?', '9th grade'),
-                (r'(10th|tenth|grade 10)\s*(?:grade|grader)?', '10th grade'),
-                (r'(11th|eleventh|grade 11)\s*(?:grade|grader)?', '11th grade'),
-                (r'(12th|twelfth|grade 12)\s*(?:grade|grader)?', '12th grade'),
+                (r"(kindergarten|k-\d|k\d)", "kindergarten"),
+                (r"(1st|first|grade 1)\s*(?:grade|grader)?", "1st grade"),
+                (r"(2nd|second|grade 2)\s*(?:grade|grader)?", "2nd grade"),
+                (r"(3rd|third|grade 3)\s*(?:grade|grader)?", "3rd grade"),
+                (r"(4th|fourth|grade 4)\s*(?:grade|grader)?", "4th grade"),
+                (r"(5th|fifth|grade 5)\s*(?:grade|grader)?", "5th grade"),
+                (r"(6th|sixth|grade 6)\s*(?:grade|grader)?", "6th grade"),
+                (r"(7th|seventh|grade 7)\s*(?:grade|grader)?", "7th grade"),
+                (r"(8th|eighth|grade 8)\s*(?:grade|grader)?", "8th grade"),
+                (r"(9th|ninth|grade 9)\s*(?:grade|grader)?", "9th grade"),
+                (r"(10th|tenth|grade 10)\s*(?:grade|grader)?", "10th grade"),
+                (r"(11th|eleventh|grade 11)\s*(?:grade|grader)?", "11th grade"),
+                (r"(12th|twelfth|grade 12)\s*(?:grade|grader)?", "12th grade"),
             ]
 
             if "grade" not in memory["context"]:
@@ -509,10 +561,53 @@ class RobloxAssistantGraph:
             # Enhanced subject extraction (consolidated, no conflicts)
             if "subject" not in memory["context"]:
                 subjects = {
-                    "math": ["math", "mathematics", "fraction", "pizza", "multiplication", "division", "geometry", "algebra", "number", "equation", "calculation"],
-                    "science": ["science", "biology", "chemistry", "physics", "ecosystem", "solar", "planet", "experiment", "lab", "atoms"],
-                    "history": ["history", "historical", "ancient", "civilization", "american", "world war", "timeline", "museum", "past"],
-                    "english": ["english", "reading", "writing", "grammar", "vocabulary", "literature", "story", "poem", "essay"]
+                    "math": [
+                        "math",
+                        "mathematics",
+                        "fraction",
+                        "pizza",
+                        "multiplication",
+                        "division",
+                        "geometry",
+                        "algebra",
+                        "number",
+                        "equation",
+                        "calculation",
+                    ],
+                    "science": [
+                        "science",
+                        "biology",
+                        "chemistry",
+                        "physics",
+                        "ecosystem",
+                        "solar",
+                        "planet",
+                        "experiment",
+                        "lab",
+                        "atoms",
+                    ],
+                    "history": [
+                        "history",
+                        "historical",
+                        "ancient",
+                        "civilization",
+                        "american",
+                        "world war",
+                        "timeline",
+                        "museum",
+                        "past",
+                    ],
+                    "english": [
+                        "english",
+                        "reading",
+                        "writing",
+                        "grammar",
+                        "vocabulary",
+                        "literature",
+                        "story",
+                        "poem",
+                        "essay",
+                    ],
                 }
 
                 for subject, keywords in subjects.items():
@@ -523,10 +618,41 @@ class RobloxAssistantGraph:
             # Extract specific topic if mentioned (e.g., "fractions", "solar system")
             if "topic" not in memory["context"]:
                 topics = {
-                    "fractions": ["fraction", "pizza", "parts", "halves", "thirds", "fourths", "eighths", "pieces"],
-                    "solar system": ["solar", "planet", "space", "mars", "jupiter", "saturn", "orbit"],
-                    "ancient civilizations": ["ancient", "egypt", "rome", "greece", "civilization", "museum"],
-                    "ecosystems": ["ecosystem", "habitat", "animal", "plant", "environment", "food chain"]
+                    "fractions": [
+                        "fraction",
+                        "pizza",
+                        "parts",
+                        "halves",
+                        "thirds",
+                        "fourths",
+                        "eighths",
+                        "pieces",
+                    ],
+                    "solar system": [
+                        "solar",
+                        "planet",
+                        "space",
+                        "mars",
+                        "jupiter",
+                        "saturn",
+                        "orbit",
+                    ],
+                    "ancient civilizations": [
+                        "ancient",
+                        "egypt",
+                        "rome",
+                        "greece",
+                        "civilization",
+                        "museum",
+                    ],
+                    "ecosystems": [
+                        "ecosystem",
+                        "habitat",
+                        "animal",
+                        "plant",
+                        "environment",
+                        "food chain",
+                    ],
                 }
 
                 for topic, keywords in topics.items():
@@ -536,19 +662,45 @@ class RobloxAssistantGraph:
 
             # Extract class size from full conversation
             if "class_size" not in memory["context"]:
-                size_match = re.search(r'(\d+)\s*(?:students?|kids?|children|learners?)', full_conversation)
+                size_match = re.search(
+                    r"(\d+)\s*(?:students?|kids?|children|learners?)", full_conversation
+                )
                 if size_match:
                     memory["context"]["class_size"] = int(size_match.group(1))
 
             # Extract game style preference from full conversation
             if "style" not in memory["context"]:
-                if any(word in full_conversation for word in ["game", "play", "fun", "interactive", "adventure", "quest", "simulation"]):
+                if any(
+                    word in full_conversation
+                    for word in [
+                        "game",
+                        "play",
+                        "fun",
+                        "interactive",
+                        "adventure",
+                        "quest",
+                        "simulation",
+                    ]
+                ):
                     memory["context"]["style"] = "game"
-                elif any(word in full_conversation for word in ["worksheet", "quiz", "test", "assessment", "questions"]):
+                elif any(
+                    word in full_conversation
+                    for word in ["worksheet", "quiz", "test", "assessment", "questions"]
+                ):
                     memory["context"]["style"] = "assessment"
 
             # Check if user is giving creative control
-            if any(phrase in current_message_lower for phrase in ["you choose", "you decide", "i trust you", "up to you", "your call", "surprise me"]):
+            if any(
+                phrase in current_message_lower
+                for phrase in [
+                    "you choose",
+                    "you decide",
+                    "i trust you",
+                    "up to you",
+                    "your call",
+                    "surprise me",
+                ]
+            ):
                 memory["context"]["user_control"] = "delegated"
 
             # Determine if we have enough information to complete
@@ -565,7 +717,9 @@ class RobloxAssistantGraph:
                 memory["context"]["force_complete"] = "User delegated control - DESIGN NOW!"
             elif has_grade and has_subject and (has_style or has_class_size):
                 should_complete = True
-                memory["context"]["force_complete"] = "Have sufficient information - PRESENT DESIGN!"
+                memory["context"][
+                    "force_complete"
+                ] = "Have sufficient information - PRESENT DESIGN!"
             elif message_count >= 6:  # 3 user messages + 3 AI messages
                 should_complete = True
                 memory["context"]["force_complete"] = "Maximum exchanges reached - COMPLETE NOW!"
@@ -611,10 +765,7 @@ You MUST present a complete design with:
 {f"🔴 USER GAVE YOU CONTROL: {memory['context'].get('user_control')} - CREATE SOMETHING NOW!" if memory['context'].get('user_control') == 'delegated' else ""}"""
 
                     for msg in memory["messages"]:
-                        anthropic_messages.append({
-                            "role": msg["role"],
-                            "content": msg["content"]
-                        })
+                        anthropic_messages.append({"role": msg["role"], "content": msg["content"]})
 
                     # Generate response with async Anthropic for better scalability
                     stream = await self.async_anthropic_client.messages.create(
@@ -623,7 +774,7 @@ You MUST present a complete design with:
                         system=system_content,
                         stream=True,
                         max_tokens=4096,
-                        temperature=0.7
+                        temperature=0.7,
                     )
 
                     response_text = ""
@@ -646,7 +797,9 @@ You MUST present a complete design with:
                 try:
                     # Build messages for OpenAI
                     openai_messages = [
-                        {"role": "system", "content": f"""You are a friendly educational consultant helping teachers design engaging Roblox learning experiences.
+                        {
+                            "role": "system",
+                            "content": f"""You are a friendly educational consultant helping teachers design engaging Roblox learning experiences.
 
 {'🚨 URGENT: ' + memory['context'].get('force_complete', '') if memory['context'].get('MUST_COMPLETE') else ''}
 
@@ -673,16 +826,14 @@ You MUST present a complete design with:
 • If missing critical info → Ask ONE specific question
 • Never repeat questions about known information'''}
 
-{f"🔴 USER GAVE YOU CONTROL: {memory['context'].get('user_control')} - CREATE SOMETHING NOW!" if memory['context'].get('user_control') == 'delegated' else ""}"""}
+{f"🔴 USER GAVE YOU CONTROL: {memory['context'].get('user_control')} - CREATE SOMETHING NOW!" if memory['context'].get('user_control') == 'delegated' else ""}""",
+                        }
                     ]
                     openai_messages.extend(memory["messages"])
 
                     # Generate response with async OpenAI for better scalability
                     stream = await self.async_openai_client.chat.completions.create(
-                        model=OPENAI_MODEL,
-                        messages=openai_messages,
-                        stream=True,
-                        temperature=0.7
+                        model=OPENAI_MODEL, messages=openai_messages, stream=True, temperature=0.7
                     )
 
                     response_text = ""
@@ -695,7 +846,9 @@ You MUST present a complete design with:
                     # Save assistant response to memory
                     memory["messages"].append({"role": "assistant", "content": response_text})
                     response_generated = True
-                    logger.info(f"Response generated with OpenAI ({OPENAI_MODEL}) after Anthropic fallback")
+                    logger.info(
+                        f"Response generated with OpenAI ({OPENAI_MODEL}) after Anthropic fallback"
+                    )
 
                 except Exception as e:
                     logger.warning(f"OpenAI API failed: {e}, trying LangChain fallback")
@@ -728,10 +881,11 @@ You MUST present a complete design with:
 
                     # Format messages for the LLM
                     formatted_messages = [
-                        SystemMessage(content=system_prompt.format(
-                            stage=memory["stage"],
-                            context=json.dumps(memory["context"])
-                        ))
+                        SystemMessage(
+                            content=system_prompt.format(
+                                stage=memory["stage"], context=json.dumps(memory["context"])
+                            )
+                        )
                     ]
 
                     for msg in memory["messages"]:
@@ -743,7 +897,7 @@ You MUST present a complete design with:
                     # Generate response with LangChain
                     response_text = ""
                     async for chunk in self.llm.astream(formatted_messages):
-                        if hasattr(chunk, 'content'):
+                        if hasattr(chunk, "content"):
                             response_text += chunk.content
                             yield chunk.content
 
@@ -776,7 +930,9 @@ You MUST present a complete design with:
     def _generate_contextual_fallback(self, message: str, memory: dict) -> str:
         """Generate context-aware fallback responses without LLM"""
         # Check conversation history for context
-        last_messages = memory["messages"][-3:] if len(memory["messages"]) >= 3 else memory["messages"]
+        last_messages = (
+            memory["messages"][-3:] if len(memory["messages"]) >= 3 else memory["messages"]
+        )
 
         # Check if this is a follow-up to a quiz discussion
         discussing_quiz = any("quiz" in msg.get("content", "").lower() for msg in last_messages)
@@ -792,6 +948,7 @@ You MUST present a complete design with:
         else:
             return "Hello! I'm here to help you create an amazing educational experience in Roblox for your students. Whether you're teaching math, science, history, or any other subject, we can design something both engaging and educational. To get started, could you tell me what subject you teach and what grade level your students are?"
 
+
 # =============================================================================
 # IN-MEMORY STORAGE (Replace with database in production)
 # =============================================================================
@@ -805,6 +962,7 @@ assistant_graph = None
 # =============================================================================
 # WEBSOCKET CONNECTION MANAGER
 # =============================================================================
+
 
 class ChatConnectionManager:
     """Manages WebSocket connections for chat"""
@@ -846,6 +1004,7 @@ class ChatConnectionManager:
         for conv_id in disconnected:
             self.disconnect(conv_id)
 
+
 # Global connection manager
 chat_manager = ChatConnectionManager()
 
@@ -859,10 +1018,12 @@ router = APIRouter(prefix="/ai-chat", tags=["AI Chat"])
 # API ENDPOINTS
 # =============================================================================
 
-@router.post("/conversations", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/conversations", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_conversation(
-    request: CreateConversationRequest,
-    current_user: User = Depends(get_current_user)
+    request: CreateConversationRequest, current_user: User = Depends(get_current_user)
 ) -> ConversationResponse:
     """Create a new AI chat conversation"""
 
@@ -876,11 +1037,8 @@ async def create_conversation(
         "status": ConversationStatus.ACTIVE.value,
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
-        "user_id": current_user.id if hasattr(current_user, 'id') else current_user.email,
-        "metadata": {
-            "context": request.context or {},
-            "user_role": current_user.role
-        }
+        "user_id": current_user.id if hasattr(current_user, "id") else current_user.email,
+        "metadata": {"context": request.context or {}, "user_role": current_user.role},
     }
 
     # Store conversation
@@ -893,23 +1051,21 @@ async def create_conversation(
         "role": MessageRole.SYSTEM.value,
         "content": "Hello! I'm your Roblox Educational Assistant. I'll help you create engaging educational environments for your students. What would you like to create today?",
         "timestamp": datetime.utcnow(),
-        "metadata": {"type": "greeting"}
+        "metadata": {"type": "greeting"},
     }
     messages[conversation_id].append(system_msg)
 
     logger.info(f"Created conversation {conversation_id} for user {current_user.email}")
 
-    return ConversationResponse(
-        **conversation,
-        messages=[MessageResponse(**system_msg)]
-    )
+    return ConversationResponse(**conversation, messages=[MessageResponse(**system_msg)])
+
 
 @router.post("/conversations/{conversation_id}/messages", response_model=MessageResponse)
 async def send_message(
     conversation_id: str,
     request: SendMessageRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> MessageResponse:
     """Send a message and receive AI response"""
 
@@ -917,15 +1073,16 @@ async def send_message(
     if conversation_id not in conversations:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Conversation {conversation_id} not found"
+            detail=f"Conversation {conversation_id} not found",
         )
 
     # Verify user owns conversation
     conversation = conversations[conversation_id]
-    if conversation["user_id"] != (current_user.id if hasattr(current_user, 'id') else current_user.email):
+    if conversation["user_id"] != (
+        current_user.id if hasattr(current_user, "id") else current_user.email
+    ):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to this conversation"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to this conversation"
         )
 
     # Create user message
@@ -934,7 +1091,7 @@ async def send_message(
         "role": MessageRole.USER.value,
         "content": request.message,
         "timestamp": datetime.utcnow(),
-        "metadata": {"attachments": request.attachments} if request.attachments else None
+        "metadata": {"attachments": request.attachments} if request.attachments else None,
     }
 
     # Add to messages
@@ -945,21 +1102,16 @@ async def send_message(
     conversation["status"] = ConversationStatus.GENERATING.value
 
     # Schedule AI response generation
-    background_tasks.add_task(
-        generate_ai_response,
-        conversation_id,
-        request.message,
-        current_user
-    )
+    background_tasks.add_task(generate_ai_response, conversation_id, request.message, current_user)
 
     logger.info(f"Message sent to conversation {conversation_id}")
 
     return MessageResponse(**user_msg)
 
+
 @router.post("/generate")
 async def generate_ai_response_endpoint(
-    request: SendMessageRequest,
-    current_user: User = Depends(get_current_user)
+    request: SendMessageRequest, current_user: User = Depends(get_current_user)
 ):
     """
     Generate AI-powered educational content with streaming response.
@@ -1009,7 +1161,7 @@ async def generate_ai_response_endpoint(
     """
 
     # Extract conversation_id from request or create temporary one
-    conversation_id = getattr(request, 'conversation_id', None)
+    conversation_id = getattr(request, "conversation_id", None)
     if not conversation_id:
         conversation_id = f"temp_{uuid.uuid4().hex[:8]}"
         conversations[conversation_id] = {
@@ -1018,8 +1170,8 @@ async def generate_ai_response_endpoint(
             "status": ConversationStatus.ACTIVE,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
-            "user_id": current_user.id if hasattr(current_user, 'id') else current_user.email,
-            "metadata": {"temporary": True}
+            "user_id": current_user.id if hasattr(current_user, "id") else current_user.email,
+            "metadata": {"temporary": True},
         }
         messages[conversation_id] = []
 
@@ -1029,7 +1181,7 @@ async def generate_ai_response_endpoint(
         "role": MessageRole.USER,
         "content": request.message,
         "timestamp": datetime.utcnow(),
-        "metadata": {"attachments": request.attachments or []}
+        "metadata": {"attachments": request.attachments or []},
     }
     messages[conversation_id].append(user_msg)
 
@@ -1041,11 +1193,9 @@ async def generate_ai_response_endpoint(
 
         try:
             # Send immediate acknowledgment
-            yield json.dumps({
-                "type": "start",
-                "id": ai_msg_id,
-                "timestamp": datetime.utcnow().isoformat()
-            }) + "\n"
+            yield json.dumps(
+                {"type": "start", "id": ai_msg_id, "timestamp": datetime.utcnow().isoformat()}
+            ) + "\n"
 
             # If using assistant_graph, stream the response
             if assistant_graph:
@@ -1057,16 +1207,20 @@ async def generate_ai_response_endpoint(
                 yield json.dumps({"type": "token", "content": "... "}) + "\n"
 
                 # Stream actual LLM response
-                async for token in assistant_graph.process_message(conversation_id, request.message):
+                async for token in assistant_graph.process_message(
+                    conversation_id, request.message
+                ):
                     response_text += token
                     yield json.dumps({"type": "token", "content": token}) + "\n"
 
                     # Timeout protection
                     if time.time() - start_time > 55:
-                        yield json.dumps({
-                            "type": "token",
-                            "content": "\n\n[Response truncated due to time limit. Please continue the conversation.]"
-                        }) + "\n"
+                        yield json.dumps(
+                            {
+                                "type": "token",
+                                "content": "\n\n[Response truncated due to time limit. Please continue the conversation.]",
+                            }
+                        ) + "\n"
                         response_text += "\n\n[Response truncated due to time limit. Please continue the conversation.]"
                         break
             else:
@@ -1083,30 +1237,33 @@ async def generate_ai_response_endpoint(
                 "role": MessageRole.ASSISTANT.value,
                 "content": response_text.strip(),
                 "timestamp": datetime.utcnow(),
-                "metadata": {"generated": True, "streaming": True}
+                "metadata": {"generated": True, "streaming": True},
             }
             messages[conversation_id].append(ai_msg)
 
             # Send completion signal with full message
-            yield json.dumps({
-                "type": "complete",
-                "message": {
-                    "id": ai_msg["id"],
-                    "role": ai_msg["role"],
-                    "content": ai_msg["content"],
-                    "timestamp": ai_msg["timestamp"].isoformat(),
-                    "metadata": ai_msg["metadata"]
+            yield json.dumps(
+                {
+                    "type": "complete",
+                    "message": {
+                        "id": ai_msg["id"],
+                        "role": ai_msg["role"],
+                        "content": ai_msg["content"],
+                        "timestamp": ai_msg["timestamp"].isoformat(),
+                        "metadata": ai_msg["metadata"],
+                    },
                 }
-            }) + "\n"
+            ) + "\n"
 
             # Also send via Pusher for other connected clients
             try:
                 from apps.backend.services.pusher import trigger_event
+
                 channel = f"ai-chat-{conversation_id}"
                 trigger_event(
                     channel=channel,
                     event="ai_response",
-                    data={"conversation_id": conversation_id, "message": ai_msg}
+                    data={"conversation_id": conversation_id, "message": ai_msg},
                 )
                 logger.info(f"Sent AI response via Pusher to channel {channel}")
             except Exception as e:
@@ -1122,11 +1279,9 @@ async def generate_ai_response_endpoint(
     return StreamingResponse(
         stream_response(),
         media_type="application/x-ndjson",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no"  # Disable nginx buffering
-        }
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},  # Disable nginx buffering
     )
+
 
 async def cleanup_temp_conversation(conversation_id: str):
     """Clean up temporary conversation after 5 minutes"""
@@ -1136,10 +1291,10 @@ async def cleanup_temp_conversation(conversation_id: str):
     if conversation_id in messages:
         del messages[conversation_id]
 
+
 @router.get("/conversations/{conversation_id}", response_model=ConversationResponse)
 async def get_conversation(
-    conversation_id: str,
-    current_user: User = Depends(get_current_user)
+    conversation_id: str, current_user: User = Depends(get_current_user)
 ) -> ConversationResponse:
     """Get conversation with all messages"""
 
@@ -1147,80 +1302,79 @@ async def get_conversation(
     if conversation_id not in conversations:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Conversation {conversation_id} not found"
+            detail=f"Conversation {conversation_id} not found",
         )
 
     conversation = conversations[conversation_id]
 
     # Verify user owns conversation
-    if conversation["user_id"] != (current_user.id if hasattr(current_user, 'id') else current_user.email):
+    if conversation["user_id"] != (
+        current_user.id if hasattr(current_user, "id") else current_user.email
+    ):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to this conversation"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to this conversation"
         )
 
     # Get messages
     conversation_messages = messages.get(conversation_id, [])
 
     return ConversationResponse(
-        **conversation,
-        messages=[MessageResponse(**msg) for msg in conversation_messages]
+        **conversation, messages=[MessageResponse(**msg) for msg in conversation_messages]
     )
+
 
 @router.get("/conversations", response_model=List[ConversationResponse])
 async def list_conversations(
-    current_user: User = Depends(get_current_user),
-    limit: int = 20,
-    offset: int = 0
+    current_user: User = Depends(get_current_user), limit: int = 20, offset: int = 0
 ) -> List[ConversationResponse]:
     """List user's conversations"""
 
-    user_id = current_user.id if hasattr(current_user, 'id') else current_user.email
+    user_id = current_user.id if hasattr(current_user, "id") else current_user.email
 
     # Filter user's conversations
-    user_conversations = [
-        conv for conv in conversations.values()
-        if conv["user_id"] == user_id
-    ]
+    user_conversations = [conv for conv in conversations.values() if conv["user_id"] == user_id]
 
     # Sort by updated_at
     user_conversations.sort(key=lambda x: x["updated_at"], reverse=True)
 
     # Paginate
-    paginated = user_conversations[offset:offset + limit]
+    paginated = user_conversations[offset : offset + limit]
 
     # Return with messages
     result = []
     for conv in paginated:
         conv_messages = messages.get(conv["id"], [])
-        result.append(ConversationResponse(
-            **conv,
-            messages=[MessageResponse(**msg) for msg in conv_messages[-10:]]  # Last 10 messages
-        ))
+        result.append(
+            ConversationResponse(
+                **conv,
+                messages=[
+                    MessageResponse(**msg) for msg in conv_messages[-10:]
+                ],  # Last 10 messages
+            )
+        )
 
     return result
 
+
 @router.delete("/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_conversation(
-    conversation_id: str,
-    current_user: User = Depends(get_current_user)
-):
+async def delete_conversation(conversation_id: str, current_user: User = Depends(get_current_user)):
     """Archive/delete a conversation"""
 
     # Verify conversation exists
     if conversation_id not in conversations:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Conversation {conversation_id} not found"
+            detail=f"Conversation {conversation_id} not found",
         )
 
     conversation = conversations[conversation_id]
 
     # Verify user owns conversation
-    if conversation["user_id"] != (current_user.id if hasattr(current_user, 'id') else current_user.email):
+    if conversation["user_id"] != (
+        current_user.id if hasattr(current_user, "id") else current_user.email
+    ):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to this conversation"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to this conversation"
         )
 
     # Archive instead of delete
@@ -1229,9 +1383,11 @@ async def delete_conversation(
 
     logger.info(f"Archived conversation {conversation_id}")
 
+
 # =============================================================================
 # WEBSOCKET ENDPOINT
 # =============================================================================
+
 
 @router.websocket("/ws/{conversation_id}")
 async def websocket_chat(websocket: WebSocket, conversation_id: str):
@@ -1248,40 +1404,41 @@ async def websocket_chat(websocket: WebSocket, conversation_id: str):
                 message = data.get("content", "")
 
                 # Stream AI response
-                await websocket.send_json({
-                    "type": "stream_start",
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                await websocket.send_json(
+                    {"type": "stream_start", "timestamp": datetime.utcnow().isoformat()}
+                )
 
                 # Process with assistant
                 if assistant_graph:
                     async for token in assistant_graph.process_message(conversation_id, message):
-                        await websocket.send_json({
-                            "type": "stream_token",
-                            "content": token,
-                            "timestamp": datetime.utcnow().isoformat()
-                        })
+                        await websocket.send_json(
+                            {
+                                "type": "stream_token",
+                                "content": token,
+                                "timestamp": datetime.utcnow().isoformat(),
+                            }
+                        )
                 else:
                     # Mock response
                     response = "I'll help you create an amazing Roblox educational experience!"
                     for word in response.split():
-                        await websocket.send_json({
-                            "type": "stream_token",
-                            "content": word + " ",
-                            "timestamp": datetime.utcnow().isoformat()
-                        })
+                        await websocket.send_json(
+                            {
+                                "type": "stream_token",
+                                "content": word + " ",
+                                "timestamp": datetime.utcnow().isoformat(),
+                            }
+                        )
                         await asyncio.sleep(0.05)
 
-                await websocket.send_json({
-                    "type": "stream_end",
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                await websocket.send_json(
+                    {"type": "stream_end", "timestamp": datetime.utcnow().isoformat()}
+                )
 
             elif data.get("type") == "ping":
-                await websocket.send_json({
-                    "type": "pong",
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                await websocket.send_json(
+                    {"type": "pong", "timestamp": datetime.utcnow().isoformat()}
+                )
 
     except WebSocketDisconnect:
         chat_manager.disconnect(conversation_id)
@@ -1289,9 +1446,11 @@ async def websocket_chat(websocket: WebSocket, conversation_id: str):
         logger.error(f"WebSocket error: {e}")
         chat_manager.disconnect(conversation_id)
 
+
 # =============================================================================
 # BACKGROUND TASKS
 # =============================================================================
+
 
 async def generate_ai_response(conversation_id: str, user_message: str, user: User):
     """Generate AI response in background"""
@@ -1322,7 +1481,7 @@ async def generate_ai_response(conversation_id: str, user_message: str, user: Us
             "role": MessageRole.ASSISTANT.value,
             "content": response_text,
             "timestamp": datetime.utcnow(),
-            "metadata": {"generated": True}
+            "metadata": {"generated": True},
         }
 
         # Add to messages
@@ -1333,11 +1492,10 @@ async def generate_ai_response(conversation_id: str, user_message: str, user: Us
         conversations[conversation_id]["updated_at"] = datetime.utcnow()
 
         # Send via WebSocket if connected
-        await chat_manager.send_message(conversation_id, {
-            "type": "ai_message",
-            "message": ai_msg,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        await chat_manager.send_message(
+            conversation_id,
+            {"type": "ai_message", "message": ai_msg, "timestamp": datetime.utcnow().isoformat()},
+        )
 
         logger.info(f"Generated AI response for conversation {conversation_id}")
 
@@ -1345,15 +1503,18 @@ async def generate_ai_response(conversation_id: str, user_message: str, user: Us
         logger.error(f"Failed to generate AI response: {e}")
         conversations[conversation_id]["status"] = ConversationStatus.ACTIVE.value
 
+
 # =============================================================================
 # INITIALIZATION
 # =============================================================================
+
 
 def initialize_assistant():
     """Initialize the assistant with API key"""
     global assistant_graph
 
     import os
+
     anthropic_key = os.getenv("ANTHROPIC_API_KEY")
     openai_key = os.getenv("OPENAI_API_KEY")
 
@@ -1366,6 +1527,7 @@ def initialize_assistant():
     else:
         assistant_graph = RobloxAssistantGraph()  # Mock mode
         logger.warning("Roblox Assistant running in mock mode - no API keys found")
+
 
 # Initialize on module load
 initialize_assistant()

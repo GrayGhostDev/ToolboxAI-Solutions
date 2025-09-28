@@ -1,13 +1,7 @@
-import { vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Configure test timeout for Vitest
 vi.setConfig({ testTimeout: 10000 });
-
-/**
- * Auth Sync Service Tests
- */
-
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AuthSyncService } from './auth-sync';
 import { store } from '../store';
 import {

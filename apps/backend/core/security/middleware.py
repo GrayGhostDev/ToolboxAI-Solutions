@@ -82,29 +82,25 @@ class CircuitBreakerConfig:
 class RateLimiter:
     """Rate limiter that uses the centralized rate limit manager"""
 
-    def __init__(
-        self, config: RateLimitConfig, redis_client: Optional[redis.Redis] = None
-    ):
+    def __init__(self, config: RateLimitConfig, redis_client: Optional[redis.Redis] = None):
         self.config = config
         self.redis_client = redis_client
         # Use centralized manager
         self.manager = get_rate_limit_manager()
         self.cleanup_task: Optional[asyncio.Task] = None
 
-    async def check_rate_limit(
-        self, identifier: str, endpoint: str = ""
-    ) -> Tuple[bool, int]:
+    async def check_rate_limit(self, identifier: str, endpoint: str = "") -> Tuple[bool, int]:
         """
         Check if request is within rate limit
         Returns: (allowed, retry_after_seconds)
         """
         limit = self.config.by_endpoint.get(endpoint, self.config.requests_per_minute)
-        
+
         return await self.manager.check_rate_limit(
             identifier=identifier,
             max_requests=limit,
             window_seconds=self.config.window_seconds,
-            source="middleware"
+            source="middleware",
         )
 
     async def start_cleanup(self):
@@ -192,14 +188,10 @@ class CircuitBreaker:
                 "state": circuit["state"].value,
                 "failures": circuit["failures"],
                 "last_failure": (
-                    circuit["last_failure"].isoformat()
-                    if circuit["last_failure"]
-                    else None
+                    circuit["last_failure"].isoformat() if circuit["last_failure"] else None
                 ),
                 "last_success": (
-                    circuit["last_success"].isoformat()
-                    if circuit["last_success"]
-                    else None
+                    circuit["last_success"].isoformat() if circuit["last_success"] else None
                 ),
             }
             for service, circuit in self.circuits.items()
@@ -313,18 +305,15 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         max_request_size: int = MAX_REQUEST_SIZE,
     ):
         super().__init__(app)
-        
+
         # Convert old config to new format if needed
         if rate_limit_config is None:
             from .rate_limit_manager import RateLimitConfig as NewRateLimitConfig
+
             rate_limit_config = NewRateLimitConfig()
-        
-        self.rate_limiter = RateLimiter(
-            rate_limit_config, redis_client
-        )
-        self.circuit_breaker = CircuitBreaker(
-            circuit_breaker_config or CircuitBreakerConfig()
-        )
+
+        self.rate_limiter = RateLimiter(rate_limit_config, redis_client)
+        self.circuit_breaker = CircuitBreaker(circuit_breaker_config or CircuitBreakerConfig())
         self.secret_redactor = SecretRedactor()
         self.enable_request_id = enable_request_id
         self.max_request_size = max_request_size
@@ -355,8 +344,10 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
         # Skip rate limiting for OPTIONS requests (CORS preflight)
         # Check if path is excluded from rate limiting
-        if (request.method != "OPTIONS" and 
-            request.url.path not in self.rate_limiter.config.exclude_paths):
+        if (
+            request.method != "OPTIONS"
+            and request.url.path not in self.rate_limiter.config.exclude_paths
+        ):
             # Check rate limit
             allowed, retry_after = await self.rate_limiter.check_rate_limit(
                 client_id, request.url.path
@@ -381,9 +372,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             response.headers["X-Content-Type-Options"] = "nosniff"
             response.headers["X-Frame-Options"] = "DENY"
             response.headers["X-XSS-Protection"] = "1; mode=block"
-            response.headers["Strict-Transport-Security"] = (
-                "max-age=31536000; includeSubDomains"
-            )
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
             # Add timing header
             process_time = time.time() - start_time
@@ -434,9 +423,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
 
 # Convenience function to create middleware with default config
-def create_security_middleware(
-    app: ASGIApp, redis_url: Optional[str] = None
-) -> SecurityMiddleware:
+def create_security_middleware(app: ASGIApp, redis_url: Optional[str] = None) -> SecurityMiddleware:
     """Create security middleware with default configuration"""
     redis_client = None
     if redis_url:

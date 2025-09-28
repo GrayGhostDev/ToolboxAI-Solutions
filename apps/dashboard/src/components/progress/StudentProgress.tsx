@@ -1,30 +1,32 @@
 import * as React from "react";
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
-import LinearProgress from '@mui/material/LinearProgress';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Skeleton from '@mui/material/Skeleton';
-import Alert from '@mui/material/Alert';
-import Paper from '@mui/material/Paper';
-import Badge from '@mui/material/Badge';
-import Grid from '@mui/material/Grid';
+import {
+  Card,
+  Text,
+  Title,
+  Box,
+  Stack,
+  Avatar,
+  Progress,
+  Badge,
+  ActionIcon,
+  Skeleton,
+  Alert,
+  Paper,
+  Grid,
+  Group,
+  useMantineTheme,
+} from '@mantine/core';
 
 import { useState, useEffect } from "react";
 import {
-  EmojiEvents,
-  TrendingUp,
-  School,
-  Refresh,
-  Assignment,
-  PlayArrow,
-  CheckCircle,
-} from "@mui/icons-material";
-import { useTheme } from "@mui/material/styles";
+  IconTrophy as EmojiEvents,
+  IconTrendingUp,
+  IconSchool as School,
+  IconRefresh as Refresh,
+  IconClipboard as Assignment,
+  IconPlayerPlay as PlayArrow,
+  IconCircleCheck as CheckCircle,
+} from "@tabler/icons-react";
 import {
   ResponsiveContainer,
   XAxis,
@@ -34,7 +36,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { useWebSocketContext } from "../../contexts/WebSocketContext";
+import { usePusherContext } from "../../contexts/PusherContext";
 import { getStudentProgress, getWeeklyXP, getSubjectMastery } from "../../services/api";
 
 interface StudentData {
@@ -82,13 +84,13 @@ interface StudentProgressProps {
   autoRefresh?: boolean;
 }
 
-export function StudentProgress({ 
+export function StudentProgress({
   studentId,
   showDetailed = true,
-  autoRefresh = true 
+  autoRefresh = true
 }: StudentProgressProps) {
-  const theme = useTheme();
-  const { isConnected, subscribe, unsubscribe } = useWebSocketContext();
+  const theme = useMantineTheme();
+  const { isConnected, subscribeToChannel, unsubscribeFromChannel } = usePusherContext();
   
   const [studentData, setStudentData] = useState<StudentData | null>(null);
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress[]>([]);
@@ -320,312 +322,300 @@ export function StudentProgress({
   useEffect(() => {
     if (!isConnected || !autoRefresh) return;
 
-    const subscriptionId = subscribe('student_progress', (message: any) => {
-      if (message.type === 'PROGRESS_UPDATE' && message.payload.studentId === studentData?.id) {
-        setStudentData(prevData => {
-          if (!prevData) return prevData;
-          return {
-            ...prevData,
-            ...message.payload.updates,
-            lastActive: new Date().toISOString(),
-          };
-        });
+    const subscriptionId = subscribeToChannel('student_progress', {
+      'PROGRESS_UPDATE': (message: any) => {
+        if (message && message.studentId === studentData?.id) {
+          setStudentData(prevData => {
+            if (!prevData) return prevData;
+            return {
+              ...prevData,
+              ...message.updates,
+              lastActive: new Date().toISOString(),
+            };
+          });
+        }
       }
     });
 
     return () => {
-      unsubscribe(subscriptionId);
+      unsubscribeFromChannel(subscriptionId);
     };
-  }, [isConnected, autoRefresh, subscribe, unsubscribe, studentData?.id]);
+  }, [isConnected, autoRefresh, subscribeToChannel, unsubscribeFromChannel, studentData?.id]);
 
   const getActivityIcon = (type: string) => {
     switch (type) {
       case "lesson":
-        return <School fontSize="small" />;
+        return <School size={16} />;
       case "quiz":
-        return <Assignment fontSize="small" />;
+        return <Assignment size={16} />;
       case "game":
-        return <PlayArrow fontSize="small" />;
+        return <PlayArrow size={16} />;
       case "achievement":
-        return <EmojiEvents fontSize="small" />;
+        return <EmojiEvents size={16} />;
       default:
-        return <CheckCircle fontSize="small" />;
+        return <CheckCircle size={16} />;
     }
   };
 
   const getActivityColor = (type: string) => {
     switch (type) {
       case "lesson":
-        return "primary";
+        return "blue";
       case "quiz":
-        return "info";
+        return "cyan";
       case "game":
-        return "success";
+        return "green";
       case "achievement":
-        return "warning";
+        return "yellow";
       default:
-        return "default";
+        return "gray";
     }
   };
 
   if (loading) {
     return (
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Skeleton variant="circular" width={60} height={60} />
-              <Skeleton variant="text" height={40} />
-              <Skeleton variant="rectangular" height={100} />
-            </CardContent>
+      <Grid>
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <Card padding="md" withBorder>
+            <Skeleton circle height={60} mb="md" />
+            <Skeleton height={40} mb="md" />
+            <Skeleton height={100} />
           </Card>
-        </Grid>
-        <Grid item xs={12} md={8}>
-          <Card>
-            <CardContent>
-              <Skeleton variant="text" height={40} />
-              <Skeleton variant="rectangular" height={200} />
-            </CardContent>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 8 }}>
+          <Card padding="md" withBorder>
+            <Skeleton height={40} mb="md" />
+            <Skeleton height={200} />
           </Card>
-        </Grid>
+        </Grid.Col>
       </Grid>
     );
   }
 
   if (!studentData) {
     return (
-      <Alert severity="error">
+      <Alert color="red">
         Failed to load student data.
       </Alert>
     );
   }
 
   return (
-    <Grid container spacing={3}>
+    <Grid>
       {/* Student Overview */}
-      <Grid item xs={12} md={4}>
-        <Card>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={2}>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Badge badgeContent={studentData.level} color="primary">
-                  <Avatar 
-                    src={studentData.avatar} 
-                    sx={{ width: 60, height: 60 }}
-                  >
-                    {studentData.name.charAt(0)}
-                  </Avatar>
-                </Badge>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    {studentData.name}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Level {studentData.level} • {studentData.totalXP.toLocaleString()} XP
-                  </Typography>
-                </Box>
-              </Stack>
-              <IconButton size="small" onClick={(e: React.MouseEvent) => fetchData}>
-                <Refresh />
-              </IconButton>
-            </Stack>
-
-            {error && (
-              <Alert severity="warning" sx={{ mb: 2 }}>
-                Using fallback data: {error}
-              </Alert>
-            )}
-
-            <Stack spacing={2}>
+      <Grid.Col span={{ base: 12, md: 4 }}>
+        <Card padding="md" withBorder>
+          <Group justify="space-between" align="flex-start" mb="md">
+            <Group>
+              <Badge badgeContent={studentData.level} color="blue">
+                <Avatar
+                  src={studentData.avatar}
+                  size={60}
+                >
+                  {studentData.name.charAt(0)}
+                </Avatar>
+              </Badge>
               <Box>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-                  <Typography variant="caption">Overall Progress</Typography>
-                  <Typography variant="caption" fontWeight={500}>
-                    {studentData.lessonsCompleted}/{studentData.lessonsTotal} lessons
-                  </Typography>
-                </Stack>
-                <LinearProgress
-                  variant="determinate"
-                  value={(studentData.lessonsCompleted / studentData.lessonsTotal) * 100}
-                  sx={{ height: 8, borderRadius: 4 }}
-                />
+                <Title order={4} fw={600}>
+                  {studentData.name}
+                </Title>
+                <Text size="xs" c="dimmed">
+                  Level {studentData.level} • {studentData.totalXP.toLocaleString()} XP
+                </Text>
               </Box>
+            </Group>
+            <ActionIcon size="sm" onClick={fetchData}>
+              <Refresh size={16} />
+            </ActionIcon>
+          </Group>
 
-              <Stack direction="row" spacing={2}>
-                <Paper sx={{ p: 1.5, flex: 1, textAlign: 'center' }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Completion Rate
-                  </Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: 'success.main' }}>
-                    {studentData.completionRate.toFixed(1)}%
-                  </Typography>
-                </Paper>
-                <Paper sx={{ p: 1.5, flex: 1, textAlign: 'center' }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Avg Score
-                  </Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                    {studentData.averageScore.toFixed(1)}%
-                  </Typography>
-                </Paper>
-              </Stack>
+          {error && (
+            <Alert color="yellow" mb="md">
+              Using fallback data: {error}
+            </Alert>
+          )}
 
-              <Stack direction="row" spacing={2}>
-                <Chip 
-                  icon={<EmojiEvents />} 
-                  label={`${studentData.achievements} Achievements`}
-                  color="warning"
-                  size="small"
-                />
-                <Chip 
-                  icon={<TrendingUp />} 
-                  label={`${studentData.streak} day streak`}
-                  color="success"
-                  size="small"
-                />
-              </Stack>
+          <Stack gap="md">
+            <Box>
+              <Group justify="space-between" mb="xs">
+                <Text size="xs">Overall Progress</Text>
+                <Text size="xs" fw={500}>
+                  {studentData.lessonsCompleted}/{studentData.lessonsTotal} lessons
+                </Text>
+              </Group>
+              <Progress
+                value={(studentData.lessonsCompleted / studentData.lessonsTotal) * 100}
+                size="sm"
+                radius="xs"
+              />
+            </Box>
 
-              <Stack direction="row" spacing={2}>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Class Rank
-                  </Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    #{studentData.classRank}
-                  </Typography>
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Global Rank
-                  </Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    #{studentData.rank}
-                  </Typography>
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Time Spent
-                  </Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    {studentData.timeSpent.toFixed(1)}h
-                  </Typography>
-                </Box>
-              </Stack>
-            </Stack>
-          </CardContent>
+            <Group grow>
+              <Paper p="sm" style={{ textAlign: 'center' }}>
+                <Text size="xs" c="dimmed">
+                  Completion Rate
+                </Text>
+                <Text size="lg" fw={700} c="green">
+                  {studentData.completionRate.toFixed(1)}%
+                </Text>
+              </Paper>
+              <Paper p="sm" style={{ textAlign: 'center' }}>
+                <Text size="xs" c="dimmed">
+                  Avg Score
+                </Text>
+                <Text size="lg" fw={700} c="blue">
+                  {studentData.averageScore.toFixed(1)}%
+                </Text>
+              </Paper>
+            </Group>
+
+            <Group>
+              <Badge
+                leftSection={<EmojiEvents size={14} />}
+                color="yellow"
+                size="sm"
+              >
+                {studentData.achievements} Achievements
+              </Badge>
+              <Badge
+                leftSection={<IconTrendingUp size={14} />}
+                color="green"
+                size="sm"
+              >
+                {studentData.streak} day streak
+              </Badge>
+            </Group>
+
+            <Group grow>
+              <Box style={{ textAlign: 'center' }}>
+                <Text size="xs" c="dimmed">
+                  Class Rank
+                </Text>
+                <Text size="lg" fw={700}>
+                  #{studentData.classRank}
+                </Text>
+              </Box>
+              <Box style={{ textAlign: 'center' }}>
+                <Text size="xs" c="dimmed">
+                  Global Rank
+                </Text>
+                <Text size="lg" fw={700}>
+                  #{studentData.rank}
+                </Text>
+              </Box>
+              <Box style={{ textAlign: 'center' }}>
+                <Text size="xs" c="dimmed">
+                  Time Spent
+                </Text>
+                <Text size="lg" fw={700}>
+                  {studentData.timeSpent.toFixed(1)}h
+                </Text>
+              </Box>
+            </Group>
+          </Stack>
         </Card>
-      </Grid>
+      </Grid.Col>
 
       {/* Weekly Progress Chart */}
-      <Grid item xs={12} md={8}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-              Weekly Progress
-            </Typography>
-            <Box sx={{ height: 250 }}>
-              <ResponsiveContainer>
-                <BarChart data={weeklyProgress}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
-                  <XAxis dataKey="day" stroke={theme.palette.text.secondary} />
-                  <YAxis stroke={theme.palette.text.secondary} />
-                  <RechartsTooltip
-                    contentStyle={{
-                      backgroundColor: theme.palette.background.paper,
-                      border: `1px solid ${theme.palette.divider}`,
-                      borderRadius: 8,
-                    }}
-                  />
-                  <Bar dataKey="xp" fill={theme.palette.primary.main} radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          </CardContent>
+      <Grid.Col span={{ base: 12, md: 8 }}>
+        <Card padding="md" withBorder>
+          <Title order={4} fw={600} mb="md">
+            Weekly Progress
+          </Title>
+          <Box style={{ height: 250 }}>
+            <ResponsiveContainer>
+              <BarChart data={weeklyProgress}>
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.gray[3]} />
+                <XAxis dataKey="day" stroke={theme.colors.gray[6]} />
+                <YAxis stroke={theme.colors.gray[6]} />
+                <RechartsTooltip
+                  contentStyle={{
+                    backgroundColor: theme.colors.gray[0],
+                    border: `1px solid ${theme.colors.gray[3]}`,
+                    borderRadius: 8,
+                  }}
+                />
+                <Bar dataKey="xp" fill={theme.colors.blue[6]} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Box>
         </Card>
-      </Grid>
+      </Grid.Col>
 
       {/* Subject Mastery */}
       {showDetailed && (
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                Subject Mastery
-              </Typography>
-              <Stack spacing={2}>
-                {studentData.subjects.map((subject) => (
-                  <Box key={subject.name}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-                      <Typography variant="body2" fontWeight={500}>
-                        {subject.name}
-                      </Typography>
-                      <Typography variant="caption">
-                        {subject.mastery}% mastery
-                      </Typography>
-                    </Stack>
-                    <LinearProgress
-                      variant="determinate"
-                      value={subject.mastery}
-                      sx={{ 
-                        height: 8, 
-                        borderRadius: 4,
-                        '& .MuiLinearProgress-bar': { backgroundColor: subject.color }
-                      }}
-                    />
-                  </Box>
-                ))}
-              </Stack>
-            </CardContent>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card padding="md" withBorder>
+            <Title order={4} fw={600} mb="md">
+              Subject Mastery
+            </Title>
+            <Stack gap="md">
+              {studentData.subjects.map((subject) => (
+                <Box key={subject.name}>
+                  <Group justify="space-between" mb="xs">
+                    <Text size="sm" fw={500}>
+                      {subject.name}
+                    </Text>
+                    <Text size="xs">
+                      {subject.mastery}% mastery
+                    </Text>
+                  </Group>
+                  <Progress
+                    value={subject.mastery}
+                    size="sm"
+                    radius="xs"
+                    color={subject.color}
+                  />
+                </Box>
+              ))}
+            </Stack>
           </Card>
-        </Grid>
+        </Grid.Col>
       )}
 
       {/* Recent Activity */}
       {showDetailed && (
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                Recent Activity
-              </Typography>
-              <Stack spacing={1}>
-                {studentData.recentActivity.slice(0, 5).map((activity, index) => (
-                  <Paper key={index} sx={{ p: 2 }}>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      <Chip
-                        icon={getActivityIcon(activity.type)}
-                        label={activity.type}
-                        size="small"
-                        color={getActivityColor(activity.type) as any}
-                        variant="outlined"
-                      />
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="body2" fontWeight={500}>
-                          {activity.title}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(activity.completedAt).toLocaleString()}
-                        </Typography>
-                      </Box>
-                      <Stack alignItems="flex-end" spacing={0.5}>
-                        {activity.score && (
-                          <Typography variant="caption" fontWeight={500}>
-                            {activity.score}%
-                          </Typography>
-                        )}
-                        <Chip 
-                          label={`+${activity.xpEarned} XP`} 
-                          size="small" 
-                          color="primary"
-                        />
-                      </Stack>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card padding="md" withBorder>
+            <Title order={4} fw={600} mb="md">
+              Recent Activity
+            </Title>
+            <Stack gap="xs">
+              {studentData.recentActivity.slice(0, 5).map((activity, index) => (
+                <Paper key={index} p="md">
+                  <Group gap="md" align="center">
+                    <Badge
+                      leftSection={getActivityIcon(activity.type)}
+                      color={getActivityColor(activity.type)}
+                      size="sm"
+                      variant="outline"
+                    >
+                      {activity.type}
+                    </Badge>
+                    <Box style={{ flex: 1 }}>
+                      <Text size="sm" fw={500}>
+                        {activity.title}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {new Date(activity.completedAt).toLocaleString()}
+                      </Text>
+                    </Box>
+                    <Stack gap="xs" align="flex-end">
+                      {activity.score && (
+                        <Text size="xs" fw={500}>
+                          {activity.score}%
+                        </Text>
+                      )}
+                      <Badge color="blue" size="sm">
+                        +{activity.xpEarned} XP
+                      </Badge>
                     </Stack>
-                  </Paper>
-                ))}
-              </Stack>
-            </CardContent>
+                  </Group>
+                </Paper>
+              ))}
+            </Stack>
           </Card>
-        </Grid>
+        </Grid.Col>
       )}
     </Grid>
   );

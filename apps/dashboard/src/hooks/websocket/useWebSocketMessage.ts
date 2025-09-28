@@ -1,79 +1,99 @@
 /**
- * WebSocket message listener hook
- * Listens for specific message types and triggers callbacks
+ * WebSocket Message Hook (Pusher Implementation)
+ * Provides message handling using Pusher service
+ * Updated for 2025 standards
  */
 
-import { useEffect, useCallback, useRef } from 'react';
-import { useWebSocket } from './useWebSocket';
-import { WebSocketMessageType } from '../../types/websocket';
+import { useEffect, useCallback, useState } from 'react';
+import { pusherService } from '../../services/pusher';
+import { WebSocketMessageType, WebSocketEventHandler } from '../../types/websocket';
 
 export interface UseWebSocketMessageOptions {
-  enabled?: boolean;
-  once?: boolean;
+  autoConnect?: boolean;
+  channel?: string;
+  filter?: (message: any) => boolean;
 }
 
-export function useWebSocketMessage<T = any>(
-  messageType: WebSocketMessageType,
-  callback: (data: T) => void,
+export function useWebSocketMessage(
+  messageType: WebSocketMessageType | string,
+  handler: WebSocketEventHandler,
   options: UseWebSocketMessageOptions = {}
-): void {
-  const { on, isConnected } = useWebSocket();
-  const { enabled = true, once = false } = options;
-  
-  // Store callback in ref to avoid re-subscriptions
-  const callbackRef = useRef(callback);
-  callbackRef.current = callback;
-  
-  // Memoize the handler
-  const handler = useCallback((data: T) => {
-    callbackRef.current(data);
-  }, []);
-  
+) {
+  const { autoConnect = true, channel, filter } = options;
+  const [isListening, setIsListening] = useState(false);
+
   useEffect(() => {
-    if (!enabled || !isConnected) return;
-    
-    let unsubscribe: (() => void) | null = null;
-    
-    if (once) {
-      // Subscribe with once behavior
-      const handleOnce = (data: T) => {
-        handler(data);
-        if (unsubscribe) unsubscribe();
-      };
-      unsubscribe = on(messageType, handleOnce);
-    } else {
-      // Regular subscription
-      unsubscribe = on(messageType, handler);
-    }
-    
+    if (!autoConnect) return;
+
+    // Register message type handler
+    pusherService.on(messageType, handler);
+    setIsListening(true);
+
     return () => {
-      if (unsubscribe) unsubscribe();
+      pusherService.off(messageType, handler);
+      setIsListening(false);
     };
-  }, [messageType, handler, on, isConnected, enabled, once]);
+  }, [messageType, handler, autoConnect]);
+
+  const startListening = useCallback(() => {
+    pusherService.on(messageType, handler);
+    setIsListening(true);
+  }, [messageType, handler]);
+
+  const stopListening = useCallback(() => {
+    pusherService.off(messageType, handler);
+    setIsListening(false);
+  }, [messageType, handler]);
+
+  return {
+    isListening,
+    startListening,
+    stopListening,
+  };
 }
 
-/**
- * Hook for listening to multiple message types
- */
 export function useWebSocketMessages(
-  handlers: Record<WebSocketMessageType, (data: any) => void>,
+  messageTypes: (WebSocketMessageType | string)[],
+  handlers: Record<string, WebSocketEventHandler>,
   options: UseWebSocketMessageOptions = {}
-): void {
-  const { on, isConnected } = useWebSocket();
-  const { enabled = true } = options;
-  
+) {
+  const { autoConnect = true } = options;
+  const [isListening, setIsListening] = useState(false);
+
   useEffect(() => {
-    if (!enabled || !isConnected) return;
-    
-    const unsubscribers: Array<() => void> = [];
-    
-    Object.entries(handlers).forEach(([messageType, handler]) => {
-      const unsubscribe = on(messageType as WebSocketMessageType, handler);
-      unsubscribers.push(unsubscribe);
+    if (!autoConnect) return;
+
+    // Register all handlers
+    Object.entries(handlers).forEach(([type, handler]) => {
+      pusherService.on(type, handler);
     });
-    
+    setIsListening(true);
+
     return () => {
-      unsubscribers.forEach(unsubscribe => unsubscribe());
+      Object.entries(handlers).forEach(([type, handler]) => {
+        pusherService.off(type, handler);
+      });
+      setIsListening(false);
     };
-  }, [handlers, on, isConnected, enabled]);
+  }, [handlers, autoConnect]);
+
+  const startListening = useCallback(() => {
+    Object.entries(handlers).forEach(([type, handler]) => {
+      pusherService.on(type, handler);
+    });
+    setIsListening(true);
+  }, [handlers]);
+
+  const stopListening = useCallback(() => {
+    Object.entries(handlers).forEach(([type, handler]) => {
+      pusherService.off(type, handler);
+    });
+    setIsListening(false);
+  }, [handlers]);
+
+  return {
+    isListening,
+    startListening,
+    stopListening,
+  };
 }

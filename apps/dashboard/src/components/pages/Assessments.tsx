@@ -1,22 +1,28 @@
-import AddIcon from '@mui/icons-material/Add';
-import AssessmentIcon from '@mui/icons-material/Assessment';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
-import CircularProgress from '@mui/material/CircularProgress';
-import Grid from '@mui/material/Grid';
-import IconButton from '@mui/material/IconButton';
-import LinearProgress from '@mui/material/LinearProgress';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+import {
+  IconPlus,
+  IconClipboardCheck,
+  IconFilter,
+  IconDots,
+  IconRefresh,
+} from "@tabler/icons-react";
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  Badge,
+  Loader,
+  Grid,
+  ActionIcon,
+  Progress,
+  Menu,
+  Stack,
+  Text,
+  Group,
+  Title,
+  Container,
+  Center
+} from '@mantine/core';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -141,281 +147,266 @@ export default function Assessments() {
 
   if (loading && assessments.length === 0) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
+      <Center style={{ minHeight: 400 }}>
+        <Loader size="lg" />
+      </Center>
     );
   }
 
   return (
-    <>
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                  Assessments
-                </Typography>
-                <Stack direction="row" spacing={1}>
-                  <IconButton onClick={(e: React.MouseEvent) => handleRefresh} disabled={loading}>
-                    <RefreshIcon />
-                  </IconButton>
-                  <IconButton onClick={(e: React.MouseEvent) => handleFilterMenuOpen}>
-                    <FilterListIcon />
-                  </IconButton>
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
-                  >
-                    Create Assessment
-                  </Button>
-                </Stack>
-              </Stack>
-              <Menu
-                anchorEl={filterAnchorEl}
-                open={Boolean(filterAnchorEl)}
-                onClose={handleFilterMenuClose}
-              >
-                <MenuItem
-                  onClick={(e: React.MouseEvent) => () => {
-                    handleFilterChange('status', 'active');
-                    handleFilterMenuClose();
-                  }}
+    <Container size="xl">
+      <Grid>
+        <Grid.Col span={12}>
+          <Card padding="md">
+            <Group justify="space-between" align="center">
+              <Title order={3} fw={600}>
+                Assessments
+              </Title>
+              <Group gap="xs">
+                <ActionIcon onClick={handleRefresh} disabled={loading}>
+                  <IconRefresh size={16} />
+                </ActionIcon>
+                <Menu
+                  trigger="click"
+                  position="bottom-end"
+                  offset={5}
                 >
-                  Active Only
-                </MenuItem>
-                <MenuItem
-                  onClick={(e: React.MouseEvent) => () => {
-                    handleFilterChange('status', 'draft');
-                    handleFilterMenuClose();
-                  }}
+                  <Menu.Target>
+                    <ActionIcon>
+                      <IconFilter size={16} />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      onClick={() => {
+                        handleFilterChange('status', 'active');
+                      }}
+                    >
+                      Active Only
+                    </Menu.Item>
+                    <Menu.Item
+                      onClick={() => {
+                        handleFilterChange('status', 'draft');
+                      }}
+                    >
+                      Drafts
+                    </Menu.Item>
+                    <Menu.Item
+                      onClick={() => {
+                        handleFilterChange('type', 'quiz');
+                      }}
+                    >
+                      Quizzes
+                    </Menu.Item>
+                    <Menu.Item
+                      onClick={() => {
+                        handleFilterChange('type', 'test');
+                      }}
+                    >
+                      Tests
+                    </Menu.Item>
+                    <Menu.Item
+                      onClick={() => {
+                        handleFilterChange('type', undefined);
+                      }}
+                    >
+                      All Types
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+                <Button
+                  leftSection={<IconPlus />}
+                  onClick={() => setCreateDialogOpen(true)}
                 >
-                  Drafts
-                </MenuItem>
-                <MenuItem
-                  onClick={(e: React.MouseEvent) => () => {
-                    handleFilterChange('type', 'quiz');
-                    handleFilterMenuClose();
-                  }}
-                >
-                  Quizzes
-                </MenuItem>
-                <MenuItem
-                  onClick={(e: React.MouseEvent) => () => {
-                    handleFilterChange('type', 'test');
-                    handleFilterMenuClose();
-                  }}
-                >
-                  Tests
-                </MenuItem>
-                <MenuItem
-                  onClick={(e: React.MouseEvent) => () => {
-                    handleFilterChange('type', undefined);
-                    handleFilterMenuClose();
-                  }}
-                >
-                  All Types
-                </MenuItem>
-              </Menu>
-            </CardContent>
+                  Create Assessment
+                </Button>
+              </Group>
+            </Group>
           </Card>
-        </Grid>
+        </Grid.Col>
 
         {/* Assessment Stats */}
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Stack spacing={1}>
-                <Typography variant="caption" color="text.secondary">
-                  Active Assessments
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                  {activeAssessments}
-                </Typography>
-                {dueTodayCount > 0 && (
-                  <Chip label={`${dueTodayCount} due today`} size="small" color="warning" />
-                )}
-              </Stack>
-            </CardContent>
+        <Grid.Col span={{ base: 12, md: 3 }}>
+          <Card padding="md">
+            <Stack gap="xs">
+              <Text size="xs" c="dimmed">
+                Active Assessments
+              </Text>
+              <Title order={2} fw={700}>
+                {activeAssessments}
+              </Title>
+              {dueTodayCount > 0 && (
+                <Badge size="sm" color="yellow">{dueTodayCount} due today</Badge>
+              )}
+            </Stack>
           </Card>
-        </Grid>
+        </Grid.Col>
 
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Stack spacing={1}>
-                <Typography variant="caption" color="text.secondary">
-                  Pending Grading
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                  {pendingGrading}
-                </Typography>
-                <LinearProgress
-                  variant="determinate"
-                  value={
-                    submissions.length > 0
-                      ? ((submissions.length - pendingGrading) / submissions.length) * 100
-                      : 0
-                  }
-                />
-              </Stack>
-            </CardContent>
+        <Grid.Col span={{ base: 12, md: 3 }}>
+          <Card padding="md">
+            <Stack gap="xs">
+              <Text size="xs" c="dimmed">
+                Pending Grading
+              </Text>
+              <Title order={2} fw={700}>
+                {pendingGrading}
+              </Title>
+              <Progress
+                value={
+                  submissions.length > 0
+                    ? ((submissions.length - pendingGrading) / submissions.length) * 100
+                    : 0
+                }
+              />
+            </Stack>
           </Card>
-        </Grid>
+        </Grid.Col>
 
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Stack spacing={1}>
-                <Typography variant="caption" color="text.secondary">
-                  Average Score
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                  {averageScore}%
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Class Average
-                </Typography>
-              </Stack>
-            </CardContent>
+        <Grid.Col span={{ base: 12, md: 3 }}>
+          <Card padding="md">
+            <Stack gap="xs">
+              <Text size="xs" c="dimmed">
+                Average Score
+              </Text>
+              <Title order={2} fw={700}>
+                {averageScore}%
+              </Title>
+              <Text size="xs" c="dimmed">
+                Class Average
+              </Text>
+            </Stack>
           </Card>
-        </Grid>
+        </Grid.Col>
 
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Stack spacing={1}>
-                <Typography variant="caption" color="text.secondary">
-                  Completion Rate
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                  {completionRate}%
-                </Typography>
-                <LinearProgress variant="determinate" value={completionRate} color="success" />
-              </Stack>
-            </CardContent>
+        <Grid.Col span={{ base: 12, md: 3 }}>
+          <Card padding="md">
+            <Stack gap="xs">
+              <Text size="xs" c="dimmed">
+                Completion Rate
+              </Text>
+              <Title order={2} fw={700}>
+                {completionRate}%
+              </Title>
+              <Progress value={completionRate} color="green" />
+            </Stack>
           </Card>
-        </Grid>
+        </Grid.Col>
 
         {/* Recent Assessments */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                Recent Assessments
-              </Typography>
-              {error && (
-                <Alert severity="error" onClose={() => dispatch(clearError())} sx={{ mb: 2 }}>
-                  {error}
-                </Alert>
-              )}
-              <Stack spacing={2}>
-                {assessments.length === 0 ? (
-                  <Typography color="text.secondary" align="center" py={4}>
-                    No assessments found. Create your first assessment to get started.
-                  </Typography>
-                ) : (
-                  assessments.slice(0, 5).map((assessment) => (
-                    <Box
-                      key={assessment.id}
-                      sx={{
-                        p: 2,
-                        borderRadius: 2,
-                        bgcolor: 'background.default',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          bgcolor: 'action.hover',
-                        },
-                      }}
-                      onClick={(e: React.MouseEvent) => () => navigate(`/assessments/${assessment.id}`)}
-                    >
-                      <Stack direction="row" spacing={2} alignItems="center">
-                        <AssessmentIcon color="primary" />
-                        <Stack>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {assessment.title}
-                          </Typography>
-                          <Stack direction="row" spacing={1}>
-                            <Chip
-                              label={assessment.type}
-                              size="small"
-                              color={
-                                assessment.type === 'quiz'
-                                  ? 'info'
-                                  : assessment.type === 'test'
-                                  ? 'warning'
-                                  : 'default'
-                              }
-                            />
-                            <Chip
-                              label={assessment.status}
-                              size="small"
-                              color={
-                                assessment.status === 'active'
-                                  ? 'success'
-                                  : assessment.status === 'draft'
-                                  ? 'default'
-                                  : 'error'
-                              }
-                            />
-                            <Typography variant="caption" color="text.secondary">
-                              Submissions: {assessment.submissions}/{assessment.maxSubmissions}
-                            </Typography>
-                          </Stack>
-                        </Stack>
-                      </Stack>
-                      <Stack alignItems="flex-end" spacing={1}>
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {assessment.averageScore ? `${assessment.averageScore}%` : 'Pending'}
-                          </Typography>
-                          <IconButton
-                            size="small"
-                            onClick={(e: React.MouseEvent) => (e) => handleMenuOpen(e, assessment)}
+        <Grid.Col span={12}>
+          <Card padding="md">
+            <Title order={4} mb="md" fw={600}>
+              Recent Assessments
+            </Title>
+            {error && (
+              <Alert color="red" onClose={() => dispatch(clearError())} mb="md">
+                {error}
+              </Alert>
+            )}
+            <Stack gap="md">
+              {assessments.length === 0 ? (
+                <Text c="dimmed" ta="center" py="xl">
+                  No assessments found. Create your first assessment to get started.
+                </Text>
+              ) : (
+                assessments.slice(0, 5).map((assessment) => (
+                  <Box
+                    key={assessment.id}
+                    p="md"
+                    style={{
+                      borderRadius: 8,
+                      backgroundColor: 'var(--mantine-color-gray-0)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                    onClick={() => navigate(`/assessments/${assessment.id}`)}
+                  >
+                    <Group gap="md" align="center">
+                      <IconClipboardCheck color="blue" />
+                      <Stack gap="xs">
+                        <Text fw={500} size="sm">
+                          {assessment.title}
+                        </Text>
+                        <Group gap="xs">
+                          <Badge
+                            size="sm"
+                            color={
+                              assessment.type === 'quiz'
+                                ? 'blue'
+                                : assessment.type === 'test'
+                                ? 'yellow'
+                                : 'gray'
+                            }
                           >
-                            <MoreVertIcon fontSize="small" />
-                          </IconButton>
-                        </Stack>
-                        <Typography variant="caption" color="text.secondary">
-                          {assessment.dueDate
-                            ? `Due: ${new Date(assessment.dueDate).toLocaleDateString()}`
-                            : 'No due date'}
-                        </Typography>
+                            {assessment.type}
+                          </Badge>
+                          <Badge
+                            size="sm"
+                            color={
+                              assessment.status === 'active'
+                                ? 'green'
+                                : assessment.status === 'draft'
+                                ? 'gray'
+                                : 'red'
+                            }
+                          >
+                            {assessment.status}
+                          </Badge>
+                          <Text size="xs" c="dimmed">
+                            Submissions: {assessment.submissions}/{assessment.maxSubmissions}
+                          </Text>
+                        </Group>
                       </Stack>
-                    </Box>
-                  ))
-                )}
-              </Stack>
-            </CardContent>
+                    </Group>
+                    <Stack align="flex-end" gap="xs">
+                      <Group align="center" gap="xs">
+                        <Text fw={500} size="sm">
+                          {assessment.averageScore ? `${assessment.averageScore}%` : 'Pending'}
+                        </Text>
+                        <Menu position="bottom-end" offset={5}>
+                          <Menu.Target>
+                            <ActionIcon
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMenuAssessment(assessment);
+                              }}
+                            >
+                              <IconDots size={16} />
+                            </ActionIcon>
+                          </Menu.Target>
+                          <Menu.Dropdown>
+                            <Menu.Item onClick={() => menuAssessment && handleViewAssessment(menuAssessment.id)}>
+                              View Details
+                            </Menu.Item>
+                            <Menu.Item onClick={() => menuAssessment && handleGradeAssessment(menuAssessment.id)}>
+                              Grade Submissions
+                            </Menu.Item>
+                            <Menu.Item onClick={() => menuAssessment && handleEditAssessment(menuAssessment.id)}>
+                              Edit Assessment
+                            </Menu.Item>
+                            <Menu.Item color="red" onClick={() => menuAssessment && handleDeleteAssessment(menuAssessment)}>
+                              Delete Assessment
+                            </Menu.Item>
+                          </Menu.Dropdown>
+                        </Menu>
+                      </Group>
+                      <Text size="xs" c="dimmed">
+                        {assessment.dueDate
+                          ? `Due: ${new Date(assessment.dueDate).toLocaleDateString()}`
+                          : 'No due date'}
+                      </Text>
+                    </Stack>
+                  </Box>
+                ))
+              )}
+            </Stack>
           </Card>
-        </Grid>
+        </Grid.Col>
       </Grid>
-
-      {/* Action Menu */}
-      <Menu
-        anchorEl={menuAnchorEl}
-        open={Boolean(menuAnchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={(e: React.MouseEvent) => () => menuAssessment && handleViewAssessment(menuAssessment.id)}>
-          View Details
-        </MenuItem>
-        <MenuItem onClick={(e: React.MouseEvent) => () => menuAssessment && handleGradeAssessment(menuAssessment.id)}>
-          Grade Submissions
-        </MenuItem>
-        <MenuItem onClick={(e: React.MouseEvent) => () => menuAssessment && handleEditAssessment(menuAssessment.id)}>
-          Edit Assessment
-        </MenuItem>
-        <MenuItem onClick={(e: React.MouseEvent) => () => menuAssessment && handleDeleteAssessment(menuAssessment)}>
-          Delete Assessment
-        </MenuItem>
-      </Menu>
 
       {/* Create Assessment Dialog */}
       <CreateAssessmentDialog
@@ -425,7 +416,7 @@ export default function Assessments() {
           try {
             // Call API to create assessment
             const createdAssessment = await createAssessment(assessmentData);
-            
+
             dispatch(
               addNotification({
                 type: 'success',
@@ -446,6 +437,6 @@ export default function Assessments() {
           }
         }}
       />
-    </>
+    </Container>
   );
 }

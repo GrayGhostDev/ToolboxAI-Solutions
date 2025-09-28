@@ -76,10 +76,10 @@ def test_imports():
         from apps.backend.api_v1_endpoints import analytics_router, reports_router, admin_router
         print("✅ API v1 routers imported successfully")
         
-        from core.database.connection import get_db
+        from database.connection import get_db
         print("✅ Database connection imported successfully")
         
-        from core.database.models import User, Course, Lesson, Quiz
+        from database.models.models import User, Course, Lesson, Quiz
         print("✅ Database models imported successfully")
         
         from apps.backend.api.auth.auth import get_current_user, require_role

@@ -18,7 +18,7 @@ from .terrain_builder_agent import RobloxTerrainBuilderAgent
 from .script_generator_agent import RobloxScriptGeneratorAgent, ScriptRequirements, ScriptType, ScriptCategory
 from .ui_designer_agent import RobloxUIDesignerAgent, UIRequirements, UILayoutType
 from .gameplay_mechanics_agent import RobloxGameplayMechanicsAgent, GameplayRequirements, MechanicType
-from .security_validator_agent import RobloxSecurityValidatorAgent
+from .roblox_security_validation_agent import RobloxSecurityValidationAgent as RobloxSecurityValidatorAgent
 from .performance_optimizer_agent import RobloxPerformanceOptimizerAgent, OptimizationType
 from .quality_assurance_agent import RobloxQualityAssuranceAgent, TestType
 from .deployment_manager_agent import RobloxDeploymentManagerAgent, DeploymentConfig, DeploymentEnvironment

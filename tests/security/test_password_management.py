@@ -339,8 +339,7 @@ class TestPasswordChangeService:
         assert remaining == service.MAX_CHANGES_PER_DAY
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_change_password_success(self):
+    async def test_change_password_success(self):
         """Test successful password change"""
         # Setup
         self.mock_redis.incr.return_value = 1  # Within rate limit
@@ -372,8 +371,7 @@ async def test_change_password_success(self):
         assert "password_strength_score" in result
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_change_password_rate_limit_exceeded(self):
+    async def test_change_password_rate_limit_exceeded(self):
         """Test password change when rate limit is exceeded"""
         self.mock_redis.incr.return_value = 6  # Exceeds limit
         
@@ -388,8 +386,7 @@ async def test_change_password_rate_limit_exceeded(self):
         assert exc_info.value.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_change_password_weak_password(self):
+    async def test_change_password_weak_password(self):
         """Test password change with weak new password"""
         self.mock_redis.incr.return_value = 1  # Within rate limit
         
@@ -413,8 +410,7 @@ async def test_change_password_weak_password(self):
             assert "security requirements" in str(exc_info.value.detail)
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_change_password_reused_password(self):
+    async def test_change_password_reused_password(self):
         """Test password change with previously used password"""
         self.mock_redis.incr.return_value = 1  # Within rate limit
         
@@ -438,8 +434,7 @@ async def test_change_password_reused_password(self):
                 assert "recently used" in str(exc_info.value.detail)
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_reset_password_success(self):
+    async def test_reset_password_success(self):
         """Test successful admin password reset"""
         with patch.object(self.service.validator, 'validate') as mock_validate:
             mock_validate.return_value = PasswordValidationResult(
@@ -466,8 +461,7 @@ async def test_reset_password_success(self):
         assert result["reset_reason"] == "Forgot password"
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_reset_password_weak_password(self):
+    async def test_reset_password_weak_password(self):
         """Test admin password reset with weak password"""
         with patch.object(self.service.validator, 'validate') as mock_validate:
             mock_validate.return_value = PasswordValidationResult(
@@ -486,8 +480,7 @@ async def test_reset_password_weak_password(self):
             assert "too weak" in str(exc_info.value.detail)
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_reset_password_no_force_logout(self):
+    async def test_reset_password_no_force_logout(self):
         """Test admin password reset without forcing logout"""
         with patch.object(self.service.validator, 'validate') as mock_validate:
             mock_validate.return_value = PasswordValidationResult(
@@ -557,8 +550,7 @@ class TestPasswordManagementIntegration:
     """Integration tests for password management"""
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_complete_password_change_flow(self):
+    async def test_complete_password_change_flow(self):
         """Test complete password change workflow"""
         # Setup mocks
         mock_session_manager = Mock()

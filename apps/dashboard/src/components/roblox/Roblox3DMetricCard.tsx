@@ -150,7 +150,9 @@ export const Roblox3DMetricCard: React.FunctionComponent<Roblox3DMetricCardProps
   tooltip,
   format = 'number',
 }) => {
+  const theme = useMantineTheme();
   const [isHovered, setIsHovered] = useState(false);
+  const { classes } = useStyles({ glowcolor: color, isHovered });
   const [displayValue, setDisplayValue] = useState<string>('0');
   const [animatedValue, setAnimatedValue] = useState(0);
   useEffect(() => {

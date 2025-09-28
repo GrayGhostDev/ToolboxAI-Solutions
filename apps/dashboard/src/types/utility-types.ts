@@ -13,18 +13,16 @@ export type OptionalBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 // Deep partial (makes all nested properties optional)
 export type DeepPartial<T> = {
-  [P in keyof T]?: T[P] extends (infer U)[]
-    ? DeepPartial<U>[]
+  [P in keyof T]?: T[P] extends Array<infer U>
+    ? Array<DeepPartial<U>>
     : T[P] extends object
-    ? DeepPartial<T[P]>
-    : T[P];
+      ? DeepPartial<T[P]>
+      : T[P];
 };
 
 // Deep required (makes all nested properties required)
 export type DeepRequired<T> = {
-  [P in keyof T]-?: T[P] extends (infer U)[]
-    ? DeepRequired<U>[]
-    : T[P] extends object
+  [P in keyof T]-?: T[P] extends object
     ? DeepRequired<T[P]>
     : T[P];
 };

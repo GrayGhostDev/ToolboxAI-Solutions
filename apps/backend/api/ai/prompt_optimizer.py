@@ -13,8 +13,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class OptimizationType(Enum):
     """Types of prompt optimizations"""
+
     LITERAL_INSTRUCTION = "literal_instruction"
     REDUNDANCY_REMOVAL = "redundancy_removal"
     STRUCTURE_SIMPLIFICATION = "structure_simplification"
@@ -22,15 +24,18 @@ class OptimizationType(Enum):
     TOOL_DESCRIPTION = "tool_description"
     FORMAT_STANDARDIZATION = "format_standardization"
 
+
 @dataclass
 class OptimizationResult:
     """Result of prompt optimization"""
+
     original: str
     optimized: str
     optimizations_applied: List[OptimizationType]
     tokens_saved: int
     complexity_score: float
     metadata: Dict[str, Any] = field(default_factory=dict)
+
 
 class GPT41PromptOptimizer:
     """
@@ -57,7 +62,6 @@ class GPT41PromptOptimizer:
                 (r"Please kindly\s+", ""),
                 (r"If possible,?\s+", ""),
                 (r"When you get a chance,?\s+", ""),
-
                 # Remove verbose instructions
                 (r"Please carefully\s+", ""),
                 (r"Make sure to\s+", ""),
@@ -67,7 +71,6 @@ class GPT41PromptOptimizer:
                 (r"It's important that you\s+", ""),
                 (r"Take care to\s+", ""),
                 (r"Pay attention to\s+", ""),
-
                 # Remove explanatory redundancies
                 (r"What I mean is\s+", ""),
                 (r"In other words,?\s+", ""),
@@ -84,14 +87,12 @@ class GPT41PromptOptimizer:
                 (r"I need you to\s+", ""),
                 (r"The goal is to\s+", "Goal: "),
                 (r"The objective is to\s+", "Objective: "),
-
                 # Simplify formatting instructions
                 (r"Format your response as follows:\s*", "Format:\n"),
                 (r"Provide your answer in the following format:\s*", "Format:\n"),
                 (r"Structure your response like this:\s*", "Format:\n"),
                 (r"Organize your answer as:\s*", "Format:\n"),
                 (r"Please format as:\s*", "Format:\n"),
-
                 # Simplify output instructions
                 (r"Your output should be\s+", "Output: "),
                 (r"The result should be\s+", "Result: "),
@@ -104,17 +105,18 @@ class GPT41PromptOptimizer:
                 (r"Attempt to\s+", ""),
                 (r"See if you can\s+", ""),
                 (r"If you can,?\s+", ""),
-
                 # Remove hedging language
                 (r"Maybe\s+", ""),
                 (r"Perhaps\s+", ""),
                 (r"Possibly\s+", ""),
                 (r"You might want to\s+", ""),
                 (r"Consider\s+", ""),
-            ]
+            ],
         }
 
-    def optimize_prompt(self, prompt: str, context: Optional[Dict[str, Any]] = None) -> OptimizationResult:
+    def optimize_prompt(
+        self, prompt: str, context: Optional[Dict[str, Any]] = None
+    ) -> OptimizationResult:
         """
         Optimize a prompt for GPT-4.1
 
@@ -167,8 +169,10 @@ class GPT41PromptOptimizer:
             metadata={
                 "original_length": len(original),
                 "optimized_length": len(optimized),
-                "reduction_percentage": round((1 - len(optimized) / len(original)) * 100, 1) if len(original) > 0 else 0
-            }
+                "reduction_percentage": (
+                    round((1 - len(optimized) / len(original)) * 100, 1) if len(original) > 0 else 0
+                ),
+            },
         )
 
         # Cache result
@@ -195,7 +199,7 @@ class GPT41PromptOptimizer:
                 count += n
 
         # Clean up extra whitespace
-        prompt = ' '.join(prompt.split())
+        prompt = " ".join(prompt.split())
 
         return prompt, count
 
@@ -204,7 +208,7 @@ class GPT41PromptOptimizer:
         count = 0
 
         # Remove repeated instructions
-        lines = prompt.split('\n')
+        lines = prompt.split("\n")
         seen_instructions = set()
         cleaned_lines = []
 
@@ -217,7 +221,7 @@ class GPT41PromptOptimizer:
             elif normalized:
                 count += 1
 
-        prompt = '\n'.join(cleaned_lines)
+        prompt = "\n".join(cleaned_lines)
 
         return prompt, count
 
@@ -232,17 +236,17 @@ class GPT41PromptOptimizer:
                 count += n
 
         # Convert lists to bullet points (GPT-4.1 handles these better)
-        prompt = re.sub(r'(\d+)\.\s+', r'• ', prompt)
+        prompt = re.sub(r"(\d+)\.\s+", r"• ", prompt)
 
         return prompt, count
 
     def _standardize_format(self, prompt: str) -> str:
         """Standardize formatting for consistency"""
         # Ensure consistent spacing
-        prompt = re.sub(r'\n{3,}', '\n\n', prompt)
+        prompt = re.sub(r"\n{3,}", "\n\n", prompt)
 
         # Standardize section headers
-        prompt = re.sub(r'^#+\s*', '', prompt, flags=re.MULTILINE)  # Remove markdown headers
+        prompt = re.sub(r"^#+\s*", "", prompt, flags=re.MULTILINE)  # Remove markdown headers
 
         # Add clear section breaks
         sections = ["Task:", "Context:", "Format:", "Output:", "Examples:", "Constraints:"]
@@ -274,13 +278,13 @@ class GPT41PromptOptimizer:
             complexity += 0.7
 
         # Instruction complexity
-        instruction_keywords = ['analyze', 'compare', 'evaluate', 'synthesize', 'create', 'design']
+        instruction_keywords = ["analyze", "compare", "evaluate", "synthesize", "create", "design"]
         for keyword in instruction_keywords:
             if keyword in prompt.lower():
                 complexity += 0.05
 
         # Structure complexity
-        if '\n' in prompt:
+        if "\n" in prompt:
             complexity += 0.1
         if any(section in prompt for section in ["Format:", "Examples:", "Constraints:"]):
             complexity += 0.1
@@ -298,31 +302,31 @@ class GPT41PromptOptimizer:
             optimized = tool.copy()
 
             # Convert function format to tool format (GPT-4.1 uses "tools")
-            if 'function' in optimized:
-                optimized['type'] = 'function'
-                if 'function' not in optimized:
-                    optimized['function'] = {}
+            if "function" in optimized:
+                optimized["type"] = "function"
+                if "function" not in optimized:
+                    optimized["function"] = {}
 
             # Optimize descriptions to be concise and literal
-            if 'description' in optimized.get('function', {}):
-                desc = optimized['function']['description']
+            if "description" in optimized.get("function", {}):
+                desc = optimized["function"]["description"]
                 # Remove redundant words
-                desc = re.sub(r'\b(please|kindly|carefully)\b', '', desc, flags=re.IGNORECASE)
-                desc = ' '.join(desc.split())
-                optimized['function']['description'] = desc
+                desc = re.sub(r"\b(please|kindly|carefully)\b", "", desc, flags=re.IGNORECASE)
+                desc = " ".join(desc.split())
+                optimized["function"]["description"] = desc
 
             # Optimize parameter descriptions
-            if 'parameters' in optimized.get('function', {}):
-                params = optimized['function']['parameters']
-                if 'properties' in params:
-                    for param_name, param_def in params['properties'].items():
-                        if 'description' in param_def:
+            if "parameters" in optimized.get("function", {}):
+                params = optimized["function"]["parameters"]
+                if "properties" in params:
+                    for param_name, param_def in params["properties"].items():
+                        if "description" in param_def:
                             # Make descriptions concise
-                            desc = param_def['description']
+                            desc = param_def["description"]
                             desc = desc.replace("This parameter", "").strip()
                             desc = desc.replace("Used to", "").strip()
                             desc = desc[0].upper() + desc[1:] if desc else desc
-                            param_def['description'] = desc
+                            param_def["description"] = desc
 
             optimized_tools.append(optimized)
 
@@ -334,7 +338,7 @@ class GPT41PromptOptimizer:
         context: Optional[str] = None,
         format: Optional[str] = None,
         examples: Optional[List[str]] = None,
-        constraints: Optional[List[str]] = None
+        constraints: Optional[List[str]] = None,
     ) -> str:
         """
         Create a structured prompt optimized for GPT-4.1
@@ -403,7 +407,7 @@ class GPT41PromptOptimizer:
             "common_redundancies": {},
             "average_complexity": 0.0,
             "total_tokens_saveable": 0,
-            "optimization_recommendations": []
+            "optimization_recommendations": [],
         }
 
         complexities = []
@@ -421,12 +425,12 @@ class GPT41PromptOptimizer:
                     redundancy_counts[pattern] = redundancy_counts.get(pattern, 0) + len(matches)
 
         # Calculate statistics
-        patterns["average_complexity"] = sum(complexities) / len(complexities) if complexities else 0
-        patterns["common_redundancies"] = dict(sorted(
-            redundancy_counts.items(),
-            key=lambda x: x[1],
-            reverse=True
-        )[:10])
+        patterns["average_complexity"] = (
+            sum(complexities) / len(complexities) if complexities else 0
+        )
+        patterns["common_redundancies"] = dict(
+            sorted(redundancy_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+        )
 
         # Generate recommendations
         if patterns["average_complexity"] > 0.7:
@@ -441,8 +445,10 @@ class GPT41PromptOptimizer:
 
         return patterns
 
+
 # Singleton instance
 _optimizer: Optional[GPT41PromptOptimizer] = None
+
 
 def get_prompt_optimizer() -> GPT41PromptOptimizer:
     """Get or create prompt optimizer singleton"""
@@ -451,6 +457,7 @@ def get_prompt_optimizer() -> GPT41PromptOptimizer:
         _optimizer = GPT41PromptOptimizer()
     return _optimizer
 
+
 # Convenience functions
 def optimize_prompt(prompt: str) -> str:
     """Quick function to optimize a single prompt"""
@@ -458,12 +465,13 @@ def optimize_prompt(prompt: str) -> str:
     result = optimizer.optimize_prompt(prompt)
     return result.optimized
 
+
 def create_gpt41_prompt(
     task: str,
     context: Optional[str] = None,
     format: Optional[str] = None,
     examples: Optional[List[str]] = None,
-    constraints: Optional[List[str]] = None
+    constraints: Optional[List[str]] = None,
 ) -> str:
     """Create an optimized structured prompt for GPT-4.1"""
     optimizer = get_prompt_optimizer()

@@ -1,0 +1,73 @@
+# Roblox Studio Cache and Auto-generated Files
+Roblox-roblox/
+*.rbxl.lock
+*.rbxlx.lock
+*.rbxm.lock
+
+# Roblox Studio Temporary Files
+*.tmp
+*.temp
+*~
+.rbxl.*
+.rbxlx.*
+
+# Plugin Installation Cache
+**/InstalledPlugins/
+**/PluginCache/
+
+# Roblox Studio Settings (user-specific)
+GlobalSettings_13.xml
+GlobalSettings_*.xml
+**/settings.json
+
+# Auto-save and backup files
+*.rbxl.bak
+*.rbxlx.bak
+*.autosave
+*.backup
+
+# Roblox Studio Logs
+*.log
+RobloxStudioBeta.log
+RobloxStudio.log
+
+# Roblox Analytics and Crash Reports
+AnalyticsSettings.xml
+CrashDump/
+*.dmp
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and Editor Files
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+
+# Node.js (if using Rojo or similar tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Rojo
+*.project.json.lock
+build/
+dist/
+
+# Foreman
+/bin/
+
+# Selene (Linting)
+.selene.yml
+
+# StyLua (Formatting)
+stylua.toml

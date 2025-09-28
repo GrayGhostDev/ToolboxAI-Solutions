@@ -6,8 +6,8 @@
  */
 
 import React, { forwardRef } from 'react';
-import { styled } from '@mui/material/styles';
-import { AtomicLabel, AtomicInput, AtomicText, AtomicBox } from '../atoms';
+import { Box } from '@mantine/core';
+import { AtomicLabel, AtomicInput, AtomicText } from '../atoms';
 import type { InputProps } from '../atoms/Input';
 import type { LabelProps } from '../atoms/Label';
 import { designTokens } from '../../../theme/designTokens';
@@ -25,34 +25,6 @@ export interface FormFieldProps extends Omit<InputProps, 'id'> {
   maxLength?: number;
   robloxTheme?: boolean;
 }
-
-const StyledFormField = styled(AtomicBox)<{ robloxTheme?: boolean }>(({
-  theme,
-  robloxTheme = true
-}) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: designTokens.spacing[1],
-  width: '100%',
-
-  '& .form-field__description': {
-    color: theme.palette.text.secondary,
-    fontSize: designTokens.typography.fontSize.sm[0],
-    marginTop: designTokens.spacing[0.5]
-  },
-
-  '& .form-field__helper': {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: designTokens.spacing[0.5]
-  },
-
-  '& .form-field__character-count': {
-    fontSize: designTokens.typography.fontSize.xs[0],
-    color: theme.palette.text.disabled
-  }
-}));
 
 const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
   (
@@ -88,7 +60,15 @@ const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
     const displayHelperText = errorText || helperText;
 
     return (
-      <StyledFormField ref={ref} robloxTheme={robloxTheme}>
+      <Box
+        ref={ref}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: designTokens.spacing[1],
+          width: '100%'
+        }}
+      >
         {/* Label */}
         {label && (
           <AtomicLabel
@@ -107,7 +87,9 @@ const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
           <AtomicText
             variant="sm"
             color="secondary"
-            className="form-field__description"
+            style={{
+              marginTop: designTokens.spacing[0.5]
+            }}
           >
             {description}
           </AtomicText>
@@ -120,19 +102,20 @@ const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
           state={currentState}
           robloxTheme={robloxTheme}
           error={currentState === 'error'}
-          aria-describedby={
-            displayHelperText ? `${fieldId}-helper` : undefined
-          }
-          {...(maxLength && { inputProps: { maxLength } })}
+          {...(maxLength && { maxLength })}
           {...inputProps}
         />
 
         {/* Helper text and character count */}
         {(displayHelperText || showCharacterCount) && (
-          <AtomicBox className="form-field__helper">
+          <Box style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: designTokens.spacing[0.5]
+          }}>
             {displayHelperText && (
               <AtomicText
-                id={`${fieldId}-helper`}
                 variant="sm"
                 color={errorText ? 'error' : 'secondary'}
               >
@@ -144,15 +127,14 @@ const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
               <AtomicText
                 variant="xs"
                 color={isOverLimit ? 'error' : 'disabled'}
-                className="form-field__character-count"
               >
                 {characterCount}
                 {maxLength && `/${maxLength}`}
               </AtomicText>
             )}
-          </AtomicBox>
+          </Box>
         )}
-      </StyledFormField>
+      </Box>
     );
   }
 );

@@ -25,10 +25,18 @@ from langgraph.checkpoint.memory import MemorySaver
 from core.agents.error_handling.base_error_agent import ErrorState, ErrorType, ErrorPriority
 from core.agents.error_handling.error_correction_agent import ErrorCorrectionAgent
 from core.agents.error_handling.debugging_agent import AdvancedDebuggingAgent
-from core.agents.error_handling.testing_orchestrator_agent import TestingOrchestratorAgent
+# Note: These imports are now integrated into the unified orchestration system
+# from core.agents.error_handling.testing_orchestrator_agent import TestingOrchestratorAgent
+# from core.agents.error_handling.auto_recovery_orchestrator_agent import AutoRecoveryOrchestratorAgent
+
 from core.agents.error_handling.error_pattern_analysis_agent import ErrorPatternAnalysisAgent
 from core.agents.error_handling.error_aggregation_intelligence_agent import ErrorAggregationIntelligenceAgent
-from core.agents.error_handling.auto_recovery_orchestrator_agent import AutoRecoveryOrchestratorAgent
+
+# Use the new orchestration system for testing and recovery
+try:
+    from ...orchestration.error_handling import ErrorHandlingOrchestrationModule
+except ImportError:
+    ErrorHandlingOrchestrationModule = None
 
 logger = logging.getLogger(__name__)
 

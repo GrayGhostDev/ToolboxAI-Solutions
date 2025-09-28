@@ -9,9 +9,19 @@ import asyncio
 from enum import Enum
 
 from .models import (
-    ConversationContext, ConversationStage, PromptTemplate, PromptResponse,
-    UserProfile, ContentRequirements, PersonalizationData, UniquenessEnhancement,
-    ContentType, GradeLevel, SubjectArea, LearningStyle, EngagementLevel
+    ConversationContext,
+    ConversationStage,
+    PromptTemplate,
+    PromptResponse,
+    UserProfile,
+    ContentRequirements,
+    PersonalizationData,
+    UniquenessEnhancement,
+    ContentType,
+    GradeLevel,
+    SubjectArea,
+    LearningStyle,
+    EngagementLevel,
 )
 from .template_engine import PromptTemplateEngine
 from .user_guidance import UserGuidanceSystem
@@ -22,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 class FlowDecision(str, Enum):
     """Decisions that can be made during conversation flow"""
+
     CONTINUE = "continue"
     BRANCH = "branch"
     LOOP_BACK = "loop_back"
@@ -55,104 +66,131 @@ class ConversationFlowManager:
                 "optional_data": ["user_experience_level"],
                 "next_stages": [ConversationStage.DISCOVERY],
                 "max_duration_minutes": 5,
-                "required_confidence": 0.7
+                "required_confidence": 0.7,
             },
             ConversationStage.DISCOVERY: {
                 "required_data": ["content_type", "grade_level", "subject_area"],
                 "optional_data": ["learning_objectives", "student_count", "duration"],
                 "next_stages": [ConversationStage.REQUIREMENTS],
                 "max_duration_minutes": 10,
-                "required_confidence": 0.8
+                "required_confidence": 0.8,
             },
             ConversationStage.REQUIREMENTS: {
                 "required_data": ["learning_objectives", "engagement_level", "duration_minutes"],
                 "optional_data": ["prerequisites", "assessment_type", "accessibility_requirements"],
                 "next_stages": [ConversationStage.PERSONALIZATION],
                 "max_duration_minutes": 15,
-                "required_confidence": 0.85
+                "required_confidence": 0.85,
             },
             ConversationStage.PERSONALIZATION: {
                 "required_data": ["student_interests", "cultural_elements"],
                 "optional_data": ["local_references", "school_theme", "personal_touches"],
-                "next_stages": [ConversationStage.CONTENT_DESIGN, ConversationStage.UNIQUENESS_ENHANCEMENT],
+                "next_stages": [
+                    ConversationStage.CONTENT_DESIGN,
+                    ConversationStage.UNIQUENESS_ENHANCEMENT,
+                ],
                 "max_duration_minutes": 20,
-                "required_confidence": 0.9
+                "required_confidence": 0.9,
             },
             ConversationStage.CONTENT_DESIGN: {
                 "required_data": ["content_structure", "interactive_elements"],
                 "optional_data": ["visual_style", "audio_style", "character_elements"],
                 "next_stages": [ConversationStage.UNIQUENESS_ENHANCEMENT],
                 "max_duration_minutes": 15,
-                "required_confidence": 0.85
+                "required_confidence": 0.85,
             },
             ConversationStage.UNIQUENESS_ENHANCEMENT: {
                 "required_data": ["uniqueness_factors", "creative_elements"],
                 "optional_data": ["trending_elements", "personal_touches", "special_features"],
                 "next_stages": [ConversationStage.VALIDATION],
                 "max_duration_minutes": 10,
-                "required_confidence": 0.8
+                "required_confidence": 0.8,
             },
             ConversationStage.VALIDATION: {
                 "required_data": ["quality_metrics", "completeness_check"],
                 "optional_data": ["accessibility_check", "performance_check"],
                 "next_stages": [ConversationStage.GENERATION, ConversationStage.REVIEW],
                 "max_duration_minutes": 5,
-                "required_confidence": 0.9
+                "required_confidence": 0.9,
             },
             ConversationStage.GENERATION: {
                 "required_data": ["generation_plan", "agent_assignments"],
                 "optional_data": ["progress_tracking", "quality_monitoring"],
                 "next_stages": [ConversationStage.REVIEW],
                 "max_duration_minutes": 30,
-                "required_confidence": 0.95
+                "required_confidence": 0.95,
             },
             ConversationStage.REVIEW: {
                 "required_data": ["content_preview", "quality_assessment"],
                 "optional_data": ["adjustment_requests", "deployment_preferences"],
                 "next_stages": [ConversationStage.DEPLOYMENT, ConversationStage.CONTENT_DESIGN],
                 "max_duration_minutes": 10,
-                "required_confidence": 0.9
+                "required_confidence": 0.9,
             },
             ConversationStage.DEPLOYMENT: {
                 "required_data": ["deployment_plan", "student_access"],
                 "optional_data": ["monitoring_setup", "feedback_collection"],
                 "next_stages": [],
                 "max_duration_minutes": 5,
-                "required_confidence": 0.95
-            }
+                "required_confidence": 0.95,
+            },
         }
 
     def _define_stage_transitions(self) -> Dict[ConversationStage, List[ConversationStage]]:
         """Define valid stage transitions"""
         return {
             ConversationStage.GREETING: [ConversationStage.DISCOVERY],
-            ConversationStage.DISCOVERY: [ConversationStage.REQUIREMENTS, ConversationStage.GREETING],
-            ConversationStage.REQUIREMENTS: [ConversationStage.PERSONALIZATION, ConversationStage.DISCOVERY],
-            ConversationStage.PERSONALIZATION: [ConversationStage.CONTENT_DESIGN, ConversationStage.UNIQUENESS_ENHANCEMENT, ConversationStage.REQUIREMENTS],
-            ConversationStage.CONTENT_DESIGN: [ConversationStage.UNIQUENESS_ENHANCEMENT, ConversationStage.PERSONALIZATION],
-            ConversationStage.UNIQUENESS_ENHANCEMENT: [ConversationStage.VALIDATION, ConversationStage.CONTENT_DESIGN],
-            ConversationStage.VALIDATION: [ConversationStage.GENERATION, ConversationStage.REVIEW, ConversationStage.UNIQUENESS_ENHANCEMENT],
+            ConversationStage.DISCOVERY: [
+                ConversationStage.REQUIREMENTS,
+                ConversationStage.GREETING,
+            ],
+            ConversationStage.REQUIREMENTS: [
+                ConversationStage.PERSONALIZATION,
+                ConversationStage.DISCOVERY,
+            ],
+            ConversationStage.PERSONALIZATION: [
+                ConversationStage.CONTENT_DESIGN,
+                ConversationStage.UNIQUENESS_ENHANCEMENT,
+                ConversationStage.REQUIREMENTS,
+            ],
+            ConversationStage.CONTENT_DESIGN: [
+                ConversationStage.UNIQUENESS_ENHANCEMENT,
+                ConversationStage.PERSONALIZATION,
+            ],
+            ConversationStage.UNIQUENESS_ENHANCEMENT: [
+                ConversationStage.VALIDATION,
+                ConversationStage.CONTENT_DESIGN,
+            ],
+            ConversationStage.VALIDATION: [
+                ConversationStage.GENERATION,
+                ConversationStage.REVIEW,
+                ConversationStage.UNIQUENESS_ENHANCEMENT,
+            ],
             ConversationStage.GENERATION: [ConversationStage.REVIEW],
-            ConversationStage.REVIEW: [ConversationStage.DEPLOYMENT, ConversationStage.CONTENT_DESIGN, ConversationStage.GENERATION],
-            ConversationStage.DEPLOYMENT: []
+            ConversationStage.REVIEW: [
+                ConversationStage.DEPLOYMENT,
+                ConversationStage.CONTENT_DESIGN,
+                ConversationStage.GENERATION,
+            ],
+            ConversationStage.DEPLOYMENT: [],
         }
 
     async def start_conversation(
-        self,
-        user_profile: UserProfile,
-        initial_message: Optional[str] = None
+        self, user_profile: UserProfile, initial_message: Optional[str] = None
     ) -> ConversationContext:
         """Start a new conversation with a user"""
 
         context = ConversationContext(
             conversation_id=f"conv_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{user_profile.user_id[:8]}",
             user_profile=user_profile,
-            current_stage=ConversationStage.GREETING
+            current_stage=ConversationStage.GREETING,
         )
 
         self.active_conversations[context.conversation_id] = context
 
-        logger.info(f"Started conversation {context.conversation_id} for user {user_profile.user_id}")
+        logger.info(
+            f"Started conversation {context.conversation_id} for user {user_profile.user_id}"
+        )
 
         return context
 
@@ -160,7 +198,7 @@ class ConversationFlowManager:
         self,
         conversation_id: str,
         user_input: str,
-        additional_context: Optional[Dict[str, Any]] = None
+        additional_context: Optional[Dict[str, Any]] = None,
     ) -> Tuple[PromptResponse, FlowDecision]:
         """Process user input and determine next steps"""
 
@@ -169,12 +207,14 @@ class ConversationFlowManager:
             raise ValueError(f"Conversation {conversation_id} not found")
 
         # Update conversation history
-        context.conversation_history.append({
-            "timestamp": datetime.utcnow(),
-            "role": "user",
-            "content": user_input,
-            "stage": context.current_stage.value
-        })
+        context.conversation_history.append(
+            {
+                "timestamp": datetime.utcnow(),
+                "role": "user",
+                "content": user_input,
+                "stage": context.current_stage.value,
+            }
+        )
 
         # Extract information from user input
         extracted_data = await self._extract_information(user_input, context)
@@ -196,20 +236,20 @@ class ConversationFlowManager:
         flow_decision = await self._determine_flow_decision(context, prompt_response)
 
         # Update conversation history with AI response
-        context.conversation_history.append({
-            "timestamp": datetime.utcnow(),
-            "role": "assistant",
-            "content": prompt_response.generated_text,
-            "stage": context.current_stage.value,
-            "confidence": prompt_response.confidence_score
-        })
+        context.conversation_history.append(
+            {
+                "timestamp": datetime.utcnow(),
+                "role": "assistant",
+                "content": prompt_response.generated_text,
+                "stage": context.current_stage.value,
+                "confidence": prompt_response.confidence_score,
+            }
+        )
 
         return prompt_response, flow_decision
 
     async def _extract_information(
-        self,
-        user_input: str,
-        context: ConversationContext
+        self, user_input: str, context: ConversationContext
     ) -> Dict[str, Any]:
         """Extract relevant information from user input"""
 
@@ -243,7 +283,7 @@ class ConversationFlowManager:
             "story": ContentType.INTERACTIVE_STORY,
             "field trip": ContentType.VIRTUAL_FIELD_TRIP,
             "lab": ContentType.LAB_EXPERIMENT,
-            "project": ContentType.COLLABORATIVE_PROJECT
+            "project": ContentType.COLLABORATIVE_PROJECT,
         }
 
         for keyword, content_type in content_types.items():
@@ -259,7 +299,7 @@ class ConversationFlowManager:
             "elementary": GradeLevel.ELEMENTARY_3_5,
             "middle school": GradeLevel.MIDDLE_SCHOOL,
             "high school": GradeLevel.HIGH_SCHOOL,
-            "college": GradeLevel.COLLEGE
+            "college": GradeLevel.COLLEGE,
         }
 
         for keyword, grade_level in grade_keywords.items():
@@ -277,7 +317,7 @@ class ConversationFlowManager:
             "art": SubjectArea.ART,
             "music": SubjectArea.MUSIC,
             "pe": SubjectArea.PHYSICAL_EDUCATION,
-            "computer": SubjectArea.COMPUTER_SCIENCE
+            "computer": SubjectArea.COMPUTER_SCIENCE,
         }
 
         for keyword, subject_area in subject_keywords.items():
@@ -298,10 +338,11 @@ class ConversationFlowManager:
 
         # Extract duration
         import re
-        duration_match = re.search(r'(\d+)\s*(min|minutes|hour|hours)', user_input.lower())
+
+        duration_match = re.search(r"(\d+)\s*(min|minutes|hour|hours)", user_input.lower())
         if duration_match:
             duration = int(duration_match.group(1))
-            if duration_match.group(2) in ['hour', 'hours']:
+            if duration_match.group(2) in ["hour", "hours"]:
                 duration *= 60
             extracted["duration_minutes"] = duration
 
@@ -314,7 +355,7 @@ class ConversationFlowManager:
             extracted["engagement_level"] = EngagementLevel.PASSIVE.value
 
         # Extract student count
-        count_match = re.search(r'(\d+)\s*students?', user_input.lower())
+        count_match = re.search(r"(\d+)\s*students?", user_input.lower())
         if count_match:
             extracted["student_count"] = int(count_match.group(1))
 
@@ -375,8 +416,7 @@ class ConversationFlowManager:
         return extracted
 
     async def _evaluate_stage_progression(
-        self,
-        context: ConversationContext
+        self, context: ConversationContext
     ) -> Tuple[bool, Optional[ConversationStage]]:
         """Evaluate if conversation can progress to next stage"""
 
@@ -407,9 +447,7 @@ class ConversationFlowManager:
         return False, None
 
     async def _generate_stage_prompt(
-        self,
-        context: ConversationContext,
-        additional_context: Optional[Dict[str, Any]] = None
+        self, context: ConversationContext, additional_context: Optional[Dict[str, Any]] = None
     ) -> PromptResponse:
         """Generate appropriate prompt for current stage"""
 
@@ -424,17 +462,13 @@ class ConversationFlowManager:
 
         # Generate prompt
         prompt_response = self.template_engine.generate_prompt(
-            selected_template.id,
-            context,
-            additional_context
+            selected_template.id, context, additional_context
         )
 
         return prompt_response
 
     def _select_best_template(
-        self,
-        templates: List[PromptTemplate],
-        context: ConversationContext
+        self, templates: List[PromptTemplate], context: ConversationContext
     ) -> PromptTemplate:
         """Select the best template for current context"""
 
@@ -445,9 +479,7 @@ class ConversationFlowManager:
         return best_template
 
     async def _determine_flow_decision(
-        self,
-        context: ConversationContext,
-        prompt_response: PromptResponse
+        self, context: ConversationContext, prompt_response: PromptResponse
     ) -> FlowDecision:
         """Determine the next flow decision based on context and response"""
 
@@ -485,13 +517,11 @@ class ConversationFlowManager:
             "completed_stages": [stage.value for stage in context.completed_stages],
             "progress_percentage": len(context.completed_stages) / len(ConversationStage) * 100,
             "collected_data_keys": list(context.collected_data.keys()),
-            "last_updated": context.updated_at.isoformat()
+            "last_updated": context.updated_at.isoformat(),
         }
 
     async def update_user_profile(
-        self,
-        conversation_id: str,
-        profile_updates: Dict[str, Any]
+        self, conversation_id: str, profile_updates: Dict[str, Any]
     ) -> bool:
         """Update user profile during conversation"""
 
@@ -508,9 +538,7 @@ class ConversationFlowManager:
         return True
 
     async def add_personalization_data(
-        self,
-        conversation_id: str,
-        personalization_data: PersonalizationData
+        self, conversation_id: str, personalization_data: PersonalizationData
     ) -> bool:
         """Add personalization data to conversation"""
 
@@ -523,9 +551,7 @@ class ConversationFlowManager:
         return True
 
     async def add_uniqueness_enhancement(
-        self,
-        conversation_id: str,
-        uniqueness_data: UniquenessEnhancement
+        self, conversation_id: str, uniqueness_data: UniquenessEnhancement
     ) -> bool:
         """Add uniqueness enhancement data to conversation"""
 
@@ -567,12 +593,3 @@ class ConversationFlowManager:
             del self.active_conversations[conv_id]
 
         logger.info(f"Cleaned up {len(to_remove)} old conversations")
-
-
-
-
-
-
-
-
-

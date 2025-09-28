@@ -35,15 +35,16 @@ except ImportError:
 router = APIRouter()
 
 # Prometheus metrics
-health_check_counter = Counter('health_checks_total', 'Total health checks', ['endpoint', 'status'])
-health_check_duration = Histogram('health_check_duration_seconds', 'Health check duration')
+health_check_counter = Counter("health_checks_total", "Total health checks", ["endpoint", "status"])
+health_check_duration = Histogram("health_check_duration_seconds", "Health check duration")
 system_metrics = {
-    'cpu_percent': Gauge('system_cpu_percent', 'System CPU usage'),
-    'memory_percent': Gauge('system_memory_percent', 'System memory usage'),
-    'disk_percent': Gauge('system_disk_percent', 'System disk usage'),
-    'network_bytes_sent': Gauge('system_network_bytes_sent', 'Network bytes sent'),
-    'network_bytes_recv': Gauge('system_network_bytes_recv', 'Network bytes received'),
+    "cpu_percent": Gauge("system_cpu_percent", "System CPU usage"),
+    "memory_percent": Gauge("system_memory_percent", "System memory usage"),
+    "disk_percent": Gauge("system_disk_percent", "System disk usage"),
+    "network_bytes_sent": Gauge("system_network_bytes_sent", "Network bytes sent"),
+    "network_bytes_recv": Gauge("system_network_bytes_recv", "Network bytes received"),
 }
+
 
 @router.get("/health")
 async def health_check() -> Dict:
@@ -54,15 +55,15 @@ async def health_check() -> Dict:
         # Update system metrics
         cpu_percent = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
+        disk = psutil.disk_usage("/")
         network = psutil.net_io_counters()
 
         # Update Prometheus metrics
-        system_metrics['cpu_percent'].set(cpu_percent)
-        system_metrics['memory_percent'].set(memory.percent)
-        system_metrics['disk_percent'].set(disk.percent)
-        system_metrics['network_bytes_sent'].set(network.bytes_sent)
-        system_metrics['network_bytes_recv'].set(network.bytes_recv)
+        system_metrics["cpu_percent"].set(cpu_percent)
+        system_metrics["memory_percent"].set(memory.percent)
+        system_metrics["disk_percent"].set(disk.percent)
+        system_metrics["network_bytes_sent"].set(network.bytes_sent)
+        system_metrics["network_bytes_recv"].set(network.bytes_recv)
 
         health_data = {
             "status": "healthy",
@@ -77,7 +78,7 @@ async def health_check() -> Dict:
                 "memory_available_gb": memory.available / (1024**3),
                 "disk_percent": disk.percent,
                 "disk_free_gb": disk.free / (1024**3),
-                "load_average": os.getloadavg() if hasattr(os, 'getloadavg') else None,
+                "load_average": os.getloadavg() if hasattr(os, "getloadavg") else None,
                 "process_count": len(psutil.pids()),
             },
             "network": {
@@ -85,17 +86,18 @@ async def health_check() -> Dict:
                 "bytes_recv": network.bytes_recv,
                 "packets_sent": network.packets_sent,
                 "packets_recv": network.packets_recv,
-            }
+            },
         }
 
-        health_check_counter.labels(endpoint='health', status='success').inc()
+        health_check_counter.labels(endpoint="health", status="success").inc()
         return health_data
 
     except Exception as e:
-        health_check_counter.labels(endpoint='health', status='error').inc()
+        health_check_counter.labels(endpoint="health", status="error").inc()
         raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
     finally:
         health_check_duration.observe(time.time() - start_time)
+
 
 @router.get("/health/live")
 async def liveness_probe() -> Dict:
@@ -103,8 +105,9 @@ async def liveness_probe() -> Dict:
     return {
         "status": "alive",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "pid": os.getpid()
+        "pid": os.getpid(),
     }
+
 
 @router.get("/health/ready")
 async def readiness_probe() -> Dict:
@@ -128,10 +131,12 @@ async def readiness_probe() -> Dict:
             "status": status_code,
             "checks": checks,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "check_duration_ms": round((time.time() - start_time) * 1000, 2)
+            "check_duration_ms": round((time.time() - start_time) * 1000, 2),
         }
 
-        health_check_counter.labels(endpoint='ready', status='success' if all_healthy else 'failed').inc()
+        health_check_counter.labels(
+            endpoint="ready", status="success" if all_healthy else "failed"
+        ).inc()
 
         if not all_healthy:
             raise HTTPException(status_code=503, detail=result)
@@ -139,10 +144,11 @@ async def readiness_probe() -> Dict:
         return result
 
     except Exception as e:
-        health_check_counter.labels(endpoint='ready', status='error').inc()
+        health_check_counter.labels(endpoint="ready", status="error").inc()
         raise HTTPException(status_code=503, detail=f"Readiness check failed: {str(e)}")
     finally:
         health_check_duration.observe(time.time() - start_time)
+
 
 @router.get("/health/deep")
 async def deep_health_check() -> Dict:
@@ -172,9 +178,7 @@ async def deep_health_check() -> Dict:
                 checks.update(result)
 
         overall_health = all(
-            check.get("healthy", False)
-            for check in checks.values()
-            if isinstance(check, dict)
+            check.get("healthy", False) for check in checks.values() if isinstance(check, dict)
         )
 
         return {
@@ -190,21 +194,23 @@ async def deep_health_check() -> Dict:
         return {
             "status": "error",
             "error": str(e),
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
+
 
 @router.get("/metrics")
 async def metrics_endpoint():
     """Prometheus metrics endpoint"""
     try:
         # Update system metrics before returning
-        system_metrics['cpu_percent'].set(psutil.cpu_percent())
-        system_metrics['memory_percent'].set(psutil.virtual_memory().percent)
-        system_metrics['disk_percent'].set(psutil.disk_usage('/').percent)
+        system_metrics["cpu_percent"].set(psutil.cpu_percent())
+        system_metrics["memory_percent"].set(psutil.virtual_memory().percent)
+        system_metrics["disk_percent"].set(psutil.disk_usage("/").percent)
 
         return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Metrics generation failed: {str(e)}")
+
 
 # Health check helper functions
 async def check_database() -> Dict:
@@ -215,21 +221,23 @@ async def check_database() -> Dict:
             return {
                 "healthy": health["status"] == "healthy",
                 "details": health.get("details", {}),
-                "response_time_ms": health.get("details", {}).get("response_time_ms", 0)
+                "response_time_ms": health.get("details", {}).get("response_time_ms", 0),
             }
         else:
             # Fallback to direct connection
-            DATABASE_URL = os.getenv('DATABASE_URL')
+            DATABASE_URL = os.getenv("DATABASE_URL")
             if not DATABASE_URL:
                 return {"healthy": False, "error": "DATABASE_URL not configured"}
 
             import asyncpg
+
             conn = await asyncpg.connect(DATABASE_URL)
             await conn.execute("SELECT 1")
             await conn.close()
             return {"healthy": True, "details": "Direct connection successful"}
     except Exception as e:
         return {"healthy": False, "error": str(e)}
+
 
 async def check_redis() -> Dict:
     """Check Redis connectivity"""
@@ -252,18 +260,19 @@ async def check_redis() -> Dict:
                         "version": info.get("redis_version"),
                         "connected_clients": info.get("connected_clients"),
                         "used_memory_human": info.get("used_memory_human"),
-                        "uptime_in_seconds": info.get("uptime_in_seconds")
-                    }
+                        "uptime_in_seconds": info.get("uptime_in_seconds"),
+                    },
                 }
             else:
                 return {"healthy": False, "error": "Redis client unavailable"}
         else:
             # Fallback check
-            REDIS_URL = os.getenv('REDIS_URL')
+            REDIS_URL = os.getenv("REDIS_URL")
             if not REDIS_URL:
                 return {"healthy": False, "error": "REDIS_URL not configured"}
 
             import aioredis
+
             client = aioredis.from_url(REDIS_URL)
             await client.ping()
             await client.close()
@@ -271,47 +280,49 @@ async def check_redis() -> Dict:
     except Exception as e:
         return {"healthy": False, "error": str(e)}
 
+
 async def check_external_apis() -> Dict:
     """Check external API availability"""
     try:
         checks = {}
 
         # Check OpenAI API
-        if os.getenv('OPENAI_API_KEY'):
+        if os.getenv("OPENAI_API_KEY"):
             try:
                 async with aiohttp.ClientSession() as session:
                     headers = {"Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}"}
                     async with session.get(
                         "https://api.openai.com/v1/models",
                         headers=headers,
-                        timeout=aiohttp.ClientTimeout(total=5)
+                        timeout=aiohttp.ClientTimeout(total=5),
                     ) as response:
                         checks["openai"] = {
                             "healthy": response.status == 200,
-                            "status_code": response.status
+                            "status_code": response.status,
                         }
             except Exception as e:
                 checks["openai"] = {"healthy": False, "error": str(e)}
 
         # Check Pusher API
-        if os.getenv('PUSHER_KEY'):
+        if os.getenv("PUSHER_KEY"):
             checks["pusher"] = {"healthy": True, "details": "API key configured"}
         else:
             checks["pusher"] = {"healthy": False, "error": "Pusher not configured"}
 
         # Check Clerk Auth API
-        if os.getenv('CLERK_SECRET_KEY'):
+        if os.getenv("CLERK_SECRET_KEY"):
             try:
                 async with aiohttp.ClientSession() as session:
                     headers = {"Authorization": f"Bearer {os.getenv('CLERK_SECRET_KEY')}"}
                     async with session.get(
                         "https://api.clerk.dev/v1/users",
                         headers=headers,
-                        timeout=aiohttp.ClientTimeout(total=5)
+                        timeout=aiohttp.ClientTimeout(total=5),
                     ) as response:
                         checks["clerk"] = {
-                            "healthy": response.status in [200, 401],  # 401 is also OK, means API is reachable
-                            "status_code": response.status
+                            "healthy": response.status
+                            in [200, 401],  # 401 is also OK, means API is reachable
+                            "status_code": response.status,
                         }
             except Exception as e:
                 checks["clerk"] = {"healthy": False, "error": str(e)}
@@ -319,21 +330,21 @@ async def check_external_apis() -> Dict:
             checks["clerk"] = {"healthy": False, "error": "Clerk not configured"}
 
         # Check Supabase API
-        if os.getenv('SUPABASE_URL') and os.getenv('SUPABASE_ANON_KEY'):
+        if os.getenv("SUPABASE_URL") and os.getenv("SUPABASE_ANON_KEY"):
             try:
                 async with aiohttp.ClientSession() as session:
                     headers = {
-                        "apikey": os.getenv('SUPABASE_ANON_KEY'),
-                        "Authorization": f"Bearer {os.getenv('SUPABASE_ANON_KEY')}"
+                        "apikey": os.getenv("SUPABASE_ANON_KEY"),
+                        "Authorization": f"Bearer {os.getenv('SUPABASE_ANON_KEY')}",
                     }
                     async with session.get(
                         f"{os.getenv('SUPABASE_URL')}/rest/v1/",
                         headers=headers,
-                        timeout=aiohttp.ClientTimeout(total=5)
+                        timeout=aiohttp.ClientTimeout(total=5),
                     ) as response:
                         checks["supabase"] = {
                             "healthy": response.status in [200, 404],  # 404 is OK for root endpoint
-                            "status_code": response.status
+                            "status_code": response.status,
                         }
             except Exception as e:
                 checks["supabase"] = {"healthy": False, "error": str(e)}
@@ -342,17 +353,15 @@ async def check_external_apis() -> Dict:
 
         overall_healthy = all(check.get("healthy", False) for check in checks.values())
 
-        return {
-            "healthy": overall_healthy,
-            "details": checks
-        }
+        return {"healthy": overall_healthy, "details": checks}
     except Exception as e:
         return {"healthy": False, "error": str(e)}
+
 
 async def check_disk_space() -> Dict:
     """Check available disk space"""
     try:
-        disk = psutil.disk_usage('/')
+        disk = psutil.disk_usage("/")
         free_percent = (disk.free / disk.total) * 100
 
         return {
@@ -360,11 +369,12 @@ async def check_disk_space() -> Dict:
             "details": {
                 "free_percent": round(free_percent, 2),
                 "free_gb": round(disk.free / (1024**3), 2),
-                "total_gb": round(disk.total / (1024**3), 2)
-            }
+                "total_gb": round(disk.total / (1024**3), 2),
+            },
         }
     except Exception as e:
         return {"healthy": False, "error": str(e)}
+
 
 async def check_memory() -> Dict:
     """Check memory usage"""
@@ -376,17 +386,18 @@ async def check_memory() -> Dict:
             "details": {
                 "used_percent": memory.percent,
                 "available_gb": round(memory.available / (1024**3), 2),
-                "total_gb": round(memory.total / (1024**3), 2)
-            }
+                "total_gb": round(memory.total / (1024**3), 2),
+            },
         }
     except Exception as e:
         return {"healthy": False, "error": str(e)}
+
 
 async def check_cpu_load() -> Dict:
     """Check CPU load"""
     try:
         cpu_percent = psutil.cpu_percent(interval=1)
-        load_avg = os.getloadavg() if hasattr(os, 'getloadavg') else [0, 0, 0]
+        load_avg = os.getloadavg() if hasattr(os, "getloadavg") else [0, 0, 0]
 
         return {
             "healthy": cpu_percent < 80,  # Alert if more than 80% used
@@ -395,11 +406,12 @@ async def check_cpu_load() -> Dict:
                 "load_average_1m": load_avg[0],
                 "load_average_5m": load_avg[1],
                 "load_average_15m": load_avg[2],
-                "cpu_count": psutil.cpu_count()
-            }
+                "cpu_count": psutil.cpu_count(),
+            },
         }
     except Exception as e:
         return {"healthy": False, "error": str(e)}
+
 
 # Detailed health check functions for deep health check
 async def check_database_detailed() -> Dict:
@@ -413,12 +425,14 @@ async def check_database_detailed() -> Dict:
     except Exception as e:
         return {"database": {"healthy": False, "error": str(e)}}
 
+
 async def check_redis_detailed() -> Dict:
     """Detailed Redis health check"""
     try:
         return {"redis": await check_redis()}
     except Exception as e:
         return {"redis": {"healthy": False, "error": str(e)}}
+
 
 async def check_system_resources() -> Dict:
     """Check system resources"""
@@ -432,11 +446,12 @@ async def check_system_resources() -> Dict:
                 "healthy": all([disk["healthy"], memory["healthy"], cpu["healthy"]]),
                 "disk": disk,
                 "memory": memory,
-                "cpu": cpu
+                "cpu": cpu,
             }
         }
     except Exception as e:
         return {"system_resources": {"healthy": False, "error": str(e)}}
+
 
 async def check_application_health() -> Dict:
     """Check application-specific health"""
@@ -449,14 +464,10 @@ async def check_application_health() -> Dict:
             "python_version": f"{os.sys.version_info.major}.{os.sys.version_info.minor}.{os.sys.version_info.micro}",
         }
 
-        return {
-            "application": {
-                "healthy": True,
-                "details": checks
-            }
-        }
+        return {"application": {"healthy": True, "details": checks}}
     except Exception as e:
         return {"application": {"healthy": False, "error": str(e)}}
+
 
 async def check_agent_orchestration() -> Dict:
     """Check agent orchestration system health"""
@@ -467,13 +478,13 @@ async def check_agent_orchestration() -> Dict:
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(5)
-                result = s.connect_ex(('localhost', 9877))
+                result = s.connect_ex(("localhost", 9877))
                 mcp_healthy = result == 0
 
             checks["mcp_server"] = {
                 "healthy": mcp_healthy,
                 "port": 9877,
-                "status": "online" if mcp_healthy else "offline"
+                "status": "online" if mcp_healthy else "offline",
             }
         except Exception as e:
             checks["mcp_server"] = {"healthy": False, "error": str(e)}
@@ -482,13 +493,13 @@ async def check_agent_orchestration() -> Dict:
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(5)
-                result = s.connect_ex(('localhost', 8888))
+                result = s.connect_ex(("localhost", 8888))
                 coordinator_healthy = result == 0
 
             checks["agent_coordinator"] = {
                 "healthy": coordinator_healthy,
                 "port": 8888,
-                "status": "online" if coordinator_healthy else "offline"
+                "status": "online" if coordinator_healthy else "offline",
             }
         except Exception as e:
             checks["agent_coordinator"] = {"healthy": False, "error": str(e)}
@@ -497,24 +508,21 @@ async def check_agent_orchestration() -> Dict:
         try:
             # Check if SPARC modules are importable
             import core.sparc.state_manager
+
             checks["sparc_framework"] = {
                 "healthy": True,
                 "status": "loaded",
-                "modules": ["state_manager"]
+                "modules": ["state_manager"],
             }
         except ImportError as e:
             checks["sparc_framework"] = {"healthy": False, "error": f"Import error: {str(e)}"}
 
         overall_healthy = all(check.get("healthy", False) for check in checks.values())
 
-        return {
-            "agent_orchestration": {
-                "healthy": overall_healthy,
-                "checks": checks
-            }
-        }
+        return {"agent_orchestration": {"healthy": overall_healthy, "checks": checks}}
     except Exception as e:
         return {"agent_orchestration": {"healthy": False, "error": str(e)}}
+
 
 async def check_realtime_services() -> Dict:
     """Check real-time services (Pusher, WebSocket)"""
@@ -522,24 +530,24 @@ async def check_realtime_services() -> Dict:
         checks = {}
 
         # Check Pusher configuration
-        if settings and hasattr(settings, 'PUSHER_APP_ID'):
+        if settings and hasattr(settings, "PUSHER_APP_ID"):
             try:
                 pusher_client = pusher.Pusher(
                     app_id=settings.PUSHER_APP_ID,
                     key=settings.PUSHER_KEY,
                     secret=settings.PUSHER_SECRET,
                     cluster=settings.PUSHER_CLUSTER,
-                    ssl=True
+                    ssl=True,
                 )
 
                 # Test channel info to verify connection
-                channel_info = pusher_client.channel_info('test-channel')
+                channel_info = pusher_client.channel_info("test-channel")
 
                 checks["pusher"] = {
                     "healthy": True,
                     "status": "configured",
                     "cluster": settings.PUSHER_CLUSTER,
-                    "ssl_enabled": True
+                    "ssl_enabled": True,
                 }
             except Exception as e:
                 checks["pusher"] = {"healthy": False, "error": str(e)}
@@ -549,30 +557,22 @@ async def check_realtime_services() -> Dict:
         # Check WebSocket endpoints (legacy support)
         try:
             # Check if WebSocket routes are available
-            websocket_endpoints = [
-                "/ws/content",
-                "/ws/roblox",
-                "/ws/native"
-            ]
+            websocket_endpoints = ["/ws/content", "/ws/roblox", "/ws/native"]
 
             checks["websocket_endpoints"] = {
                 "healthy": True,
                 "endpoints": websocket_endpoints,
-                "status": "legacy_support_active"
+                "status": "legacy_support_active",
             }
         except Exception as e:
             checks["websocket_endpoints"] = {"healthy": False, "error": str(e)}
 
         overall_healthy = all(check.get("healthy", False) for check in checks.values())
 
-        return {
-            "realtime_services": {
-                "healthy": overall_healthy,
-                "checks": checks
-            }
-        }
+        return {"realtime_services": {"healthy": overall_healthy, "checks": checks}}
     except Exception as e:
         return {"realtime_services": {"healthy": False, "error": str(e)}}
+
 
 async def check_roblox_integration() -> Dict:
     """Check Roblox integration services"""
@@ -583,13 +583,13 @@ async def check_roblox_integration() -> Dict:
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(5)
-                result = s.connect_ex(('localhost', 5001))
+                result = s.connect_ex(("localhost", 5001))
                 flask_healthy = result == 0
 
             checks["flask_bridge"] = {
                 "healthy": flask_healthy,
                 "port": 5001,
-                "status": "online" if flask_healthy else "offline"
+                "status": "online" if flask_healthy else "offline",
             }
         except Exception as e:
             checks["flask_bridge"] = {"healthy": False, "error": str(e)}
@@ -597,43 +597,37 @@ async def check_roblox_integration() -> Dict:
         # Check Roblox source structure
         try:
             import os
-            roblox_paths = [
-                "roblox/src/client",
-                "roblox/src/server",
-                "roblox/src/shared"
-            ]
+
+            roblox_paths = ["roblox/src/client", "roblox/src/server", "roblox/src/shared"]
 
             structure_valid = all(
-                os.path.exists(os.path.join(os.getcwd(), path))
-                for path in roblox_paths
+                os.path.exists(os.path.join(os.getcwd(), path)) for path in roblox_paths
             )
 
             checks["roblox_source_structure"] = {
                 "healthy": structure_valid,
                 "paths_checked": roblox_paths,
-                "status": "valid" if structure_valid else "missing_paths"
+                "status": "valid" if structure_valid else "missing_paths",
             }
         except Exception as e:
             checks["roblox_source_structure"] = {"healthy": False, "error": str(e)}
 
         # Check Roblox agents
         try:
-            from core.agents.roblox.roblox_content_generation_agent import RobloxContentGenerationAgent
+            from core.agents.roblox.roblox_content_generation_agent import (
+                RobloxContentGenerationAgent,
+            )
+
             checks["roblox_agents"] = {
                 "healthy": True,
                 "status": "agents_available",
-                "agents": ["RobloxContentGenerationAgent"]
+                "agents": ["RobloxContentGenerationAgent"],
             }
         except ImportError as e:
             checks["roblox_agents"] = {"healthy": False, "error": f"Agent import error: {str(e)}"}
 
         overall_healthy = all(check.get("healthy", False) for check in checks.values())
 
-        return {
-            "roblox_integration": {
-                "healthy": overall_healthy,
-                "checks": checks
-            }
-        }
+        return {"roblox_integration": {"healthy": overall_healthy, "checks": checks}}
     except Exception as e:
         return {"roblox_integration": {"healthy": False, "error": str(e)}}

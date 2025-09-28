@@ -4,24 +4,26 @@
  */
 
 import React, { memo } from 'react';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Tooltip from '@mui/material/Tooltip';
-import IconButton from '@mui/material/IconButton';
-import Skeleton from '@mui/material/Skeleton';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
+import {
+  Card,
+  Text,
+  Box,
+  Stack,
+  Tooltip,
+  ActionIcon,
+  Skeleton,
+  useMantineTheme,
+  alpha,
+  Group,
+} from '@mantine/core';
 
 import {
-  TrendingUp,
-  TrendingDown,
-  TrendingFlat,
-  Info as InfoIcon,
-  MoreVert as MoreIcon,
-} from '@mui/icons-material';
+  IconTrendingUp,
+  IconTrendingDown,
+  IconMinus,
+  IconInfoCircle as InfoIcon,
+  IconDots as MoreIcon,
+} from '@tabler/icons-react';
 import { motion } from 'framer-motion';
 
 export interface MetricCardProps {
@@ -59,26 +61,26 @@ export const MetricCard = memo<MetricCardProps>(({
   trend,
   sparklineData,
 }) => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
 
   const getTrendIcon = () => {
     if (trend === 'up' || (change && change > 0)) {
-      return <TrendingUp sx={{ fontSize: 16 }} />;
+      return <IconTrendingUp size={16} />;
     }
     if (trend === 'down' || (change && change < 0)) {
-      return <TrendingDown sx={{ fontSize: 16 }} />;
+      return <IconTrendingDown size={16} />;
     }
-    return <TrendingFlat sx={{ fontSize: 16 }} />;
+    return <IconMinus size={16} />;
   };
 
   const getTrendColor = () => {
     if (trend === 'up' || (change && change > 0)) {
-      return theme.palette.success.main;
+      return theme.colors.green[6];
     }
     if (trend === 'down' || (change && change < 0)) {
-      return theme.palette.error.main;
+      return theme.colors.red[6];
     }
-    return theme.palette.text.secondary;
+    return theme.colors.gray[6];
   };
 
   const formatValue = () => {
@@ -93,6 +95,18 @@ export const MetricCard = memo<MetricCardProps>(({
       return value.toLocaleString();
     }
     return value;
+  };
+
+  const getColorValue = (colorName: string) => {
+    const colorMap = {
+      primary: theme.colors.blue[6],
+      secondary: theme.colors.gray[6],
+      success: theme.colors.green[6],
+      warning: theme.colors.yellow[6],
+      error: theme.colors.red[6],
+      info: theme.colors.cyan[6],
+    };
+    return colorMap[colorName as keyof typeof colorMap] || theme.colors.blue[6];
   };
 
   const renderSparkline = () => {
@@ -114,12 +128,12 @@ export const MetricCard = memo<MetricCardProps>(({
       .join(' ');
 
     return (
-      <Box sx={{ position: 'absolute', right: 16, bottom: 16, opacity: 0.3 }}>
+      <Box style={{ position: 'absolute', right: 16, bottom: 16, opacity: 0.3 }}>
         <svg width={width} height={height}>
           <polyline
             points={points}
             fill="none"
-            stroke={theme.palette[color].main}
+            stroke={getColorValue(color)}
             strokeWidth="2"
           />
         </svg>
@@ -129,14 +143,12 @@ export const MetricCard = memo<MetricCardProps>(({
 
   if (loading) {
     return (
-      <Card>
-        <CardContent>
-          <Stack spacing={2}>
-            <Skeleton variant="text" width="60%" />
-            <Skeleton variant="text" width="40%" height={32} />
-            <Skeleton variant="text" width="30%" />
-          </Stack>
-        </CardContent>
+      <Card padding="md" withBorder>
+        <Stack gap="md">
+          <Skeleton height={8} width="60%" />
+          <Skeleton height={32} width="40%" />
+          <Skeleton height={8} width="30%" />
+        </Stack>
       </Card>
     );
   }
@@ -145,110 +157,101 @@ export const MetricCard = memo<MetricCardProps>(({
     <MotionCard
       whileHover={{ scale: onClick ? 1.02 : 1 }}
       transition={{ type: 'spring', stiffness: 300 }}
-      onClick={(e: React.MouseEvent) => onClick}
-      sx={{
+      onClick={onClick}
+      padding="md"
+      withBorder
+      style={{
         cursor: onClick ? 'pointer' : 'default',
         position: 'relative',
         overflow: 'visible',
         background: `linear-gradient(135deg,
-          ${alpha(theme.palette[color].main, 0.05)} 0%,
-          ${alpha(theme.palette[color].main, 0.02)} 100%)`,
-        borderLeft: `4px solid ${theme.palette[color].main}`,
+          ${alpha(getColorValue(color), 0.05)} 0%,
+          ${alpha(getColorValue(color), 0.02)} 100%)`,
+        borderLeft: `4px solid ${getColorValue(color)}`,
       }}
     >
-      <CardContent>
-        <Stack spacing={1}>
-          {/* Header */}
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Stack direction="row" alignItems="center" spacing={1}>
-              {icon && (
-                <Box
-                  sx={{
-                    color: theme.palette[color].main,
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  {icon}
-                </Box>
-              )}
-              <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                {title}
-              </Typography>
-            </Stack>
-            <Stack direction="row" spacing={0.5}>
-              {description && (
-                <Tooltip title={description}>
-                  <IconButton size="small" onClick={(e: React.MouseEvent) => onInfoClick}>
-                    <InfoIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              )}
-              <IconButton size="small">
-                <MoreIcon fontSize="small" />
-              </IconButton>
-            </Stack>
-          </Stack>
-
-          {/* Value */}
-          <Typography
-            variant="h4"
-            fontWeight="bold"
-            sx={{
-              color: theme.palette.text.primary,
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: 0.5,
-            }}
-          >
-            {prefix && (
-              <Typography component="span" variant="h5" color="text.secondary">
-                {prefix}
-              </Typography>
-            )}
-            {formatValue()}
-            {suffix && (
-              <Typography component="span" variant="h6" color="text.secondary">
-                {suffix}
-              </Typography>
-            )}
-          </Typography>
-
-          {/* Change indicator */}
-          {(change !== undefined || changeLabel) && (
-            <Stack direction="row" alignItems="center" spacing={0.5}>
+      <Stack gap="xs">
+        {/* Header */}
+        <Group justify="space-between">
+          <Group gap="xs">
+            {icon && (
               <Box
-                sx={{
+                style={{
+                  color: getColorValue(color),
                   display: 'flex',
                   alignItems: 'center',
-                  color: getTrendColor(),
                 }}
               >
-                {getTrendIcon()}
+                {icon}
               </Box>
-              {change !== undefined && (
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: getTrendColor(),
-                    fontWeight: 600,
-                  }}
-                >
-                  {change > 0 ? '+' : ''}{change}%
-                </Typography>
-              )}
-              {changeLabel && (
-                <Typography variant="body2" color="text.secondary">
-                  {changeLabel}
-                </Typography>
-              )}
-            </Stack>
-          )}
-        </Stack>
+            )}
+            <Text size="sm" c="dimmed" fw={500}>
+              {title}
+            </Text>
+          </Group>
+          <Group gap={4}>
+            {description && (
+              <Tooltip label={description}>
+                <ActionIcon size="sm" variant="subtle" onClick={onInfoClick}>
+                  <InfoIcon size={16} />
+                </ActionIcon>
+              </Tooltip>
+            )}
+            <ActionIcon size="sm" variant="subtle">
+              <MoreIcon size={16} />
+            </ActionIcon>
+          </Group>
+        </Group>
 
-        {/* Sparkline */}
-        {renderSparkline()}
-      </CardContent>
+        {/* Value */}
+        <Group gap="xs" align="baseline">
+          {prefix && (
+            <Text size="lg" c="dimmed">
+              {prefix}
+            </Text>
+          )}
+          <Text size="xl" fw={700}>
+            {formatValue()}
+          </Text>
+          {suffix && (
+            <Text size="md" c="dimmed">
+              {suffix}
+            </Text>
+          )}
+        </Group>
+
+        {/* Change indicator */}
+        {(change !== undefined || changeLabel) && (
+          <Group gap="xs">
+            <Box
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                color: getTrendColor(),
+              }}
+            >
+              {getTrendIcon()}
+            </Box>
+            {change !== undefined && (
+              <Text
+                size="sm"
+                fw={600}
+                style={{ color: getTrendColor() }}
+              >
+                {change > 0 ? '+' : ''}{change}%
+              </Text>
+            )}
+            {changeLabel && (
+              <Text size="sm" c="dimmed">
+                {changeLabel}
+              </Text>
+            )}
+          </Group>
+        )}
+      </Stack>
+
+      {/* Sparkline */}
+      {renderSparkline()}
     </MotionCard>
   );
 });

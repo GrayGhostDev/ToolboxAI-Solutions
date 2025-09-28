@@ -1,15 +1,17 @@
 import React, { useState } from "react";
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import Stack from '@mui/material/Stack';
+import {
+  Modal,
+  Button,
+  TextInput,
+  Textarea,
+  Select,
+  Stack,
+  Group,
+  NumberInput,
+} from '@mantine/core';
+import { usePusherChannel } from "../../hooks/usePusherEvents";
+import { useAppDispatch } from "../../store";
+import { addNotification } from "../../store/slices/uiSlice";
 
 
 interface CreateClassDialogProps {
@@ -27,12 +29,45 @@ const CreateClassDialog: React.FunctionComponent<CreateClassDialogProps> = ({
   editMode = false,
   initialData = null,
 }) => {
+  const dispatch = useAppDispatch();
   const [className, setClassName] = useState(initialData?.name || "");
   const [grade, setGrade] = useState(initialData?.grade || "");
   const [schedule, setSchedule] = useState(initialData?.schedule || "");
   const [subject, setSubject] = useState(initialData?.subject || "Mathematics");
   const [room, setRoom] = useState(initialData?.room || "");
   const [description, setDescription] = useState(initialData?.description || "");
+
+  // Pusher real-time updates for class management
+  usePusherChannel(
+    'class-updates',
+    {
+      'class-created': (data: { classId: string; name: string; creator: string }) => {
+        dispatch(
+          addNotification({
+            type: "success",
+            message: `New class "${data.name}" created by ${data.creator}`,
+          })
+        );
+      },
+      'class-updated': (data: { classId: string; name: string; changes: string[] }) => {
+        dispatch(
+          addNotification({
+            type: "info",
+            message: `Class "${data.name}" has been updated`,
+          })
+        );
+      },
+      'class-enrollment-changed': (data: { classId: string; name: string; studentCount: number }) => {
+        dispatch(
+          addNotification({
+            type: "info",
+            message: `Class "${data.name}" now has ${data.studentCount} students enrolled`,
+          })
+        );
+      },
+    },
+    { enabled: true }
+  );
 
   React.useEffect(() => {
     if (initialData) {
@@ -81,108 +116,134 @@ const CreateClassDialog: React.FunctionComponent<CreateClassDialogProps> = ({
     onClose();
   };
 
-  const handleSubjectChange = (event: SelectChangeEvent) => {
-    setSubject(event.target.value);
-  };
+  const subjects = [
+    "Mathematics",
+    "Science",
+    "English",
+    "History",
+    "Computer Science",
+    "Art",
+    "Music",
+    "Physical Education",
+  ];
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth role="dialog">
-      <DialogTitle>{editMode ? "Edit Class" : "Create New Class"}</DialogTitle>
-      <DialogContent>
-        <Stack spacing={3} sx={{ mt: 1 }}>
-          <TextField
-            label="Class Name"
-            name="name"
-            placeholder="Enter class name"
-            value={className}
-            onChange={(e) => setClassName(e.target.value)}
-            fullWidth
-            required
-            autoFocus
-            data-testid="class-name-input"
-          />
+    <Modal
+      opened={open}
+      onClose={handleClose}
+      title={editMode ? "Edit Class" : "Create New Class"}
+      size="lg"
+      styles={{
+        title: {
+          background: 'linear-gradient(135deg, #00bcd4, #e91e63)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          fontWeight: 'bold',
+          fontSize: '1.5rem'
+        },
+        header: {
+          paddingBottom: 'var(--mantine-spacing-md)'
+        }
+      }}
+    >
+      <Stack spacing="md">
+        <TextInput
+          label="Class Name"
+          required
+          value={className}
+          onChange={(event) => setClassName(event.currentTarget.value)}
+          placeholder="Enter class name"
+          styles={{
+            label: { fontWeight: 600 }
+          }}
+          data-testid="class-name-input"
+        />
 
-          <FormControl fullWidth required>
-            <InputLabel id="subject-label">Subject</InputLabel>
-            <Select
-              labelId="subject-label"
-              id="subject-select"
-              name="subject"
-              value={subject}
-              label="Subject"
-              onChange={handleSubjectChange}
-              data-testid="subject-select"
-            >
-              <MenuItem value="Mathematics">Mathematics</MenuItem>
-              <MenuItem value="Science">Science</MenuItem>
-              <MenuItem value="English">English</MenuItem>
-              <MenuItem value="History">History</MenuItem>
-              <MenuItem value="Computer Science">Computer Science</MenuItem>
-              <MenuItem value="Art">Art</MenuItem>
-              <MenuItem value="Music">Music</MenuItem>
-              <MenuItem value="Physical Education">Physical Education</MenuItem>
-            </Select>
-          </FormControl>
+        <Select
+          label="Subject"
+          required
+          value={subject}
+          onChange={(value) => setSubject(value || "Mathematics")}
+          data={subjects.map(sub => ({ value: sub, label: sub }))}
+          styles={{
+            label: { fontWeight: 600 }
+          }}
+          data-testid="subject-select"
+        />
 
-          <TextField
-            label="Grade Level"
-            name="grade"
-            type="number"
-            value={grade}
-            onChange={(e) => setGrade(e.target.value)}
-            fullWidth
-            required
-            inputProps={{ min: 1, max: 12 }}
-            data-testid="grade-input"
-          />
+        <NumberInput
+          label="Grade Level"
+          required
+          value={grade ? parseInt(grade) : undefined}
+          onChange={(value) => setGrade(value?.toString() || "")}
+          placeholder="Enter grade level"
+          min={1}
+          max={12}
+          styles={{
+            label: { fontWeight: 600 }
+          }}
+          data-testid="grade-input"
+        />
 
-          <TextField
-            label="Room"
-            name="room"
-            placeholder="e.g., Room 101"
-            value={room}
-            onChange={(e) => setRoom(e.target.value)}
-            fullWidth
-            data-testid="room-input"
-          />
+        <TextInput
+          label="Room"
+          value={room}
+          onChange={(event) => setRoom(event.currentTarget.value)}
+          placeholder="e.g., Room 101"
+          styles={{
+            label: { fontWeight: 600 }
+          }}
+          data-testid="room-input"
+        />
 
-          <TextField
-            label="Schedule"
-            name="schedule"
-            placeholder="e.g., Mon/Wed/Fri 10:00 AM"
-            value={schedule}
-            onChange={(e) => setSchedule(e.target.value)}
-            fullWidth
-            data-testid="schedule-input"
-          />
+        <TextInput
+          label="Schedule"
+          value={schedule}
+          onChange={(event) => setSchedule(event.currentTarget.value)}
+          placeholder="e.g., Mon/Wed/Fri 10:00 AM"
+          styles={{
+            label: { fontWeight: 600 }
+          }}
+          data-testid="schedule-input"
+        />
 
-          <TextField
-            label="Description"
-            name="description"
-            placeholder="Class description (optional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            fullWidth
-            multiline
-            rows={3}
-            data-testid="description-input"
-          />
-        </Stack>
-      </DialogContent>
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={(e: React.MouseEvent) => handleClose} color="inherit">
-          Cancel
-        </Button>
-        <Button
-          onClick={(e: React.MouseEvent) => handleSave}
-          variant="contained"
-          disabled={!className || !grade}
-          data-testid="save-class-button"
-        >
-          {editMode ? "Update" : "Create"} Class
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <Textarea
+          label="Description"
+          value={description}
+          onChange={(event) => setDescription(event.currentTarget.value)}
+          placeholder="Class description (optional)"
+          rows={3}
+          styles={{
+            label: { fontWeight: 600 }
+          }}
+          data-testid="description-input"
+        />
+
+        <Group position="right" mt="md">
+          <Button
+            variant="default"
+            onClick={handleClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={!className || !grade}
+            styles={{
+              root: {
+                background: 'linear-gradient(135deg, #00bcd4, #e91e63)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #00acc1, #d81b60)'
+                }
+              }
+            }}
+            data-testid="save-class-button"
+          >
+            {editMode ? "Update" : "Create"} Class
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
   );
 };
 

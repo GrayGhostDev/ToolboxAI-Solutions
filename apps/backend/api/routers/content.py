@@ -19,7 +19,7 @@ from apps.backend.models.schemas import (
     ContentResponse,
     BaseResponse,
     ErrorResponse,
-    User
+    User,
 )
 from apps.backend.api.auth.auth import get_current_user, require_any_role
 
@@ -33,7 +33,7 @@ async def generate_content(
     content_request: ContentRequest,
     background_tasks: BackgroundTasks,
     request: Request,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> ContentResponse:
     """
     Generate educational content using AI agents
@@ -56,8 +56,8 @@ async def generate_content(
             "request_id": request_id,
             "user_id": current_user.id,
             "topic": content_request.topic,
-            "content_type": getattr(content_request, 'content_type', 'general')
-        }
+            "content_type": getattr(content_request, "content_type", "general"),
+        },
     )
 
     try:
@@ -67,10 +67,10 @@ async def generate_content(
         # Generate content using agents
         result = await generate_educational_content(
             topic=content_request.topic,
-            subject=getattr(content_request, 'subject', None),
-            grade_level=getattr(content_request, 'grade_level', None),
-            content_type=getattr(content_request, 'content_type', 'lesson'),
-            user_id=current_user.id
+            subject=getattr(content_request, "subject", None),
+            grade_level=getattr(content_request, "grade_level", None),
+            content_type=getattr(content_request, "content_type", "lesson"),
+            user_id=current_user.id,
         )
 
         # Log successful generation
@@ -80,10 +80,7 @@ async def generate_content(
             user_id=current_user.id,
             resource_type="educational_content",
             resource_id=request_id,
-            details={
-                "topic": content_request.topic,
-                "result_length": len(str(result))
-            }
+            details={"topic": content_request.topic, "result_length": len(str(result))},
         )
 
         # Broadcast update via Pusher
@@ -92,7 +89,7 @@ async def generate_content(
             user_id=current_user.id,
             content_id=request_id,
             status="completed",
-            result=result
+            result=result,
         )
 
         return ContentResponse(
@@ -102,18 +99,14 @@ async def generate_content(
                 "request_id": request_id,
                 "generation_time": (datetime.now() - start_time).total_seconds(),
                 "agent_used": "educational_content_agent",
-                "user_id": current_user.id
-            }
+                "user_id": current_user.id,
+            },
         )
 
     except Exception as e:
         logger.error(
             f"Content generation failed: {e}",
-            extra_fields={
-                "request_id": request_id,
-                "user_id": current_user.id,
-                "error": str(e)
-            }
+            extra_fields={"request_id": request_id, "user_id": current_user.id, "error": str(e)},
         )
 
         # Broadcast error via Pusher
@@ -122,19 +115,15 @@ async def generate_content(
             user_id=current_user.id,
             content_id=request_id,
             status="failed",
-            error=str(e)
+            error=str(e),
         )
 
-        raise HTTPException(
-            status_code=500,
-            detail=f"Content generation failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Content generation failed: {str(e)}")
 
 
 @router.get("/content/{content_id}")
 async def get_content(
-    content_id: str,
-    current_user: User = Depends(get_current_user)
+    content_id: str, current_user: User = Depends(get_current_user)
 ) -> JSONResponse:
     """
     Retrieve generated content by ID
@@ -154,34 +143,32 @@ async def get_content(
             "status": "completed",
             "content": f"Retrieved content for ID: {content_id}",
             "created_at": datetime.now(timezone.utc).isoformat(),
-            "user_id": current_user.id
+            "user_id": current_user.id,
         }
 
         log_audit(
             action="content_retrieved",
             user_id=current_user.id,
             resource_type="educational_content",
-            resource_id=content_id
+            resource_id=content_id,
         )
 
-        return JSONResponse(content={
-            "status": "success",
-            "data": content_data,
-            "message": "Content retrieved successfully"
-        })
+        return JSONResponse(
+            content={
+                "status": "success",
+                "data": content_data,
+                "message": "Content retrieved successfully",
+            }
+        )
 
     except Exception as e:
         logger.error(f"Failed to retrieve content {content_id}: {e}")
-        raise HTTPException(
-            status_code=404,
-            detail=f"Content not found: {content_id}"
-        )
+        raise HTTPException(status_code=404, detail=f"Content not found: {content_id}")
 
 
 @router.get("/content/{content_id}/stream")
 async def stream_content_generation(
-    content_id: str,
-    current_user: User = Depends(get_current_user)
+    content_id: str, current_user: User = Depends(get_current_user)
 ) -> StreamingResponse:
     """
     Stream content generation progress
@@ -194,6 +181,7 @@ async def stream_content_generation(
         StreamingResponse: Streaming response with generation progress
     """
     try:
+
         async def generate_stream():
             """Generate streaming content updates"""
             # Simulate streaming content generation
@@ -203,7 +191,7 @@ async def stream_content_generation(
                 "Generating content structure...",
                 "Creating detailed content...",
                 "Finalizing and formatting...",
-                "Content generation completed!"
+                "Content generation completed!",
             ]
 
             for i, stage in enumerate(stages):
@@ -212,12 +200,13 @@ async def stream_content_generation(
                     "content_id": content_id,
                     "stage": stage,
                     "progress": progress,
-                    "timestamp": datetime.now(timezone.utc).isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
                 yield f"data: {data}\n\n"
 
                 # Simulate processing time
                 import asyncio
+
                 await asyncio.sleep(1)
 
         return StreamingResponse(
@@ -226,22 +215,20 @@ async def stream_content_generation(
             headers={
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
-                "Content-Encoding": "identity"
-            }
+                "Content-Encoding": "identity",
+            },
         )
 
     except Exception as e:
         logger.error(f"Failed to stream content generation {content_id}: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to stream content generation: {str(e)}"
+            status_code=500, detail=f"Failed to stream content generation: {str(e)}"
         )
 
 
 @router.delete("/content/{content_id}")
 async def delete_content(
-    content_id: str,
-    current_user: User = Depends(require_any_role(["admin", "teacher"]))
+    content_id: str, current_user: User = Depends(require_any_role(["admin", "teacher"]))
 ) -> JSONResponse:
     """
     Delete generated content
@@ -261,29 +248,25 @@ async def delete_content(
             action="content_deleted",
             user_id=current_user.id,
             resource_type="educational_content",
-            resource_id=content_id
+            resource_id=content_id,
         )
 
-        return JSONResponse(content={
-            "status": "success",
-            "data": {"content_id": content_id, "deleted": True},
-            "message": "Content deleted successfully"
-        })
+        return JSONResponse(
+            content={
+                "status": "success",
+                "data": {"content_id": content_id, "deleted": True},
+                "message": "Content deleted successfully",
+            }
+        )
 
     except Exception as e:
         logger.error(f"Failed to delete content {content_id}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to delete content: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to delete content: {str(e)}")
 
 
 @router.get("/content/user/{user_id}")
 async def get_user_content(
-    user_id: str,
-    current_user: User = Depends(get_current_user),
-    limit: int = 10,
-    offset: int = 0
+    user_id: str, current_user: User = Depends(get_current_user), limit: int = 10, offset: int = 0
 ) -> JSONResponse:
     """
     Get content generated by a specific user
@@ -301,8 +284,7 @@ async def get_user_content(
         # Check if user can access this data
         if current_user.id != user_id and not _user_has_role(current_user, ["admin", "teacher"]):
             raise HTTPException(
-                status_code=403,
-                detail="Insufficient permissions to access user content"
+                status_code=403, detail="Insufficient permissions to access user content"
             )
 
         # For now, return placeholder data
@@ -312,30 +294,29 @@ async def get_user_content(
                 "id": f"content_{i}",
                 "topic": f"Sample Topic {i}",
                 "created_at": datetime.now(timezone.utc).isoformat(),
-                "status": "completed"
+                "status": "completed",
             }
             for i in range(offset, offset + limit)
         ]
 
-        return JSONResponse(content={
-            "status": "success",
-            "data": {
-                "content": content_list,
-                "total": 50,  # Placeholder total
-                "limit": limit,
-                "offset": offset
-            },
-            "message": "User content retrieved successfully"
-        })
+        return JSONResponse(
+            content={
+                "status": "success",
+                "data": {
+                    "content": content_list,
+                    "total": 50,  # Placeholder total
+                    "limit": limit,
+                    "offset": offset,
+                },
+                "message": "User content retrieved successfully",
+            }
+        )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to get user content for {user_id}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve user content: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve user content: {str(e)}")
 
 
 async def _broadcast_content_update(
@@ -343,7 +324,7 @@ async def _broadcast_content_update(
     content_id: str,
     status: str,
     result: Optional[str] = None,
-    error: Optional[str] = None
+    error: Optional[str] = None,
 ) -> None:
     """
     Broadcast content generation update via Pusher
@@ -359,11 +340,7 @@ async def _broadcast_content_update(
         from apps.backend.services.pusher_handler import broadcast_content_update
 
         await broadcast_content_update(
-            user_id=user_id,
-            content_id=content_id,
-            status=status,
-            result=result,
-            error=error
+            user_id=user_id, content_id=content_id, status=status, result=result, error=error
         )
 
     except Exception as e:
@@ -381,5 +358,5 @@ def _user_has_role(user: User, required_roles: list) -> bool:
     Returns:
         bool: True if user has any required role
     """
-    user_role = getattr(user, 'role', None)
+    user_role = getattr(user, "role", None)
     return user_role in required_roles if user_role else False

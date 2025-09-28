@@ -41,9 +41,7 @@ def get_settings():
 
 
 # Authentication dependencies
-async def get_current_active_user(
-    current_user: User = Depends(get_current_user)
-) -> User:
+async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
     """Get current active user"""
     if not current_user:
         raise HTTPException(
@@ -52,23 +50,17 @@ async def get_current_active_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    if hasattr(current_user, 'is_active') and not current_user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Inactive user"
-        )
+    if hasattr(current_user, "is_active") and not current_user.is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
 
     return current_user
 
 
-async def get_admin_user(
-    current_user: User = Depends(get_current_active_user)
-) -> User:
+async def get_admin_user(current_user: User = Depends(get_current_active_user)) -> User:
     """Get current user with admin privileges"""
-    if not hasattr(current_user, 'role') or current_user.role != 'admin':
+    if not hasattr(current_user, "role") or current_user.role != "admin":
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin privileges required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin privileges required"
         )
     return current_user
 
@@ -79,6 +71,7 @@ def get_agent_service():
     """Get agent service instance"""
     try:
         from apps.backend.services.agent_service import get_agent_service
+
         return get_agent_service()
     except ImportError as e:
         logger.warning(f"Agent service not available: {e}")
@@ -90,6 +83,7 @@ def get_pusher_service():
     """Get Pusher service instance"""
     try:
         from apps.backend.services.pusher_realtime import get_pusher_service
+
         return get_pusher_service()
     except ImportError as e:
         logger.warning(f"Pusher service not available: {e}")
@@ -101,6 +95,7 @@ def get_mcp_service():
     """Get MCP service instance"""
     try:
         from core.mcp.server import MCPServer
+
         return MCPServer()
     except ImportError as e:
         logger.warning(f"MCP service not available: {e}")
@@ -125,6 +120,7 @@ async def check_redis_health() -> bool:
     try:
         # Import Redis service if available
         from apps.backend.core.redis.connection import redis_service
+
         return await redis_service.ping()
     except Exception as e:
         logger.error(f"Redis health check failed: {e}")
@@ -143,20 +139,14 @@ def get_rate_limit_key(request) -> str:
 def validate_content_id(content_id: str) -> str:
     """Validate content ID format"""
     if not content_id or len(content_id) < 1:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid content ID"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid content ID")
     return content_id
 
 
 def validate_agent_id(agent_id: str) -> str:
     """Validate agent ID format"""
     if not agent_id or len(agent_id) < 1:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid agent ID"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid agent ID")
     return agent_id
 
 
@@ -218,18 +208,14 @@ def get_websocket_manager() -> WebSocketConnectionManager:
 # Error handling dependencies
 def handle_validation_error(error: Exception) -> HTTPException:
     """Convert validation errors to HTTP exceptions"""
-    return HTTPException(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        detail=str(error)
-    )
+    return HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(error))
 
 
 def handle_database_error(error: Exception) -> HTTPException:
     """Convert database errors to HTTP exceptions"""
     logger.error(f"Database error: {error}")
     return HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail="Database operation failed"
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Database operation failed"
     )
 
 
@@ -238,5 +224,5 @@ def handle_external_service_error(error: Exception) -> HTTPException:
     logger.error(f"External service error: {error}")
     return HTTPException(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        detail="External service temporarily unavailable"
+        detail="External service temporarily unavailable",
     )

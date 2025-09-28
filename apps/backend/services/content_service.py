@@ -21,7 +21,7 @@ class ContentService:
     """Service for handling educational content operations"""
 
     def __init__(self):
-        self.generation_timeout = getattr(settings, 'CONTENT_GENERATION_TIMEOUT', 300)  # 5 minutes
+        self.generation_timeout = getattr(settings, "CONTENT_GENERATION_TIMEOUT", 300)  # 5 minutes
 
     async def generate_content(
         self,
@@ -30,7 +30,7 @@ class ContentService:
         subject: Optional[str] = None,
         grade_level: Optional[str] = None,
         content_type: str = "lesson",
-        additional_requirements: Optional[Dict[str, Any]] = None
+        additional_requirements: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Generate educational content using AI agents
@@ -56,8 +56,8 @@ class ContentService:
                     "content_id": content_id,
                     "topic": topic,
                     "user_id": user_id,
-                    "content_type": content_type
-                }
+                    "content_type": content_type,
+                },
             )
 
             # Prepare generation parameters
@@ -67,15 +67,14 @@ class ContentService:
                 "grade_level": grade_level,
                 "content_type": content_type,
                 "user_id": user_id,
-                "requirements": additional_requirements or {}
+                "requirements": additional_requirements or {},
             }
 
             # Generate content using agent system
             from apps.backend.agents.agent import generate_educational_content
 
             result = await asyncio.wait_for(
-                generate_educational_content(**generation_params),
-                timeout=self.generation_timeout
+                generate_educational_content(**generation_params), timeout=self.generation_timeout
             )
 
             # Calculate generation time
@@ -92,7 +91,7 @@ class ContentService:
                 "user_id": user_id,
                 "created_at": start_time.isoformat(),
                 "generation_time": generation_time,
-                "status": "completed"
+                "status": "completed",
             }
 
             # Store content (in a full implementation)
@@ -102,11 +101,7 @@ class ContentService:
             await self._update_user_activity(
                 user_id,
                 "content_generated",
-                {
-                    "content_id": content_id,
-                    "topic": topic,
-                    "content_type": content_type
-                }
+                {"content_id": content_id, "topic": topic, "content_type": content_type},
             )
 
             logger.info(
@@ -114,8 +109,8 @@ class ContentService:
                 extra_fields={
                     "content_id": content_id,
                     "generation_time": generation_time,
-                    "content_length": len(str(result))
-                }
+                    "content_length": len(str(result)),
+                },
             )
 
             return content_data
@@ -150,7 +145,7 @@ class ContentService:
                 "content": "This is a sample educational content...",
                 "user_id": user_id,
                 "created_at": datetime.now(timezone.utc).isoformat(),
-                "status": "completed"
+                "status": "completed",
             }
 
             # Check if user has access to this content
@@ -172,7 +167,7 @@ class ContentService:
         limit: int = 20,
         offset: int = 0,
         content_type: Optional[str] = None,
-        subject: Optional[str] = None
+        subject: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         List content for a user
@@ -193,24 +188,23 @@ class ContentService:
             content_items = []
 
             for i in range(offset, min(offset + limit, offset + 20)):
-                content_items.append({
-                    "id": f"content_{i}",
-                    "topic": f"Topic {i}",
-                    "subject": subject or "General",
-                    "content_type": content_type or "lesson",
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                    "status": "completed"
-                })
+                content_items.append(
+                    {
+                        "id": f"content_{i}",
+                        "topic": f"Topic {i}",
+                        "subject": subject or "General",
+                        "content_type": content_type or "lesson",
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                        "status": "completed",
+                    }
+                )
 
             return {
                 "items": content_items,
                 "total": 100,  # Mock total
                 "limit": limit,
                 "offset": offset,
-                "filters": {
-                    "content_type": content_type,
-                    "subject": subject
-                }
+                "filters": {"content_type": content_type, "subject": subject},
             }
 
         except Exception as e:
@@ -218,10 +212,7 @@ class ContentService:
             return {"items": [], "total": 0, "limit": limit, "offset": offset}
 
     async def update_content(
-        self,
-        content_id: str,
-        user_id: str,
-        updates: Dict[str, Any]
+        self, content_id: str, user_id: str, updates: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """
         Update content
@@ -256,8 +247,8 @@ class ContentService:
                 extra_fields={
                     "content_id": content_id,
                     "user_id": user_id,
-                    "updates": list(updates.keys())
-                }
+                    "updates": list(updates.keys()),
+                },
             )
 
             return content
@@ -291,11 +282,7 @@ class ContentService:
             await self._delete_content_from_storage(content_id)
 
             logger.info(
-                f"Content deleted",
-                extra_fields={
-                    "content_id": content_id,
-                    "user_id": user_id
-                }
+                f"Content deleted", extra_fields={"content_id": content_id, "user_id": user_id}
             )
 
             return True
@@ -305,10 +292,7 @@ class ContentService:
             return False
 
     async def generate_content_stream(
-        self,
-        topic: str,
-        user_id: str,
-        **kwargs
+        self, topic: str, user_id: str, **kwargs
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         Generate content with streaming updates
@@ -326,12 +310,28 @@ class ContentService:
 
             # Simulation of streaming content generation
             stages = [
-                {"stage": "initializing", "progress": 10, "message": "Initializing content generation..."},
-                {"stage": "analyzing", "progress": 25, "message": "Analyzing topic and requirements..."},
-                {"stage": "structuring", "progress": 50, "message": "Creating content structure..."},
-                {"stage": "generating", "progress": 75, "message": "Generating detailed content..."},
+                {
+                    "stage": "initializing",
+                    "progress": 10,
+                    "message": "Initializing content generation...",
+                },
+                {
+                    "stage": "analyzing",
+                    "progress": 25,
+                    "message": "Analyzing topic and requirements...",
+                },
+                {
+                    "stage": "structuring",
+                    "progress": 50,
+                    "message": "Creating content structure...",
+                },
+                {
+                    "stage": "generating",
+                    "progress": 75,
+                    "message": "Generating detailed content...",
+                },
                 {"stage": "finalizing", "progress": 90, "message": "Finalizing and formatting..."},
-                {"stage": "completed", "progress": 100, "message": "Content generation completed!"}
+                {"stage": "completed", "progress": 100, "message": "Content generation completed!"},
             ]
 
             for stage_data in stages:
@@ -340,7 +340,7 @@ class ContentService:
                     "topic": topic,
                     "user_id": user_id,
                     "timestamp": datetime.now(timezone.utc).isoformat(),
-                    **stage_data
+                    **stage_data,
                 }
 
                 # Simulate processing time
@@ -355,7 +355,7 @@ class ContentService:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "stage": "error",
                 "progress": 0,
-                "message": f"Generation failed: {str(e)}"
+                "message": f"Generation failed: {str(e)}",
             }
 
     async def _store_content(self, content_data: Dict[str, Any]) -> None:
@@ -373,12 +373,16 @@ class ContentService:
         # Basic access check - user owns content or is admin
         return content_data.get("user_id") == user_id or await self._is_admin(user_id)
 
-    async def _check_content_modify_access(self, user_id: str, content_data: Dict[str, Any]) -> bool:
+    async def _check_content_modify_access(
+        self, user_id: str, content_data: Dict[str, Any]
+    ) -> bool:
         """Check if user can modify content"""
         # Basic modify check - user owns content or is admin
         return content_data.get("user_id") == user_id or await self._is_admin(user_id)
 
-    async def _check_content_delete_access(self, user_id: str, content_data: Dict[str, Any]) -> bool:
+    async def _check_content_delete_access(
+        self, user_id: str, content_data: Dict[str, Any]
+    ) -> bool:
         """Check if user can delete content"""
         # Basic delete check - user owns content or is admin
         return content_data.get("user_id") == user_id or await self._is_admin(user_id)
@@ -395,19 +399,17 @@ class ContentService:
             extra_fields={
                 "content_id": content_id,
                 "user_id": user_id,
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
         )
 
-    async def _update_user_activity(self, user_id: str, activity_type: str, metadata: Dict[str, Any]) -> None:
+    async def _update_user_activity(
+        self, user_id: str, activity_type: str, metadata: Dict[str, Any]
+    ) -> None:
         """Update user activity log"""
         logger.info(
             f"User activity: {activity_type}",
-            extra_fields={
-                "user_id": user_id,
-                "activity_type": activity_type,
-                "metadata": metadata
-            }
+            extra_fields={"user_id": user_id, "activity_type": activity_type, "metadata": metadata},
         )
 
 

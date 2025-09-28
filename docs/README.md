@@ -4,18 +4,19 @@ Welcome to the comprehensive documentation for ToolBoxAI-Solutions, an AI-powere
 
 ## 🚀 Quick Start Guides
 
-### 🔥 Phase 2 Documentation (Latest)
-1. **[Phase 2 Status Report](phase2/PHASE2_STATUS.md)** - Current implementation status (68% complete)
-2. **[Phase 2 Completion Report](phase2/PHASE2_COMPLETION_REPORT.md)** - Comprehensive achievements overview
-3. **[Testing Environment](phase2/testing/PYTEST_ENVIRONMENT_COMPLETE.md)** - Test suite results (74.9% pass rate)
-4. **[TypeScript Migration](phase2/migration/TYPESCRIPT_MIGRATION_SUMMARY.md)** - 845 errors fixed
-5. **[Staging Environment](phase2/deployment/STAGING_SETUP_README.md)** - Database modernization ready
+### 🔥 Latest Documentation (September 2025)
+1. **[Docker MCP Gateway Integration 2025](05-implementation/docker-mcp-gateway-integration-2025.md)** - ⭐ **CURRENT** - Accurate implementation status
+2. **[Docker Hub MCP Integration](05-implementation/docker-hub-mcp-integration.md)** - Repository management via MCP
+3. **[Documentation Update Summary](11-reports/DOCUMENTATION_UPDATE_SUMMARY_2025-09-28.md)** - All corrections applied
+4. **[Phase 2 Status Report](phase2/PHASE2_STATUS.md)** - Implementation status (68% complete)
+5. **[Testing Environment](phase2/testing/PYTEST_ENVIRONMENT_COMPLETE.md)** - Test suite results (74.9% pass rate)
 
 ### For Developers
-1. **[Getting Started](01-overview/getting-started/getting-started.md)** - Initial setup and overview
-2. **[Development Setup](04-implementation/development-setup/comprehensive-development-setup.md)** - Environment configuration
-3. **[System Architecture](02-architecture/system-design.md)** - Understanding the codebase
-4. **[Testing Guidelines](04-implementation/testing/testing-guidelines.md)** - Running and writing tests
+1. **[Docker MCP Deployment Guide 2025](guides/DOCKER_MCP_DEPLOYMENT_GUIDE_2025.md)** - ⭐ **CURRENT** - Complete deployment guide
+2. **[Getting Started](01-overview/getting-started/getting-started.md)** - Initial setup and overview
+3. **[Development Setup](04-implementation/development-setup/comprehensive-development-setup.md)** - Environment configuration
+4. **[System Architecture](02-architecture/system-design.md)** - Understanding the codebase
+5. **[Testing Guidelines](04-implementation/testing/testing-guidelines.md)** - Running and writing tests
 
 ### For Users
 1. **[Project Overview](01-overview/project-overview/project-overview.md)** - What ToolBoxAI does
@@ -215,8 +216,8 @@ Review compliance documentation and security reports:
 ### Environment Setup
 - **Virtual Environment**: Use `venv/` (not `.venv` or `venv_clean/`)
 - **Dashboard Location**: `apps/dashboard/` (not nested structure)
-- **Backend Port**: 8008 (FastAPI server)
-- **Frontend Port**: 5179 (Vite development server)
+- **Backend Port**: 8009 (FastAPI server)
+- **Frontend Port**: 5180 (React + Mantine v8 development server)
 
 ### Development Workflow
 1. **Setup**: Follow [Development Setup](04-implementation/development-setup/comprehensive-development-setup.md)

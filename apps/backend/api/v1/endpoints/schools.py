@@ -13,6 +13,7 @@ from apps.backend.models.schemas import User
 
 router = APIRouter()
 
+
 # Request/Response Models
 class School(BaseModel):
     id: Optional[str] = None
@@ -27,16 +28,19 @@ class School(BaseModel):
     website: Optional[str] = None
     is_active: bool = True
 
+
 class SchoolResponse(BaseModel):
     success: bool
     data: Optional[School] = None
     message: Optional[str] = None
+
 
 class SchoolListResponse(BaseModel):
     success: bool
     data: List[School] = []
     total: int = 0
     message: Optional[str] = None
+
 
 # Mock data for now
 _mock_schools = [
@@ -49,30 +53,25 @@ _mock_schools = [
         zip_code="12345",
         country="USA",
         email="info@demoschool.edu",
-        is_active=True
+        is_active=True,
     )
 ]
 
+
 @router.get("/", response_model=SchoolListResponse)
 async def get_schools(
-    skip: int = 0,
-    limit: int = 100,
-    current_user: User = Depends(get_current_user)
+    skip: int = 0, limit: int = 100, current_user: User = Depends(get_current_user)
 ):
     """
     Get list of schools
     """
     return SchoolListResponse(
-        success=True,
-        data=_mock_schools[skip:skip+limit],
-        total=len(_mock_schools)
+        success=True, data=_mock_schools[skip : skip + limit], total=len(_mock_schools)
     )
 
+
 @router.get("/{school_id}", response_model=SchoolResponse)
-async def get_school(
-    school_id: str,
-    current_user: User = Depends(get_current_user)
-):
+async def get_school(school_id: str, current_user: User = Depends(get_current_user)):
     """
     Get specific school by ID
     """
@@ -82,11 +81,9 @@ async def get_school(
 
     raise HTTPException(status_code=404, detail="School not found")
 
+
 @router.post("/", response_model=SchoolResponse)
-async def create_school(
-    school: School,
-    current_user: User = Depends(get_current_user)
-):
+async def create_school(school: School, current_user: User = Depends(get_current_user)):
     """
     Create new school
     """
@@ -98,17 +95,12 @@ async def create_school(
     school.id = str(len(_mock_schools) + 1)
     _mock_schools.append(school)
 
-    return SchoolResponse(
-        success=True,
-        data=school,
-        message="School created successfully"
-    )
+    return SchoolResponse(success=True, data=school, message="School created successfully")
+
 
 @router.put("/{school_id}", response_model=SchoolResponse)
 async def update_school(
-    school_id: str,
-    school: School,
-    current_user: User = Depends(get_current_user)
+    school_id: str, school: School, current_user: User = Depends(get_current_user)
 ):
     """
     Update school
@@ -121,19 +113,13 @@ async def update_school(
         if existing.id == school_id:
             school.id = school_id
             _mock_schools[i] = school
-            return SchoolResponse(
-                success=True,
-                data=school,
-                message="School updated successfully"
-            )
+            return SchoolResponse(success=True, data=school, message="School updated successfully")
 
     raise HTTPException(status_code=404, detail="School not found")
 
+
 @router.delete("/{school_id}")
-async def delete_school(
-    school_id: str,
-    current_user: User = Depends(get_current_user)
-):
+async def delete_school(school_id: str, current_user: User = Depends(get_current_user)):
     """
     Delete school
     """
@@ -145,6 +131,7 @@ async def delete_school(
     _mock_schools = [s for s in _mock_schools if s.id != school_id]
 
     return {"success": True, "message": "School deleted successfully"}
+
 
 # Export router
 __all__ = ["router"]

@@ -121,6 +121,9 @@ export const robloxMantineTheme = createTheme({
     'roblox-orange': robloxOrange,
     'roblox-pink': robloxPink,
     'roblox-yellow': robloxYellow,
+    // Add aliases for easier usage
+    'toolboxai-blue': robloxBlue,
+    'toolboxai-purple': robloxPurple,
   },
 
   /** Typography matching existing Roblox theme */

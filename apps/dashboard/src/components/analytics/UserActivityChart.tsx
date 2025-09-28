@@ -1,16 +1,5 @@
 import * as React from "react";
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import Stack from '@mui/material/Stack';
-import Skeleton from '@mui/material/Skeleton';
-import Chip from '@mui/material/Chip';
-import Alert from '@mui/material/Alert';
+import { Card, Text, Title, Box, Select, Stack, Skeleton, Badge, Alert } from '@mantine/core';
 
 import { useState, useEffect } from "react";
 import {
@@ -27,8 +16,8 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { useTheme } from "@mui/material/styles";
-import { useWebSocketContext } from "../../contexts/WebSocketContext";
+import { useMantineTheme } from "@mantine/core";
+import { usePusherContext } from "../../contexts/PusherContext";
 import { apiClient } from "../../services/api";
 
 interface UserActivityData {
@@ -46,13 +35,13 @@ interface UserActivityChartProps {
   autoRefresh?: boolean;
 }
 
-export function UserActivityChart({ 
-  timeRange = "7d", 
+export function UserActivityChart({
+  timeRange = "7d",
   height = 350,
-  autoRefresh = true 
+  autoRefresh = true
 }: UserActivityChartProps) {
-  const theme = useTheme();
-  const { isConnected, subscribe, unsubscribe } = useWebSocketContext();
+  const theme = useMantineTheme();
+  const { isConnected, subscribeToChannel, unsubscribeFromChannel } = usePusherContext();
   
   const [data, setData] = useState<UserActivityData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -173,34 +162,34 @@ export function UserActivityChart({
   useEffect(() => {
     if (!isConnected || !autoRefresh) return;
 
-    const subscriptionId = subscribe('user_activity', (message: any) => {
-      if (message.type === 'ACTIVITY_UPDATE') {
+    const subscriptionId = subscribeToChannel('user_activity', {
+      'ACTIVITY_UPDATE': (message: any) => {
         setData(prevData => {
           const newData = [...prevData];
           const lastIndex = newData.length - 1;
-          
+
           if (lastIndex >= 0 && newData[lastIndex]) {
             // Update the latest data point
             const currentData = newData[lastIndex]!; // We've already checked it exists
             newData[lastIndex] = {
               date: currentData.date, // Preserve the date field explicitly
-              activeUsers: message.payload.activeUsers || currentData.activeUsers,
-              newUsers: message.payload.newUsers || currentData.newUsers,
-              sessionDuration: message.payload.sessionDuration || currentData.sessionDuration,
-              pageViews: message.payload.pageViews || currentData.pageViews,
-              engagementRate: message.payload.engagementRate || currentData.engagementRate,
+              activeUsers: message.activeUsers || currentData.activeUsers,
+              newUsers: message.newUsers || currentData.newUsers,
+              sessionDuration: message.sessionDuration || currentData.sessionDuration,
+              pageViews: message.pageViews || currentData.pageViews,
+              engagementRate: message.engagementRate || currentData.engagementRate,
             };
           }
-          
+
           return newData;
         });
       }
     });
 
     return () => {
-      unsubscribe(subscriptionId);
+      unsubscribeFromChannel(subscriptionId);
     };
-  }, [isConnected, autoRefresh, subscribe, unsubscribe]);
+  }, [isConnected, autoRefresh, subscribeToChannel, unsubscribeFromChannel]);
 
   // Auto-refresh every 5 minutes
   useEffect(() => {
@@ -216,15 +205,15 @@ export function UserActivityChart({
   const getMetricColor = (metric: string) => {
     switch (metric) {
       case "activeUsers":
-        return theme.palette.primary.main;
+        return theme.colors.blue[6];
       case "newUsers":
-        return theme.palette.success.main;
+        return theme.colors.green[6];
       case "sessionDuration":
-        return theme.palette.warning.main;
+        return theme.colors.yellow[6];
       case "pageViews":
-        return theme.palette.info.main;
+        return theme.colors.cyan[6];
       default:
-        return theme.palette.primary.main;
+        return theme.colors.blue[6];
     }
   };
 
@@ -250,13 +239,13 @@ export function UserActivityChart({
       case "bar":
         return (
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
-            <XAxis dataKey="date" stroke={theme.palette.text.secondary} />
-            <YAxis stroke={theme.palette.text.secondary} />
+            <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.gray[3]} />
+            <XAxis dataKey="date" stroke={theme.colors.gray[6]} />
+            <YAxis stroke={theme.colors.gray[6]} />
             <Tooltip
               contentStyle={{
-                backgroundColor: theme.palette.background.paper,
-                border: `1px solid ${theme.palette.divider}`,
+                backgroundColor: theme.colors.gray[0],
+                border: `1px solid ${theme.colors.gray[3]}`,
                 borderRadius: 8,
               }}
             />
@@ -267,13 +256,13 @@ export function UserActivityChart({
       case "area":
         return (
           <AreaChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
-            <XAxis dataKey="date" stroke={theme.palette.text.secondary} />
-            <YAxis stroke={theme.palette.text.secondary} />
+            <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.gray[3]} />
+            <XAxis dataKey="date" stroke={theme.colors.gray[6]} />
+            <YAxis stroke={theme.colors.gray[6]} />
             <Tooltip
               contentStyle={{
-                backgroundColor: theme.palette.background.paper,
-                border: `1px solid ${theme.palette.divider}`,
+                backgroundColor: theme.colors.gray[0],
+                border: `1px solid ${theme.colors.gray[3]}`,
                 borderRadius: 8,
               }}
             />
@@ -290,13 +279,13 @@ export function UserActivityChart({
       default:
         return (
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
-            <XAxis dataKey="date" stroke={theme.palette.text.secondary} />
-            <YAxis stroke={theme.palette.text.secondary} />
+            <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.gray[3]} />
+            <XAxis dataKey="date" stroke={theme.colors.gray[6]} />
+            <YAxis stroke={theme.colors.gray[6]} />
             <Tooltip
               contentStyle={{
-                backgroundColor: theme.palette.background.paper,
-                border: `1px solid ${theme.palette.divider}`,
+                backgroundColor: theme.colors.gray[0],
+                border: `1px solid ${theme.colors.gray[3]}`,
                 borderRadius: 8,
               }}
             />
@@ -316,73 +305,69 @@ export function UserActivityChart({
   if (loading && data.length === 0) {
     return (
       <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            User Activity
-          </Typography>
-          <Skeleton variant="rectangular" height={height} />
-        </CardContent>
+        <Title order={3} mb="md">
+          User Activity
+        </Title>
+        <Skeleton height={height} />
       </Card>
     );
   }
 
   return (
     <Card>
-      <CardContent>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            User Activity
-          </Typography>
-          <Stack direction="row" spacing={2} alignItems="center">
-            {isConnected && autoRefresh && (
-              <Chip label="Live" color="success" size="small" />
-            )}
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel>Metric</InputLabel>
-              <Select
-                value={selectedMetric}
-                label="Metric"
-                onChange={(e) => setSelectedMetric(e.target.value as any)}
-              >
-                <MenuItem value="activeUsers">Active Users</MenuItem>
-                <MenuItem value="newUsers">New Users</MenuItem>
-                <MenuItem value="sessionDuration">Session Duration</MenuItem>
-                <MenuItem value="pageViews">Page Views</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl size="small" sx={{ minWidth: 100 }}>
-              <InputLabel>Chart</InputLabel>
-              <Select
-                value={chartType}
-                label="Chart"
-                onChange={(e) => setChartType(e.target.value as any)}
-              >
-                <MenuItem value="line">Line</MenuItem>
-                <MenuItem value="area">Area</MenuItem>
-                <MenuItem value="bar">Bar</MenuItem>
-              </Select>
-            </FormControl>
-          </Stack>
+      <Stack direction="row" justify="space-between" align="center" mb="md">
+        <Title order={3} fw={600}>
+          User Activity
+        </Title>
+        <Stack direction="row" gap="md" align="center">
+          {isConnected && autoRefresh && (
+            <Badge color="green" size="sm">Live</Badge>
+          )}
+          <Select
+            size="sm"
+            w={120}
+            label="Metric"
+            value={selectedMetric}
+            onChange={(value) => setSelectedMetric(value as any)}
+            data={[
+              { value: "activeUsers", label: "Active Users" },
+              { value: "newUsers", label: "New Users" },
+              { value: "sessionDuration", label: "Session Duration" },
+              { value: "pageViews", label: "Page Views" }
+            ]}
+          />
+          <Select
+            size="sm"
+            w={100}
+            label="Chart"
+            value={chartType}
+            onChange={(value) => setChartType(value as any)}
+            data={[
+              { value: "line", label: "Line" },
+              { value: "area", label: "Area" },
+              { value: "bar", label: "Bar" }
+            ]}
+          />
         </Stack>
-        
-        {error && (
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            Using fallback data: {error}
-          </Alert>
-        )}
-        
-        <Box sx={{ width: "100%", height }}>
-          <ResponsiveContainer>
-            {renderChart()}
-          </ResponsiveContainer>
-        </Box>
-        
-        <Stack direction="row" justifyContent="center" spacing={1} mt={2}>
-          <Typography variant="caption" color="text.secondary">
-            {getMetricLabel(selectedMetric)} over {timeRange}
-          </Typography>
-        </Stack>
-      </CardContent>
+      </Stack>
+
+      {error && (
+        <Alert color="yellow" mb="md">
+          Using fallback data: {error}
+        </Alert>
+      )}
+
+      <Box w="100%" h={height}>
+        <ResponsiveContainer>
+          {renderChart()}
+        </ResponsiveContainer>
+      </Box>
+
+      <Stack direction="row" justify="center" gap="xs" mt="md">
+        <Text size="xs" c="dimmed">
+          {getMetricLabel(selectedMetric)} over {timeRange}
+        </Text>
+      </Stack>
     </Card>
   );
 }

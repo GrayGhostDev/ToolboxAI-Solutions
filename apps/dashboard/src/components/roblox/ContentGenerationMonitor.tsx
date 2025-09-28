@@ -1,60 +1,59 @@
 /**
  * ContentGenerationMonitor Component
- * 
+ *
  * Real-time monitoring of AI content generation pipeline
  * Shows progress for each agent and overall generation status
  */
 import React, { useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import LinearProgress from '@mui/material/LinearProgress';
-import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Button from '@mui/material/Button';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import Collapse from '@mui/material/Collapse';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import Divider from '@mui/material/Divider';
-import CircularProgress from '@mui/material/CircularProgress';
-import Tooltip from '@mui/material/Tooltip';
-import Badge from '@mui/material/Badge';
-import Stack from '@mui/material/Stack';
-import { useTheme, alpha } from '@mui/material/styles';
 import {
-  PlayArrow,
-  Pause,
-  Stop,
-  Refresh,
-  CheckCircle,
-  Error,
-  Warning,
-  Info,
-  Code,
-  Psychology,
-  Terrain,
-  Quiz,
-  Movie,
-  Settings,
-  ExpandMore,
-  ExpandLess,
-  Speed,
-  Memory,
-  Storage,
-  Timer,
-  Cancel,
-  Download,
-  Preview,
-  Visibility
-} from '@mui/icons-material';
-import { useWebSocketContext } from '../../contexts/WebSocketContext';
+  Box,
+  Card,
+  Text,
+  Progress,
+  Grid,
+  Paper,
+  Badge,
+  ActionIcon,
+  Button,
+  Alert,
+  Collapse,
+  List,
+  Tooltip,
+  Stack,
+  Group,
+  Title,
+  RingProgress,
+  Loader,
+  Switch
+} from '@mantine/core';
+import { useMantineTheme } from '@mantine/hooks';
+import {
+  IconPlayerPlay,
+  IconPlayerPause,
+  IconPlayerStop,
+  IconRefresh,
+  IconCircleCheck,
+  IconExclamationMark,
+  IconAlertTriangle,
+  IconInfoCircle,
+  IconCode,
+  IconBrain,
+  IconMountain,
+  IconHelp,
+  IconMovie,
+  IconSettings,
+  IconChevronDown,
+  IconChevronUp,
+  IconGauge,
+  IconMemory,
+  IconDatabase,
+  IconClock,
+  IconX,
+  IconDownload,
+  IconEye,
+  IconEyeCheck
+} from '@tabler/icons-react';
+import { usePusherContext } from '../../contexts/PusherContext';
 import {
   ContentGenerationProgress,
   WebSocketMessageType,
@@ -101,13 +100,13 @@ interface GenerationSession {
 }
 const getAgentIcon = (type: AgentStatus['type']) => {
   switch (type) {
-    case 'supervisor': return <Psychology />;
-    case 'content': return <Movie />;
-    case 'quiz': return <Quiz />;
-    case 'terrain': return <Terrain />;
-    case 'script': return <Code />;
-    case 'review': return <CheckCircle />;
-    default: return <Settings />;
+    case 'supervisor': return <IconBrain />;
+    case 'content': return <IconMovie />;
+    case 'quiz': return <IconHelp />;
+    case 'terrain': return <IconMountain />;
+    case 'script': return <IconCode />;
+    case 'review': return <IconCircleCheck />;
+    default: return <IconSettings />;
   }
 };
 const getStatusColor = (status: AgentStatus['status']) => {
@@ -121,8 +120,8 @@ const getStatusColor = (status: AgentStatus['status']) => {
   }
 };
 export const ContentGenerationMonitor: React.FunctionComponent<Record<string, any>> = () => {
-  const theme = useTheme();
-  const { on, sendMessage, isConnected } = useWebSocketContext();
+  const theme = useMantineTheme();
+  const { on, sendMessage, isConnected } = usePusherContext();
   const [session, setSession] = useState<GenerationSession | null>(null);
   const [expandedAgents, setExpandedAgents] = useState<Set<string>>(new Set());
   const [showPreview, setShowPreview] = useState(false);
@@ -294,103 +293,107 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
     URL.revokeObjectURL(url);
   };
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* Header */}
       <Card>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Psychology color="primary" fontSize="large" />
+        <Card.Section p="md">
+          <Group justify="space-between" align="center">
+            <Group align="center">
+              <IconBrain color={theme.colors.blue[6]} size={32} />
               <Box>
-                <Typography variant="h5">Content Generation Monitor</Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Title order={3}>Content Generation Monitor</Title>
+                <Text size="sm" c="dimmed">
                   Real-time AI agent orchestration and progress tracking
-                </Typography>
+                </Text>
               </Box>
-            </Box>
-            <Stack direction="row" spacing={1}>
-              <Chip
-                label={isConnected ? 'Connected' : 'Disconnected'}
-                color={isConnected ? 'success' : 'error'}
-                size="small"
-              />
+            </Group>
+            <Group>
+              <Badge
+                color={isConnected ? 'green' : 'red'}
+                size="sm"
+              >
+                {isConnected ? 'Connected' : 'Disconnected'}
+              </Badge>
               {session && (
-                <Chip
-                  label={session.status}
-                  color={getStatusColor(session.status as any)}
-                  size="small"
-                />
+                <Badge
+                  color={getStatusColor(session.status as any) === 'success' ? 'green' :
+                         getStatusColor(session.status as any) === 'warning' ? 'yellow' :
+                         getStatusColor(session.status as any) === 'error' ? 'red' : 'gray'}
+                  size="sm"
+                >
+                  {session.status}
+                </Badge>
               )}
-            </Stack>
-          </Box>
-        </CardContent>
+            </Group>
+          </Group>
+        </Card.Section>
       </Card>
       {/* Session Overview */}
       {session && (
         <Card>
-          <CardContent>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={8}>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" gutterBottom>
+          <Card.Section p="md">
+            <Grid gutter="md">
+              <Grid.Col span={{ base: 12, md: 8 }}>
+                <Box mb="md">
+                  <Text size="sm" fw={600} mb="sm">
                     Overall Progress
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box sx={{ flex: 1 }}>
-                      <LinearProgress
-                        variant="determinate"
+                  </Text>
+                  <Group align="center" gap="md">
+                    <Box style={{ flex: 1 }}>
+                      <Progress
                         value={session.totalProgress}
-                        sx={{ height: 10, borderRadius: 1 }}
+                        size="lg"
+                        radius="md"
                       />
                     </Box>
-                    <Typography variant="body2" fontWeight="bold">
+                    <Text size="sm" fw={700}>
                       {Math.round(session.totalProgress)}%
-                    </Typography>
-                  </Box>
+                    </Text>
+                  </Group>
                 </Box>
-                <Grid container spacing={1}>
-                  <Grid item xs={6} sm={3}>
-                    <Typography variant="caption" color="text.secondary">Subject</Typography>
-                    <Typography variant="body2" fontWeight="bold">{session.request.subject}</Typography>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Typography variant="caption" color="text.secondary">Grade Level</Typography>
-                    <Typography variant="body2" fontWeight="bold">{session.request.gradeLevel}</Typography>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Typography variant="caption" color="text.secondary">Environment</Typography>
-                    <Typography variant="body2" fontWeight="bold">{session.request.environmentType}</Typography>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Typography variant="caption" color="text.secondary">Duration</Typography>
-                    <Typography variant="body2" fontWeight="bold">
-                      {session.endTime 
+                <Grid gutter="sm">
+                  <Grid.Col span={{ base: 6, sm: 3 }}>
+                    <Text size="xs" c="dimmed">Subject</Text>
+                    <Text size="sm" fw={600}>{session.request.subject}</Text>
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 6, sm: 3 }}>
+                    <Text size="xs" c="dimmed">Grade Level</Text>
+                    <Text size="sm" fw={600}>{session.request.gradeLevel}</Text>
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 6, sm: 3 }}>
+                    <Text size="xs" c="dimmed">Environment</Text>
+                    <Text size="sm" fw={600}>{session.request.environmentType}</Text>
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 6, sm: 3 }}>
+                    <Text size="xs" c="dimmed">Duration</Text>
+                    <Text size="sm" fw={600}>
+                      {session.endTime
                         ? formatTime(session.endTime.getTime() - session.startTime.getTime())
                         : formatTime(Date.now() - session.startTime.getTime())
                       }
-                    </Typography>
-                  </Grid>
+                    </Text>
+                  </Grid.Col>
                 </Grid>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, md: 4 }}>
+                <Group justify="flex-end" wrap="wrap">
                   {session.status === 'processing' && (
                     <>
                       <Button
-                        variant="outlined"
-                        color="warning"
-                        startIcon={<Pause />}
-                        size="small"
+                        variant="outline"
+                        color="yellow"
+                        leftSection={<IconPlayerPause size={16} />}
+                        size="sm"
                         disabled
                       >
                         Pause
                       </Button>
                       <Button
-                        variant="outlined"
-                        color="error"
-                        startIcon={<Cancel />}
-                        size="small"
-                        onClick={(e: React.MouseEvent) => cancelGeneration}
+                        variant="outline"
+                        color="red"
+                        leftSection={<IconX size={16} />}
+                        size="sm"
+                        onClick={cancelGeneration}
                       >
                         Cancel
                       </Button>
@@ -399,35 +402,35 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
                   {session.status === 'completed' && (
                     <>
                       <Button
-                        variant="outlined"
-                        startIcon={<Download />}
-                        size="small"
-                        onClick={(e: React.MouseEvent) => downloadOutput}
+                        variant="outline"
+                        leftSection={<IconDownload size={16} />}
+                        size="sm"
+                        onClick={downloadOutput}
                       >
                         Download
                       </Button>
                       <Button
-                        variant="outlined"
-                        startIcon={<Preview />}
-                        size="small"
-                        onClick={(e: React.MouseEvent) => () => setShowPreview(!showPreview)}
+                        variant="outline"
+                        leftSection={<IconEye size={16} />}
+                        size="sm"
+                        onClick={() => setShowPreview(!showPreview)}
                       >
                         Preview
                       </Button>
                     </>
                   )}
                   <Button
-                    variant="outlined"
-                    startIcon={<Refresh />}
-                    size="small"
-                    onClick={(e: React.MouseEvent) => () => setSession(null)}
+                    variant="outline"
+                    leftSection={<IconRefresh size={16} />}
+                    size="sm"
+                    onClick={() => setSession(null)}
                   >
                     Reset
                   </Button>
-                </Box>
-              </Grid>
+                </Group>
+              </Grid.Col>
             </Grid>
-          </CardContent>
+          </Card.Section>
         </Card>
       )}
       {/* Agent Status Grid */}
@@ -438,104 +441,131 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
               <Card
                 sx={{
                   border: agent.status === 'working' ? 2 : 1,
-                  borderColor: agent.status === 'working' 
-                    ? 'primary.main' 
+                  borderColor: agent.status === 'working'
+                    ? 'primary.main'
                     : alpha(theme.palette.divider, 0.2),
                   transition: 'all 0.3s'
                 }}
               >
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Badge
-                        badgeContent={
-                          agent.status === 'working' ? (
-                            <CircularProgress size={10} thickness={6} />
-                          ) : agent.status === 'completed' ? (
-                            <CheckCircle sx={{ fontSize: 12 }} />
-                          ) : agent.status === 'error' ? (
-                            <Error sx={{ fontSize: 12 }} />
-                          ) : null
-                        }
-                      >
-                        {getAgentIcon(agent.type)}
-                      </Badge>
-                      <Typography variant="subtitle2" fontWeight="bold">
+                  <Group justify="space-between" align="center" mb="md">
+                    <Group align="center">
+                      {agent.status === 'working' ? (
+                        <RingProgress
+                          size={40}
+                          thickness={3}
+                          sections={[{ value: agent.progress, color: 'blue' }]}
+                          label={getAgentIcon(agent.type)}
+                        />
+                      ) : (
+                        <Box style={{ position: 'relative' }}>
+                          {getAgentIcon(agent.type)}
+                          {agent.status === 'completed' && (
+                            <IconCircleCheck
+                              size={12}
+                              style={{
+                                position: 'absolute',
+                                top: -4,
+                                right: -4,
+                                color: theme.colors.green[6]
+                              }}
+                            />
+                          )}
+                          {agent.status === 'error' && (
+                            <IconExclamationMark
+                              size={12}
+                              style={{
+                                position: 'absolute',
+                                top: -4,
+                                right: -4,
+                                color: theme.colors.red[6]
+                              }}
+                            />
+                          )}
+                        </Box>
+                      )}
+                      <Text size="sm" fw={600}>
                         {agent.name}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Chip
-                        label={agent.status}
-                        size="small"
-                        color={getStatusColor(agent.status)}
-                      />
-                      <IconButton
-                        size="small"
-                        onClick={(e: React.MouseEvent) => () => toggleAgentExpansion(agent.id)}
+                      </Text>
+                    </Group>
+                    <Group align="center">
+                      <Badge
+                        color={
+                          getStatusColor(agent.status) === 'success' ? 'green' :
+                          getStatusColor(agent.status) === 'warning' ? 'yellow' :
+                          getStatusColor(agent.status) === 'error' ? 'red' : 'gray'
+                        }
+                        size="sm"
                       >
-                        {expandedAgents.has(agent.id) ? <ExpandLess /> : <ExpandMore />}
-                      </IconButton>
-                    </Box>
-                  </Box>
-                  <Box sx={{ mb: 1 }}>
-                    <LinearProgress
-                      variant="determinate"
+                        {agent.status}
+                      </Badge>
+                      <ActionIcon
+                        size="sm"
+                        onClick={() => toggleAgentExpansion(agent.id)}
+                      >
+                        {expandedAgents.has(agent.id) ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+                      </ActionIcon>
+                    </Group>
+                  </Group>
+                  <Box mb="sm">
+                    <Progress
                       value={agent.progress}
-                      sx={{ height: 6, borderRadius: 1 }}
+                      size="sm"
+                      radius="md"
                     />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
-                      <Typography variant="caption" color="text.secondary">
+                    <Group justify="space-between" mt="xs">
+                      <Text size="xs" c="dimmed">
                         {agent.currentTask || 'Idle'}
-                      </Typography>
-                      <Typography variant="caption" fontWeight="bold">
+                      </Text>
+                      <Text size="xs" fw={600}>
                         {agent.progress}%
-                      </Typography>
-                    </Box>
+                      </Text>
+                    </Group>
                   </Box>
                   <Collapse in={expandedAgents.has(agent.id)}>
-                    <Divider sx={{ my: 1 }} />
-                    <Grid container spacing={1}>
-                      {agent.metrics?.tokensUsed && (
-                        <Grid item xs={4}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <Speed fontSize="small" color="action" />
-                            <Box>
-                              <Typography variant="caption" color="text.secondary">Tokens</Typography>
-                              <Typography variant="body2">{agent.metrics.tokensUsed}</Typography>
-                            </Box>
-                          </Box>
-                        </Grid>
+                    <Box style={{ borderTop: `1px solid ${theme.colors.gray[3]}`, paddingTop: '8px' }}>
+                      <Grid gutter="xs">
+                        {agent.metrics?.tokensUsed && (
+                          <Grid.Col span={4}>
+                            <Group align="center" gap="xs">
+                              <IconGauge size={16} color={theme.colors.gray[6]} />
+                              <Box>
+                                <Text size="xs" c="dimmed">Tokens</Text>
+                                <Text size="sm">{agent.metrics.tokensUsed}</Text>
+                              </Box>
+                            </Group>
+                          </Grid.Col>
+                        )}
+                        {agent.metrics?.timeElapsed && (
+                          <Grid.Col span={4}>
+                            <Group align="center" gap="xs">
+                              <IconClock size={16} color={theme.colors.gray[6]} />
+                              <Box>
+                                <Text size="xs" c="dimmed">Time</Text>
+                                <Text size="sm">{formatTime(agent.metrics.timeElapsed)}</Text>
+                              </Box>
+                            </Group>
+                          </Grid.Col>
+                        )}
+                        {agent.metrics?.memoryUsage && (
+                          <Grid.Col span={4}>
+                            <Group align="center" gap="xs">
+                              <IconMemory size={16} color={theme.colors.gray[6]} />
+                              <Box>
+                                <Text size="xs" c="dimmed">Memory</Text>
+                                <Text size="sm">{agent.metrics.memoryUsage}MB</Text>
+                              </Box>
+                            </Group>
+                          </Grid.Col>
+                        )}
+                      </Grid>
+                      {agent.error && (
+                        <Alert color="red" mt="sm">
+                          <Text size="sm" fw={600}>Error</Text>
+                          <Text size="sm">{agent.error}</Text>
+                        </Alert>
                       )}
-                      {agent.metrics?.timeElapsed && (
-                        <Grid item xs={4}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <Timer fontSize="small" color="action" />
-                            <Box>
-                              <Typography variant="caption" color="text.secondary">Time</Typography>
-                              <Typography variant="body2">{formatTime(agent.metrics.timeElapsed)}</Typography>
-                            </Box>
-                          </Box>
-                        </Grid>
-                      )}
-                      {agent.metrics?.memoryUsage && (
-                        <Grid item xs={4}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <Memory fontSize="small" color="action" />
-                            <Box>
-                              <Typography variant="caption" color="text.secondary">Memory</Typography>
-                              <Typography variant="body2">{agent.metrics.memoryUsage}MB</Typography>
-                            </Box>
-                          </Box>
-                        </Grid>
-                      )}
-                    </Grid>
-                    {agent.error && (
-                      <Alert severity="error" sx={{ mt: 1 }}>
-                        <AlertTitle>Error</AlertTitle>
-                        {agent.error}
-                      </Alert>
-                    )}
+                    </Box>
                   </Collapse>
                 </CardContent>
               </Card>
@@ -547,63 +577,60 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
       {session && logs.length > 0 && (
         <Card sx={{ maxHeight: 200, overflow: 'auto' }}>
           <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="subtitle2">Activity Log</Typography>
-              <FormControlLabel
-                control={
-                  <Switch
-                    size="small"
-                    checked={autoScroll}
-                    onChange={(e) => setAutoScroll(e.target.checked)}
-                  />
-                }
-                label="Auto-scroll"
-              />
-            </Box>
-            <List dense>
+            <Group justify="space-between" align="center" mb="sm">
+              <Text size="sm" fw={600}>Activity Log</Text>
+              <Group align="center">
+                <Text size="sm">Auto-scroll</Text>
+                <MuiSwitch
+                  size="sm"
+                  checked={autoScroll}
+                  onChange={(event) => setAutoScroll(event.currentTarget.checked)}
+                />
+              </Group>
+            </Group>
+            <Stack gap="xs">
               {logs.map((log, index) => (
-                <ListItem key={index}>
-                  <ListItemIcon sx={{ minWidth: 30 }}>
-                    {log.level === 'error' ? <Error color="error" fontSize="small" /> :
-                     log.level === 'warning' ? <Warning color="warning" fontSize="small" /> :
-                     <Info color="info" fontSize="small" />}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={log.message}
-                    secondary={log.time.toLocaleTimeString()}
-                    primaryTypographyProps={{ variant: 'body2' }}
-                    secondaryTypographyProps={{ variant: 'caption' }}
-                  />
-                </ListItem>
+                <Group key={index} align="flex-start" gap="sm">
+                  <Box style={{ marginTop: '2px' }}>
+                    {log.level === 'error' ? <IconExclamationMark size={16} color={theme.colors.red[6]} /> :
+                     log.level === 'warning' ? <IconAlertTriangle size={16} color={theme.colors.yellow[6]} /> :
+                     <IconInfoCircle size={16} color={theme.colors.blue[6]} />}
+                  </Box>
+                  <Box style={{ flex: 1 }}>
+                    <Text size="sm">{log.message}</Text>
+                    <Text size="xs" c="dimmed">{log.time.toLocaleTimeString()}</Text>
+                  </Box>
+                </Group>
               ))}
-            </List>
+            </Stack>
           </CardContent>
         </Card>
       )}
       {/* Empty State */}
       {!session && (
         <Box
-          sx={{
+          style={{
             flex: 1,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexDirection: 'column',
-            gap: 2
+            gap: '16px'
           }}
         >
-          <Psychology sx={{ fontSize: 64, color: 'text.disabled' }} />
-          <Typography variant="h6" color="text.secondary">
+          <IconBrain size={64} color={theme.colors.gray[4]} />
+          <Text size="lg" c="dimmed">
             No active content generation
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+          </Text>
+          <Text size="sm" c="dimmed">
             Start a new generation from the Roblox Control Panel
-          </Typography>
+          </Text>
         </Box>
       )}
     </Box>
   );
 };
 // Add missing import
-import Switch from '@mui/material/Switch';
+
+import MuiSwitch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';

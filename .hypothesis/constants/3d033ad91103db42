@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/v1/endpoints/roblox_ai.py
-# hypothesis_version: 6.139.2
-
-[400, 500, 503, 2000, '/chat', '/generate', '/health', '/roblox-ai', '/webhook/pusher', '2024-01-01T00:00:00Z', 'Additional context', 'Conversation cleared', 'Service unhealthy', 'User message', 'agent_chat_user', 'context', 'conversationId', 'environment_name', 'health_check', 'healthy', 'learning_objectives', 'map_type', 'message', 'payload', 'roblox-ai', 'roblox-ai-agent', 'roblox_agent_request', 'router', 'service', 'spec', 'status', 'success', 'text', 'theme', 'timestamp', 'type', 'user_id', 'user_name', 'user_role']

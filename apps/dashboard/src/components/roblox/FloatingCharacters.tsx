@@ -7,7 +7,7 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Float, Stars, Cloud } from '@react-three/drei';
-import Box from '@mui/material/Box';
+import { Box } from '@mantine/core';
 import * as THREE from 'three';
 interface FloatingCharacterProps {
   position: [number, number, number];

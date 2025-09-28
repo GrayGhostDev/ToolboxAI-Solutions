@@ -11,6 +11,7 @@ import uuid
 
 class ConversationStage(str, Enum):
     """Stages of the educational content creation conversation"""
+
     GREETING = "greeting"
     DISCOVERY = "discovery"
     REQUIREMENTS = "requirements"
@@ -25,6 +26,7 @@ class ConversationStage(str, Enum):
 
 class FlowDecision(str, Enum):
     """Decision points in conversation flow"""
+
     CONTINUE = "continue"
     CLARIFY = "clarify"
     REDIRECT = "redirect"
@@ -36,6 +38,7 @@ class FlowDecision(str, Enum):
 
 class ContentType(str, Enum):
     """Types of educational content that can be created"""
+
     LESSON = "lesson"
     QUIZ = "quiz"
     SIMULATION = "simulation"
@@ -48,6 +51,7 @@ class ContentType(str, Enum):
 
 class GradeLevel(str, Enum):
     """Educational grade levels"""
+
     PRE_K = "pre_k"
     KINDERGARTEN = "kindergarten"
     ELEMENTARY_1_2 = "elementary_1_2"
@@ -60,6 +64,7 @@ class GradeLevel(str, Enum):
 
 class SubjectArea(str, Enum):
     """Subject areas for educational content"""
+
     SCIENCE = "science"
     MATHEMATICS = "mathematics"
     LANGUAGE_ARTS = "language_arts"
@@ -77,6 +82,7 @@ class SubjectArea(str, Enum):
 
 class LearningStyle(str, Enum):
     """Learning styles to accommodate"""
+
     VISUAL = "visual"
     AUDITORY = "auditory"
     KINESTHETIC = "kinesthetic"
@@ -86,6 +92,7 @@ class LearningStyle(str, Enum):
 
 class EngagementLevel(str, Enum):
     """Levels of engagement and interactivity"""
+
     PASSIVE = "passive"
     MODERATE = "moderate"
     HIGH = "high"
@@ -94,6 +101,7 @@ class EngagementLevel(str, Enum):
 
 class UniquenessFactor(str, Enum):
     """Factors that contribute to content uniqueness"""
+
     CUSTOM_THEME = "custom_theme"
     PERSONALIZED_CHARACTERS = "personalized_characters"
     UNIQUE_MECHANICS = "unique_mechanics"
@@ -106,6 +114,7 @@ class UniquenessFactor(str, Enum):
 
 class UserProfile(BaseModel):
     """User profile for personalization"""
+
     user_id: str
     role: str
     experience_level: Literal["beginner", "intermediate", "advanced"] = "beginner"
@@ -114,11 +123,14 @@ class UserProfile(BaseModel):
     cultural_background: Optional[str] = None
     teaching_philosophy: Optional[str] = None
     technology_comfort: Literal["low", "medium", "high"] = "medium"
-    time_available: Optional[int] = Field(None, description="Minutes available for content creation")
+    time_available: Optional[int] = Field(
+        None, description="Minutes available for content creation"
+    )
 
 
 class ContentRequirements(BaseModel):
     """Detailed requirements for educational content"""
+
     content_type: ContentType
     subject_area: SubjectArea
     grade_level: GradeLevel
@@ -134,6 +146,7 @@ class ContentRequirements(BaseModel):
 
 class PersonalizationData(BaseModel):
     """Data for personalizing content"""
+
     student_names: List[str] = Field(default_factory=list)
     local_landmarks: List[str] = Field(default_factory=list)
     cultural_elements: List[str] = Field(default_factory=list)
@@ -147,6 +160,7 @@ class PersonalizationData(BaseModel):
 
 class UniquenessEnhancement(BaseModel):
     """Enhancements to make content unique"""
+
     factors: List[UniquenessFactor] = Field(default_factory=list)
     custom_elements: Dict[str, Any] = Field(default_factory=dict)
     creative_twists: List[str] = Field(default_factory=list)
@@ -156,6 +170,7 @@ class UniquenessEnhancement(BaseModel):
 
 class PromptTemplate(BaseModel):
     """Individual prompt template"""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     stage: ConversationStage
@@ -173,6 +188,7 @@ class PromptTemplate(BaseModel):
 
 class ConversationContext(BaseModel):
     """Context for the entire conversation"""
+
     conversation_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_profile: UserProfile
     current_stage: ConversationStage = ConversationStage.GREETING
@@ -189,6 +205,7 @@ class ConversationContext(BaseModel):
 
 class PromptResponse(BaseModel):
     """Response from a prompt template"""
+
     template_id: str
     generated_text: str
     variables_used: Dict[str, Any]
@@ -201,6 +218,7 @@ class PromptResponse(BaseModel):
 
 class WorkflowStep(BaseModel):
     """Individual step in the content creation workflow"""
+
     step_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     description: str
@@ -215,6 +233,7 @@ class WorkflowStep(BaseModel):
 
 class ContentGenerationPlan(BaseModel):
     """Complete plan for content generation"""
+
     plan_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     conversation_context: ConversationContext
     workflow_steps: List[WorkflowStep]
@@ -227,6 +246,7 @@ class ContentGenerationPlan(BaseModel):
 
 class ValidationResult(BaseModel):
     """Result of content validation"""
+
     is_valid: bool
     errors: List[str] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
@@ -239,17 +259,9 @@ class ValidationResult(BaseModel):
 
 class AgentTrigger(BaseModel):
     """Trigger for agent activation"""
+
     agent_name: str
     trigger_type: Literal["data_ready", "stage_complete", "user_request", "error"]
     trigger_data: Dict[str, Any]
     priority: int = Field(default=1, ge=1, le=10)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-
-
-
-
-
-
-
-
-

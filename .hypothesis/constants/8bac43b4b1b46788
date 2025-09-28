@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/security/secrets.py
-# hypothesis_version: 6.139.2
-
-[b'toolboxai-salt', 384, 100000, '.secrets', '12345', 'AZURE_VAULT_URL', 'CANVAS_TOKEN', 'Canvas LMS API token', 'DATABASE_URL', 'JWT signing key', 'JWT_SECRET_KEY', 'MASTER_KEY', 'OPENAI_API_KEY', 'REDIS_URL', 'SCHOOLOGY_KEY', 'SCHOOLOGY_SECRET', 'Schoology API key', 'Schoology API secret', 'SecretString', 'VAULT_TOKEN', 'VAULT_URL', 'admin', 'aws_secrets_manager', 'azure_key_vault', 'configured_secrets', 'data', 'default_value', 'demo', 'description', 'encryption_enabled', 'environment', 'example', 'has_value', 'hashicorp_vault', 'local_file', 'mysql://', 'name', 'password', 'postgres://', 'postgresql://', 'provider', 'providers_used', 'r', 'rb', 'required', 'rotation_days', 'rotation_needed', 'secrets_config.json', 'secretsmanager', 'sqlite://', 'test', 'total_secrets', 'value', 'w', 'wb']

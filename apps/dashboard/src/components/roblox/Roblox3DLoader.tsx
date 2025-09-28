@@ -7,8 +7,7 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Text, RoundedBox, Float } from '@react-three/drei';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
+import { Box, Text as MantineText } from '@mantine/core';
 import * as THREE from 'three';
 import { robloxColors } from '../../theme/robloxTheme';
 
@@ -153,7 +152,7 @@ export const Roblox3DLoader: React.FunctionComponent<Roblox3DLoaderProps> = ({
 
   return (
     <Box
-      sx={{
+      style={{
         width: dimensions.width,
         height: dimensions.height,
         position: 'relative',
@@ -161,7 +160,7 @@ export const Roblox3DLoader: React.FunctionComponent<Roblox3DLoaderProps> = ({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 3,
+        borderRadius: 12,
         background: showBackground
           ? `linear-gradient(135deg, rgba(15, 15, 46, 0.9), rgba(46, 11, 46, 0.9))`
           : 'transparent',
@@ -220,24 +219,29 @@ export const Roblox3DLoader: React.FunctionComponent<Roblox3DLoaderProps> = ({
       </Canvas>
 
       {message && (
-        <Typography
-          variant="body2"
-          sx={{
+        <MantineText
+          size="sm"
+          style={{
             position: 'absolute',
             bottom: 20,
             color: robloxColors.neon.electricBlue,
             fontWeight: 600,
             textShadow: `0 0 10px ${robloxColors.neon.electricBlue}80`,
             animation: 'pulse 1.5s ease-in-out infinite',
-            '@keyframes pulse': {
-              '0%, 100%': { opacity: 1 },
-              '50%': { opacity: 0.6 }
-            }
           }}
         >
           {message}
-        </Typography>
+        </MantineText>
       )}
+
+      <style>
+        {`
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+          }
+        `}
+      </style>
     </Box>
   );
 };

@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import Fade from '@mui/material/Fade';
-import FadeProps from '@mui/material/FadeProps';
+import { Transition } from '@mantine/core';
 
-interface SafeFadeProps extends Omit<FadeProps, 'in'> {
+interface SafeFadeProps {
   in?: boolean;
-  timeout?: number;
+  duration?: number;
   appear?: boolean;
   children: React.ReactElement;
 }
 
-export const SafeFade: React.FunctionComponent<SafeFadeProps> = ({ 
-  in: inProp = true, 
-  timeout = 300, 
+export const SafeFade: React.FunctionComponent<SafeFadeProps> = ({
+  in: inProp = true,
+  duration = 300,
   appear = false,
-  children,
-  ...props 
+  children
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -35,14 +33,18 @@ export const SafeFade: React.FunctionComponent<SafeFadeProps> = ({
 
   try {
     return (
-      <Fade
-        in={isVisible}
-        timeout={timeout}
-        appear={appear}
-        {...props}
+      <Transition
+        mounted={isVisible}
+        transition="fade"
+        duration={duration}
+        timingFunction="ease"
       >
-        {children}
-      </Fade>
+        {(styles) => (
+          <div style={styles}>
+            {children}
+          </div>
+        )}
+      </Transition>
     );
   } catch (error) {
     console.warn('SafeFade error:', error);

@@ -1,0 +1,183 @@
+# ================================================================================
+# SERVICE INTEGRATION CONFIGURATION - 2025
+# ================================================================================
+# Complete service integration configuration for ToolboxAI Dashboard
+# Updated: September 27, 2025
+# ================================================================================
+
+# Service Integration Matrix
+services:
+  dashboard:
+    name: "ToolboxAI Dashboard"
+    port: 5180
+    type: "frontend"
+    technology: "React 18 + Vite 6 + Mantine v8"
+    realtime: "Pusher Channels"
+    status: "updated"
+    integrations:
+      - backend
+      - mcp-server
+      - agent-coordinator
+      - roblox-bridge
+      - ghost-cms
+    
+  backend:
+    name: "FastAPI Backend"
+    port: 8009
+    type: "api"
+    technology: "FastAPI + Python 3.12"
+    realtime: "Pusher Server SDK"
+    status: "ready"
+    endpoints:
+      - "/api/v1/*"
+      - "/pusher/auth"
+      - "/health"
+    
+  postgres:
+    name: "PostgreSQL Database"
+    port: 5434
+    type: "database"
+    technology: "PostgreSQL 15"
+    status: "ready"
+    
+  redis:
+    name: "Redis Cache"
+    port: 6381
+    type: "cache"
+    technology: "Redis 7"
+    status: "ready"
+    
+  mcp-server:
+    name: "Model Context Protocol Server"
+    port: 9877
+    type: "ai-service"
+    technology: "Python + MCP SDK"
+    status: "integration-needed"
+    endpoints:
+      - "/mcp/health"
+      - "/mcp/models"
+      - "/mcp/contexts"
+    dashboard_integration:
+      - "AI model management"
+      - "Context switching"
+      - "Model performance monitoring"
+    
+  agent-coordinator:
+    name: "AI Agent Coordinator"
+    port: 8888
+    type: "ai-service"
+    technology: "Python + LangChain"
+    status: "integration-needed"
+    endpoints:
+      - "/agents/status"
+      - "/agents/tasks"
+      - "/agents/results"
+    dashboard_integration:
+      - "Agent task management"
+      - "Real-time agent status"
+      - "Task result visualization"
+    
+  flask-bridge:
+    name: "Roblox Integration Bridge"
+    port: 5001
+    type: "integration"
+    technology: "Flask + Roblox API"
+    status: "integration-needed"
+    endpoints:
+      - "/roblox/status"
+      - "/roblox/worlds"
+      - "/roblox/students"
+    dashboard_integration:
+      - "Roblox world management"
+      - "Student progress tracking"
+      - "Real-time game events"
+    
+  ghost-backend:
+    name: "Ghost CMS"
+    port: 8000
+    type: "cms"
+    technology: "Ghost CMS"
+    status: "integration-needed"
+    endpoints:
+      - "/ghost/admin"
+      - "/ghost/content"
+      - "/ghost/api"
+    dashboard_integration:
+      - "Content management"
+      - "Blog post creation"
+      - "Media library access"
+
+# Integration Patterns
+integration_patterns:
+  realtime_communication:
+    primary: "Pusher Channels"
+    fallback: "WebSocket (disabled)"
+    channels:
+      - "dashboard-updates"
+      - "agent-status"
+      - "roblox-events"
+      - "content-updates"
+      - "mcp-events"
+    
+  api_communication:
+    pattern: "REST API"
+    authentication: "JWT Bearer Token"
+    rate_limiting: "60 req/min per user"
+    
+  health_monitoring:
+    interval: "30s"
+    timeout: "10s"
+    retries: 3
+    endpoints:
+      - "/health"
+      - "/api/health"
+      - "/mcp/health"
+      - "/agents/health"
+      - "/roblox/health"
+      - "/ghost/health"
+
+# Dashboard Feature Integration
+dashboard_features:
+  mcp_integration:
+    enabled: true
+    features:
+      - "Model selection interface"
+      - "Context management panel"
+      - "Performance monitoring dashboard"
+    components:
+      - "src/components/mcp/MCPDashboard.tsx"
+      - "src/hooks/useMCP.ts"
+      - "src/services/mcp.ts"
+    
+  agent_integration:
+    enabled: true
+    features:
+      - "Agent task creation"
+      - "Real-time status monitoring"
+      - "Result visualization"
+    components:
+      - "src/components/agents/AgentDashboard.tsx"
+      - "src/hooks/useAgents.ts"
+      - "src/services/agents.ts"
+    
+  roblox_integration:
+    enabled: true
+    features:
+      - "World management interface"
+      - "Student progress tracking"
+      - "Real-time game events"
+    components:
+      - "src/components/roblox/RobloxDashboard.tsx"
+      - "src/hooks/useRoblox.ts"
+      - "src/services/roblox.ts"
+    
+  ghost_integration:
+    enabled: true
+    features:
+      - "Content creation interface"
+      - "Media management"
+      - "Blog post editor"
+    components:
+      - "src/components/ghost/GhostDashboard.tsx"
+      - "src/hooks/useGhost.ts"
+      - "src/services/ghost.ts"

@@ -120,15 +120,15 @@ export const AuthProvider: React.FunctionComponent<{ children: React.ReactNode }
     if (tokenRefreshTimer) {
       clearTimeout(tokenRefreshTimer);
     }
-    
+
     try {
       // Parse JWT to get expiry time
       const payload = JSON.parse(atob(accessToken.split('.')[1]));
       const expiryTime = payload.exp * 1000; // Convert to milliseconds
-      
+
       // Schedule refresh 5 minutes before expiry
       const refreshTime = expiryTime - Date.now() - (5 * 60 * 1000);
-      
+
       if (refreshTime > 0) {
         const timer = setTimeout(async () => {
           try {
@@ -137,7 +137,7 @@ export const AuthProvider: React.FunctionComponent<{ children: React.ReactNode }
             logger.error('Automatic token refresh failed', error);
           }
         }, refreshTime);
-        
+
         setTokenRefreshTimer(timer);
         logger.debug('Token refresh scheduled', {
           refreshTime: new Date(expiryTime - 5 * 60 * 1000).toISOString()
@@ -147,7 +147,7 @@ export const AuthProvider: React.FunctionComponent<{ children: React.ReactNode }
       logger.error('Failed to schedule token refresh', error);
     }
   }, [tokenRefreshTimer]);
-  
+
   // Handle successful authentication
   const handleAuthSuccess = useCallback((response: AuthResponse) => {
     const { user, accessToken, refreshToken } = response;
@@ -201,7 +201,7 @@ export const AuthProvider: React.FunctionComponent<{ children: React.ReactNode }
         clearTimeout(tokenRefreshTimer);
         setTokenRefreshTimer(null);
       }
-      
+
       // Clear local state and storage
       setUser(null);
       setUserConfig(null);
@@ -213,14 +213,14 @@ export const AuthProvider: React.FunctionComponent<{ children: React.ReactNode }
 
       // Navigate to login
       navigate('/login');
-      
+
       // Show notification
       store.dispatch(addNotification({
         type: 'info',
         message: 'You have been logged out successfully.',
         autoHide: true,
       }));
-      
+
       setIsLoading(false);
     }
   }, [apiClient, navigate, tokenRefreshTimer]);
@@ -231,7 +231,7 @@ export const AuthProvider: React.FunctionComponent<{ children: React.ReactNode }
     try {
       const response = await apiClient.register(userData);
       handleAuthSuccess(response);
-      
+
       // Show welcome notification
       store.dispatch(addNotification({
         type: 'success',
@@ -253,12 +253,12 @@ export const AuthProvider: React.FunctionComponent<{ children: React.ReactNode }
   // Update user profile
 const updateProfile = useCallback(async (updates: Partial<User>) => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       const updatedUser = await apiUpdateUser(user.id, updates);
       setUser(updatedUser);
-      
+
       store.dispatch(addNotification({
         type: 'success',
         message: 'Profile updated successfully.',
@@ -282,17 +282,17 @@ const updateProfile = useCallback(async (updates: Partial<User>) => {
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
-    
+
     try {
       const response = await apiClient.refreshToken(refreshToken);
       handleAuthSuccess(response);
-      
-      // Also refresh WebSocket connection with new token
-      const { websocketService } = await import('../services/websocket');
-      if (websocketService.isConnected()) {
-        await websocketService.refreshToken(response.accessToken);
+
+      // Also refresh Pusher connection with new token
+      const { pusherService } = await import('../services/pusher');
+      if (pusherService.isConnected()) {
+        await pusherService.refreshToken(response.accessToken);
       }
-      
+
       return response;
     } catch (error) {
       await logout();
@@ -303,7 +303,7 @@ const updateProfile = useCallback(async (updates: Partial<User>) => {
 // Check permission based on user role
   const checkPermission = useCallback((permission: string): boolean => {
     if (!userConfig) return false;
-    
+
     const permissions = {
       'view.dashboard': userConfig.features.dashboard.showWelcomeMessage,
       'view.analytics': userConfig.features.dashboard.showStatistics,
@@ -314,7 +314,7 @@ const updateProfile = useCallback(async (updates: Partial<User>) => {
       'send.messages': userConfig.features.notifications.types.includes('message'),
       // Add more permission mappings as needed
     } as Record<string, boolean>;
-    
+
     return Boolean(permissions[permission]);
   }, [userConfig]);
 
@@ -347,7 +347,7 @@ const updateProfile = useCallback(async (updates: Partial<User>) => {
       }
     };
   }, [tokenRefreshTimer]);
-  
+
 // Initialize WebSocket connection when authenticated
   useEffect(() => {
     const initWebSocket = async () => {
@@ -355,12 +355,12 @@ const updateProfile = useCallback(async (updates: Partial<User>) => {
       if (user && isAuth) {
         const token = localStorage.getItem(AUTH_TOKEN_KEY);
         if (token) {
-          const { websocketService } = await import('../services/websocket');
+          const { pusherService } = await import('../services/pusher');
           try {
-            await websocketService.connect(token);
-            
+            await pusherService.connect(token);
+
             // Register token refresh callback
-            websocketService.onTokenRefresh(() => {
+            pusherService.onTokenRefresh(() => {
               refreshAuth();
             });
           } catch (error) {
@@ -369,7 +369,7 @@ const updateProfile = useCallback(async (updates: Partial<User>) => {
         }
       }
     };
-    
+
     initWebSocket();
   }, [user, refreshAuth]);
 

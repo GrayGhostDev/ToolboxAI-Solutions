@@ -63,7 +63,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { useWebSocketContext } from "../../contexts/WebSocketContext";
+import { usePusherContext } from "../../contexts/PusherContext";
 import { useAppDispatch } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
 
@@ -131,7 +131,7 @@ export function MCPAgentDashboard({
 }: MCPAgentDashboardProps) {
   const theme = useTheme();
   const dispatch = useAppDispatch();
-  const { isConnected, subscribe, unsubscribe, sendMessage } = useWebSocketContext();
+  const { isConnected, subscribeToChannel, unsubscribeFromChannel, sendMessage } = usePusherContext();
   
   const [agents, setAgents] = useState<MCPAgent[]>([]);
   const [messages, setMessages] = useState<MCPMessage[]>([]);
@@ -440,14 +440,18 @@ export function MCPAgentDashboard({
   useEffect(() => {
     if (!isConnected || !autoRefresh) return;
 
-    const subscriptionId = subscribe('mcp_agents', (message: any) => {
-      handleMCPMessage(message);
+    const subscriptionId = subscribeToChannel('mcp_agents', {
+      'agents_status': (message: any) => handleMCPMessage({ type: 'agents_status', ...message }),
+      'agent_update': (message: any) => handleMCPMessage({ type: 'agent_update', ...message }),
+      'task_progress': (message: any) => handleMCPMessage({ type: 'task_progress', ...message }),
+      'task_completed': (message: any) => handleMCPMessage({ type: 'task_completed', ...message }),
+      'error': (message: any) => handleMCPMessage({ type: 'error', ...message })
     });
 
     return () => {
-      unsubscribe(subscriptionId);
+      unsubscribeFromChannel(subscriptionId);
     };
-  }, [isConnected, autoRefresh, subscribe, unsubscribe]);
+  }, [isConnected, autoRefresh, subscribeToChannel, unsubscribeFromChannel]);
 
   // Send task to agent
   const handleSendTask = async () => {

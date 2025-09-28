@@ -1,52 +1,44 @@
 import * as React from "react";
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import TextField from '@mui/material/TextField';
-import Chip from '@mui/material/Chip';
-import Box from '@mui/material/Box';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import IconButton from '@mui/material/IconButton';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import LinearProgress from '@mui/material/LinearProgress';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
+import {
+  Card,
+  Text,
+  Button,
+  Stack,
+  Select,
+  TextInput,
+  Badge,
+  Box,
+  Table,
+  ActionIcon,
+  Alert,
+  Progress,
+  List,
+  Tabs,
+  Grid,
+  Group,
+  Title,
+  Container,
+  Paper,
+  Center
+} from '@mantine/core';
 
-import Grid2 from "@mui/material/Unstable_Grid2";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import PrintIcon from "@mui/icons-material/Print";
-import EmailIcon from "@mui/icons-material/Email";
-import ScheduleIcon from "@mui/icons-material/Schedule";
-import AssessmentIcon from "@mui/icons-material/Assessment";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import PeopleIcon from "@mui/icons-material/People";
-import SchoolIcon from "@mui/icons-material/School";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import DescriptionIcon from "@mui/icons-material/Description";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import TimelineIcon from "@mui/icons-material/Timeline";
+import { DateInput } from "@mantine/dates";
+import {
+  IconDownload,
+  IconPrinter,
+  IconMail,
+  IconCalendarTime,
+  IconClipboardCheck,
+  IconTrendingUp,
+  IconUsers,
+  IconSchool,
+  IconTrophy,
+  IconFile,
+  IconFileText,
+  IconRefresh,
+  IconDots,
+  IconChartLine,
+} from "@tabler/icons-react";
 import { useAppSelector, useAppDispatch } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
 import {
@@ -492,172 +484,158 @@ export default function Reports() {
     switch (currentTab) {
       case 0: // Reports Generation
         return (
-          <>
+          <Tabs.Panel value="0">
             {/* Quick Stats */}
-            <Grid2 xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Stack spacing={1}>
-                    <Typography variant="caption" color="text.secondary">
+            <Grid>
+              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                <Card padding="md">
+                  <Stack gap="xs">
+                    <Text size="xs" c="dimmed">
                       Reports Generated
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                    </Text>
+                    <Title order={2} fw={700}>
                       {stats?.reports_generated || 0}
-                    </Typography>
-                    <Typography variant="caption" color="success.main">
+                    </Title>
+                    <Text size="xs" c="green">
                       {stats?.reports_this_month || 0} this month
-                    </Typography>
+                    </Text>
                   </Stack>
-                </CardContent>
-              </Card>
-            </Grid2>
+                </Card>
+              </Grid.Col>
 
-            <Grid2 xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Stack spacing={1}>
-                    <Typography variant="caption" color="text.secondary">
+              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                <Card padding="md">
+                  <Stack gap="xs">
+                    <Text size="xs" c="dimmed">
                       Scheduled Reports
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                    </Text>
+                    <Title order={2} fw={700}>
                       {stats?.scheduled_reports || 0}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {stats?.next_scheduled_time 
+                    </Title>
+                    <Text size="xs" c="dimmed">
+                      {stats?.next_scheduled_time
                         ? `Next: ${new Date(stats.next_scheduled_time).toLocaleString()}`
                         : "No scheduled reports"}
-                    </Typography>
+                    </Text>
                   </Stack>
-                </CardContent>
-              </Card>
-            </Grid2>
+                </Card>
+              </Grid.Col>
 
-            <Grid2 xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Stack spacing={1}>
-                    <Typography variant="caption" color="text.secondary">
+              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                <Card padding="md">
+                  <Stack gap="xs">
+                    <Text size="xs" c="dimmed">
                       Recipients
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                    </Text>
+                    <Title order={2} fw={700}>
                       {stats?.total_recipients || 0}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    </Title>
+                    <Text size="xs" c="dimmed">
                       Across all reports
-                    </Typography>
+                    </Text>
                   </Stack>
-                </CardContent>
-              </Card>
-            </Grid2>
+                </Card>
+              </Grid.Col>
 
-            <Grid2 xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Stack spacing={1}>
-                    <Typography variant="caption" color="text.secondary">
+              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                <Card padding="md">
+                  <Stack gap="xs">
+                    <Text size="xs" c="dimmed">
                       Storage Used
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                    </Text>
+                    <Title order={2} fw={700}>
                       {stats?.storage_used_gb || 0} GB
-                    </Typography>
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={Math.min((stats?.storage_used_gb || 0) * 10, 100)} 
-                      sx={{ mt: 1 }} 
+                    </Title>
+                    <Progress
+                      value={Math.min((stats?.storage_used_gb || 0) * 10, 100)}
+                      mt="xs"
                     />
                   </Stack>
-                </CardContent>
-              </Card>
-            </Grid2>
+                </Card>
+              </Grid.Col>
 
-            {/* Report Generator */}
-            <Grid2 xs={12} lg={8}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+              {/* Report Generator */}
+              <Grid.Col span={{ base: 12, lg: 8 }}>
+                <Card padding="md">
+                  <Title order={4} fw={600} mb="lg">
                     Generate New Report
-                  </Typography>
-                  <Grid2 container spacing={2}>
-                    <Grid2 xs={12} md={6}>
-                      <FormControl fullWidth>
-                        <InputLabel>Report Type</InputLabel>
-                        <Select
-                          value={reportType}
-                          label="Report Type"
-                          onChange={(e) => setReportType(e.target.value)}
-                        >
-                          <MenuItem value="progress">Progress Report</MenuItem>
-                          <MenuItem value="attendance">Attendance Report</MenuItem>
-                          <MenuItem value="grades">Grade Report</MenuItem>
-                          <MenuItem value="behavior">Behavior Report</MenuItem>
-                          <MenuItem value="custom">Custom Report</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid2>
-                    <Grid2 xs={12} md={6}>
-                      <FormControl fullWidth>
-                        <InputLabel>Class/Student</InputLabel>
-                        <Select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} label="Class/Student">
-                          <MenuItem value="all">All Classes</MenuItem>
-                          {classes.map((cls) => (
-                            <MenuItem key={cls.id} value={cls.id}>
-                              {cls.name} ({cls.students} students)
-                            </MenuItem>
-                          ))}
-                          <MenuItem value="individual">Individual Student</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid2>
-                    <Grid2 xs={12} md={6}>
-                      <DatePicker
+                  </Title>
+                  <Grid>
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                      <Select
+                        label="Report Type"
+                        value={reportType}
+                        onChange={(value) => setReportType(value || 'progress')}
+                        data={[
+                          { value: "progress", label: "Progress Report" },
+                          { value: "attendance", label: "Attendance Report" },
+                          { value: "grades", label: "Grade Report" },
+                          { value: "behavior", label: "Behavior Report" },
+                          { value: "custom", label: "Custom Report" },
+                        ]}
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                      <Select
+                        label="Class/Student"
+                        value={selectedClass}
+                        onChange={(value) => setSelectedClass(value || 'all')}
+                        data={[
+                          { value: "all", label: "All Classes" },
+                          ...classes.map((cls) => ({
+                            value: cls.id,
+                            label: `${cls.name} (${cls.students} students)`,
+                          })),
+                          { value: "individual", label: "Individual Student" },
+                        ]}
+                      />
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                      <DateInput
                         label="Start Date"
                         value={dateRange[0]}
                         onChange={(newValue) => setDateRange([newValue, dateRange[1]])}
-                        slotProps={{ textField: { fullWidth: true } }}
                       />
-                    </Grid2>
-                    <Grid2 xs={12} md={6}>
-                      <DatePicker
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                      <DateInput
                         label="End Date"
                         value={dateRange[1]}
                         onChange={(newValue) => setDateRange([dateRange[0], newValue])}
-                        slotProps={{ textField: { fullWidth: true } }}
                       />
-                    </Grid2>
-                    <Grid2 xs={12}>
-                      <Stack direction="row" gap={2}>
+                    </Grid.Col>
+                    <Grid.Col span={12}>
+                      <Group gap="md">
                         <Button
-                          variant="contained"
-                          startIcon={<FileDownloadIcon />}
-                          onClick={(e: React.MouseEvent) => handleGenerateReport}
-                          sx={{ flex: 1 }}
+                          leftSection={<IconDownload />}
+                          onClick={handleGenerateReport}
+                          style={{ flex: 1 }}
                         >
                           Generate Report
                         </Button>
-                        <Button 
-                          variant="outlined" 
-                          startIcon={<ScheduleIcon />}
-                          onClick={(e: React.MouseEvent) => handleScheduleReport}
+                        <Button
+                          variant="outline"
+                          leftSection={<IconCalendarTime />}
+                          onClick={handleScheduleReport}
                         >
                           Schedule
                         </Button>
-                        <Button 
-                          variant="outlined" 
-                          startIcon={<EmailIcon />}
+                        <Button
+                          variant="outline"
+                          leftSection={<IconMail />}
                           disabled={reports.length === 0}
-                          onClick={(e: React.MouseEvent) => () => reports.length > 0 && handleEmailReport(reports[0].id)}
+                          onClick={() => reports.length > 0 && handleEmailReport(reports[0].id)}
                         >
                           Email
                         </Button>
-                        <Button variant="outlined" startIcon={<PrintIcon />}>
+                        <Button variant="outline" leftSection={<IconPrinter />}>
                           Print
                         </Button>
-                      </Stack>
-                    </Grid2>
-                  </Grid2>
-                </CardContent>
-              </Card>
-            </Grid2>
+                      </Group>
+                    </Grid.Col>
+                  </Grid>
+                </Card>
+              </Grid.Col>
 
             {/* Report Templates */}
             <Grid2 xs={12} lg={4}>
@@ -790,98 +768,107 @@ export default function Reports() {
           </>
         );
       
+            </Grid>
+          </Tabs.Panel>
+        );
+
       case 1: // Analytics Dashboard
         return (
-          <>
-            <Grid2 xs={12}>
-              <UserActivityChart timeRange="30d" height={350} autoRefresh={true} />
-            </Grid2>
-            <Grid2 xs={12}>
-              <ContentMetrics timeRange="30d" autoRefresh={true} />
-            </Grid2>
-          </>
+          <Tabs.Panel value="1">
+            <Grid>
+              <Grid.Col span={12}>
+                <UserActivityChart timeRange="30d" height={350} autoRefresh={true} />
+              </Grid.Col>
+              <Grid.Col span={12}>
+                <ContentMetrics timeRange="30d" autoRefresh={true} />
+              </Grid.Col>
+            </Grid>
+          </Tabs.Panel>
         );
-      
+
       case 2: // Performance Metrics
         return (
-          <>
-            <Grid2 xs={12}>
-              <PerformanceIndicator showSystemHealth={role === "admin"} autoRefresh={true} />
-            </Grid2>
-          </>
+          <Tabs.Panel value="2">
+            <Grid>
+              <Grid.Col span={12}>
+                <PerformanceIndicator showSystemHealth={role === "admin"} autoRefresh={true} />
+              </Grid.Col>
+            </Grid>
+          </Tabs.Panel>
         );
-      
+
       default:
         return (
-          <Grid2 xs={12}>
-            <Alert severity="info">
+          <Tabs.Panel value="0">
+            <Alert color="blue">
               Select a tab to view reports and analytics.
             </Alert>
-          </Grid2>
+          </Tabs.Panel>
         );
     }
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Grid2 container spacing={3}>
+    <Container size="xl">
+      <Grid>
         {/* Header */}
-        <Grid2 xs={12}>
-          <Card>
-            <CardContent>
-              <Stack
-                direction={{ xs: "column", md: "row" }}
-                justifyContent="space-between"
-                alignItems={{ xs: "flex-start", md: "center" }}
-                gap={2}
-                mb={2}
-              >
-                <Stack direction="row" alignItems="center" gap={2}>
-                  <AssessmentIcon sx={{ fontSize: 32, color: "primary.main" }} />
-                  <div>
-                    <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                      Reports & Analytics
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Generate reports and view real-time analytics
-                    </Typography>
-                  </div>
-                </Stack>
-                <Stack direction="row" gap={2}>
-                  <Button variant="outlined" startIcon={<RefreshIcon />} onClick={(e: React.MouseEvent) => fetchReportData}>
-                    Refresh
-                  </Button>
-                  <Button variant="contained" startIcon={<FileDownloadIcon />}>
-                    Export All
-                  </Button>
-                </Stack>
-              </Stack>
-              
-              {/* Navigation Tabs */}
-              <Tabs value={currentTab} onChange={(_, newValue) => setCurrentTab(newValue)}>
-                <Tab 
-                  label="Reports" 
-                  icon={<DescriptionIcon />}
-                  iconPosition="start"
-                />
-                <Tab 
-                  label="Analytics" 
-                  icon={<TimelineIcon />}
-                  iconPosition="start"
-                />
-                <Tab 
-                  label="Performance" 
-                  icon={<TrendingUpIcon />}
-                  iconPosition="start"
-                />
-              </Tabs>
-            </CardContent>
-          </Card>
-        </Grid2>
+        <Grid.Col span={12}>
+          <Card padding="md">
+            <Group
+              justify="space-between"
+              align="center"
+              mb="md"
+            >
+              <Group gap="md">
+                <IconClipboardCheck size={32} color="blue" />
+                <Box>
+                  <Title order={3} fw={600}>
+                    Reports & Analytics
+                  </Title>
+                  <Text size="xs" c="dimmed">
+                    Generate reports and view real-time analytics
+                  </Text>
+                </Box>
+              </Group>
+              <Group gap="md">
+                <Button variant="outline" leftSection={<IconRefresh />} onClick={fetchReportData}>
+                  Refresh
+                </Button>
+                <Button leftSection={<IconDownload />}>
+                  Export All
+                </Button>
+              </Group>
+            </Group>
 
-        {/* Tab Content */}
-        {renderTabContent()}
-      </Grid2>
-    </LocalizationProvider>
+            {/* Navigation Tabs */}
+            <Tabs value={currentTab.toString()} onChange={(value) => setCurrentTab(Number(value))}>
+              <Tabs.List>
+                <Tabs.Tab
+                  value="0"
+                  leftSection={<IconFileText />}
+                >
+                  Reports
+                </Tabs.Tab>
+                <Tabs.Tab
+                  value="1"
+                  leftSection={<IconChartLine />}
+                >
+                  Analytics
+                </Tabs.Tab>
+                <Tabs.Tab
+                  value="2"
+                  leftSection={<IconTrendingUp />}
+                >
+                  Performance
+                </Tabs.Tab>
+              </Tabs.List>
+
+              {/* Tab Content */}
+              {renderTabContent()}
+            </Tabs>
+          </Card>
+        </Grid.Col>
+      </Grid>
+    </Container>
   );
 }

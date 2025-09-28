@@ -30,9 +30,7 @@ async def resolve_login(obj, info, input: Dict[str, Any]) -> Dict[str, Any]:
     password = input["password"]
 
     # Find user by email or username
-    stmt = select(User).where(
-        (User.email == identifier) | (User.username == identifier)
-    )
+    stmt = select(User).where((User.email == identifier) | (User.username == identifier))
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
 
@@ -40,7 +38,7 @@ async def resolve_login(obj, info, input: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "success": False,
             "errors": [{"code": "INVALID_CREDENTIALS", "message": "Invalid credentials"}],
-            "message": "Invalid email/username or password"
+            "message": "Invalid email/username or password",
         }
 
     # Verify password
@@ -48,7 +46,7 @@ async def resolve_login(obj, info, input: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "success": False,
             "errors": [{"code": "INVALID_CREDENTIALS", "message": "Invalid credentials"}],
-            "message": "Invalid email/username or password"
+            "message": "Invalid email/username or password",
         }
 
     # Check if user is active
@@ -56,24 +54,17 @@ async def resolve_login(obj, info, input: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "success": False,
             "errors": [{"code": "ACCOUNT_INACTIVE", "message": "Account is inactive"}],
-            "message": "Your account is inactive"
+            "message": "Your account is inactive",
         }
 
     # Create access token
-    token = create_access_token(
-        data={"sub": str(user.id), "username": user.username}
-    )
+    token = create_access_token(data={"sub": str(user.id), "username": user.username})
 
     # Update last login
     user.last_login = datetime.now(timezone.utc)
     await db.commit()
 
-    return {
-        "success": True,
-        "message": "Login successful",
-        "token": token,
-        "user": user
-    }
+    return {"success": True, "message": "Login successful", "token": token, "user": user}
 
 
 @mutation.field("signup")
@@ -83,9 +74,7 @@ async def resolve_signup(obj, info, input: Dict[str, Any]) -> Dict[str, Any]:
     db = info.context["db"]
 
     # Check if user exists
-    stmt = select(User).where(
-        (User.email == input["email"]) | (User.username == input["username"])
-    )
+    stmt = select(User).where((User.email == input["email"]) | (User.username == input["username"]))
     result = await db.execute(stmt)
     existing = result.scalar_one_or_none()
 
@@ -93,7 +82,7 @@ async def resolve_signup(obj, info, input: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "success": False,
             "errors": [{"code": "USER_EXISTS", "message": "User already exists"}],
-            "message": "Email or username already taken"
+            "message": "Email or username already taken",
         }
 
     # Create new user
@@ -106,23 +95,16 @@ async def resolve_signup(obj, info, input: Dict[str, Any]) -> Dict[str, Any]:
         first_name=input.get("firstName"),
         last_name=input.get("lastName"),
         is_active=True,
-        is_verified=False
+        is_verified=False,
     )
 
     db.add(user)
     await db.commit()
 
     # Create access token
-    token = create_access_token(
-        data={"sub": str(user.id), "username": user.username}
-    )
+    token = create_access_token(data={"sub": str(user.id), "username": user.username})
 
-    return {
-        "success": True,
-        "message": "Signup successful",
-        "token": token,
-        "user": user
-    }
+    return {"success": True, "message": "Signup successful", "token": token, "user": user}
 
 
 @mutation.field("logout")
@@ -134,16 +116,13 @@ async def resolve_logout(obj, info) -> Dict[str, Any]:
         return {
             "success": False,
             "errors": [{"code": "NOT_AUTHENTICATED", "message": "Not authenticated"}],
-            "message": "Not authenticated"
+            "message": "Not authenticated",
         }
 
     # In a real implementation, you might want to blacklist the token
     # or clear session data
 
-    return {
-        "success": True,
-        "message": "Logged out successfully"
-    }
+    return {"success": True, "message": "Logged out successfully"}
 
 
 # Course mutations
@@ -158,7 +137,7 @@ async def resolve_create_course(obj, info, input: Dict[str, Any]) -> Dict[str, A
         return {
             "success": False,
             "errors": [{"code": "NOT_AUTHENTICATED", "message": "Not authenticated"}],
-            "message": "Authentication required"
+            "message": "Authentication required",
         }
 
     # Create new course
@@ -172,25 +151,18 @@ async def resolve_create_course(obj, info, input: Dict[str, Any]) -> Dict[str, A
         teacher_id=user.id,
         status="DRAFT",
         max_students=input.get("maxStudents", 30),
-        created_at=datetime.now(timezone.utc)
+        created_at=datetime.now(timezone.utc),
     )
 
     db.add(course)
     await db.commit()
 
-    return {
-        "success": True,
-        "message": "Course created successfully",
-        "course": course
-    }
+    return {"success": True, "message": "Course created successfully", "course": course}
 
 
 @mutation.field("enrollInCourse")
 async def resolve_enroll_in_course(
-    obj,
-    info,
-    courseId: str,
-    enrollmentCode: str = None
+    obj, info, courseId: str, enrollmentCode: str = None
 ) -> Dict[str, Any]:
     """Enroll in a course"""
 
@@ -201,7 +173,7 @@ async def resolve_enroll_in_course(
         return {
             "success": False,
             "errors": [{"code": "NOT_AUTHENTICATED", "message": "Not authenticated"}],
-            "message": "Authentication required"
+            "message": "Authentication required",
         }
 
     course_id = uuid.UUID(courseId)
@@ -215,13 +187,12 @@ async def resolve_enroll_in_course(
         return {
             "success": False,
             "errors": [{"code": "NOT_FOUND", "message": "Course not found"}],
-            "message": "Course not found"
+            "message": "Course not found",
         }
 
     # Check if already enrolled
     stmt = select(Enrollment).where(
-        (Enrollment.student_id == user.id) &
-        (Enrollment.course_id == course_id)
+        (Enrollment.student_id == user.id) & (Enrollment.course_id == course_id)
     )
     result = await db.execute(stmt)
     existing = result.scalar_one_or_none()
@@ -230,7 +201,7 @@ async def resolve_enroll_in_course(
         return {
             "success": False,
             "errors": [{"code": "ALREADY_ENROLLED", "message": "Already enrolled"}],
-            "message": "You are already enrolled in this course"
+            "message": "You are already enrolled in this course",
         }
 
     # Create enrollment
@@ -240,17 +211,13 @@ async def resolve_enroll_in_course(
         course_id=course_id,
         status="ACTIVE",
         enrolled_at=datetime.now(timezone.utc),
-        progress=0.0
+        progress=0.0,
     )
 
     db.add(enrollment)
     await db.commit()
 
-    return {
-        "success": True,
-        "message": "Successfully enrolled in course",
-        "enrollment": enrollment
-    }
+    return {"success": True, "message": "Successfully enrolled in course", "enrollment": enrollment}
 
 
 @mutation.field("updateProfile")
@@ -264,7 +231,7 @@ async def resolve_update_profile(obj, info, input: Dict[str, Any]) -> Dict[str, 
         return {
             "success": False,
             "errors": [{"code": "NOT_AUTHENTICATED", "message": "Not authenticated"}],
-            "message": "Authentication required"
+            "message": "Authentication required",
         }
 
     # Update profile fields
@@ -281,8 +248,4 @@ async def resolve_update_profile(obj, info, input: Dict[str, Any]) -> Dict[str, 
 
     await db.commit()
 
-    return {
-        "success": True,
-        "message": "Profile updated successfully",
-        "user": user
-    }
+    return {"success": True, "message": "Profile updated successfully", "user": user}

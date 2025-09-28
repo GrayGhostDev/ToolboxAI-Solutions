@@ -38,7 +38,7 @@ jobs:
         if: matrix.terminal == 'backend' || matrix.terminal == 'roblox'
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       
       - name: Setup Node.js
         if: matrix.terminal == 'frontend'
@@ -50,7 +50,7 @@ jobs:
         run: |
           case "${{ matrix.terminal }}" in
             backend)
-              cd ToolboxAI-Roblox-Environment
+              cd .
               python -m venv venv_test
               source venv_test/bin/activate
               pip install -r requirements.txt
@@ -62,7 +62,7 @@ jobs:
               npm test -- --coverage --watchAll=false
               ;;
             roblox)
-              cd ToolboxAI-Roblox-Environment
+              cd .
               python -m venv venv_test
               source venv_test/bin/activate
               pip install -r requirements.txt
@@ -97,7 +97,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       
       - name: Run Security Scans
         run: |
@@ -110,13 +110,13 @@ jobs:
           pip install safety bandit
           
           # Run safety check
-          if [ -f "ToolboxAI-Roblox-Environment/requirements.txt" ]; then
-            safety check -r ToolboxAI-Roblox-Environment/requirements.txt || true
+          if [ -f "requirements.txt" ]; then
+            safety check -r requirements.txt || true
           fi
           
           # Run bandit
-          if [ -d "ToolboxAI-Roblox-Environment/server" ]; then
-            bandit -r ToolboxAI-Roblox-Environment/server/ ToolboxAI-Roblox-Environment/agents/ -f json -o bandit_report.json || true
+          if [ -d "apps/backend" ]; then
+            bandit -r apps/backend/ core/ -f json -o bandit_report.json || true
           fi
           
           # SAST scanning with Semgrep
@@ -152,7 +152,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -168,7 +168,7 @@ jobs:
       
       - name: Build Backend
         run: |
-          cd ToolboxAI-Roblox-Environment
+          cd .
           python -m venv venv_build
           source venv_build/bin/activate
           pip install -r requirements.txt
@@ -232,7 +232,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       
       - name: Generate Release Notes
         id: release_notes

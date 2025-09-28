@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/cache.py
-# hypothesis_version: 6.139.2
-
-[300, 1000, 6379, 'Loaded cache from %s', 'REDIS_DB', 'REDIS_HOST', 'REDIS_PORT', 'Saved cache to %s', 'cache', 'hit_rate', 'hits', 'keys', 'localhost', 'max_size', 'misses', 'r', 'size', 'timestamps', 'ttl', 'utf-8', 'w']

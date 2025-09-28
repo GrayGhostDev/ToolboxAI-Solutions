@@ -18,17 +18,23 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/roblox/environment", tags=["roblox-environment"])
 
+
 class EnvironmentCreationRequest(BaseModel):
     """Request model for environment creation"""
+
     name: str = Field(..., description="Name of the environment")
     description: str = Field(..., description="Natural language description of the environment")
     grade_level: Optional[str] = Field(None, description="Target grade level")
     subject: Optional[str] = Field(None, description="Subject area")
     max_players: int = Field(default=20, description="Maximum number of players")
-    settings: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional settings")
+    settings: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Additional settings"
+    )
+
 
 class EnvironmentCreationResponse(BaseModel):
     """Response model for environment creation"""
+
     success: bool
     environment_name: str
     project_path: Optional[str] = None
@@ -37,8 +43,10 @@ class EnvironmentCreationResponse(BaseModel):
     error: Optional[str] = None
     created_at: datetime
 
+
 class EnvironmentStatusResponse(BaseModel):
     """Response model for environment status"""
+
     environment_name: str
     status: str
     players: int
@@ -46,10 +54,10 @@ class EnvironmentStatusResponse(BaseModel):
     rojo_connected: bool
     error: Optional[str] = None
 
+
 @router.post("/preview", response_model=Dict[str, Any])
 async def preview_environment(
-    request: EnvironmentCreationRequest,
-    current_user: User = Depends(get_current_user)
+    request: EnvironmentCreationRequest, current_user: User = Depends(get_current_user)
 ):
     """
     Generate a preview of the environment without creating it
@@ -61,7 +69,9 @@ async def preview_environment(
     4. Returns preview data for visualization
     """
     try:
-        logger.info(f"Generating preview for environment '{request.name}' for user {current_user.id}")
+        logger.info(
+            f"Generating preview for environment '{request.name}' for user {current_user.id}"
+        )
 
         # Validate request
         if not request.description.strip():
@@ -73,9 +83,7 @@ async def preview_environment(
 
             # Generate detailed preview structure
             preview_structure = await rojo._generate_rojo_structure(
-                parsed_components,
-                request.name or "Preview Environment",
-                current_user.id
+                parsed_components, request.name or "Preview Environment", current_user.id
             )
 
             # Create enhanced preview with positioning and styling
@@ -90,7 +98,7 @@ async def preview_environment(
                             "type": comp["type"],
                             "position": {"x": i * 30, "y": 0, "z": 0},
                             "size": {"x": 20, "y": 10, "z": 20},
-                            "color": "#4CAF50"
+                            "color": "#4CAF50",
                         }
                         for i, comp in enumerate(parsed_components.get("terrain", []))
                     ],
@@ -99,7 +107,7 @@ async def preview_environment(
                             "type": comp["type"],
                             "position": {"x": i * 40, "y": 0, "z": 0},
                             "size": {"x": 25, "y": 15, "z": 25},
-                            "color": f"#{hex(hash(comp['type']) % 0xFFFFFF)[2:].zfill(6)}"
+                            "color": f"#{hex(hash(comp['type']) % 0xFFFFFF)[2:].zfill(6)}",
                         }
                         for i, comp in enumerate(parsed_components.get("buildings", []))
                     ],
@@ -108,48 +116,47 @@ async def preview_environment(
                             "type": comp["type"],
                             "position": {"x": (i % 5) * 15, "y": 0, "z": (i // 5) * 15},
                             "size": {"x": 5, "y": 5, "z": 5},
-                            "color": f"#{hex(hash(comp['type']) % 0xFFFFFF)[2:].zfill(6)}"
+                            "color": f"#{hex(hash(comp['type']) % 0xFFFFFF)[2:].zfill(6)}",
                         }
                         for i, comp in enumerate(parsed_components.get("objects", []))
                     ],
                     "lighting": {
                         "type": parsed_components.get("lighting", {}).get("type", "Standard"),
                         "brightness": 0.7,
-                        "color": "#FFFFFF"
+                        "color": "#FFFFFF",
                     },
                     "effects": [
-                        {
-                            "type": effect,
-                            "intensity": 0.5,
-                            "active": True
-                        }
+                        {"type": effect, "intensity": 0.5, "active": True}
                         for effect in parsed_components.get("effects", [])
-                    ]
+                    ],
                 },
                 "metadata": {
                     "grade_level": request.grade_level,
                     "subject": request.subject,
                     "max_players": request.max_players,
                     "estimated_creation_time": "2-5 minutes",
-                    "complexity": "Medium" if len(parsed_components.get("buildings", [])) > 2 else "Simple"
-                }
+                    "complexity": (
+                        "Medium" if len(parsed_components.get("buildings", [])) > 2 else "Simple"
+                    ),
+                },
             }
 
             return {
                 "success": True,
                 "preview": enhanced_preview,
-                "created_at": datetime.now().isoformat()
+                "created_at": datetime.now().isoformat(),
             }
 
     except Exception as e:
         logger.error(f"Environment preview generation failed: {e}")
         raise HTTPException(status_code=500, detail=f"Preview generation failed: {str(e)}")
 
+
 @router.post("/create", response_model=EnvironmentCreationResponse)
 async def create_environment(
     request: EnvironmentCreationRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Create a Roblox environment from natural language description
@@ -181,23 +188,19 @@ async def create_environment(
                     success=False,
                     environment_name=request.name,
                     error="Rojo is not running or not accessible. Please ensure Roblox Studio is open with Rojo plugin installed.",
-                    created_at=datetime.now()
+                    created_at=datetime.now(),
                 )
 
             # Create environment
             result = await rojo.create_environment_from_description(
                 description=request.description,
                 environment_name=request.name,
-                user_id=current_user.id
+                user_id=current_user.id,
             )
 
             # Store environment info in database (background task)
             background_tasks.add_task(
-                store_environment_info,
-                current_user.id,
-                request.name,
-                request.description,
-                result
+                store_environment_info, current_user.id, request.name, request.description, result
             )
 
             return EnvironmentCreationResponse(
@@ -207,7 +210,7 @@ async def create_environment(
                 rojo_url=result.get("rojo_url"),
                 components=result.get("components"),
                 error=result.get("error"),
-                created_at=datetime.now()
+                created_at=datetime.now(),
             )
 
     except RojoAPIError as e:
@@ -218,10 +221,10 @@ async def create_environment(
         logger.error(f"Environment creation failed: {e}")
         raise HTTPException(status_code=500, detail=f"Environment creation failed: {str(e)}")
 
+
 @router.get("/status/{environment_name}", response_model=EnvironmentStatusResponse)
 async def get_environment_status(
-    environment_name: str,
-    current_user: User = Depends(get_current_user)
+    environment_name: str, current_user: User = Depends(get_current_user)
 ):
     """Get the status of a created environment"""
     try:
@@ -234,12 +237,13 @@ async def get_environment_status(
                 players=status.get("players", 0),
                 last_updated=status.get("last_updated", datetime.now().isoformat()),
                 rojo_connected=status.get("rojo_connected", False),
-                error=status.get("error")
+                error=status.get("error"),
             )
 
     except Exception as e:
         logger.error(f"Error getting environment status: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get environment status: {str(e)}")
+
 
 @router.get("/rojo/info")
 async def get_rojo_info(current_user: User = Depends(get_current_user)):
@@ -250,7 +254,7 @@ async def get_rojo_info(current_user: User = Depends(get_current_user)):
             return {
                 "success": True,
                 "rojo_info": info,
-                "rojo_url": f"rojo://{rojo.rojo_host}:{rojo.rojo_port}/api/rojo"
+                "rojo_url": f"rojo://{rojo.rojo_host}:{rojo.rojo_port}/api/rojo",
             }
 
     except RojoAPIError as e:
@@ -258,12 +262,13 @@ async def get_rojo_info(current_user: User = Depends(get_current_user)):
         return {
             "success": False,
             "error": str(e),
-            "message": "Rojo is not running or not accessible"
+            "message": "Rojo is not running or not accessible",
         }
 
     except Exception as e:
         logger.error(f"Error getting Rojo info: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get Rojo info: {str(e)}")
+
 
 @router.post("/rojo/check")
 async def check_rojo_connection(current_user: User = Depends(get_current_user)):
@@ -277,22 +282,16 @@ async def check_rojo_connection(current_user: User = Depends(get_current_user)):
                 "rojo_connected": is_connected,
                 "rojo_host": rojo.rojo_host,
                 "rojo_port": rojo.rojo_port,
-                "rojo_url": f"rojo://{rojo.rojo_host}:{rojo.rojo_port}/api/rojo"
+                "rojo_url": f"rojo://{rojo.rojo_host}:{rojo.rojo_port}/api/rojo",
             }
 
     except Exception as e:
         logger.error(f"Error checking Rojo connection: {e}")
-        return {
-            "success": False,
-            "rojo_connected": False,
-            "error": str(e)
-        }
+        return {"success": False, "rojo_connected": False, "error": str(e)}
+
 
 async def store_environment_info(
-    user_id: str,
-    environment_name: str,
-    description: str,
-    creation_result: Dict[str, Any]
+    user_id: str, environment_name: str, description: str, creation_result: Dict[str, Any]
 ):
     """Store environment information in database (background task)"""
     try:
@@ -313,6 +312,7 @@ async def store_environment_info(
     except Exception as e:
         logger.error(f"Error storing environment info: {e}")
 
+
 # Additional endpoints for environment management
 @router.get("/list")
 async def list_user_environments(current_user: User = Depends(get_current_user)):
@@ -329,20 +329,18 @@ async def list_user_environments(current_user: User = Depends(get_current_user))
                     "name": "Sample Math World",
                     "description": "A mathematical learning environment",
                     "created_at": "2025-01-15T10:30:00Z",
-                    "status": "active"
+                    "status": "active",
                 }
-            ]
+            ],
         }
 
     except Exception as e:
         logger.error(f"Error listing environments: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to list environments: {str(e)}")
 
+
 @router.delete("/{environment_name}")
-async def delete_environment(
-    environment_name: str,
-    current_user: User = Depends(get_current_user)
-):
+async def delete_environment(environment_name: str, current_user: User = Depends(get_current_user)):
     """Delete an environment"""
     try:
         # TODO: Implement environment deletion
@@ -355,7 +353,7 @@ async def delete_environment(
 
         return {
             "success": True,
-            "message": f"Environment '{environment_name}' deleted successfully"
+            "message": f"Environment '{environment_name}' deleted successfully",
         }
 
     except Exception as e:

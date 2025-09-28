@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/config.py
-# hypothesis_version: 6.139.2
-
-[8009, '../../..', '.env', '1', '1.0.0', '10', '100', '1000', '127.0.0.1', '30', '300', '34872', '60', 'APP_NAME', 'APP_VERSION', 'CANVAS_BASE_URL', 'CORS_ORIGINS', 'DEBUG', 'DEMO_PASSWORD', 'DEMO_USERNAME', 'ENVIRONMENT', 'INFO', 'PUSHER_APP_ID', 'PUSHER_CLUSTER', 'PUSHER_ENABLED', 'PUSHER_KEY', 'PUSHER_SECRET', 'PUSHER_SSL', 'ROJO_ENABLED', 'ROJO_HOST', 'ROJO_PORT', 'ROJO_TIMEOUT', 'SCHOOLOGY_SECRET', 'SKIP_AUTH', 'WS_MAX_CONNECTIONS', 'canvas', 'demo123', 'demo@example.com', 'false', 'localhost', 'openai', 'schoology', 'true', 'us2', 'yes']

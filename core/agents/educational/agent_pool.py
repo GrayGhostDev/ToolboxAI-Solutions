@@ -18,7 +18,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import redis.asyncio as redis
-import websockets
+# WebSocket replaced with Pusher for real-time communication
+# from apps.backend.services.pusher import trigger_event as pusher_trigger
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))

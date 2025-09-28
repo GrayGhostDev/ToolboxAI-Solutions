@@ -1,0 +1,112 @@
+[
+  {
+    "timestamp": "2025-09-20T02:27:15.168762",
+    "level": "INFO",
+    "logger": "test_session",
+    "module": "test_logger",
+    "function": "start_test",
+    "line": 110,
+    "message": "================================================================================",
+    "process": 98670,
+    "thread": 8628281536
+  },
+  {
+    "timestamp": "2025-09-20T02:27:15.169058",
+    "level": "INFO",
+    "logger": "test_session",
+    "module": "test_logger",
+    "function": "start_test",
+    "line": 111,
+    "message": "Starting test: Test Session",
+    "process": 98670,
+    "thread": 8628281536
+  },
+  {
+    "timestamp": "2025-09-20T02:27:15.169440",
+    "level": "INFO",
+    "logger": "test_session",
+    "module": "test_logger",
+    "function": "start_test",
+    "line": 112,
+    "message": "Correlation ID: session_",
+    "process": 98670,
+    "thread": 8628281536
+  },
+  {
+    "timestamp": "2025-09-20T02:27:15.170418",
+    "level": "INFO",
+    "logger": "test_session",
+    "module": "test_logger",
+    "function": "start_test",
+    "line": 113,
+    "message": "================================================================================",
+    "process": 98670,
+    "thread": 8628281536
+  },
+  {
+    "timestamp": "2025-09-20T02:27:17.394561",
+    "level": "INFO",
+    "logger": "test_session",
+    "module": "test_logger",
+    "function": "end_test",
+    "line": 127,
+    "message": "================================================================================",
+    "process": 98670,
+    "thread": 8628281536
+  },
+  {
+    "timestamp": "2025-09-20T02:27:17.394878",
+    "level": "INFO",
+    "logger": "test_session",
+    "module": "test_logger",
+    "function": "end_test",
+    "line": 128,
+    "message": "Test completed: Test Session",
+    "process": 98670,
+    "thread": 8628281536
+  },
+  {
+    "timestamp": "2025-09-20T02:27:17.395813",
+    "level": "INFO",
+    "logger": "test_session",
+    "module": "test_logger",
+    "function": "end_test",
+    "line": 129,
+    "message": "Status: failed",
+    "process": 98670,
+    "thread": 8628281536
+  },
+  {
+    "timestamp": "2025-09-20T02:27:17.396699",
+    "level": "INFO",
+    "logger": "test_session",
+    "module": "test_logger",
+    "function": "end_test",
+    "line": 130,
+    "message": "Duration: 0.000s",
+    "process": 98670,
+    "thread": 8628281536
+  },
+  {
+    "timestamp": "2025-09-20T02:27:17.397642",
+    "level": "INFO",
+    "logger": "test_session",
+    "module": "test_logger",
+    "function": "end_test",
+    "line": 133,
+    "message": "================================================================================",
+    "process": 98670,
+    "thread": 8628281536
+  },
+  {
+    "timestamp": "2025-09-20T02:27:17.398737",
+    "level": "INFO",
+    "logger": "test_session",
+    "module": "test_logger",
+    "function": "generate_report",
+    "line": 182,
+    "message": "Test report generated: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/logs/reports/test_report_test_session_20250920_022717.json",
+    "process": 98670,
+    "thread": 8628281536
+  }
+]

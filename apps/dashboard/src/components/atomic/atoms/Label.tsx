@@ -5,66 +5,46 @@
  */
 
 import React, { forwardRef } from 'react';
-import FormLabel from '@mui/material/FormLabel';
-import FormLabelProps from '@mui/material/FormLabelProps';
-import { styled } from '@mui/material/styles';
+import { Text, TextProps } from '@mantine/core';
 import { designTokens } from '../../../theme/designTokens';
 
-export interface LabelProps extends FormLabelProps {
+export interface LabelProps extends Omit<TextProps, 'size' | 'component'> {
   size?: 'sm' | 'md' | 'lg';
   weight?: 'normal' | 'medium' | 'semibold' | 'bold';
   required?: boolean;
   optional?: boolean;
   robloxTheme?: boolean;
+  htmlFor?: string;
 }
-
-const StyledLabel = styled(FormLabel)<LabelProps>(({
-  theme,
-  size = 'md',
-  weight = 'medium',
-  robloxTheme = true
-}) => {
-  const sizeMap = {
-    sm: designTokens.typography.fontSize.sm[0],
-    md: designTokens.typography.fontSize.sm[0],
-    lg: designTokens.typography.fontSize.base[0]
-  };
-
-  const weightMap = {
-    normal: designTokens.typography.fontWeight.normal,
-    medium: designTokens.typography.fontWeight.medium,
-    semibold: designTokens.typography.fontWeight.semibold,
-    bold: designTokens.typography.fontWeight.bold
-  };
-
-  return {
-    fontSize: sizeMap[size],
-    fontWeight: weightMap[weight],
-    color: theme.palette.text.primary,
-    marginBottom: designTokens.spacing[1],
-    display: 'block',
-
-    '&.Mui-focused': {
-      color: robloxTheme ? '#E2231A' : theme.palette.primary.main
-    },
-
-    '&.Mui-error': {
-      color: theme.palette.error.main
-    }
-  };
-});
 
 const AtomicLabel = forwardRef<HTMLLabelElement, LabelProps>(
   (
     {
       children,
+      size = 'md',
+      weight = 'medium',
       required = false,
       optional = false,
       robloxTheme = true,
+      htmlFor,
+      style,
       ...props
     },
     ref
   ) => {
+    const sizeMap = {
+      sm: designTokens.typography.fontSize.sm[0],
+      md: designTokens.typography.fontSize.sm[0],
+      lg: designTokens.typography.fontSize.base[0]
+    };
+
+    const weightMap = {
+      normal: designTokens.typography.fontWeight.normal,
+      medium: designTokens.typography.fontWeight.medium,
+      semibold: designTokens.typography.fontWeight.semibold,
+      bold: designTokens.typography.fontWeight.bold
+    };
+
     const renderContent = () => {
       return (
         <>
@@ -86,15 +66,25 @@ const AtomicLabel = forwardRef<HTMLLabelElement, LabelProps>(
       );
     };
 
+    const customStyle: React.CSSProperties = {
+      fontSize: sizeMap[size],
+      fontWeight: weightMap[weight],
+      color: 'var(--mantine-color-text)',
+      marginBottom: designTokens.spacing[1],
+      display: 'block',
+      ...(style as React.CSSProperties)
+    };
+
     return (
-      <StyledLabel
+      <Text
         ref={ref}
-        required={required}
-        robloxTheme={robloxTheme}
+        component="label"
+        htmlFor={htmlFor}
+        style={customStyle}
         {...props}
       >
         {renderContent()}
-      </StyledLabel>
+      </Text>
     );
   }
 );

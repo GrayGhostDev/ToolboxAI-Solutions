@@ -1,210 +1,50 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import fs from 'fs'
-import { muiInteropFix } from './vite-plugin-mui-fix.js'
-
-// Enhanced interop helper for MUI compatibility (2025)
-// This is a more robust approach that ensures interop functions are available globally
-const interopHelper = `
-  // Critical: Define interop functions globally BEFORE any modules load
-  (function() {
-    'use strict';
-
-    // Make interop functions available globally for MUI
-    if (typeof window !== 'undefined') {
-      // Primary interop function - MUI needs this
-      window._interopRequireDefault = function(obj) {
-        return obj && obj.__esModule ? obj : { default: obj };
-      };
-
-      // Make it available on globalThis too for better compatibility
-      globalThis._interopRequireDefault = window._interopRequireDefault;
-
-      // Additional interop helpers
-      window._interopRequireWildcard = function(obj) {
-        if (obj && obj.__esModule) return obj;
-        if (obj === null || (typeof obj !== "object" && typeof obj !== "function")) {
-          return { default: obj };
-        }
-        var cache = {};
-        if (obj != null) {
-          for (var key in obj) {
-            if (Object.prototype.hasOwnProperty.call(obj, key)) {
-              cache[key] = obj[key];
-            }
-          }
-        }
-        cache.default = obj;
-        return cache;
-      };
-
-      // Make sure modules can find these functions
-      window.__createBinding = window.__createBinding || function(o, m, k, k2) {
-        if (k2 === undefined) k2 = k;
-        Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-      };
-
-      // Webpack compatibility shim for some modules
-      window.__webpack_require__ = window.__webpack_require__ || function(id) {
-        return window[id] || {};
-      };
-
-      console.log('[Vite] MUI interop helpers injected successfully');
-    }
-  })();
-`
-
-// Check for local node_modules first, then workspace
-const muiIconsPath = fs.existsSync(path.resolve(__dirname, 'node_modules/@mui/icons-material'))
-  ? path.resolve(__dirname, 'node_modules/@mui/icons-material')
-  : path.resolve(__dirname, '../../node_modules/@mui/icons-material')
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    muiInteropFix(), // Add the MUI fix plugin first
-    react(),
-    {
-      name: 'inject-interop-helper',
-      transformIndexHtml(html) {
-        return html.replace(
-          '</head>',
-          `<script>${interopHelper}</script></head>`
-        )
-      }
-    }
+    react()
   ],
 
-  // Enhanced module optimization for 2025 best practices
+  // Optimization for production Mantine integration
   optimizeDeps: {
-    // Force esbuild to treat MUI as ESM
-    esbuildOptions: {
-      target: 'es2020',
-      define: {
-        'global': 'globalThis'
-      },
-      // Inject interop helpers at build time for each module
-      banner: {
-        js: `
-          // Critical: Define interop functions before any imports
-          if (typeof globalThis !== 'undefined' && !globalThis._interopRequireDefault) {
-            globalThis._interopRequireDefault = function(obj) {
-              return obj && obj.__esModule ? obj : { default: obj };
-            };
-            globalThis._interopRequireWildcard = function(obj) {
-              if (obj && obj.__esModule) return obj;
-              if (obj === null || (typeof obj !== "object" && typeof obj !== "function")) return { default: obj };
-              var cache = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) cache[key] = obj[key]; } } cache.default = obj; return cache;
-            };
-          }
-          if (typeof window !== 'undefined') {
-            window._interopRequireDefault = window._interopRequireDefault || globalThis._interopRequireDefault;
-            window._interopRequireWildcard = window._interopRequireWildcard || globalThis._interopRequireWildcard;
-          }
-        `
-      },
-      // Enable tree shaking for better performance
-      treeShaking: true,
-      // Handle JSX transform
-      jsx: 'automatic',
-      // More conservative approach to dropping statements
-      drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : []
-    },
     include: [
       // Core React ecosystem
+      'react',
+      'react-dom',
       'react/jsx-runtime',
       'react/jsx-dev-runtime',
-      'react-dom/client',
-      'prop-types',
-
-      // UI Framework - MUI optimizations with specific modules
-      '@mui/material',
-      '@mui/material/styles',
-      '@mui/material/styles/createTheme',
-      '@mui/material/styles/createPalette',
-      '@mui/system',
-      '@mui/system/createStyled',
-      '@mui/system/styled',
-      '@mui/system/colorManipulator',
-      '@mui/utils',
-      '@mui/material/Unstable_Grid2',
-      '@mui/material/Grid',
-      '@mui/material/Box',
-      '@mui/material/Typography',
-      '@mui/material/Button',
-      '@mui/material/Card',
-      '@mui/material/CardContent',
-      '@mui/icons-material/Add',
-      '@mui/icons-material/Search',
-      '@mui/icons-material/Refresh',
-      // Don't include bare @babel/runtime as it has no main export
-      '@babel/runtime/helpers/interopRequireDefault',
-      '@babel/runtime/helpers/interopRequireWildcard',
-      '@babel/runtime/helpers/extends',
-      '@babel/runtime/helpers/objectWithoutPropertiesLoose',
-      '@emotion/styled',
-      '@emotion/react',
-      '@emotion/cache',
 
       // Mantine UI Framework
       '@mantine/core',
       '@mantine/hooks',
       '@mantine/form',
       '@mantine/notifications',
+      '@mantine/dates',
+      '@mantine/charts',
+      '@mantine/spotlight',
+      '@mantine/tiptap',
       '@tabler/icons-react',
-      
+
       // State management
       'react-redux',
       '@reduxjs/toolkit',
-      '@reduxjs/toolkit/query',
-      
+
       // Communication libraries
       'pusher-js',
       'axios',
-      
-      // Utilities
+
+      // Essential utilities
       'date-fns',
-      'zod',
-
-      // Clerk Authentication - Fixed optimization paths
-      '@clerk/clerk-react',
-      '@clerk/types',
-
-      // Performance libraries
-      'react-window',
-      'web-vitals',
-      
-      // Three.js libraries - pre-bundle to avoid reconciler issues
-      'three',
-      '@react-three/fiber',
-      '@react-three/drei',
-      
-      // Charts and their dependencies
-      'recharts',
-      'chart.js',
-      'react-chartjs-2',
-      
-      // Syntax highlighting - fix ESM/CJS issues
-      'react-syntax-highlighter',
-      'react-syntax-highlighter/dist/cjs/styles/prism',
-      
-      // Markdown rendering
-      'react-markdown'
+      'dayjs',
+      'zod'
     ],
     exclude: [
       '@vite/client',
-      '@vite/env',
-      // Exclude problematic packages that should be externalized
-      'fsevents'
-    ],
-    // Add entries to ensure they're pre-bundled with interop support
-    entries: [
-      'src/main.tsx',
-      '@mui/material/styles/colorManipulator',
-      '@mui/system/colorManipulator'
-    ],
-    force: true // Force re-optimization to clear cached issues
+      '@vite/env'
+    ]
   },
 
   // Path resolution
@@ -224,15 +64,12 @@ export default defineConfig({
       '@config': path.resolve(__dirname, './src/config')
     },
     dedupe: [
-      '@mui/icons-material', 
-      '@mui/material', 
-      'react', 
-      'react-dom', 
+      'react',
+      'react-dom',
       'react-reconciler',
-      // Additional dedupe for common conflicts
-      '@emotion/react',
-      '@emotion/styled',
-      'react-redux'
+      'react-redux',
+      '@mantine/core',
+      '@mantine/hooks'
     ],
     // Enhanced conditions for better module resolution
     conditions: ['import', 'module', 'browser', 'default'],
@@ -386,11 +223,6 @@ export default defineConfig({
           // State management
           if (id.includes('@reduxjs/toolkit') || id.includes('react-redux')) {
             return 'vendor-redux';
-          }
-
-          // UI Framework - combine MUI packages
-          if (id.includes('@mui/') || id.includes('@emotion/')) {
-            return 'vendor-mui';
           }
 
           // Mantine UI Framework

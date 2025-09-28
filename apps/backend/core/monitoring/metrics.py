@@ -15,7 +15,7 @@ from prometheus_client import (
     generate_latest,
     REGISTRY,
     CollectorRegistry,
-    CONTENT_TYPE_LATEST
+    CONTENT_TYPE_LATEST,
 )
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -27,309 +27,303 @@ metrics_registry = REGISTRY
 
 # Authentication Metrics
 auth_attempts = Counter(
-    'auth_attempts_total',
-    'Total number of authentication attempts',
-    ['method', 'status'],  # method: jwt, api_key, oauth | status: success, failed, expired
-    registry=metrics_registry
+    "auth_attempts_total",
+    "Total number of authentication attempts",
+    ["method", "status"],  # method: jwt, api_key, oauth | status: success, failed, expired
+    registry=metrics_registry,
 )
 
 auth_token_rotations = Counter(
-    'auth_token_rotations_total',
-    'Total number of JWT token rotations',
-    registry=metrics_registry
+    "auth_token_rotations_total", "Total number of JWT token rotations", registry=metrics_registry
 )
 
 active_sessions = Gauge(
-    'active_sessions_count',
-    'Number of active user sessions',
-    ['user_type'],  # admin, teacher, student
-    registry=metrics_registry
+    "active_sessions_count",
+    "Number of active user sessions",
+    ["user_type"],  # admin, teacher, student
+    registry=metrics_registry,
 )
 
 api_key_validations = Counter(
-    'api_key_validations_total',
-    'Total number of API key validations',
-    ['scope', 'status'],  # scope: read, write, admin | status: valid, invalid, rate_limited
-    registry=metrics_registry
+    "api_key_validations_total",
+    "Total number of API key validations",
+    ["scope", "status"],  # scope: read, write, admin | status: valid, invalid, rate_limited
+    registry=metrics_registry,
 )
 
 # Request Metrics
 http_requests_total = Counter(
-    'http_requests_total',
-    'Total number of HTTP requests',
-    ['method', 'endpoint', 'status'],
-    registry=metrics_registry
+    "http_requests_total",
+    "Total number of HTTP requests",
+    ["method", "endpoint", "status"],
+    registry=metrics_registry,
 )
 
 http_request_duration = Histogram(
-    'http_request_duration_seconds',
-    'HTTP request latency',
-    ['method', 'endpoint'],
+    "http_request_duration_seconds",
+    "HTTP request latency",
+    ["method", "endpoint"],
     buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10),
-    registry=metrics_registry
+    registry=metrics_registry,
 )
 
 http_request_size = Summary(
-    'http_request_size_bytes',
-    'HTTP request body size',
-    ['method', 'endpoint'],
-    registry=metrics_registry
+    "http_request_size_bytes",
+    "HTTP request body size",
+    ["method", "endpoint"],
+    registry=metrics_registry,
 )
 
 http_response_size = Summary(
-    'http_response_size_bytes',
-    'HTTP response body size',
-    ['method', 'endpoint'],
-    registry=metrics_registry
+    "http_response_size_bytes",
+    "HTTP response body size",
+    ["method", "endpoint"],
+    registry=metrics_registry,
 )
 
 # WebSocket Metrics
 websocket_connections = Gauge(
-    'websocket_connections_active',
-    'Number of active WebSocket connections',
-    ['client_type'],  # roblox_studio, dashboard, api
-    registry=metrics_registry
+    "websocket_connections_active",
+    "Number of active WebSocket connections",
+    ["client_type"],  # roblox_studio, dashboard, api
+    registry=metrics_registry,
 )
 
 websocket_messages = Counter(
-    'websocket_messages_total',
-    'Total number of WebSocket messages',
-    ['direction', 'type'],  # direction: sent, received | type: heartbeat, data, error
-    registry=metrics_registry
+    "websocket_messages_total",
+    "Total number of WebSocket messages",
+    ["direction", "type"],  # direction: sent, received | type: heartbeat, data, error
+    registry=metrics_registry,
 )
 
 # Agent System Metrics
 agent_tasks = Counter(
-    'agent_tasks_total',
-    'Total number of agent tasks executed',
-    ['agent_type', 'status'],  # status: success, failed, timeout
-    registry=metrics_registry
+    "agent_tasks_total",
+    "Total number of agent tasks executed",
+    ["agent_type", "status"],  # status: success, failed, timeout
+    registry=metrics_registry,
 )
 
 agent_execution_time = Histogram(
-    'agent_execution_seconds',
-    'Agent task execution time',
-    ['agent_type'],
+    "agent_execution_seconds",
+    "Agent task execution time",
+    ["agent_type"],
     buckets=(0.1, 0.5, 1, 2, 5, 10, 30, 60, 120, 300),
-    registry=metrics_registry
+    registry=metrics_registry,
 )
 
 agent_pool_size = Gauge(
-    'agent_pool_size',
-    'Number of agents in pool',
-    ['agent_type', 'status'],  # status: idle, busy
-    registry=metrics_registry
+    "agent_pool_size",
+    "Number of agents in pool",
+    ["agent_type", "status"],  # status: idle, busy
+    registry=metrics_registry,
 )
 
 # GPT-5 API Metrics (Phase 1)
 gpt5_api_requests = Counter(
-    'gpt5_api_requests_total',
-    'Total number of GPT-5 API requests',
-    ['model', 'status', 'fallback'],  # model: gpt-5, gpt-5-mini, etc | status: success, error | fallback: true, false
-    registry=metrics_registry
+    "gpt5_api_requests_total",
+    "Total number of GPT-5 API requests",
+    [
+        "model",
+        "status",
+        "fallback",
+    ],  # model: gpt-5, gpt-5-mini, etc | status: success, error | fallback: true, false
+    registry=metrics_registry,
 )
 
 gpt5_api_latency = Histogram(
-    'gpt5_api_latency_seconds',
-    'GPT-5 API request latency',
-    ['model'],
+    "gpt5_api_latency_seconds",
+    "GPT-5 API request latency",
+    ["model"],
     buckets=(0.1, 0.25, 0.5, 1, 2.5, 5, 10, 25, 60),
-    registry=metrics_registry
+    registry=metrics_registry,
 )
 
 gpt5_tokens_used = Counter(
-    'gpt5_tokens_used_total',
-    'Total GPT-5 tokens used',
-    ['model', 'token_type'],  # token_type: input, output, reasoning
-    registry=metrics_registry
+    "gpt5_tokens_used_total",
+    "Total GPT-5 tokens used",
+    ["model", "token_type"],  # token_type: input, output, reasoning
+    registry=metrics_registry,
 )
 
 gpt5_api_cost = Counter(
-    'gpt5_api_cost_dollars',
-    'GPT-5 API cost in dollars',
-    ['model'],
-    registry=metrics_registry
+    "gpt5_api_cost_dollars", "GPT-5 API cost in dollars", ["model"], registry=metrics_registry
 )
 
 gpt5_reasoning_effort = Counter(
-    'gpt5_reasoning_effort_distribution',
-    'Distribution of reasoning effort settings',
-    ['model', 'effort_level'],  # effort_level: minimal, medium, high
-    registry=metrics_registry
+    "gpt5_reasoning_effort_distribution",
+    "Distribution of reasoning effort settings",
+    ["model", "effort_level"],  # effort_level: minimal, medium, high
+    registry=metrics_registry,
 )
 
 gpt5_fallback_rate = Gauge(
-    'gpt5_fallback_rate',
-    'Rate of fallbacks from GPT-5 to GPT-4',
-    registry=metrics_registry
+    "gpt5_fallback_rate", "Rate of fallbacks from GPT-5 to GPT-4", registry=metrics_registry
 )
 
 # OAuth 2.1 Metrics (Phase 1)
 oauth21_auth_requests = Counter(
-    'oauth21_auth_requests_total',
-    'Total OAuth 2.1 authorization requests',
-    ['grant_type', 'status'],  # grant_type: authorization_code, refresh_token | status: success, failed
-    registry=metrics_registry
+    "oauth21_auth_requests_total",
+    "Total OAuth 2.1 authorization requests",
+    [
+        "grant_type",
+        "status",
+    ],  # grant_type: authorization_code, refresh_token | status: success, failed
+    registry=metrics_registry,
 )
 
 oauth21_token_requests = Counter(
-    'oauth21_token_requests_total',
-    'Total OAuth 2.1 token requests',
-    ['grant_type', 'status'],
-    registry=metrics_registry
+    "oauth21_token_requests_total",
+    "Total OAuth 2.1 token requests",
+    ["grant_type", "status"],
+    registry=metrics_registry,
 )
 
 oauth21_token_revocations = Counter(
-    'oauth21_token_revocations_total',
-    'Total OAuth 2.1 token revocations',
-    ['token_type', 'status'],  # token_type: access, refresh | status: success, failed
-    registry=metrics_registry
+    "oauth21_token_revocations_total",
+    "Total OAuth 2.1 token revocations",
+    ["token_type", "status"],  # token_type: access, refresh | status: success, failed
+    registry=metrics_registry,
 )
 
 oauth21_pkce_validations = Counter(
-    'oauth21_pkce_validations_total',
-    'Total PKCE validation attempts',
-    ['result'],  # result: success, failed, invalid_method
-    registry=metrics_registry
+    "oauth21_pkce_validations_total",
+    "Total PKCE validation attempts",
+    ["result"],  # result: success, failed, invalid_method
+    registry=metrics_registry,
 )
 
 oauth21_active_sessions = Gauge(
-    'oauth21_active_sessions',
-    'Number of active OAuth 2.1 sessions',
-    registry=metrics_registry
+    "oauth21_active_sessions", "Number of active OAuth 2.1 sessions", registry=metrics_registry
 )
 
 oauth21_token_lifetime = Histogram(
-    'oauth21_token_lifetime_seconds',
-    'OAuth 2.1 token lifetime',
-    ['token_type'],
+    "oauth21_token_lifetime_seconds",
+    "OAuth 2.1 token lifetime",
+    ["token_type"],
     buckets=(300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400),
-    registry=metrics_registry
+    registry=metrics_registry,
 )
 
 # Feature Flag Metrics (Phase 1)
 feature_flag_evaluations = Counter(
-    'feature_flag_evaluations_total',
-    'Total feature flag evaluations',
-    ['flag_name', 'result'],  # result: enabled, disabled
-    registry=metrics_registry
+    "feature_flag_evaluations_total",
+    "Total feature flag evaluations",
+    ["flag_name", "result"],  # result: enabled, disabled
+    registry=metrics_registry,
 )
 
 feature_flag_changes = Counter(
-    'feature_flag_changes_total',
-    'Total feature flag changes',
-    ['flag_name', 'change_type'],  # change_type: enabled, disabled, rollout_change
-    registry=metrics_registry
+    "feature_flag_changes_total",
+    "Total feature flag changes",
+    ["flag_name", "change_type"],  # change_type: enabled, disabled, rollout_change
+    registry=metrics_registry,
 )
 
 # Security Metrics (Phase 1 Enhancement)
 security_violations = Counter(
-    'security_violations_total',
-    'Total security violations detected',
-    ['violation_type', 'severity'],  # violation_type: invalid_redirect, pkce_failure, etc
-    registry=metrics_registry
+    "security_violations_total",
+    "Total security violations detected",
+    ["violation_type", "severity"],  # violation_type: invalid_redirect, pkce_failure, etc
+    registry=metrics_registry,
 )
 
 rate_limit_hits = Counter(
-    'rate_limit_hits_total',
-    'Total rate limit hits',
-    ['endpoint', 'limit_type'],  # limit_type: per_minute, per_hour, per_day
-    registry=metrics_registry
+    "rate_limit_hits_total",
+    "Total rate limit hits",
+    ["endpoint", "limit_type"],  # limit_type: per_minute, per_hour, per_day
+    registry=metrics_registry,
 )
 
 jwt_validations = Counter(
-    'jwt_validations_total',
-    'Total JWT validation attempts',
-    ['result'],  # result: success, expired, invalid, malformed
-    registry=metrics_registry
+    "jwt_validations_total",
+    "Total JWT validation attempts",
+    ["result"],  # result: success, expired, invalid, malformed
+    registry=metrics_registry,
 )
 
 # Roblox Integration Metrics
 roblox_deployments = Counter(
-    'roblox_deployments_total',
-    'Total number of Roblox deployments',
-    ['status', 'content_type'],  # status: success, failed | content_type: script, model, place
-    registry=metrics_registry
+    "roblox_deployments_total",
+    "Total number of Roblox deployments",
+    ["status", "content_type"],  # status: success, failed | content_type: script, model, place
+    registry=metrics_registry,
 )
 
 roblox_script_generations = Counter(
-    'roblox_script_generations_total',
-    'Total number of Roblox scripts generated',
-    ['script_type', 'difficulty'],
-    registry=metrics_registry
+    "roblox_script_generations_total",
+    "Total number of Roblox scripts generated",
+    ["script_type", "difficulty"],
+    registry=metrics_registry,
 )
 
 roblox_validations = Counter(
-    'roblox_validations_total',
-    'Total number of Roblox script validations',
-    ['risk_level', 'status'],  # risk_level: low, medium, high | status: passed, failed
-    registry=metrics_registry
+    "roblox_validations_total",
+    "Total number of Roblox script validations",
+    ["risk_level", "status"],  # risk_level: low, medium, high | status: passed, failed
+    registry=metrics_registry,
 )
 
 # Database Metrics
 database_queries = Counter(
-    'database_queries_total',
-    'Total number of database queries',
-    ['operation', 'table'],  # operation: select, insert, update, delete
-    registry=metrics_registry
+    "database_queries_total",
+    "Total number of database queries",
+    ["operation", "table"],  # operation: select, insert, update, delete
+    registry=metrics_registry,
 )
 
 database_query_duration = Histogram(
-    'database_query_duration_seconds',
-    'Database query execution time',
-    ['operation', 'table'],
+    "database_query_duration_seconds",
+    "Database query execution time",
+    ["operation", "table"],
     buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5),
-    registry=metrics_registry
+    registry=metrics_registry,
 )
 
 database_connections = Gauge(
-    'database_connections_active',
-    'Number of active database connections',
-    registry=metrics_registry
+    "database_connections_active",
+    "Number of active database connections",
+    registry=metrics_registry,
 )
 
 # Redis Metrics
 redis_operations = Counter(
-    'redis_operations_total',
-    'Total number of Redis operations',
-    ['operation', 'status'],  # operation: get, set, del, expire | status: success, failed
-    registry=metrics_registry
+    "redis_operations_total",
+    "Total number of Redis operations",
+    ["operation", "status"],  # operation: get, set, del, expire | status: success, failed
+    registry=metrics_registry,
 )
 
 redis_cache_hits = Counter(
-    'redis_cache_hits_total',
-    'Total number of Redis cache hits',
-    ['cache_type'],  # auth, api_key, content, session
-    registry=metrics_registry
+    "redis_cache_hits_total",
+    "Total number of Redis cache hits",
+    ["cache_type"],  # auth, api_key, content, session
+    registry=metrics_registry,
 )
 
 redis_cache_misses = Counter(
-    'redis_cache_misses_total',
-    'Total number of Redis cache misses',
-    ['cache_type'],
-    registry=metrics_registry
+    "redis_cache_misses_total",
+    "Total number of Redis cache misses",
+    ["cache_type"],
+    registry=metrics_registry,
 )
 
 # Error Metrics
 application_errors = Counter(
-    'application_errors_total',
-    'Total number of application errors',
-    ['error_type', 'severity'],  # severity: warning, error, critical
-    registry=metrics_registry
+    "application_errors_total",
+    "Total number of application errors",
+    ["error_type", "severity"],  # severity: warning, error, critical
+    registry=metrics_registry,
 )
 
 # System Metrics
-cpu_usage = Gauge(
-    'cpu_usage_percent',
-    'CPU usage percentage',
-    registry=metrics_registry
-)
+cpu_usage = Gauge("cpu_usage_percent", "CPU usage percentage", registry=metrics_registry)
 
 memory_usage = Gauge(
-    'memory_usage_bytes',
-    'Memory usage in bytes',
-    ['type'],  # rss, vms, available
-    registry=metrics_registry
+    "memory_usage_bytes",
+    "Memory usage in bytes",
+    ["type"],  # rss, vms, available
+    registry=metrics_registry,
 )
 
 
@@ -361,27 +355,18 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
 
         # Update metrics
         http_requests_total.labels(
-            method=request.method,
-            endpoint=endpoint,
-            status=response.status_code
+            method=request.method, endpoint=endpoint, status=response.status_code
         ).inc()
 
-        http_request_duration.labels(
-            method=request.method,
-            endpoint=endpoint
-        ).observe(duration)
+        http_request_duration.labels(method=request.method, endpoint=endpoint).observe(duration)
 
         if request_size > 0:
-            http_request_size.labels(
-                method=request.method,
-                endpoint=endpoint
-            ).observe(request_size)
+            http_request_size.labels(method=request.method, endpoint=endpoint).observe(request_size)
 
         if response_size > 0:
-            http_response_size.labels(
-                method=request.method,
-                endpoint=endpoint
-            ).observe(response_size)
+            http_response_size.labels(method=request.method, endpoint=endpoint).observe(
+                response_size
+            )
 
         return response
 
@@ -464,14 +449,11 @@ def track_roblox_validation(risk_level: str, passed: bool):
 
 # Phase 1 Tracking Functions
 
+
 def track_gpt5_api_request(model: str, success: bool, is_fallback: bool = False):
     """Track GPT-5 API requests"""
     status = "success" if success else "error"
-    gpt5_api_requests.labels(
-        model=model,
-        status=status,
-        fallback=str(is_fallback)
-    ).inc()
+    gpt5_api_requests.labels(model=model, status=status, fallback=str(is_fallback)).inc()
 
 
 def track_gpt5_latency(model: str, duration: float):
@@ -587,6 +569,7 @@ def update_system_metrics():
 
 def metrics_decorator(metric_name: str = None):
     """Decorator to track function execution metrics"""
+
     def decorator(func: Callable):
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
@@ -638,6 +621,7 @@ def metrics_decorator(metric_name: str = None):
 
         # Return appropriate wrapper based on function type
         import asyncio
+
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
@@ -662,5 +646,5 @@ async def metrics_endpoint(request: Request) -> Response:
     return Response(
         content=metrics_data,
         media_type=CONTENT_TYPE_LATEST,
-        headers={"Content-Type": CONTENT_TYPE_LATEST}
+        headers={"Content-Type": CONTENT_TYPE_LATEST},
     )

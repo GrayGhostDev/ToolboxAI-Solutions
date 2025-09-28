@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/v1/endpoints/orchestrator.py
-# hypothesis_version: 6.139.2
-
-[404, 500, '/agents', '/resources/alerts', '/resources/monitor', '/resources/optimize', '/shutdown', '/status/{task_id}', '/submit', '/system/status', '/worktree/distribute', '/worktree/sessions', '/ws', 'Agent Orchestrator', 'ResourceMonitor', 'active', 'active_tasks', 'agent_type', 'available', 'completed', 'completed_tasks', 'created_at', 'failed', 'failed_tasks', 'is_running', 'message', 'pending', 'queued_tasks', 'result', 'snapshot', 'status', 'status_update', 'subscribe', 'task_id', 'total_processed', 'type', 'unknown', 'uptime', 'worktree']

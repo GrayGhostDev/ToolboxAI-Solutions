@@ -24,7 +24,8 @@ import os
 import subprocess
 import sys
 import time
-import websockets
+# WebSocket replaced with Pusher for real-time communication
+# from apps.backend.services.pusher import trigger_event as pusher_trigger
 import threading
 from datetime import datetime, timedelta
 from pathlib import Path

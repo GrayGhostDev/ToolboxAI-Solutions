@@ -30,7 +30,7 @@ from .pipeline_monitoring_agent import PipelineMonitoringAgent
 from .orchestrator import GitHubAgentOrchestrator
 from .error_recovery import ErrorRecoveryAgent
 from .monitoring import GitHubAgentMonitoring
-from .worktree_orchestrator_agent import WorktreeOrchestratorAgent
+# from .worktree_orchestrator_agent import WorktreeOrchestratorAgent  # Archived - now in orchestration module
 from .session_manager_agent import SessionManagerAgent
 from .resource_monitor_agent import ResourceMonitorAgent
 
@@ -50,7 +50,7 @@ __all__ = [
     "GitHubAgentOrchestrator",
     "ErrorRecoveryAgent",
     "GitHubAgentMonitoring",
-    "WorktreeOrchestratorAgent",
+    # "WorktreeOrchestratorAgent",  # Archived
     "SessionManagerAgent",
     "ResourceMonitorAgent",
 ]

@@ -24,7 +24,7 @@ class CORSConfig:
         Args:
             environment: Environment name (development, staging, production)
         """
-        self.environment = environment or os.getenv('ENV', 'development').lower()
+        self.environment = environment or os.getenv("ENV", "development").lower()
         self._allowed_origins = None
         self._allowed_methods = None
         self._allowed_headers = None
@@ -40,14 +40,7 @@ class CORSConfig:
     def allowed_methods(self) -> List[str]:
         """Get allowed HTTP methods"""
         if self._allowed_methods is None:
-            self._allowed_methods = [
-                "GET",
-                "POST",
-                "PUT",
-                "PATCH",
-                "DELETE",
-                "OPTIONS"
-            ]
+            self._allowed_methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
         return self._allowed_methods
 
     @property
@@ -62,7 +55,7 @@ class CORSConfig:
                 "Origin",
                 "Access-Control-Request-Method",
                 "Access-Control-Request-Headers",
-                "X-CSRF-Token"
+                "X-CSRF-Token",
             ]
         return self._allowed_headers
 
@@ -72,34 +65,34 @@ class CORSConfig:
         NEVER use wildcards in production
         """
         # First, check for explicit ALLOWED_ORIGINS environment variable
-        env_origins = os.getenv('ALLOWED_ORIGINS', '')
-        if env_origins and env_origins != '*':
+        env_origins = os.getenv("ALLOWED_ORIGINS", "")
+        if env_origins and env_origins != "*":
             origins = [
                 origin.strip()
-                for origin in env_origins.split(',')
-                if origin.strip() and origin.strip() != '*'
+                for origin in env_origins.split(",")
+                if origin.strip() and origin.strip() != "*"
             ]
             if origins:
                 logger.info(f"Using explicit allowed origins from environment: {origins}")
                 return origins
 
         # Environment-specific defaults
-        if self.environment in ('production', 'prod'):
+        if self.environment in ("production", "prod"):
             # Production: Only specific domains
             origins = [
                 "https://app.toolboxai.solutions",
                 "https://toolboxai.solutions",
                 "https://www.toolboxai.solutions",
                 "https://dashboard.toolboxai.solutions",
-                "https://api.toolboxai.solutions"
+                "https://api.toolboxai.solutions",
             ]
 
             # Add CloudFront distribution if configured
-            cloudfront_domain = os.getenv('CLOUDFRONT_DOMAIN')
+            cloudfront_domain = os.getenv("CLOUDFRONT_DOMAIN")
             if cloudfront_domain:
                 origins.append(f"https://{cloudfront_domain}")
 
-        elif self.environment in ('staging', 'stage'):
+        elif self.environment in ("staging", "stage"):
             # Staging: Staging domains and some development access
             origins = [
                 "https://staging.toolboxai.solutions",
@@ -107,7 +100,7 @@ class CORSConfig:
                 "https://staging-dashboard.toolboxai.solutions",
                 "http://localhost:3000",  # For testing from local
                 "http://localhost:5173",
-                "http://localhost:5179"
+                "http://localhost:5179",
             ]
 
         else:
@@ -116,28 +109,25 @@ class CORSConfig:
 
             # Common development ports
             dev_ports = [
-                3000,   # React default
-                5173,   # Vite default
-                5174,   # Vite alternate
-                5175,   # Vite alternate
-                5176,   # Vite alternate
-                5177,   # Vite alternate
-                5178,   # Vite alternate
-                5179,   # Dashboard current port
-                5180,   # Dashboard alternate
-                8008,   # Backend FastAPI
-                8009    # Backend alternate
+                3000,  # React default
+                5173,  # Vite default
+                5174,  # Vite alternate
+                5175,  # Vite alternate
+                5176,  # Vite alternate
+                5177,  # Vite alternate
+                5178,  # Vite alternate
+                5179,  # Dashboard current port
+                5180,  # Dashboard alternate
+                8008,  # Backend FastAPI
+                8009,  # Backend alternate
             ]
 
             # Add localhost and 127.0.0.1 for each port
             for port in dev_ports:
-                origins.extend([
-                    f"http://localhost:{port}",
-                    f"http://127.0.0.1:{port}"
-                ])
+                origins.extend([f"http://localhost:{port}", f"http://127.0.0.1:{port}"])
 
             # Add custom development domain if set
-            dev_domain = os.getenv('DEV_DOMAIN')
+            dev_domain = os.getenv("DEV_DOMAIN")
             if dev_domain:
                 origins.append(f"http://{dev_domain}")
                 origins.append(f"https://{dev_domain}")
@@ -146,9 +136,9 @@ class CORSConfig:
         logger.info(f"CORS configuration for {self.environment} environment:")
         logger.info(f"  Allowed origins: {len(origins)} domains")
 
-        if self.environment in ('production', 'prod'):
+        if self.environment in ("production", "prod"):
             logger.info("  Production CORS security enabled - no wildcards")
-        elif self.environment in ('development', 'dev'):
+        elif self.environment in ("development", "dev"):
             logger.info("  Development CORS - local origins allowed")
 
         return origins
@@ -167,7 +157,7 @@ class CORSConfig:
             return False
 
         # Never allow wildcard in production
-        if origin == '*' and self.environment in ('production', 'prod'):
+        if origin == "*" and self.environment in ("production", "prod"):
             logger.warning(f"Wildcard origin blocked in production")
             return False
 
@@ -200,12 +190,8 @@ class CORSConfig:
             "allow_credentials": True,
             "allow_methods": self.allowed_methods,
             "allow_headers": self.allowed_headers,
-            "expose_headers": [
-                "Content-Length",
-                "X-Request-ID",
-                "X-Process-Time"
-            ],
-            "max_age": 3600  # Cache preflight requests for 1 hour
+            "expose_headers": ["Content-Length", "X-Request-ID", "X-Process-Time"],
+            "max_age": 3600,  # Cache preflight requests for 1 hour
         }
 
     def get_cors_headers(self, origin: str = None) -> dict:
@@ -239,13 +225,13 @@ class CORSConfig:
         issues = []
 
         # Check for wildcards in production
-        if self.environment in ('production', 'prod'):
-            if '*' in self.allowed_origins:
+        if self.environment in ("production", "prod"):
+            if "*" in self.allowed_origins:
                 issues.append("Wildcard origin (*) found in production configuration")
 
             for origin in self.allowed_origins:
                 # Check for HTTP in production
-                if origin.startswith('http://') and 'localhost' not in origin:
+                if origin.startswith("http://") and "localhost" not in origin:
                     issues.append(f"Insecure HTTP origin in production: {origin}")
 
         # Check for empty origins
@@ -254,9 +240,9 @@ class CORSConfig:
 
         # Check for suspicious patterns
         for origin in self.allowed_origins:
-            if origin.endswith('.'):
+            if origin.endswith("."):
                 issues.append(f"Invalid origin with trailing dot: {origin}")
-            if ' ' in origin:
+            if " " in origin:
                 issues.append(f"Origin contains whitespace: {origin}")
 
         # Log issues
@@ -296,16 +282,10 @@ def apply_cors_to_app(app):
     cors_config = get_cors_config()
 
     # Remove any existing CORS middleware
-    app.middleware_stack = [
-        m for m in app.middleware_stack
-        if not isinstance(m, CORSMiddleware)
-    ]
+    app.middleware_stack = [m for m in app.middleware_stack if not isinstance(m, CORSMiddleware)]
 
     # Add CORS middleware with secure configuration
-    app.add_middleware(
-        CORSMiddleware,
-        **cors_config.get_cors_options()
-    )
+    app.add_middleware(CORSMiddleware, **cors_config.get_cors_options())
 
     logger.info(f"Applied secure CORS configuration to app")
     logger.info(f"  Environment: {cors_config.environment}")

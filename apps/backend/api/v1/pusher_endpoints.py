@@ -34,6 +34,7 @@ router = APIRouter(prefix="/api/v1/pusher", tags=["Pusher"])
 
 class PusherMessageRequest(BaseModel):
     """Request model for sending messages through Pusher"""
+
     message_type: str = Field(..., description="Type of message to send")
     payload: Dict[str, Any] = Field(default={}, description="Message payload")
     channel: Optional[str] = Field(None, description="Specific channel to use")
@@ -41,6 +42,7 @@ class PusherMessageRequest(BaseModel):
 
 class EnvironmentCreateRequest(BaseModel):
     """Request model for environment creation"""
+
     environment_type: str = Field(..., description="Type of environment to create")
     config: Dict[str, Any] = Field(default={}, description="Environment configuration")
     spec: Optional[Dict[str, Any]] = Field(None, description="Environment specification")
@@ -48,12 +50,14 @@ class EnvironmentCreateRequest(BaseModel):
 
 class AnalyticsRequest(BaseModel):
     """Request model for analytics data"""
+
     metric_type: str = Field(default="all", description="Type of metrics to retrieve")
     include_realtime: bool = Field(default=True, description="Include real-time updates")
 
 
 class RobloxSyncRequest(BaseModel):
     """Request model for Roblox synchronization"""
+
     action: str = Field(..., description="Synchronization action")
     data: Dict[str, Any] = Field(default={}, description="Synchronization data")
 
@@ -75,27 +79,21 @@ async def send_pusher_message(
             message_type=request.message_type,
             payload=request.payload,
             user_id=str(current_user.id),
-            channel=request.channel
+            channel=request.channel,
         )
 
         return {
             "success": True,
             "message": "Message sent successfully",
             "user_id": str(current_user.id),
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     except PusherUnavailable:
-        raise HTTPException(
-            status_code=503,
-            detail="Pusher service temporarily unavailable"
-        )
+        raise HTTPException(status_code=503, detail="Pusher service temporarily unavailable")
     except Exception as e:
         logger.error(f"Error sending Pusher message: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to send message: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to send message: {str(e)}")
 
 
 @router.post("/environment/create")
@@ -121,8 +119,8 @@ async def create_environment(
                 "request_id": request_id,
                 "environment_type": request.environment_type,
                 "user_id": str(current_user.id),
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
         )
 
         # Handle environment creation in background
@@ -133,9 +131,9 @@ async def create_environment(
                 "type": request.environment_type,
                 "config": request.config,
                 "spec": request.spec,
-                "request_id": request_id
+                "request_id": request_id,
             },
-            str(current_user.id)
+            str(current_user.id),
         )
 
         return {
@@ -143,15 +141,12 @@ async def create_environment(
             "request_id": request_id,
             "message": "Environment creation started",
             "channel": user_channel,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Error creating environment: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to create environment: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to create environment: {str(e)}")
 
 
 @router.post("/analytics/realtime")
@@ -168,29 +163,20 @@ async def get_realtime_analytics(
     try:
         # Check user permissions for analytics
         if current_user.role not in ["admin", "teacher"]:
-            raise HTTPException(
-                status_code=403,
-                detail="Insufficient permissions for analytics"
-            )
+            raise HTTPException(status_code=403, detail="Insufficient permissions for analytics")
 
         analytics_channel = "presence-analytics-realtime"
 
         # Subscribe user to analytics channel
-        pusher_handler.subscribe_user_to_channel(
-            str(current_user.id),
-            analytics_channel
-        )
+        pusher_handler.subscribe_user_to_channel(str(current_user.id), analytics_channel)
 
         # Trigger initial analytics data
         background_tasks.add_task(
             handle_pusher_message,
             "analytics_request",
-            {
-                "metric_type": request.metric_type,
-                "user_id": str(current_user.id)
-            },
+            {"metric_type": request.metric_type, "user_id": str(current_user.id)},
             str(current_user.id),
-            analytics_channel
+            analytics_channel,
         )
 
         return {
@@ -198,17 +184,14 @@ async def get_realtime_analytics(
             "channel": analytics_channel,
             "message": "Subscribed to real-time analytics",
             "metric_type": request.metric_type,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error subscribing to analytics: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to subscribe to analytics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to subscribe to analytics: {str(e)}")
 
 
 @router.post("/roblox/sync")
@@ -229,13 +212,9 @@ async def sync_roblox_studio(
         background_tasks.add_task(
             handle_pusher_message,
             "roblox_sync",
-            {
-                "action": request.action,
-                "data": request.data,
-                "user_id": str(current_user.id)
-            },
+            {"action": request.action, "data": request.data, "user_id": str(current_user.id)},
             str(current_user.id),
-            roblox_channel
+            roblox_channel,
         )
 
         # Send acknowledgment
@@ -245,8 +224,8 @@ async def sync_roblox_studio(
             {
                 "action": request.action,
                 "status": "processing",
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
         )
 
         return {
@@ -254,15 +233,12 @@ async def sync_roblox_studio(
             "channel": roblox_channel,
             "action": request.action,
             "status": "synchronizing",
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     except Exception as e:
         logger.error(f"Error synchronizing with Roblox: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to synchronize with Roblox: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to synchronize with Roblox: {str(e)}")
 
 
 @router.post("/subscribe")
@@ -283,37 +259,28 @@ async def subscribe_to_channel(
                 {
                     "username": current_user.username,
                     "role": current_user.role,
-                    "email": current_user.email
-                }
+                    "email": current_user.email,
+                },
             )
 
         # Subscribe to channel
-        success = pusher_handler.subscribe_user_to_channel(
-            str(current_user.id),
-            channel
-        )
+        success = pusher_handler.subscribe_user_to_channel(str(current_user.id), channel)
 
         if success:
             return {
                 "success": True,
                 "channel": channel,
                 "user_id": str(current_user.id),
-                "message": f"Successfully subscribed to {channel}"
+                "message": f"Successfully subscribed to {channel}",
             }
         else:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Failed to subscribe to {channel}"
-            )
+            raise HTTPException(status_code=400, detail=f"Failed to subscribe to {channel}")
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error subscribing to channel {channel}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to subscribe: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to subscribe: {str(e)}")
 
 
 @router.post("/unsubscribe")
@@ -325,32 +292,26 @@ async def unsubscribe_from_channel(
     Unsubscribe user from a Pusher channel
     """
     try:
-        success = pusher_handler.unsubscribe_user_from_channel(
-            str(current_user.id),
-            channel
-        )
+        success = pusher_handler.unsubscribe_user_from_channel(str(current_user.id), channel)
 
         if success:
             return {
                 "success": True,
                 "channel": channel,
                 "user_id": str(current_user.id),
-                "message": f"Successfully unsubscribed from {channel}"
+                "message": f"Successfully unsubscribed from {channel}",
             }
         else:
             return {
                 "success": False,
                 "channel": channel,
                 "user_id": str(current_user.id),
-                "message": "User was not subscribed to this channel"
+                "message": "User was not subscribed to this channel",
             }
 
     except Exception as e:
         logger.error(f"Error unsubscribing from channel {channel}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to unsubscribe: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to unsubscribe: {str(e)}")
 
 
 @router.get("/user/channels")
@@ -368,22 +329,19 @@ async def get_user_channels(
                 "success": True,
                 "user_id": str(current_user.id),
                 "channels": list(user_info.get("channels", set())),
-                "connected_at": user_info.get("connected_at")
+                "connected_at": user_info.get("connected_at"),
             }
         else:
             return {
                 "success": True,
                 "user_id": str(current_user.id),
                 "channels": [],
-                "message": "User not currently connected"
+                "message": "User not currently connected",
             }
 
     except Exception as e:
         logger.error(f"Error getting user channels: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get channels: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get channels: {str(e)}")
 
 
 @router.post("/broadcast")
@@ -404,20 +362,14 @@ async def broadcast_to_channel(
             "channel": channel,
             "event": event,
             "message": "Broadcast sent successfully",
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     except PusherUnavailable:
-        raise HTTPException(
-            status_code=503,
-            detail="Pusher service temporarily unavailable"
-        )
+        raise HTTPException(status_code=503, detail="Pusher service temporarily unavailable")
     except Exception as e:
         logger.error(f"Error broadcasting to channel {channel}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to broadcast: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to broadcast: {str(e)}")
 
 
 @router.delete("/disconnect")
@@ -433,12 +385,9 @@ async def disconnect_user(
         return {
             "success": True,
             "user_id": str(current_user.id),
-            "message": "User disconnected from all channels"
+            "message": "User disconnected from all channels",
         }
 
     except Exception as e:
         logger.error(f"Error disconnecting user: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to disconnect: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to disconnect: {str(e)}")

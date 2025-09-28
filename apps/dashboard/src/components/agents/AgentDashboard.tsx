@@ -20,40 +20,37 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   Card,
-  CardContent,
-  Grid,
-  Typography,
+  SimpleGrid,
+  Text,
   Button,
-  Chip,
+  Badge,
   Alert,
   Skeleton,
   Tooltip,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  LinearProgress,
-  Divider,
+  ActionIcon,
+  Modal,
+  Progress,
   List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Badge,
-} from '@mui/material';
+  Group,
+  Stack,
+  Flex,
+  Indicator,
+  Title,
+  Container,
+} from '@mantine/core';
 import {
-  Refresh as RefreshIcon,
-  PlayArrow as PlayIcon,
-  Stop as StopIcon,
-  Settings as SettingsIcon,
-  Analytics as AnalyticsIcon,
-  Error as ErrorIcon,
-  CheckCircle as CheckCircleIcon,
-  Schedule as ScheduleIcon,
-  Memory as MemoryIcon,
-  Speed as SpeedIcon,
-  TrendingUp as TrendingUpIcon,
-} from '@mui/icons-material';
+  IconRefresh,
+  IconPlayerPlay,
+  IconPlayerStop,
+  IconSettings,
+  IconChartBar,
+  IconAlertTriangle,
+  IconCircleCheck,
+  IconClock,
+  IconCpu,
+  IconBolt,
+  IconTrendingUp,
+} from '@tabler/icons-react';
 import { usePusher } from '../../hooks/usePusher';
 import { useAgentAPI } from '../../hooks/useAgentAPI';
 import { useSupabaseAgent } from '../../hooks/useSupabaseAgent';
@@ -165,15 +162,15 @@ export const AgentDashboard= () => {
   // Status icon mapping
   const getStatusIcon = useCallback((status: string) => {
     switch (status) {
-      case 'idle': return <CheckCircleIcon />;
-      case 'busy': 
-      case 'processing': return <PlayIcon />;
-      case 'waiting': return <ScheduleIcon />;
-      case 'error': return <ErrorIcon />;
-      case 'offline': 
-      case 'maintenance': return <StopIcon />;
-      case 'initializing': return <RefreshIcon />;
-      default: return <CheckCircleIcon />;
+      case 'idle': return <IconCircleCheck />;
+      case 'busy':
+      case 'processing': return <IconPlayerPlay />;
+      case 'waiting': return <IconClock />;
+      case 'error': return <IconAlertTriangle />;
+      case 'offline':
+      case 'maintenance': return <IconPlayerStop />;
+      case 'initializing': return <IconRefresh />;
+      default: return <IconCircleCheck />;
     }
   }, []);
 
@@ -398,216 +395,216 @@ export const AgentDashboard= () => {
 
   if (loading && agents.length === 0) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Typography variant="h4" gutterBottom>
+      <Container size="xl" p="md">
+        <Title order={2} mb="lg">
           Agent Dashboard
-        </Typography>
-        <Grid container spacing={3}>
+        </Title>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
           {[1, 2, 3, 4].map(i => (
-            <Grid item xs={12} sm={6} md={3} key={i}>
-              <Card>
-                <CardContent>
-                  <Skeleton variant="text" width="60%" />
-                  <Skeleton variant="rectangular" height={60} sx={{ my: 1 }} />
-                  <Skeleton variant="text" width="40%" />
-                </CardContent>
-              </Card>
-            </Grid>
+            <Card key={i} padding="md" withBorder>
+              <Stack spacing="sm">
+                <Skeleton height={20} width="60%" />
+                <Skeleton height={60} />
+                <Skeleton height={16} width="40%" />
+              </Stack>
+            </Card>
           ))}
-        </Grid>
-      </Box>
+        </SimpleGrid>
+      </Container>
     );
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Container size="xl" p="md">
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
+      <Flex justify="space-between" align="center" mb="lg">
+        <Title order={2}>
           Agent Dashboard
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          <SystemHealthIndicator 
-            status={systemMetrics?.system.status || 'error'} 
+        </Title>
+        <Group spacing="sm">
+          <SystemHealthIndicator
+            status={systemMetrics?.system.status || 'error'}
             isConnected={isConnected}
           />
           <Button
-            variant="outlined"
-            startIcon={<AnalyticsIcon />}
+            variant="outline"
+            leftSection={<IconChartBar size={16} />}
             onClick={handleShowMetrics}
           >
             Metrics
           </Button>
           <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
+            variant="outline"
+            leftSection={<IconRefresh size={16} />}
             onClick={handleRefresh}
             disabled={apiLoading}
           >
             Refresh
           </Button>
-        </Box>
-      </Box>
+        </Group>
+      </Flex>
 
       {/* Error Alert */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+        <Alert color="red" onClose={() => setError(null)} withCloseButton mb="lg">
           {error}
         </Alert>
       )}
 
       {/* System Overview Cards */}
       {systemMetrics && (
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <MemoryIcon color="primary" sx={{ mr: 1 }} />
-                  <Typography variant="h6">Total Agents</Typography>
-                </Box>
-                <Typography variant="h3" color="primary">
-                  {systemMetrics.agents.total}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {healthyAgents} healthy
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <SpeedIcon color="success" sx={{ mr: 1 }} />
-                  <Typography variant="h6">Utilization</Typography>
-                </Box>
-                <Typography variant="h3" color="success.main">
-                  {systemMetrics.agents.utilization_rate.toFixed(1)}%
-                </Typography>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={systemMetrics.agents.utilization_rate} 
-                  sx={{ mt: 1 }}
-                />
-              </CardContent>
-            </Card>
-          </Grid>
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md" mb="xl">
+          <Card padding="md" withBorder>
+            <Stack spacing="xs">
+              <Group spacing="xs">
+                <IconCpu color="var(--mantine-color-blue-6)" />
+                <Text size="lg" fw={600}>Total Agents</Text>
+              </Group>
+              <Text size="xl" fw={700} c="blue">
+                {systemMetrics.agents.total}
+              </Text>
+              <Text size="sm" c="dimmed">
+                {healthyAgents} healthy
+              </Text>
+            </Stack>
+          </Card>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <TrendingUpIcon color="info" sx={{ mr: 1 }} />
-                  <Typography variant="h6">Success Rate</Typography>
-                </Box>
-                <Typography variant="h3" color="info.main">
-                  {systemMetrics.tasks.success_rate.toFixed(1)}%
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {systemMetrics.tasks.completed} completed
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+          <Card padding="md" withBorder>
+            <Stack spacing="xs">
+              <Group spacing="xs">
+                <IconBolt color="var(--mantine-color-green-6)" />
+                <Text size="lg" fw={600}>Utilization</Text>
+              </Group>
+              <Text size="xl" fw={700} c="green">
+                {systemMetrics.agents.utilization_rate.toFixed(1)}%
+              </Text>
+              <Progress
+                value={systemMetrics.agents.utilization_rate}
+                color="green"
+                size="sm"
+                radius="md"
+              />
+            </Stack>
+          </Card>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <ScheduleIcon color="warning" sx={{ mr: 1 }} />
-                  <Typography variant="h6">Queue</Typography>
-                </Box>
-                <Typography variant="h3" color="warning.main">
-                  {systemMetrics.tasks.queued}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {systemMetrics.tasks.running} running
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+          <Card padding="md" withBorder>
+            <Stack spacing="xs">
+              <Group spacing="xs">
+                <IconTrendingUp color="var(--mantine-color-cyan-6)" />
+                <Text size="lg" fw={600}>Success Rate</Text>
+              </Group>
+              <Text size="xl" fw={700} c="cyan">
+                {systemMetrics.tasks.success_rate.toFixed(1)}%
+              </Text>
+              <Text size="sm" c="dimmed">
+                {systemMetrics.tasks.completed} completed
+              </Text>
+            </Stack>
+          </Card>
+
+          <Card padding="md" withBorder>
+            <Stack spacing="xs">
+              <Group spacing="xs">
+                <IconClock color="var(--mantine-color-orange-6)" />
+                <Text size="lg" fw={600}>Queue</Text>
+              </Group>
+              <Text size="xl" fw={700} c="orange">
+                {systemMetrics.tasks.queued}
+              </Text>
+              <Text size="sm" c="dimmed">
+                {systemMetrics.tasks.running} running
+              </Text>
+            </Stack>
+          </Card>
+        </SimpleGrid>
       )}
 
       {/* Agents Grid */}
-      <Typography variant="h5" gutterBottom>
+      <Title order={3} mb="md">
         Active Agents
-      </Typography>
-      
+      </Title>
+
       {agents.length === 0 ? (
-        <Alert severity="info">
+        <Alert color="blue">
           No agents are currently registered. The agent service may be starting up.
         </Alert>
       ) : (
-        <Grid container spacing={3}>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
           {agents.map(agent => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={agent.agent_id}>
-              <AgentCard
-                agent={agent}
-                onAgentClick={handleAgentClick}
-                onTaskExecute={handleTaskExecute}
-                getStatusColor={getStatusColor}
-                getStatusIcon={getStatusIcon}
-              />
-            </Grid>
+            <AgentCard
+              key={agent.agent_id}
+              agent={agent}
+              onAgentClick={handleAgentClick}
+              onTaskExecute={handleTaskExecute}
+              getStatusColor={getStatusColor}
+              getStatusIcon={getStatusIcon}
+            />
           ))}
-        </Grid>
+        </SimpleGrid>
       )}
 
       {/* Agents by Type */}
       {Object.keys(agentsByType).length > 1 && (
-        <Box sx={{ mt: 4 }}>
-          <Typography variant="h5" gutterBottom>
+        <Box mt="xl">
+          <Title order={3} mb="md">
             Agents by Type
-          </Typography>
-          {Object.entries(agentsByType).map(([type, typeAgents]) => (
-            <Card key={type} sx={{ mb: 2 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} 
-                  <Chip 
-                    label={typeAgents.length} 
-                    size="small" 
-                    sx={{ ml: 1 }} 
-                  />
-                </Typography>
-                <Grid container spacing={2}>
-                  {typeAgents.map(agent => (
-                    <Grid item xs={12} sm={6} md={4} key={agent.agent_id}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', p: 1, border: 1, borderColor: 'divider', borderRadius: 1 }}>
-                        <Badge
-                          color={getStatusColor(agent.status) as any}
-                          variant="dot"
-                          sx={{ mr: 1 }}
+          </Title>
+          <Stack spacing="md">
+            {Object.entries(agentsByType).map(([type, typeAgents]) => (
+              <Card key={type} padding="md" withBorder>
+                <Stack spacing="md">
+                  <Group spacing="sm">
+                    <Text size="lg" fw={600}>
+                      {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </Text>
+                    <Badge size="sm" variant="light">
+                      {typeAgents.length}
+                    </Badge>
+                  </Group>
+                  <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+                    {typeAgents.map(agent => (
+                      <Box
+                        key={agent.agent_id}
+                        p="sm"
+                        style={{
+                          border: '1px solid var(--mantine-color-gray-3)',
+                          borderRadius: 'var(--mantine-radius-sm)',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <Indicator
+                          color={getStatusColor(agent.status)}
+                          size={8}
+                          mr="sm"
                         >
                           {getStatusIcon(agent.status)}
-                        </Badge>
-                        <Box sx={{ flexGrow: 1 }}>
-                          <Typography variant="body2" noWrap>
+                        </Indicator>
+                        <Box style={{ flexGrow: 1 }}>
+                          <Text size="sm" lineClamp={1}>
                             {agent.agent_id}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          </Text>
+                          <Text size="xs" c="dimmed">
                             {agent.total_tasks_completed} tasks
-                          </Typography>
+                          </Text>
                         </Box>
-                        <Tooltip title="Execute Task">
-                          <IconButton 
-                            size="small" 
+                        <Tooltip label="Execute Task">
+                          <ActionIcon
+                            size="sm"
+                            variant="subtle"
                             onClick={() => handleTaskExecute(agent)}
                             disabled={agent.status !== 'idle'}
                           >
-                            <PlayIcon />
-                          </IconButton>
+                            <IconPlayerPlay size={16} />
+                          </ActionIcon>
                         </Tooltip>
                       </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-              </CardContent>
-            </Card>
-          ))}
+                    ))}
+                  </SimpleGrid>
+                </Stack>
+              </Card>
+            ))}
+          </Stack>
         </Box>
       )}
 
@@ -626,7 +623,7 @@ export const AgentDashboard= () => {
         systemMetrics={systemMetrics}
         agents={agents}
       />
-    </Box>
+    </Container>
   );
 };
 

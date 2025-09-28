@@ -94,9 +94,7 @@ class APIVersion(BaseModel):
         pre_release = match.group(4)
         build = match.group(5)
 
-        return cls(
-            major=major, minor=minor, patch=patch, pre_release=pre_release, build=build
-        )
+        return cls(major=major, minor=minor, patch=patch, pre_release=pre_release, build=build)
 
 
 class VersionedEndpoint:
@@ -152,9 +150,7 @@ class VersionManager:
         logger.info(f"Registered API version: {version}")
         return version
 
-    def create_versioned_router(
-        self, version: str, prefix: str = None, **kwargs
-    ) -> APIRouter:
+    def create_versioned_router(self, version: str, prefix: str = None, **kwargs) -> APIRouter:
         """Create a router for a specific API version"""
         api_version = self.register_version(version)
 
@@ -203,9 +199,7 @@ class VersionManager:
 
         return self.default_version
 
-    def version_deprecated(
-        self, sunset_date: Optional[datetime] = None, message: str = None
-    ):
+    def version_deprecated(self, sunset_date: Optional[datetime] = None, message: str = None):
         """Decorator to mark an endpoint as deprecated"""
 
         def decorator(func):
@@ -280,9 +274,7 @@ class VersionNegotiator:
 
         return None
 
-    def _parse_accept_header(
-        self, accept_header: str
-    ) -> List[Tuple[APIVersion, float]]:
+    def _parse_accept_header(self, accept_header: str) -> List[Tuple[APIVersion, float]]:
         """Parse Accept header for version preferences"""
         preferences = []
 
@@ -384,36 +376,39 @@ class APIVersionMiddleware:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
-            
+
         # Create request object for version extraction
         from starlette.requests import Request
+
         request = Request(scope, receive=receive)
-        
+
         # Extract API version from request
         version = self.version_manager.get_version_from_request(request)
-        
+
         # Store version in scope
         scope["api_version"] = version
-        
+
         # Create a custom send to add headers
         async def send_wrapper(message):
             if message["type"] == "http.response.start":
                 headers = dict(message.get("headers", []))
-                
+
                 # Add version headers
                 headers[b"x-api-version"] = str(version).encode()
                 headers[b"x-api-version-strategy"] = self.version_manager.strategy.value.encode()
-                
+
                 # Add deprecation headers if applicable
                 if version < self.version_manager.default_version:
                     headers[b"x-api-version-status"] = b"deprecated"
-                    headers[b"x-api-latest-version"] = str(self.version_manager.default_version).encode()
-                
+                    headers[b"x-api-latest-version"] = str(
+                        self.version_manager.default_version
+                    ).encode()
+
                 # Convert headers back to list of tuples
                 message["headers"] = [(k, v) for k, v in headers.items()]
-            
+
             await send(message)
-        
+
         # Process request with wrapped send
         await self.app(scope, receive, send_wrapper)
 

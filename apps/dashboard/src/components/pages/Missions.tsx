@@ -1,90 +1,83 @@
 import React, { useState, useEffect } from "react";
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import LinearProgress from '@mui/material/LinearProgress';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import TextField from '@mui/material/TextField';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import IconButton from '@mui/material/IconButton';
-import Badge from '@mui/material/Badge';
-import Tooltip from '@mui/material/Tooltip';
-import Alert from '@mui/material/Alert';
-import Paper from '@mui/material/Paper';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
-import Divider from '@mui/material/Divider';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import Skeleton from '@mui/material/Skeleton';
-import Avatar from '@mui/material/Avatar';
+import {
+  Box,
+  Text,
+  Grid,
+  Card,
+  Button,
+  Badge,
+  Progress,
+  Tabs,
+  Modal,
+  TextInput,
+  Select,
+  ActionIcon,
+  Tooltip,
+  Alert,
+  Paper,
+  List,
+  Divider,
+  SegmentedControl,
+  Skeleton,
+  Avatar,
+  Group,
+  Stack,
+  Container,
+  Title,
+  Center
+} from '@mantine/core';
 
 import {
-  EmojiEvents,
-  Timer,
-  CalendarToday,
-  Star,
-  TrendingUp,
-  Assignment,
-  School,
-  Palette,
-  FitnessCenter,
-  People,
-  CheckCircle,
-  RadioButtonUnchecked,
-  Lock,
-  LockOpen,
-  Add,
-  Edit,
-  Delete,
-  FilterList,
-  Sort,
-  Refresh,
-  PlayArrow,
-  MoreVert,
-  Info,
-  AttachMoney,
-  CardGiftcard,
-  LocalFireDepartment,
-  AutoAwesome,
-  Celebration,
-  WorkspacePremium,
-  Speed,
-  Psychology,
-  Groups,
-  Schedule,
-  Flag,
-} from "@mui/icons-material";
+  IconTrophy,
+  IconClock,
+  IconCalendar,
+  IconStar,
+  IconTrendingUp,
+  IconClipboardCheck,
+  IconSchool,
+  IconPalette,
+  IconBarbell,
+  IconUsers,
+  IconCircleCheck,
+  IconCircle,
+  IconLock,
+  IconLockOpen,
+  IconPlus,
+  IconEdit,
+  IconTrash,
+  IconFilter,
+  IconArrowsSort,
+  IconRefresh,
+  IconPlayerPlay,
+  IconDots,
+  IconInfoCircle,
+  IconCoin,
+  IconGift,
+  IconFlame,
+  IconSparkles,
+  IconConfetti,
+  IconAward,
+  IconGauge,
+  IconBrain,
+  IconUsersGroup,
+  IconCalendarTime,
+  IconFlag,
+} from "@tabler/icons-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store";
 import { Mission, MissionProgress, Challenge } from "../../types/api";
 const categoryIcons = {
-  academic: <School />,
-  social: <People />,
-  creativity: <Palette />,
-  physical: <FitnessCenter />,
-  community: <Groups />,
+  academic: <IconSchool />,
+  social: <IconUsers />,
+  creativity: <IconPalette />,
+  physical: <IconBarbell />,
+  community: <IconUsersGroup />,
 };
 const difficultyColors = {
-  easy: "success",
-  medium: "warning",
-  hard: "error",
-  expert: "secondary",
+  easy: "green",
+  medium: "yellow",
+  hard: "red",
+  expert: "violet",
 } as const;
 const typeColors = {
   daily: "#4CAF50",
@@ -94,11 +87,11 @@ const typeColors = {
   custom: "#607D8B",
 };
 const challengeTypeIcons = {
-  speed: <Speed />,
-  accuracy: <Psychology />,
-  creativity: <Palette />,
-  collaboration: <Groups />,
-  endurance: <Schedule />,
+  speed: <IconGauge />,
+  accuracy: <IconBrain />,
+  creativity: <IconPalette />,
+  collaboration: <IconUsersGroup />,
+  endurance: <IconCalendarTime />,
 };
 const Missions: React.FunctionComponent<Record<string, any>> = () => {
   const dispatch = useDispatch();
@@ -424,67 +417,69 @@ const Missions: React.FunctionComponent<Record<string, any>> = () => {
     return (
       <Card
         key={mission.id}
-        sx={{
+        style={{
           height: "100%",
           display: "flex",
           flexDirection: "column",
           borderTop: `4px solid ${typeColors[mission.type]}`,
           opacity: isClaimed ? 0.7 : 1,
         }}
+        padding="md"
       >
-        <CardContent sx={{ flexGrow: 1 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-            <Box display="flex" gap={1} alignItems="center">
+        <Box style={{ flexGrow: 1 }}>
+          <Group justify="space-between" align="flex-start" mb="xs">
+            <Group gap="xs" align="center">
               {categoryIcons[mission.category]}
-              <Chip
-                label={mission.type}
-                size="small"
-                sx={{ bgcolor: typeColors[mission.type], color: "white" }}
-              />
-              <Chip
-                label={mission.difficulty}
-                size="small"
+              <Badge
+                size="sm"
+                style={{ backgroundColor: typeColors[mission.type], color: "white" }}
+              >
+                {mission.type}
+              </Badge>
+              <Badge
+                size="sm"
                 color={difficultyColors[mission.difficulty]}
-              />
-            </Box>
+              >
+                {mission.difficulty}
+              </Badge>
+            </Group>
             {mission.isRepeatable && (
-              <Tooltip title="Repeatable Mission">
-                <Refresh fontSize="small" />
+              <Tooltip label="Repeatable Mission">
+                <IconRefresh size={16} />
               </Tooltip>
             )}
-          </Box>
-          <Typography variant="h6" gutterBottom>
+          </Group>
+          <Title order={4} mb="xs">
             {mission.title}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
+          </Title>
+          <Text size="sm" c="dimmed" mb="md">
             {mission.description}
-          </Typography>
-          <Box display="flex" alignItems="center" gap={1} my={2}>
-            <AttachMoney />
-            <Typography variant="h6" color="primary">
+          </Text>
+          <Group gap="xs" my="md">
+            <IconCoin />
+            <Text size="lg" fw={600} c="blue">
               {mission.xpReward} XP
-            </Typography>
+            </Text>
             {mission.badgeReward && (
               <>
-                <WorkspacePremium />
-                <Typography variant="body2">+ Badge</Typography>
+                <IconAward />
+                <Text size="sm">+ Badge</Text>
               </>
             )}
-          </Box>
+          </Group>
           {isStarted && progress && (
-            <Box mb={2}>
-              <Box display="flex" justifyContent="space-between" mb={1}>
-                <Typography variant="body2">Progress</Typography>
-                <Typography variant="body2">{Math.round(progress.progress)}%</Typography>
-              </Box>
-              <LinearProgress
-                variant="determinate"
+            <Box mb="md">
+              <Group justify="space-between" mb="xs">
+                <Text size="sm">Progress</Text>
+                <Text size="sm">{Math.round(progress.progress)}%</Text>
+              </Group>
+              <Progress
                 value={progress.progress}
-                sx={{ height: 8, borderRadius: 4 }}
+                size="md"
               />
             </Box>
           )}
-          <List dense>
+          <List spacing="xs" size="sm">
             {mission.requirements.map((req) => {
               const reqProgress = progress?.requirementsProgress.find(
                 rp => rp.requirementId === req.id
@@ -492,39 +487,36 @@ const Missions: React.FunctionComponent<Record<string, any>> = () => {
               const current = reqProgress?.current || 0;
               const completed = reqProgress?.completed || false;
               return (
-                <ListItem key={req.id} disableGutters>
-                  <ListItemIcon sx={{ minWidth: 32 }}>
-                    {completed ? (
-                      <CheckCircle color="success" fontSize="small" />
-                    ) : (
-                      <RadioButtonUnchecked fontSize="small" />
-                    )}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={req.description}
-                    secondary={`${current} / ${req.target}`}
-                    primaryTypographyProps={{ variant: "body2" }}
-                    secondaryTypographyProps={{ variant: "caption" }}
-                  />
-                </ListItem>
+                <List.Item
+                  key={req.id}
+                  icon={completed ? (
+                    <IconCircleCheck color="green" size={16} />
+                  ) : (
+                    <IconCircle size={16} />
+                  )}
+                >
+                  <Box>
+                    <Text size="sm">{req.description}</Text>
+                    <Text size="xs" c="dimmed">{current} / {req.target}</Text>
+                  </Box>
+                </List.Item>
               );
             })}
           </List>
           {mission.endDate && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              <Typography variant="caption">
+            <Alert color="blue" mt="md">
+              <Text size="xs">
                 Ends: {new Date(mission.endDate).toLocaleDateString()}
-              </Typography>
+              </Text>
             </Alert>
           )}
-        </CardContent>
-        <Box p={2} pt={0}>
+        </Box>
+        <Box pt={0} mt="md">
           {!isStarted && (
             <Button
               fullWidth
-              variant="contained"
-              startIcon={<PlayArrow />}
-              onClick={(e: React.MouseEvent) => () => handleStartMission(mission)}
+              leftSection={<IconPlayerPlay />}
+              onClick={() => handleStartMission(mission)}
             >
               Start Mission
             </Button>
@@ -532,8 +524,8 @@ const Missions: React.FunctionComponent<Record<string, any>> = () => {
           {isStarted && !isCompleted && !isClaimed && (
             <Button
               fullWidth
-              variant="outlined"
-              onClick={(e: React.MouseEvent) => () => {
+              variant="outline"
+              onClick={() => {
                 setSelectedMission(mission);
                 setMissionDetailsOpen(true);
               }}
@@ -544,16 +536,15 @@ const Missions: React.FunctionComponent<Record<string, any>> = () => {
           {isCompleted && !isClaimed && (
             <Button
               fullWidth
-              variant="contained"
-              color="success"
-              startIcon={<Celebration />}
-              onClick={(e: React.MouseEvent) => () => handleClaimReward(mission)}
+              color="green"
+              leftSection={<IconConfetti />}
+              onClick={() => handleClaimReward(mission)}
             >
               Claim Reward
             </Button>
           )}
           {isClaimed && (
-            <Button fullWidth disabled startIcon={<CheckCircle />}>
+            <Button fullWidth disabled leftSection={<IconCircleCheck />}>
               Claimed
             </Button>
           )}
@@ -566,98 +557,95 @@ const Missions: React.FunctionComponent<Record<string, any>> = () => {
     const timeUntilStart = new Date(challenge.startTime).getTime() - Date.now();
     const timeUntilEnd = new Date(challenge.endTime).getTime() - Date.now();
     return (
-      <Card key={challenge.id} sx={{ height: "100%" }}>
-        <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-            <Box display="flex" gap={1} alignItems="center">
-              {challengeTypeIcons[challenge.type]}
-              <Typography variant="h6">{challenge.title}</Typography>
-            </Box>
-            <Chip
-              label={challenge.status}
-              size="small"
-              color={
-                challenge.status === "active" ? "success" :
-                challenge.status === "upcoming" ? "warning" : "default"
-              }
-            />
+      <Card key={challenge.id} style={{ height: "100%" }} padding="md">
+        <Group justify="space-between" align="flex-start" mb="md">
+          <Group gap="xs" align="center">
+            {challengeTypeIcons[challenge.type]}
+            <Title order={4}>{challenge.title}</Title>
+          </Group>
+          <Badge
+            size="sm"
+            color={
+              challenge.status === "active" ? "green" :
+              challenge.status === "upcoming" ? "yellow" : "gray"
+            }
+          >
+            {challenge.status}
+          </Badge>
+        </Group>
+        <Text size="sm" c="dimmed" mb="md">
+          {challenge.description}
+        </Text>
+        <Box my="md">
+          <Text size="xs" c="dimmed">
+            {challenge.status === "upcoming" && `Starts in ${Math.ceil(timeUntilStart / (1000 * 60 * 60 * 24))} days`}
+            {challenge.status === "active" && `Ends in ${Math.ceil(timeUntilEnd / (1000 * 60 * 60 * 24))} days`}
+            {challenge.status === "completed" && "Challenge ended"}
+          </Text>
+        </Box>
+        <Group gap="xs" mb="md">
+          <IconUsers size={16} />
+          <Text size="sm">
+            {challenge.participants.length} participants
+          </Text>
+        </Group>
+        {challenge.leaderboard && challenge.leaderboard.length > 0 && (
+          <Box mb="md">
+            <Text size="sm" fw={600} mb="xs">
+              Current Leaders
+            </Text>
+            <List spacing="xs" size="sm">
+              {challenge.leaderboard.slice(0, 3).map((entry) => (
+                <List.Item
+                  key={entry.studentId}
+                  icon={
+                    <Avatar size="sm" radius="xl">
+                      {entry.rank}
+                    </Avatar>
+                  }
+                >
+                  <Box>
+                    <Text size="sm">{entry.displayName}</Text>
+                    <Text size="xs" c="dimmed">Score: {entry.score}</Text>
+                  </Box>
+                </List.Item>
+              ))}
+            </List>
           </Box>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            {challenge.description}
-          </Typography>
-          <Box my={2}>
-            <Typography variant="caption" color="text.secondary">
-              {challenge.status === "upcoming" && `Starts in ${Math.ceil(timeUntilStart / (1000 * 60 * 60 * 24))} days`}
-              {challenge.status === "active" && `Ends in ${Math.ceil(timeUntilEnd / (1000 * 60 * 60 * 24))} days`}
-              {challenge.status === "completed" && "Challenge ended"}
-            </Typography>
-          </Box>
-          <Box display="flex" alignItems="center" gap={1} mb={2}>
-            <People fontSize="small" />
-            <Typography variant="body2">
-              {challenge.participants.length} participants
-            </Typography>
-          </Box>
-          {challenge.leaderboard && challenge.leaderboard.length > 0 && (
-            <Box mb={2}>
-              <Typography variant="subtitle2" gutterBottom>
-                Current Leaders
-              </Typography>
-              <List dense>
-                {challenge.leaderboard.slice(0, 3).map((entry) => (
-                  <ListItem key={entry.studentId} disableGutters>
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
-                        {entry.rank}
-                      </Avatar>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={entry.displayName}
-                      secondary={`Score: ${entry.score}`}
-                      primaryTypographyProps={{ variant: "body2" }}
-                      secondaryTypographyProps={{ variant: "caption" }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </Box>
-          )}
-          <Typography variant="subtitle2" gutterBottom>
-            Prizes
-          </Typography>
-          <Box display="flex" gap={1} mb={2}>
-            {challenge.prizes.slice(0, 3).map((prize) => (
-              <Chip
-                key={prize.position}
-                label={`#${prize.position}: ${prize.xpReward} XP`}
-                size="small"
-                variant="outlined"
-              />
-            ))}
-          </Box>
-        </CardContent>
-        <Box p={2} pt={0}>
+        )}
+        <Text size="sm" fw={600} mb="xs">
+          Prizes
+        </Text>
+        <Group gap="xs" mb="md">
+          {challenge.prizes.slice(0, 3).map((prize) => (
+            <Badge
+              key={prize.position}
+              variant="outline"
+              size="sm"
+            >
+              #{prize.position}: {prize.xpReward} XP
+            </Badge>
+          ))}
+        </Group>
+        <Box pt="md">
           {challenge.status === "upcoming" && !isParticipant && (
             <Button
               fullWidth
-              variant="contained"
-              startIcon={<Flag />}
-              onClick={(e: React.MouseEvent) => () => handleJoinChallenge(challenge)}
+              leftSection={<IconFlag />}
+              onClick={() => handleJoinChallenge(challenge)}
             >
               Join Challenge
             </Button>
           )}
           {challenge.status === "upcoming" && isParticipant && (
-            <Button fullWidth disabled startIcon={<CheckCircle />}>
+            <Button fullWidth disabled leftSection={<IconCircleCheck />}>
               Registered
             </Button>
           )}
           {challenge.status === "active" && (
             <Button
               fullWidth
-              variant="contained"
-              color="primary"
-              onClick={(e: React.MouseEvent) => () => {
+              onClick={() => {
                 setSelectedChallenge(challenge);
                 setChallengeDetailsOpen(true);
               }}
@@ -668,8 +656,8 @@ const Missions: React.FunctionComponent<Record<string, any>> = () => {
           {challenge.status === "completed" && (
             <Button
               fullWidth
-              variant="outlined"
-              onClick={(e: React.MouseEvent) => () => {
+              variant="outline"
+              onClick={() => {
                 setSelectedChallenge(challenge);
                 setChallengeDetailsOpen(true);
               }}
@@ -691,231 +679,234 @@ const Missions: React.FunctionComponent<Record<string, any>> = () => {
     return challenge.status === challengeFilter;
   });
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Missions & Challenges</Typography>
+    <Container size="xl">
+      <Group justify="space-between" align="center" mb="xl">
+        <Title order={2}>Missions & Challenges</Title>
         {(role === "teacher" || role === "admin") && (
           <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
+            leftSection={<IconPlus />}
+            onClick={() => setCreateDialogOpen(true)}
           >
             Create Mission
           </Button>
         )}
-      </Box>
-      <Paper sx={{ mb: 3, p: 2 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={3}>
-            <Box display="flex" alignItems="center" gap={1}>
-              <LocalFireDepartment color="error" />
+      </Group>
+      <Paper p="md" mb="xl">
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 3 }}>
+            <Group gap="xs" align="center">
+              <IconFlame color="red" />
               <Box>
-                <Typography variant="h4">{xp}</Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Title order={3}>{xp}</Title>
+                <Text size="xs" c="dimmed">
                   Total XP
-                </Typography>
+                </Text>
               </Box>
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Star color="warning" />
+            </Group>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 3 }}>
+            <Group gap="xs" align="center">
+              <IconStar color="orange" />
               <Box>
-                <Typography variant="h4">{level}</Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Title order={3}>{level}</Title>
+                <Text size="xs" c="dimmed">
                   Current Level
-                </Typography>
+                </Text>
               </Box>
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Assignment color="primary" />
+            </Group>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 3 }}>
+            <Group gap="xs" align="center">
+              <IconClipboardCheck color="blue" />
               <Box>
-                <Typography variant="h4">
+                <Title order={3}>
                   {Array.from(missionProgress.values()).filter(p => p.status === "in_progress").length}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
+                </Title>
+                <Text size="xs" c="dimmed">
                   Active Missions
-                </Typography>
+                </Text>
               </Box>
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <Box display="flex" alignItems="center" gap={1}>
-              <EmojiEvents color="success" />
+            </Group>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 3 }}>
+            <Group gap="xs" align="center">
+              <IconTrophy color="green" />
               <Box>
-                <Typography variant="h4">
+                <Title order={3}>
                   {Array.from(missionProgress.values()).filter(p => p.status === "completed" || p.status === "claimed").length}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
+                </Title>
+                <Text size="xs" c="dimmed">
                   Completed
-                </Typography>
+                </Text>
               </Box>
-            </Box>
-          </Grid>
+            </Group>
+          </Grid.Col>
         </Grid>
       </Paper>
-      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ mb: 3 }}>
-        <Tab label="Missions" icon={<Assignment />} iconPosition="start" />
-        <Tab label="Challenges" icon={<EmojiEvents />} iconPosition="start" />
-        <Tab label="History" icon={<Timer />} iconPosition="start" />
-      </Tabs>
-      {activeTab === 0 && (
-        <>
-          <Box display="flex" gap={2} mb={3} flexWrap="wrap">
-            <ToggleButtonGroup
+      <Tabs value={activeTab.toString()} onChange={(v) => setActiveTab(Number(v))} mb="xl">
+        <Tabs.List>
+          <Tabs.Tab value="0" leftSection={<IconClipboardCheck />}>
+            Missions
+          </Tabs.Tab>
+          <Tabs.Tab value="1" leftSection={<IconTrophy />}>
+            Challenges
+          </Tabs.Tab>
+          <Tabs.Tab value="2" leftSection={<IconClock />}>
+            History
+          </Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="0">
+          <Group gap="md" mb="lg" wrap="nowrap">
+            <SegmentedControl
               value={missionFilter}
-              exclusive
-              onChange={(_, v) => v && setMissionFilter(v)}
-              size="small"
-            >
-              <ToggleButton value="all">All</ToggleButton>
-              <ToggleButton value="daily">Daily</ToggleButton>
-              <ToggleButton value="weekly">Weekly</ToggleButton>
-              <ToggleButton value="monthly">Monthly</ToggleButton>
-              <ToggleButton value="special">Special</ToggleButton>
-            </ToggleButtonGroup>
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>Category</InputLabel>
-              <Select
-                value={categoryFilter}
-                label="Category"
-                onChange={(e) => setCategoryFilter(e.target.value)}
-              >
-                <MenuItem value="all">All Categories</MenuItem>
-                <MenuItem value="academic">Academic</MenuItem>
-                <MenuItem value="social">Social</MenuItem>
-                <MenuItem value="creativity">Creativity</MenuItem>
-                <MenuItem value="physical">Physical</MenuItem>
-                <MenuItem value="community">Community</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-          <Grid container spacing={3}>
+              onChange={setMissionFilter}
+              data={[
+                { value: "all", label: "All" },
+                { value: "daily", label: "Daily" },
+                { value: "weekly", label: "Weekly" },
+                { value: "monthly", label: "Monthly" },
+                { value: "special", label: "Special" },
+              ]}
+              size="sm"
+            />
+            <Select
+              placeholder="Category"
+              value={categoryFilter}
+              onChange={(value) => setCategoryFilter(value || "all")}
+              data={[
+                { value: "all", label: "All Categories" },
+                { value: "academic", label: "Academic" },
+                { value: "social", label: "Social" },
+                { value: "creativity", label: "Creativity" },
+                { value: "physical", label: "Physical" },
+                { value: "community", label: "Community" },
+              ]}
+              size="sm"
+              style={{ minWidth: 150 }}
+            />
+          </Group>
+          <Grid>
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <Grid item xs={12} md={6} lg={4} key={i}>
-                  <Skeleton variant="rectangular" height={300} />
-                </Grid>
+                <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={i}>
+                  <Skeleton height={300} />
+                </Grid.Col>
               ))
             ) : (
               filteredMissions.map((mission) => (
-                <Grid item xs={12} md={6} lg={4} key={mission.id}>
+                <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={mission.id}>
                   {renderMissionCard(mission)}
-                </Grid>
+                </Grid.Col>
               ))
             )}
           </Grid>
-        </>
-      )}
-      {activeTab === 1 && (
-        <>
-          <Box display="flex" gap={2} mb={3}>
-            <ToggleButtonGroup
+        </Tabs.Panel>
+
+        <Tabs.Panel value="1">
+          <Group gap="md" mb="lg">
+            <SegmentedControl
               value={challengeFilter}
-              exclusive
-              onChange={(_, v) => v && setChallengeFilter(v)}
-              size="small"
-            >
-              <ToggleButton value="all">All</ToggleButton>
-              <ToggleButton value="upcoming">Upcoming</ToggleButton>
-              <ToggleButton value="active">Active</ToggleButton>
-              <ToggleButton value="completed">Completed</ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-          <Grid container spacing={3}>
+              onChange={setChallengeFilter}
+              data={[
+                { value: "all", label: "All" },
+                { value: "upcoming", label: "Upcoming" },
+                { value: "active", label: "Active" },
+                { value: "completed", label: "Completed" },
+              ]}
+              size="sm"
+            />
+          </Group>
+          <Grid>
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => (
-                <Grid item xs={12} md={6} key={i}>
-                  <Skeleton variant="rectangular" height={250} />
-                </Grid>
+                <Grid.Col span={{ base: 12, md: 6 }} key={i}>
+                  <Skeleton height={250} />
+                </Grid.Col>
               ))
             ) : (
               filteredChallenges.map((challenge) => (
-                <Grid item xs={12} md={6} key={challenge.id}>
+                <Grid.Col span={{ base: 12, md: 6 }} key={challenge.id}>
                   {renderChallengeCard(challenge)}
-                </Grid>
+                </Grid.Col>
               ))
             )}
           </Grid>
-        </>
-      )}
-      {activeTab === 2 && (
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Mission History
-          </Typography>
-          <List>
-            {Array.from(missionProgress.values())
-              .filter(p => p.status === "claimed")
-              .map((progress) => {
-                const mission = missions.find(m => m.id === progress.missionId);
-                if (!mission) return null;
-                return (
-                  <React.Fragment key={progress.id}>
-                    <ListItem>
-                      <ListItemIcon>{categoryIcons[mission.category]}</ListItemIcon>
-                      <ListItemText
-                        primary={mission.title}
-                        secondary={`Completed on ${new Date(progress.claimedAt!).toLocaleDateString()}`}
-                      />
-                      <ListItemSecondaryAction>
-                        <Chip label={`+${mission.xpReward} XP`} color="success" />
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                    <Divider />
-                  </React.Fragment>
-                );
-              })}
-          </List>
-        </Paper>
-      )}
-      {/* Mission Details Dialog */}
-      <Dialog
-        open={missionDetailsOpen}
+        </Tabs.Panel>
+
+        <Tabs.Panel value="2">
+          <Paper p="lg">
+            <Title order={4} mb="md">
+              Mission History
+            </Title>
+            <List spacing="sm">
+              {Array.from(missionProgress.values())
+                .filter(p => p.status === "claimed")
+                .map((progress) => {
+                  const mission = missions.find(m => m.id === progress.missionId);
+                  if (!mission) return null;
+                  return (
+                    <React.Fragment key={progress.id}>
+                      <List.Item
+                        icon={categoryIcons[mission.category]}
+                      >
+                        <Group justify="space-between" align="center">
+                          <Box>
+                            <Text fw={500}>{mission.title}</Text>
+                            <Text size="sm" c="dimmed">
+                              Completed on {new Date(progress.claimedAt!).toLocaleDateString()}
+                            </Text>
+                          </Box>
+                          <Badge color="green">+{mission.xpReward} XP</Badge>
+                        </Group>
+                      </List.Item>
+                      <Divider />
+                    </React.Fragment>
+                  );
+                })}
+            </List>
+          </Paper>
+        </Tabs.Panel>
+      </Tabs>
+      {/* Mission Details Modal */}
+      <Modal
+        opened={missionDetailsOpen}
         onClose={() => setMissionDetailsOpen(false)}
-        maxWidth="sm"
-        fullWidth
+        title={selectedMission?.title}
+        size="sm"
       >
         {selectedMission && (
-          <>
-            <DialogTitle>{selectedMission.title}</DialogTitle>
-            <DialogContent>
-              <Typography variant="body1" paragraph>
-                {selectedMission.description}
-              </Typography>
-              {/* Add more mission details here */}
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={(e: React.MouseEvent) => () => setMissionDetailsOpen(false)}>Close</Button>
-            </DialogActions>
-          </>
+          <Stack gap="md">
+            <Text>
+              {selectedMission.description}
+            </Text>
+            {/* Add more mission details here */}
+            <Group justify="flex-end">
+              <Button onClick={() => setMissionDetailsOpen(false)}>Close</Button>
+            </Group>
+          </Stack>
         )}
-      </Dialog>
-      {/* Challenge Details Dialog */}
-      <Dialog
-        open={challengeDetailsOpen}
+      </Modal>
+
+      {/* Challenge Details Modal */}
+      <Modal
+        opened={challengeDetailsOpen}
         onClose={() => setChallengeDetailsOpen(false)}
-        maxWidth="md"
-        fullWidth
+        title={selectedChallenge?.title}
+        size="md"
       >
         {selectedChallenge && (
-          <>
-            <DialogTitle>{selectedChallenge.title}</DialogTitle>
-            <DialogContent>
-              <Typography variant="body1" paragraph>
-                {selectedChallenge.description}
-              </Typography>
-              {/* Add challenge submission form or results here */}
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={(e: React.MouseEvent) => () => setChallengeDetailsOpen(false)}>Close</Button>
-            </DialogActions>
-          </>
+          <Stack gap="md">
+            <Text>
+              {selectedChallenge.description}
+            </Text>
+            {/* Add challenge submission form or results here */}
+            <Group justify="flex-end">
+              <Button onClick={() => setChallengeDetailsOpen(false)}>Close</Button>
+            </Group>
+          </Stack>
         )}
-      </Dialog>
-    </Box>
+      </Modal>
+    </Container>
   );
 };
 export default Missions;

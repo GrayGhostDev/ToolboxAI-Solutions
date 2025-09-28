@@ -23,13 +23,15 @@ logger = logging.getLogger(__name__)
 
 class CircuitBreakerState(Enum):
     """Circuit breaker states"""
+
     CLOSED = "closed"  # Normal operation, requests pass through
-    OPEN = "open"      # Service is failing, requests are blocked
+    OPEN = "open"  # Service is failing, requests are blocked
     HALF_OPEN = "half_open"  # Testing if service has recovered
 
 
 class CircuitBreakerError(Exception):
     """Raised when circuit breaker is open"""
+
     def __init__(self, message: str, circuit_name: str, wait_time: float):
         super().__init__(message)
         self.circuit_name = circuit_name
@@ -91,7 +93,7 @@ class CircuitBreakerMetrics:
             "timestamp": datetime.now(),
             "success": success,
             "duration": duration,
-            "error": str(error) if error else None
+            "error": str(error) if error else None,
         }
         self.recent_calls.append(call_record)
 
@@ -139,11 +141,7 @@ class CircuitBreaker:
             return await external_api_call()
     """
 
-    def __init__(
-        self,
-        name: str,
-        config: Optional[CircuitBreakerConfig] = None
-    ):
+    def __init__(self, name: str, config: Optional[CircuitBreakerConfig] = None):
         self.name = name
         self.config = config or CircuitBreakerConfig()
         self.state = CircuitBreakerState.CLOSED
@@ -172,9 +170,7 @@ class CircuitBreaker:
             # Calculate wait time with jitter
             wait_time = self._get_wait_time()
             raise CircuitBreakerError(
-                f"Circuit breaker '{self.name}' is {self.state.value}",
-                self.name,
-                wait_time
+                f"Circuit breaker '{self.name}' is {self.state.value}", self.name, wait_time
             )
 
         # Execute the function
@@ -182,10 +178,7 @@ class CircuitBreaker:
         try:
             # Add timeout
             if asyncio.iscoroutinefunction(func):
-                result = await asyncio.wait_for(
-                    func(*args, **kwargs),
-                    timeout=self.config.timeout
-                )
+                result = await asyncio.wait_for(func(*args, **kwargs), timeout=self.config.timeout)
             else:
                 result = func(*args, **kwargs)
 
@@ -212,8 +205,10 @@ class CircuitBreaker:
 
             if self.state == CircuitBreakerState.OPEN:
                 # Check if enough time has passed to try half-open
-                if self._last_failure_time and \
-                   time.time() - self._last_failure_time >= self.config.reset_timeout:
+                if (
+                    self._last_failure_time
+                    and time.time() - self._last_failure_time >= self.config.reset_timeout
+                ):
                     await self._transition_to_half_open()
                     return False
                 return True
@@ -257,8 +252,10 @@ class CircuitBreaker:
                 # Check both absolute threshold and failure rate
                 failure_rate = self.metrics.get_failure_rate(self.config.window_size)
 
-                if self._failure_count >= self.config.failure_threshold or \
-                   failure_rate >= self.config.failure_rate_threshold:
+                if (
+                    self._failure_count >= self.config.failure_threshold
+                    or failure_rate >= self.config.failure_rate_threshold
+                ):
                     await self._transition_to_open()
 
             elif self.state == CircuitBreakerState.HALF_OPEN:
@@ -272,12 +269,14 @@ class CircuitBreaker:
         self._success_count = 0
         self.metrics.circuit_opened_at = datetime.now()
 
-        self.metrics.state_transitions.append({
-            "timestamp": datetime.now(),
-            "from_state": self.state.value,
-            "to_state": CircuitBreakerState.OPEN.value,
-            "reason": "failure_threshold_exceeded"
-        })
+        self.metrics.state_transitions.append(
+            {
+                "timestamp": datetime.now(),
+                "from_state": self.state.value,
+                "to_state": CircuitBreakerState.OPEN.value,
+                "reason": "failure_threshold_exceeded",
+            }
+        )
 
         logger.warning(f"Circuit breaker '{self.name}' opened due to failures")
 
@@ -288,12 +287,14 @@ class CircuitBreaker:
         self._failure_count = 0
         self._half_open_calls = 0
 
-        self.metrics.state_transitions.append({
-            "timestamp": datetime.now(),
-            "from_state": CircuitBreakerState.OPEN.value,
-            "to_state": CircuitBreakerState.HALF_OPEN.value,
-            "reason": "testing_recovery"
-        })
+        self.metrics.state_transitions.append(
+            {
+                "timestamp": datetime.now(),
+                "from_state": CircuitBreakerState.OPEN.value,
+                "to_state": CircuitBreakerState.HALF_OPEN.value,
+                "reason": "testing_recovery",
+            }
+        )
 
         logger.info(f"Circuit breaker '{self.name}' half-opened for testing")
 
@@ -303,12 +304,14 @@ class CircuitBreaker:
         self._failure_count = 0
         self._success_count = 0
 
-        self.metrics.state_transitions.append({
-            "timestamp": datetime.now(),
-            "from_state": self.state.value,
-            "to_state": CircuitBreakerState.CLOSED.value,
-            "reason": "service_recovered"
-        })
+        self.metrics.state_transitions.append(
+            {
+                "timestamp": datetime.now(),
+                "from_state": self.state.value,
+                "to_state": CircuitBreakerState.CLOSED.value,
+                "reason": "service_recovered",
+            }
+        )
 
         logger.info(f"Circuit breaker '{self.name}' closed - service recovered")
 
@@ -332,6 +335,7 @@ class CircuitBreaker:
 
     def __call__(self, func: Callable) -> Callable:
         """Decorator usage"""
+
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
             return await self.call(func, *args, **kwargs)
@@ -372,8 +376,16 @@ class CircuitBreaker:
                 "reset_timeout": self.config.reset_timeout,
                 "timeout": self.config.timeout,
             },
-            "last_failure": self.metrics.last_failure_time.isoformat() if self.metrics.last_failure_time else None,
-            "circuit_opened_at": self.metrics.circuit_opened_at.isoformat() if self.metrics.circuit_opened_at else None,
+            "last_failure": (
+                self.metrics.last_failure_time.isoformat()
+                if self.metrics.last_failure_time
+                else None
+            ),
+            "circuit_opened_at": (
+                self.metrics.circuit_opened_at.isoformat()
+                if self.metrics.circuit_opened_at
+                else None
+            ),
         }
 
 
@@ -381,20 +393,14 @@ class CircuitBreaker:
 _circuit_breakers: Dict[str, CircuitBreaker] = {}
 
 
-def get_circuit_breaker(
-    name: str,
-    config: Optional[CircuitBreakerConfig] = None
-) -> CircuitBreaker:
+def get_circuit_breaker(name: str, config: Optional[CircuitBreakerConfig] = None) -> CircuitBreaker:
     """Get or create a circuit breaker instance"""
     if name not in _circuit_breakers:
         _circuit_breakers[name] = CircuitBreaker(name, config)
     return _circuit_breakers[name]
 
 
-def circuit_breaker(
-    name: Optional[str] = None,
-    **config_kwargs
-) -> Callable:
+def circuit_breaker(name: Optional[str] = None, **config_kwargs) -> Callable:
     """
     Decorator for applying circuit breaker to functions
 
@@ -403,6 +409,7 @@ def circuit_breaker(
         async def call_external_api():
             return await make_request()
     """
+
     def decorator(func: Callable) -> Callable:
         breaker_name = name or func.__name__
         config = CircuitBreakerConfig(**config_kwargs) if config_kwargs else None
@@ -414,7 +421,4 @@ def circuit_breaker(
 
 async def get_all_circuit_breakers_status() -> Dict[str, Any]:
     """Get status of all circuit breakers"""
-    return {
-        name: breaker.get_status()
-        for name, breaker in _circuit_breakers.items()
-    }
+    return {name: breaker.get_status() for name, breaker in _circuit_breakers.items()}

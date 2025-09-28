@@ -1,36 +1,41 @@
 /**
- * WebSocket Connection Status Component
+ * Pusher Connection Status Component (Mantine v8)
  * Displays real-time connection status and statistics
+ * Updated to use Mantine v8 components instead of MUI
  */
 
 import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
-import Collapse from '@mui/material/Collapse';
-import Chip from '@mui/material/Chip';
-import LinearProgress from '@mui/material/LinearProgress';
-import Button from '@mui/material/Button';
-import Alert from '@mui/material/Alert';
-import Stack from '@mui/material/Stack';
-import Divider from '@mui/material/Divider';
-import Grid from '@mui/material/Grid';
-import Grid from '@mui/material/Grid';
 import {
-  WifiTethering as ConnectedIcon,
-  WifiTetheringOff as DisconnectedIcon,
-  Sync as ReconnectingIcon,
-  Error as ErrorIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-  Refresh as RefreshIcon,
-  Speed as SpeedIcon,
-  Send as SendIcon,
-  CallReceived as ReceiveIcon
-} from '@mui/icons-material';
-import { useWebSocketStatus } from '../../hooks/websocket';
+  Box,
+  ActionIcon,
+  Tooltip,
+  Text,
+  Paper,
+  Collapse,
+  Badge,
+  Progress,
+  Button,
+  Alert,
+  Stack,
+  Divider,
+  Group,
+  Card,
+  Code
+} from '@mantine/core';
+import {
+  IconWifi,
+  IconWifiOff,
+  IconRefresh,
+  IconChevronDown,
+  IconChevronUp,
+  IconAlertCircle,
+  IconCheck,
+  IconX,
+  IconClock,
+  IconSend,
+  IconDownload
+} from '@tabler/icons-react';
+import { usePusher } from '../../hooks/usePusher';
 import { useAppSelector } from '../../store';
 import { selectWebSocketStats, selectWebSocketError } from '../../store/slices/realtimeSlice';
 import { WebSocketState } from '../../types/websocket';
@@ -46,47 +51,54 @@ interface ConnectionStatusProps {
     top?: number | string;
     left?: number | string;
   };
+  showLabel?: boolean;
+  size?: 'small' | 'medium' | 'large';
 }
 
-export const ConnectionStatus: React.FunctionComponent<ConnectionStatusProps> = ({
+export default function ConnectionStatus({
   variant = 'compact',
-  showStats = true,
+  showStats = false,
   position = 'relative',
-  floatingPosition = { bottom: 20, right: 20 }
-}) => {
-  const status = useWebSocketStatus();
+  floatingPosition = { bottom: 20, right: 20 },
+  showLabel = false,
+  size = 'medium'
+}: ConnectionStatusProps) {
+  const status = usePusher();
   const stats = useAppSelector(selectWebSocketStats);
   const error = useAppSelector(selectWebSocketError);
   const [expanded, setExpanded] = useState(false);
   const [serverDiag, setServerDiag] = useState<any | null>(null);
 
-  // Get status color
-  const getStatusColor = (): 'success' | 'warning' | 'error' | 'info' => {
+  // Get status color based on connection state
+  const getStatusColor = () => {
     switch (status.state) {
       case WebSocketState.CONNECTED:
-        return 'success';
+        return 'green';
       case WebSocketState.CONNECTING:
       case WebSocketState.RECONNECTING:
-        return 'warning';
+        return 'yellow';
       case WebSocketState.ERROR:
-        return 'error';
+      case WebSocketState.FAILED:
+        return 'red';
       default:
-        return 'info';
+        return 'gray';
     }
   };
 
   // Get status icon
   const getStatusIcon = () => {
+    const iconSize = size === 'small' ? 16 : size === 'large' ? 24 : 20;
+
     switch (status.state) {
       case WebSocketState.CONNECTED:
-        return <ConnectedIcon fontSize="small" />;
-      case WebSocketState.CONNECTING:
-      case WebSocketState.RECONNECTING:
-        return <ReconnectingIcon fontSize="small" className="spin-animation" />;
+        return <IconCheck size={iconSize} color="green" />;
+      case WebSocketState.DISCONNECTED:
+        return <IconWifiOff size={iconSize} color="gray" />;
       case WebSocketState.ERROR:
-        return <ErrorIcon fontSize="small" />;
+      case WebSocketState.FAILED:
+        return <IconX size={iconSize} color="red" />;
       default:
-        return <DisconnectedIcon fontSize="small" />;
+        return <IconWifi size={iconSize} color="gray" />;
     }
   };
 
@@ -98,257 +110,268 @@ export const ConnectionStatus: React.FunctionComponent<ConnectionStatusProps> = 
       case WebSocketState.CONNECTING:
         return 'Connecting...';
       case WebSocketState.RECONNECTING:
-        return `Reconnecting (${stats.reconnectAttempts})...`;
-      case WebSocketState.ERROR:
-        return 'Connection Error';
+        return 'Reconnecting...';
       case WebSocketState.DISCONNECTED:
         return 'Disconnected';
+      case WebSocketState.ERROR:
+      case WebSocketState.FAILED:
+        return 'Connection Failed';
       default:
         return 'Unknown';
     }
   };
 
-  // Format latency
-  const formatLatency = (ms: number | null) => {
-    if (ms === null) return 'N/A';
-    if (ms < 100) return `${ms}ms ✅`;
-    if (ms < 300) return `${ms}ms ⚠️`;
-    return `${ms}ms ❌`;
+  // Fetch server diagnostics
+  const fetchServerDiagnostics = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/health/websocket`);
+      const data = await response.json();
+      setServerDiag(data);
+    } catch (err) {
+      console.error('Failed to fetch server diagnostics:', err);
+      setServerDiag({ error: 'Failed to fetch diagnostics' });
+    }
   };
 
-  // Server diagnostics: periodically fetch /socketio/status in debug
-  React.useEffect(() => {
-    if (!DEBUG_MODE) return;
-    let timer: any;
-    let aborted = false;
+  // Compact variant
+  if (variant === 'compact') {
+    const containerStyle = position === 'fixed' ? {
+      position: 'fixed' as const,
+      ...floatingPosition,
+      zIndex: 1000,
+    } : {};
 
-    const load = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/socketio/status`, {
-          headers: { 'Accept': 'application/json' }
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!aborted) setServerDiag({ ...data, fetchedAt: new Date().toISOString() });
-      } catch {
-        // ignore
-      }
-    };
-
-    // Prefetch on connect and then every 30s
-    if (status.isConnected) {
-      load();
-      timer = setInterval(load, 30000);
-    }
-
-    return () => {
-      aborted = true;
-      if (timer) clearInterval(timer);
-    };
-  }, [status.isConnected]);
-
-  // Compact view (icon only with tooltip)
-  if (variant === 'compact' && !expanded) {
     return (
-      <Box
-        sx={{
-          position: position === 'fixed' ? 'fixed' : 'relative',
-          ...(position === 'fixed' ? floatingPosition : {}),
-          zIndex: 1000
-        }}
-      >
-        <Tooltip
-          title={
-            <Box>
-              <Typography variant="caption">
-                Status: {getStatusText()}
-              </Typography>
-              {showStats && status.isConnected && (
-                <>
-                  <br />
-                  <Typography variant="caption">
-                    Latency: {formatLatency(stats.latency)}
-                  </Typography>
-                  <br />
-                  <Typography variant="caption">
-                    Messages: ↑{stats.messagesSent} ↓{stats.messagesReceived}
-                  </Typography>
-                </>
-              )}
-              {error && (
-                <>
-                  <br />
-                  <Typography variant="caption" color="error">
-                    Error: {error.message}
-                  </Typography>
-                </>
-              )}
-            </Box>
-          }
-        >
-          <IconButton
-            size="small"
-            onClick={(e: React.MouseEvent) => () => setExpanded(!expanded)}
-            sx={{
-              backgroundColor: 'background.paper',
-              border: '1px solid',
-              borderColor: `${getStatusColor()}.main`,
-              '&:hover': {
-                backgroundColor: 'background.default'
-              }
-            }}
+      <Box style={containerStyle}>
+        <Tooltip label={`Pusher Status: ${getStatusText()}`}>
+          <ActionIcon
+            variant="subtle"
+            size={size === 'small' ? 'sm' : size === 'large' ? 'lg' : 'md'}
+            color={getStatusColor()}
+            onClick={() => setExpanded(!expanded)}
           >
             {getStatusIcon()}
-          </IconButton>
+          </ActionIcon>
         </Tooltip>
+
+        {showLabel && (
+          <Text size="xs" c="dimmed" ta="center" mt={4}>
+            {getStatusText()}
+          </Text>
+        )}
+
+        <Collapse in={expanded}>
+          <Paper p="md" mt="xs" shadow="md" style={{ minWidth: 300, maxWidth: 400 }}>
+            <Stack gap="sm">
+              {/* Header */}
+              <Group justify="space-between" align="center">
+                <Text fw={600}>Pusher Status</Text>
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  onClick={() => setExpanded(false)}
+                >
+                  <IconChevronUp size={16} />
+                </ActionIcon>
+              </Group>
+
+              <Divider />
+
+              {/* Status Info */}
+              <Group justify="space-between">
+                <Text size="sm">Status:</Text>
+                <Badge color={getStatusColor()} variant="filled">
+                  {getStatusText()}
+                </Badge>
+              </Group>
+
+              {error && (
+                <Alert color="red" icon={<IconAlertCircle size={16} />}>
+                  <Text size="sm">{error.message}</Text>
+                </Alert>
+              )}
+
+              {showStats && stats && (
+                <>
+                  <Divider />
+                  <Stack gap="xs">
+                    <Text size="sm" fw={500}>Statistics</Text>
+                    <Group justify="space-between">
+                      <Text size="xs">Messages Sent:</Text>
+                      <Text size="xs" fw={500}>{stats.messagesSent || 0}</Text>
+                    </Group>
+                    <Group justify="space-between">
+                      <Text size="xs">Messages Received:</Text>
+                      <Text size="xs" fw={500}>{stats.messagesReceived || 0}</Text>
+                    </Group>
+                    <Group justify="space-between">
+                      <Text size="xs">Reconnect Attempts:</Text>
+                      <Text size="xs" fw={500}>{stats.reconnectAttempts || 0}</Text>
+                    </Group>
+                    {stats.latency && (
+                      <Group justify="space-between">
+                        <Text size="xs">Latency:</Text>
+                        <Text size="xs" fw={500}>{stats.latency}ms</Text>
+                      </Group>
+                    )}
+                  </Stack>
+                </>
+              )}
+
+              <Divider />
+
+              <Group>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  leftSection={<IconRefresh size={14} />}
+                  onClick={() => status.connect?.()}
+                  disabled={status.isConnected}
+                >
+                  Reconnect
+                </Button>
+
+                {DEBUG_MODE && (
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    leftSection={<IconClock size={14} />}
+                    onClick={fetchServerDiagnostics}
+                  >
+                    Diagnostics
+                  </Button>
+                )}
+              </Group>
+
+              {serverDiag && (
+                <>
+                  <Divider />
+                  <Stack gap="xs">
+                    <Text size="sm" fw={500}>Server Diagnostics</Text>
+                    <Code block style={{ fontSize: '0.75rem' }}>
+                      {JSON.stringify(serverDiag, null, 2)}
+                    </Code>
+                  </Stack>
+                </>
+              )}
+            </Stack>
+          </Paper>
+        </Collapse>
       </Box>
     );
   }
 
-  // Detailed view
+  // Detailed variant
   return (
-    <Paper
-      elevation={3}
-      sx={{
-        position: position === 'fixed' ? 'fixed' : 'relative',
-        ...(position === 'fixed' ? floatingPosition : {}),
-        p: 2,
-        minWidth: 300,
-        maxWidth: 400,
-        zIndex: 1000
-      }}
-    >
-      {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-        <Box display="flex" alignItems="center" gap={1}>
-          {getStatusIcon()}
-          <Typography variant="subtitle2" fontWeight="bold">
-            WebSocket Connection
-          </Typography>
-        </Box>
-        {variant === 'compact' && (
-          <IconButton size="small" onClick={(e: React.MouseEvent) => () => setExpanded(!expanded)}>
-            {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          </IconButton>
+    <Card withBorder p="lg">
+      <Stack gap="md">
+        <Group justify="space-between">
+          <Title order={3}>Pusher Connection Status</Title>
+          <Badge color={getStatusColor()} variant="filled" leftSection={getStatusIcon()}>
+            {getStatusText()}
+          </Badge>
+        </Group>
+
+        {status.state === WebSocketState.CONNECTING && (
+          <Progress value={undefined} animated />
         )}
-      </Box>
 
-      {/* Status */}
-      <Chip
-        label={getStatusText()}
-        color={getStatusColor()}
-        size="small"
-        sx={{ mb: 2 }}
-      />
+        {error && (
+          <Alert color="red" icon={<IconAlertCircle size={16} />} title="Connection Error">
+            <Text size="sm">{error.message}</Text>
+            {error.recoverable && (
+              <Button
+                size="xs"
+                variant="outline"
+                mt="sm"
+                leftSection={<IconRefresh size={14} />}
+                onClick={() => status.connect?.()}
+              >
+                Retry Connection
+              </Button>
+            )}
+          </Alert>
+        )}
 
-      {/* Progress bar for connecting states */}
-      {(status.isConnecting) && (
-        <LinearProgress color={getStatusColor()} sx={{ mb: 2 }} />
-      )}
+        {showStats && stats && (
+          <Card withBorder>
+            <Stack gap="sm">
+              <Text fw={500}>Connection Statistics</Text>
 
-      {/* Error alert */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error.message}
-          {error.code && (
-            <Typography variant="caption" display="block">
-              Code: {error.code}
-            </Typography>
-          )}
-        </Alert>
-      )}
+              <Group grow>
+                <Paper p="sm" withBorder>
+                  <Stack gap={4} align="center">
+                    <IconSend size={20} color="blue" />
+                    <Text size="lg" fw={700}>{stats.messagesSent || 0}</Text>
+                    <Text size="xs" c="dimmed">Sent</Text>
+                  </Stack>
+                </Paper>
 
-      {/* Statistics */}
-      {showStats && (variant === 'detailed' || expanded) && (
-        <>
-          <Divider sx={{ my: 1 }} />
-          <Typography variant="subtitle2" gutterBottom>
-            Statistics
-          </Typography>
-          
-          <Grid container spacing={1}>
-            <Grid item xs={6}>
-              <Box display="flex" alignItems="center" gap={0.5}>
-                <SpeedIcon fontSize="small" color="action" />
-                <Typography variant="caption">
-                  Latency: {formatLatency(stats.latency)}
-                </Typography>
-              </Box>
-            </Grid>
-            
-            <Grid item xs={6}>
-              <Box display="flex" alignItems="center" gap={0.5}>
-                <RefreshIcon fontSize="small" color="action" />
-                <Typography variant="caption">
-                  Reconnects: {stats.reconnectAttempts}
-                </Typography>
-              </Box>
-            </Grid>
-            
-            <Grid item xs={6}>
-              <Box display="flex" alignItems="center" gap={0.5}>
-                <SendIcon fontSize="small" color="primary" />
-                <Typography variant="caption">
-                  Sent: {stats.messagesSent}
-                </Typography>
-              </Box>
-            </Grid>
-            
-            <Grid item xs={6}>
-              <Box display="flex" alignItems="center" gap={0.5}>
-                <ReceiveIcon fontSize="small" color="success" />
-                <Typography variant="caption">
-                  Received: {stats.messagesReceived}
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
+                <Paper p="sm" withBorder>
+                  <Stack gap={4} align="center">
+                    <IconDownload size={20} color="green" />
+                    <Text size="lg" fw={700}>{stats.messagesReceived || 0}</Text>
+                    <Text size="xs" c="dimmed">Received</Text>
+                  </Stack>
+                </Paper>
 
-          {/* Last activity times */}
-          {status.lastConnected && (
-            <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-              Last connected: {new Date(status.lastConnected).toLocaleTimeString()}
-            </Typography>
-          )}
-          
-          {status.lastDisconnected && (
-            <Typography variant="caption" display="block">
-              Last disconnected: {new Date(status.lastDisconnected).toLocaleTimeString()}
-            </Typography>
-          )}
+                <Paper p="sm" withBorder>
+                  <Stack gap={4} align="center">
+                    <IconRefresh size={20} color="orange" />
+                    <Text size="lg" fw={700}>{stats.reconnectAttempts || 0}</Text>
+                    <Text size="xs" c="dimmed">Reconnects</Text>
+                  </Stack>
+                </Paper>
+              </Group>
 
-          {/* Diagnostics (debug only) */}
-          {DEBUG_MODE && (
-            <>
-              <Divider sx={{ my: 1 }} />
-              <Typography variant="subtitle2" gutterBottom>
-                Server Diagnostics
-              </Typography>
-              {serverDiag ? (
-                <Stack spacing={0.5}>
-                  <Typography variant="caption">Path: {serverDiag.path ?? 'unknown'}</Typography>
-                  <Typography variant="caption">Acks: {String(serverDiag.acks_enabled ?? false)}</Typography>
-                  <Typography variant="caption">Connected: {serverDiag.connected ?? 'n/a'}</Typography>
-                  <Typography variant="caption">Authenticated: {serverDiag.authenticated ?? 'n/a'}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Fetched: {new Date(serverDiag.fetchedAt).toLocaleTimeString()}
-                  </Typography>
-                </Stack>
-              ) : (
-                <Typography variant="caption" color="text.secondary">Loading diagnostics...</Typography>
+              {stats.connectedAt && (
+                <Group justify="space-between">
+                  <Text size="sm">Connected Since:</Text>
+                  <Text size="sm" fw={500}>
+                    {new Date(stats.connectedAt).toLocaleString()}
+                  </Text>
+                </Group>
               )}
-            </>
+
+              {stats.latency && (
+                <Group justify="space-between">
+                  <Text size="sm">Latency:</Text>
+                  <Text size="sm" fw={500}>{stats.latency}ms</Text>
+                </Group>
+              )}
+            </Stack>
+          </Card>
+        )}
+
+        <Group>
+          <Button
+            variant="outline"
+            leftSection={<IconRefresh size={16} />}
+            onClick={() => status.connect?.()}
+            disabled={status.isConnected}
+          >
+            Reconnect
+          </Button>
+
+          {DEBUG_MODE && (
+            <Button
+              variant="outline"
+              leftSection={<IconClock size={16} />}
+              onClick={fetchServerDiagnostics}
+            >
+              Server Diagnostics
+            </Button>
           )}
-        </>
-      )}
-    </Paper>
+        </Group>
+      </Stack>
+    </Card>
   );
-};
+}
 
 // Mini status indicator for app bar
 export const ConnectionStatusIndicator: React.FunctionComponent<Record<string, any>> = () => {
-  const status = useWebSocketStatus();
-  
+  const status = usePusher();
+
   const getColor = () => {
     switch (status.state) {
       case WebSocketState.CONNECTED:
@@ -357,29 +380,24 @@ export const ConnectionStatusIndicator: React.FunctionComponent<Record<string, a
       case WebSocketState.RECONNECTING:
         return '#ff9800';
       case WebSocketState.ERROR:
+      case WebSocketState.FAILED:
         return '#f44336';
       default:
         return '#9e9e9e';
     }
   };
 
-  const isAnimating = status.state === WebSocketState.CONNECTING || 
-                      status.state === WebSocketState.RECONNECTING;
-
   return (
-    <Tooltip title={`WebSocket: ${status.state}`}>
+    <Tooltip label={`Pusher: ${status.state}`}>
       <Box
-        sx={{
-          width: 8,
-          height: 8,
+        style={{
+          width: 12,
+          height: 12,
           borderRadius: '50%',
           backgroundColor: getColor(),
-          animation: isAnimating ? 'pulse 1.5s infinite' : 'none',
-          '@keyframes pulse': {
-            '0%': { opacity: 1 },
-            '50%': { opacity: 0.4 },
-            '100%': { opacity: 1 }
-          }
+          border: '2px solid white',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+          animation: status.state === WebSocketState.CONNECTING ? 'pulse 2s infinite' : 'none',
         }}
       />
     </Tooltip>

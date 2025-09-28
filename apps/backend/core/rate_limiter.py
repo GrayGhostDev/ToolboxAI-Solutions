@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 class RateLimitStrategy(Enum):
     """Rate limiting algorithms"""
+
     FIXED_WINDOW = "fixed_window"
     SLIDING_WINDOW = "sliding_window"
     TOKEN_BUCKET = "token_bucket"
@@ -32,6 +33,7 @@ class RateLimitStrategy(Enum):
 
 class RateLimitScope(Enum):
     """Scope of rate limiting"""
+
     GLOBAL = "global"
     IP = "ip"
     USER = "user"
@@ -64,21 +66,20 @@ class RateLimitConfig:
 
     # User tiers
     enable_user_tiers: bool = True
-    user_tier_multipliers: Dict[str, float] = field(default_factory=lambda: {
-        "free": 1.0,
-        "basic": 2.0,
-        "premium": 5.0,
-        "enterprise": 10.0
-    })
+    user_tier_multipliers: Dict[str, float] = field(
+        default_factory=lambda: {"free": 1.0, "basic": 2.0, "premium": 5.0, "enterprise": 10.0}
+    )
 
     # Endpoint-specific limits
-    endpoint_limits: Dict[str, Dict[str, int]] = field(default_factory=lambda: {
-        "/auth/login": {"requests_per_minute": 5},
-        "/auth/register": {"requests_per_hour": 10},
-        "/api/v1/generate": {"requests_per_minute": 20},
-        "/api/v1/agents": {"requests_per_minute": 30},
-        "/api/v1/upload": {"requests_per_hour": 100},
-    })
+    endpoint_limits: Dict[str, Dict[str, int]] = field(
+        default_factory=lambda: {
+            "/auth/login": {"requests_per_minute": 5},
+            "/auth/register": {"requests_per_hour": 10},
+            "/api/v1/generate": {"requests_per_minute": 20},
+            "/api/v1/agents": {"requests_per_minute": 30},
+            "/api/v1/upload": {"requests_per_hour": 100},
+        }
+    )
 
     # Redis settings
     redis_key_prefix: str = "rate_limit"
@@ -97,6 +98,7 @@ class RateLimitConfig:
 @dataclass
 class RateLimitResult:
     """Result of rate limit check"""
+
     allowed: bool
     limit: int
     remaining: int
@@ -112,11 +114,7 @@ class RateLimiter:
     rate limiting across multiple servers.
     """
 
-    def __init__(
-        self,
-        redis_client: aioredis.Redis,
-        config: Optional[RateLimitConfig] = None
-    ):
+    def __init__(self, redis_client: aioredis.Redis, config: Optional[RateLimitConfig] = None):
         self.redis = redis_client
         self.config = config or RateLimitConfig()
         self._scripts = {}
@@ -126,7 +124,9 @@ class RateLimiter:
         """Initialize Lua scripts for atomic Redis operations"""
 
         # Sliding window rate limiting script
-        self._scripts["sliding_window"] = """
+        self._scripts[
+            "sliding_window"
+        ] = """
         local key = KEYS[1]
         local now = tonumber(ARGV[1])
         local window = tonumber(ARGV[2])
@@ -154,7 +154,9 @@ class RateLimiter:
         """
 
         # Token bucket script
-        self._scripts["token_bucket"] = """
+        self._scripts[
+            "token_bucket"
+        ] = """
         local key = KEYS[1]
         local capacity = tonumber(ARGV[1])
         local refill_rate = tonumber(ARGV[2])
@@ -185,7 +187,9 @@ class RateLimiter:
         """
 
         # Sliding log script for precise rate limiting
-        self._scripts["sliding_log"] = """
+        self._scripts[
+            "sliding_log"
+        ] = """
         local key = KEYS[1]
         local now = tonumber(ARGV[1])
         local window = tonumber(ARGV[2])
@@ -218,7 +222,7 @@ class RateLimiter:
         identifier: str,
         endpoint: Optional[str] = None,
         user_tier: str = "free",
-        custom_limit: Optional[int] = None
+        custom_limit: Optional[int] = None,
     ) -> RateLimitResult:
         """
         Check if request is within rate limits
@@ -241,21 +245,13 @@ class RateLimiter:
 
             # Choose strategy
             if self.config.strategy == RateLimitStrategy.SLIDING_WINDOW:
-                result = await self._check_sliding_window(
-                    identifier, endpoint, limit, now
-                )
+                result = await self._check_sliding_window(identifier, endpoint, limit, now)
             elif self.config.strategy == RateLimitStrategy.TOKEN_BUCKET:
-                result = await self._check_token_bucket(
-                    identifier, endpoint, limit, now
-                )
+                result = await self._check_token_bucket(identifier, endpoint, limit, now)
             elif self.config.strategy == RateLimitStrategy.SLIDING_LOG:
-                result = await self._check_sliding_log(
-                    identifier, endpoint, limit, now
-                )
+                result = await self._check_sliding_log(identifier, endpoint, limit, now)
             else:
-                result = await self._check_fixed_window(
-                    identifier, endpoint, limit, now
-                )
+                result = await self._check_fixed_window(identifier, endpoint, limit, now)
 
             # Apply progressive penalties if enabled
             if not result.allowed and self.config.enable_progressive_penalties:
@@ -272,18 +268,14 @@ class RateLimiter:
             # Fail open - allow request if Redis is down
             return RateLimitResult(
                 allowed=True,
-                limit=limit if 'limit' in locals() else 100,
+                limit=limit if "limit" in locals() else 100,
                 remaining=1,
-                reset_at=int(now + 60) if 'now' in locals() else int(time.time() + 60),
-                reason="Rate limit check failed, allowing request"
+                reset_at=int(now + 60) if "now" in locals() else int(time.time() + 60),
+                reason="Rate limit check failed, allowing request",
             )
 
     async def _check_sliding_window(
-        self,
-        identifier: str,
-        endpoint: Optional[str],
-        limit: int,
-        now: float
+        self, identifier: str, endpoint: Optional[str], limit: int, now: float
     ) -> RateLimitResult:
         """Check rate limit using sliding window algorithm"""
 
@@ -292,10 +284,7 @@ class RateLimiter:
 
         # Execute Lua script atomically
         script = self.redis.register_script(self._scripts["sliding_window"])
-        result = await script(
-            keys=[key],
-            args=[now, window, limit]
-        )
+        result = await script(keys=[key], args=[now, window, limit])
 
         allowed, remaining, reset_at = result
 
@@ -304,15 +293,11 @@ class RateLimiter:
             limit=limit,
             remaining=int(remaining),
             reset_at=int(reset_at),
-            retry_after=int(reset_at - now) if not allowed else None
+            retry_after=int(reset_at - now) if not allowed else None,
         )
 
     async def _check_token_bucket(
-        self,
-        identifier: str,
-        endpoint: Optional[str],
-        limit: int,
-        now: float
+        self, identifier: str, endpoint: Optional[str], limit: int, now: float
     ) -> RateLimitResult:
         """Check rate limit using token bucket algorithm"""
 
@@ -321,10 +306,7 @@ class RateLimiter:
         refill_rate = self.config.token_bucket_refill_rate
 
         script = self.redis.register_script(self._scripts["token_bucket"])
-        result = await script(
-            keys=[key],
-            args=[capacity, refill_rate, now, 1]  # Request 1 token
-        )
+        result = await script(keys=[key], args=[capacity, refill_rate, now, 1])  # Request 1 token
 
         allowed, remaining, retry_after = result
 
@@ -333,15 +315,11 @@ class RateLimiter:
             limit=capacity,
             remaining=int(remaining),
             reset_at=int(now + (capacity - remaining) / refill_rate),
-            retry_after=int(retry_after) if retry_after > 0 else None
+            retry_after=int(retry_after) if retry_after > 0 else None,
         )
 
     async def _check_sliding_log(
-        self,
-        identifier: str,
-        endpoint: Optional[str],
-        limit: int,
-        now: float
+        self, identifier: str, endpoint: Optional[str], limit: int, now: float
     ) -> RateLimitResult:
         """Check rate limit using sliding log algorithm (most precise)"""
 
@@ -350,10 +328,7 @@ class RateLimiter:
         request_id = f"{now}:{hashlib.md5(str(now).encode()).hexdigest()[:8]}"
 
         script = self.redis.register_script(self._scripts["sliding_log"])
-        result = await script(
-            keys=[key],
-            args=[now, window, limit, request_id]
-        )
+        result = await script(keys=[key], args=[now, window, limit, request_id])
 
         allowed, remaining, reset_at = result
 
@@ -362,15 +337,11 @@ class RateLimiter:
             limit=limit,
             remaining=int(remaining),
             reset_at=int(reset_at),
-            retry_after=int(reset_at - now) if not allowed else None
+            retry_after=int(reset_at - now) if not allowed else None,
         )
 
     async def _check_fixed_window(
-        self,
-        identifier: str,
-        endpoint: Optional[str],
-        limit: int,
-        now: float
+        self, identifier: str, endpoint: Optional[str], limit: int, now: float
     ) -> RateLimitResult:
         """Check rate limit using fixed window algorithm (simplest)"""
 
@@ -394,14 +365,10 @@ class RateLimiter:
             limit=limit,
             remaining=max(0, limit - current_count),
             reset_at=window_start + window,
-            retry_after=window_start + window - int(now) if not allowed else None
+            retry_after=window_start + window - int(now) if not allowed else None,
         )
 
-    async def _apply_penalty(
-        self,
-        identifier: str,
-        result: RateLimitResult
-    ) -> RateLimitResult:
+    async def _apply_penalty(self, identifier: str, result: RateLimitResult) -> RateLimitResult:
         """Apply progressive penalties for repeated violations"""
 
         penalty_key = f"{self.config.redis_key_prefix}:penalty:{identifier}"
@@ -412,27 +379,18 @@ class RateLimiter:
 
         # Increase penalty
         penalty_level += 1
-        await self.redis.setex(
-            penalty_key,
-            self.config.penalty_duration,
-            penalty_level
-        )
+        await self.redis.setex(penalty_key, self.config.penalty_duration, penalty_level)
 
         # Apply penalty multiplier
         penalty_factor = self.config.penalty_multiplier ** (penalty_level - 1)
-        result.retry_after = int(
-            (result.retry_after or 60) * penalty_factor
-        )
+        result.retry_after = int((result.retry_after or 60) * penalty_factor)
 
         result.reason = f"Progressive penalty level {penalty_level}"
 
         return result
 
     def _get_effective_limit(
-        self,
-        endpoint: Optional[str],
-        user_tier: str,
-        custom_limit: Optional[int]
+        self, endpoint: Optional[str], user_tier: str, custom_limit: Optional[int]
     ) -> int:
         """Calculate effective rate limit based on various factors"""
 
@@ -446,10 +404,7 @@ class RateLimiter:
         # Check endpoint-specific limits
         elif endpoint and endpoint in self.config.endpoint_limits:
             endpoint_config = self.config.endpoint_limits[endpoint]
-            base_limit = endpoint_config.get(
-                "requests_per_minute",
-                base_limit
-            )
+            base_limit = endpoint_config.get("requests_per_minute", base_limit)
 
         # Apply user tier multiplier
         if self.config.enable_user_tiers and user_tier in self.config.user_tier_multipliers:
@@ -458,12 +413,7 @@ class RateLimiter:
 
         return base_limit
 
-    def _generate_key(
-        self,
-        identifier: str,
-        endpoint: Optional[str],
-        suffix: str = ""
-    ) -> str:
+    def _generate_key(self, identifier: str, endpoint: Optional[str], suffix: str = "") -> str:
         """Generate Redis key for rate limiting"""
 
         parts = [self.config.redis_key_prefix]
@@ -511,32 +461,17 @@ class RateLimiter:
         logger.info(f"Reset rate limits for {identifier}: {len(keys)} keys deleted")
 
     async def get_usage_stats(
-        self,
-        identifier: str,
-        endpoint: Optional[str] = None
+        self, identifier: str, endpoint: Optional[str] = None
     ) -> Dict[str, Any]:
         """Get usage statistics for an identifier"""
 
-        stats = {
-            "identifier": identifier,
-            "endpoint": endpoint,
-            "current_usage": {},
-            "limits": {}
-        }
+        stats = {"identifier": identifier, "endpoint": endpoint, "current_usage": {}, "limits": {}}
 
         # Check various time windows
-        windows = [
-            ("minute", 60),
-            ("hour", 3600),
-            ("day", 86400)
-        ]
+        windows = [("minute", 60), ("hour", 3600), ("day", 86400)]
 
         for window_name, window_seconds in windows:
-            key = self._generate_key(
-                identifier,
-                endpoint,
-                f"stats:{window_name}"
-            )
+            key = self._generate_key(identifier, endpoint, f"stats:{window_name}")
 
             count = await self.redis.get(key)
             stats["current_usage"][window_name] = int(count) if count else 0
@@ -552,11 +487,7 @@ class RateLimiter:
 class RateLimitMiddleware:
     """FastAPI middleware for rate limiting"""
 
-    def __init__(
-        self,
-        redis_client: aioredis.Redis,
-        config: Optional[RateLimitConfig] = None
-    ):
+    def __init__(self, redis_client: aioredis.Redis, config: Optional[RateLimitConfig] = None):
         self.limiter = RateLimiter(redis_client, config)
 
     async def __call__(self, request, call_next):
@@ -572,23 +503,20 @@ class RateLimitMiddleware:
         user_tier = self._get_user_tier(request)
 
         # Check rate limit
-        result = await self.limiter.check_rate_limit(
-            identifier,
-            endpoint,
-            user_tier
-        )
+        result = await self.limiter.check_rate_limit(identifier, endpoint, user_tier)
 
         if not result.allowed:
             # Return 429 Too Many Requests
             from fastapi.responses import JSONResponse
+
             return JSONResponse(
                 status_code=429,
                 content={
                     "error": "Rate limit exceeded",
                     "message": result.reason or "Too many requests",
-                    "retry_after": result.retry_after
+                    "retry_after": result.retry_after,
                 },
-                headers=result.headers
+                headers=result.headers,
             )
 
         # Add rate limit headers to response
@@ -620,10 +548,10 @@ class RateLimitMiddleware:
 
 # Export main components
 __all__ = [
-    'RateLimiter',
-    'RateLimitConfig',
-    'RateLimitMiddleware',
-    'RateLimitResult',
-    'RateLimitStrategy',
-    'RateLimitScope'
+    "RateLimiter",
+    "RateLimitConfig",
+    "RateLimitMiddleware",
+    "RateLimitResult",
+    "RateLimitStrategy",
+    "RateLimitScope",
 ]

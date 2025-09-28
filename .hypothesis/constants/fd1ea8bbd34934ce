@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/v1/endpoints/compliance.py
-# hypothesis_version: 6.139.2
-
-[100, 150, 500, '/audit-logs', '/health', '/reports', '/status', '/verify/{category}', '127.0.0.1', 'COPPA', 'Compliance status', 'FERPA', 'Filter by school ID', 'Filter by user ID', 'GDPR', 'HIPAA', 'Mozilla/5.0', 'applies_to', 'category', 'compliance', 'data_access', 'duration_ms', 'healthy', 'last_updated', 'low', 'name', 'requirements', 'service', 'status', 'success', 'timestamp']

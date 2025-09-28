@@ -1,12 +1,15 @@
 /**
  * Real-time data hook for automatic CRUD operations refresh
- * Provides optimistic updates with WebSocket fallback
+ * Provides optimistic updates with Pusher real-time updates
+ * Updated for 2025 Pusher integration standards
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useWebSocketContext } from '../contexts/WebSocketContext';
+import { usePusherContext } from '../contexts/PusherContext';
+import { pusherService } from '../services/pusher';
 import { addNotification } from '../store/slices/uiSlice';
 import { useAppDispatch } from '../store';
+import { WebSocketMessageType } from '../types/websocket';
 
 interface UseRealTimeDataOptions<T> {
   /** Function to fetch data from API */
@@ -17,7 +20,7 @@ interface UseRealTimeDataOptions<T> {
   updateFn?: (id: string, data: any) => Promise<T>;
   /** Function to delete item */
   deleteFn?: (id: string) => Promise<void>;
-  /** WebSocket channel to listen for updates */
+  /** Pusher channel to listen for updates */
   channel?: string;
   /** Transform function for new items */
   transformFn?: (item: any) => T;
@@ -62,7 +65,7 @@ export function useRealTimeData<T extends { id: string }>(
   } = options;
 
   const dispatch = useAppDispatch();
-  const { isConnected, subscribe, unsubscribe } = useWebSocketContext();
+  const { isConnected } = usePusherContext();
 
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(false);
@@ -117,7 +120,7 @@ export function useRealTimeData<T extends { id: string }>(
     } finally {
       setLoading(false);
     }
-  }, [createFn, transformFn, dispatch]); // Remove refresh to avoid circular deps
+  }, [createFn, transformFn, dispatch]);
 
   // Update existing item with optimistic update
   const update = useCallback(async (id: string, itemData: any): Promise<T | null> => {
@@ -154,7 +157,7 @@ export function useRealTimeData<T extends { id: string }>(
     } finally {
       setLoading(false);
     }
-  }, [updateFn, transformFn, dispatch]); // Remove refresh to avoid circular deps
+  }, [updateFn, transformFn, dispatch]);
 
   // Delete item with optimistic update
   const remove = useCallback(async (id: string): Promise<boolean> => {
@@ -192,14 +195,14 @@ export function useRealTimeData<T extends { id: string }>(
     } finally {
       setLoading(false);
     }
-  }, [deleteFn, dispatch]); // Remove refresh to avoid circular deps
+  }, [deleteFn, dispatch]);
 
   // Auto-fetch on mount
   useEffect(() => {
     if (autoFetch) {
       refresh();
     }
-  }, [autoFetch]); // Remove refresh from deps to avoid loops
+  }, [autoFetch]);
 
   // Optional polling
   useEffect(() => {
@@ -208,20 +211,22 @@ export function useRealTimeData<T extends { id: string }>(
       refresh();
     }, refreshInterval);
     return () => clearInterval(id);
-  }, [refreshInterval]); // Remove refresh from deps to avoid loops
+  }, [refreshInterval]);
 
-  // WebSocket subscription for real-time updates
+  // Pusher subscription for real-time updates using modern 2025 patterns
   useEffect(() => {
     if (!channel || !isConnected) return;
 
-    const subscriptionId = subscribe(channel, (message: any) => {
-      console.log(`[Real-time] Received update on ${channel}:`, message);
+    // Use pusherService directly for more reliable subscriptions
+    const subscriptionId = pusherService.subscribe(channel, (message: any) => {
+      console.log(`[Real-time] Received message on ${channel}:`, message);
 
-      // Handle different types of real-time updates
+      // Handle different message types
       switch (message.type) {
+        case WebSocketMessageType.CONTENT_UPDATE:
         case 'ITEM_CREATED':
-          if (message.payload && transformFn) {
-            const newItem = transformFn(message.payload);
+          if (message.data && transformFn) {
+            const newItem = transformFn(message.data);
             setData(prev => {
               // Avoid duplicates
               if (prev.some(item => item.id === newItem.id)) {
@@ -236,8 +241,8 @@ export function useRealTimeData<T extends { id: string }>(
           break;
 
         case 'ITEM_UPDATED':
-          if (message.payload && transformFn) {
-            const updatedItem = transformFn(message.payload);
+          if (message.data && transformFn) {
+            const updatedItem = transformFn(message.data);
             setData(prev => prev.map(item =>
               item.id === updatedItem.id ? updatedItem : item
             ));
@@ -247,8 +252,8 @@ export function useRealTimeData<T extends { id: string }>(
           break;
 
         case 'ITEM_DELETED':
-          if (message.payload?.id) {
-            setData(prev => prev.filter(item => item.id !== message.payload.id));
+          if (message.data?.id) {
+            setData(prev => prev.filter(item => item.id !== message.data.id));
           } else {
             refresh();
           }
@@ -259,12 +264,17 @@ export function useRealTimeData<T extends { id: string }>(
           refresh();
           break;
       }
+    }, (message) => {
+      // Filter messages relevant to this hook
+      return message.channel === channel ||
+             message.type === WebSocketMessageType.CONTENT_UPDATE ||
+             ['ITEM_CREATED', 'ITEM_UPDATED', 'ITEM_DELETED', 'UPDATE'].includes(message.type);
     });
 
     return () => {
-      unsubscribe(subscriptionId);
+      pusherService.unsubscribe(subscriptionId);
     };
-  }, [channel, isConnected, subscribe, unsubscribe, transformFn]); // Remove refresh to avoid loops
+  }, [channel, isConnected, transformFn]);
 
   return {
     data,

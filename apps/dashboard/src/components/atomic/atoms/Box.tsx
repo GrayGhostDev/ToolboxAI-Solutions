@@ -2,30 +2,20 @@
  * Atomic Box Component
  *
  * A polymorphic layout component with responsive spacing, flexbox utilities,
- * and Roblox theming support.
+ * and Roblox theming support using Mantine.
  */
 
 import React, { forwardRef } from 'react';
-import { Box as MuiBox } from '@mui/material';
-import { BoxProps as MuiBoxProps } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { Box as MantineBox, BoxProps as MantineBoxProps, MantineStyleProp } from '@mantine/core';
 import { designTokens } from '../../../theme/designTokens';
 
-// Polymorphic component types
-type PolymorphicRef<T extends React.ElementType> = React.ComponentPropsWithRef<T>['ref'];
-
-type PolymorphicProps<T extends React.ElementType = 'div'> = {
-  as?: T;
-  children?: React.ReactNode;
-} & Omit<React.ComponentPropsWithoutRef<T>, 'as' | 'children'>;
-
 // Spacing type
-type SpacingValue = keyof typeof designTokens.spacing | 'auto';
+type SpacingValue = keyof typeof designTokens.spacing | 'auto' | number | string;
 type ResponsiveSpacing = SpacingValue | { xs?: SpacingValue; sm?: SpacingValue; md?: SpacingValue; lg?: SpacingValue; xl?: SpacingValue };
 
 // Custom props for our Box component
-export interface AtomicBoxProps {
-  // Padding
+export interface AtomicBoxProps extends Omit<MantineBoxProps, 'w' | 'h'> {
+  // Padding (Mantine already has these, we just redefine for consistency)
   p?: ResponsiveSpacing;
   px?: ResponsiveSpacing;
   py?: ResponsiveSpacing;
@@ -62,7 +52,7 @@ export interface AtomicBoxProps {
   maxW?: string | number;
   maxH?: string | number;
 
-  // Border - use custom name to avoid conflict
+  // Border
   customBorder?: boolean | string;
   borderRadius?: keyof typeof designTokens.borderRadius | string | number;
 
@@ -73,152 +63,173 @@ export interface AtomicBoxProps {
   // Roblox theming
   robloxTheme?: boolean;
   gameContainer?: boolean;
+
+  // Polymorphic component
+  component?: React.ElementType;
 }
 
-// Combine with MUI box props, excluding conflicting ones
-export type BoxProps = AtomicBoxProps & Omit<MuiBoxProps, keyof AtomicBoxProps | 'border'>;
-
-const StyledBox = styled(MuiBox)<AtomicBoxProps>(({
-  theme,
-  robloxTheme = false,
-  gameContainer = false,
-  gradient = false,
-  bg,
-  customBorder,
-  borderRadius,
-  w,
-  h,
-  minW,
-  minH,
-  maxW,
-  maxH
-}) => {
-  const getSpacingValue = (value: SpacingValue): string => {
-    if (value === 'auto') return 'auto';
-    return designTokens.spacing[value] || '0';
-  };
-
-  const getResponsiveSpacing = (spacing: ResponsiveSpacing | undefined): any => {
-    if (!spacing) return undefined;
-
-    if (typeof spacing === 'object') {
-      return Object.entries(spacing).reduce((acc, [breakpoint, value]) => {
-        acc[breakpoint] = getSpacingValue(value);
-        return acc;
-      }, {} as any);
-    }
-
-    return getSpacingValue(spacing);
-  };
-
-  // Base styles
-  let styles: any = {};
-
-  // Dimensions
-  if (w !== undefined) styles.width = typeof w === 'number' ? `${w}px` : w;
-  if (h !== undefined) styles.height = typeof h === 'number' ? `${h}px` : h;
-  if (minW !== undefined) styles.minWidth = typeof minW === 'number' ? `${minW}px` : minW;
-  if (minH !== undefined) styles.minHeight = typeof minH === 'number' ? `${minH}px` : minH;
-  if (maxW !== undefined) styles.maxWidth = typeof maxW === 'number' ? `${maxW}px` : maxW;
-  if (maxH !== undefined) styles.maxHeight = typeof maxH === 'number' ? `${maxH}px` : maxH;
-
-  // Background
-  if (bg) {
-    styles.backgroundColor = bg;
-  } else if (gradient && robloxTheme) {
-    styles.background = 'linear-gradient(135deg, rgba(226, 35, 26, 0.1), rgba(139, 92, 246, 0.1))';
-  }
-
-  // Border
-  if (customBorder) {
-    if (typeof customBorder === 'string') {
-      styles.border = customBorder;
-    } else {
-      styles.border = `1px solid ${theme.palette.divider}`;
-    }
-  }
-
-  // Border radius
-  if (borderRadius !== undefined) {
-    if (typeof borderRadius === 'string' && borderRadius in designTokens.borderRadius) {
-      styles.borderRadius = designTokens.borderRadius[borderRadius as keyof typeof designTokens.borderRadius];
-    } else {
-      styles.borderRadius = borderRadius;
-    }
-  }
-
-  // Game container styling
-  if (gameContainer && robloxTheme) {
-    styles = {
-      ...styles,
-      background: theme.palette.mode === 'dark'
-        ? 'radial-gradient(circle at 20% 80%, rgba(226, 35, 26, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%)'
-        : 'radial-gradient(circle at 20% 80%, rgba(226, 35, 26, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%)',
-      borderRadius: designTokens.borderRadius['3xl'],
-      position: 'relative',
-      overflow: 'hidden',
-
-      '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'conic-gradient(from 0deg, transparent, rgba(226, 35, 26, 0.1), transparent)',
-        animation: 'rotate 10s linear infinite',
-        pointerEvents: 'none'
-      }
-    };
-  }
-
-  return styles;
-});
-
-const AtomicBox = forwardRef<HTMLDivElement, BoxProps & PolymorphicProps>(
+const AtomicBox = forwardRef<HTMLDivElement, AtomicBoxProps>(
   (
     {
       children,
-      as: Component = 'div',
+      component = 'div',
       p, px, py, pt, pr, pb, pl,
       m, mx, my, mt, mr, mb, ml,
+      display,
+      position,
+      flexDirection,
+      justifyContent,
+      alignItems,
+      flexWrap,
       gap,
+      w,
+      h,
+      minW,
+      minH,
+      maxW,
+      maxH,
+      customBorder,
+      borderRadius,
+      bg,
+      gradient = false,
       robloxTheme = false,
       gameContainer = false,
+      style,
       ...props
     },
     ref
   ) => {
-    // Convert spacing props to Material-UI format
-    const spacingProps = {
-      ...(p !== undefined && { p: p }),
-      ...(px !== undefined && { px: px }),
-      ...(py !== undefined && { py: py }),
-      ...(pt !== undefined && { pt: pt }),
-      ...(pr !== undefined && { pr: pr }),
-      ...(pb !== undefined && { pb: pb }),
-      ...(pl !== undefined && { pl: pl }),
-      ...(m !== undefined && { m: m }),
-      ...(mx !== undefined && { mx: mx }),
-      ...(my !== undefined && { my: my }),
-      ...(mt !== undefined && { mt: mt }),
-      ...(mr !== undefined && { mr: mr }),
-      ...(mb !== undefined && { mb: mb }),
-      ...(ml !== undefined && { ml: ml }),
-      ...(gap !== undefined && { gap: gap })
+    // Convert spacing values
+    const getSpacingValue = (value: SpacingValue): string | number => {
+      if (value === 'auto') return 'auto';
+      if (typeof value === 'number' || typeof value === 'string') return value;
+      return designTokens.spacing[value] || 0;
     };
 
+    const processSpacing = (spacing: ResponsiveSpacing | undefined): any => {
+      if (!spacing) return undefined;
+
+      if (typeof spacing === 'object') {
+        // For responsive spacing, Mantine expects an object with breakpoint keys
+        return spacing;
+      }
+
+      return getSpacingValue(spacing);
+    };
+
+    // Build styles object
+    let customStyles: React.CSSProperties = {};
+
+    // Dimensions
+    if (w !== undefined) customStyles.width = typeof w === 'number' ? `${w}px` : w;
+    if (h !== undefined) customStyles.height = typeof h === 'number' ? `${h}px` : h;
+    if (minW !== undefined) customStyles.minWidth = typeof minW === 'number' ? `${minW}px` : minW;
+    if (minH !== undefined) customStyles.minHeight = typeof minH === 'number' ? `${minH}px` : minH;
+    if (maxW !== undefined) customStyles.maxWidth = typeof maxW === 'number' ? `${maxW}px` : maxW;
+    if (maxH !== undefined) customStyles.maxHeight = typeof maxH === 'number' ? `${maxH}px` : maxH;
+
+    // Layout
+    if (display) customStyles.display = display;
+    if (position) customStyles.position = position;
+
+    // Flexbox
+    if (flexDirection) customStyles.flexDirection = flexDirection;
+    if (justifyContent) customStyles.justifyContent = justifyContent;
+    if (alignItems) customStyles.alignItems = alignItems;
+    if (flexWrap) customStyles.flexWrap = flexWrap;
+    if (gap) customStyles.gap = processSpacing(gap);
+
+    // Background
+    if (bg) {
+      customStyles.backgroundColor = bg;
+    } else if (gradient && robloxTheme) {
+      customStyles.background = 'linear-gradient(135deg, rgba(226, 35, 26, 0.1), rgba(139, 92, 246, 0.1))';
+    }
+
+    // Border
+    if (customBorder) {
+      if (typeof customBorder === 'string') {
+        customStyles.border = customBorder;
+      } else {
+        customStyles.border = '1px solid var(--mantine-color-gray-4)';
+      }
+    }
+
+    // Border radius
+    if (borderRadius !== undefined) {
+      if (typeof borderRadius === 'string' && borderRadius in designTokens.borderRadius) {
+        customStyles.borderRadius = designTokens.borderRadius[borderRadius as keyof typeof designTokens.borderRadius];
+      } else {
+        customStyles.borderRadius = borderRadius;
+      }
+    }
+
+    // Game container styling for Roblox theme
+    if (gameContainer && robloxTheme) {
+      customStyles = {
+        ...customStyles,
+        background: 'radial-gradient(circle at 20% 80%, rgba(226, 35, 26, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%)',
+        borderRadius: designTokens.borderRadius['3xl'],
+        position: 'relative',
+        overflow: 'hidden'
+      };
+    }
+
+    // Build Mantine style prop
+    const mantineStyles: MantineStyleProp = {
+      ...customStyles,
+      ...(style as React.CSSProperties)
+    };
+
+    // Add animation for game container
+    const animationStyles = gameContainer && robloxTheme ? (
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        .game-container::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: conic-gradient(from 0deg, transparent, rgba(226, 35, 26, 0.1), transparent);
+          animation: rotate 10s linear infinite;
+          pointer-events: none;
+        }
+      ` }} />
+    ) : null;
+
     return (
-      <StyledBox
-        ref={ref}
-        component={Component}
-        robloxTheme={robloxTheme}
-        gameContainer={gameContainer}
-        {...spacingProps}
-        {...props}
-      >
-        {children}
-      </StyledBox>
+      <>
+        {animationStyles}
+        <MantineBox
+          ref={ref}
+          component={component}
+          p={processSpacing(p)}
+          px={processSpacing(px)}
+          py={processSpacing(py)}
+          pt={processSpacing(pt)}
+          pr={processSpacing(pr)}
+          pb={processSpacing(pb)}
+          pl={processSpacing(pl)}
+          m={processSpacing(m)}
+          mx={processSpacing(mx)}
+          my={processSpacing(my)}
+          mt={processSpacing(mt)}
+          mr={processSpacing(mr)}
+          mb={processSpacing(mb)}
+          ml={processSpacing(ml)}
+          style={mantineStyles}
+          className={gameContainer && robloxTheme ? 'game-container' : undefined}
+          {...props}
+        >
+          {children}
+        </MantineBox>
+      </>
     );
   }
 );
@@ -226,4 +237,4 @@ const AtomicBox = forwardRef<HTMLDivElement, BoxProps & PolymorphicProps>(
 AtomicBox.displayName = 'AtomicBox';
 
 export default AtomicBox;
-export type { BoxProps };
+export type { AtomicBoxProps as BoxProps };

@@ -23,7 +23,7 @@ from datetime import datetime
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from core.database import (
+from database import (
     db_manager,
     Base,
     User, Course, Lesson, Content, Quiz

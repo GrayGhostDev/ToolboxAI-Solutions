@@ -15,10 +15,10 @@ from enum import Enum
 import json
 import uuid
 import weakref
-import websockets
+# WebSocket replaced with Pusher for real-time communication
 from concurrent.futures import ThreadPoolExecutor
 
-from fastapi import FastAPI, WebSocket, HTTPException, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)

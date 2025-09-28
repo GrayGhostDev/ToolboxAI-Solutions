@@ -1,36 +1,18 @@
 import * as React from "react";
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
-import LinearProgress from '@mui/material/LinearProgress';
-import IconButton from '@mui/material/IconButton';
-import Skeleton from '@mui/material/Skeleton';
-import Alert from '@mui/material/Alert';
-import Tooltip from '@mui/material/Tooltip';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
+import { Card, Text, Title, Box, Grid, Paper, Stack, Badge, Progress, ActionIcon, Skeleton, Alert, Tooltip, Table } from '@mantine/core';
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from "react";
 import {
-  TrendingUp,
-  TrendingDown,
-  Assessment,
-  School,
-  PlayArrow,
-  Star,
-  Refresh,
-  Info,
-} from "@mui/icons-material";
+  IconTrendingUp,
+  IconTrendingDown,
+  IconClipboardCheck,
+  IconSchool,
+  IconPlayerPlay,
+  IconStar,
+  IconRefresh,
+  IconInfoCircle,
+} from "@tabler/icons-react";
 import {
   PieChart,
   Pie,
@@ -45,8 +27,8 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { useTheme } from "@mui/material/styles";
-import { useWebSocketContext } from "../../contexts/WebSocketContext";
+import { useMantineTheme } from "@mantine/core";
+import { usePusherContext } from "../../contexts/PusherContext";
 import { apiClient } from "../../services/api";
 
 interface ContentMetric {
@@ -82,12 +64,12 @@ interface ContentMetricsProps {
 
 const COLORS = ['#2563EB', '#22C55E', '#FACC15', '#9333EA', '#EF4444', '#06B6D4', '#F97316'];
 
-export function ContentMetrics({ 
+export function ContentMetrics({
   timeRange = "30d",
-  autoRefresh = true 
+  autoRefresh = true
 }: ContentMetricsProps) {
-  const theme = useTheme();
-  const { isConnected, subscribe, unsubscribe } = useWebSocketContext();
+  const theme = useMantineTheme();
+  const { isConnected, subscribeToChannel, unsubscribeFromChannel } = usePusherContext();
   
   const [contentData, setContentData] = useState<ContentMetric[]>([]);
   const [subjectData, setSubjectData] = useState<SubjectPerformance[]>([]);
@@ -312,9 +294,9 @@ export function ContentMetrics({
   useEffect(() => {
     if (!isConnected || !autoRefresh) return;
 
-    const subscriptionId = subscribe('content_metrics', (message: any) => {
-      if (message.type === 'CONTENT_UPDATE') {
-        const { contentId, metrics } = message.payload;
+    const subscriptionId = subscribeToChannel('content_metrics', {
+      'CONTENT_UPDATE': (message: any) => {
+        const { contentId, metrics } = message;
         setContentData(prevData =>
           prevData.map(item =>
             item.id === contentId ? { ...item, ...metrics } : item
@@ -324,275 +306,262 @@ export function ContentMetrics({
     });
 
     return () => {
-      unsubscribe(subscriptionId);
+      unsubscribeFromChannel(subscriptionId);
     };
-  }, [isConnected, autoRefresh, subscribe, unsubscribe]);
+  }, [isConnected, autoRefresh, subscribeToChannel, unsubscribeFromChannel]);
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case "up":
-        return <TrendingUp color="success" fontSize="small" />;
+        return <IconTrendingUp size={16} color={theme.colors.green[6]} />;
       case "down":
-        return <TrendingDown color="error" fontSize="small" />;
+        return <IconTrendingDown size={16} color={theme.colors.red[6]} />;
       default:
-        return <TrendingUp color="disabled" fontSize="small" />;
+        return <IconTrendingUp size={16} color={theme.colors.gray[6]} />;
     }
   };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
       case "lesson":
-        return <School fontSize="small" />;
+        return <IconSchool size={16} />;
       case "quiz":
-        return <Assessment fontSize="small" />;
+        return <IconClipboardCheck size={16} />;
       case "game":
-        return <PlayArrow fontSize="small" />;
+        return <IconPlayerPlay size={16} />;
       default:
-        return <Assessment fontSize="small" />;
+        return <IconClipboardCheck size={16} />;
     }
   };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "easy":
-        return "success";
+        return "green";
       case "medium":
-        return "warning";
+        return "yellow";
       case "hard":
-        return "error";
+        return "red";
       default:
-        return "default";
+        return "gray";
     }
   };
 
   if (loading) {
     return (
-      <Grid container spacing={3}>
+      <Grid gutter="md">
         {[1, 2, 3, 4].map((item) => (
-          <Grid item xs={12} md={6} key={item}>
+          <Grid.Col key={item} span={{ base: 12, md: 6 }}>
             <Card>
-              <CardContent>
-                <Skeleton variant="text" height={40} />
-                <Skeleton variant="rectangular" height={200} />
-              </CardContent>
+              <Skeleton height={40} mb="md" />
+              <Skeleton height={200} />
             </Card>
-          </Grid>
+          </Grid.Col>
         ))}
       </Grid>
     );
   }
 
   return (
-    <Grid container spacing={3}>
+    <Grid gutter="md">
       {/* Content Performance Overview */}
-      <Grid item xs={12} md={8}>
+      <Grid.Col span={{ base: 12, md: 8 }}>
         <Card>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Content Performance
-              </Typography>
-              <Stack direction="row" spacing={1} alignItems="center">
-                {isConnected && autoRefresh && (
-                  <Chip label="Live" color="success" size="small" />
-                )}
-                <IconButton size="small" onClick={(e: React.MouseEvent) => fetchData}>
-                  <Refresh />
-                </IconButton>
-              </Stack>
+          <Stack justify="space-between" align="center" mb="md">
+            <Title order={3} fw={600}>
+              Content Performance
+            </Title>
+            <Stack direction="row" spacing="xs" align="center">
+              {isConnected && autoRefresh && (
+                <Badge color="green" size="sm">Live</Badge>
+              )}
+              <ActionIcon size="sm" onClick={(e: React.MouseEvent) => fetchData}>
+                <IconRefresh />
+              </ActionIcon>
             </Stack>
-            
-            {error && (
-              <Alert severity="warning" sx={{ mb: 2 }}>
-                Using fallback data: {error}
-              </Alert>
-            )}
+          </Stack>
 
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Content</TableCell>
-                    <TableCell>Type</TableCell>
-                    <TableCell>Views</TableCell>
-                    <TableCell>Completion Rate</TableCell>
-                    <TableCell>Avg Score</TableCell>
-                    <TableCell>Rating</TableCell>
-                    <TableCell>Trend</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {contentData.slice(0, 10).map((content) => (
-                    <TableRow key={content.id} hover>
-                      <TableCell>
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          {getTypeIcon(content.type)}
-                          <Box>
-                            <Typography variant="body2" fontWeight={500}>
-                              {content.title}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {content.subject}
-                            </Typography>
-                          </Box>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={content.type} 
-                          size="small" 
-                          color={getDifficultyColor(content.difficulty) as any}
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell>{content.views.toLocaleString()}</TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <LinearProgress
-                            variant="determinate"
-                            value={content.completionRate}
-                            sx={{ width: 60, height: 6, borderRadius: 3 }}
-                          />
-                          <Typography variant="caption">
-                            {content.completionRate.toFixed(1)}%
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight={500}>
-                          {content.averageScore.toFixed(1)}%
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Stack direction="row" alignItems="center" spacing={0.5}>
-                          <Star fontSize="small" color="warning" />
-                          <Typography variant="caption">
-                            {content.rating.toFixed(1)}
-                          </Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Stack direction="row" alignItems="center" spacing={0.5}>
-                          {getTrendIcon(content.trend)}
-                          <Typography 
-                            variant="caption" 
-                            color={content.trend === "up" ? "success.main" : content.trend === "down" ? "error.main" : "text.secondary"}
-                          >
-                            {content.trendValue > 0 ? "+" : ""}{content.trendValue.toFixed(1)}%
-                          </Typography>
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CardContent>
+          {error && (
+            <Alert color="yellow" mb="md">
+              Using fallback data: {error}
+            </Alert>
+          )}
+
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Content</Table.Th>
+                <Table.Th>Type</Table.Th>
+                <Table.Th>Views</Table.Th>
+                <Table.Th>Completion Rate</Table.Th>
+                <Table.Th>Avg Score</Table.Th>
+                <Table.Th>Rating</Table.Th>
+                <Table.Th>Trend</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {contentData.slice(0, 10).map((content) => (
+                <Table.Tr key={content.id}>
+                  <Table.Td>
+                    <Stack direction="row" align="center" gap="xs">
+                      {getTypeIcon(content.type)}
+                      <Box>
+                        <Text size="sm" fw={500}>
+                          {content.title}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {content.subject}
+                        </Text>
+                      </Box>
+                    </Stack>
+                  </Table.Td>
+                  <Table.Td>
+                    <Badge
+                      size="sm"
+                      color={getDifficultyColor(content.difficulty)}
+                      variant="outline"
+                    >
+                      {content.type}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>{content.views.toLocaleString()}</Table.Td>
+                  <Table.Td>
+                    <Stack direction="row" align="center" gap="xs">
+                      <Progress
+                        value={content.completionRate}
+                        w={60}
+                        h={6}
+                        radius="xl"
+                      />
+                      <Text size="xs">
+                        {content.completionRate.toFixed(1)}%
+                      </Text>
+                    </Stack>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm" fw={500}>
+                      {content.averageScore.toFixed(1)}%
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Stack direction="row" align="center" gap="xs">
+                      <IconStar size={16} color={theme.colors.yellow[6]} />
+                      <Text size="xs">
+                        {content.rating.toFixed(1)}
+                      </Text>
+                    </Stack>
+                  </Table.Td>
+                  <Table.Td>
+                    <Stack direction="row" align="center" gap="xs">
+                      {getTrendIcon(content.trend)}
+                      <Text
+                        size="xs"
+                        c={content.trend === "up" ? "green" : content.trend === "down" ? "red" : "dimmed"}
+                      >
+                        {content.trendValue > 0 ? "+" : ""}{content.trendValue.toFixed(1)}%
+                      </Text>
+                    </Stack>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
         </Card>
-      </Grid>
+      </Grid.Col>
 
       {/* Subject Distribution */}
-      <Grid item xs={12} md={4}>
+      <Grid.Col span={{ base: 12, md: 4 }}>
         <Card>
-          <CardContent>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-              Subject Distribution
-            </Typography>
-            <Box sx={{ height: 200 }}>
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie
-                    data={subjectData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, value }) => `${name}: ${value}`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="totalContent"
-                  >
-                    {subjectData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </Box>
-          </CardContent>
+          <Title order={3} fw={600} mb="md">
+            Subject Distribution
+          </Title>
+          <Box h={200}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={subjectData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, value }) => `${name}: ${value}`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="totalContent"
+                >
+                  {subjectData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <RechartsTooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </Box>
         </Card>
-      </Grid>
+      </Grid.Col>
 
       {/* Subject Performance Details */}
-      <Grid item xs={12}>
+      <Grid.Col span={12}>
         <Card>
-          <CardContent>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-              Subject Performance Metrics
-            </Typography>
-            <Grid container spacing={2}>
-              {subjectData.map((subject, index) => (
-                <Grid item xs={12} md={6} lg={4} key={subject.subject}>
-                  <Paper sx={{ p: 2 }}>
-                    <Stack spacing={2}>
-                      <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Typography variant="subtitle1" fontWeight={600}>
-                          {subject.subject}
-                        </Typography>
-                        <Chip 
-                          label={`${subject.totalContent} items`} 
-                          size="small" 
-                          style={{ backgroundColor: subject.color + '20', color: subject.color }}
-                        />
-                      </Stack>
-                      
-                      <Box>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-                          <Typography variant="caption">Completion Rate</Typography>
-                          <Typography variant="caption" fontWeight={500}>
-                            {subject.averageCompletion.toFixed(1)}%
-                          </Typography>
-                        </Stack>
-                        <LinearProgress
-                          variant="determinate"
-                          value={subject.averageCompletion}
-                          sx={{ 
-                            height: 6, 
-                            borderRadius: 3,
-                            '& .MuiLinearProgress-bar': { backgroundColor: subject.color }
-                          }}
-                        />
-                      </Box>
-                      
-                      <Box>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-                          <Typography variant="caption">Average Score</Typography>
-                          <Typography variant="caption" fontWeight={500}>
-                            {subject.averageScore.toFixed(1)}%
-                          </Typography>
-                        </Stack>
-                        <LinearProgress
-                          variant="determinate"
-                          value={subject.averageScore}
-                          sx={{ 
-                            height: 6, 
-                            borderRadius: 3,
-                            '& .MuiLinearProgress-bar': { backgroundColor: subject.color }
-                          }}
-                        />
-                      </Box>
-                      
-                      <Typography variant="caption" color="text.secondary">
-                        {subject.totalViews.toLocaleString()} total views
-                      </Typography>
+          <Title order={3} fw={600} mb="md">
+            Subject Performance Metrics
+          </Title>
+          <Grid gutter="md">
+            {subjectData.map((subject, index) => (
+              <Grid.Col key={subject.subject} span={{ base: 12, md: 6, lg: 4 }}>
+                <Paper p="md">
+                  <Stack gap="md">
+                    <Stack direction="row" justify="space-between" align="center">
+                      <Title order={4} fw={600}>
+                        {subject.subject}
+                      </Title>
+                      <Badge
+                        size="sm"
+                        style={{ backgroundColor: subject.color + '20', color: subject.color }}
+                      >
+                        {subject.totalContent} items
+                      </Badge>
                     </Stack>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </CardContent>
+
+                    <Box>
+                      <Stack direction="row" justify="space-between" align="center" mb="xs">
+                        <Text size="xs">Completion Rate</Text>
+                        <Text size="xs" fw={500}>
+                          {subject.averageCompletion.toFixed(1)}%
+                        </Text>
+                      </Stack>
+                      <Progress
+                        value={subject.averageCompletion}
+                        h={6}
+                        radius="xl"
+                        color={subject.color}
+                      />
+                    </Box>
+
+                    <Box>
+                      <Stack direction="row" justify="space-between" align="center" mb="xs">
+                        <Text size="xs">Average Score</Text>
+                        <Text size="xs" fw={500}>
+                          {subject.averageScore.toFixed(1)}%
+                        </Text>
+                      </Stack>
+                      <Progress
+                        value={subject.averageScore}
+                        h={6}
+                        radius="xl"
+                        color={subject.color}
+                      />
+                    </Box>
+
+                    <Text size="xs" c="dimmed">
+                      {subject.totalViews.toLocaleString()} total views
+                    </Text>
+                  </Stack>
+                </Paper>
+              </Grid.Col>
+            ))}
+          </Grid>
         </Card>
-      </Grid>
+      </Grid.Col>
     </Grid>
   );
 }

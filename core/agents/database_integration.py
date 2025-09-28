@@ -18,7 +18,8 @@ from contextlib import asynccontextmanager
 from sqlalchemy import text, select, insert, update, delete, and_, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError, NoResultFound
-import websockets
+# WebSocket replaced with Pusher for real-time communication
+# from apps.backend.services.pusher import trigger_event as pusher_trigger
 
 # Import project components
 try:
@@ -39,14 +40,14 @@ try:
     if str(parent_dir) not in sys.path:
         sys.path.insert(0, str(parent_dir))
     
-    from core.database.connection_manager import get_async_session, get_session, get_redis_client
-    from core.database.repositories import (
+    from database.connection_manager import get_async_session, get_session, get_redis_client
+    from database.core.repositories import (
         UserRepository, CourseRepository, LessonRepository, 
         ContentRepository, QuizRepository, ProgressRepository,
         AnalyticsRepository
     )
 except ImportError as e:
-    logging.warning(f"Could not import core.database components: {e}")
+    logging.warning(f"Could not import database components: {e}")
     # Fallback for testing - will use mock data
     get_async_session = None
     get_session = None

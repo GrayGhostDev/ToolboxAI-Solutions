@@ -612,7 +612,7 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
             from pathlib import Path
             # Add parent directory to path for database import
             sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-            from apps.backend.core.database.connection_manager import db_manager
+            from apps.backend.database.core.connection_manager import db_manager
 
             # Initialize if not already done
             if not db_manager._initialized:

@@ -18,16 +18,19 @@ from apps.backend.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class RojoAPIError(Exception):
     """Custom exception for Rojo API errors"""
+
     pass
+
 
 class RojoAPIService:
     """Service for interacting with Roblox Studio via Rojo API"""
 
     def __init__(self):
-        self.rojo_port = getattr(settings, 'ROJO_PORT', 34872)
-        self.rojo_host = getattr(settings, 'ROJO_HOST', 'localhost')
+        self.rojo_port = getattr(settings, "ROJO_PORT", 34872)
+        self.rojo_host = getattr(settings, "ROJO_HOST", "localhost")
         self.base_url = f"http://{self.rojo_host}:{self.rojo_port}"
         self.session: Optional[aiohttp.ClientSession] = None
 
@@ -75,10 +78,7 @@ class RojoAPIService:
             raise RojoAPIError(f"Rojo info request failed: {e}")
 
     async def create_environment_from_description(
-        self,
-        description: str,
-        environment_name: str,
-        user_id: str
+        self, description: str, environment_name: str, user_id: str
     ) -> Dict[str, Any]:
         """
         Create a Roblox environment from natural language description
@@ -114,16 +114,12 @@ class RojoAPIService:
                 "project_path": str(project_path),
                 "components": parsed_components,
                 "sync_result": sync_result,
-                "rojo_url": f"rojo://{self.rojo_host}:{self.rojo_port}/api/rojo"
+                "rojo_url": f"rojo://{self.rojo_host}:{self.rojo_port}/api/rojo",
             }
 
         except Exception as e:
             logger.error(f"Environment creation failed: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "environment_name": environment_name
-            }
+            return {"success": False, "error": str(e), "environment_name": environment_name}
 
     async def _parse_environment_description(self, description: str) -> Dict[str, Any]:
         """Parse natural language description into structured components"""
@@ -136,47 +132,46 @@ class RojoAPIService:
             "objects": [],
             "lighting": {},
             "effects": [],
-            "scripts": []
+            "scripts": [],
         }
 
         # Basic keyword detection (in production, use proper NLP)
         description_lower = description.lower()
 
         # Terrain detection
-        if any(word in description_lower for word in ["mountain", "hill", "valley", "forest", "desert"]):
-            components["terrain"].append({
-                "type": "natural",
-                "description": "Natural terrain based on description"
-            })
+        if any(
+            word in description_lower for word in ["mountain", "hill", "valley", "forest", "desert"]
+        ):
+            components["terrain"].append(
+                {"type": "natural", "description": "Natural terrain based on description"}
+            )
 
         # Building detection
-        if any(word in description_lower for word in ["house", "building", "school", "classroom", "lab"]):
-            components["buildings"].append({
-                "type": "educational",
-                "description": "Educational building structure"
-            })
+        if any(
+            word in description_lower
+            for word in ["house", "building", "school", "classroom", "lab"]
+        ):
+            components["buildings"].append(
+                {"type": "educational", "description": "Educational building structure"}
+            )
 
         # Object detection
-        if any(word in description_lower for word in ["table", "chair", "computer", "board", "equipment"]):
-            components["objects"].append({
-                "type": "furniture",
-                "description": "Educational furniture and equipment"
-            })
+        if any(
+            word in description_lower
+            for word in ["table", "chair", "computer", "board", "equipment"]
+        ):
+            components["objects"].append(
+                {"type": "furniture", "description": "Educational furniture and equipment"}
+            )
 
         # Lighting detection
         if any(word in description_lower for word in ["bright", "dark", "sunny", "moonlight"]):
-            components["lighting"] = {
-                "type": "ambient",
-                "description": "Ambient lighting setup"
-            }
+            components["lighting"] = {"type": "ambient", "description": "Ambient lighting setup"}
 
         return components
 
     async def _generate_rojo_structure(
-        self,
-        components: Dict[str, Any],
-        environment_name: str,
-        user_id: str
+        self, components: Dict[str, Any], environment_name: str, user_id: str
     ) -> Dict[str, Any]:
         """Generate Rojo project structure from parsed components"""
 
@@ -188,36 +183,24 @@ class RojoAPIService:
                     "$className": "ReplicatedStorage",
                     "SharedModules": {
                         "$className": "Folder",
-                        "EnvironmentConfig": {
-                            "$path": "src/shared/EnvironmentConfig.lua"
-                        }
-                    }
+                        "EnvironmentConfig": {"$path": "src/shared/EnvironmentConfig.lua"},
+                    },
                 },
                 "ServerStorage": {
                     "$className": "ServerStorage",
-                    "EnvironmentScripts": {
-                        "$className": "Folder"
-                    }
+                    "EnvironmentScripts": {"$className": "Folder"},
                 },
                 "Workspace": {
                     "$className": "Workspace",
                     "Environment": {
                         "$className": "Folder",
-                        "Terrain": {
-                            "$className": "Terrain"
-                        },
-                        "Buildings": {
-                            "$className": "Folder"
-                        },
-                        "Objects": {
-                            "$className": "Folder"
-                        },
-                        "Lighting": {
-                            "$className": "Lighting"
-                        }
-                    }
-                }
-            }
+                        "Terrain": {"$className": "Terrain"},
+                        "Buildings": {"$className": "Folder"},
+                        "Objects": {"$className": "Folder"},
+                        "Lighting": {"$className": "Lighting"},
+                    },
+                },
+            },
         }
 
         # Add components based on parsed description
@@ -228,29 +211,20 @@ class RojoAPIService:
 
         if components["buildings"]:
             for i, building in enumerate(components["buildings"]):
-                project_structure["tree"]["Workspace"]["Environment"]["Buildings"][f"Building_{i+1}"] = {
-                    "$className": "Model",
-                    "$properties": {
-                        "Name": building["type"]
-                    }
-                }
+                project_structure["tree"]["Workspace"]["Environment"]["Buildings"][
+                    f"Building_{i+1}"
+                ] = {"$className": "Model", "$properties": {"Name": building["type"]}}
 
         if components["objects"]:
             for i, obj in enumerate(components["objects"]):
-                project_structure["tree"]["Workspace"]["Environment"]["Objects"][f"Object_{i+1}"] = {
-                    "$className": "Model",
-                    "$properties": {
-                        "Name": obj["type"]
-                    }
-                }
+                project_structure["tree"]["Workspace"]["Environment"]["Objects"][
+                    f"Object_{i+1}"
+                ] = {"$className": "Model", "$properties": {"Name": obj["type"]}}
 
         return project_structure
 
     async def _create_project_directory(
-        self,
-        project_structure: Dict[str, Any],
-        environment_name: str,
-        user_id: str
+        self, project_structure: Dict[str, Any], environment_name: str, user_id: str
     ) -> Path:
         """Create temporary project directory with Rojo structure"""
 
@@ -261,13 +235,11 @@ class RojoAPIService:
         project_config = {
             "name": project_structure["name"],
             "tree": project_structure["tree"],
-            "serve": {
-                "port": self.rojo_port
-            }
+            "serve": {"port": self.rojo_port},
         }
 
         project_json_path = temp_dir / "default.project.json"
-        async with aiofiles.open(project_json_path, 'w') as f:
+        async with aiofiles.open(project_json_path, "w") as f:
             await f.write(json.dumps(project_config, indent=2))
 
         # Create source directory structure
@@ -278,7 +250,7 @@ class RojoAPIService:
         shared_dir.mkdir(exist_ok=True)
 
         # Create basic environment configuration script
-        env_config_script = f'''-- Environment Configuration for {environment_name}
+        env_config_script = f"""-- Environment Configuration for {environment_name}
 -- Generated for user: {user_id}
 
 local EnvironmentConfig = {{}}
@@ -296,10 +268,10 @@ EnvironmentConfig.Settings = {{
 }}
 
 return EnvironmentConfig
-'''
+"""
 
         config_script_path = shared_dir / "EnvironmentConfig.lua"
-        async with aiofiles.open(config_script_path, 'w') as f:
+        async with aiofiles.open(config_script_path, "w") as f:
             await f.write(env_config_script)
 
         logger.info(f"Created project directory: {temp_dir}")
@@ -325,25 +297,24 @@ return EnvironmentConfig
                 "success": True,
                 "build_result": build_result,
                 "sync_result": sync_result,
-                "project_path": str(project_path)
+                "project_path": str(project_path),
             }
 
         except Exception as e:
             logger.error(f"Sync to Roblox Studio failed: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def _build_rojo_project(self, project_path: Path) -> Dict[str, Any]:
         """Build Rojo project"""
         try:
             # Run rojo build command
             process = await asyncio.create_subprocess_exec(
-                "rojo", "build", str(project_path / "default.project.json"),
+                "rojo",
+                "build",
+                str(project_path / "default.project.json"),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=str(project_path)
+                cwd=str(project_path),
             )
 
             stdout, stderr = await process.communicate()
@@ -352,31 +323,27 @@ return EnvironmentConfig
                 return {
                     "success": True,
                     "output": stdout.decode(),
-                    "project_path": str(project_path)
+                    "project_path": str(project_path),
                 }
             else:
-                return {
-                    "success": False,
-                    "error": stderr.decode(),
-                    "output": stdout.decode()
-                }
+                return {"success": False, "error": stderr.decode(), "output": stdout.decode()}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def _sync_project(self, project_path: Path) -> Dict[str, Any]:
         """Sync project to Roblox Studio"""
         try:
             # Run rojo serve command in background
             process = await asyncio.create_subprocess_exec(
-                "rojo", "serve", str(project_path / "default.project.json"),
-                "--port", str(self.rojo_port),
+                "rojo",
+                "serve",
+                str(project_path / "default.project.json"),
+                "--port",
+                str(self.rojo_port),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=str(project_path)
+                cwd=str(project_path),
             )
 
             # Give it a moment to start
@@ -387,21 +354,14 @@ return EnvironmentConfig
                 return {
                     "success": True,
                     "message": f"Rojo server started on port {self.rojo_port}",
-                    "rojo_url": f"rojo://{self.rojo_host}:{self.rojo_port}/api/rojo"
+                    "rojo_url": f"rojo://{self.rojo_host}:{self.rojo_port}/api/rojo",
                 }
             else:
                 stdout, stderr = await process.communicate()
-                return {
-                    "success": False,
-                    "error": stderr.decode(),
-                    "output": stdout.decode()
-                }
+                return {"success": False, "error": stderr.decode(), "output": stdout.decode()}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def get_environment_status(self, environment_name: str) -> Dict[str, Any]:
         """Get status of a created environment"""
@@ -416,16 +376,13 @@ return EnvironmentConfig
                 "status": "active",
                 "players": 0,
                 "last_updated": "2025-01-15T10:30:00Z",
-                "rojo_connected": await self.check_rojo_connection()
+                "rojo_connected": await self.check_rojo_connection(),
             }
 
         except Exception as e:
             logger.error(f"Error getting environment status: {e}")
-            return {
-                "environment_name": environment_name,
-                "status": "error",
-                "error": str(e)
-            }
+            return {"environment_name": environment_name, "status": "error", "error": str(e)}
+
 
 # Global instance
 rojo_api_service = RojoAPIService()

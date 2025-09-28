@@ -1,752 +1,631 @@
 /**
- * Roblox Control Panel Component
+ * Roblox Control Panel Component (Mantine v8)
  * Main control interface for teachers to manage Roblox educational content
+ * Updated to use Mantine v8 components instead of MUI
  */
 import React, { useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardHeader from '@mui/material/CardHeader';
-import Grid from '@mui/material/Grid';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import TextField from '@mui/material/TextField';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Alert from '@mui/material/Alert';
-import CircularProgress from '@mui/material/CircularProgress';
-import Tooltip from '@mui/material/Tooltip';
-import Divider from '@mui/material/Divider';
-import Switch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Badge from '@mui/material/Badge';
-import Paper from '@mui/material/Paper';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Stepper from '@mui/material/Stepper';
-import Step from '@mui/material/Step';
-import StepLabel from '@mui/material/StepLabel';
-import StepContent from '@mui/material/StepContent';
-import Fab from '@mui/material/Fab';
 import {
-  PlayArrow as PlayIcon,
-  Stop as StopIcon,
-  Pause as PauseIcon,
-  Refresh as RefreshIcon,
-  Add as AddIcon,
-  Send as SendIcon,
-  CloudUpload as CloudIcon,
-  School as SchoolIcon,
-  Quiz as QuizIcon,
-  Terrain as TerrainIcon,
-  Code as CodeIcon,
-  Group as GroupIcon,
-  CheckCircle as CheckIcon,
-  Error as ErrorIcon,
-  Warning as WarningIcon,
-  Info as InfoIcon,
-  Settings as SettingsIcon,
-  SportsEsports as GameIcon,
-  Psychology as AIIcon,
-  Visibility as PreviewIcon,
-  Download as DownloadIcon,
-  Save as SaveIcon,
-  FiberManualRecord as RecordIcon
-} from '@mui/icons-material';
-import { useWebSocket } from '../../hooks/websocket';
+  Box,
+  Card,
+  Group,
+  Button,
+  Text,
+  Title,
+  Badge,
+  ActionIcon,
+  TextInput,
+  Select,
+  Alert,
+  Loader,
+  Tooltip,
+  Divider,
+  Switch,
+  Paper,
+  Stack,
+  Modal,
+  Stepper,
+  Progress,
+  Tabs,
+  ScrollArea,
+  Code,
+  SimpleGrid,
+  Indicator,
+  Notification
+} from '@mantine/core';
+import {
+  IconDeviceGamepad2 as GameIcon,
+  IconRobot as AIIcon,
+  IconUsers as GroupIcon,
+  IconCode as CodeIcon,
+  IconPlayerPlay as PlayIcon,
+  IconPlayerPause as PauseIcon,
+  IconPlayerStop as StopIcon,
+  IconRefresh as RefreshIcon,
+  IconSettings as SettingsIcon,
+  IconDownload as DownloadIcon,
+  IconUpload as UploadIcon,
+  IconCheck as CheckIcon,
+  IconX as CloseIcon,
+  IconAlertCircle as WarningIcon,
+  IconBulb as LightbulbIcon,
+  IconChevronDown as ExpandMoreIcon,
+  IconChevronUp as ExpandLessIcon,
+  IconWifi as WifiIcon,
+  IconWifiOff as WifiOffIcon,
+  IconCircle as FiberManualRecord
+} from '@tabler/icons-react';
+import { usePusher } from '../../hooks/usePusher';
 import { useAppDispatch } from '../../store';
 import { WebSocketMessageType, ContentGenerationRequest } from '../../types/websocket';
+
 interface RobloxControlPanelProps {
   className?: string;
 }
+
 interface PluginStatus {
   connected: boolean;
   version: string;
-  lastHeartbeat: Date | null;
+  lastHeartbeat: number;
+  studioVersion?: string;
   capabilities: string[];
 }
+
 interface ActiveSession {
   id: string;
-  name: string;
-  lessonId: string;
-  studentCount: number;
-  status: 'waiting' | 'active' | 'paused' | 'completed';
-  startTime: Date;
-  duration: number;
+  userId: string;
+  userName: string;
+  worldId: string;
+  worldName: string;
+  startTime: number;
+  status: 'active' | 'paused' | 'completed';
+  progress: {
+    currentObjective: string;
+    completedObjectives: number;
+    totalObjectives: number;
+    xpEarned: number;
+  };
 }
-interface ContentPreset {
+
+interface ContentGenerationTask {
   id: string;
-  name: string;
+  type: 'lesson' | 'quiz' | 'environment' | 'script';
+  status: 'pending' | 'generating' | 'completed' | 'failed';
+  progress: number;
   description: string;
-  subject: string;
-  gradeLevel: number;
-  environment: string;
-  includeQuiz: boolean;
+  result?: any;
+  error?: string;
+  createdAt: number;
 }
-const CONTENT_PRESETS: ContentPreset[] = [
+
+// Sample data for demonstration
+const sampleSessions: ActiveSession[] = [
   {
-    id: 'math-fractions',
-    name: 'Fractions Adventure',
-    description: 'Interactive fraction learning in a pizza restaurant',
-    subject: 'Mathematics',
-    gradeLevel: 5,
-    environment: 'restaurant',
-    includeQuiz: true
+    id: 'session_1',
+    userId: 'user_123',
+    userName: 'Alice Johnson',
+    worldId: 'world_math_001',
+    worldName: 'Algebra Adventure',
+    startTime: Date.now() - 1200000, // 20 minutes ago
+    status: 'active',
+    progress: {
+      currentObjective: 'Solve linear equations',
+      completedObjectives: 3,
+      totalObjectives: 8,
+      xpEarned: 150
+    }
   },
   {
-    id: 'science-solar',
-    name: 'Solar System Explorer',
-    description: 'Journey through space to learn about planets',
-    subject: 'Science',
-    gradeLevel: 6,
-    environment: 'space_station',
-    includeQuiz: true
-  },
-  {
-    id: 'history-ancient',
-    name: 'Ancient Civilizations',
-    description: 'Time travel to explore ancient Egypt and Rome',
-    subject: 'History',
-    gradeLevel: 7,
-    environment: 'historical',
-    includeQuiz: true
-  },
-  {
-    id: 'english-grammar',
-    name: 'Grammar Quest',
-    description: 'Adventure game for learning grammar rules',
-    subject: 'English',
-    gradeLevel: 4,
-    environment: 'fantasy_world',
-    includeQuiz: true
+    id: 'session_2',
+    userId: 'user_456',
+    userName: 'Bob Smith',
+    worldId: 'world_science_002',
+    worldName: 'Chemistry Lab',
+    startTime: Date.now() - 600000, // 10 minutes ago
+    status: 'active',
+    progress: {
+      currentObjective: 'Mix chemical compounds',
+      completedObjectives: 2,
+      totalObjectives: 5,
+      xpEarned: 100
+    }
   }
 ];
-const ENVIRONMENT_TYPES = [
-  'classroom',
-  'outdoor',
-  'laboratory',
-  'space_station',
-  'underwater',
-  'fantasy_world',
-  'historical',
-  'urban',
-  'restaurant',
-  'museum'
-];
+
 export const RobloxControlPanel: React.FunctionComponent<RobloxControlPanelProps> = ({ className }) => {
   const dispatch = useAppDispatch();
-  const { sendMessage, isConnected, state: wsState } = useWebSocket();
+  const { send: sendMessage, isConnected, state: wsState } = usePusher();
+
   // Local state
   const [pluginStatus, setPluginStatus] = useState<PluginStatus>({
     connected: false,
-    version: 'Unknown',
-    lastHeartbeat: null,
-    capabilities: []
+    version: '1.0.0',
+    lastHeartbeat: 0,
+    capabilities: ['content-generation', 'world-sync', 'student-tracking']
   });
-  const [activeSessions, setActiveSessions] = useState<ActiveSession[]>([]);
-  const [selectedPreset, setSelectedPreset] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generationProgress, setGenerationProgress] = useState(0);
-  const [showContentWizard, setShowContentWizard] = useState(false);
-  const [activeStep, setActiveStep] = useState(0);
+
+  const [activeSessions, setActiveSessions] = useState<ActiveSession[]>(sampleSessions);
+  const [contentTasks, setContentTasks] = useState<ContentGenerationTask[]>([]);
+  const [selectedTab, setSelectedTab] = useState<string>('overview');
+
   // Content generation form state
-  const [contentForm, setContentForm] = useState<Partial<ContentGenerationRequest> & { duration?: number; maxStudents?: number; difficulty?: string }>({
-    requestId: '',
+  const [contentForm, setContentForm] = useState({
+    type: 'lesson' as 'lesson' | 'quiz' | 'environment' | 'script',
     subject: 'Mathematics',
-    gradeLevel: 5,
-    learningObjectives: [],
-    environmentType: 'classroom',
-    includeQuiz: true,
-    difficulty: 'medium',
-    duration: 30,
-    maxStudents: 30
+    grade: 8,
+    topic: '',
+    difficulty: 'medium' as 'easy' | 'medium' | 'hard',
+    description: ''
   });
-  const [objectivesInput, setObjectivesInput] = useState('');
-  // Check plugin connection status
-  useEffect(() => {
-    const checkPluginStatus = async () => {
-      if (isConnected) {
-        try {
-          const response = await sendMessage(WebSocketMessageType.PLUGIN_STATUS_REQUEST);
-          if (response) {
-            setPluginStatus({
-              connected: true,
-              version: response.version || 'Unknown',
-              lastHeartbeat: new Date(),
-              capabilities: response.capabilities || []
-            });
-          }
+
+  const [showGenerationDialog, setShowGenerationDialog] = useState(false);
+  const [generationStep, setGenerationStep] = useState(0);
+
+  // Plugin management
+  const connectToPlugin = async () => {
+    try {
+      await sendMessage(WebSocketMessageType.ROBLOX_UPDATE, {
+        action: 'connect_plugin',
+        timestamp: Date.now()
+      }, { channel: 'roblox-updates' });
+
+      setPluginStatus(prev => ({ ...prev, connected: true, lastHeartbeat: Date.now() }));
         } catch (error) {
-          console.error('Failed to check plugin status:', error);
-          setPluginStatus(prev => ({ ...prev, connected: false }));
-        }
-      }
-    };
-    checkPluginStatus();
-    const interval = setInterval(checkPluginStatus, 30000); // Check every 30 seconds
-    return () => clearInterval(interval);
-  }, [isConnected, sendMessage]);
-  // Fetch active sessions
-  useEffect(() => {
-    const fetchSessions = async () => {
-      if (isConnected) {
-        try {
-          const response = await sendMessage(WebSocketMessageType.GET_ACTIVE_SESSIONS);
-          if (response && response.sessions) {
-            setActiveSessions(response.sessions);
-          }
-        } catch (error) {
-          console.error('Failed to fetch sessions:', error);
-        }
-      }
-    };
-    fetchSessions();
-    const interval = setInterval(fetchSessions, 10000); // Update every 10 seconds
-    return () => clearInterval(interval);
-  }, [isConnected, sendMessage]);
-  // Handle preset selection
-  const handlePresetSelect = (presetId: string) => {
-    const preset = CONTENT_PRESETS.find(p => p.id === presetId);
-    if (preset) {
-      setContentForm(prev => ({
-        ...prev,
-        subject: preset.subject,
-        gradeLevel: preset.gradeLevel,
-        environmentType: preset.environment,
-        includeQuiz: preset.includeQuiz
-      }));
-      setSelectedPreset(presetId);
+      console.error('Failed to connect to Roblox Studio plugin:', error);
     }
   };
-  // Handle content generation
-  const handleGenerateContent = async () => {
-    setIsGenerating(true);
-    setGenerationProgress(0);
+
+  const disconnectFromPlugin = async () => {
     try {
-      // Parse learning objectives
-      const objectives = objectivesInput
-        .split(',')
-        .map(obj => obj.trim())
-        .filter(obj => obj.length > 0);
-      const request: ContentGenerationRequest = {
-        subject: contentForm.subject || 'Mathematics',
-        gradeLevel: contentForm.gradeLevel || 5,
-        learningObjectives: objectives,
-        environmentType: contentForm.environmentType || 'classroom',
-        includeQuiz: contentForm.includeQuiz,
-        difficultyLevel: (contentForm.difficulty as any) || 'medium',
-        requestId: `req_${Date.now()}`,
-        userId: (typeof window !== 'undefined' && localStorage.getItem('current_user_id')) || 'unknown'
-      };
-      // Send generation request
-      await sendMessage(WebSocketMessageType.CONTENT_GENERATION_REQUEST, request);
-      // Simulate progress (real progress would come from WebSocket events)
-      const progressInterval = setInterval(() => {
-        setGenerationProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(progressInterval);
-            setIsGenerating(false);
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 1000);
+      await sendMessage(WebSocketMessageType.ROBLOX_UPDATE, {
+        action: 'disconnect_plugin',
+        timestamp: Date.now()
+      }, { channel: 'roblox-updates' });
+
+      setPluginStatus(prev => ({ ...prev, connected: false }));
     } catch (error) {
-      console.error('Failed to generate content:', error);
-      setIsGenerating(false);
+      console.error('Failed to disconnect from Roblox Studio plugin:', error);
     }
   };
-  // Handle session control
-  const handleSessionControl = async (sessionId: string, action: 'start' | 'pause' | 'stop') => {
+
+  // Content generation
+  const generateContent = async () => {
+    if (!contentForm.topic.trim()) {
+      alert('Please enter a topic for content generation');
+      return;
+    }
+
+    const task: ContentGenerationTask = {
+      id: `task_${Date.now()}`,
+      type: contentForm.type,
+      status: 'pending',
+      progress: 0,
+      description: `${contentForm.type} - ${contentForm.topic}`,
+      createdAt: Date.now()
+    };
+
+    setContentTasks(prev => [task, ...prev]);
+    setShowGenerationDialog(false);
+
+    const request: ContentGenerationRequest = {
+      type: contentForm.type,
+      subject: contentForm.subject,
+      grade: contentForm.grade,
+      topic: contentForm.topic,
+      difficulty: contentForm.difficulty,
+      customInstructions: contentForm.description
+    };
+
     try {
-      await sendMessage(WebSocketMessageType.SESSION_CONTROL, {
-        sessionId,
-        action
+      await sendMessage(WebSocketMessageType.CONTENT_UPDATE, request, {
+        channel: 'content-generation'
       });
-      // Update local state
-      setActiveSessions(prev => prev.map(session => {
-        if (session.id === sessionId) {
-          switch (action) {
-            case 'start':
-              return { ...session, status: 'active' };
-            case 'pause':
-              return { ...session, status: 'paused' };
-            case 'stop':
-              return { ...session, status: 'completed' };
-            default:
-              return session;
-          }
-        }
-        return session;
-      }));
     } catch (error) {
-      console.error(`Failed to ${action} session:`, error);
+      console.error('Failed to send content generation request:', error);
+      setContentTasks(prev => prev.map(t =>
+        t.id === task.id ? { ...t, status: 'failed', error: 'Failed to send request' } : t
+      ));
     }
   };
-  // Wizard steps
-  const wizardSteps = [
-    'Select Subject & Grade',
-    'Define Learning Objectives',
-    'Choose Environment',
-    'Configure Settings',
-    'Review & Generate'
-  ];
-  const handleNext = () => {
-    setActiveStep(prev => prev + 1);
-  };
-  const handleBack = () => {
-    setActiveStep(prev => prev - 1);
-  };
-  const handleWizardComplete = () => {
-    handleGenerateContent();
-    setShowContentWizard(false);
-    setActiveStep(0);
-  };
-  // Get connection status color
-  const getStatusColor = (connected: boolean) => {
-    return connected ? 'success' : 'error';
-  };
+
   return (
-    <Box className={className}>
-      <Grid container spacing={3}>
-        {/* Plugin Status Card */}
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardHeader
-              title="Roblox Studio Plugin"
-              avatar={<GameIcon color="primary" />}
-              action={
-                <Chip
-                  label={pluginStatus.connected ? 'Connected' : 'Disconnected'}
-                  color={getStatusColor(pluginStatus.connected)}
-                  icon={pluginStatus.connected ? <CheckIcon /> : <ErrorIcon />}
-                  size="small"
-                />
-              }
-            />
-            <CardContent>
-              <List dense>
-                <ListItem>
-                  <ListItemIcon>
-                    <InfoIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="Version" 
-                    secondary={pluginStatus.version}
-                  />
-                </ListItem>
-                <ListItem>
-                  <ListItemIcon>
-                    <RecordIcon 
-                      fontSize="small" 
-                      color={pluginStatus.connected ? 'success' : 'error'}
-                    />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="Status" 
-                    secondary={pluginStatus.connected ? 'Online' : 'Offline'}
-                  />
-                </ListItem>
-                <ListItem>
-                  <ListItemIcon>
-                    <RefreshIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="Last Heartbeat" 
-                    secondary={
-                      pluginStatus.lastHeartbeat 
-                        ? new Date(pluginStatus.lastHeartbeat).toLocaleTimeString()
-                        : 'Never'
-                    }
-                  />
-                </ListItem>
-              </List>
-              <Box mt={2}>
+    <Box className={className} p="xl">
+      <Stack gap="lg">
+        {/* Header */}
+        <Group justify="space-between" align="center">
+          <Title order={2}>Roblox Control Panel</Title>
+          <Group gap="sm">
+            <Badge
+              color={isConnected ? 'green' : 'red'}
+              variant="filled"
+              leftSection={isConnected ? <WifiIcon size={14} /> : <WifiOffIcon size={14} />}
+            >
+              {isConnected ? 'Connected' : 'Disconnected'}
+            </Badge>
+            <Badge
+              color={pluginStatus.connected ? 'blue' : 'gray'}
+              variant="outline"
+            >
+              Plugin: {pluginStatus.connected ? 'Connected' : 'Disconnected'}
+            </Badge>
+          </Group>
+        </Group>
+
+        {/* Connection Alert */}
+        {!isConnected && (
+          <Alert color="orange" icon={<WarningIcon size={16} />} title="Connection Required">
+            <Text size="sm">
+              Pusher connection is required for real-time Roblox integration.
+              Please check your connection and try again.
+            </Text>
+          </Alert>
+        )}
+
+        <Tabs value={selectedTab} onChange={setSelectedTab}>
+          <Tabs.List>
+            <Tabs.Tab value="overview">Overview</Tabs.Tab>
+            <Tabs.Tab value="plugin">Studio Plugin</Tabs.Tab>
+            <Tabs.Tab value="content">Content Generation</Tabs.Tab>
+            <Tabs.Tab value="sessions">Active Sessions</Tabs.Tab>
+          </Tabs.List>
+
+          {/* Overview Tab */}
+          <Tabs.Panel value="overview">
+            <Stack gap="md" mt="md">
+              <SimpleGrid cols={3} spacing="md">
+                <Card withBorder>
+                  <Stack gap="sm" align="center">
+                    <GameIcon size={32} color="var(--mantine-color-blue-6)" />
+                    <Text fw={600}>Studio Plugin</Text>
+                    <Badge color={pluginStatus.connected ? 'green' : 'red'}>
+                      {pluginStatus.connected ? 'Connected' : 'Disconnected'}
+                    </Badge>
+                    <Text size="xs" c="dimmed">v{pluginStatus.version}</Text>
+                  </Stack>
+                </Card>
+
+                <Card withBorder>
+                  <Stack gap="sm" align="center">
+                    <GroupIcon size={32} color="var(--mantine-color-green-6)" />
+                    <Text fw={600}>Active Sessions</Text>
+                    <Text size="xl" fw={700}>{activeSessions.length}</Text>
+                    <Text size="xs" c="dimmed">Students online</Text>
+                  </Stack>
+                </Card>
+
+                <Card withBorder>
+                  <Stack gap="sm" align="center">
+                    <AIIcon size={32} color="var(--mantine-color-purple-6)" />
+                    <Text fw={600}>Content Tasks</Text>
+                    <Text size="xl" fw={700}>{contentTasks.length}</Text>
+                    <Text size="xs" c="dimmed">Generation queue</Text>
+                  </Stack>
+                </Card>
+              </SimpleGrid>
+            </Stack>
+          </Tabs.Panel>
+
+          {/* Plugin Tab */}
+          <Tabs.Panel value="plugin">
+            <Stack gap="md" mt="md">
+              <Card withBorder>
+                <Card.Section p="md" withBorder>
+                  <Group justify="space-between">
+                    <Group gap="sm">
+                      <GameIcon size={24} color="var(--mantine-color-blue-6)" />
+                      <Title order={4}>Roblox Studio Plugin</Title>
+                    </Group>
+                    <Badge color={pluginStatus.connected ? 'green' : 'red'}>
+                      {pluginStatus.connected ? 'Connected' : 'Disconnected'}
+                    </Badge>
+                  </Group>
+                </Card.Section>
+
+                <Stack gap="md" p="md">
+                  <Group justify="space-between">
+                    <Text>Plugin Version:</Text>
+                    <Code>{pluginStatus.version}</Code>
+                  </Group>
+
+                  {pluginStatus.connected && (
+                    <Group justify="space-between">
+                      <Text>Last Heartbeat:</Text>
+                      <Text size="sm" c="dimmed">
+                        {new Date(pluginStatus.lastHeartbeat).toLocaleTimeString()}
+                      </Text>
+                    </Group>
+                  )}
+
+                  <Divider />
+
+                  <Group>
+                    {pluginStatus.connected ? (
+                      <Button
+                        color="red"
+                        variant="outline"
+                        leftSection={<CloseIcon size={16} />}
+                        onClick={disconnectFromPlugin}
+                      >
+                        Disconnect Plugin
+                      </Button>
+                    ) : (
+                      <Button
+                        color="blue"
+                        leftSection={<CheckIcon size={16} />}
+                        onClick={connectToPlugin}
+                        disabled={!isConnected}
+                      >
+                        Connect Plugin
+                      </Button>
+                    )}
+
+                    <Button
+                      variant="outline"
+                      leftSection={<RefreshIcon size={16} />}
+                      onClick={() => {/* Refresh plugin status */}}
+                    >
+                      Refresh Status
+                    </Button>
+                  </Group>
+
+                  {pluginStatus.capabilities.length > 0 && (
+                    <>
+                      <Divider />
+                      <Stack gap="xs">
+                        <Text fw={500}>Plugin Capabilities:</Text>
+                        <Group gap="xs">
+                          {pluginStatus.capabilities.map((capability) => (
+                            <Badge key={capability} variant="outline" size="sm">
+                              {capability}
+                            </Badge>
+                          ))}
+                        </Group>
+                      </Stack>
+                    </>
+                  )}
+                </Stack>
+              </Card>
+            </Stack>
+          </Tabs.Panel>
+
+          {/* Content Generation Tab */}
+          <Tabs.Panel value="content">
+            <Stack gap="md" mt="md">
+              <Group justify="space-between">
+                <Title order={4}>Content Generation</Title>
                 <Button
-                  fullWidth
-                  variant="outlined"
-                  startIcon={<RefreshIcon />}
+                  leftSection={<AIIcon size={16} />}
+                  onClick={() => setShowGenerationDialog(true)}
                   disabled={!isConnected}
                 >
-                  Reconnect Plugin
+                  Generate Content
                 </Button>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        {/* Quick Actions Card */}
-        <Grid item xs={12} md={8}>
-          <Card>
-            <CardHeader
-              title="Quick Actions"
-              avatar={<AIIcon color="primary" />}
-            />
-            <CardContent>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Content Preset</InputLabel>
-                    <Select
-                      value={selectedPreset}
-                      onChange={(e) => handlePresetSelect(e.target.value)}
-                      label="Content Preset"
-                    >
-                      <MenuItem value="">
-                        <em>Custom</em>
-                      </MenuItem>
-                      {CONTENT_PRESETS.map(preset => (
-                        <MenuItem key={preset.id} value={preset.id}>
-                          {preset.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    color="primary"
-                    startIcon={isGenerating ? <CircularProgress size={20} /> : <CloudIcon />}
-                    onClick={(e: React.MouseEvent) => () => setShowContentWizard(true)}
-                    disabled={!isConnected || !pluginStatus.connected || isGenerating}
-                  >
-                    {isGenerating ? 'Generating...' : 'Generate Content'}
-                  </Button>
-                </Grid>
-                <Grid item xs={12}>
-                  {selectedPreset && (
-                    <Alert severity="info" icon={<InfoIcon />}>
-                      {CONTENT_PRESETS.find(p => p.id === selectedPreset)?.description}
-                    </Alert>
+              </Group>
+
+              {/* Active Tasks */}
+              <Card withBorder>
+                <Card.Section p="md" withBorder>
+                  <Title order={5}>Generation Queue</Title>
+                </Card.Section>
+
+                <Stack gap="sm" p="md">
+                  {contentTasks.length === 0 ? (
+                    <Text c="dimmed" ta="center" py="xl">
+                      No content generation tasks
+                    </Text>
+                  ) : (
+                    contentTasks.map((task) => (
+                      <Paper key={task.id} p="md" withBorder>
+                        <Group justify="space-between" align="flex-start">
+                          <Stack gap="xs" style={{ flex: 1 }}>
+                            <Group gap="sm">
+                              <Badge variant="outline">{task.type}</Badge>
+                              <Badge
+                                color={
+                                  task.status === 'completed' ? 'green' :
+                                  task.status === 'failed' ? 'red' :
+                                  task.status === 'generating' ? 'blue' : 'gray'
+                                }
+                              >
+                                {task.status}
+                              </Badge>
+                            </Group>
+                            <Text size="sm" fw={500}>{task.description}</Text>
+                            {task.status === 'generating' && (
+                              <Progress value={task.progress} size="sm" />
+                            )}
+                            {task.error && (
+                              <Text size="xs" c="red">{task.error}</Text>
+                            )}
+                          </Stack>
+                          <Text size="xs" c="dimmed">
+                            {new Date(task.createdAt).toLocaleTimeString()}
+                          </Text>
+                        </Group>
+                      </Paper>
+                    ))
                   )}
-                </Grid>
-                {isGenerating && (
-                  <Grid item xs={12}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Box sx={{ width: '100%', mr: 1 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          Generating content... {generationProgress}%
-                        </Typography>
-                        <Box sx={{ width: '100%', mt: 1 }}>
-                          <CircularProgress 
-                            variant="determinate" 
-                            value={generationProgress}
-                            size={30}
-                          />
-                        </Box>
-                      </Box>
-                    </Box>
-                  </Grid>
-                )}
-              </Grid>
-            </CardContent>
+                </Stack>
           </Card>
-        </Grid>
-        {/* Active Sessions Card */}
-        <Grid item xs={12}>
-          <Card>
-            <CardHeader
-              title="Active Sessions"
-              avatar={<GroupIcon color="primary" />}
-              action={
-                <Badge badgeContent={activeSessions.length} color="primary">
-                  <IconButton size="small">
-                    <RefreshIcon />
-                  </IconButton>
-                </Badge>
-              }
-            />
-            <CardContent>
+            </Stack>
+          </Tabs.Panel>
+
+          {/* Sessions Tab */}
+          <Tabs.Panel value="sessions">
+            <Stack gap="md" mt="md">
+              <Group justify="space-between">
+                <Title order={4}>Active Sessions</Title>
+                <Badge variant="outline">{activeSessions.length} active</Badge>
+              </Group>
+
+              <Card withBorder>
+                <Stack gap="sm" p="md">
               {activeSessions.length === 0 ? (
-                <Alert severity="info">
-                  No active sessions. Generate content to start a new session.
-                </Alert>
-              ) : (
-                <List>
-                  {activeSessions.map(session => (
-                    <ListItem key={session.id}>
-                      <ListItemIcon>
-                        <SchoolIcon color={session.status === 'active' ? 'success' : 'action'} />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={session.name}
-                        secondary={
-                          <Box>
-                            <Chip 
-                              label={session.status} 
-                              size="small" 
-                              color={session.status === 'active' ? 'success' : 'default'}
-                              sx={{ mr: 1 }}
+                    <Text c="dimmed" ta="center" py="xl">
+                      No active sessions
+                    </Text>
+                  ) : (
+                    activeSessions.map((session) => (
+                      <Paper key={session.id} p="md" withBorder>
+                        <Group justify="space-between" align="flex-start">
+                          <Stack gap="xs" style={{ flex: 1 }}>
+                            <Group gap="sm">
+                              <Text fw={500}>{session.userName}</Text>
+                              <Badge color="blue" size="sm">{session.worldName}</Badge>
+                              <Badge
+                                color={session.status === 'active' ? 'green' : 'orange'}
+                                size="sm"
+                              >
+                                {session.status}
+                              </Badge>
+                            </Group>
+
+                            <Text size="sm" c="dimmed">
+                              {session.progress.currentObjective}
+                            </Text>
+
+                            <Progress
+                              value={(session.progress.completedObjectives / session.progress.totalObjectives) * 100}
+                              size="sm"
+                              label={`${session.progress.completedObjectives}/${session.progress.totalObjectives} objectives`}
                             />
-                            <Typography variant="caption" component="span">
-                              {session.studentCount} students • Started {new Date(session.startTime).toLocaleTimeString()}
-                            </Typography>
-                          </Box>
-                        }
-                      />
-                      <ListItemSecondaryAction>
-                        {session.status === 'active' ? (
-                          <>
-                            <IconButton 
-                              edge="end" 
-                              onClick={(e: React.MouseEvent) => () => handleSessionControl(session.id, 'pause')}
-                            >
-                              <PauseIcon />
-                            </IconButton>
-                            <IconButton 
-                              edge="end" 
-                              onClick={(e: React.MouseEvent) => () => handleSessionControl(session.id, 'stop')}
-                            >
-                              <StopIcon />
-                            </IconButton>
-                          </>
-                        ) : session.status === 'paused' ? (
-                          <IconButton 
-                            edge="end" 
-                            onClick={(e: React.MouseEvent) => () => handleSessionControl(session.id, 'start')}
-                          >
-                            <PlayIcon />
-                          </IconButton>
-                        ) : null}
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                  ))}
-                </List>
-              )}
-            </CardContent>
+
+                            <Group gap="md">
+                              <Text size="xs" c="dimmed">
+                                XP Earned: {session.progress.xpEarned}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                Started: {new Date(session.startTime).toLocaleTimeString()}
+                              </Text>
+                            </Group>
+                          </Stack>
+
+                          <Group gap="xs">
+                            <ActionIcon variant="outline" size="sm">
+                              <PauseIcon size={14} />
+                            </ActionIcon>
+                            <ActionIcon variant="outline" size="sm" color="red">
+                              <StopIcon size={14} />
+                            </ActionIcon>
+                          </Group>
+                        </Group>
+                      </Paper>
+                    ))
+                  )}
+                </Stack>
           </Card>
-        </Grid>
-        {/* Statistics Cards */}
-        <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Typography variant="h4" color="primary">
-              {activeSessions.reduce((sum, s) => sum + s.studentCount, 0)}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Active Students
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Typography variant="h4" color="secondary">
-              {activeSessions.length}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Active Sessions
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Typography variant="h4" color="success.main">
-              12
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Content Generated Today
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Typography variant="h4" color="info.main">
-              85%
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Avg. Completion Rate
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-      {/* Content Generation Wizard Dialog */}
-      <Dialog 
-        open={showContentWizard} 
-        onClose={() => setShowContentWizard(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          Generate Educational Content
-        </DialogTitle>
-        <DialogContent>
-          <Stepper activeStep={activeStep} orientation="vertical">
-            {wizardSteps.map((label, index) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-                <StepContent>
-                  {index === 0 && (
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
+            </Stack>
+          </Tabs.Panel>
+        </Tabs>
+
+        {/* Content Generation Dialog */}
+        <Modal
+          opened={showGenerationDialog}
+          onClose={() => setShowGenerationDialog(false)}
+          title="Generate Educational Content"
+          size="lg"
+        >
+          <Stack gap="md">
+            <Stepper active={generationStep} onStepClick={setGenerationStep}>
+              <Stepper.Step label="Content Type" description="Choose what to generate">
+                <Stack gap="md" mt="md">
+                  <Select
+                    label="Content Type"
+                    value={contentForm.type}
+                    onChange={(value) => value && setContentForm(prev => ({ ...prev, type: value as any }))}
+                    data={[
+                      { value: 'lesson', label: 'Interactive Lesson' },
+                      { value: 'quiz', label: 'Quiz/Assessment' },
+                      { value: 'environment', label: 'Virtual Environment' },
+                      { value: 'script', label: 'Lua Script' }
+                    ]}
+                  />
+
+                  <Group grow>
+                    <Select
                           label="Subject"
                           value={contentForm.subject}
-                          onChange={(e) => setContentForm(prev => ({ ...prev, subject: e.target.value }))}
-                          margin="normal"
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Grade Level"
-                          type="number"
-                          value={contentForm.gradeLevel}
-                          onChange={(e) => setContentForm(prev => ({ ...prev, gradeLevel: parseInt(e.target.value) }))}
-                          margin="normal"
-                          InputProps={{ inputProps: { min: 1, max: 12 } }}
-                        />
-                      </Grid>
-                    </Grid>
-                  )}
-                  {index === 1 && (
-                    <TextField
-                      fullWidth
-                      multiline
-                      rows={4}
-                      label="Learning Objectives (comma separated)"
-                      value={objectivesInput}
-                      onChange={(e) => setObjectivesInput(e.target.value)}
-                      placeholder="e.g., Understanding fractions, Adding fractions, Converting to decimals"
-                      margin="normal"
+                      onChange={(value) => value && setContentForm(prev => ({ ...prev, subject: value }))}
+                      data={[
+                        'Mathematics',
+                        'Science',
+                        'History',
+                        'English',
+                        'Computer Science'
+                      ]}
                     />
-                  )}
-                  {index === 2 && (
-                    <FormControl fullWidth margin="normal">
-                      <InputLabel>Environment Type</InputLabel>
+
+                    <Select
+                          label="Grade Level"
+                      value={contentForm.grade.toString()}
+                      onChange={(value) => value && setContentForm(prev => ({ ...prev, grade: parseInt(value) }))}
+                      data={Array.from({ length: 12 }, (_, i) => ({
+                        value: (i + 1).toString(),
+                        label: `Grade ${i + 1}`
+                      }))}
+                    />
+                  </Group>
+                </Stack>
+              </Stepper.Step>
+
+              <Stepper.Step label="Details" description="Specify content details">
+                <Stack gap="md" mt="md">
+                  <TextInput
+                    label="Topic"
+                    value={contentForm.topic}
+                    onChange={(e) => setContentForm(prev => ({ ...prev, topic: e.target.value }))}
+                    placeholder="e.g., Linear Equations, Photosynthesis, etc."
+                    required
+                  />
+
                       <Select
-                        value={contentForm.environmentType}
-                        onChange={(e) => setContentForm(prev => ({ ...prev, environmentType: e.target.value }))}
-                        label="Environment Type"
-                      >
-                        {ENVIRONMENT_TYPES.map(env => (
-                          <MenuItem key={env} value={env}>
-                            {env.replace('_', ' ').charAt(0).toUpperCase() + env.slice(1)}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  )}
-                  {index === 3 && (
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={contentForm.includeQuiz}
-                              onChange={(e) => setContentForm(prev => ({ ...prev, includeQuiz: e.target.checked }))}
-                            />
-                          }
-                          label="Include Quiz/Assessment"
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Session Duration (minutes)"
-                          type="number"
-                          value={contentForm.duration}
-                          onChange={(e) => setContentForm(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
-                          margin="normal"
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Max Students"
-                          type="number"
-                          value={contentForm.maxStudents}
-                          onChange={(e) => setContentForm(prev => ({ ...prev, maxStudents: parseInt(e.target.value) }))}
-                          margin="normal"
-                        />
-                      </Grid>
-                    </Grid>
-                  )}
-                  {index === 4 && (
-                    <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
-                      <Typography variant="h6" gutterBottom>Review Your Configuration</Typography>
-                      <Grid container spacing={1}>
-                        <Grid item xs={6}>
-                          <Typography variant="body2" color="text.secondary">Subject:</Typography>
-                        </Grid>
-                        <Grid item xs={6}>
-                          <Typography variant="body2">{contentForm.subject}</Typography>
-                        </Grid>
-                        <Grid item xs={6}>
-                          <Typography variant="body2" color="text.secondary">Grade Level:</Typography>
-                        </Grid>
-                        <Grid item xs={6}>
-                          <Typography variant="body2">{contentForm.gradeLevel}</Typography>
-                        </Grid>
-                        <Grid item xs={6}>
-                          <Typography variant="body2" color="text.secondary">Environment:</Typography>
-                        </Grid>
-                        <Grid item xs={6}>
-                          <Typography variant="body2">{contentForm.environmentType}</Typography>
-                        </Grid>
-                        <Grid item xs={6}>
-                          <Typography variant="body2" color="text.secondary">Include Quiz:</Typography>
-                        </Grid>
-                        <Grid item xs={6}>
-                          <Typography variant="body2">{contentForm.includeQuiz ? 'Yes' : 'No'}</Typography>
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Typography variant="body2" color="text.secondary">Learning Objectives:</Typography>
-                          <Typography variant="body2">{objectivesInput || 'None specified'}</Typography>
-                        </Grid>
-                      </Grid>
-                    </Paper>
-                  )}
-                  <Box sx={{ mb: 2, mt: 2 }}>
+                    label="Difficulty"
+                    value={contentForm.difficulty}
+                    onChange={(value) => value && setContentForm(prev => ({ ...prev, difficulty: value as any }))}
+                    data={[
+                      { value: 'easy', label: 'Easy' },
+                      { value: 'medium', label: 'Medium' },
+                      { value: 'hard', label: 'Hard' }
+                    ]}
+                  />
+
+                  <TextInput
+                    label="Custom Instructions"
+                    value={contentForm.description}
+                    onChange={(e) => setContentForm(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Any specific requirements or instructions..."
+                    multiline
+                    rows={3}
+                  />
+                </Stack>
+              </Stepper.Step>
+
+              <Stepper.Step label="Generate" description="Create the content">
+                <Stack gap="md" mt="md">
+                  <Alert color="blue" icon={<LightbulbIcon size={16} />}>
+                    <Text size="sm">
+                      Ready to generate {contentForm.type} content for {contentForm.topic}
+                      (Grade {contentForm.grade} {contentForm.subject})
+                    </Text>
+                  </Alert>
+
+                  <Group>
                     <Button
-                      variant="contained"
-                      onClick={(e: React.MouseEvent) => index === wizardSteps.length - 1 ? handleWizardComplete : handleNext}
-                      sx={{ mt: 1, mr: 1 }}
+                      leftSection={<AIIcon size={16} />}
+                      onClick={generateContent}
+                      disabled={!contentForm.topic.trim() || !isConnected}
                     >
-                      {index === wizardSteps.length - 1 ? 'Generate' : 'Continue'}
+                      Generate Content
                     </Button>
-                    <Button
-                      disabled={index === 0}
-                      onClick={(e: React.MouseEvent) => handleBack}
-                      sx={{ mt: 1, mr: 1 }}
-                    >
-                      Back
+                    <Button variant="outline" onClick={() => setShowGenerationDialog(false)}>
+                      Cancel
                     </Button>
-                  </Box>
-                </StepContent>
-              </Step>
-            ))}
+                  </Group>
+                </Stack>
+              </Stepper.Step>
           </Stepper>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={(e: React.MouseEvent) => () => setShowContentWizard(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
-      {/* Floating Action Button for Quick Generate */}
-      <Fab
-        color="primary"
-        aria-label="quick generate"
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16
-        }}
-        onClick={(e: React.MouseEvent) => () => setShowContentWizard(true)}
-        disabled={!isConnected || !pluginStatus.connected}
-      >
-        <AddIcon />
-      </Fab>
+          </Stack>
+        </Modal>
+      </Stack>
     </Box>
   );
 };

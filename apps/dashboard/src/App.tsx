@@ -21,6 +21,7 @@ import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import ErrorBoundary from "./components/ErrorBoundary";
 // WebSocket removed - using Pusher for real-time features
 import { pusherService } from "./services/pusher";
+import { PusherProvider } from "./contexts/PusherContext";
 import { NetworkError } from "./components/ErrorComponents";
 import { SessionMonitor, NetworkStatus } from "./components/auth/AuthRecovery";
 // Import new Three.js infrastructure
@@ -29,8 +30,6 @@ import { Scene3D } from "./components/three/Scene3D";
 import { FloatingCharactersV2 } from "./components/roblox/FloatingCharactersV2";
 import { Canvas2D } from "./components/three/fallbacks/Canvas2D";
 import { PerformanceMonitor } from "./components/common/PerformanceMonitor";
-// Import WebSocketProvider for context
-import { WebSocketProvider } from "./contexts/WebSocketContext";
 // Import Migration Control Panel for development
 import { MigrationControlPanel } from "./components/migration/MigrationWrapper";
 
@@ -157,7 +156,12 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <WebSocketProvider autoConnect={true} debug={process.env.NODE_ENV === 'development'}>
+      <PusherProvider
+        autoConnect={true}
+        enablePresence={true}
+        debug={process.env.NODE_ENV === 'development'}
+        onConnectionChange={(state) => logger.debug('Pusher connection state:', state)}
+      >
         {/* Modern 3D Background with fallback support */}
         {!isRobloxPage && (
           <ThreeProvider fallback={<Canvas2D particleCount={30} animate={true} />}>
@@ -206,7 +210,7 @@ export default function App() {
           />
         )}
         <MigrationControlPanel />
-      </WebSocketProvider>
+      </PusherProvider>
     </ErrorBoundary>
   );
 }

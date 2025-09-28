@@ -10,32 +10,31 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Modal,
   Button,
-  TextField,
-  FormControl,
-  InputLabel,
+  TextInput,
   Select,
-  MenuItem,
   Box,
-  Typography,
+  Text,
   Alert,
-  LinearProgress,
-  Chip,
-  Grid,
+  Progress,
+  Badge,
+  SimpleGrid,
   Card,
-  CardContent,
-  CardHeader,
-} from '@mui/material';
-import Collapse from '@mui/material/Collapse';
+  Collapse,
+  Textarea,
+  Stack,
+  Group,
+  Flex,
+  Title,
+  NumberInput,
+} from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import {
-  ExpandMore as ExpandMoreIcon,
-  PlayArrow as PlayIcon,
-  Close as CloseIcon,
-} from '@mui/icons-material';
+  IconChevronDown,
+  IconPlayerPlay,
+  IconX,
+} from '@tabler/icons-react';
 
 interface AgentStatus {
   agent_id: string;
@@ -177,7 +176,7 @@ export const AgentTaskDialog = ({
   const [executing, setExecuting] = useState(false);
   const [result, setResult] = useState<TaskResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(false);
+  const [showResult, { toggle: toggleShowResult }] = useDisclosure(false);
 
   // Get available task types for the agent
   const availableTaskTypes = agent ? TASK_CONFIGURATIONS[agent.agent_type] || {} : {};
@@ -269,9 +268,8 @@ export const AgentTaskDialog = ({
     switch (field.type) {
       case 'text':
         return (
-          <TextField
+          <TextInput
             key={field.name}
-            fullWidth
             label={field.label}
             value={value}
             onChange={(e) => handleFieldChange(field.name, e.target.value)}
@@ -282,49 +280,44 @@ export const AgentTaskDialog = ({
 
       case 'number':
         return (
-          <TextField
+          <NumberInput
             key={field.name}
-            fullWidth
-            type="number"
             label={field.label}
             value={value}
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            onChange={(val) => handleFieldChange(field.name, val)}
             required={field.required}
-            inputProps={{ min: field.min, max: field.max }}
+            min={field.min}
+            max={field.max}
           />
         );
 
       case 'textarea':
         return (
-          <TextField
+          <Textarea
             key={field.name}
-            fullWidth
-            multiline
-            rows={field.rows || 4}
             label={field.label}
             value={value}
             onChange={(e) => handleFieldChange(field.name, e.target.value)}
             required={field.required}
             placeholder={field.placeholder}
+            minRows={field.rows || 4}
+            autosize
           />
         );
 
       case 'select':
         return (
-          <FormControl key={field.name} fullWidth required={field.required}>
-            <InputLabel>{field.label}</InputLabel>
-            <Select
-              value={value}
-              onChange={(e) => handleFieldChange(field.name, e.target.value)}
-              label={field.label}
-            >
-              {field.options?.map((option: any) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Select
+            key={field.name}
+            label={field.label}
+            value={value}
+            onChange={(val) => handleFieldChange(field.name, val)}
+            required={field.required}
+            data={field.options?.map((option: any) => ({
+              value: option.value,
+              label: option.label
+            })) || []}
+          />
         );
 
       default:
@@ -337,148 +330,145 @@ export const AgentTaskDialog = ({
   }
 
   return (
-    <Dialog
-      open={open}
+    <Modal
+      opened={open}
       onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: { minHeight: '60vh' }
+      size="lg"
+      title={
+        <Flex justify="space-between" align="center" w="100%">
+          <Box>
+            <Title order={4}>
+              Execute Task on {agent.agent_type.replace(/_/g, ' ')}
+            </Title>
+            <Text size="sm" c="dimmed">
+              Agent ID: {agent.agent_id}
+            </Text>
+          </Box>
+          <Badge
+            color={agent.status === 'idle' ? 'green' : 'gray'}
+            size="sm"
+          >
+            {agent.status.toUpperCase()}
+          </Badge>
+        </Flex>
+      }
+      styles={{
+        content: { minHeight: '60vh' },
+        body: { padding: 'var(--mantine-spacing-md)' }
       }}
     >
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box>
-          <Typography variant="h6">
-            Execute Task on {agent.agent_type.replace(/_/g, ' ')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Agent ID: {agent.agent_id}
-          </Typography>
-        </Box>
-        <Chip
-          label={agent.status.toUpperCase()}
-          color={agent.status === 'idle' ? 'success' : 'default'}
-          size="small"
-        />
-      </DialogTitle>
+      {Object.keys(availableTaskTypes).length === 0 ? (
+        <Alert color="yellow">
+          No task types available for this agent type.
+        </Alert>
+      ) : (
+        <Stack spacing="md">
+          {/* Task Type Selection */}
+          <Select
+            label="Task Type"
+            value={taskType}
+            onChange={(value) => setTaskType(value || '')}
+            data={Object.entries(availableTaskTypes).map(([key, config]: [string, any]) => ({
+              value: key,
+              label: config.label
+            }))}
+          />
 
-      <DialogContent>
-        {Object.keys(availableTaskTypes).length === 0 ? (
-          <Alert severity="warning">
-            No task types available for this agent type.
-          </Alert>
-        ) : (
-          <Box sx={{ mt: 1 }}>
-            {/* Task Type Selection */}
-            <FormControl fullWidth sx={{ mb: 3 }}>
-              <InputLabel>Task Type</InputLabel>
-              <Select
-                value={taskType}
-                onChange={(e) => setTaskType(e.target.value)}
-                label="Task Type"
-              >
-                {Object.entries(availableTaskTypes).map(([key, config]: [string, any]) => (
-                  <MenuItem key={key} value={key}>
-                    {config.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+          {/* Task Configuration Form */}
+          {currentTaskConfig && (
+            <SimpleGrid cols={1} spacing="md">
+              {currentTaskConfig.fields.map((field: any) => (
+                <div key={field.name}>
+                  {renderField(field)}
+                </div>
+              ))}
+            </SimpleGrid>
+          )}
 
-            {/* Task Configuration Form */}
-            {currentTaskConfig && (
-              <Grid container spacing={2}>
-                {currentTaskConfig.fields.map((field: any) => (
-                  <Grid item xs={12} key={field.name}>
-                    {renderField(field)}
-                  </Grid>
-                ))}
-              </Grid>
-            )}
+          {/* Execution Progress */}
+          {executing && (
+            <Box>
+              <Text size="sm" mb="xs">
+                Executing task...
+              </Text>
+              <Progress animated />
+            </Box>
+          )}
 
-            {/* Execution Progress */}
-            {executing && (
-              <Box sx={{ mt: 3 }}>
-                <Typography variant="body2" gutterBottom>
-                  Executing task...
-                </Typography>
-                <LinearProgress />
-              </Box>
-            )}
+          {/* Error Display */}
+          {error && (
+            <Alert color="red">
+              {error}
+            </Alert>
+          )}
 
-            {/* Error Display */}
-            {error && (
-              <Alert severity="error" sx={{ mt: 3 }}>
-                {error}
-              </Alert>
-            )}
+          {/* Result Display */}
+          {result && (
+            <Box>
+              {result.success ? (
+                <Alert color="green" mb="md">
+                  Task completed successfully in {result.execution_time?.toFixed(2)}s
+                </Alert>
+              ) : (
+                <Alert color="red" mb="md">
+                  Task failed: {result.error}
+                </Alert>
+              )}
 
-            {/* Result Display */}
-            {result && (
-              <Box sx={{ mt: 3 }}>
-                {result.success ? (
-                  <Alert severity="success" sx={{ mb: 2 }}>
-                    Task completed successfully in {result.execution_time?.toFixed(2)}s
-                  </Alert>
-                ) : (
-                  <Alert severity="error" sx={{ mb: 2 }}>
-                    Task failed: {result.error}
-                  </Alert>
-                )}
+              {result.result && (
+                <Card padding="md" withBorder>
+                  <Flex justify="space-between" align="center" mb="md">
+                    <Text fw={600}>Task Result</Text>
+                    <Button
+                      variant="subtle"
+                      onClick={toggleShowResult}
+                      rightSection={<IconChevronDown size={16} />}
+                    >
+                      {showResult ? 'Hide' : 'Show'}
+                    </Button>
+                  </Flex>
+                  <Collapse in={showResult}>
+                    <Box
+                      component="pre"
+                      style={{
+                        backgroundColor: 'var(--mantine-color-gray-1)',
+                        padding: 'var(--mantine-spacing-md)',
+                        borderRadius: 'var(--mantine-radius-sm)',
+                        overflow: 'auto',
+                        maxHeight: 300,
+                        fontSize: '0.875rem',
+                        fontFamily: 'monospace'
+                      }}
+                    >
+                      {JSON.stringify(result.result, null, 2)}
+                    </Box>
+                  </Collapse>
+                </Card>
+              )}
+            </Box>
+          )}
 
-                {result.result && (
-                  <Card>
-                    <CardHeader
-                      title="Task Result"
-                      action={
-                        <Button
-                          onClick={() => setShowResult(!showResult)}
-                          endIcon={<ExpandMoreIcon />}
-                        >
-                          {showResult ? 'Hide' : 'Show'}
-                        </Button>
-                      }
-                    />
-                    <Collapse in={showResult}>
-                      <CardContent>
-                        <Box
-                          component="pre"
-                          sx={{
-                            backgroundColor: 'grey.100',
-                            p: 2,
-                            borderRadius: 1,
-                            overflow: 'auto',
-                            maxHeight: 300,
-                            fontSize: '0.875rem',
-                            fontFamily: 'monospace'
-                          }}
-                        >
-                          {JSON.stringify(result.result, null, 2)}
-                        </Box>
-                      </CardContent>
-                    </Collapse>
-                  </Card>
-                )}
-              </Box>
-            )}
-          </Box>
-        )}
-      </DialogContent>
-
-      <DialogActions>
-        <Button onClick={onClose} startIcon={<CloseIcon />}>
-          Close
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleExecute}
-          disabled={!taskType || executing || agent.status !== 'idle'}
-          startIcon={<PlayIcon />}
-        >
-          {executing ? 'Executing...' : 'Execute Task'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+          {/* Action Buttons */}
+          <Group justify="flex-end" mt="md">
+            <Button
+              variant="subtle"
+              onClick={onClose}
+              leftSection={<IconX size={16} />}
+            >
+              Close
+            </Button>
+            <Button
+              onClick={handleExecute}
+              disabled={!taskType || executing || agent.status !== 'idle'}
+              leftSection={<IconPlayerPlay size={16} />}
+              loading={executing}
+            >
+              {executing ? 'Executing...' : 'Execute Task'}
+            </Button>
+          </Group>
+        </Stack>
+      )}
+    </Modal>
   );
 };
 

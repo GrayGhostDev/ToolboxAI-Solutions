@@ -11,6 +11,7 @@ from dataclasses import dataclass, field, asdict
 from enum import Enum
 import redis
 
+
 @dataclass
 class GPT41ModelConfig:
     """GPT-4.1 model configuration settings"""
@@ -45,17 +46,13 @@ class GPT41ModelConfig:
     target_latency_nano: int = 500
 
     # Feature support
-    supports_reasoning: Dict[str, bool] = field(default_factory=lambda: {
-        "gpt-4.1": True,
-        "gpt-4.1-mini": False,
-        "gpt-4.1-nano": False
-    })
+    supports_reasoning: Dict[str, bool] = field(
+        default_factory=lambda: {"gpt-4.1": True, "gpt-4.1-mini": False, "gpt-4.1-nano": False}
+    )
 
-    supports_vision: Dict[str, bool] = field(default_factory=lambda: {
-        "gpt-4.1": True,
-        "gpt-4.1-mini": True,
-        "gpt-4.1-nano": False
-    })
+    supports_vision: Dict[str, bool] = field(
+        default_factory=lambda: {"gpt-4.1": True, "gpt-4.1-mini": True, "gpt-4.1-nano": False}
+    )
 
     # Migration settings
     deprecation_date: str = "2025-07-14"  # GPT-4.5 Preview deprecation
@@ -66,6 +63,7 @@ class GPT41ModelConfig:
     nano_complexity_threshold: float = 0.3
     mini_complexity_threshold: float = 0.7
     reasoning_complexity_threshold: float = 0.8
+
 
 @dataclass
 class GPT41FeatureFlags:
@@ -103,14 +101,17 @@ class GPT41FeatureFlags:
     enable_instant_rollback: bool = True
     rollback_on_error_rate: float = 5.0  # Rollback if error rate > 5%
 
+
 class MigrationPhase(Enum):
     """Migration phases for GPT-4.1 rollout"""
+
     TESTING = "testing"  # Internal testing only
     CANARY = "canary"  # 1% of traffic
     EARLY_ACCESS = "early_access"  # 10% of traffic
     BETA = "beta"  # 25% of traffic
     ROLLOUT = "rollout"  # 50% of traffic
     GENERAL_AVAILABILITY = "ga"  # 100% of traffic
+
 
 @dataclass
 class MigrationSchedule:
@@ -122,16 +123,14 @@ class MigrationSchedule:
     success_criteria: Dict[str, Any] = field(default_factory=dict)
     rollback_criteria: Dict[str, Any] = field(default_factory=dict)
 
+
 # Migration schedule
 MIGRATION_SCHEDULE = [
     MigrationSchedule(
         phase=MigrationPhase.TESTING,
         start_date="2025-04-01",
         target_percentage=0.0,
-        success_criteria={
-            "internal_tests_pass": True,
-            "performance_baseline_met": True
-        }
+        success_criteria={"internal_tests_pass": True, "performance_baseline_met": True},
     ),
     MigrationSchedule(
         phase=MigrationPhase.CANARY,
@@ -140,12 +139,9 @@ MIGRATION_SCHEDULE = [
         success_criteria={
             "error_rate": {"max": 1.0},
             "latency_p95": {"max": 2000},
-            "user_reports": {"max": 5}
+            "user_reports": {"max": 5},
         },
-        rollback_criteria={
-            "error_rate": {"threshold": 2.0},
-            "user_reports": {"threshold": 10}
-        }
+        rollback_criteria={"error_rate": {"threshold": 2.0}, "user_reports": {"threshold": 10}},
     ),
     MigrationSchedule(
         phase=MigrationPhase.EARLY_ACCESS,
@@ -154,8 +150,8 @@ MIGRATION_SCHEDULE = [
         success_criteria={
             "error_rate": {"max": 0.5},
             "latency_p95": {"max": 1800},
-            "cost_reduction": {"min": 15.0}
-        }
+            "cost_reduction": {"min": 15.0},
+        },
     ),
     MigrationSchedule(
         phase=MigrationPhase.BETA,
@@ -165,8 +161,8 @@ MIGRATION_SCHEDULE = [
             "error_rate": {"max": 0.3},
             "latency_p95": {"max": 1600},
             "cost_reduction": {"min": 20.0},
-            "user_satisfaction": {"min": 4.5}
-        }
+            "user_satisfaction": {"min": 4.5},
+        },
     ),
     MigrationSchedule(
         phase=MigrationPhase.ROLLOUT,
@@ -175,19 +171,17 @@ MIGRATION_SCHEDULE = [
         success_criteria={
             "error_rate": {"max": 0.2},
             "latency_p95": {"max": 1500},
-            "cost_reduction": {"min": 25.0}
-        }
+            "cost_reduction": {"min": 25.0},
+        },
     ),
     MigrationSchedule(
         phase=MigrationPhase.GENERAL_AVAILABILITY,
         start_date="2025-06-01",
         target_percentage=100.0,
-        success_criteria={
-            "all_metrics_green": True,
-            "deprecation_ready": True
-        }
-    )
+        success_criteria={"all_metrics_green": True, "deprecation_ready": True},
+    ),
 ]
+
 
 class GPT41ConfigManager:
     """Manages GPT-4.1 configuration and feature flags"""
@@ -203,10 +197,10 @@ class GPT41ConfigManager:
         """Initialize Redis connection"""
         try:
             return redis.Redis(
-                host=os.getenv('REDIS_HOST', 'localhost'),
-                port=int(os.getenv('REDIS_PORT', 6379)),
+                host=os.getenv("REDIS_HOST", "localhost"),
+                port=int(os.getenv("REDIS_PORT", 6379)),
                 db=0,
-                decode_responses=True
+                decode_responses=True,
             )
         except Exception as e:
             print(f"Redis initialization failed: {e}")
@@ -215,18 +209,22 @@ class GPT41ConfigManager:
     def _load_from_env(self):
         """Load configuration from environment variables"""
         # Feature flags from env
-        if os.getenv('GPT41_ENABLED'):
-            self.feature_flags.enable_gpt41 = os.getenv('GPT41_ENABLED', 'false').lower() == 'true'
+        if os.getenv("GPT41_ENABLED"):
+            self.feature_flags.enable_gpt41 = os.getenv("GPT41_ENABLED", "false").lower() == "true"
 
-        if os.getenv('GPT41_ROLLOUT_PERCENTAGE'):
-            self.feature_flags.rollout_percentage = float(os.getenv('GPT41_ROLLOUT_PERCENTAGE', '0'))
+        if os.getenv("GPT41_ROLLOUT_PERCENTAGE"):
+            self.feature_flags.rollout_percentage = float(
+                os.getenv("GPT41_ROLLOUT_PERCENTAGE", "0")
+            )
 
-        if os.getenv('GPT41_ENABLE_FALLBACK'):
-            self.feature_flags.enable_auto_fallback = os.getenv('GPT41_ENABLE_FALLBACK', 'true').lower() == 'true'
+        if os.getenv("GPT41_ENABLE_FALLBACK"):
+            self.feature_flags.enable_auto_fallback = (
+                os.getenv("GPT41_ENABLE_FALLBACK", "true").lower() == "true"
+            )
 
         # Model config from env
-        if os.getenv('GPT41_PRIMARY_MODEL'):
-            self.config.primary_model = os.getenv('GPT41_PRIMARY_MODEL', 'gpt-4.1')
+        if os.getenv("GPT41_PRIMARY_MODEL"):
+            self.config.primary_model = os.getenv("GPT41_PRIMARY_MODEL", "gpt-4.1")
 
     def _load_from_redis(self):
         """Load configuration from Redis"""
@@ -235,7 +233,7 @@ class GPT41ConfigManager:
 
         try:
             # Load feature flags
-            flags_json = self.redis_client.get('gpt41:feature_flags')
+            flags_json = self.redis_client.get("gpt41:feature_flags")
             if flags_json:
                 flags_dict = json.loads(flags_json)
                 for key, value in flags_dict.items():
@@ -243,7 +241,7 @@ class GPT41ConfigManager:
                         setattr(self.feature_flags, key, value)
 
             # Load rollout percentage
-            rollout = self.redis_client.get('gpt41:rollout_percentage')
+            rollout = self.redis_client.get("gpt41:rollout_percentage")
             if rollout:
                 self.feature_flags.rollout_percentage = float(rollout)
 
@@ -258,14 +256,16 @@ class GPT41ConfigManager:
         try:
             # Save feature flags
             flags_dict = asdict(self.feature_flags)
-            self.redis_client.set('gpt41:feature_flags', json.dumps(flags_dict))
+            self.redis_client.set("gpt41:feature_flags", json.dumps(flags_dict))
 
             # Save rollout percentage separately for easy access
-            self.redis_client.set('gpt41:rollout_percentage', str(self.feature_flags.rollout_percentage))
+            self.redis_client.set(
+                "gpt41:rollout_percentage", str(self.feature_flags.rollout_percentage)
+            )
 
             # Save config
             config_dict = asdict(self.config)
-            self.redis_client.set('gpt41:model_config', json.dumps(config_dict))
+            self.redis_client.set("gpt41:model_config", json.dumps(config_dict))
 
         except Exception as e:
             print(f"Error saving to Redis: {e}")
@@ -277,7 +277,10 @@ class GPT41ConfigManager:
 
         for schedule in MIGRATION_SCHEDULE:
             schedule_date = datetime.strptime(schedule.start_date, "%Y-%m-%d")
-            if now >= schedule_date and self.feature_flags.rollout_percentage >= schedule.target_percentage:
+            if (
+                now >= schedule_date
+                and self.feature_flags.rollout_percentage >= schedule.target_percentage
+            ):
                 current_phase = schedule.phase
             else:
                 break
@@ -298,11 +301,13 @@ class GPT41ConfigManager:
         # Use user_id for consistent hashing if provided
         if user_id:
             import hashlib
+
             hash_val = int(hashlib.md5(user_id.encode()).hexdigest()[:8], 16)
             return (hash_val % 100) < self.feature_flags.rollout_percentage
 
         # Random selection otherwise
         import random
+
         return random.random() * 100 < self.feature_flags.rollout_percentage
 
     def get_model_for_complexity(self, complexity: float) -> str:
@@ -310,9 +315,15 @@ class GPT41ConfigManager:
         if not self.feature_flags.enable_auto_model_selection:
             return self.config.primary_model
 
-        if complexity < self.config.nano_complexity_threshold and self.feature_flags.enable_nano_for_simple:
+        if (
+            complexity < self.config.nano_complexity_threshold
+            and self.feature_flags.enable_nano_for_simple
+        ):
             return self.config.nano_model
-        elif complexity < self.config.mini_complexity_threshold and self.feature_flags.enable_mini_for_standard:
+        elif (
+            complexity < self.config.mini_complexity_threshold
+            and self.feature_flags.enable_mini_for_standard
+        ):
             return self.config.mini_model
         else:
             return self.config.primary_model
@@ -356,8 +367,8 @@ class GPT41ConfigManager:
             "migration_progress": {
                 "current_phase": self.get_current_phase().value,
                 "rollout_percentage": self.feature_flags.rollout_percentage,
-                "target_date": self.config.rollout_target_date
-            }
+                "target_date": self.config.rollout_target_date,
+            },
         }
 
         if status["is_deprecated"]:
@@ -377,36 +388,43 @@ class GPT41ConfigManager:
         gpt45_input_cost = 10.0  # per 1M tokens
         gpt45_output_cost = 30.0
 
-        gpt45_total = (input_tokens / 1_000_000 * gpt45_input_cost) + (output_tokens / 1_000_000 * gpt45_output_cost)
-        gpt41_total = (input_tokens / 1_000_000 * self.config.cost_input_gpt41) + (output_tokens / 1_000_000 * self.config.cost_output_gpt41)
-        mini_total = (input_tokens / 1_000_000 * self.config.cost_input_mini) + (output_tokens / 1_000_000 * self.config.cost_output_mini)
-        nano_total = (input_tokens / 1_000_000 * self.config.cost_input_nano) + (output_tokens / 1_000_000 * self.config.cost_output_nano)
+        gpt45_total = (input_tokens / 1_000_000 * gpt45_input_cost) + (
+            output_tokens / 1_000_000 * gpt45_output_cost
+        )
+        gpt41_total = (input_tokens / 1_000_000 * self.config.cost_input_gpt41) + (
+            output_tokens / 1_000_000 * self.config.cost_output_gpt41
+        )
+        mini_total = (input_tokens / 1_000_000 * self.config.cost_input_mini) + (
+            output_tokens / 1_000_000 * self.config.cost_output_mini
+        )
+        nano_total = (input_tokens / 1_000_000 * self.config.cost_input_nano) + (
+            output_tokens / 1_000_000 * self.config.cost_output_nano
+        )
 
         return {
-            "tokens": {
-                "input": input_tokens,
-                "output": output_tokens
-            },
+            "tokens": {"input": input_tokens, "output": output_tokens},
             "costs": {
                 "gpt-4.5-preview": round(gpt45_total, 4),
                 "gpt-4.1": round(gpt41_total, 4),
                 "gpt-4.1-mini": round(mini_total, 4),
-                "gpt-4.1-nano": round(nano_total, 4)
+                "gpt-4.1-nano": round(nano_total, 4),
             },
             "savings": {
                 "gpt-4.1": round(gpt45_total - gpt41_total, 4),
                 "gpt-4.1-mini": round(gpt45_total - mini_total, 4),
-                "gpt-4.1-nano": round(gpt45_total - nano_total, 4)
+                "gpt-4.1-nano": round(gpt45_total - nano_total, 4),
             },
             "savings_percentage": {
                 "gpt-4.1": round((gpt45_total - gpt41_total) / gpt45_total * 100, 1),
                 "gpt-4.1-mini": round((gpt45_total - mini_total) / gpt45_total * 100, 1),
-                "gpt-4.1-nano": round((gpt45_total - nano_total) / gpt45_total * 100, 1)
-            }
+                "gpt-4.1-nano": round((gpt45_total - nano_total) / gpt45_total * 100, 1),
+            },
         }
+
 
 # Singleton instance
 _config_manager: Optional[GPT41ConfigManager] = None
+
 
 def get_gpt41_config() -> GPT41ConfigManager:
     """Get or create GPT-4.1 config manager singleton"""

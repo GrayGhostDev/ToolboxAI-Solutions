@@ -17,7 +17,7 @@ from core.langchain_compat import (
     AIMessage,
     ChatPromptTemplate,
     StrOutputParser,
-    JsonOutputParser
+    JsonOutputParser,
 )
 from apps.backend.services.pusher_realtime import pusher_service
 from apps.backend.services.rojo_manager import rojo_manager, RojoProjectConfig
@@ -26,8 +26,10 @@ from apps.backend.core.prompts.conversation_flow import ConversationStage
 
 logger = logging.getLogger(__name__)
 
+
 class RobloxEnvironmentData(BaseModel):
     """Data for Roblox environment generation"""
+
     terrain_type: str = Field(default="natural", description="Type of terrain")
     buildings: List[Dict[str, Any]] = Field(default_factory=list)
     interactive_objects: List[Dict[str, Any]] = Field(default_factory=list)
@@ -37,8 +39,10 @@ class RobloxEnvironmentData(BaseModel):
     atmosphere: Dict[str, Any] = Field(default_factory=dict)
     game_mechanics: List[str] = Field(default_factory=list)
 
+
 class ConversationContext(BaseModel):
     """Context for the entire conversation"""
+
     session_id: str
     user_id: str
     current_stage: ConversationStage
@@ -47,6 +51,7 @@ class ConversationContext(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 
 class StageChain:
     """Base class for conversation stage chains"""
@@ -60,17 +65,22 @@ class StageChain:
         """Process user input for this stage"""
         raise NotImplementedError
 
+
 class GreetingChain(StageChain):
     """Chain for greeting stage"""
 
     def __init__(self):
         super().__init__(ConversationStage.GREETING)
-        self.prompt = ChatPromptTemplate.from_messages([
-            SystemMessage(content="""You are an educational content creator assistant for Roblox.
+        self.prompt = ChatPromptTemplate.from_messages(
+            [
+                SystemMessage(
+                    content="""You are an educational content creator assistant for Roblox.
             Start by warmly greeting the user and asking what kind of educational experience they want to create.
-            Be enthusiastic and helpful. Extract their general intent and subject area."""),
-            HumanMessage(content="{user_input}")
-        ])
+            Be enthusiastic and helpful. Extract their general intent and subject area."""
+                ),
+                HumanMessage(content="{user_input}"),
+            ]
+        )
         self.chain = self.prompt | self.llm | self.output_parser
 
     async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
@@ -81,72 +91,81 @@ class GreetingChain(StageChain):
             "greeting_complete": True,
             "subject_area": result.get("subject", "general"),
             "user_intent": result.get("intent", "create educational content"),
-            "response": result.get("response", "Welcome! Let's create an amazing educational Roblox experience!")
+            "response": result.get(
+                "response", "Welcome! Let's create an amazing educational Roblox experience!"
+            ),
         }
+
 
 class DiscoveryChain(StageChain):
     """Chain for discovery stage - extracting learning objectives"""
 
     def __init__(self):
         super().__init__(ConversationStage.DISCOVERY)
-        self.prompt = ChatPromptTemplate.from_messages([
-            SystemMessage(content="""Extract specific learning objectives from the user's description.
+        self.prompt = ChatPromptTemplate.from_messages(
+            [
+                SystemMessage(
+                    content="""Extract specific learning objectives from the user's description.
             Focus on:
             1. Core concepts to teach
             2. Skills to develop
             3. Knowledge to impart
             4. Age group and grade level
-            Format as structured data for Roblox environment generation."""),
-            HumanMessage(content="Previous context: {context}\nUser input: {user_input}")
-        ])
+            Format as structured data for Roblox environment generation."""
+                ),
+                HumanMessage(content="Previous context: {context}\nUser input: {user_input}"),
+            ]
+        )
         self.chain = self.prompt | self.llm | self.output_parser
 
     async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
-        result = await self.chain.ainvoke({
-            "context": str(context.stage_data.get(ConversationStage.GREETING, {})),
-            "user_input": user_input
-        })
+        result = await self.chain.ainvoke(
+            {
+                "context": str(context.stage_data.get(ConversationStage.GREETING, {})),
+                "user_input": user_input,
+            }
+        )
 
         # Update Roblox data based on learning objectives
         if "concepts" in result:
-            context.roblox_data.game_mechanics.extend([
-                "concept_exploration",
-                "interactive_learning",
-                "progress_tracking"
-            ])
+            context.roblox_data.game_mechanics.extend(
+                ["concept_exploration", "interactive_learning", "progress_tracking"]
+            )
 
         return {
             "learning_objectives": result.get("objectives", []),
             "target_age": result.get("age_group", "8-12"),
             "grade_level": result.get("grade_level", "3-6"),
             "core_concepts": result.get("concepts", []),
-            "response": result.get("response", "Great! I understand your learning objectives.")
+            "response": result.get("response", "Great! I understand your learning objectives."),
         }
+
 
 class RequirementsChain(StageChain):
     """Chain for requirements gathering"""
 
     def __init__(self):
         super().__init__(ConversationStage.REQUIREMENTS)
-        self.prompt = ChatPromptTemplate.from_messages([
-            SystemMessage(content="""Gather technical and educational requirements for the Roblox environment.
+        self.prompt = ChatPromptTemplate.from_messages(
+            [
+                SystemMessage(
+                    content="""Gather technical and educational requirements for the Roblox environment.
             Ask about:
             1. Number of players (single/multiplayer)
             2. Environment type (classroom, outdoor, fantasy, sci-fi)
             3. Assessment methods (quizzes, challenges, exploration)
             4. Duration of experience
             5. Accessibility needs
-            Generate specific Roblox environment parameters."""),
-            HumanMessage(content="Learning objectives: {objectives}\nUser input: {user_input}")
-        ])
+            Generate specific Roblox environment parameters."""
+                ),
+                HumanMessage(content="Learning objectives: {objectives}\nUser input: {user_input}"),
+            ]
+        )
         self.chain = self.prompt | self.llm | self.output_parser
 
     async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
         objectives = context.stage_data.get(ConversationStage.DISCOVERY, {})
-        result = await self.chain.ainvoke({
-            "objectives": str(objectives),
-            "user_input": user_input
-        })
+        result = await self.chain.ainvoke({"objectives": str(objectives), "user_input": user_input})
 
         # Update Roblox environment data
         if result.get("environment_type"):
@@ -161,40 +180,44 @@ class RequirementsChain(StageChain):
             "assessment_types": result.get("assessments", ["quiz", "exploration"]),
             "duration_minutes": result.get("duration", 30),
             "accessibility": result.get("accessibility", ["visual_aids", "audio_cues"]),
-            "response": result.get("response", "I've noted your requirements.")
+            "response": result.get("response", "I've noted your requirements."),
         }
+
 
 class PersonalizationChain(StageChain):
     """Chain for personalization preferences"""
 
     def __init__(self):
         super().__init__(ConversationStage.PERSONALIZATION)
-        self.prompt = ChatPromptTemplate.from_messages([
-            SystemMessage(content="""Gather personalization preferences for the Roblox experience.
+        self.prompt = ChatPromptTemplate.from_messages(
+            [
+                SystemMessage(
+                    content="""Gather personalization preferences for the Roblox experience.
             Ask about:
             1. Visual style preferences (realistic, cartoon, minimalist)
             2. Color schemes
             3. Character types (humans, animals, robots)
             4. Music and sound preferences
             5. Cultural considerations
-            Map these to specific Roblox assets and settings."""),
-            HumanMessage(content="Requirements: {requirements}\nUser input: {user_input}")
-        ])
+            Map these to specific Roblox assets and settings."""
+                ),
+                HumanMessage(content="Requirements: {requirements}\nUser input: {user_input}"),
+            ]
+        )
         self.chain = self.prompt | self.llm | self.output_parser
 
     async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
         requirements = context.stage_data.get(ConversationStage.REQUIREMENTS, {})
-        result = await self.chain.ainvoke({
-            "requirements": str(requirements),
-            "user_input": user_input
-        })
+        result = await self.chain.ainvoke(
+            {"requirements": str(requirements), "user_input": user_input}
+        )
 
         # Update Roblox lighting and atmosphere
         if result.get("visual_style"):
             context.roblox_data.lighting = {
                 "style": result["visual_style"],
                 "brightness": result.get("brightness", 0.7),
-                "ambient": result.get("ambient_color", "white")
+                "ambient": result.get("ambient_color", "white"),
             }
 
         if result.get("atmosphere"):
@@ -206,46 +229,47 @@ class PersonalizationChain(StageChain):
             "character_types": result.get("characters", ["friendly_animals"]),
             "audio_style": result.get("audio", "cheerful"),
             "cultural_elements": result.get("cultural", []),
-            "response": result.get("response", "Great choices for personalization!")
+            "response": result.get("response", "Great choices for personalization!"),
         }
+
 
 class ContentDesignChain(StageChain):
     """Chain for content design with AI assistance"""
 
     def __init__(self):
         super().__init__(ConversationStage.CONTENT_DESIGN)
-        self.prompt = ChatPromptTemplate.from_messages([
-            SystemMessage(content="""Design the educational content structure for Roblox.
+        self.prompt = ChatPromptTemplate.from_messages(
+            [
+                SystemMessage(
+                    content="""Design the educational content structure for Roblox.
             Create:
             1. Interactive learning stations
             2. NPC dialogue scripts
             3. Quiz questions and answers
             4. Challenge scenarios
             5. Progress milestones
-            Generate specific Roblox objects and scripts."""),
-            HumanMessage(content="Full context: {context}\nUser input: {user_input}")
-        ])
+            Generate specific Roblox objects and scripts."""
+                ),
+                HumanMessage(content="Full context: {context}\nUser input: {user_input}"),
+            ]
+        )
         self.chain = self.prompt | self.llm | self.output_parser
 
     async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
-        full_context = {
-            stage.value: data
-            for stage, data in context.stage_data.items()
-        }
-        result = await self.chain.ainvoke({
-            "context": str(full_context),
-            "user_input": user_input
-        })
+        full_context = {stage.value: data for stage, data in context.stage_data.items()}
+        result = await self.chain.ainvoke({"context": str(full_context), "user_input": user_input})
 
         # Populate Roblox environment with content
         if result.get("learning_stations"):
             for station in result["learning_stations"]:
-                context.roblox_data.interactive_objects.append({
-                    "type": "learning_station",
-                    "name": station.get("name"),
-                    "content": station.get("content"),
-                    "position": station.get("position")
-                })
+                context.roblox_data.interactive_objects.append(
+                    {
+                        "type": "learning_station",
+                        "name": station.get("name"),
+                        "content": station.get("content"),
+                        "position": station.get("position"),
+                    }
+                )
 
         if result.get("npcs"):
             context.roblox_data.npcs.extend(result["npcs"])
@@ -259,33 +283,35 @@ class ContentDesignChain(StageChain):
             "quizzes": result.get("quizzes", []),
             "challenges": result.get("challenges", []),
             "milestones": result.get("milestones", []),
-            "response": result.get("response", "Content structure designed!")
+            "response": result.get("response", "Content structure designed!"),
         }
+
 
 class UniquenessChain(StageChain):
     """Chain for adding unique creative elements"""
 
     def __init__(self):
         super().__init__(ConversationStage.UNIQUENESS_ENHANCEMENT)
-        self.prompt = ChatPromptTemplate.from_messages([
-            SystemMessage(content="""Add unique and creative elements to make the Roblox experience memorable.
+        self.prompt = ChatPromptTemplate.from_messages(
+            [
+                SystemMessage(
+                    content="""Add unique and creative elements to make the Roblox experience memorable.
             Suggest:
             1. Special effects and particles
             2. Easter eggs and hidden content
             3. Unique game mechanics
             4. Memorable characters
             5. Surprising interactions
-            Be creative while maintaining educational value."""),
-            HumanMessage(content="Content design: {content}\nUser input: {user_input}")
-        ])
+            Be creative while maintaining educational value."""
+                ),
+                HumanMessage(content="Content design: {content}\nUser input: {user_input}"),
+            ]
+        )
         self.chain = self.prompt | self.llm | self.output_parser
 
     async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
         content = context.stage_data.get(ConversationStage.CONTENT_DESIGN, {})
-        result = await self.chain.ainvoke({
-            "content": str(content),
-            "user_input": user_input
-        })
+        result = await self.chain.ainvoke({"content": str(content), "user_input": user_input})
 
         # Add unique elements to Roblox data
         if result.get("special_effects"):
@@ -300,36 +326,38 @@ class UniquenessChain(StageChain):
             "unique_mechanics": result.get("unique_mechanics", []),
             "memorable_characters": result.get("characters", []),
             "surprise_elements": result.get("surprises", []),
-            "response": result.get("response", "Added creative enhancements!")
+            "response": result.get("response", "Added creative enhancements!"),
         }
+
 
 class ValidationChain(StageChain):
     """Chain for content validation and quality checks"""
 
     def __init__(self):
         super().__init__(ConversationStage.VALIDATION)
-        self.prompt = ChatPromptTemplate.from_messages([
-            SystemMessage(content="""Validate the educational content for quality and appropriateness.
+        self.prompt = ChatPromptTemplate.from_messages(
+            [
+                SystemMessage(
+                    content="""Validate the educational content for quality and appropriateness.
             Check:
             1. Educational alignment with objectives
             2. Age appropriateness
             3. Safety and content guidelines
             4. Accessibility compliance
             5. Technical feasibility in Roblox
-            Provide validation scores and suggestions."""),
-            HumanMessage(content="Full design: {design}\nUser confirmation: {user_input}")
-        ])
+            Provide validation scores and suggestions."""
+                ),
+                HumanMessage(content="Full design: {design}\nUser confirmation: {user_input}"),
+            ]
+        )
         self.chain = self.prompt | self.llm | self.output_parser
 
     async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
         full_design = {
             "stages": {stage.value: data for stage, data in context.stage_data.items()},
-            "roblox_data": context.roblox_data.dict()
+            "roblox_data": context.roblox_data.dict(),
         }
-        result = await self.chain.ainvoke({
-            "design": str(full_design),
-            "user_input": user_input
-        })
+        result = await self.chain.ainvoke({"design": str(full_design), "user_input": user_input})
 
         return {
             "validation_scores": {
@@ -337,13 +365,14 @@ class ValidationChain(StageChain):
                 "age_appropriateness": result.get("age_score", 0.90),
                 "safety": result.get("safety_score", 0.95),
                 "accessibility": result.get("accessibility_score", 0.85),
-                "technical_feasibility": result.get("feasibility_score", 0.90)
+                "technical_feasibility": result.get("feasibility_score", 0.90),
             },
             "suggestions": result.get("suggestions", []),
             "warnings": result.get("warnings", []),
             "approved": result.get("approved", True),
-            "response": result.get("response", "Content validated and ready for generation!")
+            "response": result.get("response", "Content validated and ready for generation!"),
         }
+
 
 class EnhancedConversationFlowManager:
     """
@@ -358,16 +387,14 @@ class EnhancedConversationFlowManager:
             ConversationStage.PERSONALIZATION: PersonalizationChain(),
             ConversationStage.CONTENT_DESIGN: ContentDesignChain(),
             ConversationStage.UNIQUENESS_ENHANCEMENT: UniquenessChain(),
-            ConversationStage.VALIDATION: ValidationChain()
+            ConversationStage.VALIDATION: ValidationChain(),
         }
         self.contexts: Dict[str, ConversationContext] = {}
 
     async def start_conversation(self, user_id: str, session_id: str) -> ConversationContext:
         """Start a new conversation"""
         context = ConversationContext(
-            session_id=session_id,
-            user_id=user_id,
-            current_stage=ConversationStage.GREETING
+            session_id=session_id, user_id=user_id, current_stage=ConversationStage.GREETING
         )
         self.contexts[session_id] = context
 
@@ -375,17 +402,13 @@ class EnhancedConversationFlowManager:
         await pusher_service.broadcast_event(
             f"conversation-{session_id}",
             "conversation_started",
-            {"stage": ConversationStage.GREETING.value}
+            {"stage": ConversationStage.GREETING.value},
         )
 
         logger.info(f"Started conversation {session_id} for user {user_id}")
         return context
 
-    async def process_input(
-        self,
-        session_id: str,
-        user_input: str
-    ) -> Dict[str, Any]:
+    async def process_input(self, session_id: str, user_input: str) -> Dict[str, Any]:
         """Process user input for current stage"""
         if session_id not in self.contexts:
             raise ValueError(f"Session {session_id} not found")
@@ -410,15 +433,15 @@ class EnhancedConversationFlowManager:
             {
                 "stage": context.current_stage.value,
                 "result": result,
-                "next_stage": self._get_next_stage(context.current_stage).value
-            }
+                "next_stage": self._get_next_stage(context.current_stage).value,
+            },
         )
 
         return {
             "current_stage": context.current_stage.value,
             "result": result,
             "next_stage": self._get_next_stage(context.current_stage).value,
-            "progress": self._calculate_progress(context)
+            "progress": self._calculate_progress(context),
         }
 
     async def advance_stage(self, session_id: str) -> ConversationContext:
@@ -440,8 +463,8 @@ class EnhancedConversationFlowManager:
                 {
                     "from": context.current_stage.value,
                     "to": next_stage.value,
-                    "progress": self._calculate_progress(context)
-                }
+                    "progress": self._calculate_progress(context),
+                },
             )
 
             logger.info(f"Advanced session {session_id} to stage {next_stage.value}")
@@ -467,7 +490,7 @@ class EnhancedConversationFlowManager:
         project = await rojo_manager.create_project(
             project_name=f"edu_{context.session_id[:8]}",
             user_id=context.user_id,
-            project_config=project_config
+            project_config=project_config,
         )
 
         # Generate Lua scripts
@@ -486,8 +509,8 @@ class EnhancedConversationFlowManager:
             {
                 "project_id": project.project_id,
                 "rojo_port": project.port,
-                "sync_status": sync_status.dict()
-            }
+                "sync_status": sync_status.dict(),
+            },
         )
 
         return {
@@ -495,7 +518,7 @@ class EnhancedConversationFlowManager:
             "project_id": project.project_id,
             "rojo_port": project.port,
             "sync_url": f"http://localhost:{project.port}",
-            "files_generated": len(scripts)
+            "files_generated": len(scripts),
         }
 
     def _get_next_stage(self, current: ConversationStage) -> Optional[ConversationStage]:
@@ -508,7 +531,7 @@ class EnhancedConversationFlowManager:
             ConversationStage.CONTENT_DESIGN,
             ConversationStage.UNIQUENESS_ENHANCEMENT,
             ConversationStage.VALIDATION,
-            ConversationStage.GENERATION_AND_REVIEW
+            ConversationStage.GENERATION_AND_REVIEW,
         ]
 
         try:
@@ -538,26 +561,23 @@ class EnhancedConversationFlowManager:
                         "$className": "Folder",
                         "QuizSystem": {"$path": "src/shared/QuizSystem.lua"},
                         "NPCDialogue": {"$path": "src/shared/NPCDialogue.lua"},
-                        "ProgressTracker": {"$path": "src/shared/ProgressTracker.lua"}
-                    }
+                        "ProgressTracker": {"$path": "src/shared/ProgressTracker.lua"},
+                    },
                 },
                 "ServerScriptService": {
                     "$className": "ServerScriptService",
                     "GameController": {"$path": "src/server/GameController.lua"},
-                    "TerrainGenerator": {"$path": "src/server/TerrainGenerator.lua"}
+                    "TerrainGenerator": {"$path": "src/server/TerrainGenerator.lua"},
                 },
                 "StarterPlayer": {
                     "$className": "StarterPlayer",
                     "StarterPlayerScripts": {
                         "$className": "StarterPlayerScripts",
-                        "ClientController": {"$path": "src/client/ClientController.lua"}
-                    }
+                        "ClientController": {"$path": "src/client/ClientController.lua"},
+                    },
                 },
-                "Workspace": {
-                    "$className": "Workspace",
-                    "Environment": {"$className": "Folder"}
-                }
-            }
+                "Workspace": {"$className": "Workspace", "Environment": {"$className": "Folder"}},
+            },
         )
 
     def _generate_lua_scripts(self, context: ConversationContext) -> Dict[str, str]:
@@ -756,6 +776,7 @@ ClientController:Initialize()
 
 return ClientController
 """
+
 
 # Global instance
 enhanced_conversation_flow = EnhancedConversationFlowManager()

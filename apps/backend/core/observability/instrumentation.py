@@ -22,7 +22,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from apps.backend.core.observability.telemetry import (
     TelemetryManager,
     LoadBalancerInstrumentor,
-    get_telemetry
+    get_telemetry,
 )
 from apps.backend.core.circuit_breaker import CircuitBreaker, get_circuit_breaker
 from apps.backend.core.rate_limiter import RateLimiter
@@ -44,7 +44,7 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
         track_user_id: bool = True,
         track_session_id: bool = True,
         track_request_body: bool = False,
-        track_response_body: bool = False
+        track_response_body: bool = False,
     ):
         super().__init__(app)
         self.telemetry = telemetry
@@ -55,21 +55,15 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
 
         # Metrics
         self.request_counter = telemetry.meter.create_counter(
-            "http_requests",
-            description="HTTP requests",
-            unit="1"
+            "http_requests", description="HTTP requests", unit="1"
         )
 
         self.request_duration = telemetry.meter.create_histogram(
-            "http_request_duration",
-            description="HTTP request duration",
-            unit="ms"
+            "http_request_duration", description="HTTP request duration", unit="ms"
         )
 
         self.response_size = telemetry.meter.create_histogram(
-            "http_response_size",
-            description="HTTP response size",
-            unit="bytes"
+            "http_response_size", description="HTTP response size", unit="bytes"
         )
 
     async def dispatch(self, request: Request, call_next):
@@ -84,7 +78,7 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
         with self.telemetry.tracer.start_as_current_span(
             f"{request.method} {request.url.path}",
             context=trace_context,
-            kind=trace.SpanKind.SERVER
+            kind=trace.SpanKind.SERVER,
         ) as span:
             # Add request attributes
             self._add_request_attributes(span, request)
@@ -94,15 +88,21 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
             session_id = None
 
             if self.track_user_id:
-                user_id = request.headers.get("X-User-ID") or \
-                         request.session.get("user_id") if hasattr(request, "session") else None
+                user_id = (
+                    request.headers.get("X-User-ID") or request.session.get("user_id")
+                    if hasattr(request, "session")
+                    else None
+                )
                 if user_id:
                     span.set_attribute("user.id", user_id)
                     baggage.set_baggage("user.id", user_id)
 
             if self.track_session_id:
-                session_id = request.headers.get("X-Session-ID") or \
-                            request.session.get("session_id") if hasattr(request, "session") else None
+                session_id = (
+                    request.headers.get("X-Session-ID") or request.session.get("session_id")
+                    if hasattr(request, "session")
+                    else None
+                )
                 if session_id:
                     span.set_attribute("session.id", session_id)
                     baggage.set_baggage("session.id", session_id)
@@ -131,17 +131,15 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
 
                 # Set span status based on response
                 if response.status_code >= 400:
-                    span.set_status(
-                        Status(StatusCode.ERROR, f"HTTP {response.status_code}")
-                    )
+                    span.set_status(Status(StatusCode.ERROR, f"HTTP {response.status_code}"))
                     # Record error metric
                     self.telemetry.error_counter.add(
                         1,
                         attributes={
                             "method": request.method,
                             "path": request.url.path,
-                            "status_code": response.status_code
-                        }
+                            "status_code": response.status_code,
+                        },
                     )
                 else:
                     span.set_status(Status(StatusCode.OK))
@@ -151,9 +149,7 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
             except Exception as e:
                 # Record exception
                 span.record_exception(e)
-                span.set_status(
-                    Status(StatusCode.ERROR, str(e))
-                )
+                span.set_status(Status(StatusCode.ERROR, str(e)))
 
                 # Record error metric
                 self.telemetry.error_counter.add(
@@ -161,8 +157,8 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
                     attributes={
                         "method": request.method,
                         "path": request.url.path,
-                        "exception": type(e).__name__
-                    }
+                        "exception": type(e).__name__,
+                    },
                 )
 
                 raise
@@ -176,27 +172,20 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
                     attributes={
                         "method": request.method,
                         "path": request.url.path,
-                        "status_code": response.status_code if 'response' in locals() else 500
-                    }
+                        "status_code": response.status_code if "response" in locals() else 500,
+                    },
                 )
 
                 self.request_duration.record(
-                    duration,
-                    attributes={
-                        "method": request.method,
-                        "path": request.url.path
-                    }
+                    duration, attributes={"method": request.method, "path": request.url.path}
                 )
 
-                if 'response' in locals() and hasattr(response, 'headers'):
+                if "response" in locals() and hasattr(response, "headers"):
                     content_length = response.headers.get("content-length")
                     if content_length:
                         self.response_size.record(
                             int(content_length),
-                            attributes={
-                                "method": request.method,
-                                "path": request.url.path
-                            }
+                            attributes={"method": request.method, "path": request.url.path},
                         )
 
     def _add_request_attributes(self, span: Span, request: Request):
@@ -315,8 +304,8 @@ class ComponentInstrumentor:
                 attributes={
                     "session_id": session_id,
                     "user_id": user_id,
-                    "node_id": cluster.node_id
-                }
+                    "node_id": cluster.node_id,
+                },
             ) as span:
                 connection_id = await original_connect(websocket, session_id, user_id, metadata)
 
@@ -336,8 +325,8 @@ class ComponentInstrumentor:
                 "websocket.send_message",
                 attributes={
                     "connection_id": connection_id,
-                    "message_type": message.get("type", "unknown")
-                }
+                    "message_type": message.get("type", "unknown"),
+                },
             ):
                 await original_send(connection_id, message)
 
@@ -349,11 +338,7 @@ class ComponentInstrumentor:
         @wraps(original_join_room)
         async def traced_join_room(connection_id: str, room: str):
             async with self.telemetry.trace_async_operation(
-                "websocket.join_room",
-                attributes={
-                    "connection_id": connection_id,
-                    "room": room
-                }
+                "websocket.join_room", attributes={"connection_id": connection_id, "room": room}
             ):
                 await original_join_room(connection_id, room)
 
@@ -384,9 +369,7 @@ class TraceContextPropagator:
         return context.get_current()
 
     async def propagate_to_service(
-        self,
-        service_url: str,
-        headers: Dict[str, str] = None
+        self, service_url: str, headers: Dict[str, str] = None
     ) -> Dict[str, str]:
         """Propagate trace context to another service"""
 
@@ -426,18 +409,17 @@ class PerformanceProfiler:
                 # Start profiling span
                 async with self.telemetry.trace_async_operation(
                     f"profile.{endpoint_name}",
-                    attributes={
-                        "profile.type": "endpoint",
-                        "profile.pattern": pattern
-                    }
+                    attributes={"profile.type": "endpoint", "profile.pattern": pattern},
                 ) as span:
                     # CPU profiling
                     import cProfile
+
                     profiler = cProfile.Profile()
                     profiler.enable()
 
                     # Memory profiling
                     import tracemalloc
+
                     tracemalloc.start()
 
                     start_time = time.perf_counter()
@@ -461,8 +443,9 @@ class PerformanceProfiler:
                             # Extract top functions
                             import io
                             import pstats
+
                             s = io.StringIO()
-                            ps = pstats.Stats(profiler, stream=s).sort_stats('cumulative')
+                            ps = pstats.Stats(profiler, stream=s).sort_stats("cumulative")
                             ps.print_stats(10)
                             span.set_attribute("profile.top_functions", s.getvalue()[:1000])
 
@@ -470,17 +453,20 @@ class PerformanceProfiler:
                         if endpoint_name not in self.profile_spans:
                             self.profile_spans[endpoint_name] = []
 
-                        self.profile_spans[endpoint_name].append({
-                            "timestamp": time.time(),
-                            "duration": duration,
-                            "memory_current": current,
-                            "memory_peak": peak
-                        })
+                        self.profile_spans[endpoint_name].append(
+                            {
+                                "timestamp": time.time(),
+                                "duration": duration,
+                                "memory_current": current,
+                                "memory_peak": peak,
+                            }
+                        )
 
                         # Keep only last 100 profiles
                         if len(self.profile_spans[endpoint_name]) > 100:
-                            self.profile_spans[endpoint_name] = \
-                                self.profile_spans[endpoint_name][-100:]
+                            self.profile_spans[endpoint_name] = self.profile_spans[endpoint_name][
+                                -100:
+                            ]
 
                         return result
 
@@ -521,25 +507,27 @@ class PerformanceProfiler:
             "duration_stats": {
                 "mean_ms": statistics.mean(durations) * 1000,
                 "median_ms": statistics.median(durations) * 1000,
-                "p95_ms": statistics.quantiles(durations, n=20)[18] * 1000 if len(durations) > 20 else 0,
-                "p99_ms": statistics.quantiles(durations, n=100)[98] * 1000 if len(durations) > 100 else 0,
+                "p95_ms": (
+                    statistics.quantiles(durations, n=20)[18] * 1000 if len(durations) > 20 else 0
+                ),
+                "p99_ms": (
+                    statistics.quantiles(durations, n=100)[98] * 1000 if len(durations) > 100 else 0
+                ),
                 "min_ms": min(durations) * 1000,
-                "max_ms": max(durations) * 1000
+                "max_ms": max(durations) * 1000,
             },
             "memory_stats": {
                 "mean_current_mb": statistics.mean(memory_current) / 1024 / 1024,
                 "mean_peak_mb": statistics.mean(memory_peak) / 1024 / 1024,
-                "max_peak_mb": max(memory_peak) / 1024 / 1024
+                "max_peak_mb": max(memory_peak) / 1024 / 1024,
             },
-            "endpoints": list(self.profile_spans.keys()) if not endpoint else [endpoint]
+            "endpoints": list(self.profile_spans.keys()) if not endpoint else [endpoint],
         }
 
 
 # FastAPI integration
 def setup_fastapi_observability(
-    app: FastAPI,
-    telemetry: TelemetryManager,
-    instrument_components: bool = True
+    app: FastAPI, telemetry: TelemetryManager, instrument_components: bool = True
 ):
     """Setup comprehensive observability for FastAPI application"""
 
@@ -553,7 +541,7 @@ def setup_fastapi_observability(
         track_user_id=True,
         track_session_id=True,
         track_request_body=telemetry.config.trace_request_body,
-        track_response_body=False
+        track_response_body=False,
     )
 
     # Instrument components
@@ -574,9 +562,19 @@ def setup_fastapi_observability(
     async def get_metrics():
         """Get current metrics"""
         return {
-            "request_count": telemetry.request_counter._value if hasattr(telemetry.request_counter, "_value") else 0,
-            "error_count": telemetry.error_counter._value if hasattr(telemetry.error_counter, "_value") else 0,
-            "active_requests": telemetry.active_requests._value if hasattr(telemetry.active_requests, "_value") else 0
+            "request_count": (
+                telemetry.request_counter._value
+                if hasattr(telemetry.request_counter, "_value")
+                else 0
+            ),
+            "error_count": (
+                telemetry.error_counter._value if hasattr(telemetry.error_counter, "_value") else 0
+            ),
+            "active_requests": (
+                telemetry.active_requests._value
+                if hasattr(telemetry.active_requests, "_value")
+                else 0
+            ),
         }
 
     @app.get("/observability/profile")
@@ -591,7 +589,7 @@ def setup_fastapi_observability(
             "tracing": telemetry.tracer is not None,
             "metrics": telemetry.meter is not None,
             "logging": telemetry.config.enable_log_correlation,
-            "profiling": telemetry.config.enable_profiling
+            "profiling": telemetry.config.enable_profiling,
         }
 
     logger.info("FastAPI observability setup complete")
@@ -607,6 +605,7 @@ class CorrelationIDMiddleware(BaseHTTPMiddleware):
 
         if not correlation_id:
             import uuid
+
             correlation_id = str(uuid.uuid4())
 
         # Add to baggage for propagation

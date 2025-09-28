@@ -18,5 +18,5 @@ __all__ = [
     "UserResponse",
     "UserUpdate",
     "SessionCreate",
-    "SessionResponse"
+    "SessionResponse",
 ]

@@ -5,41 +5,40 @@
  * Provides conversational interface with streaming responses and preview integration
  */
 import React, { useState, useEffect, useRef } from 'react';
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import TextField from '@mui/material/TextField';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import CircularProgress from '@mui/material/CircularProgress';
-import Fade from '@mui/material/Fade';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import Alert from '@mui/material/Alert';
-import Tooltip from '@mui/material/Tooltip';
-import InputAdornment from '@mui/material/InputAdornment';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import ListItemText from '@mui/material/ListItemText';
 import {
-  Send,
-  SmartToy,
-  Person,
-  AttachFile,
-  Preview,
-  School,
-  Quiz,
-  Terrain,
-  Clear,
-  Refresh,
-  ExpandMore,
-  ExpandLess,
-  AutoAwesome,
-  Code
-} from '@mui/icons-material';
+  Box,
+  Paper,
+  TextInput,
+  ActionIcon,
+  Text,
+  Avatar,
+  Badge,
+  Stack,
+  Loader,
+  Transition,
+  Button,
+  Divider,
+  Alert,
+  Tooltip,
+  List,
+  Group
+} from '@mantine/core';
+import {
+  IconSend as Send,
+  IconRobot as SmartToy,
+  IconUser as Person,
+  IconPaperclip as AttachFile,
+  IconEye as Preview,
+  IconSchool as School,
+  IconQuestionMark as Quiz,
+  IconMountain as Terrain,
+  IconX as Clear,
+  IconRefresh as Refresh,
+  IconChevronDown as ExpandMore,
+  IconChevronUp as ExpandLess,
+  IconSparkles as AutoAwesome,
+  IconCode as Code
+} from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';

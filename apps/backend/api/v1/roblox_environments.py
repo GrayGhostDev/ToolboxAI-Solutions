@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.core.auth import get_current_user
-from apps.backend.core.database import get_db
+from database import get_db
 from apps.backend.models.schemas import User
 from apps.backend.services.roblox_ai_agent import roblox_ai_agent
 from apps.backend.services.pusher import trigger_event as pusher_trigger
@@ -22,14 +22,13 @@ from sqlalchemy import select, and_
 
 router = APIRouter()
 
+
 class RobloxEnvironmentAPI:
     """API for managing Roblox environments"""
 
     @staticmethod
     async def create_environment(
-        environment_data: Dict[str, Any],
-        user: User,
-        db: AsyncSession
+        environment_data: Dict[str, Any], user: User, db: AsyncSession
     ) -> Dict[str, Any]:
         """Create a new Roblox environment"""
         try:
@@ -40,44 +39,37 @@ class RobloxEnvironmentAPI:
             # Create database record
             db_environment = RobloxEnvironment(
                 id=environment_id,
-                name=environment_data['spec']['environment_name'],
-                theme=environment_data['spec']['theme'],
-                map_type=environment_data['spec']['map_type'],
-                spec=environment_data['spec'],
-                status='draft',
+                name=environment_data["spec"]["environment_name"],
+                theme=environment_data["spec"]["theme"],
+                map_type=environment_data["spec"]["map_type"],
+                spec=environment_data["spec"],
+                status="draft",
                 user_id=user.id,
                 conversation_id=conversation_id,
-                created_at=datetime.now(timezone.utc)
+                created_at=datetime.now(timezone.utc),
             )
 
             db.add(db_environment)
             await db.commit()
             await db.refresh(db_environment)
 
-            return {
-                "id": environment_id,
-                "conversationId": conversation_id,
-                "status": "created"
-            }
+            return {"id": environment_id, "conversationId": conversation_id, "status": "created"}
 
         except Exception as e:
             await db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to create environment: {str(e)}"
+                detail=f"Failed to create environment: {str(e)}",
             )
 
     @staticmethod
-    async def get_user_environments(
-        user: User,
-        db: AsyncSession
-    ) -> List[Dict[str, Any]]:
+    async def get_user_environments(user: User, db: AsyncSession) -> List[Dict[str, Any]]:
         """Get all environments for a user"""
         try:
             result = await db.execute(
-                select(RobloxEnvironment).where(
-                    RobloxEnvironment.user_id == user.id
-                ).order_by(RobloxEnvironment.created_at.desc())
+                select(RobloxEnvironment)
+                .where(RobloxEnvironment.user_id == user.id)
+                .order_by(RobloxEnvironment.created_at.desc())
             )
 
             environments = result.scalars().all()
@@ -94,7 +86,7 @@ class RobloxEnvironmentAPI:
                     "downloadUrl": env.download_url,
                     "previewUrl": env.preview_url,
                     "userId": env.user_id,
-                    "conversationId": env.conversation_id
+                    "conversationId": env.conversation_id,
                 }
                 for env in environments
             ]
@@ -102,14 +94,12 @@ class RobloxEnvironmentAPI:
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to fetch environments: {str(e)}"
+                detail=f"Failed to fetch environments: {str(e)}",
             )
 
     @staticmethod
     async def generate_environment(
-        environment_id: str,
-        user: User,
-        db: AsyncSession
+        environment_id: str, user: User, db: AsyncSession
     ) -> Dict[str, str]:
         """Start environment generation"""
         try:
@@ -117,8 +107,7 @@ class RobloxEnvironmentAPI:
             result = await db.execute(
                 select(RobloxEnvironment).where(
                     and_(
-                        RobloxEnvironment.id == environment_id,
-                        RobloxEnvironment.user_id == user.id
+                        RobloxEnvironment.id == environment_id, RobloxEnvironment.user_id == user.id
                     )
                 )
             )
@@ -126,25 +115,20 @@ class RobloxEnvironmentAPI:
             environment = result.scalar_one_or_none()
             if not environment:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Environment not found"
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Environment not found"
                 )
 
             # Update status to generating
-            environment.status = 'generating'
+            environment.status = "generating"
             environment.generation_started_at = datetime.now(timezone.utc)
             await db.commit()
 
             # Start AI generation
             request_id = await roblox_ai_agent.generate_environment(
-                environment.conversation_id,
-                environment.spec
+                environment.conversation_id, environment.spec
             )
 
-            return {
-                "requestId": request_id,
-                "status": "generation_started"
-            }
+            return {"requestId": request_id, "status": "generation_started"}
 
         except HTTPException:
             raise
@@ -152,14 +136,12 @@ class RobloxEnvironmentAPI:
             await db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to start generation: {str(e)}"
+                detail=f"Failed to start generation: {str(e)}",
             )
 
     @staticmethod
     async def deploy_environment(
-        environment_id: str,
-        user: User,
-        db: AsyncSession
+        environment_id: str, user: User, db: AsyncSession
     ) -> Dict[str, str]:
         """Deploy environment to Roblox"""
         try:
@@ -169,7 +151,7 @@ class RobloxEnvironmentAPI:
                     and_(
                         RobloxEnvironment.id == environment_id,
                         RobloxEnvironment.user_id == user.id,
-                        RobloxEnvironment.status == 'ready'
+                        RobloxEnvironment.status == "ready",
                     )
                 )
             )
@@ -178,11 +160,11 @@ class RobloxEnvironmentAPI:
             if not environment:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Environment not found or not ready for deployment"
+                    detail="Environment not found or not ready for deployment",
                 )
 
             # Update status
-            environment.status = 'deployed'
+            environment.status = "deployed"
             environment.deployed_at = datetime.now(timezone.utc)
             await db.commit()
 
@@ -190,10 +172,7 @@ class RobloxEnvironmentAPI:
             await pusher_trigger(
                 f"user-{user.id}",
                 "roblox_environment_deployed",
-                {
-                    "environmentId": environment_id,
-                    "status": "deployed"
-                }
+                {"environmentId": environment_id, "status": "deployed"},
             )
 
             return {"status": "deployed"}
@@ -204,14 +183,12 @@ class RobloxEnvironmentAPI:
             await db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to deploy environment: {str(e)}"
+                detail=f"Failed to deploy environment: {str(e)}",
             )
 
     @staticmethod
     async def delete_environment(
-        environment_id: str,
-        user: User,
-        db: AsyncSession
+        environment_id: str, user: User, db: AsyncSession
     ) -> Dict[str, str]:
         """Delete an environment"""
         try:
@@ -219,8 +196,7 @@ class RobloxEnvironmentAPI:
             result = await db.execute(
                 select(RobloxEnvironment).where(
                     and_(
-                        RobloxEnvironment.id == environment_id,
-                        RobloxEnvironment.user_id == user.id
+                        RobloxEnvironment.id == environment_id, RobloxEnvironment.user_id == user.id
                     )
                 )
             )
@@ -228,8 +204,7 @@ class RobloxEnvironmentAPI:
             environment = result.scalar_one_or_none()
             if not environment:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Environment not found"
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Environment not found"
                 )
 
             # Clear AI conversation
@@ -248,52 +223,57 @@ class RobloxEnvironmentAPI:
             await db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to delete environment: {str(e)}"
+                detail=f"Failed to delete environment: {str(e)}",
             )
+
 
 # Route definitions
 api = RobloxEnvironmentAPI()
 
+
 @router.get("/environments")
 async def get_environments(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     """Get all environments for the current user"""
     return await api.get_user_environments(current_user, db)
+
 
 @router.post("/environments")
 async def create_environment(
     environment_data: Dict[str, Any],
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Create a new Roblox environment"""
     return await api.create_environment(environment_data, current_user, db)
+
 
 @router.post("/environments/{environment_id}/generate")
 async def generate_environment(
     environment_id: str,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Start environment generation"""
     return await api.generate_environment(environment_id, current_user, db)
+
 
 @router.post("/environments/{environment_id}/deploy")
 async def deploy_environment(
     environment_id: str,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Deploy environment to Roblox"""
     return await api.deploy_environment(environment_id, current_user, db)
+
 
 @router.delete("/environments/{environment_id}")
 async def delete_environment(
     environment_id: str,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Delete an environment"""
     return await api.delete_environment(environment_id, current_user, db)

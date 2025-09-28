@@ -5,17 +5,27 @@ import random
 
 router = APIRouter()
 
+
 # Mock leaderboard data for development
 def generate_mock_leaderboard(timeframe: str = "weekly") -> List[dict]:
     """Generate mock leaderboard data for development"""
     names = [
-        "Alex Thompson", "Sarah Johnson", "Mike Chen", "Emily Davis", 
-        "Chris Brown", "Jessica Lee", "David Wilson", "Amanda Garcia",
-        "Ryan Martinez", "Lisa Anderson", "Kevin Park", "Maria Rodriguez"
+        "Alex Thompson",
+        "Sarah Johnson",
+        "Mike Chen",
+        "Emily Davis",
+        "Chris Brown",
+        "Jessica Lee",
+        "David Wilson",
+        "Amanda Garcia",
+        "Ryan Martinez",
+        "Lisa Anderson",
+        "Kevin Park",
+        "Maria Rodriguez",
     ]
-    
+
     classes = ["Math 101", "Science 201", "English 301", "History 401"]
-    
+
     leaderboard = []
     for i, name in enumerate(names):
         # Vary XP based on timeframe
@@ -26,7 +36,7 @@ def generate_mock_leaderboard(timeframe: str = "weekly") -> List[dict]:
             xp = base_xp * 4
         else:  # weekly
             xp = base_xp
-            
+
         entry = {
             "userId": f"user_{i+1}",
             "displayName": name,
@@ -38,13 +48,13 @@ def generate_mock_leaderboard(timeframe: str = "weekly") -> List[dict]:
             "rank": i + 1,
             "previousRank": i + 1 + random.randint(-2, 2),
             "avatarUrl": f"https://api.dicebear.com/7.x/avataaars/svg?seed={name.replace(' ', '')}",
-            "trend": random.choice(["up", "down", "stable"])
+            "trend": random.choice(["up", "down", "stable"]),
         }
         leaderboard.append(entry)
-    
+
     # Sort by XP
     leaderboard.sort(key=lambda x: x["xp"], reverse=True)
-    
+
     # Update ranks based on sorted order
     for i, entry in enumerate(leaderboard):
         entry["rank"] = i + 1
@@ -55,28 +65,32 @@ def generate_mock_leaderboard(timeframe: str = "weekly") -> List[dict]:
             entry["trend"] = "down"
         else:
             entry["trend"] = "stable"
-    
+
     return leaderboard
+
 
 @router.get("/leaderboard")
 async def get_leaderboard(
     classId: Optional[str] = Query(None, description="Filter by class ID"),
-    timeframe: Optional[str] = Query("weekly", description="Time period: daily, weekly, monthly, all")
+    timeframe: Optional[str] = Query(
+        "weekly", description="Time period: daily, weekly, monthly, all"
+    ),
 ) -> List[dict]:
     """
     Get gamification leaderboard
-    
+
     Returns a list of users ranked by XP for the specified timeframe
     """
     # For development, return mock data
     leaderboard = generate_mock_leaderboard(timeframe)
-    
+
     # If classId is provided, filter (in production this would be a DB query)
     if classId:
         # For mock data, just return as-is since we don't have real class filtering
         pass
-    
+
     return leaderboard
+
 
 @router.get("/achievements")
 async def get_achievements(
@@ -91,7 +105,7 @@ async def get_achievements(
             "xpReward": 50,
             "badgeIcon": "🎯",
             "unlocked": True,
-            "unlockedAt": datetime.utcnow().isoformat()
+            "unlockedAt": datetime.utcnow().isoformat(),
         },
         {
             "id": "week_streak",
@@ -100,7 +114,7 @@ async def get_achievements(
             "xpReward": 100,
             "badgeIcon": "🔥",
             "unlocked": True,
-            "unlockedAt": (datetime.utcnow() - timedelta(days=2)).isoformat()
+            "unlockedAt": (datetime.utcnow() - timedelta(days=2)).isoformat(),
         },
         {
             "id": "perfect_score",
@@ -109,7 +123,7 @@ async def get_achievements(
             "xpReward": 150,
             "badgeIcon": "⭐",
             "unlocked": False,
-            "progress": 0.8
+            "progress": 0.8,
         },
         {
             "id": "helper",
@@ -118,11 +132,12 @@ async def get_achievements(
             "xpReward": 75,
             "badgeIcon": "🤝",
             "unlocked": False,
-            "progress": 0.6
-        }
+            "progress": 0.6,
+        },
     ]
-    
+
     return achievements
+
 
 @router.get("/badges")
 async def get_badges(
@@ -136,7 +151,7 @@ async def get_badges(
             "description": "Complete 5 lessons in one day",
             "icon": "⚡",
             "rarity": "common",
-            "earnedAt": datetime.utcnow().isoformat()
+            "earnedAt": datetime.utcnow().isoformat(),
         },
         {
             "id": "badge_2",
@@ -144,7 +159,7 @@ async def get_badges(
             "description": "Achieve level 10 in Mathematics",
             "icon": "🧮",
             "rarity": "rare",
-            "earnedAt": (datetime.utcnow() - timedelta(days=5)).isoformat()
+            "earnedAt": (datetime.utcnow() - timedelta(days=5)).isoformat(),
         },
         {
             "id": "badge_3",
@@ -152,19 +167,15 @@ async def get_badges(
             "description": "Try all available subjects",
             "icon": "🗺️",
             "rarity": "epic",
-            "earnedAt": (datetime.utcnow() - timedelta(days=10)).isoformat()
-        }
+            "earnedAt": (datetime.utcnow() - timedelta(days=10)).isoformat(),
+        },
     ]
-    
+
     return badges
 
+
 @router.post("/xp/add")
-async def add_xp(
-    userId: str,
-    amount: int,
-    reason: str,
-    source: str = "achievement"
-) -> dict:
+async def add_xp(userId: str, amount: int, reason: str, source: str = "achievement") -> dict:
     """Add XP to a user's account"""
     # In production, this would update the database
     # For now, return a success response
@@ -176,8 +187,9 @@ async def add_xp(
         "newLevel": ((2500 + amount) // 500) + 1,
         "reason": reason,
         "source": source,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
+
 
 @router.get("/stats/{userId}")
 async def get_user_stats(userId: str) -> dict:
@@ -195,24 +207,19 @@ async def get_user_stats(userId: str) -> dict:
         "totalAchievements": 12,
         "completedMissions": 45,
         "averageScore": 87.5,
-        "subjectMastery": {
-            "Mathematics": 85,
-            "Science": 78,
-            "English": 92,
-            "History": 71
-        },
+        "subjectMastery": {"Mathematics": 85, "Science": 78, "English": 92, "History": 71},
         "recentActivity": [
             {
                 "type": "lesson_completed",
                 "description": "Completed 'Introduction to Algebra'",
                 "xpEarned": 50,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             },
             {
                 "type": "achievement_unlocked",
                 "description": "Unlocked 'Week Warrior' achievement",
                 "xpEarned": 100,
-                "timestamp": (datetime.utcnow() - timedelta(hours=2)).isoformat()
-            }
-        ]
+                "timestamp": (datetime.utcnow() - timedelta(hours=2)).isoformat(),
+            },
+        ],
     }

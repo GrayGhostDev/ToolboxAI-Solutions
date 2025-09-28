@@ -6,7 +6,6 @@ import {
   Text,
   TextInput,
   PasswordInput,
-  Button,
   Stack,
   Alert,
   Divider,
@@ -16,6 +15,7 @@ import {
   Gradient,
   rem
 } from '@mantine/core';
+import AtomicButton from '../atomic/atoms/Button';
 import { notifications } from '@mantine/notifications';
 import {
   IconMail,
@@ -28,7 +28,7 @@ import { login } from "../../services/api";
 import { useAppDispatch } from "../../store";
 import { signInSuccess } from "../../store/slices/userSlice";
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from "../../config";
-import { connectWebSocket } from "../../services/websocket";
+import { pusherService } from "../../services/pusher";
 import { logger } from "../../utils/logger";
 
 export default function LoginMantine() {
@@ -54,9 +54,9 @@ export default function LoginMantine() {
 
     // Basic email format validation - check if it's not a username (contains _)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isUsername = formData.email.includes("_") || formData.email.includes(".");
+    const isUsername = formData.email.includes("_") || !formData.email.includes("@");
     if (!isUsername && !emailRegex.test(formData.email)) {
-      setError("Please enter a valid email address");
+      setError("Please enter a valid email address or username");
       return false;
     }
 
@@ -88,13 +88,13 @@ export default function LoginMantine() {
       localStorage.setItem(AUTH_TOKEN_KEY, accessToken);
       localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
 
-      // Try to connect WebSocket after successful login via Pusher
+      // Connect to Pusher for realtime features after successful login
+      // Don't let Pusher errors prevent login
       try {
-        if (import.meta.env.VITE_ENABLE_WEBSOCKET === 'true') {
-          await connectWebSocket(accessToken);
-        }
-      } catch (wsError) {
-        logger.warn('WebSocket connection failed, continuing without realtime features', wsError);
+        pusherService.connect();
+        logger.info('Connected to Pusher for realtime features');
+      } catch (pusherError) {
+        logger.warn('Pusher connection failed, continuing without realtime features', pusherError);
       }
 
       // Get role from either user object or top-level
@@ -158,7 +158,7 @@ export default function LoginMantine() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, var(--mantine-color-toolboxai-blue-6) 0%, var(--mantine-color-toolboxai-purple-6) 100%)',
+        background: 'linear-gradient(135deg, var(--mantine-color-roblox-blue-6) 0%, var(--mantine-color-roblox-purple-6) 100%)',
         padding: 'var(--mantine-spacing-md)',
       }}
     >
@@ -179,7 +179,7 @@ export default function LoginMantine() {
               margin: `calc(var(--mantine-spacing-xl) * -1)`,
               marginBottom: 'var(--mantine-spacing-xl)',
               padding: 'var(--mantine-spacing-xl)',
-              background: 'linear-gradient(135deg, var(--mantine-color-toolboxai-blue-6) 0%, var(--mantine-color-toolboxai-purple-6) 100%)',
+              background: 'linear-gradient(135deg, var(--mantine-color-roblox-blue-6) 0%, var(--mantine-color-roblox-purple-6) 100%)',
               color: 'white',
               textAlign: 'center',
               borderRadius: 'var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0',
@@ -229,24 +229,25 @@ export default function LoginMantine() {
                 data-testid="password-input"
               />
 
-              <Button
+              <AtomicButton
                 type="submit"
                 fullWidth
                 size="md"
                 loading={loading}
+                loadingText="Signing In..."
                 data-testid="login-submit"
-                gradient={{ from: 'toolboxai-blue', to: 'toolboxai-purple', deg: 135 }}
-                variant="gradient"
+                variant="primary"
+                robloxTheme={true}
               >
-                {loading ? "Signing In..." : "Sign In"}
-              </Button>
+                Sign In
+              </AtomicButton>
 
               <Group justify="center">
                 <Anchor
                   component={Link}
                   to="/password-reset"
                   size="sm"
-                  c="toolboxai-blue.6"
+                  c="roblox-blue.6"
                 >
                   Forgot your password?
                 </Anchor>
@@ -276,17 +277,17 @@ export default function LoginMantine() {
                         {cred.email}
                       </Text>
                     </Box>
-                    <Button
+                    <AtomicButton
                       size="xs"
-                      variant="subtle"
-                      color="toolboxai-blue"
+                      variant="secondary"
+                      robloxTheme={true}
                       onClick={(e) => {
                         e.stopPropagation();
                         fillDemoCredentials(cred.email, cred.password);
                       }}
                     >
                       Use
-                    </Button>
+                    </AtomicButton>
                   </Group>
                 ))}
               </Stack>
@@ -298,7 +299,7 @@ export default function LoginMantine() {
                     component={Link}
                     to="/register"
                     fw={600}
-                    c="toolboxai-blue.6"
+                    c="roblox-blue.6"
                   >
                     Sign up here
                   </Anchor>

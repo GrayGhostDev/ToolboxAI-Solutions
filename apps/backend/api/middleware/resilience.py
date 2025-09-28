@@ -17,7 +17,7 @@ from apps.backend.core.circuit_breaker import (
     CircuitBreakerConfig,
     CircuitBreakerError,
     get_circuit_breaker,
-    get_all_circuit_breakers_status
+    get_all_circuit_breakers_status,
 )
 
 logger = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
                 timeout=5.0,
                 expected_exceptions=(Exception,),
                 excluded_exceptions=(HTTPException,),
-            )
+            ),
         )
 
         # External API circuit breaker (OpenAI, etc.)
@@ -57,7 +57,7 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
                 failure_rate_threshold=0.6,
                 reset_timeout=60.0,
                 timeout=30.0,
-            )
+            ),
         )
 
         # Redis circuit breaker
@@ -68,7 +68,7 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
                 failure_rate_threshold=0.7,
                 reset_timeout=15.0,
                 timeout=2.0,
-            )
+            ),
         )
 
         # Agent service circuit breaker
@@ -79,7 +79,7 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
                 failure_rate_threshold=0.5,
                 reset_timeout=45.0,
                 timeout=60.0,  # Agents may take longer
-            )
+            ),
         )
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
@@ -96,9 +96,7 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
             # If a circuit breaker applies to this path, use it
             if circuit_breaker:
                 response = await self._call_with_circuit_breaker(
-                    circuit_breaker,
-                    call_next,
-                    request
+                    circuit_breaker, call_next, request
                 )
             else:
                 response = await call_next(request)
@@ -121,8 +119,8 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
                 content={
                     "error": "Internal server error",
                     "message": "Service temporarily unavailable",
-                    "process_time": process_time
-                }
+                    "process_time": process_time,
+                },
             )
 
     def _get_circuit_breaker_for_path(self, path: str) -> Optional[CircuitBreaker]:
@@ -147,10 +145,7 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
         return None
 
     async def _call_with_circuit_breaker(
-        self,
-        circuit_breaker: CircuitBreaker,
-        call_next: Callable,
-        request: Request
+        self, circuit_breaker: CircuitBreaker, call_next: Callable, request: Request
     ) -> Response:
         """Execute request with circuit breaker protection"""
 
@@ -169,10 +164,7 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
             "agent_service": "AI agent service is currently overloaded",
         }
 
-        message = fallback_messages.get(
-            error.circuit_name,
-            "Service is temporarily unavailable"
-        )
+        message = fallback_messages.get(error.circuit_name, "Service is temporarily unavailable")
 
         return JSONResponse(
             status_code=503,
@@ -185,7 +177,7 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
             headers={
                 "Retry-After": str(int(error.wait_time)),
                 "X-Circuit-Breaker": error.circuit_name,
-            }
+            },
         )
 
 
@@ -195,11 +187,7 @@ class RetryMiddleware(BaseHTTPMiddleware):
     """
 
     def __init__(
-        self,
-        app,
-        max_retries: int = 3,
-        retry_delay: float = 1.0,
-        exponential_backoff: bool = True
+        self, app, max_retries: int = 3, retry_delay: float = 1.0, exponential_backoff: bool = True
     ):
         super().__init__(app)
         self.max_retries = max_retries
@@ -255,8 +243,8 @@ class RetryMiddleware(BaseHTTPMiddleware):
             content={
                 "error": "Service Unavailable",
                 "message": "Maximum retry attempts exceeded",
-                "retries": self.max_retries
-            }
+                "retries": self.max_retries,
+            },
         )
 
 
@@ -266,12 +254,7 @@ class BulkheadMiddleware(BaseHTTPMiddleware):
     and prevent resource exhaustion
     """
 
-    def __init__(
-        self,
-        app,
-        max_concurrent_requests: int = 100,
-        max_queue_size: int = 50
-    ):
+    def __init__(self, app, max_concurrent_requests: int = 100, max_queue_size: int = 50):
         super().__init__(app)
         self.max_concurrent_requests = max_concurrent_requests
         self.max_queue_size = max_queue_size
@@ -292,11 +275,9 @@ class BulkheadMiddleware(BaseHTTPMiddleware):
                         content={
                             "error": "Service Unavailable",
                             "message": "Server is at capacity",
-                            "retry_after": 5
+                            "retry_after": 5,
                         },
-                        headers={
-                            "Retry-After": "5"
-                        }
+                        headers={"Retry-After": "5"},
                     )
                 self.queue_size += 1
 
@@ -328,26 +309,14 @@ def setup_resilience_middleware(app):
     app.add_middleware(ResilienceMiddleware)
 
     # Add retry middleware for transient failures
-    app.add_middleware(
-        RetryMiddleware,
-        max_retries=3,
-        retry_delay=1.0,
-        exponential_backoff=True
-    )
+    app.add_middleware(RetryMiddleware, max_retries=3, retry_delay=1.0, exponential_backoff=True)
 
     # Add bulkhead pattern for resource isolation
-    app.add_middleware(
-        BulkheadMiddleware,
-        max_concurrent_requests=100,
-        max_queue_size=50
-    )
+    app.add_middleware(BulkheadMiddleware, max_concurrent_requests=100, max_queue_size=50)
 
     logger.info("Resilience middleware configured successfully")
 
 
 async def get_resilience_status() -> Dict[str, Any]:
     """Get status of all resilience components"""
-    return {
-        "circuit_breakers": await get_all_circuit_breakers_status(),
-        "timestamp": time.time()
-    }
+    return {"circuit_breakers": await get_all_circuit_breakers_status(), "timestamp": time.time()}

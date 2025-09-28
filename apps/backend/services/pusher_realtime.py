@@ -15,18 +15,14 @@ from apps.backend.services.pusher import (
     get_pusher_client,
     trigger_event,
     authenticate_channel,
-    PusherUnavailable
+    PusherUnavailable,
 )
 from apps.backend.services.rate_limit_manager import get_rate_limit_manager
 
 logger = logging.getLogger(__name__)
 
 # Channel name conventions
-CHANNEL_PREFIX = {
-    "public": "public-",
-    "private": "private-",
-    "presence": "presence-"
-}
+CHANNEL_PREFIX = {"public": "public-", "private": "private-", "presence": "presence-"}
 
 # Default channels
 DEFAULT_CHANNELS = [
@@ -34,7 +30,7 @@ DEFAULT_CHANNELS = [
     "public-notifications",
     "private-admin",
     "private-teacher",
-    "private-student"
+    "private-student",
 ]
 
 # Track connected users (via presence channels)
@@ -61,7 +57,7 @@ def _get_required_roles() -> Dict[str, str]:
         "teacher": "teacher",
         "student": "student",
         "dashboard": "student",
-        "notifications": "student"
+        "notifications": "student",
     }
 
 
@@ -101,7 +97,9 @@ class PusherRealtimeService:
         except Exception as e:
             logger.error(f"Failed to initialize Pusher: {e}")
 
-    async def authenticate_user(self, socket_id: str, channel: str, user_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def authenticate_user(
+        self, socket_id: str, channel: str, user_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Authenticate user for private/presence channel access
         """
@@ -113,7 +111,9 @@ class PusherRealtimeService:
 
         # Check RBAC
         if not _check_channel_access(channel, user_role):
-            raise PermissionError(f"User {user_id} with role {user_role} cannot access channel {channel}")
+            raise PermissionError(
+                f"User {user_id} with role {user_role} cannot access channel {channel}"
+            )
 
         # Check rate limit
         if not await self.rate_limiter.check_rate_limit(f"pusher_auth:{user_id}", 10, 60):
@@ -128,14 +128,11 @@ class PusherRealtimeService:
                 user_info={
                     "name": user_data.get("name", "Unknown"),
                     "role": user_role,
-                    "avatar": user_data.get("avatar", None)
-                }
+                    "avatar": user_data.get("avatar", None),
+                },
             )
         else:
-            auth_data = authenticate_channel(
-                socket_id=socket_id,
-                channel_name=channel
-            )
+            auth_data = authenticate_channel(socket_id=socket_id, channel_name=channel)
 
         # Track subscription
         if user_id not in channel_subscriptions:
@@ -149,7 +146,7 @@ class PusherRealtimeService:
         channel: str,
         event: str,
         data: Dict[str, Any],
-        exclude_socket_id: Optional[str] = None
+        exclude_socket_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Broadcast event to a channel
@@ -167,36 +164,21 @@ class PusherRealtimeService:
         logger.debug(f"Broadcast event '{event}' to channel '{channel}'")
         return result
 
-    async def send_to_user(
-        self,
-        user_id: str,
-        event: str,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def send_to_user(self, user_id: str, event: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Send event to specific user via their private channel
         """
         channel = f"private-user-{user_id}"
         return await self.broadcast_event(channel, event, data)
 
-    async def send_to_role(
-        self,
-        role: str,
-        event: str,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def send_to_role(self, role: str, event: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Send event to all users with specific role
         """
         channel = f"private-{role}"
         return await self.broadcast_event(channel, event, data)
 
-    async def handle_presence_event(
-        self,
-        channel: str,
-        event: str,
-        user_data: Dict[str, Any]
-    ):
+    async def handle_presence_event(self, channel: str, event: str, user_data: Dict[str, Any]):
         """
         Handle presence channel events (member_added, member_removed)
         """
@@ -206,7 +188,7 @@ class PusherRealtimeService:
             connected_users[user_id] = {
                 **user_data,
                 "connected_at": datetime.now(timezone.utc).isoformat(),
-                "channels": channel_subscriptions.get(user_id, set())
+                "channels": channel_subscriptions.get(user_id, set()),
             }
             logger.info(f"User {user_id} joined presence channel {channel}")
 
@@ -257,15 +239,12 @@ def get_pusher_service() -> PusherRealtimeService:
 # Export for compatibility
 pusher_service = get_pusher_service()
 
+
 # Event handlers for common operations
 async def emit_dashboard_update(data: Dict[str, Any]):
     """Emit dashboard update to all connected clients"""
     service = get_pusher_service()
-    return await service.broadcast_event(
-        "public-dashboard",
-        "dashboard-update",
-        data
-    )
+    return await service.broadcast_event("public-dashboard", "dashboard-update", data)
 
 
 async def emit_content_generated(content_id: str, content_data: Dict[str, Any]):
@@ -274,11 +253,7 @@ async def emit_content_generated(content_id: str, content_data: Dict[str, Any]):
     return await service.broadcast_event(
         "public-notifications",
         "content-generated",
-        {
-            "content_id": content_id,
-            "data": content_data,
-            "status": "completed"
-        }
+        {"content_id": content_id, "data": content_data, "status": "completed"},
     )
 
 
@@ -288,24 +263,12 @@ async def emit_quiz_submitted(quiz_id: str, student_id: str, score: float):
 
     # Notify teachers
     await service.send_to_role(
-        "teacher",
-        "quiz-submitted",
-        {
-            "quiz_id": quiz_id,
-            "student_id": student_id,
-            "score": score
-        }
+        "teacher", "quiz-submitted", {"quiz_id": quiz_id, "student_id": student_id, "score": score}
     )
 
     # Notify the student
     await service.send_to_user(
-        student_id,
-        "quiz-result",
-        {
-            "quiz_id": quiz_id,
-            "score": score,
-            "status": "graded"
-        }
+        student_id, "quiz-result", {"quiz_id": quiz_id, "score": score, "status": "graded"}
     )
 
 
@@ -315,11 +278,7 @@ async def emit_agent_status(agent_name: str, status: str, details: Optional[Dict
     return await service.broadcast_event(
         "public-notifications",
         "agent-status",
-        {
-            "agent": agent_name,
-            "status": status,
-            "details": details or {}
-        }
+        {"agent": agent_name, "status": status, "details": details or {}},
     )
 
 
@@ -334,7 +293,7 @@ def get_pusher_status() -> Dict[str, Any]:
         return {
             "status": "unavailable",
             "message": "Pusher service not initialized",
-            "connected_users": 0
+            "connected_users": 0,
         }
 
     connected = len(connected_users)
@@ -344,14 +303,16 @@ def get_pusher_status() -> Dict[str, Any]:
         "status": "healthy",
         "connected_users": connected,
         "total_channels": total_channels,
-        "active_channels": list(set().union(*channel_subscriptions.values())) if channel_subscriptions else [],
+        "active_channels": (
+            list(set().union(*channel_subscriptions.values())) if channel_subscriptions else []
+        ),
         "users": [
             {
                 "id": user_id,
                 "role": user_data.get("role"),
                 "connected_at": user_data.get("connected_at"),
-                "channels": list(channel_subscriptions.get(user_id, set()))
+                "channels": list(channel_subscriptions.get(user_id, set())),
             }
             for user_id, user_data in connected_users.items()
-        ]
+        ],
     }

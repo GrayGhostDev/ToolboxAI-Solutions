@@ -1,0 +1,604 @@
+name: Documentation Validation
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '**/*.md'
+      - '**/*.rst'
+      - 'apps/backend/**/*.py'
+      - 'core/**/*.py'
+      - 'database/**/*.py'
+      - 'scripts/validation/**'
+      - '.github/workflows/validate-docs.yml'
+
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'docs/**'
+      - '**/*.md'
+      - '**/*.rst'
+      - 'apps/backend/**/*.py'
+      - 'core/**/*.py'
+      - 'database/**/*.py'
+
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+  workflow_dispatch:
+    inputs:
+      validation_type:
+        description: 'Type of validation to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - syntax-only
+          - links-only
+          - api-sync
+          - coverage
+      fix_issues:
+        description: 'Auto-fix issues where possible'
+        required: false
+        default: false
+        type: boolean
+      coverage_threshold:
+        description: 'Documentation coverage threshold'
+        required: false
+        default: '80'
+        type: string
+
+env:
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '22'
+
+jobs:
+  prepare:
+    name: Prepare Validation Environment
+    runs-on: ubuntu-latest
+    outputs:
+      validation-type: ${{ steps.determine-validation.outputs.type }}
+      changed-files: ${{ steps.changed-files.outputs.files }}
+      should-run-api-sync: ${{ steps.determine-validation.outputs.api-sync }}
+      should-run-coverage: ${{ steps.determine-validation.outputs.coverage }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v40
+        with:
+          files: |
+            docs/**
+            **/*.md
+            **/*.rst
+            apps/backend/**/*.py
+            core/**/*.py
+            database/**/*.py
+
+      - name: Determine validation type
+        id: determine-validation
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "type=${{ inputs.validation_type }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "type=all" >> $GITHUB_OUTPUT
+          elif [ "${{ steps.changed-files.outputs.any_changed }}" = "true" ]; then
+            # Check what types of files changed
+            if echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q "apps/backend\|core/\|database/.*\.py"; then
+              echo "api-sync=true" >> $GITHUB_OUTPUT
+              echo "coverage=true" >> $GITHUB_OUTPUT
+            fi
+            if echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q "docs/\|.*\.md\|.*\.rst"; then
+              echo "type=all" >> $GITHUB_OUTPUT
+            else
+              echo "type=syntax-only" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "type=syntax-only" >> $GITHUB_OUTPUT
+          fi
+
+          # Set defaults if not set
+          if [ -z "${{ github.event.inputs.api_sync }}" ]; then
+            echo "api-sync=${api_sync:-false}" >> $GITHUB_OUTPUT
+          fi
+          if [ -z "${{ github.event.inputs.coverage }}" ]; then
+            echo "coverage=${coverage:-false}" >> $GITHUB_OUTPUT
+          fi
+
+  documentation-validation:
+    name: Documentation Validation
+    runs-on: ubuntu-latest
+    needs: prepare
+    if: needs.prepare.outputs.changed-files != '' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install click rich markdown beautifulsoup4 mistune openapi-spec-validator jsonschema requests aiohttp GitPython semantic_version
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Node dependencies (for API validation)
+        working-directory: apps/dashboard
+        run: |
+          npm ci
+
+      - name: Create output directories
+        run: |
+          mkdir -p reports/validation
+          mkdir -p reports/api-sync
+          mkdir -p reports/coverage
+          mkdir -p reports/migration
+
+      - name: Run basic documentation validation
+        id: doc-validation
+        run: |
+          python scripts/validation/doc_validator.py \
+            --root-dir . \
+            --output reports/validation/doc_validation_report.json \
+            --format json \
+            --verbose \
+            ${{ inputs.fix_issues == 'true' && '--fix-auto' || '' }}
+        continue-on-error: true
+
+      - name: Run code example validation
+        id: code-validation
+        if: needs.prepare.outputs.validation-type == 'all' || needs.prepare.outputs.validation-type == 'syntax-only'
+        run: |
+          python scripts/validation/code_example_validator.py \
+            --docs-dir docs \
+            --output-dir reports/validation \
+            --use-docker false \
+            --report-file reports/validation/code_examples_report.json \
+            --verbose
+        continue-on-error: true
+
+      - name: Run migration documentation check
+        id: migration-check
+        if: needs.prepare.outputs.validation-type == 'all'
+        run: |
+          python scripts/validation/migration_checker.py \
+            --root-dir . \
+            --output-dir reports/migration \
+            --check-migrations \
+            --verbose
+        continue-on-error: true
+
+      - name: Start backend for API sync (if needed)
+        id: start-backend
+        if: needs.prepare.outputs.should-run-api-sync == 'true'
+        run: |
+          # Start backend in background for API validation
+          cd apps/backend
+          python -m uvicorn main:app --host 127.0.0.1 --port 8009 &
+          BACKEND_PID=$!
+          echo "backend-pid=$BACKEND_PID" >> $GITHUB_OUTPUT
+
+          # Wait for backend to be ready
+          for i in {1..30}; do
+            if curl -s http://127.0.0.1:8009/health >/dev/null 2>&1; then
+              echo "Backend is ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Backend failed to start"
+              exit 1
+            fi
+            sleep 2
+          done
+        continue-on-error: true
+
+      - name: Run API documentation sync
+        id: api-sync
+        if: needs.prepare.outputs.should-run-api-sync == 'true' && steps.start-backend.outcome == 'success'
+        run: |
+          python scripts/validation/api_doc_sync.py \
+            --server http://127.0.0.1:8009 \
+            --docs-dir docs \
+            --output-dir reports/api-sync \
+            --verbose
+        continue-on-error: true
+
+      - name: Stop backend
+        if: steps.start-backend.outputs.backend-pid
+        run: |
+          kill ${{ steps.start-backend.outputs.backend-pid }} || true
+
+      - name: Run documentation coverage analysis
+        id: coverage-analysis
+        if: needs.prepare.outputs.should-run-coverage == 'true' || needs.prepare.outputs.validation-type == 'all'
+        run: |
+          python scripts/validation/doc_coverage.py \
+            --root-dir . \
+            --output-dir reports/coverage \
+            --generate-report \
+            --threshold ${{ inputs.coverage_threshold || '80' }} \
+            --verbose
+        continue-on-error: true
+
+      - name: Generate consolidated report
+        id: consolidate
+        if: always()
+        run: |
+          python -c "
+          import json
+          import os
+          from datetime import datetime
+
+          # Collect all validation results
+          results = {
+              'timestamp': datetime.now().isoformat(),
+              'pr_number': '${{ github.event.pull_request.number }}' if '${{ github.event_name }}' == 'pull_request' else None,
+              'commit_sha': '${{ github.sha }}',
+              'validation_type': '${{ needs.prepare.outputs.validation-type }}',
+              'results': {}
+          }
+
+          # Load individual reports
+          report_files = {
+              'documentation': 'reports/validation/doc_validation_report.json',
+              'code_examples': 'reports/validation/code_examples_report.json',
+              'api_sync': 'reports/api-sync/api_sync_report.json',
+              'migration': 'reports/migration/migration_report.json',
+              'coverage': 'reports/coverage/documentation_coverage_report.json'
+          }
+
+          for name, path in report_files.items():
+              if os.path.exists(path):
+                  try:
+                      with open(path) as f:
+                          results['results'][name] = json.load(f)
+                  except Exception as e:
+                      results['results'][name] = {'error': str(e)}
+
+          # Calculate overall status
+          has_errors = False
+          has_warnings = False
+
+          for name, result in results['results'].items():
+              if 'error' in result:
+                  has_errors = True
+              elif name == 'documentation' and result.get('stats', {}).get('error_count', 0) > 0:
+                  has_errors = True
+              elif name == 'coverage' and result.get('summary', {}).get('coverage_percentage', 0) < ${{ inputs.coverage_threshold || '80' }}:
+                  has_warnings = True
+
+          results['overall_status'] = 'error' if has_errors else 'warning' if has_warnings else 'success'
+
+          with open('reports/consolidated_validation_report.json', 'w') as f:
+              json.dump(results, f, indent=2)
+
+          print(f\"Overall status: {results['overall_status']}\")
+          "
+
+      - name: Parse results for PR comment
+        id: parse-results
+        if: github.event_name == 'pull_request'
+        run: |
+          python -c "
+          import json
+          import os
+
+          if os.path.exists('reports/consolidated_validation_report.json'):
+              with open('reports/consolidated_validation_report.json') as f:
+                  results = json.load(f)
+
+              # Generate summary for PR comment
+              summary = []
+              summary.append('# 📝 Documentation Validation Results')
+              summary.append('')
+
+              overall = results['overall_status']
+              if overall == 'success':
+                  summary.append('✅ **All validation checks passed!**')
+              elif overall == 'warning':
+                  summary.append('⚠️ **Validation completed with warnings**')
+              else:
+                  summary.append('❌ **Validation failed with errors**')
+
+              summary.append('')
+              summary.append('## Results Summary')
+              summary.append('')
+
+              for name, result in results['results'].items():
+                  if 'error' in result:
+                      summary.append(f'- ❌ {name.title()}: Error - {result[\"error\"]}')
+                  elif name == 'documentation':
+                      stats = result.get('stats', {})
+                      issues = stats.get('issues_found', 0)
+                      if issues == 0:
+                          summary.append(f'- ✅ {name.title()}: No issues found')
+                      else:
+                          summary.append(f'- ⚠️ {name.title()}: {issues} issues found')
+                  elif name == 'coverage':
+                      coverage = result.get('summary', {}).get('coverage_percentage', 0)
+                      threshold = ${{ inputs.coverage_threshold || '80' }}
+                      if coverage >= threshold:
+                          summary.append(f'- ✅ {name.title()}: {coverage:.1f}% (>= {threshold}%)')
+                      else:
+                          summary.append(f'- ⚠️ {name.title()}: {coverage:.1f}% (< {threshold}%)')
+                  elif name == 'api_sync':
+                      sync_summary = result.get('summary', {})
+                      missing = sync_summary.get('missing_from_docs', 0)
+                      if missing == 0:
+                          summary.append(f'- ✅ {name.title()}: API docs in sync')
+                      else:
+                          summary.append(f'- ⚠️ {name.title()}: {missing} endpoints missing docs')
+                  else:
+                      summary.append(f'- ✅ {name.title()}: Completed')
+
+              summary.append('')
+              summary.append('## Detailed Reports')
+              summary.append('')
+              summary.append('Detailed validation reports are available in the workflow artifacts.')
+
+              # Write to file for comment action
+              with open('pr_comment.md', 'w') as f:
+                  f.write('\n'.join(summary))
+
+              print('PR comment generated')
+          else:
+              with open('pr_comment.md', 'w') as f:
+                  f.write('# 📝 Documentation Validation Results\n\n❌ **Validation failed to generate reports**')
+          "
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            if (fs.existsSync('pr_comment.md')) {
+              const comment = fs.readFileSync('pr_comment.md', 'utf8');
+
+              // Find existing comment
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+
+              const existingComment = comments.find(comment =>
+                comment.user.type === 'Bot' &&
+                comment.body.includes('📝 Documentation Validation Results')
+              );
+
+              if (existingComment) {
+                // Update existing comment
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existingComment.id,
+                  body: comment
+                });
+              } else {
+                // Create new comment
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: comment
+                });
+              }
+            }
+
+      - name: Upload validation reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: documentation-validation-reports
+          path: |
+            reports/
+          retention-days: 30
+
+      - name: Upload HTML reports for preview
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: validation-html-reports
+          path: |
+            reports/**/*.html
+          retention-days: 7
+
+      - name: Check validation status
+        if: always()
+        run: |
+          if [ -f "reports/consolidated_validation_report.json" ]; then
+            STATUS=$(python -c "
+            import json
+            with open('reports/consolidated_validation_report.json') as f:
+                result = json.load(f)
+            print(result['overall_status'])
+            ")
+
+            echo "Overall validation status: $STATUS"
+
+            if [ "$STATUS" = "error" ]; then
+              echo "❌ Validation failed with errors"
+              exit 1
+            elif [ "$STATUS" = "warning" ]; then
+              echo "⚠️ Validation completed with warnings"
+              if [ "${{ github.event_name }}" = "pull_request" ]; then
+                # Don't fail PR on warnings, just notify
+                exit 0
+              else
+                exit 1
+              fi
+            else
+              echo "✅ All validation checks passed"
+              exit 0
+            fi
+          else
+            echo "❌ No validation results found"
+            exit 1
+          fi
+
+  update-documentation:
+    name: Update Documentation (if needed)
+    runs-on: ubuntu-latest
+    needs: [prepare, documentation-validation]
+    if: |
+      always() &&
+      needs.documentation-validation.result != 'failure' &&
+      github.event_name == 'schedule' &&
+      needs.prepare.outputs.should-run-coverage == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install click rich GitPython semantic_version
+
+      - name: Update migration status documentation
+        run: |
+          python scripts/validation/migration_checker.py \
+            --root-dir . \
+            --output-dir reports/migration \
+            --update-docs \
+            --verbose
+
+      - name: Generate missing documentation templates
+        run: |
+          python scripts/validation/doc_coverage.py \
+            --root-dir . \
+            --output-dir reports/coverage \
+            --missing-docs \
+            --fix-template \
+            --verbose
+
+      - name: Commit updated documentation
+        run: |
+          git config --global user.name 'Documentation Bot'
+          git config --global user.email 'bot@toolboxai.dev'
+
+          if [ -n "$(git status --porcelain)" ]; then
+            git add docs/
+            git commit -m "docs: Auto-update documentation status and templates
+
+            - Updated migration status documentation
+            - Generated templates for missing documentation
+            - Automated by documentation validation workflow"
+
+            git push origin ${{ github.ref_name }}
+            echo "Documentation updated and pushed"
+          else
+            echo "No documentation changes to commit"
+          fi
+
+  # Separate job for generating OpenAPI spec
+  update-openapi-spec:
+    name: Update OpenAPI Specification
+    runs-on: ubuntu-latest
+    needs: [prepare]
+    if: |
+      needs.prepare.outputs.should-run-api-sync == 'true' ||
+      github.event_name == 'schedule'
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Start FastAPI application
+        run: |
+          cd apps/backend
+          export DATABASE_URL="postgresql://postgres:test_password@localhost:5432/test_db"
+          export REDIS_URL="redis://localhost:6379"
+          python -m uvicorn main:app --host 0.0.0.0 --port 8009 &
+
+          # Wait for app to be ready
+          for i in {1..30}; do
+            if curl -s http://localhost:8009/health >/dev/null 2>&1; then
+              echo "FastAPI app is ready"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Generate OpenAPI specification
+        run: |
+          python scripts/validation/api_doc_sync.py \
+            --server http://localhost:8009 \
+            --docs-dir docs \
+            --output-dir docs/03-api \
+            --generate-spec
+
+      - name: Commit OpenAPI spec if changed
+        run: |
+          git config --global user.name 'API Documentation Bot'
+          git config --global user.email 'api-bot@toolboxai.dev'
+
+          if [ -n "$(git diff --name-only docs/03-api/)" ]; then
+            git add docs/03-api/
+            git commit -m "docs: Update OpenAPI specification
+
+            - Auto-generated from running FastAPI application
+            - Updated API endpoint documentation
+            - Generated by documentation validation workflow"
+
+            git push origin ${{ github.ref_name }}
+            echo "OpenAPI specification updated"
+          else
+            echo "No OpenAPI specification changes"
+          fi

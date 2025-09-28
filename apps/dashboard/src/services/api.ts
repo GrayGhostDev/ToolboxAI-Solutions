@@ -173,38 +173,48 @@ class ApiClient {
           } else {
             // Provide status-specific messages
             switch (status) {
-              case 400:
+              case 400: {
                 errorMessage = error.config?.url?.includes('/auth/')
                   ? 'Invalid credentials or request format.'
                   : 'Invalid request. Please check your input.';
                 break;
-              case 403:
+              }
+              case 403: {
                 errorMessage = error.config?.url?.includes('/admin/')
                   ? 'Administrator access required.'
                   : 'You do not have permission to perform this action.';
                 break;
-              case 404:
+              }
+              case 404: {
                 const resource = error.config?.url?.split('/').filter(Boolean).pop() || 'resource';
                 errorMessage = `The requested ${resource} was not found.`;
                 break;
-              case 409:
+              }
+              case 409: {
                 errorMessage = 'This action conflicts with existing data.';
                 break;
-              case 422:
+              }
+              case 422: {
                 errorMessage = 'Validation error. Please check your input.';
                 break;
-              case 429:
+              }
+              case 429: {
                 const retryAfter = error.response.headers['retry-after'];
                 errorMessage = retryAfter
                   ? `Too many requests. Please try again in ${retryAfter} seconds.`
                   : 'Too many requests. Please slow down.';
                 break;
-              case 500:
+              }
+              case 500: {
                 errorMessage = 'Server error. Our team has been notified.';
                 break;
+              }
               case 502:
-              case 503:
+              case 503: {
                 errorMessage = 'Service temporarily unavailable. Please try again later.';
+                break;
+              }
+              default:
                 break;
             }
           }

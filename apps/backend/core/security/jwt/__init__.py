@@ -12,10 +12,10 @@ from .jwt_manager import JWTSecurityManager, init_jwt_security, get_secure_jwt_s
 JWTManager = JWTSecurityManager
 
 __all__ = [
-    'JWTSecretGenerator',
-    'JWTSecurityManager',
-    'JWTManager',  # Alias
-    'generate_secure_jwt_secret',
-    'get_secure_jwt_secret',
-    'init_jwt_security'
+    "JWTSecretGenerator",
+    "JWTSecurityManager",
+    "JWTManager",  # Alias
+    "generate_secure_jwt_secret",
+    "get_secure_jwt_secret",
+    "init_jwt_security",
 ]

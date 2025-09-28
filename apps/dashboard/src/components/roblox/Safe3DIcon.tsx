@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Box from '@mui/material/Box';
+import { Box } from '@mantine/core';
 import { Procedural3DIcon } from './Procedural3DIcon';
 interface Safe3DIconProps {
   iconName: string;
@@ -40,7 +40,7 @@ export const Safe3DIcon: React.FunctionComponent<Safe3DIconProps> = ({
   // This code path won't be reached but keeping for future when we have real assets
   return (
     <Box
-      sx={{
+      style={{
         width: iconSize,
         height: iconSize,
         position: 'relative',
@@ -55,7 +55,7 @@ export const Safe3DIcon: React.FunctionComponent<Safe3DIconProps> = ({
           height: '100%',
           objectFit: 'contain',
         }}
-        onError={(e) => {
+        onError={() => {
           console.log(`3D icon ${iconName} not found, using procedural icon`);
           setImageError(true);
         }}

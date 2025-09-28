@@ -38,6 +38,7 @@ router = APIRouter(prefix="/health/load-balancing", tags=["health"])
 
 class HealthStatus(Enum):
     """Health check status levels"""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -62,18 +63,14 @@ class ComponentHealth:
             "message": self.message,
             "details": self.details,
             "latency_ms": self.latency_ms,
-            "checked_at": self.checked_at.isoformat()
+            "checked_at": self.checked_at.isoformat(),
         }
 
 
 class LoadBalancingHealthChecker:
     """Comprehensive health checker for load balancing infrastructure"""
 
-    def __init__(
-        self,
-        redis_url: Optional[str] = None,
-        enable_detailed_checks: bool = True
-    ):
+    def __init__(self, redis_url: Optional[str] = None, enable_detailed_checks: bool = True):
         self.redis_url = redis_url or "redis://localhost:6379"
         self.enable_detailed = enable_detailed_checks
         self.redis_client: Optional[aioredis.Redis] = None
@@ -101,16 +98,12 @@ class LoadBalancingHealthChecker:
                 "database": get_circuit_breaker("database"),
                 "api": get_circuit_breaker("api"),
                 "external_service": get_circuit_breaker("external_service"),
-                "redis": get_circuit_breaker("redis")
+                "redis": get_circuit_breaker("redis"),
             }
 
             open_circuits = []
             half_open_circuits = []
-            metrics_summary = {
-                "total_calls": 0,
-                "failed_calls": 0,
-                "success_rate": 0
-            }
+            metrics_summary = {"total_calls": 0, "failed_calls": 0, "success_rate": 0}
 
             for name, breaker in breakers.items():
                 if breaker:
@@ -147,7 +140,7 @@ class LoadBalancingHealthChecker:
             health.details = {
                 "open_circuits": open_circuits,
                 "half_open_circuits": half_open_circuits,
-                "metrics": metrics_summary
+                "metrics": metrics_summary,
             }
 
         except Exception as e:
@@ -169,10 +162,8 @@ class LoadBalancingHealthChecker:
 
             # Create test rate limiter
             from apps.backend.core.rate_limiter import RateLimitConfig
-            config = RateLimitConfig(
-                requests_per_second=10,
-                burst_size=5
-            )
+
+            config = RateLimitConfig(requests_per_second=10, burst_size=5)
             limiter = RateLimiter(self.redis_client, config)
 
             # Test rate limiting
@@ -203,12 +194,9 @@ class LoadBalancingHealthChecker:
                 "test_results": {
                     "requests_made": len(results),
                     "requests_allowed": allowed_count,
-                    "requests_rejected": rejected_count
+                    "requests_rejected": rejected_count,
                 },
-                "redis_status": {
-                    "connected": True,
-                    "connected_clients": connected_clients
-                }
+                "redis_status": {"connected": True, "connected_clients": connected_clients},
             }
 
         except Exception as e:
@@ -244,7 +232,7 @@ class LoadBalancingHealthChecker:
                     "healthy": replica_health.is_healthy,
                     "lag_seconds": replica_health.lag_seconds,
                     "connections": replica_health.active_connections,
-                    "weight": replica_health.weight
+                    "weight": replica_health.weight,
                 }
                 replica_details.append(replica_info)
 
@@ -275,7 +263,7 @@ class LoadBalancingHealthChecker:
                 "replicas": replica_details,
                 "routing_metrics": routing_metrics,
                 "unhealthy_count": len(unhealthy_replicas),
-                "high_lag_count": len(high_lag_replicas)
+                "high_lag_count": len(high_lag_replicas),
             }
 
         except Exception as e:
@@ -313,24 +301,23 @@ class LoadBalancingHealthChecker:
             # Verify cache working
             if set_success and retrieved and retrieved.value == test_value:
                 health.status = HealthStatus.HEALTHY
-                health.message = f"Cache operational, hit rate: {edge_metrics.get('hit_rate', 0):.1f}%"
+                health.message = (
+                    f"Cache operational, hit rate: {edge_metrics.get('hit_rate', 0):.1f}%"
+                )
             else:
                 health.status = HealthStatus.DEGRADED
                 health.message = "Cache operations partially failing"
 
             # Check cache hit rate
-            hit_rate = edge_metrics.get('hit_rate', 0)
-            if hit_rate < 30 and edge_metrics.get('hits', 0) > 100:
+            hit_rate = edge_metrics.get("hit_rate", 0)
+            if hit_rate < 30 and edge_metrics.get("hits", 0) > 100:
                 health.status = HealthStatus.DEGRADED
                 health.message = f"Low cache hit rate: {hit_rate:.1f}%"
 
             health.details = {
                 "cache_tiers": list(cache_metrics.keys()),
                 "edge_metrics": edge_metrics,
-                "test_result": {
-                    "set": set_success,
-                    "get": retrieved is not None
-                }
+                "test_result": {"set": set_success, "get": retrieved is not None},
             }
 
             await cache.close()
@@ -361,6 +348,7 @@ class LoadBalancingHealthChecker:
 
             # Check node state
             from apps.backend.core.websocket_cluster import NodeState
+
             if cluster.node_state == NodeState.HEALTHY:
                 health.status = HealthStatus.HEALTHY
                 health.message = f"Node healthy with {metrics['connections']} connections"
@@ -372,12 +360,14 @@ class LoadBalancingHealthChecker:
                 health.message = f"Node state: {cluster.node_state.value}"
 
             # Check cluster health
-            if metrics['healthy_nodes'] == 0:
+            if metrics["healthy_nodes"] == 0:
                 health.status = HealthStatus.CRITICAL
                 health.message = "No healthy nodes in cluster"
-            elif metrics['healthy_nodes'] < metrics['cluster_nodes'] / 2:
+            elif metrics["healthy_nodes"] < metrics["cluster_nodes"] / 2:
                 health.status = HealthStatus.DEGRADED
-                health.message = f"Only {metrics['healthy_nodes']}/{metrics['cluster_nodes']} nodes healthy"
+                health.message = (
+                    f"Only {metrics['healthy_nodes']}/{metrics['cluster_nodes']} nodes healthy"
+                )
 
             health.details = metrics
 
@@ -405,7 +395,7 @@ class LoadBalancingHealthChecker:
             test_endpoints = [
                 ("us-east-1.example.com", "US East"),
                 ("eu-west-1.example.com", "EU West"),
-                ("ap-south-1.example.com", "AP South")
+                ("ap-south-1.example.com", "AP South"),
             ]
 
             async with httpx.AsyncClient(timeout=5.0) as client:
@@ -433,7 +423,7 @@ class LoadBalancingHealthChecker:
             health.details = {
                 "regions_checked": regions_checked,
                 "healthy_regions": healthy_regions,
-                "unhealthy_count": len(regions_checked) - len(healthy_regions)
+                "unhealthy_count": len(regions_checked) - len(healthy_regions),
             }
 
         except Exception as e:
@@ -452,7 +442,7 @@ class LoadBalancingHealthChecker:
             self.check_database_replicas(),
             self.check_edge_cache(),
             self.check_websocket_cluster(),
-            self.check_global_load_balancer()
+            self.check_global_load_balancer(),
         ]
 
         results = await asyncio.gather(*checks, return_exceptions=True)
@@ -471,8 +461,7 @@ class LoadBalancingHealthChecker:
         return health_results
 
     def calculate_overall_health(
-        self,
-        component_health: Dict[str, ComponentHealth]
+        self, component_health: Dict[str, ComponentHealth]
     ) -> Tuple[HealthStatus, str]:
         """Calculate overall system health from component health"""
 
@@ -503,10 +492,10 @@ async def get_health_checker() -> LoadBalancingHealthChecker:
 
 # API Endpoints
 
+
 @router.get("/status")
 async def get_overall_status(
-    detailed: bool = False,
-    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)
+    detailed: bool = False, health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)
 ):
     """Get overall load balancing health status"""
 
@@ -514,28 +503,20 @@ async def get_overall_status(
     component_health = await health_checker.check_all_components()
 
     # Calculate overall health
-    overall_status, overall_message = health_checker.calculate_overall_health(
-        component_health
-    )
+    overall_status, overall_message = health_checker.calculate_overall_health(component_health)
 
     response = {
         "status": overall_status.value,
         "message": overall_message,
         "timestamp": datetime.utcnow().isoformat(),
         "components": {
-            name: {
-                "status": health.status.value,
-                "message": health.message
-            }
+            name: {"status": health.status.value, "message": health.message}
             for name, health in component_health.items()
-        }
+        },
     }
 
     if detailed:
-        response["details"] = {
-            name: health.to_dict()
-            for name, health in component_health.items()
-        }
+        response["details"] = {name: health.to_dict() for name, health in component_health.items()}
 
     # Set appropriate HTTP status code
     if overall_status == HealthStatus.CRITICAL:
@@ -550,7 +531,7 @@ async def get_overall_status(
 
 @router.get("/circuit-breakers")
 async def get_circuit_breaker_health(
-    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)
+    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker),
 ):
     """Get circuit breaker health status"""
     health = await health_checker.check_circuit_breakers()
@@ -559,7 +540,7 @@ async def get_circuit_breaker_health(
 
 @router.get("/rate-limiting")
 async def get_rate_limiting_health(
-    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)
+    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker),
 ):
     """Get rate limiting health status"""
     health = await health_checker.check_rate_limiting()
@@ -568,7 +549,7 @@ async def get_rate_limiting_health(
 
 @router.get("/database-replicas")
 async def get_database_replica_health(
-    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)
+    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker),
 ):
     """Get database replica health status"""
     health = await health_checker.check_database_replicas()
@@ -577,7 +558,7 @@ async def get_database_replica_health(
 
 @router.get("/edge-cache")
 async def get_edge_cache_health(
-    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)
+    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker),
 ):
     """Get edge cache health status"""
     health = await health_checker.check_edge_cache()
@@ -586,7 +567,7 @@ async def get_edge_cache_health(
 
 @router.get("/websocket-cluster")
 async def get_websocket_cluster_health(
-    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)
+    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker),
 ):
     """Get WebSocket cluster health status"""
     health = await health_checker.check_websocket_cluster()
@@ -595,7 +576,7 @@ async def get_websocket_cluster_health(
 
 @router.get("/global-lb")
 async def get_global_lb_health(
-    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)
+    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker),
 ):
     """Get global load balancer health status"""
     health = await health_checker.check_global_load_balancer()
@@ -604,8 +585,7 @@ async def get_global_lb_health(
 
 @router.post("/test-failover")
 async def test_failover_scenario(
-    component: str,
-    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)
+    component: str, health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)
 ):
     """Test failover scenario for a component"""
 
@@ -614,7 +594,7 @@ async def test_failover_scenario(
 
     return {
         "message": f"Failover test for {component} would be triggered",
-        "note": "This endpoint requires additional authentication in production"
+        "note": "This endpoint requires additional authentication in production",
     }
 
 
@@ -655,29 +635,23 @@ async def liveness_probe():
 
 # Readiness probe for Kubernetes
 @router.get("/ready")
-async def readiness_probe(
-    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)
-):
+async def readiness_probe(health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)):
     """Readiness probe that checks critical components"""
 
     # Check only critical components for readiness
     critical_checks = await asyncio.gather(
         health_checker.check_database_replicas(),
         health_checker.check_circuit_breakers(),
-        return_exceptions=True
+        return_exceptions=True,
     )
 
     for check in critical_checks:
         if isinstance(check, Exception):
-            return JSONResponse(
-                {"status": "not_ready", "error": str(check)},
-                status_code=503
-            )
+            return JSONResponse({"status": "not_ready", "error": str(check)}, status_code=503)
         elif isinstance(check, ComponentHealth):
             if check.status in [HealthStatus.CRITICAL, HealthStatus.UNHEALTHY]:
                 return JSONResponse(
-                    {"status": "not_ready", "component": check.name},
-                    status_code=503
+                    {"status": "not_ready", "component": check.name}, status_code=503
                 )
 
     return {"status": "ready"}

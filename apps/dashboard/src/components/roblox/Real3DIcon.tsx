@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { useTheme, alpha, keyframes, styled } from '@mui/material/styles';
+import { Box, Text, useMantineTheme } from '@mantine/core';
+import { keyframes } from '@emotion/react';
 import { Procedural3DIcon } from './Procedural3DIcon';
 
 interface Real3DIconProps {
@@ -30,7 +29,8 @@ const glowAnimation = keyframes`
   100% { box-shadow: 0 0 5px currentColor; }
 `;
 
-const StyledIconContainer = styled(Box)(({ theme, size }: any) => {
+// Mantine-compatible styled component approach
+const getIconContainerStyles = (theme: any, size: string) => {
   const sizeStyles = {
     small: { width: 60, height: 60 },
     medium: { width: 80, height: 80 },
@@ -43,57 +43,17 @@ const StyledIconContainer = styled(Box)(({ theme, size }: any) => {
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: '50%',
-    background: `linear-gradient(145deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-    border: `3px solid ${theme.palette.primary.main}`,
-    boxShadow: `0 8px 25px ${alpha(theme.palette.primary.main, 0.3)}`,
+    background: `linear-gradient(145deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
+    border: `3px solid ${theme.colors.blue[6]}`,
+    boxShadow: `0 8px 25px ${theme.colors.blue[2]}`,
     cursor: 'pointer',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     position: 'relative',
     overflow: 'hidden',
-    ...sizeStyles[size],
-    
-    '&:hover': {
-      transform: 'translateY(-5px) scale(1.1)',
-      boxShadow: `0 12px 35px ${alpha(theme.palette.primary.main, 0.5)}`,
-      borderColor: theme.palette.secondary.main,
-    },
-    
     animation: `${floatAnimation} 3s ease-in-out infinite`,
-    
-    '&::before': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: `linear-gradient(45deg, transparent, ${alpha('#fff', 0.2)}, transparent)`,
-      transform: 'translateX(-100%)',
-      transition: 'transform 0.6s ease',
-    },
-    
-    '&:hover::before': {
-      transform: 'translateX(100%)',
-    },
-    
-    '&::after': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: `linear-gradient(135deg, ${alpha('#fff', 0.1)}, transparent, ${alpha('#fff', 0.1)})`,
-      borderRadius: '50%',
-      opacity: 0,
-      transition: 'opacity 0.3s ease',
-    },
-    
-    '&:hover::after': {
-      opacity: 1,
-    },
+    ...sizeStyles[size as keyof typeof sizeStyles]
   };
-});
+};
 
 // Particle effect generator
 function createParticleEffect(x: number, y: number, type: string) {
@@ -344,7 +304,7 @@ export const Real3DIcon: React.FunctionComponent<Real3DIconProps> = ({
   onClick,
   description
 }) => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const [isHovered, setIsHovered] = useState(false);
 
   // Map icon names like ROCKET_1 to ROCKET
@@ -363,16 +323,16 @@ export const Real3DIcon: React.FunctionComponent<Real3DIconProps> = ({
 
   return (
     <Box
-      sx={{
+      style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 1,
+        gap: theme.spacing.xs,
         position: 'relative',
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={(e: React.MouseEvent) => handleClick}
+      onClick={handleClick}
     >
       {/* Use Procedural 3D Icon */}
       <Procedural3DIcon
@@ -389,28 +349,27 @@ export const Real3DIcon: React.FunctionComponent<Real3DIconProps> = ({
 
       {/* Tooltip */}
       {displayDescription && isHovered && (
-        <Typography
-          variant="caption"
-          sx={{
+        <Text
+          size="xs"
+          style={{
             position: 'absolute',
             bottom: -25,
             left: '50%',
             transform: 'translateX(-50%)',
             whiteSpace: 'nowrap',
-            fontSize: '0.7rem',
             fontWeight: 600,
-            color: theme.palette.text.primary,
-            background: alpha(theme.palette.background.paper, 0.95),
+            color: theme.colors.dark[9],
+            backgroundColor: theme.colors.gray[0],
             padding: '4px 12px',
             borderRadius: 8,
-            border: `2px solid ${alpha(iconData.fallbackColor, 0.5)}`,
-            boxShadow: `0 4px 12px ${alpha('#000', 0.2)}`,
+            border: `2px solid ${iconData.fallbackColor}40`,
+            boxShadow: `0 4px 12px ${theme.colors.dark[2]}`,
             zIndex: 1000,
             pointerEvents: 'none',
           }}
         >
           {displayDescription}
-        </Typography>
+        </Text>
       )}
     </Box>
   );

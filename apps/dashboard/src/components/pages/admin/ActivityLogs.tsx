@@ -1,50 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardHeader from '@mui/material/CardHeader';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import TablePagination from '@mui/material/TablePagination';
-import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
-import TextField from '@mui/material/TextField';
-import InputAdornment from '@mui/material/InputAdornment';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import Stack from '@mui/material/Stack';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Paper from '@mui/material/Paper';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
+import { Box, Card, Table, Text, Badge, TextInput, Select, Stack, ActionIcon, Tooltip, Paper, Avatar, Button, Group, Pagination } from '@mantine/core';
 
 import {
-  Search,
-  FilterList,
-  Download,
-  Refresh,
-  Info,
-  Warning,
-  Error,
-  CheckCircle,
-  Security,
-  Person,
-  School,
-  Assessment,
-  Login,
-  Logout,
-  Edit,
-  Delete,
-  Add,
-  Settings,
-} from '@mui/icons-material';
+  IconSearch,
+  IconFilter,
+  IconDownload,
+  IconRefresh,
+  IconInfoCircle,
+  IconAlertTriangle,
+  IconAlertCircle,
+  IconCircleCheck,
+  IconShield,
+  IconUser,
+  IconSchool,
+  IconChartBar,
+  IconLogin,
+  IconLogout,
+  IconEdit,
+  IconTrash,
+  IconPlus,
+  IconSettings,
+} from '@tabler/icons-react';
 import { format } from 'date-fns';
 import { useRealTimeData } from '../../../hooks/useRealTimeData';
 
@@ -252,56 +228,56 @@ const ActivityLogs: React.FunctionComponent<Record<string, any>> = () => {
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'auth':
-        return <Login fontSize="small" />;
+        return <IconLogin size={14} />;
       case 'user':
-        return <Person fontSize="small" />;
+        return <IconUser size={14} />;
       case 'content':
-        return <School fontSize="small" />;
+        return <IconSchool size={14} />;
       case 'system':
-        return <Settings fontSize="small" />;
+        return <IconSettings size={14} />;
       case 'security':
-        return <Security fontSize="small" />;
+        return <IconShield size={14} />;
       case 'api':
-        return <Assessment fontSize="small" />;
+        return <IconChartBar size={14} />;
       default:
-        return <Info fontSize="small" />;
+        return <IconInfoCircle size={14} />;
     }
   };
 
   const getLevelIcon = (level: string) => {
     switch (level) {
       case 'success':
-        return <CheckCircle color="success" fontSize="small" />;
+        return <IconCircleCheck color="var(--mantine-color-green-6)" size={14} />;
       case 'warning':
-        return <Warning color="warning" fontSize="small" />;
+        return <IconAlertTriangle color="var(--mantine-color-orange-6)" size={14} />;
       case 'error':
-        return <Error color="error" fontSize="small" />;
+        return <IconAlertCircle color="var(--mantine-color-red-6)" size={14} />;
       case 'info':
       default:
-        return <Info color="info" fontSize="small" />;
+        return <IconInfoCircle color="var(--mantine-color-blue-6)" size={14} />;
     }
   };
 
   const getLevelColor = (level: string) => {
     switch (level) {
       case 'success':
-        return 'success';
+        return 'green';
       case 'warning':
-        return 'warning';
+        return 'orange';
       case 'error':
-        return 'error';
+        return 'red';
       case 'info':
       default:
-        return 'info';
+        return 'blue';
     }
   };
 
   const getActionIcon = (action: string) => {
-    if (action.includes('login') || action.includes('Login')) return <Login fontSize="small" />;
-    if (action.includes('logout') || action.includes('Logout')) return <Logout fontSize="small" />;
-    if (action.includes('create') || action.includes('Create')) return <Add fontSize="small" />;
-    if (action.includes('update') || action.includes('Update')) return <Edit fontSize="small" />;
-    if (action.includes('delete') || action.includes('Delete')) return <Delete fontSize="small" />;
+    if (action.includes('login') || action.includes('Login')) return <IconLogin size={14} />;
+    if (action.includes('logout') || action.includes('Logout')) return <IconLogout size={14} />;
+    if (action.includes('create') || action.includes('Create')) return <IconPlus size={14} />;
+    if (action.includes('update') || action.includes('Update')) return <IconEdit size={14} />;
+    if (action.includes('delete') || action.includes('Delete')) return <IconTrash size={14} />;
     return null;
   };
 
@@ -309,178 +285,171 @@ const ActivityLogs: React.FunctionComponent<Record<string, any>> = () => {
 
   return (
     <Box>
-      <Typography variant="h5" fontWeight={600} gutterBottom>
+      <Text size="lg" fw={600} mb="lg">
         Activity Logs
-      </Typography>
+      </Text>
 
       {/* Summary Cards */}
-      <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-        <Card sx={{ flex: 1 }}>
-          <CardContent>
-            <Typography variant="caption" color="text.secondary">
-              Total Logs
-            </Typography>
-            <Typography variant="h4">{logs.length}</Typography>
-          </CardContent>
+      <Group grow mb="lg">
+        <Card p="md">
+          <Text size="xs" c="dimmed">
+            Total Logs
+          </Text>
+          <Text size="xl" fw={600}>{logs.length}</Text>
         </Card>
-        <Card sx={{ flex: 1 }}>
-          <CardContent>
-            <Typography variant="caption" color="text.secondary">
-              Warnings
-            </Typography>
-            <Typography variant="h4" color="warning.main">
-              {logs.filter((l) => l.level === 'warning').length}
-            </Typography>
-          </CardContent>
+        <Card p="md">
+          <Text size="xs" c="dimmed">
+            Warnings
+          </Text>
+          <Text size="xl" fw={600} c="orange">
+            {logs.filter((l) => l.level === 'warning').length}
+          </Text>
         </Card>
-        <Card sx={{ flex: 1 }}>
-          <CardContent>
-            <Typography variant="caption" color="text.secondary">
-              Errors
-            </Typography>
-            <Typography variant="h4" color="error.main">
-              {logs.filter((l) => l.level === 'error').length}
-            </Typography>
-          </CardContent>
+        <Card p="md">
+          <Text size="xs" c="dimmed">
+            Errors
+          </Text>
+          <Text size="xl" fw={600} c="red">
+            {logs.filter((l) => l.level === 'error').length}
+          </Text>
         </Card>
-        <Card sx={{ flex: 1 }}>
-          <CardContent>
-            <Typography variant="caption" color="text.secondary">
-              Security Events
-            </Typography>
-            <Typography variant="h4" color="primary.main">
-              {logs.filter((l) => l.category === 'security').length}
-            </Typography>
-          </CardContent>
+        <Card p="md">
+          <Text size="xs" c="dimmed">
+            Security Events
+          </Text>
+          <Text size="xl" fw={600} c="blue">
+            {logs.filter((l) => l.category === 'security').length}
+          </Text>
         </Card>
-      </Stack>
+      </Group>
 
       {/* Logs Table */}
       <Card>
-        <CardHeader
-          title="Activity History"
-          action={
-            <Stack direction="row" spacing={1}>
-              <Button
-                variant={autoRefresh ? 'contained' : 'outlined'}
-                size="small"
-                onClick={(e: React.MouseEvent) => () => setAutoRefresh(!autoRefresh)}
-              >
-                {autoRefresh ? 'Auto-Refresh ON' : 'Auto-Refresh OFF'}
-              </Button>
-              <Button variant="outlined" startIcon={<Download />} size="small" onClick={(e: React.MouseEvent) => handleExportLogs}>
-                Export
-              </Button>
-              <IconButton onClick={(e: React.MouseEvent) => loadLogs}>
-                <Refresh />
-              </IconButton>
-            </Stack>
-          }
-        />
-        <CardContent>
+        <Group justify="space-between" p="md" style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}>
+          <Text fw={500}>Activity History</Text>
+          <Group gap="xs">
+            <Button
+              variant={autoRefresh ? 'filled' : 'outline'}
+              size="xs"
+              onClick={() => setAutoRefresh(!autoRefresh)}
+            >
+              {autoRefresh ? 'Auto-Refresh ON' : 'Auto-Refresh OFF'}
+            </Button>
+            <Button
+              variant="outline"
+              leftSection={<IconDownload size={14} />}
+              size="xs"
+              onClick={handleExportLogs}
+            >
+              Export
+            </Button>
+            <ActionIcon onClick={loadLogs} size="sm">
+              <IconRefresh size={16} />
+            </ActionIcon>
+          </Group>
+        </Group>
+
+        <Box p="md">
           {/* Filters */}
-          <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-            <TextField
+          <Group mb="md">
+            <TextInput
               placeholder="Search logs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              size="small"
-              sx={{ flexGrow: 1, maxWidth: 400 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search />
-                  </InputAdornment>
-                ),
-              }}
+              leftSection={<IconSearch size={16} />}
+              style={{ flexGrow: 1, maxWidth: 400 }}
             />
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel>Category</InputLabel>
-              <Select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                label="Category"
-              >
-                <MenuItem value="all">All Categories</MenuItem>
-                <MenuItem value="auth">Authentication</MenuItem>
-                <MenuItem value="user">User</MenuItem>
-                <MenuItem value="content">Content</MenuItem>
-                <MenuItem value="system">System</MenuItem>
-                <MenuItem value="security">Security</MenuItem>
-                <MenuItem value="api">API</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel>Level</InputLabel>
-              <Select value={levelFilter} onChange={(e) => setLevelFilter(e.target.value)} label="Level">
-                <MenuItem value="all">All Levels</MenuItem>
-                <MenuItem value="info">Info</MenuItem>
-                <MenuItem value="success">Success</MenuItem>
-                <MenuItem value="warning">Warning</MenuItem>
-                <MenuItem value="error">Error</MenuItem>
-              </Select>
-            </FormControl>
-          </Stack>
+            <Select
+              placeholder="Category"
+              value={categoryFilter}
+              onChange={(value) => setCategoryFilter(value || 'all')}
+              data={[
+                { value: 'all', label: 'All Categories' },
+                { value: 'auth', label: 'Authentication' },
+                { value: 'user', label: 'User' },
+                { value: 'content', label: 'Content' },
+                { value: 'system', label: 'System' },
+                { value: 'security', label: 'Security' },
+                { value: 'api', label: 'API' },
+              ]}
+              w={150}
+            />
+            <Select
+              placeholder="Level"
+              value={levelFilter}
+              onChange={(value) => setLevelFilter(value || 'all')}
+              data={[
+                { value: 'all', label: 'All Levels' },
+                { value: 'info', label: 'Info' },
+                { value: 'success', label: 'Success' },
+                { value: 'warning', label: 'Warning' },
+                { value: 'error', label: 'Error' },
+              ]}
+              w={130}
+            />
+          </Group>
 
           {/* Table */}
-          <TableContainer component={Paper} variant="outlined">
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Timestamp</TableCell>
-                  <TableCell>User</TableCell>
-                  <TableCell>Action</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Level</TableCell>
-                  <TableCell>Details</TableCell>
-                  <TableCell>IP Address</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
+          <Table.ScrollContainer minWidth={800}>
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Timestamp</Table.Th>
+                  <Table.Th>User</Table.Th>
+                  <Table.Th>Action</Table.Th>
+                  <Table.Th>Category</Table.Th>
+                  <Table.Th>Level</Table.Th>
+                  <Table.Th>Details</Table.Th>
+                  <Table.Th>IP Address</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
                 {filteredLogs
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((log) => (
-                    <TableRow key={log.id} hover>
-                      <TableCell>
-                        <Typography variant="caption">
+                    <Table.Tr key={log.id}>
+                      <Table.Td>
+                        <Text size="xs">
                           {format(log.timestamp, 'MMM dd, HH:mm:ss')}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Avatar sx={{ width: 24, height: 24, fontSize: '0.875rem' }}>
+                        </Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Group gap="xs">
+                          <Avatar size="sm">
                             {log.user[0].toUpperCase()}
                           </Avatar>
-                          <Typography variant="body2">{log.user}</Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Text size="sm">{log.user}</Text>
+                        </Group>
+                      </Table.Td>
+                      <Table.Td>
+                        <Group gap="xs">
                           {getActionIcon(log.action)}
-                          <Typography variant="body2">{log.action}</Typography>
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          icon={getCategoryIcon(log.category)}
-                          label={log.category}
-                          size="small"
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          icon={getLevelIcon(log.level)}
-                          label={log.level}
-                          size="small"
+                          <Text size="sm">{log.action}</Text>
+                        </Group>
+                      </Table.Td>
+                      <Table.Td>
+                        <Badge
+                          leftSection={getCategoryIcon(log.category)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          {log.category}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td>
+                        <Badge
+                          leftSection={getLevelIcon(log.level)}
                           color={getLevelColor(log.level)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Tooltip title={log.details}>
-                          <Typography
-                            variant="body2"
-                            sx={{
+                          size="sm"
+                        >
+                          {log.level}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td>
+                        <Tooltip label={log.details}>
+                          <Text
+                            size="sm"
+                            style={{
                               maxWidth: 300,
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -488,42 +457,57 @@ const ActivityLogs: React.FunctionComponent<Record<string, any>> = () => {
                             }}
                           >
                             {log.details}
-                          </Typography>
+                          </Text>
                         </Tooltip>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="xs" ff="monospace">
                           {log.ipAddress}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
+                        </Text>
+                      </Table.Td>
+                    </Table.Tr>
                   ))}
                 {filteredLogs.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center">
-                      <Typography variant="body2" color="text.secondary">
+                  <Table.Tr>
+                    <Table.Td colSpan={7} ta="center">
+                      <Text size="sm" c="dimmed">
                         No logs found matching your filters
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
+                      </Text>
+                    </Table.Td>
+                  </Table.Tr>
                 )}
-              </TableBody>
+              </Table.Tbody>
             </Table>
-          </TableContainer>
+          </Table.ScrollContainer>
 
-          <TablePagination
-            rowsPerPageOptions={[10, 25, 50, 100]}
-            component="div"
-            count={filteredLogs.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10));
-              setPage(0);
-            }}
-          />
-        </CardContent>
+          <Group justify="space-between" mt="md">
+            <Text size="sm" c="dimmed">
+              Showing {page * rowsPerPage + 1}-{Math.min((page + 1) * rowsPerPage, filteredLogs.length)} of {filteredLogs.length} logs
+            </Text>
+            <Group gap="md">
+              <Select
+                value={rowsPerPage.toString()}
+                onChange={(value) => {
+                  setRowsPerPage(parseInt(value || '25', 10));
+                  setPage(0);
+                }}
+                data={[
+                  { value: '10', label: '10 per page' },
+                  { value: '25', label: '25 per page' },
+                  { value: '50', label: '50 per page' },
+                  { value: '100', label: '100 per page' },
+                ]}
+                w={140}
+              />
+              <Pagination
+                total={Math.ceil(filteredLogs.length / rowsPerPage)}
+                value={page + 1}
+                onChange={(newPage) => setPage(newPage - 1)}
+                size="sm"
+              />
+            </Group>
+          </Group>
+        </Box>
       </Card>
     </Box>
   );

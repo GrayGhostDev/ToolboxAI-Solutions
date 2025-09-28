@@ -13,8 +13,10 @@ from database.models import User
 
 router = APIRouter(prefix="/api/v1/users", tags=["User Profile"])
 
+
 class UserProfile(BaseModel):
     """User profile response model"""
+
     id: str
     username: str
     email: str
@@ -26,6 +28,7 @@ class UserProfile(BaseModel):
     createdAt: datetime
     lastLogin: Optional[datetime] = None
     isActive: bool = True
+
 
 @router.get("/me/profile", response_model=UserProfile)
 async def get_user_profile(current_user: User = Depends(get_current_user)):
@@ -40,24 +43,26 @@ async def get_user_profile(current_user: User = Depends(get_current_user)):
 
     # Convert the User model to profile response
     return UserProfile(
-        id=str(current_user.id) if hasattr(current_user, 'id') else "1",
-        username=current_user.username if hasattr(current_user, 'username') else current_user.email.split('@')[0],
+        id=str(current_user.id) if hasattr(current_user, "id") else "1",
+        username=(
+            current_user.username
+            if hasattr(current_user, "username")
+            else current_user.email.split("@")[0]
+        ),
         email=current_user.email,
-        role=current_user.role if hasattr(current_user, 'role') else "student",
-        displayName=getattr(current_user, 'display_name', None) or current_user.email.split('@')[0],
-        avatarUrl=getattr(current_user, 'avatar_url', None),
-        schoolId=getattr(current_user, 'school_id', None),
-        classIds=getattr(current_user, 'class_ids', []) or [],
-        createdAt=getattr(current_user, 'created_at', datetime.now(timezone.utc)),
-        lastLogin=getattr(current_user, 'last_login', None),
-        isActive=getattr(current_user, 'is_active', True)
+        role=current_user.role if hasattr(current_user, "role") else "student",
+        displayName=getattr(current_user, "display_name", None) or current_user.email.split("@")[0],
+        avatarUrl=getattr(current_user, "avatar_url", None),
+        schoolId=getattr(current_user, "school_id", None),
+        classIds=getattr(current_user, "class_ids", []) or [],
+        createdAt=getattr(current_user, "created_at", datetime.now(timezone.utc)),
+        lastLogin=getattr(current_user, "last_login", None),
+        isActive=getattr(current_user, "is_active", True),
     )
 
+
 @router.patch("/me/profile")
-async def update_user_profile(
-    updates: dict,
-    current_user: User = Depends(get_current_user)
-):
+async def update_user_profile(updates: dict, current_user: User = Depends(get_current_user)):
     """
     Update the current user's profile information.
 
@@ -69,7 +74,7 @@ async def update_user_profile(
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     # Only allow certain fields to be updated
-    allowed_fields = ['displayName', 'avatarUrl']
+    allowed_fields = ["displayName", "avatarUrl"]
     filtered_updates = {k: v for k, v in updates.items() if k in allowed_fields}
 
     if not filtered_updates:
@@ -80,8 +85,9 @@ async def update_user_profile(
     return {
         "success": True,
         "message": "Profile updated successfully",
-        "updated_fields": list(filtered_updates.keys())
+        "updated_fields": list(filtered_updates.keys()),
     }
+
 
 @router.get("/me/preferences")
 async def get_user_preferences(current_user: User = Depends(get_current_user)):
@@ -92,18 +98,7 @@ async def get_user_preferences(current_user: User = Depends(get_current_user)):
     return {
         "theme": "light",
         "language": "en",
-        "notifications": {
-            "email": True,
-            "push": False,
-            "sms": False
-        },
-        "privacy": {
-            "profile_visible": True,
-            "show_online_status": True
-        },
-        "accessibility": {
-            "high_contrast": False,
-            "font_size": "medium",
-            "screen_reader": False
-        }
+        "notifications": {"email": True, "push": False, "sms": False},
+        "privacy": {"profile_visible": True, "show_online_status": True},
+        "accessibility": {"high_contrast": False, "font_size": "medium", "screen_reader": False},
     }

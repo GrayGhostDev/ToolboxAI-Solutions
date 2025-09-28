@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/validation/validation_engine.py
-# hypothesis_version: 6.139.2
-
-[0.0, 0.2, 0.3, 25.0, 50.0, 75.0, 100.0, 1000, 'Validation Error', 'accessibility', 'appropriate', 'average_score', 'blocked', 'common_issues', 'compliance', 'compliant', 'content_rating', 'critical', 'critical_violation', 'educational', 'educational_value', 'engagement', 'error', 'error_handling', 'failed', 'failed_validations', 'high', 'inappropriate', 'json', 'medium', 'needs_review', 'passed', 'passed_validations', 'passed_with_warnings', 'quality', 'security', 'summary', 'syntax', 'total_validations', 'validation_error', 'violation', 'warning']

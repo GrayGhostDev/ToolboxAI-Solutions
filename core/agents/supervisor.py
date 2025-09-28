@@ -1018,3 +1018,26 @@ Suggest:
             
         # Default to true for other cases
         return True
+
+# Compatibility layer for supervisor_complete and supervisor_advanced
+# These are kept for backward compatibility but will be deprecated
+
+# Alias for supervisor_complete.py compatibility
+CompleteSupervisorAgent = SupervisorAgent
+
+# Import for supervisor_advanced.py compatibility 
+# (Advanced features have been integrated into main SupervisorAgent)
+class SupervisorAdvanced(SupervisorAgent):
+    """
+    Deprecated: Use SupervisorAgent instead.
+    This class exists only for backward compatibility.
+    """
+    def __init__(self, *args, **kwargs):
+        import warnings
+        warnings.warn(
+            "SupervisorAdvanced is deprecated. Use SupervisorAgent instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        super().__init__(*args, **kwargs)
+

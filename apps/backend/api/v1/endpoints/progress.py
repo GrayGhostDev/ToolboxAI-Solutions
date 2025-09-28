@@ -23,6 +23,7 @@ router = APIRouter(
 # Pydantic models for request/response
 class ProgressItem(BaseModel):
     """Model for a progress item"""
+
     item_id: str = Field(..., description="Unique identifier for the progress item")
     item_type: str = Field(..., description="Type of progress item (lesson, assessment, etc.)")
     status: str = Field("pending", description="Status of the progress item")
@@ -34,6 +35,7 @@ class ProgressItem(BaseModel):
 
 class UserProgress(BaseModel):
     """Model for user progress overview"""
+
     user_id: int
     total_items: int = 0
     completed_items: int = 0
@@ -45,6 +47,7 @@ class UserProgress(BaseModel):
 
 class UpdateProgressRequest(BaseModel):
     """Request model for updating progress"""
+
     item_id: str
     item_type: str
     status: str = Field(..., description="Status: pending, in_progress, completed")
@@ -54,6 +57,7 @@ class UpdateProgressRequest(BaseModel):
 
 class ProgressResponse(BaseModel):
     """Response model for progress operations"""
+
     success: bool
     message: str
     data: Optional[ProgressItem] = None
@@ -61,6 +65,7 @@ class ProgressResponse(BaseModel):
 
 class UserProgressResponse(BaseModel):
     """Response model for user progress"""
+
     success: bool
     data: UserProgress
 
@@ -71,18 +76,14 @@ progress_storage = {}
 
 @router.get("/", response_model=UserProgressResponse)
 async def get_user_progress(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """Get current user's progress overview"""
     user_id = current_user.id
 
     # Get or create user progress
     if user_id not in progress_storage:
-        progress_storage[user_id] = {
-            "items": {},
-            "last_activity": None
-        }
+        progress_storage[user_id] = {"items": {}, "last_activity": None}
 
     user_data = progress_storage[user_id]
     items = list(user_data["items"].values())
@@ -103,42 +104,35 @@ async def get_user_progress(
         in_progress_items=in_progress_items,
         overall_percentage=overall_percentage,
         last_activity=user_data["last_activity"],
-        items=[ProgressItem(**item) for item in items]
+        items=[ProgressItem(**item) for item in items],
     )
 
-    return UserProgressResponse(
-        success=True,
-        data=progress
-    )
+    return UserProgressResponse(success=True, data=progress)
 
 
 @router.get("/{item_id}", response_model=ProgressResponse)
 async def get_item_progress(
-    item_id: str,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    item_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """Get progress for a specific item"""
     user_id = current_user.id
 
     if user_id not in progress_storage:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No progress data found for user"
+            status_code=status.HTTP_404_NOT_FOUND, detail="No progress data found for user"
         )
 
     items = progress_storage[user_id]["items"]
 
     if item_id not in items:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Progress item {item_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Progress item {item_id} not found"
         )
 
     return ProgressResponse(
         success=True,
         message="Progress item retrieved successfully",
-        data=ProgressItem(**items[item_id])
+        data=ProgressItem(**items[item_id]),
     )
 
 
@@ -146,17 +140,14 @@ async def get_item_progress(
 async def update_progress(
     request: UpdateProgressRequest,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Update progress for an item"""
     user_id = current_user.id
 
     # Initialize user progress if not exists
     if user_id not in progress_storage:
-        progress_storage[user_id] = {
-            "items": {},
-            "last_activity": None
-        }
+        progress_storage[user_id] = {"items": {}, "last_activity": None}
 
     user_data = progress_storage[user_id]
 
@@ -169,7 +160,7 @@ async def update_progress(
             "percentage": 0.0,
             "started_at": None,
             "completed_at": None,
-            "metadata": {}
+            "metadata": {},
         }
 
     item = user_data["items"][request.item_id]
@@ -197,31 +188,27 @@ async def update_progress(
     return ProgressResponse(
         success=True,
         message=f"Progress updated for item {request.item_id}",
-        data=ProgressItem(**item)
+        data=ProgressItem(**item),
     )
 
 
 @router.delete("/{item_id}", response_model=ProgressResponse)
 async def reset_item_progress(
-    item_id: str,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    item_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """Reset progress for a specific item"""
     user_id = current_user.id
 
     if user_id not in progress_storage:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No progress data found for user"
+            status_code=status.HTTP_404_NOT_FOUND, detail="No progress data found for user"
         )
 
     items = progress_storage[user_id]["items"]
 
     if item_id not in items:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Progress item {item_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Progress item {item_id} not found"
         )
 
     # Reset the item
@@ -234,16 +221,13 @@ async def reset_item_progress(
     progress_storage[user_id]["last_activity"] = datetime.utcnow()
 
     return ProgressResponse(
-        success=True,
-        message=f"Progress reset for item {item_id}",
-        data=ProgressItem(**item)
+        success=True, message=f"Progress reset for item {item_id}", data=ProgressItem(**item)
     )
 
 
 @router.delete("/", response_model=ProgressResponse)
 async def reset_all_progress(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """Reset all progress for the current user"""
     user_id = current_user.id
@@ -252,11 +236,7 @@ async def reset_all_progress(
     if user_id in progress_storage:
         del progress_storage[user_id]
 
-    return ProgressResponse(
-        success=True,
-        message="All progress has been reset",
-        data=None
-    )
+    return ProgressResponse(success=True, message="All progress has been reset", data=None)
 
 
 # Export router

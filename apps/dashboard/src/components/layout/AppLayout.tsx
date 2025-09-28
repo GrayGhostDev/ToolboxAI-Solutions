@@ -1,6 +1,5 @@
 import * as React from "react";
-import Box from "@mui/material/Box";
-import Toolbar from "@mui/material/Toolbar";
+import { Box } from "@mantine/core";
 import Topbar from "./Topbar";
 import Sidebar from "./Sidebar";
 import { UserRole } from "../../types";
@@ -18,19 +17,32 @@ export default function AppLayout({ role, children, isRobloxPage = false }: Prop
   const drawerWidth = 240;
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100dvh", bgcolor: "background.default" }}>
+    <Box
+      style={{
+        display: "flex",
+        minHeight: "100dvh",
+        backgroundColor: "var(--mantine-color-dark-7)",
+      }}
+    >
       <Topbar />
       <Sidebar role={role} />
       <Box
         component="main"
-        sx={{
+        style={{
           flexGrow: 1,
-          p: { xs: 2, md: 3 },
-          width: { sm: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : "100%" },
-          ml: { sm: sidebarOpen ? `${drawerWidth}px` : 0 },
-          // REMOVED ALL TRANSITIONS TO PREVENT MOVEMENT
+          padding: "var(--mantine-spacing-md)",
+          width: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : "100%",
+          marginLeft: sidebarOpen ? `${drawerWidth}px` : 0,
           minHeight: "100vh",
           background: "linear-gradient(135deg, #0f0f2e 0%, #1a0b2e 50%, #2e0b2e 100%)",
+          position: "relative",
+        }}
+        sx={{
+          '@media (max-width: 768px)': {
+            padding: "var(--mantine-spacing-sm)",
+            width: "100%",
+            marginLeft: 0,
+          },
         }}
       >
         {/* Particle Effects for enhanced visuals - Disabled on Roblox page */}
@@ -43,8 +55,10 @@ export default function AppLayout({ role, children, isRobloxPage = false }: Prop
           />
         )}
 
-        <Toolbar />
-        <Box sx={{ position: 'relative', zIndex: 1 }}>
+        {/* Spacer for Topbar - equivalent to MUI Toolbar */}
+        <Box style={{ height: "64px" }} />
+
+        <Box style={{ position: 'relative', zIndex: 1 }}>
           {children}
         </Box>
       </Box>

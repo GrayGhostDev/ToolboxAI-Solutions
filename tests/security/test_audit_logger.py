@@ -240,8 +240,7 @@ class TestSecurityAuditLogger:
         assert self.logger.verify_integrity(event) is False
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_log_event_basic(self):
+    async def test_log_event_basic(self):
         """Test basic event logging"""
         event_id = await self.logger.log_event(
             category=AuditCategory.AUTHENTICATION,
@@ -264,8 +263,7 @@ async def test_log_event_basic(self):
         assert stats["events_by_severity"]["high"] == 1
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_log_event_file_logging(self):
+    async def test_log_event_file_logging(self):
         """Test file logging functionality"""
         await self.logger.log_event(
             category=AuditCategory.USER_ACTION,
@@ -287,8 +285,7 @@ async def test_log_event_file_logging(self):
         assert "success" in log_content
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_log_event_database_logging(self):
+    async def test_log_event_database_logging(self):
         """Test database logging functionality"""
         await self.logger.log_event(
             category=AuditCategory.DATA_ACCESS,
@@ -312,8 +309,7 @@ async def test_log_event_database_logging(self):
         assert added_entry.user_id == "user123"
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_log_event_redis_publishing(self):
+    async def test_log_event_redis_publishing(self):
         """Test Redis event publishing"""
         await self.logger.log_event(
             category=AuditCategory.SECURITY_EVENT,
@@ -331,8 +327,7 @@ async def test_log_event_redis_publishing(self):
         self.mock_redis.expire.assert_called()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_alert_triggering_critical(self):
+    async def test_alert_triggering_critical(self):
         """Test alert triggering for critical events"""
         alert_callback = AsyncMock()
         self.logger.add_alert_callback(alert_callback)
@@ -354,8 +349,7 @@ async def test_alert_triggering_critical(self):
         assert "data_breach_detected" in alert_args["event"]["action"]
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_alert_triggering_failed_auth(self):
+    async def test_alert_triggering_failed_auth(self):
         """Test alert triggering for multiple failed authentications"""
         # Mock Redis to return failure count
         self.mock_redis.get.return_value = "5"
@@ -379,8 +373,7 @@ async def test_alert_triggering_failed_auth(self):
         assert "Multiple failed authentication attempts" in alert_args["message"]
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_alert_triggering_unauthorized_access(self):
+    async def test_alert_triggering_unauthorized_access(self):
         """Test alert triggering for unauthorized data access"""
         alert_callback = AsyncMock()
         self.logger.add_alert_callback(alert_callback)
@@ -449,8 +442,7 @@ async def test_alert_triggering_unauthorized_access(self):
         assert stats["events_by_severity"]["medium"] == 1
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_log_rotation(self):
+    async def test_log_rotation(self):
         """Test log file rotation"""
         # Create a large log file
         with open(self.log_file_path, 'w') as f:
@@ -463,8 +455,7 @@ async def test_log_rotation(self):
             assert os.path.getsize(self.log_file_path) < 100 * 1024 * 1024
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_query_events(self):
+    async def test_query_events(self):
         """Test querying audit events from database"""
         # Mock database query
         mock_entry = Mock()
@@ -508,8 +499,7 @@ async def test_query_events(self):
         assert events[0].user_id == "user123"
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_archive_old_events(self):
+    async def test_archive_old_events(self):
         """Test archiving old audit events"""
         await self.logger.archive_old_events(days_to_keep=30)
         
@@ -518,8 +508,7 @@ async def test_archive_old_events(self):
         self.mock_db.commit.assert_called()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_no_redis_graceful_handling(self):
+    async def test_no_redis_graceful_handling(self):
         """Test graceful handling when Redis is unavailable"""
         logger = SecurityAuditLogger(
             service_name="test_service",
@@ -545,8 +534,7 @@ async def test_no_redis_graceful_handling(self):
         assert logger.enable_db_logging is False
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_database_error_handling(self):
+    async def test_database_error_handling(self):
         """Test handling of database errors during logging"""
         # Mock database to raise exception
         self.mock_db.add.side_effect = Exception("Database error")
@@ -576,8 +564,7 @@ class TestConvenienceFunctions:
         assert isinstance(logger1, SecurityAuditLogger)
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_audit_log_convenience_function(self):
+    async def test_audit_log_convenience_function(self):
         """Test audit_log convenience function"""
         with patch('apps.backend.core.security.audit_logger.get_audit_logger') as mock_get_logger:
             mock_logger = Mock()
@@ -601,8 +588,7 @@ class TestAuditLoggerIntegration:
     """Integration tests for audit logger"""
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_complete_audit_flow(self):
+    async def test_complete_audit_flow(self):
         """Test complete audit logging flow"""
         temp_dir = tempfile.mkdtemp()
         log_file = os.path.join(temp_dir, "integration_test.log")
@@ -734,8 +720,7 @@ class TestErrorHandling:
         assert logger.enable_file_logging is False
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_malformed_event_data(self):
+    async def test_malformed_event_data(self):
         """Test handling of malformed event data"""
         logger = SecurityAuditLogger(
             service_name="test",
@@ -789,8 +774,7 @@ async def test_malformed_event_data(self):
         assert hash1 != hash2
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_alert_callback_errors(self):
+    async def test_alert_callback_errors(self):
         """Test handling of alert callback errors"""
         logger = SecurityAuditLogger(
             service_name="test",

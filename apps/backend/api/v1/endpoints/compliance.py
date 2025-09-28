@@ -15,6 +15,7 @@ router = APIRouter()
 # Pydantic models for request/response
 class ComplianceStatus(BaseModel):
     """Model for compliance status"""
+
     compliant: bool = Field(..., description="Compliance status")
     category: str = Field(..., description="Compliance category (FERPA, COPPA, GDPR, etc.)")
     last_checked: datetime = Field(default_factory=datetime.now)
@@ -24,6 +25,7 @@ class ComplianceStatus(BaseModel):
 
 class ComplianceReport(BaseModel):
     """Model for compliance report"""
+
     report_id: str = Field(..., description="Unique report identifier")
     generated_at: datetime = Field(default_factory=datetime.now)
     school_id: Optional[str] = None
@@ -35,6 +37,7 @@ class ComplianceReport(BaseModel):
 
 class AuditLog(BaseModel):
     """Model for audit log entries"""
+
     log_id: str
     timestamp: datetime
     user_id: str
@@ -51,19 +54,19 @@ MOCK_COMPLIANCE_STATUSES = [
         compliant=True,
         category="FERPA",
         issues=[],
-        recommendations=["Regular training recommended"]
+        recommendations=["Regular training recommended"],
     ),
     ComplianceStatus(
         compliant=True,
         category="COPPA",
         issues=[],
-        recommendations=["Update parental consent forms"]
+        recommendations=["Update parental consent forms"],
     ),
     ComplianceStatus(
         compliant=True,
         category="GDPR",
         issues=[],
-        recommendations=["Review data retention policies"]
+        recommendations=["Review data retention policies"],
     ),
 ]
 
@@ -89,7 +92,7 @@ async def get_compliance_status(
 @router.get("/reports", response_model=List[ComplianceReport])
 async def get_compliance_reports(
     school_id: Optional[str] = Query(None, description="Filter by school ID"),
-    limit: int = Query(10, ge=1, le=100, description="Number of reports to return")
+    limit: int = Query(10, ge=1, le=100, description="Number of reports to return"),
 ) -> List[ComplianceReport]:
     """
     Get compliance reports.
@@ -109,7 +112,7 @@ async def get_compliance_reports(
             school_id=school_id or f"SCH-{i+1:03d}",
             categories=MOCK_COMPLIANCE_STATUSES.copy(),
             overall_compliant=True,
-            risk_level="low"
+            risk_level="low",
         )
         reports.append(report)
 
@@ -117,9 +120,7 @@ async def get_compliance_reports(
 
 
 @router.post("/reports", response_model=ComplianceReport, status_code=status.HTTP_201_CREATED)
-async def generate_compliance_report(
-    school_id: Optional[str] = None
-) -> ComplianceReport:
+async def generate_compliance_report(school_id: Optional[str] = None) -> ComplianceReport:
     """
     Generate a new compliance report.
 
@@ -136,7 +137,7 @@ async def generate_compliance_report(
         school_id=school_id,
         categories=MOCK_COMPLIANCE_STATUSES.copy(),
         overall_compliant=True,
-        risk_level="low"
+        risk_level="low",
     )
 
     return report
@@ -148,7 +149,7 @@ async def get_audit_logs(
     action: Optional[str] = Query(None, description="Filter by action type"),
     start_date: Optional[datetime] = Query(None, description="Start date for filtering"),
     end_date: Optional[datetime] = Query(None, description="End date for filtering"),
-    limit: int = Query(50, ge=1, le=500, description="Maximum logs to return")
+    limit: int = Query(50, ge=1, le=500, description="Maximum logs to return"),
 ) -> List[AuditLog]:
     """
     Retrieve audit logs for compliance tracking.
@@ -174,7 +175,7 @@ async def get_audit_logs(
             resource=f"/api/v1/resource/{i+1}",
             details={"status": "success", "duration_ms": 150 + i * 10},
             ip_address="127.0.0.1",
-            user_agent="Mozilla/5.0"
+            user_agent="Mozilla/5.0",
         )
         logs.append(log)
 
@@ -183,8 +184,7 @@ async def get_audit_logs(
 
 @router.post("/verify/{category}", response_model=ComplianceStatus)
 async def verify_compliance(
-    category: str,
-    force_check: bool = Query(False, description="Force a new compliance check")
+    category: str, force_check: bool = Query(False, description="Force a new compliance check")
 ) -> ComplianceStatus:
     """
     Verify compliance for a specific category.
@@ -201,7 +201,7 @@ async def verify_compliance(
         compliant=True,
         category=category.upper(),
         issues=[],
-        recommendations=["Continue regular monitoring"]
+        recommendations=["Continue regular monitoring"],
     )
 
     # Simulate some categories having issues
@@ -231,9 +231,9 @@ async def get_compliance_requirements(category: str) -> Dict[str, Any]:
                 "Protect student education records",
                 "Obtain parental consent for disclosure",
                 "Allow parents to review records",
-                "Provide annual notification of rights"
+                "Provide annual notification of rights",
             ],
-            "applies_to": "Educational institutions receiving federal funding"
+            "applies_to": "Educational institutions receiving federal funding",
         },
         "COPPA": {
             "name": "Children's Online Privacy Protection Act",
@@ -241,9 +241,9 @@ async def get_compliance_requirements(category: str) -> Dict[str, Any]:
                 "Obtain verifiable parental consent",
                 "Provide notice of data collection practices",
                 "Allow parents to review collected data",
-                "Secure data with reasonable measures"
+                "Secure data with reasonable measures",
             ],
-            "applies_to": "Online services directed to children under 13"
+            "applies_to": "Online services directed to children under 13",
         },
         "GDPR": {
             "name": "General Data Protection Regulation",
@@ -251,23 +251,23 @@ async def get_compliance_requirements(category: str) -> Dict[str, Any]:
                 "Obtain explicit consent for data processing",
                 "Provide right to erasure",
                 "Ensure data portability",
-                "Implement privacy by design"
+                "Implement privacy by design",
             ],
-            "applies_to": "Organizations processing EU residents' data"
-        }
+            "applies_to": "Organizations processing EU residents' data",
+        },
     }
 
     category_upper = category.upper()
     if category_upper not in requirements:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Requirements not found for category: {category}"
+            detail=f"Requirements not found for category: {category}",
         )
 
     return {
         "category": category_upper,
         **requirements[category_upper],
-        "last_updated": datetime.now().isoformat()
+        "last_updated": datetime.now().isoformat(),
     }
 
 
@@ -275,8 +275,4 @@ async def get_compliance_requirements(category: str) -> Dict[str, Any]:
 @router.get("/health")
 async def compliance_health_check():
     """Check compliance service health"""
-    return {
-        "status": "healthy",
-        "service": "compliance",
-        "timestamp": datetime.now().isoformat()
-    }
+    return {"status": "healthy", "service": "compliance", "timestamp": datetime.now().isoformat()}

@@ -1,41 +1,39 @@
 /**
  * Roblox Dashboard Grid Component
- * 
+ *
  * Displays a grid of 3D icons and interactive elements
  * with futuristic animations and hover effects
  */
 
 import React, { useState, useEffect } from 'react';
-import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
-import LinearProgress from '@mui/material/LinearProgress';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Fade from '@mui/material/Fade';
-import Zoom from '@mui/material/Zoom';
-import Slide from '@mui/material/Slide';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
 import {
-  PlayArrow,
-  Pause,
-  Refresh,
-  Star,
-  EmojiEvents,
-  TrendingUp,
-  School,
-  SportsEsports,
-  Psychology,
-  Groups,
-  Games,
-  AutoAwesome
-} from '@mui/icons-material';
+  Grid,
+  Card,
+  Text,
+  Box,
+  Group,
+  Badge,
+  Progress,
+  ActionIcon,
+  Tooltip,
+  Transition,
+  useMantineTheme,
+  rem
+} from '@mantine/core';
+import {
+  IconPlayerPlay,
+  IconPlayerPause,
+  IconRefresh,
+  IconStar,
+  IconTrophy,
+  IconTrendingUp,
+  IconSchool,
+  IconDeviceGamepad2,
+  IconBrain,
+  IconUsers,
+  IconDeviceGamepad,
+  IconSparkles
+} from '@tabler/icons-react';
 import { Roblox3DIcon } from './Roblox3DIcon';
 
 interface DashboardItem {
@@ -150,21 +148,21 @@ const SAMPLE_ITEMS: DashboardItem[] = [
 
 const getTypeIcon = (type: string) => {
   switch (type) {
-    case 'education': return School;
-    case 'gaming': return SportsEsports;
-    case 'tool': return Psychology;
-    case 'achievement': return EmojiEvents;
-    default: return AutoAwesome;
+    case 'education': return IconSchool;
+    case 'gaming': return IconDeviceGamepad2;
+    case 'tool': return IconBrain;
+    case 'achievement': return IconTrophy;
+    default: return IconSparkles;
   }
 };
 
 const getTypeColor = (type: string, theme: any) => {
   switch (type) {
-    case 'education': return theme.palette.primary.main;
-    case 'gaming': return theme.palette.secondary.main;
-    case 'tool': return theme.palette.info.main;
-    case 'achievement': return theme.palette.warning.main;
-    default: return theme.palette.grey[500];
+    case 'education': return theme.colors.blue[6];
+    case 'gaming': return theme.colors.violet[6];
+    case 'tool': return theme.colors.cyan[6];
+    case 'achievement': return theme.colors.yellow[6];
+    default: return theme.colors.gray[5];
   }
 };
 
@@ -175,7 +173,7 @@ export const RobloxDashboardGrid: React.FunctionComponent<RobloxDashboardGridPro
   onItemPause,
   onItemRefresh
 }) => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -213,62 +211,67 @@ export const RobloxDashboardGrid: React.FunctionComponent<RobloxDashboardGridPro
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Fade in={isAnimating} timeout={1000}>
-        <Typography
-          variant="h4"
-          sx={{
-            mb: 3,
-            fontWeight: 700,
-            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            textAlign: 'center'
-          }}
-        >
-          Your Learning Tools
-        </Typography>
-      </Fade>
+    <Box p="lg">
+      <Transition
+        mounted={isAnimating}
+        transition="fade"
+        duration={1000}
+      >
+        {(styles) => (
+          <Text
+            size="xl"
+            fw={700}
+            ta="center"
+            mb="lg"
+            style={{
+              ...styles,
+              background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}
+          >
+            Your Learning Tools
+          </Text>
+        )}
+      </Transition>
 
-      <Grid container spacing={3}>
+      <Grid>
         {items.map((item, index) => {
           const TypeIcon = getTypeIcon(item.type);
           const typeColor = getTypeColor(item.type, theme);
           const progressPercentage = (item.progress / item.maxProgress) * 100;
 
           return (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
-              <Zoom
-                in={isAnimating}
-                timeout={1000 + index * 200}
-                style={{ transitionDelay: `${index * 100}ms` }}
+            <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }} key={item.id}>
+              <Transition
+                mounted={isAnimating}
+                transition="pop"
+                duration={1000 + index * 200}
               >
-                <Card
-                  sx={{
-                    height: '100%',
-                    background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(typeColor, 0.05)})`,
-                    border: `2px solid ${alpha(typeColor, 0.2)}`,
-                    borderRadius: 3,
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    cursor: item.isUnlocked ? 'pointer' : 'default',
-                    transform: hoveredItem === item.id ? 'translateY(-8px) scale(1.02)' : 'translateY(0) scale(1)',
-                    boxShadow: hoveredItem === item.id 
-                      ? `0 20px 40px ${alpha(typeColor, 0.3)}`
-                      : `0 8px 25px ${alpha(typeColor, 0.1)}`,
-                    '&:hover': {
-                      border: `2px solid ${typeColor}`,
-                      boxShadow: `0 20px 40px ${alpha(typeColor, 0.3)}`,
-                    }
-                  }}
-                  onMouseEnter={() => setHoveredItem(item.id)}
-                  onMouseLeave={() => setHoveredItem(null)}
-                  onClick={(e: React.MouseEvent) => () => handleItemClick(item)}
-                >
-                  <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                {(styles) => (
+                  <Card
+                    style={{
+                      ...styles,
+                      height: '100%',
+                      background: `linear-gradient(145deg, ${theme.colors.dark[6]}, ${theme.fn.rgba(typeColor, 0.05)})`,
+                      border: `2px solid ${theme.fn.rgba(typeColor, 0.2)}`,
+                      borderRadius: rem(12),
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      cursor: item.isUnlocked ? 'pointer' : 'default',
+                      transform: hoveredItem === item.id ? 'translateY(-8px) scale(1.02)' : 'translateY(0) scale(1)',
+                      boxShadow: hoveredItem === item.id
+                        ? `0 20px 40px ${theme.fn.rgba(typeColor, 0.3)}`
+                        : `0 8px 25px ${theme.fn.rgba(typeColor, 0.1)}`
+                    }}
+                    onMouseEnter={() => setHoveredItem(item.id)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                    onClick={() => handleItemClick(item)}
+                    p="lg"
+                  >
                     {/* Header with icon and actions */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Group justify="space-between" align="flex-start" mb="md">
+                      <Group align="center" spacing="md">
                         <Roblox3DIcon
                           icon={{
                             name: item.icon,
@@ -283,139 +286,149 @@ export const RobloxDashboardGrid: React.FunctionComponent<RobloxDashboardGridPro
                           animated={true}
                         />
                         <Box>
-                          <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                          <Text size="lg" fw={600} mb="xs">
                             {item.name.replace(/_/g, ' ')}
-                          </Typography>
-                          <Chip
-                            label={item.category}
-                            size="small"
-                            sx={{
-                              background: `linear-gradient(135deg, ${typeColor}, ${alpha(typeColor, 0.7)})`,
-                              color: 'white',
-                              fontWeight: 600
+                          </Text>
+                          <Badge
+                            size="sm"
+                            style={{
+                              background: `linear-gradient(135deg, ${typeColor}, ${theme.fn.rgba(typeColor, 0.7)})`,
+                              color: 'white'
                             }}
-                          />
+                          >
+                            {item.category}
+                          </Badge>
                         </Box>
-                      </Box>
+                      </Group>
 
                       {/* Action buttons */}
-                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      <Group spacing="xs">
                         {item.isActive ? (
-                          <Tooltip title="Pause">
-                            <IconButton
-                              size="small"
-                              onClick={(e: React.MouseEvent) => (e) => handleItemPause(item, e)}
-                              sx={{
-                                color: theme.palette.warning.main,
-                                background: alpha(theme.palette.warning.main, 0.1),
-                                '&:hover': {
-                                  background: alpha(theme.palette.warning.main, 0.2),
+                          <Tooltip label="Pause">
+                            <ActionIcon
+                              size="sm"
+                              onClick={(e) => handleItemPause(item, e)}
+                              style={{
+                                color: theme.colors.yellow[6],
+                                background: theme.fn.rgba(theme.colors.yellow[6], 0.1)
+                              }}
+                              styles={{
+                                root: {
+                                  '&:hover': {
+                                    background: theme.fn.rgba(theme.colors.yellow[6], 0.2)
+                                  }
                                 }
                               }}
                             >
-                              <Pause fontSize="small" />
-                            </IconButton>
+                              <IconPlayerPause size={16} />
+                            </ActionIcon>
                           </Tooltip>
                         ) : (
-                          <Tooltip title="Play">
-                            <IconButton
-                              size="small"
-                              onClick={(e: React.MouseEvent) => (e) => handleItemPlay(item, e)}
-                              sx={{
-                                color: theme.palette.success.main,
-                                background: alpha(theme.palette.success.main, 0.1),
-                                '&:hover': {
-                                  background: alpha(theme.palette.success.main, 0.2),
+                          <Tooltip label="Play">
+                            <ActionIcon
+                              size="sm"
+                              onClick={(e) => handleItemPlay(item, e)}
+                              style={{
+                                color: theme.colors.green[6],
+                                background: theme.fn.rgba(theme.colors.green[6], 0.1)
+                              }}
+                              styles={{
+                                root: {
+                                  '&:hover': {
+                                    background: theme.fn.rgba(theme.colors.green[6], 0.2)
+                                  }
                                 }
                               }}
                             >
-                              <PlayArrow fontSize="small" />
-                            </IconButton>
+                              <IconPlayerPlay size={16} />
+                            </ActionIcon>
                           </Tooltip>
                         )}
-                        
-                        <Tooltip title="Refresh">
-                          <IconButton
-                            size="small"
-                            onClick={(e: React.MouseEvent) => (e) => handleItemRefresh(item, e)}
-                            sx={{
-                              color: theme.palette.info.main,
-                              background: alpha(theme.palette.info.main, 0.1),
-                              '&:hover': {
-                                background: alpha(theme.palette.info.main, 0.2),
+
+                        <Tooltip label="Refresh">
+                          <ActionIcon
+                            size="sm"
+                            onClick={(e) => handleItemRefresh(item, e)}
+                            style={{
+                              color: theme.colors.cyan[6],
+                              background: theme.fn.rgba(theme.colors.cyan[6], 0.1)
+                            }}
+                            styles={{
+                              root: {
+                                '&:hover': {
+                                  background: theme.fn.rgba(theme.colors.cyan[6], 0.2)
+                                }
                               }
                             }}
                           >
-                            <Refresh fontSize="small" />
-                          </IconButton>
+                            <IconRefresh size={16} />
+                          </ActionIcon>
                         </Tooltip>
-                      </Box>
-                    </Box>
+                      </Group>
+                    </Group>
 
                     {/* Description */}
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 2, flex: 1 }}
+                    <Text
+                      size="sm"
+                      c="dimmed"
+                      mb="md"
+                      style={{ flex: 1 }}
                     >
                       {item.description}
-                    </Typography>
+                    </Text>
 
                     {/* Progress section */}
-                    <Box sx={{ mb: 2 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    <Box mb="md">
+                      <Group justify="space-between" align="center" mb="xs">
+                        <Text size="sm" fw={600}>
                           Progress
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        </Text>
+                        <Text size="sm" c="dimmed">
                           {item.progress}/{item.maxProgress}
-                        </Typography>
-                      </Box>
-                      <LinearProgress
-                        variant="determinate"
+                        </Text>
+                      </Group>
+                      <Progress
                         value={progressPercentage}
-                        sx={{
-                          height: 8,
-                          borderRadius: 4,
-                          background: alpha(typeColor, 0.1),
-                          '& .MuiLinearProgress-bar': {
-                            background: `linear-gradient(90deg, ${typeColor}, ${alpha(typeColor, 0.7)})`,
-                            borderRadius: 4,
+                        size="sm"
+                        radius="md"
+                        style={{
+                          background: theme.fn.rgba(typeColor, 0.1)
+                        }}
+                        styles={{
+                          bar: {
+                            background: `linear-gradient(90deg, ${typeColor}, ${theme.fn.rgba(typeColor, 0.7)})`,
+                            borderRadius: rem(4)
                           }
                         }}
                       />
                     </Box>
 
                     {/* Level and status */}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <TypeIcon sx={{ fontSize: 16, color: typeColor }} />
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    <Group justify="space-between" align="center">
+                      <Group spacing="xs" align="center">
+                        <TypeIcon size={16} color={typeColor} />
+                        <Text size="sm" fw={600}>
                           Level {item.level}
-                        </Typography>
-                      </Box>
-                      
+                        </Text>
+                      </Group>
+
                       {item.isActive && (
-                        <Chip
-                          label="Active"
-                          size="small"
-                          sx={{
-                            background: `linear-gradient(135deg, ${theme.palette.success.main}, ${alpha(theme.palette.success.main, 0.7)})`,
+                        <Badge
+                          size="sm"
+                          style={{
+                            background: `linear-gradient(135deg, ${theme.colors.green[6]}, ${theme.fn.rgba(theme.colors.green[6], 0.7)})`,
                             color: 'white',
-                            fontWeight: 600,
-                            animation: 'pulse 2s infinite',
-                            '@keyframes pulse': {
-                              '0%, 100%': { opacity: 1 },
-                              '50%': { opacity: 0.7 }
-                            }
+                            animation: 'pulse 2s infinite'
                           }}
-                        />
+                        >
+                          Active
+                        </Badge>
                       )}
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Zoom>
-            </Grid>
+                    </Group>
+                  </Card>
+                )}
+              </Transition>
+            </Grid.Col>
           );
         })}
       </Grid>

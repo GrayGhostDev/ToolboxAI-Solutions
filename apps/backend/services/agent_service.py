@@ -40,6 +40,7 @@ try:
         RobloxAssetManagementAgent,
     )
     from core.agents.roblox.roblox_testing_agent import RobloxTestingAgent
+
     ROBLOX_AGENTS_AVAILABLE = True
     logging.info("Roblox agents imported successfully")
 except ImportError as e:
@@ -62,6 +63,7 @@ try:
         SupabaseService,
         get_supabase_service,
     )
+
     SUPABASE_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Supabase services not available: {e}")
@@ -72,20 +74,26 @@ except ImportError as e:
 
     async def trigger_event(channel, event, data):
         pass
+
     async def trigger_agent_event(event_type, agent_id, data, user_id=None):
         pass
+
     async def trigger_task_event(event_type, task_id, agent_id, data, user_id=None):
         pass
+
     async def trigger_metrics_update(metrics_data, agent_id=None):
         pass
+
     async def trigger_agent_status_change(agent_id, old_status, new_status, additional_data=None):
         pass
+
 
 logger = logging.getLogger(__name__)
 
 
 class AgentStatus(str, Enum):
     """Agent operational status"""
+
     INITIALIZING = "initializing"
     IDLE = "idle"
     BUSY = "busy"
@@ -98,6 +106,7 @@ class AgentStatus(str, Enum):
 
 class TaskStatus(str, Enum):
     """Task execution status"""
+
     PENDING = "pending"
     QUEUED = "queued"
     RUNNING = "running"
@@ -109,6 +118,7 @@ class TaskStatus(str, Enum):
 
 class AgentInfo:
     """Agent information container"""
+
     def __init__(self, agent_id: str, agent_type: str, agent_instance):
         self.agent_id = agent_id
         self.agent_type = agent_type
@@ -124,17 +134,14 @@ class AgentInfo:
             "uptime": 100.0,
             "throughput": 0.0,
             "error_rate": 0.0,
-            "success_rate": 100.0
+            "success_rate": 100.0,
         }
-        self.resource_usage = {
-            "cpu_percent": 0.0,
-            "memory_mb": 0,
-            "gpu_percent": 0.0
-        }
+        self.resource_usage = {"cpu_percent": 0.0, "memory_mb": 0, "gpu_percent": 0.0}
 
 
 class TaskInfo:
     """Task information container"""
+
     def __init__(self, task_id: str, agent_type: str, task_type: str, task_data: Dict[str, Any]):
         self.task_id = task_id
         self.agent_type = agent_type
@@ -188,11 +195,11 @@ class AgentService:
         try:
             # Initialize core agents
             core_agents = [
-                ('content_generator', ContentGenerationAgent()),
-                ('quiz_generator', QuizGenerationAgent()),
-                ('terrain_generator', TerrainGenerationAgent()),
-                ('script_generator', ScriptGenerationAgent()),
-                ('code_reviewer', CodeReviewAgent())
+                ("content_generator", ContentGenerationAgent()),
+                ("quiz_generator", QuizGenerationAgent()),
+                ("terrain_generator", TerrainGenerationAgent()),
+                ("script_generator", ScriptGenerationAgent()),
+                ("code_reviewer", CodeReviewAgent()),
             ]
 
             for agent_type, agent_instance in core_agents:
@@ -200,19 +207,19 @@ class AgentService:
                 agent_info = AgentInfo(agent_id, agent_type, agent_instance)
                 agent_info.status = AgentStatus.IDLE
                 self.agents[agent_id] = agent_info
-                
+
                 # Persist agent to Supabase if available
                 if self.supabase_service and self.supabase_service.is_available():
                     asyncio.create_task(self._persist_agent_to_supabase(agent_info))
-                
+
                 logger.info(f"Initialized agent: {agent_id} ({agent_type})")
 
             # Initialize Roblox agents if available
             if ROBLOX_AGENTS_AVAILABLE:
                 roblox_agents = [
-                    ('roblox_asset', RobloxAssetManagementAgent()),
-                    ('roblox_testing', RobloxTestingAgent()),
-                    ('roblox_analytics', RobloxAnalyticsAgent())
+                    ("roblox_asset", RobloxAssetManagementAgent()),
+                    ("roblox_testing", RobloxTestingAgent()),
+                    ("roblox_analytics", RobloxAnalyticsAgent()),
                 ]
 
                 for agent_type, agent_instance in roblox_agents:
@@ -220,11 +227,11 @@ class AgentService:
                     agent_info = AgentInfo(agent_id, agent_type, agent_instance)
                     agent_info.status = AgentStatus.IDLE
                     self.agents[agent_id] = agent_info
-                    
+
                     # Persist agent to Supabase if available
                     if self.supabase_service and self.supabase_service.is_available():
                         asyncio.create_task(self._persist_agent_to_supabase(agent_info))
-                    
+
                     logger.info(f"Initialized Roblox agent: {agent_id} ({agent_type})")
 
             logger.info(f"Agent service initialized with {len(self.agents)} agents")
@@ -237,7 +244,7 @@ class AgentService:
         """Persist agent information to Supabase"""
         if not self.supabase_service or not self.supabase_service.is_available():
             return
-        
+
         try:
             agent_data = {
                 "agent_id": agent_info.agent_id,
@@ -245,36 +252,32 @@ class AgentService:
                 "status": agent_info.status.value,
                 "configuration": {
                     "initialized_at": agent_info.created_at.isoformat(),
-                    "agent_class": agent_info.agent_instance.__class__.__name__
+                    "agent_class": agent_info.agent_instance.__class__.__name__,
                 },
-                "resource_limits": {
-                    "max_memory_mb": 1024,
-                    "max_cpu_percent": 80
-                },
-                "performance_thresholds": {
-                    "min_quality_score": 0.85,
-                    "max_execution_time": 30
-                }
+                "resource_limits": {"max_memory_mb": 1024, "max_cpu_percent": 80},
+                "performance_thresholds": {"min_quality_score": 0.85, "max_execution_time": 30},
             }
-            
+
             await self.supabase_service.create_agent_instance(agent_data)
             logger.debug(f"Persisted agent {agent_info.agent_id} to Supabase")
-            
+
         except Exception as e:
             logger.warning(f"Failed to persist agent {agent_info.agent_id} to Supabase: {e}")
 
-    async def _persist_task_to_supabase(self, task_info: TaskInfo, agent_id: str, user_id: Optional[str] = None):
+    async def _persist_task_to_supabase(
+        self, task_info: TaskInfo, agent_id: str, user_id: Optional[str] = None
+    ):
         """Persist task execution to Supabase"""
         if not self.supabase_service or not self.supabase_service.is_available():
             return None
-        
+
         try:
             # Get agent instance ID from Supabase
             agent_instance = await self.supabase_service.get_agent_instance(agent_id)
             if not agent_instance:
                 logger.warning(f"Agent {agent_id} not found in Supabase for task persistence")
                 return None
-            
+
             task_data = {
                 "task_id": task_info.task_id,
                 "agent_instance_id": agent_instance["id"],
@@ -282,19 +285,16 @@ class AgentService:
                 "task_type": task_info.task_type,
                 "priority": "normal",
                 "input_data": task_info.task_data,
-                "context_data": {
-                    "created_by_service": "agent_service",
-                    "service_version": "1.0.0"
-                },
+                "context_data": {"created_by_service": "agent_service", "service_version": "1.0.0"},
                 "status": "pending",
                 "user_id": user_id,
-                "session_id": f"session_{uuid.uuid4().hex[:8]}"
+                "session_id": f"session_{uuid.uuid4().hex[:8]}",
             }
-            
+
             result = await self.supabase_service.create_task_execution(task_data)
             logger.debug(f"Persisted task {task_info.task_id} to Supabase")
             return result
-            
+
         except Exception as e:
             logger.warning(f"Failed to persist task {task_info.task_id} to Supabase: {e}")
             return None
@@ -303,11 +303,11 @@ class AgentService:
         """Update task execution status in Supabase"""
         if not self.supabase_service or not self.supabase_service.is_available():
             return
-        
+
         try:
             await self.supabase_service.update_task_execution(task_id, updates)
             logger.debug(f"Updated task {task_id} in Supabase")
-            
+
         except Exception as e:
             logger.warning(f"Failed to update task {task_id} in Supabase: {e}")
 
@@ -315,22 +315,23 @@ class AgentService:
         """Store agent performance metrics to Supabase"""
         if not self.supabase_service or not self.supabase_service.is_available():
             return
-        
+
         try:
             # Get agent instance from Supabase
             agent_instance = await self.supabase_service.get_agent_instance(agent_id)
             if not agent_instance:
                 return
-            
+
             # Get agent info
             agent_info = self.agents.get(agent_id)
             if not agent_info:
                 return
-            
+
             # Prepare metrics data
             from datetime import datetime, timezone
+
             now = datetime.now(timezone.utc)
-            
+
             metrics_data = {
                 "agent_instance_id": agent_instance["id"],
                 "agent_type": agent_info.agent_type,
@@ -343,17 +344,22 @@ class AgentService:
                 "error_rate": metrics.get("error_rate", 0.0),
                 "average_execution_time": metrics.get("average_execution_time", 0.0),
                 "average_quality_score": metrics.get("average_quality_score", 0.0),
-                "uptime_percentage": metrics.get("uptime_percentage", 100.0)
+                "uptime_percentage": metrics.get("uptime_percentage", 100.0),
             }
-            
+
             await self.supabase_service.store_agent_metrics(metrics_data)
             logger.debug(f"Stored metrics for agent {agent_id} to Supabase")
-            
+
         except Exception as e:
             logger.warning(f"Failed to store metrics for agent {agent_id} to Supabase: {e}")
 
-    async def execute_task(self, agent_type: str, task_type: str, task_data: Dict[str, Any],
-                          user_id: Optional[str] = None) -> Dict[str, Any]:
+    async def execute_task(
+        self,
+        agent_type: str,
+        task_type: str,
+        task_data: Dict[str, Any],
+        user_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Execute a task on a specific agent type.
 
@@ -378,15 +384,15 @@ class AgentService:
                 # Queue task if no agent available
                 self.task_queue.append(task_id)
                 task.status = TaskStatus.QUEUED
-                
+
                 # Persist queued task to Supabase
                 await self._persist_task_to_supabase(task, "queued", user_id)
-                
+
                 return {
                     "success": False,
                     "task_id": task_id,
                     "status": "queued",
-                    "message": f"No available {agent_type} agent. Task queued."
+                    "message": f"No available {agent_type} agent. Task queued.",
                 }
 
             # Persist task to Supabase before execution
@@ -394,52 +400,51 @@ class AgentService:
 
             # Execute task
             result = await self._execute_task_on_agent(task_id, agent_id, user_id)
-            
+
             # Update task status in Supabase
             if supabase_task and result.get("success"):
-                await self._update_task_in_supabase(task_id, {
-                    "status": "completed",
-                    "output_data": result,
-                    "completed_at": datetime.now(timezone.utc).isoformat(),
-                    "quality_score": result.get("quality_score", 0.0),
-                    "execution_time_seconds": result.get("execution_time", 0.0)
-                })
+                await self._update_task_in_supabase(
+                    task_id,
+                    {
+                        "status": "completed",
+                        "output_data": result,
+                        "completed_at": datetime.now(timezone.utc).isoformat(),
+                        "quality_score": result.get("quality_score", 0.0),
+                        "execution_time_seconds": result.get("execution_time", 0.0),
+                    },
+                )
             elif supabase_task:
-                await self._update_task_in_supabase(task_id, {
-                    "status": "failed",
-                    "error_message": result.get("error", "Unknown error"),
-                    "completed_at": datetime.now(timezone.utc).isoformat()
-                })
-            
+                await self._update_task_in_supabase(
+                    task_id,
+                    {
+                        "status": "failed",
+                        "error_message": result.get("error", "Unknown error"),
+                        "completed_at": datetime.now(timezone.utc).isoformat(),
+                    },
+                )
+
             return result
 
         except Exception as e:
             logger.error(f"Error executing task: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "message": "Task execution failed"
-            }
+            return {"success": False, "error": str(e), "message": "Task execution failed"}
 
     def _find_available_agent(self, agent_type: str) -> Optional[str]:
         """Find an available agent of the specified type"""
         for agent_id, agent_info in self.agents.items():
-            if (agent_info.agent_type == agent_type and
-                agent_info.status == AgentStatus.IDLE):
+            if agent_info.agent_type == agent_type and agent_info.status == AgentStatus.IDLE:
                 return agent_id
         return None
 
-    async def _execute_task_on_agent(self, task_id: str, agent_id: str,
-                                   user_id: Optional[str] = None) -> Dict[str, Any]:
+    async def _execute_task_on_agent(
+        self, task_id: str, agent_id: str, user_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Execute a specific task on a specific agent"""
         task = self.tasks.get(task_id)
         agent = self.agents.get(agent_id)
 
         if not task or not agent:
-            return {
-                "success": False,
-                "error": "Task or agent not found"
-            }
+            return {"success": False, "error": "Task or agent not found"}
 
         try:
             # Update task and agent status
@@ -450,10 +455,13 @@ class AgentService:
             agent.last_activity = datetime.now(timezone.utc)
 
             # Notify status update via Pusher
-            await trigger_task_event("task_started", task_id, agent_id, {
-                "task_type": task.task_type,
-                "agent_type": agent.agent_type
-            }, user_id)
+            await trigger_task_event(
+                "task_started",
+                task_id,
+                agent_id,
+                {"task_type": task.task_type, "agent_type": agent.agent_type},
+                user_id,
+            )
 
             # Route task to appropriate agent method
             result = await self._route_task_to_agent_method(agent, task)
@@ -477,11 +485,17 @@ class AgentService:
             await self._store_execution_record(task, agent_id, user_id, True)
 
             # Notify completion via Pusher
-            await trigger_task_event("task_completed", task_id, agent_id, {
-                "execution_time": task.execution_time_seconds,
-                "result": result,
-                "quality_score": result.get('quality_score', 0) if result else 0
-            }, user_id)
+            await trigger_task_event(
+                "task_completed",
+                task_id,
+                agent_id,
+                {
+                    "execution_time": task.execution_time_seconds,
+                    "result": result,
+                    "quality_score": result.get("quality_score", 0) if result else 0,
+                },
+                user_id,
+            )
 
             # Process queued tasks
             await self._process_task_queue()
@@ -491,7 +505,7 @@ class AgentService:
                 "task_id": task_id,
                 "result": result,
                 "execution_time": task.execution_time_seconds,
-                "agent_id": agent_id
+                "agent_id": agent_id,
             }
 
         except Exception as e:
@@ -505,26 +519,26 @@ class AgentService:
             agent.total_tasks_failed += 1
 
             # Update performance metrics
-            execution_time = (task.completed_at - task.started_at).total_seconds() if task.started_at else 0
+            execution_time = (
+                (task.completed_at - task.started_at).total_seconds() if task.started_at else 0
+            )
             self._update_agent_metrics(agent, execution_time, False)
 
             # Store execution record
             await self._store_execution_record(task, agent_id, user_id, False)
 
             # Notify failure via Pusher
-            await trigger_task_event("task_failed", task_id, agent_id, {
-                "error": str(e),
-                "execution_time": execution_time
-            }, user_id)
+            await trigger_task_event(
+                "task_failed",
+                task_id,
+                agent_id,
+                {"error": str(e), "execution_time": execution_time},
+                user_id,
+            )
 
             logger.error(f"Task {task_id} failed on agent {agent_id}: {e}")
 
-            return {
-                "success": False,
-                "task_id": task_id,
-                "error": str(e),
-                "agent_id": agent_id
-            }
+            return {"success": False, "task_id": task_id, "error": str(e), "agent_id": agent_id}
 
     async def _route_task_to_agent_method(self, agent: AgentInfo, task: TaskInfo) -> Dict[str, Any]:
         """Route task to appropriate agent method based on agent type"""
@@ -532,62 +546,62 @@ class AgentService:
         task_data = task.task_data
 
         try:
-            if agent.agent_type == 'content':
+            if agent.agent_type == "content":
                 return await agent_instance.generate_content(
-                    subject=task_data.get('subject', 'General'),
-                    grade_level=task_data.get('grade_level', 5),
-                    objectives=task_data.get('objectives', ['Learn the topic'])
+                    subject=task_data.get("subject", "General"),
+                    grade_level=task_data.get("grade_level", 5),
+                    objectives=task_data.get("objectives", ["Learn the topic"]),
                 )
 
-            elif agent.agent_type == 'quiz':
+            elif agent.agent_type == "quiz":
                 return await agent_instance.generate_quiz(
-                    subject=task_data.get('subject', 'General'),
-                    objectives=task_data.get('objectives', ['Test knowledge']),
-                    num_questions=task_data.get('num_questions', 5),
-                    difficulty=task_data.get('difficulty', 'medium')
+                    subject=task_data.get("subject", "General"),
+                    objectives=task_data.get("objectives", ["Test knowledge"]),
+                    num_questions=task_data.get("num_questions", 5),
+                    difficulty=task_data.get("difficulty", "medium"),
                 )
 
-            elif agent.agent_type == 'terrain':
+            elif agent.agent_type == "terrain":
                 return await agent_instance.generate_terrain(
-                    subject=task_data.get('subject', 'General'),
-                    terrain_type=task_data.get('terrain_type', 'educational'),
-                    complexity=task_data.get('complexity', 'medium'),
-                    features=task_data.get('features', [])
+                    subject=task_data.get("subject", "General"),
+                    terrain_type=task_data.get("terrain_type", "educational"),
+                    complexity=task_data.get("complexity", "medium"),
+                    features=task_data.get("features", []),
                 )
 
-            elif agent.agent_type == 'script':
+            elif agent.agent_type == "script":
                 return await agent_instance.generate_script(
-                    script_type=task_data.get('script_type', 'ServerScript'),
-                    functionality=task_data.get('functionality', 'Basic script'),
-                    requirements=task_data.get('requirements', []),
-                    context=task_data.get('context', {})
+                    script_type=task_data.get("script_type", "ServerScript"),
+                    functionality=task_data.get("functionality", "Basic script"),
+                    requirements=task_data.get("requirements", []),
+                    context=task_data.get("context", {}),
                 )
 
-            elif agent.agent_type == 'code_review':
+            elif agent.agent_type == "code_review":
                 return await agent_instance.review_code(
-                    code=task_data.get('code', ''),
-                    language=task_data.get('language', 'lua'),
-                    review_type=task_data.get('review_type', 'comprehensive')
+                    code=task_data.get("code", ""),
+                    language=task_data.get("language", "lua"),
+                    review_type=task_data.get("review_type", "comprehensive"),
                 )
 
             # Roblox agents
-            elif agent.agent_type == 'roblox_asset' and ROBLOX_AGENTS_AVAILABLE:
+            elif agent.agent_type == "roblox_asset" and ROBLOX_AGENTS_AVAILABLE:
                 return await agent_instance.manage_asset(
-                    asset_type=task_data.get('asset_type', 'model'),
-                    action=task_data.get('action', 'create'),
-                    asset_data=task_data.get('asset_data', {})
+                    asset_type=task_data.get("asset_type", "model"),
+                    action=task_data.get("action", "create"),
+                    asset_data=task_data.get("asset_data", {}),
                 )
 
-            elif agent.agent_type == 'roblox_testing' and ROBLOX_AGENTS_AVAILABLE:
+            elif agent.agent_type == "roblox_testing" and ROBLOX_AGENTS_AVAILABLE:
                 return await agent_instance.run_tests(
-                    test_type=task_data.get('test_type', 'functional'),
-                    test_data=task_data.get('test_data', {})
+                    test_type=task_data.get("test_type", "functional"),
+                    test_data=task_data.get("test_data", {}),
                 )
 
-            elif agent.agent_type == 'roblox_analytics' and ROBLOX_AGENTS_AVAILABLE:
+            elif agent.agent_type == "roblox_analytics" and ROBLOX_AGENTS_AVAILABLE:
                 return await agent_instance.analyze_data(
-                    data_type=task_data.get('data_type', 'player_behavior'),
-                    analysis_data=task_data.get('analysis_data', {})
+                    data_type=task_data.get("data_type", "player_behavior"),
+                    analysis_data=task_data.get("analysis_data", {}),
                 )
 
             else:
@@ -608,25 +622,23 @@ class AgentService:
             )
 
             # Update error rate
-            agent.performance_metrics["error_rate"] = (
-                agent.total_tasks_failed / total_tasks * 100
-            )
+            agent.performance_metrics["error_rate"] = agent.total_tasks_failed / total_tasks * 100
 
             # Update average execution time
             if success and execution_time > 0:
                 current_avg = agent.average_execution_time
                 agent.average_execution_time = (
-                    (current_avg * (agent.total_tasks_completed - 1) + execution_time) /
-                    agent.total_tasks_completed
-                )
+                    current_avg * (agent.total_tasks_completed - 1) + execution_time
+                ) / agent.total_tasks_completed
 
             # Update throughput (tasks per minute)
             uptime_minutes = (datetime.now(timezone.utc) - agent.created_at).total_seconds() / 60
             if uptime_minutes > 0:
                 agent.performance_metrics["throughput"] = total_tasks / uptime_minutes
 
-    async def _store_execution_record(self, task: TaskInfo, agent_id: str,
-                                    user_id: Optional[str], success: bool):
+    async def _store_execution_record(
+        self, task: TaskInfo, agent_id: str, user_id: Optional[str], success: bool
+    ):
         """Store task execution record in Supabase"""
         if not self.supabase_service or not self.supabase_service.is_available():
             logger.debug("Supabase not available for storing execution record")
@@ -647,13 +659,13 @@ class AgentService:
                 "execution_time_seconds": task.execution_time_seconds,
                 "status": "completed" if success else "failed",
                 "error_message": task.error_message,
-                "quality_score": task.result.get('quality_score', 0) if task.result else 0,
+                "quality_score": task.result.get("quality_score", 0) if task.result else 0,
                 "user_id": user_id,
                 "created_at": task.created_at.isoformat() if task.created_at else None,
                 "started_at": task.started_at.isoformat() if task.started_at else None,
                 "completed_at": task.completed_at.isoformat() if task.completed_at else None,
                 "retry_count": task.retry_count,
-                "max_retries": task.max_retries
+                "max_retries": task.max_retries,
             }
 
             await self.supabase_service.create_task_execution(execution_record)
@@ -665,11 +677,17 @@ class AgentService:
     async def _notify_status_update(self, agent_id: str, event_type: str, data: Dict[str, Any]):
         """Send real-time status updates via Pusher (legacy method - use trigger_agent_event instead)"""
         try:
-            await trigger_agent_event(event_type, agent_id, data, data.get('user_id'))
+            await trigger_agent_event(event_type, agent_id, data, data.get("user_id"))
         except Exception as e:
             logger.warning(f"Could not send status update: {e}")
 
-    async def _notify_agent_status_change(self, agent_id: str, old_status: str, new_status: str, additional_data: Optional[Dict[str, Any]] = None):
+    async def _notify_agent_status_change(
+        self,
+        agent_id: str,
+        old_status: str,
+        new_status: str,
+        additional_data: Optional[Dict[str, Any]] = None,
+    ):
         """Notify about agent status changes via Pusher"""
         try:
             await trigger_agent_status_change(agent_id, old_status, new_status, additional_data)
@@ -710,15 +728,12 @@ class AgentService:
             "last_activity": agent.last_activity.isoformat(),
             "created_at": agent.created_at.isoformat(),
             "performance_metrics": agent.performance_metrics,
-            "resource_usage": agent.resource_usage
+            "resource_usage": agent.resource_usage,
         }
 
     def get_all_agents_status(self) -> List[Dict[str, Any]]:
         """Get status of all agents"""
-        return [
-            self.get_agent_status(agent_id)
-            for agent_id in self.agents.keys()
-        ]
+        return [self.get_agent_status(agent_id) for agent_id in self.agents.keys()]
 
     def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
         """Get status of specific task"""
@@ -737,7 +752,7 @@ class AgentService:
             "started_at": task.started_at.isoformat() if task.started_at else None,
             "completed_at": task.completed_at.isoformat() if task.completed_at else None,
             "execution_time_seconds": task.execution_time_seconds,
-            "retry_count": task.retry_count
+            "retry_count": task.retry_count,
         }
 
     def get_system_metrics(self) -> Dict[str, Any]:
@@ -758,7 +773,7 @@ class AgentService:
                 "idle": idle_agents,
                 "busy": busy_agents,
                 "error": error_agents,
-                "utilization_rate": (busy_agents / max(total_agents, 1)) * 100
+                "utilization_rate": (busy_agents / max(total_agents, 1)) * 100,
             },
             "tasks": {
                 "total": total_tasks,
@@ -766,13 +781,15 @@ class AgentService:
                 "failed": failed_tasks,
                 "running": running_tasks,
                 "queued": len(self.task_queue),
-                "success_rate": (completed_tasks / max(total_tasks, 1)) * 100 if total_tasks > 0 else 0
+                "success_rate": (
+                    (completed_tasks / max(total_tasks, 1)) * 100 if total_tasks > 0 else 0
+                ),
             },
             "system": {
                 "status": "healthy" if error_agents == 0 else "degraded",
                 "uptime": "99.8%",  # Mock data
-                "last_updated": datetime.now(timezone.utc).isoformat()
-            }
+                "last_updated": datetime.now(timezone.utc).isoformat(),
+            },
         }
 
     async def shutdown(self):

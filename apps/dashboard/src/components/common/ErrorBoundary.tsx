@@ -1,9 +1,6 @@
 import * as React from "react";
-import Alert from '@mui/material/Alert';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import { ErrorOutline, Refresh } from "@mui/icons-material";
+import { Alert, Box, Button, Text } from "@mantine/core";
+import { IconAlertCircle, IconRefresh } from "@tabler/icons-react";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -50,34 +47,36 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
       return (
         <Box
-          sx={{
+          style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             minHeight: "400px",
-            p: 3,
+            padding: "var(--mantine-spacing-lg)",
           }}
         >
           <Alert
-            severity="error"
-            icon={<ErrorOutline />}
-            sx={{
-              maxWidth: 600,
-              width: "100%",
+            icon={<IconAlertCircle size={20} />}
+            title="Something went wrong"
+            color="red"
+            variant="filled"
+            styles={{
+              root: {
+                maxWidth: 600,
+                width: "100%",
+              },
             }}
           >
-            <Typography variant="h6" gutterBottom>
-              Something went wrong
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 2 }}>
+            <Text size="sm" mb="md">
               {this.state.error?.message || "An unexpected error occurred"}
-            </Typography>
+            </Text>
             <Button
-              variant="outlined"
-              startIcon={<Refresh />}
-              onClick={(e: React.MouseEvent) => this.resetError}
-              size="small"
+              variant="outline"
+              color="red"
+              leftIcon={<IconRefresh size={16} />}
+              onClick={this.resetError}
+              size="sm"
             >
               Try Again
             </Button>

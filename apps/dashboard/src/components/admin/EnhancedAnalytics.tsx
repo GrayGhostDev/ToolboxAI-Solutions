@@ -1,32 +1,31 @@
 import { useState } from "react";
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid';
-import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import IconButton from '@mui/material/IconButton';
-import Button from '@mui/material/Button';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import Alert from '@mui/material/Alert';
+import {
+  Box,
+  Card,
+  Text,
+  Title,
+  Grid,
+  Stack,
+  Badge,
+  Select,
+  ActionIcon,
+  Button,
+  Tabs,
+  Alert,
+  Group,
+} from '@mantine/core';
 
 import {
-  Refresh,
-  Download,
-  Timeline,
-  People,
-  Assessment,
-  Speed,
-} from "@mui/icons-material";
+  IconRefresh as Refresh,
+  IconDownload as Download,
+  IconTimeline as Timeline,
+  IconUsers as People,
+  IconClipboard as Assessment,
+  IconGauge as Speed,
+} from "@tabler/icons-react";
 import { useAppDispatch, useAppSelector } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
-import { useWebSocketContext } from "../../contexts/WebSocketContext";
+import { usePusherContext } from "../../contexts/PusherContext";
 
 // Import our new analytics components
 import UserActivityChart from "../analytics/UserActivityChart";
@@ -45,7 +44,7 @@ export function EnhancedAnalytics({
   timeRange: initialTimeRange = "7d" 
 }: EnhancedAnalyticsProps) {
   const dispatch = useAppDispatch();
-  const { isConnected } = useWebSocketContext();
+  const { isConnected } = usePusherContext();
   const userRole = useAppSelector((state) => state.user.role);
   
   const [currentTab, setCurrentTab] = useState(initialTab);

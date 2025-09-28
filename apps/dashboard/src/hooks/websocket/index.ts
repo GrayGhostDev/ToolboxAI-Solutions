@@ -1,20 +1,26 @@
 /**
- * WebSocket hooks exports
- * Centralized export for all WebSocket-related hooks
+ * Pusher hooks exports (backward compatibility)
+ * Centralized export for all real-time communication hooks
+ * Updated to use Pusher instead of WebSocket
  */
 
-export { useWebSocket } from './useWebSocket';
-export { useWebSocketStatus } from './useWebSocketStatus';
-export { useWebSocketMessage, useWebSocketMessages } from './useWebSocketMessage';
-export { useWebSocketChannel, useWebSocketChannels } from './useWebSocketChannel';
-export { useRealtimeContent, useMultipleContentGeneration } from './useRealtimeContent';
+// Re-export main Pusher hook with WebSocket alias for backward compatibility
+export { usePusher as useWebSocket } from '../usePusher';
+export { usePusher } from '../usePusher';
+
+// Export Pusher-specific hooks
+export { usePusherEvents } from '../pusher/usePusherEvent';
+export { usePusherChannel } from '../pusher/usePusherChannel';
 
 // Re-export types for convenience
-export type { WebSocketStatusInfo } from './useWebSocketStatus';
-export type { UseWebSocketMessageOptions } from './useWebSocketMessage';
-export type { UseWebSocketChannelOptions, UseWebSocketChannelReturn } from './useWebSocketChannel';
 export type { 
-  ContentGenerationState,
-  UseRealtimeContentOptions,
-  UseRealtimeContentReturn 
-} from './useRealtimeContent';
+  WebSocketState,
+  WebSocketConnectionState,
+  WebSocketEventHandler 
+} from '../../types/websocket';
+
+export type {
+  PusherConnectionState,
+  PusherEventHandler,
+  PusherHookConfig
+} from '../../types/pusher';

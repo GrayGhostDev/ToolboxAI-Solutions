@@ -6,37 +6,30 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Button from '@mui/material/Button';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import LinearProgress from '@mui/material/LinearProgress';
-import CircularProgress from '@mui/material/CircularProgress';
-import Stack from '@mui/material/Stack';
-import Divider from '@mui/material/Divider';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import Tooltip from '@mui/material/Tooltip';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Avatar from '@mui/material/Avatar';
-import AvatarGroup from '@mui/material/AvatarGroup';
-import { useTheme, alpha } from '@mui/material/styles';
+import {
+  Box,
+  Card,
+  Text,
+  Grid,
+  Paper,
+  Badge,
+  ActionIcon,
+  Button,
+  Table,
+  Progress,
+  RingProgress,
+  Stack,
+  Alert,
+  Tooltip,
+  SegmentedControl,
+  Select,
+  Avatar,
+  Group,
+  Title,
+  Loader,
+  Divider
+} from '@mantine/core';
+import { useMantineTheme } from '@mantine/hooks';
 import {
   BarChart,
   Bar,
@@ -60,29 +53,29 @@ import {
   AreaChart
 } from 'recharts';
 import {
-  Quiz,
-  Analytics,
-  TrendingUp,
-  TrendingDown,
-  CheckCircle,
-  Cancel,
-  Timer,
-  Speed,
-  EmojiEvents,
-  Download,
-  Refresh,
-  FilterList,
-  Person,
-  Groups,
-  QuestionAnswer,
-  Assessment,
-  Grade,
-  Psychology,
-  Lightbulb,
-  Warning,
-  Error as ErrorIcon
-} from '@mui/icons-material';
-import { useWebSocketContext } from '../../contexts/WebSocketContext';
+  IconHelp,
+  IconChartBar,
+  IconTrendingUp,
+  IconTrendingDown,
+  IconCircleCheck,
+  IconX,
+  IconClock,
+  IconGauge,
+  IconTrophy,
+  IconDownload,
+  IconRefresh,
+  IconFilter,
+  IconUser,
+  IconUsers,
+  IconQuestionMark,
+  IconClipboardCheck,
+  IconSchool,
+  IconBrain,
+  IconBulb,
+  IconAlertTriangle,
+  IconExclamationMark
+} from '@tabler/icons-react';
+import { usePusherContext } from '../../contexts/PusherContext';
 import { WebSocketMessageType } from '../../types/websocket';
 
 interface QuizResult {
@@ -147,8 +140,8 @@ type ChartType = 'bar' | 'line' | 'pie' | 'radar';
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0'];
 
 export const QuizResultsAnalytics: React.FunctionComponent<Record<string, any>> = () => {
-  const theme = useTheme();
-  const { on, sendMessage, isConnected } = useWebSocketContext();
+  const theme = useMantineTheme();
+  const { on, sendMessage, isConnected } = usePusherContext();
   
   const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
   const [selectedQuiz, setSelectedQuiz] = useState<QuizResult | null>(null);
@@ -318,216 +311,238 @@ export const QuizResultsAnalytics: React.FunctionComponent<Record<string, any>> 
   }, [selectedQuiz]);
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* Header */}
       <Card>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Analytics color="primary" fontSize="large" />
+        <Card.Section p="md">
+          <Group justify="space-between" align="center">
+            <Group align="center">
+              <IconChartBar color={theme.colors.blue[6]} size={32} />
               <Box>
-                <Typography variant="h5">Quiz Results Analytics</Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Title order={3}>Quiz Results Analytics</Title>
+                <Text size="sm" c="dimmed">
                   Comprehensive analysis of quiz performance and learning outcomes
-                </Typography>
+                </Text>
               </Box>
-            </Box>
-            
-            <Stack direction="row" spacing={1}>
-              <FormControl size="small" sx={{ minWidth: 120 }}>
-                <Select
-                  value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value as any)}
-                >
-                  <MenuItem value="today">Today</MenuItem>
-                  <MenuItem value="week">This Week</MenuItem>
-                  <MenuItem value="month">This Month</MenuItem>
-                  <MenuItem value="all">All Time</MenuItem>
-                </Select>
-              </FormControl>
-              
-              <IconButton
-                onClick={(e: React.MouseEvent) => () => sendMessage(WebSocketMessageType.REQUEST_QUIZ_RESULTS, { timeRange })}
+            </Group>
+
+            <Group>
+              <Select
+                size="sm"
+                value={timeRange}
+                onChange={(value) => setTimeRange(value as any)}
+                data={[
+                  { value: 'today', label: 'Today' },
+                  { value: 'week', label: 'This Week' },
+                  { value: 'month', label: 'This Month' },
+                  { value: 'all', label: 'All Time' }
+                ]}
+                style={{ minWidth: 120 }}
+              />
+
+              <ActionIcon
+                onClick={() => sendMessage(WebSocketMessageType.REQUEST_QUIZ_RESULTS, { timeRange })}
               >
-                <Refresh />
-              </IconButton>
-              
+                <IconRefresh size={16} />
+              </ActionIcon>
+
               {selectedQuiz && (
                 <Button
-                  variant="outlined"
-                  startIcon={<Download />}
-                  onClick={(e: React.MouseEvent) => exportResults}
-                  size="small"
+                  variant="outline"
+                  leftSection={<IconDownload size={16} />}
+                  onClick={exportResults}
+                  size="sm"
                 >
                   Export
                 </Button>
               )}
-            </Stack>
-          </Box>
-        </CardContent>
+            </Group>
+          </Group>
+        </Card.Section>
       </Card>
 
       {/* Quiz Selector */}
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
+      <Grid gutter="md">
+        <Grid.Col span={12}>
           <Card>
-            <CardContent>
-              <Typography variant="subtitle2" gutterBottom>
+            <Card.Section p="md">
+              <Text size="sm" fw={600} mb="sm">
                 Recent Quizzes
-              </Typography>
-              <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 1 }}>
+              </Text>
+              <Group gap="xs" style={{ overflowX: 'auto', paddingBottom: '8px' }}>
                 {quizResults.map((quiz) => (
-                  <Chip
+                  <Badge
                     key={quiz.quizId}
-                    label={quiz.quizName}
-                    onClick={(e: React.MouseEvent) => () => setSelectedQuiz(quiz)}
-                    color={selectedQuiz?.quizId === quiz.quizId ? 'primary' : 'default'}
-                    icon={<Quiz />}
-                    sx={{ minWidth: 120 }}
-                  />
+                    style={{ cursor: 'pointer', minWidth: 120 }}
+                    onClick={() => setSelectedQuiz(quiz)}
+                    color={selectedQuiz?.quizId === quiz.quizId ? 'blue' : 'gray'}
+                    variant={selectedQuiz?.quizId === quiz.quizId ? 'filled' : 'outline'}
+                    leftSection={<IconHelp size={12} />}
+                  >
+                    {quiz.quizName}
+                  </Badge>
                 ))}
-              </Stack>
-            </CardContent>
+              </Group>
+            </Card.Section>
           </Card>
-        </Grid>
+        </Grid.Col>
       </Grid>
 
       {selectedQuiz && (
         <>
           {/* View Mode Selector */}
-          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-            <ToggleButtonGroup
+          <Group justify="center">
+            <SegmentedControl
               value={viewMode}
-              exclusive
-              onChange={(e, value) => value && setViewMode(value)}
-              size="small"
-            >
-              <ToggleButton value="overview">
-                <Assessment sx={{ mr: 1 }} />
-                Overview
-              </ToggleButton>
-              <ToggleButton value="students">
-                <Groups sx={{ mr: 1 }} />
-                Students
-              </ToggleButton>
-              <ToggleButton value="questions">
-                <QuestionAnswer sx={{ mr: 1 }} />
-                Questions
-              </ToggleButton>
-              <ToggleButton value="insights">
-                <Psychology sx={{ mr: 1 }} />
-                Insights
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
+              onChange={(value) => setViewMode(value as ViewMode)}
+              data={[
+                {
+                  value: 'overview',
+                  label: (
+                    <Group gap="xs">
+                      <IconClipboardCheck size={16} />
+                      <Text size="sm">Overview</Text>
+                    </Group>
+                  )
+                },
+                {
+                  value: 'students',
+                  label: (
+                    <Group gap="xs">
+                      <IconUsers size={16} />
+                      <Text size="sm">Students</Text>
+                    </Group>
+                  )
+                },
+                {
+                  value: 'questions',
+                  label: (
+                    <Group gap="xs">
+                      <IconQuestionMark size={16} />
+                      <Text size="sm">Questions</Text>
+                    </Group>
+                  )
+                },
+                {
+                  value: 'insights',
+                  label: (
+                    <Group gap="xs">
+                      <IconBrain size={16} />
+                      <Text size="sm">Insights</Text>
+                    </Group>
+                  )
+                }
+              ]}
+            />
+          </Group>
 
           {/* Content based on view mode */}
           {viewMode === 'overview' && (
             <Grid container spacing={2}>
               {/* Key Metrics */}
-              <Grid item xs={12}>
-                <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
+              <Grid.Col span={12}>
+                <Grid gutter="md">
+                  <Grid.Col span={{ base: 6, sm: 3 }}>
                     <Card>
-                      <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Card.Section p="md">
+                        <Group justify="space-between" align="center">
                           <Box>
-                            <Typography variant="h4">
+                            <Text size="xl" fw={700}>
                               {Math.round(selectedQuiz.overallMetrics.averageScore)}%
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                            </Text>
+                            <Text size="sm" c="dimmed">
                               Average Score
-                            </Typography>
+                            </Text>
                           </Box>
-                          <Grade color="primary" />
-                        </Box>
-                      </CardContent>
+                          <IconSchool color={theme.colors.blue[6]} />
+                        </Group>
+                      </Card.Section>
                     </Card>
-                  </Grid>
+                  </Grid.Col>
 
-                  <Grid item xs={6} sm={3}>
+                  <Grid.Col span={{ base: 6, sm: 3 }}>
                     <Card>
-                      <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Card.Section p="md">
+                        <Group justify="space-between" align="center">
                           <Box>
-                            <Typography variant="h4">
+                            <Text size="xl" fw={700}>
                               {Math.round(selectedQuiz.overallMetrics.passRate)}%
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                            </Text>
+                            <Text size="sm" c="dimmed">
                               Pass Rate
-                            </Typography>
+                            </Text>
                           </Box>
-                          <CheckCircle color="success" />
-                        </Box>
-                      </CardContent>
+                          <IconCircleCheck color={theme.colors.green[6]} />
+                        </Group>
+                      </Card.Section>
                     </Card>
-                  </Grid>
+                  </Grid.Col>
 
-                  <Grid item xs={6} sm={3}>
+                  <Grid.Col span={{ base: 6, sm: 3 }}>
                     <Card>
-                      <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Card.Section p="md">
+                        <Group justify="space-between" align="center">
                           <Box>
-                            <Typography variant="h4">
+                            <Text size="xl" fw={700}>
                               {Math.round(selectedQuiz.overallMetrics.completionRate)}%
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                            </Text>
+                            <Text size="sm" c="dimmed">
                               Completion
-                            </Typography>
+                            </Text>
                           </Box>
-                          <EmojiEvents color="warning" />
-                        </Box>
-                      </CardContent>
+                          <IconTrophy color={theme.colors.yellow[6]} />
+                        </Group>
+                      </Card.Section>
                     </Card>
-                  </Grid>
+                  </Grid.Col>
 
-                  <Grid item xs={6} sm={3}>
+                  <Grid.Col span={{ base: 6, sm: 3 }}>
                     <Card>
-                      <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Card.Section p="md">
+                        <Group justify="space-between" align="center">
                           <Box>
-                            <Typography variant="h4">
+                            <Text size="xl" fw={700}>
                               {Math.round(selectedQuiz.overallMetrics.averageTimeSpent / 60)}m
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                            </Text>
+                            <Text size="sm" c="dimmed">
                               Avg Time
-                            </Typography>
+                            </Text>
                           </Box>
-                          <Timer color="info" />
-                        </Box>
-                      </CardContent>
+                          <IconClock color={theme.colors.cyan[6]} />
+                        </Group>
+                      </Card.Section>
                     </Card>
-                  </Grid>
+                  </Grid.Col>
                 </Grid>
-              </Grid>
+              </Grid.Col>
 
               {/* Score Distribution Chart */}
-              <Grid item xs={12} md={6}>
+              <Grid.Col span={{ base: 12, md: 6 }}>
                 <Card>
-                  <CardContent>
-                    <Typography variant="subtitle2" gutterBottom>
+                  <Card.Section p="md">
+                    <Text size="sm" fw={600} mb="sm">
                       Score Distribution
-                    </Typography>
+                    </Text>
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={scoreDistributionData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis />
                         <RechartsTooltip />
-                        <Bar dataKey="count" fill={theme.palette.primary.main} />
+                        <Bar dataKey="count" fill={theme.colors.blue[6]} />
                       </BarChart>
                     </ResponsiveContainer>
-                  </CardContent>
+                  </Card.Section>
                 </Card>
-              </Grid>
+              </Grid.Col>
 
               {/* Question Performance Chart */}
-              <Grid item xs={12} md={6}>
+              <Grid.Col span={{ base: 12, md: 6 }}>
                 <Card>
-                  <CardContent>
-                    <Typography variant="subtitle2" gutterBottom>
+                  <Card.Section p="md">
+                    <Text size="sm" fw={600} mb="sm">
                       Question Performance
-                    </Typography>
+                    </Text>
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={questionPerformanceData}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -535,356 +550,369 @@ export const QuizResultsAnalytics: React.FunctionComponent<Record<string, any>> 
                         <YAxis />
                         <RechartsTooltip />
                         <Legend />
-                        <Line 
-                          type="monotone" 
-                          dataKey="accuracy" 
-                          stroke={theme.palette.success.main}
+                        <Line
+                          type="monotone"
+                          dataKey="accuracy"
+                          stroke={theme.colors.green[6]}
                           name="Accuracy %"
                         />
                       </LineChart>
                     </ResponsiveContainer>
-                  </CardContent>
+                  </Card.Section>
                 </Card>
-              </Grid>
+              </Grid.Col>
 
               {/* Topic Performance */}
-              <Grid item xs={12}>
+              <Grid.Col span={12}>
                 <Card>
-                  <CardContent>
-                    <Typography variant="subtitle2" gutterBottom>
+                  <Card.Section p="md">
+                    <Text size="sm" fw={600} mb="md">
                       Performance by Topic
-                    </Typography>
-                    <Box sx={{ mt: 2 }}>
+                    </Text>
+                    <Stack gap="md">
                       {topicPerformanceData.map((topic) => (
-                        <Box key={topic.topic} sx={{ mb: 2 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                            <Typography variant="body2">{topic.topic}</Typography>
-                            <Typography variant="body2" fontWeight="bold">
+                        <Box key={topic.topic}>
+                          <Group justify="space-between" mb="xs">
+                            <Text size="sm">{topic.topic}</Text>
+                            <Text size="sm" fw={600}>
                               {topic.performance}%
-                            </Typography>
-                          </Box>
-                          <LinearProgress
-                            variant="determinate"
+                            </Text>
+                          </Group>
+                          <Progress
                             value={topic.performance}
-                            sx={{
-                              height: 8,
-                              borderRadius: 1,
-                              bgcolor: alpha(theme.palette.primary.main, 0.1),
-                              '& .MuiLinearProgress-bar': {
-                                bgcolor: topic.performance >= 70 ? 'success.main' :
-                                        topic.performance >= 50 ? 'warning.main' : 'error.main'
-                              }
-                            }}
+                            size="lg"
+                            radius="md"
+                            color={
+                              topic.performance >= 70 ? 'green' :
+                              topic.performance >= 50 ? 'yellow' : 'red'
+                            }
                           />
                         </Box>
                       ))}
-                    </Box>
-                  </CardContent>
+                    </Stack>
+                  </Card.Section>
                 </Card>
-              </Grid>
+              </Grid.Col>
             </Grid>
           )}
 
           {viewMode === 'students' && (
             <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
+              <Card.Section p="md">
+                <Text size="lg" fw={600} mb="md">
                   Student Performance
-                </Typography>
-                <TableContainer>
+                </Text>
+                <Table.ScrollContainer minWidth={800}>
                   <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Rank</TableCell>
-                        <TableCell>Student</TableCell>
-                        <TableCell align="center">Score</TableCell>
-                        <TableCell align="center">Percentage</TableCell>
-                        <TableCell align="center">Time</TableCell>
-                        <TableCell align="center">Attempts</TableCell>
-                        <TableCell align="center">Status</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Rank</Table.Th>
+                        <Table.Th>Student</Table.Th>
+                        <Table.Th ta="center">Score</Table.Th>
+                        <Table.Th ta="center">Percentage</Table.Th>
+                        <Table.Th ta="center">Time</Table.Th>
+                        <Table.Th ta="center">Attempts</Table.Th>
+                        <Table.Th ta="center">Status</Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
                       {selectedQuiz.studentResults
                         .sort((a, b) => b.percentage - a.percentage)
                         .map((student, index) => (
-                          <TableRow key={student.studentId}>
-                            <TableCell>
-                              {index === 0 && <EmojiEvents color="warning" />}
-                              {index === 1 && <EmojiEvents color="action" />}
-                              {index === 2 && <EmojiEvents sx={{ color: '#CD7F32' }} />}
-                              {index > 2 && index + 1}
-                            </TableCell>
-                            <TableCell>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Avatar sx={{ width: 32, height: 32 }}>
+                          <Table.Tr key={student.studentId}>
+                            <Table.Td>
+                              {index === 0 && <IconTrophy color={theme.colors.yellow[6]} />}
+                              {index === 1 && <IconTrophy color={theme.colors.gray[6]} />}
+                              {index === 2 && <IconTrophy style={{ color: '#CD7F32' }} />}
+                              {index > 2 && <Text size="sm">{index + 1}</Text>}
+                            </Table.Td>
+                            <Table.Td>
+                              <Group align="center">
+                                <Avatar size={32}>
                                   {student.studentName[0]}
                                 </Avatar>
-                                {student.studentName}
-                              </Box>
-                            </TableCell>
-                            <TableCell align="center">
-                              {student.score}/{selectedQuiz.totalQuestions}
-                            </TableCell>
-                            <TableCell align="center">
-                              <Chip
-                                label={`${student.percentage}%`}
-                                size="small"
+                                <Text size="sm">{student.studentName}</Text>
+                              </Group>
+                            </Table.Td>
+                            <Table.Td ta="center">
+                              <Text size="sm">{student.score}/{selectedQuiz.totalQuestions}</Text>
+                            </Table.Td>
+                            <Table.Td ta="center">
+                              <Badge
                                 color={
-                                  student.percentage >= 80 ? 'success' :
-                                  student.percentage >= 60 ? 'warning' : 'error'
+                                  student.percentage >= 80 ? 'green' :
+                                  student.percentage >= 60 ? 'yellow' : 'red'
                                 }
-                              />
-                            </TableCell>
-                            <TableCell align="center">
-                              {Math.round(student.timeSpent / 60)}m
-                            </TableCell>
-                            <TableCell align="center">{student.attempts}</TableCell>
-                            <TableCell align="center">
+                                size="sm"
+                              >
+                                {student.percentage}%
+                              </Badge>
+                            </Table.Td>
+                            <Table.Td ta="center">
+                              <Text size="sm">{Math.round(student.timeSpent / 60)}m</Text>
+                            </Table.Td>
+                            <Table.Td ta="center">
+                              <Text size="sm">{student.attempts}</Text>
+                            </Table.Td>
+                            <Table.Td ta="center">
                               {student.percentage >= 70 ? (
-                                <CheckCircle color="success" />
+                                <IconCircleCheck color={theme.colors.green[6]} />
                               ) : (
-                                <Cancel color="error" />
+                                <IconX color={theme.colors.red[6]} />
                               )}
-                            </TableCell>
-                          </TableRow>
+                            </Table.Td>
+                          </Table.Tr>
                         ))}
-                    </TableBody>
+                    </Table.Tbody>
                   </Table>
-                </TableContainer>
-              </CardContent>
+                </Table.ScrollContainer>
+              </Card.Section>
             </Card>
           )}
 
           {viewMode === 'questions' && (
-            <Grid container spacing={2}>
+            <Grid gutter="md">
               {selectedQuiz.questionAnalytics.map((question, index) => (
-                <Grid item xs={12} md={6} key={question.questionId}>
+                <Grid.Col span={{ base: 12, md: 6 }} key={question.questionId}>
                   <Card>
-                    <CardContent>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="subtitle2">
+                    <Card.Section p="md">
+                      <Group justify="space-between" mb="md">
+                        <Text size="sm" fw={600}>
                           Question {index + 1}
-                        </Typography>
-                        <Chip
-                          label={question.difficulty}
-                          size="small"
+                        </Text>
+                        <Badge
                           color={
-                            question.difficulty === 'easy' ? 'success' :
-                            question.difficulty === 'medium' ? 'warning' : 'error'
+                            question.difficulty === 'easy' ? 'green' :
+                            question.difficulty === 'medium' ? 'yellow' : 'red'
                           }
-                        />
-                      </Box>
-                      
-                      <Typography variant="body2" paragraph>
+                          size="sm"
+                        >
+                          {question.difficulty}
+                        </Badge>
+                      </Group>
+
+                      <Text size="sm" mb="md">
                         {question.questionText}
-                      </Typography>
-                      
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="caption" color="text.secondary">
+                      </Text>
+
+                      <Box mb="md">
+                        <Text size="xs" c="dimmed">
                           Correct Answer:
-                        </Typography>
-                        <Typography variant="body2" color="success.main">
+                        </Text>
+                        <Text size="sm" c="green">
                           {question.correctAnswer}
-                        </Typography>
+                        </Text>
                       </Box>
-                      
-                      <Grid container spacing={2}>
-                        <Grid item xs={6}>
-                          <Box sx={{ textAlign: 'center' }}>
-                            <CircularProgress
-                              variant="determinate"
-                              value={(question.correctCount / (question.correctCount + question.incorrectCount)) * 100}
-                              color={
-                                (question.correctCount / (question.correctCount + question.incorrectCount)) > 0.7
-                                  ? 'success' : 'warning'
+
+                      <Grid gutter="md">
+                        <Grid.Col span={6}>
+                          <Box style={{ textAlign: 'center' }}>
+                            <RingProgress
+                              size={80}
+                              thickness={8}
+                              sections={[{
+                                value: (question.correctCount / (question.correctCount + question.incorrectCount)) * 100,
+                                color: (question.correctCount / (question.correctCount + question.incorrectCount)) > 0.7
+                                  ? 'green' : 'yellow'
+                              }]}
+                              label={
+                                <Text size="xs" ta="center">
+                                  {Math.round((question.correctCount / (question.correctCount + question.incorrectCount)) * 100)}%
+                                </Text>
                               }
                             />
-                            <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                            <Text size="xs" c="dimmed" mt="sm">
                               Success Rate
-                            </Typography>
+                            </Text>
                           </Box>
-                        </Grid>
-                        <Grid item xs={6}>
-                          <Typography variant="caption" color="text.secondary">
-                            Avg Time
-                          </Typography>
-                          <Typography variant="h6">
-                            {Math.round(question.averageTime)}s
-                          </Typography>
-                        </Grid>
+                        </Grid.Col>
+                        <Grid.Col span={6}>
+                          <Box>
+                            <Text size="xs" c="dimmed">
+                              Avg Time
+                            </Text>
+                            <Text size="lg" fw={600}>
+                              {Math.round(question.averageTime)}s
+                            </Text>
+                          </Box>
+                        </Grid.Col>
                       </Grid>
-                      
+
                       {question.commonWrongAnswers.length > 0 && (
-                        <Box sx={{ mt: 2 }}>
-                          <Typography variant="caption" color="text.secondary">
+                        <Box mt="md">
+                          <Text size="xs" c="dimmed" mb="xs">
                             Common Wrong Answers:
-                          </Typography>
-                          {question.commonWrongAnswers.slice(0, 2).map((wrong, i) => (
-                            <Typography key={i} variant="body2" color="error">
-                              • {wrong.answer} ({wrong.count} students)
-                            </Typography>
-                          ))}
+                          </Text>
+                          <Stack gap="xs">
+                            {question.commonWrongAnswers.slice(0, 2).map((wrong, i) => (
+                              <Text key={i} size="sm" c="red">
+                                • {wrong.answer} ({wrong.count} students)
+                              </Text>
+                            ))}
+                          </Stack>
                         </Box>
                       )}
-                    </CardContent>
+                    </Card.Section>
                   </Card>
-                </Grid>
+                </Grid.Col>
               ))}
             </Grid>
           )}
 
           {viewMode === 'insights' && insights && (
-            <Grid container spacing={2}>
+            <Grid gutter="md">
               {/* Top Performers */}
-              <Grid item xs={12} md={6}>
+              <Grid.Col span={{ base: 12, md: 6 }}>
                 <Card>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                      <EmojiEvents color="warning" />
-                      <Typography variant="h6">Top Performers</Typography>
-                    </Box>
-                    <Stack spacing={2}>
+                  <Card.Section p="md">
+                    <Group align="center" mb="md">
+                      <IconTrophy color={theme.colors.yellow[6]} />
+                      <Text size="lg" fw={600}>Top Performers</Text>
+                    </Group>
+                    <Stack gap="md">
                       {insights.topPerformers.map((student, index) => (
                         <Box
                           key={student.studentId}
-                          sx={{
+                          style={{
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            p: 1,
-                            borderRadius: 1,
-                            bgcolor: alpha(theme.palette.success.main, 0.1)
+                            padding: '8px',
+                            borderRadius: '4px',
+                            backgroundColor: theme.colors.green[0]
                           }}
                         >
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Avatar sx={{ width: 32, height: 32 }}>
+                          <Group align="center">
+                            <Avatar size={32}>
                               {student.studentName[0]}
                             </Avatar>
-                            <Typography>{student.studentName}</Typography>
-                          </Box>
-                          <Chip
-                            label={`${student.percentage}%`}
-                            color="success"
-                            size="small"
-                          />
+                            <Text size="sm">{student.studentName}</Text>
+                          </Group>
+                          <Badge
+                            color="green"
+                            size="sm"
+                          >
+                            {student.percentage}%
+                          </Badge>
                         </Box>
                       ))}
                     </Stack>
-                  </CardContent>
+                  </Card.Section>
                 </Card>
-              </Grid>
+              </Grid.Col>
 
               {/* Students Needing Help */}
-              <Grid item xs={12} md={6}>
+              <Grid.Col span={{ base: 12, md: 6 }}>
                 <Card>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                      <Warning color="warning" />
-                      <Typography variant="h6">Needs Attention</Typography>
-                    </Box>
-                    <Stack spacing={2}>
+                  <Card.Section p="md">
+                    <Group align="center" mb="md">
+                      <IconAlertTriangle color={theme.colors.yellow[6]} />
+                      <Text size="lg" fw={600}>Needs Attention</Text>
+                    </Group>
+                    <Stack gap="md">
                       {insights.needsHelp.map((student) => (
                         <Box
                           key={student.id}
-                          sx={{
+                          style={{
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            p: 1,
-                            borderRadius: 1,
-                            bgcolor: alpha(theme.palette.warning.main, 0.1)
+                            padding: '8px',
+                            borderRadius: '4px',
+                            backgroundColor: theme.colors.yellow[0]
                           }}
                         >
-                          <Typography>{student.name}</Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Chip
-                              label={`${student.score}%`}
-                              color="warning"
-                              size="small"
-                            />
-                            <Button size="small" variant="outlined">
+                          <Text size="sm">{student.name}</Text>
+                          <Group align="center">
+                            <Badge
+                              color="yellow"
+                              size="sm"
+                            >
+                              {student.score}%
+                            </Badge>
+                            <Button size="sm" variant="outline">
                               Help
                             </Button>
-                          </Box>
+                          </Group>
                         </Box>
                       ))}
                     </Stack>
-                  </CardContent>
+                  </Card.Section>
                 </Card>
-              </Grid>
+              </Grid.Col>
 
               {/* Struggling Topics */}
-              <Grid item xs={12} md={6}>
+              <Grid.Col span={{ base: 12, md: 6 }}>
                 <Card>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                      <Lightbulb color="info" />
-                      <Typography variant="h6">Topics to Review</Typography>
-                    </Box>
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                  <Card.Section p="md">
+                    <Group align="center" mb="md">
+                      <IconBulb color={theme.colors.cyan[6]} />
+                      <Text size="lg" fw={600}>Topics to Review</Text>
+                    </Group>
+                    <Group gap="xs" wrap="wrap">
                       {insights.strugglingTopics.map((topic) => (
-                        <Chip
+                        <Badge
                           key={topic}
-                          label={topic}
-                          color="error"
-                          variant="outlined"
-                          sx={{ mb: 1 }}
-                        />
+                          color="red"
+                          variant="outline"
+                        >
+                          {topic}
+                        </Badge>
                       ))}
-                    </Stack>
-                  </CardContent>
+                    </Group>
+                  </Card.Section>
                 </Card>
-              </Grid>
+              </Grid.Col>
 
               {/* Difficult Questions */}
-              <Grid item xs={12} md={6}>
+              <Grid.Col span={{ base: 12, md: 6 }}>
                 <Card>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                      <ErrorIcon color="error" />
-                      <Typography variant="h6">Difficult Questions</Typography>
-                    </Box>
-                    <Stack spacing={1}>
+                  <Card.Section p="md">
+                    <Group align="center" mb="md">
+                      <IconExclamationMark color={theme.colors.red[6]} />
+                      <Text size="lg" fw={600}>Difficult Questions</Text>
+                    </Group>
+                    <Stack gap="xs">
                       {insights.difficultQuestions.slice(0, 3).map((q) => (
-                        <Alert key={q.id} severity="error" sx={{ py: 0 }}>
-                          <Typography variant="caption">
+                        <Alert key={q.id} color="red">
+                          <Text size="xs">
                             {q.text.substring(0, 100)}...
-                          </Typography>
+                          </Text>
                         </Alert>
                       ))}
                     </Stack>
-                  </CardContent>
+                  </Card.Section>
                 </Card>
-              </Grid>
+              </Grid.Col>
 
               {/* Improvement Trend */}
-              <Grid item xs={12}>
+              <Grid.Col span={12}>
                 <Card>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Typography variant="h6">Class Improvement</Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Card.Section p="md">
+                    <Group justify="space-between" align="center">
+                      <Text size="lg" fw={600}>Class Improvement</Text>
+                      <Group align="center">
                         {insights.averageImprovement > 0 ? (
-                          <TrendingUp color="success" />
+                          <IconTrendingUp color={theme.colors.green[6]} />
                         ) : (
-                          <TrendingDown color="error" />
+                          <IconTrendingDown color={theme.colors.red[6]} />
                         )}
-                        <Typography
-                          variant="h5"
-                          color={insights.averageImprovement > 0 ? 'success.main' : 'error.main'}
+                        <Text
+                          size="xl"
+                          fw={700}
+                          c={insights.averageImprovement > 0 ? 'green' : 'red'}
                         >
                           {insights.averageImprovement > 0 ? '+' : ''}
                           {insights.averageImprovement.toFixed(1)}%
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">
+                        </Text>
+                      </Group>
+                    </Group>
+                    <Text size="sm" c="dimmed">
                       Compared to previous quiz
-                    </Typography>
-                  </CardContent>
+                    </Text>
+                  </Card.Section>
                 </Card>
-              </Grid>
+              </Grid.Col>
             </Grid>
           )}
         </>
@@ -893,22 +921,22 @@ export const QuizResultsAnalytics: React.FunctionComponent<Record<string, any>> 
       {/* Empty State */}
       {quizResults.length === 0 && (
         <Box
-          sx={{
+          style={{
             flex: 1,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexDirection: 'column',
-            gap: 2
+            gap: '16px'
           }}
         >
-          <Quiz sx={{ fontSize: 64, color: 'text.disabled' }} />
-          <Typography variant="h6" color="text.secondary">
+          <IconHelp size={64} color={theme.colors.gray[4]} />
+          <Text size="lg" c="dimmed">
             No quiz results available
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+          </Text>
+          <Text size="sm" c="dimmed">
             Quiz results will appear here after students complete assessments
-          </Typography>
+          </Text>
         </Box>
       )}
     </Box>

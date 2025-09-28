@@ -47,6 +47,7 @@ def _register_core_routers(app: FastAPI) -> None:
         # Health and system status routers
         try:
             from apps.backend.api.routers.health import router as health_router
+
             app.include_router(health_router)
             logger.info("Health check endpoints loaded successfully")
         except ImportError as e:
@@ -55,6 +56,7 @@ def _register_core_routers(app: FastAPI) -> None:
         # Pusher and realtime communication routers
         try:
             from apps.backend.api.routers.pusher import router as pusher_router
+
             app.include_router(pusher_router)
             logger.info("Pusher endpoints loaded successfully")
         except ImportError as e:
@@ -63,6 +65,7 @@ def _register_core_routers(app: FastAPI) -> None:
         # Content generation routers
         try:
             from apps.backend.api.routers.content import router as content_router
+
             app.include_router(content_router)
             logger.info("Content generation endpoints loaded successfully")
         except ImportError as e:
@@ -102,52 +105,43 @@ def _register_v1_routers(app: FastAPI) -> None:
         ("apps.backend.api.v1.endpoints.lessons", "lessons_router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.assessments", "assessments_router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.educational_content", "router", "/api/v1"),
-
         # User management routers
         ("apps.backend.api.v1.endpoints.auth", "auth_router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.users", "router", "/api/v1"),
-        ("apps.backend.api.v1.endpoints.user_profile", "router", ""),  # User profile endpoints
 
+        # Background tasks and Celery management
+        ("apps.backend.api.v1.endpoints.tasks", "router", "/api/v1"),
+        ("apps.backend.api.v1.endpoints.user_profile", "router", ""),  # User profile endpoints
         # Content and AI routers
         ("apps.backend.api.v1.endpoints.ai_chat", "router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.enhanced_content", "router", ""),
         ("apps.backend.api.v1.endpoints.prompt_templates", "router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.agent_swarm", "router", ""),
-
         # Roblox integration routers
         ("apps.backend.api.v1.endpoints.roblox", "roblox_router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.roblox_environment", "router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.roblox_integration", "router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.roblox_ai", "router", "/api/v1"),
-
         # Analytics and reporting
         ("apps.backend.api.v1.endpoints.analytics_reporting", "router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.reports", "reports_router", "/api/v1"),
-
         # Communication routers
         ("apps.backend.api.v1.endpoints.messages", "messages_router", "/api/v1"),
-
         # Gamification and engagement
         ("apps.backend.api.v1.endpoints.gamification", "router", "/api/v1/gamification"),
-
         # Integration and API management
         ("apps.backend.api.v1.endpoints.api_keys", "router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.integration", "router", "/api/v1"),
-
         # Privacy and compliance
         ("apps.backend.api.v1.endpoints.privacy", "router", ""),
         ("apps.backend.api.v1.endpoints.compliance", "router", "/api/v1"),
-
         # Payment and billing
         ("apps.backend.api.v1.endpoints.stripe_checkout", "router", ""),
-
         # Mobile and specialized endpoints
         ("apps.backend.api.v1.endpoints.mobile", "router", "/api/v1"),
-
         # Database and system management
         ("apps.backend.api.v1.endpoints.database_swarm", "router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.gpt4_migration_monitoring", "router", "/api/v1"),
-
         # Dashboard endpoints
         ("apps.backend.api.v1.endpoints.dashboard", "dashboard_router", ""),
     ]
@@ -176,6 +170,7 @@ def _register_webhook_routers(app: FastAPI) -> None:
         # Clerk webhooks
         try:
             from apps.backend.api.webhooks.clerk_webhooks import router as clerk_webhook_router
+
             app.include_router(clerk_webhook_router)
             logger.info("Clerk webhook endpoints loaded successfully")
         except ImportError as e:
@@ -184,6 +179,7 @@ def _register_webhook_routers(app: FastAPI) -> None:
         # Stripe webhooks
         try:
             from apps.backend.api.v1.endpoints.stripe_webhook import router as stripe_router
+
             app.include_router(stripe_router)
             logger.info("Stripe webhook endpoints loaded successfully")
         except ImportError as e:
@@ -199,6 +195,7 @@ def _register_legacy_routers(app: FastAPI) -> None:
         # Legacy API v1 router
         try:
             from apps.backend.api.v1.router import api_router
+
             app.include_router(api_router, prefix="/api/v1")
             logger.info("Legacy API v1 endpoints loaded successfully")
         except ImportError as e:
@@ -211,7 +208,7 @@ def _register_legacy_routers(app: FastAPI) -> None:
                 gamification_router,
                 compliance_router,
                 users_router,
-                schools_router
+                schools_router,
             )
 
             app.include_router(analytics_router)

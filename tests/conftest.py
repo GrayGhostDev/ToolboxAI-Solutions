@@ -36,8 +36,8 @@ from typing import Generator, Dict, Any
 from unittest.mock import Mock, patch, AsyncMock
 
 # Import test logging and cleanup utilities
-from tests.test_logger import TestLogger, configure_test_logging, TEST_LOG_DIR
-from tests.test_cleanup import TestCleanupManager
+from tests.backend.test_logger import TestLogger, configure_test_logging, TEST_LOG_DIR
+from tests.backend.test_cleanup import TestCleanupManager
 
 # Import async database components
 import asyncpg
@@ -832,11 +832,11 @@ def pytest_addoption(parser):
 async def cleanup_database_pools():
     """Clean up database connection pools after each test"""
     yield
-    
-    # Close all database pools
-    from core.database.connection_manager import OptimizedConnectionManager
-    
+
+    # Try to close all database pools if the module exists
     try:
+        from database.connection_manager import OptimizedConnectionManager
+
         # Get the singleton instance if it exists
         if hasattr(OptimizedConnectionManager, '_instance'):
             db_manager = OptimizedConnectionManager._instance
@@ -848,12 +848,15 @@ async def cleanup_database_pools():
                         logger.debug(f"Closed database pool: {pool_name}")
                     except Exception as e:
                         logger.warning(f"Error closing pool {pool_name}: {e}")
-                
+
                 # Clear the pools dictionary
                 db_manager.pools.clear()
-            
+
             # Reset the singleton instance
             OptimizedConnectionManager._instance = None
+    except ImportError:
+        # Module doesn't exist, skip cleanup
+        pass
     except Exception as e:
         logger.warning(f"Database cleanup error: {e}")
 
@@ -923,7 +926,7 @@ def worker_id(request):
 @pytest_asyncio.fixture(loop_scope="module")
 async def module_db_pool(worker_id):
     """Module-scoped database pool per worker"""
-    from core.database.connection_manager import OptimizedConnectionManager, ConnectionConfig
+    from database.connection_manager import OptimizedConnectionManager, ConnectionConfig
     
     # Create isolated database per worker
     db_name = f"test_db_{worker_id}" if worker_id != 'master' else "test_db"

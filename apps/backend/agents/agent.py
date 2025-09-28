@@ -67,9 +67,7 @@ try:
     from core.sparc.state_manager import StateManager  # type: ignore
     from core.swarm.swarm_controller import SwarmController  # type: ignore
 except ImportError as e:
-    logger.warning(
-        "Could not import agent modules: %s. Some features may be limited.", e
-    )
+    logger.warning("Could not import agent modules: %s. Some features may be limited.", e)
 
     # Create placeholder classes for basic functionality
     class SupervisorAgent:
@@ -90,7 +88,7 @@ except ImportError as e:
                 "terrain": ["terrain", "environment", "world", "landscape"],
                 "script": ["script", "lua", "code", "programming"],
                 "review": ["review", "check", "validate", "security"],
-                "content": ["content", "lesson", "curriculum", "educational"]
+                "content": ["content", "lesson", "curriculum", "educational"],
             }
 
             # Agent load tracking
@@ -106,7 +104,7 @@ except ImportError as e:
                     "quiz": QuizGenerationAgent(self.llm),
                     "terrain": TerrainGenerationAgent(self.llm),
                     "script": ScriptGenerationAgent(self.llm),
-                    "review": CodeReviewAgent(self.llm)
+                    "review": CodeReviewAgent(self.llm),
                 }
                 self.agent_load = {agent: 0 for agent in self.agents.keys()}
                 self._agents_initialized = True
@@ -159,30 +157,32 @@ except ImportError as e:
                     {"agent": "quiz", "action": "generate_quiz", "parallel": True},
                     {"agent": "terrain", "action": "generate_terrain", "parallel": True},
                     {"agent": "script", "action": "generate_script", "parallel": False},
-                    {"agent": "review", "action": "review_code", "parallel": False}
+                    {"agent": "review", "action": "review_code", "parallel": False},
                 ],
                 "assessment_creation": [
                     {"agent": "quiz", "action": "generate_quiz", "parallel": False},
                     {"agent": "script", "action": "generate_script", "parallel": False},
-                    {"agent": "review", "action": "review_code", "parallel": False}
+                    {"agent": "review", "action": "review_code", "parallel": False},
                 ],
                 "environment_setup": [
                     {"agent": "terrain", "action": "generate_terrain", "parallel": False},
                     {"agent": "script", "action": "generate_script", "parallel": True},
-                    {"agent": "review", "action": "review_code", "parallel": False}
-                ]
+                    {"agent": "review", "action": "review_code", "parallel": False},
+                ],
             }
 
             # Configure parallel execution
-            self.max_parallel_workers = kwargs.get('max_workers', 5)
-            self.execution_timeout = kwargs.get('timeout', 300)
-            self.retry_attempts = kwargs.get('retry_attempts', 3)
+            self.max_parallel_workers = kwargs.get("max_workers", 5)
+            self.execution_timeout = kwargs.get("timeout", 300)
+            self.retry_attempts = kwargs.get("retry_attempts", 3)
 
             # Initialize state management
             self.execution_state = {}
             self.task_dependencies = {}
 
-            logger.info("OrchestrationEngine initialized with %d workflows", len(self.workflow_definitions))
+            logger.info(
+                "OrchestrationEngine initialized with %d workflows", len(self.workflow_definitions)
+            )
 
         async def orchestrate(self, workflow_name: str, context: dict, *args, **kwargs):
             """Implement workflow orchestration with dependency management and parallel execution"""
@@ -200,7 +200,7 @@ except ImportError as e:
                 "workflow": workflow_name,
                 "status": "running",
                 "started_at": datetime.now(timezone.utc),
-                "context": context
+                "context": context,
             }
 
             try:
@@ -238,7 +238,7 @@ except ImportError as e:
                     "execution_id": execution_id,
                     "workflow": workflow_name,
                     "status": "completed",
-                    "results": results
+                    "results": results,
                 }
 
             except Exception as e:
@@ -249,22 +249,29 @@ except ImportError as e:
                     "execution_id": execution_id,
                     "workflow": workflow_name,
                     "status": "failed",
-                    "error": str(e)
+                    "error": str(e),
                 }
 
-        async def _execute_task(self, agent_name: str, action: str, context: dict, previous_results: dict):
+        async def _execute_task(
+            self, agent_name: str, action: str, context: dict, previous_results: dict
+        ):
             """Execute a single task with retry logic"""
             for attempt in range(self.retry_attempts):
                 try:
                     # Simulate task execution (would call actual agent in production)
                     logger.info("Executing %s.%s (attempt %d)", agent_name, action, attempt + 1)
                     await asyncio.sleep(0.1)  # Simulate work
-                    return {"status": "completed", "agent": agent_name, "action": action, "attempt": attempt + 1}
+                    return {
+                        "status": "completed",
+                        "agent": agent_name,
+                        "action": action,
+                        "attempt": attempt + 1,
+                    }
                 except Exception as e:
                     if attempt == self.retry_attempts - 1:
                         raise e
                     logger.warning("Task %s.%s failed, retrying: %s", agent_name, action, str(e))
-                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                    await asyncio.sleep(2**attempt)  # Exponential backoff
 
         async def _execute_parallel_tasks(self, tasks: list):
             """Execute tasks in parallel with proper error handling"""
@@ -272,9 +279,7 @@ except ImportError as e:
             futures = []
 
             for agent_name, action, context in tasks:
-                future = asyncio.create_task(
-                    self._execute_task(agent_name, action, context, {})
-                )
+                future = asyncio.create_task(self._execute_task(agent_name, action, context, {}))
                 futures.append((f"{agent_name}_{action}", future))
 
             for key, future in futures:
@@ -292,28 +297,28 @@ except ImportError as e:
             # Set up state tracking
             self.state = {}  # Current environment state
             self.state_history = []  # Historical states for analysis
-            self.max_history_size = kwargs.get('max_history', 1000)
+            self.max_history_size = kwargs.get("max_history", 1000)
 
             # Initialize policy engine
             self.policy = self._initialize_policy()
             self.policy_parameters = {
-                "learning_rate": kwargs.get('learning_rate', 0.01),
-                "exploration_rate": kwargs.get('exploration_rate', 0.1),
-                "discount_factor": kwargs.get('discount_factor', 0.95)
+                "learning_rate": kwargs.get("learning_rate", 0.01),
+                "exploration_rate": kwargs.get("exploration_rate", 0.1),
+                "discount_factor": kwargs.get("discount_factor", 0.95),
             }
 
             # Configure reward calculator
             self.reward_calculator = {
-                "success_weight": kwargs.get('success_weight', 1.0),
-                "efficiency_weight": kwargs.get('efficiency_weight', 0.5),
-                "quality_weight": kwargs.get('quality_weight', 0.8),
-                "user_satisfaction_weight": kwargs.get('user_satisfaction_weight', 1.2)
+                "success_weight": kwargs.get("success_weight", 1.0),
+                "efficiency_weight": kwargs.get("efficiency_weight", 0.5),
+                "quality_weight": kwargs.get("quality_weight", 0.8),
+                "user_satisfaction_weight": kwargs.get("user_satisfaction_weight", 1.2),
             }
             self.rewards = {}  # Reward tracking
 
             # Set up context window
             self.context = {}  # User context
-            self.context_window_size = kwargs.get('context_window_size', 10)
+            self.context_window_size = kwargs.get("context_window_size", 10)
             self.context_history = []
 
             logger.info("StateManager initialized with SPARC framework")
@@ -327,7 +332,7 @@ except ImportError as e:
                 "assessment_interval": 5,  # Questions after 5 activities
                 "reward_threshold": 0.7,  # 70% success for reward
                 "personalization_enabled": True,
-                "collaborative_learning": True
+                "collaborative_learning": True,
             }
 
         async def execute_cycle(self, task: dict, user_context: dict = None):
@@ -361,7 +366,7 @@ except ImportError as e:
                     "result": result,
                     "reward": reward,
                     "context": self.context,
-                    "execution_time": (datetime.now(timezone.utc) - cycle_start).total_seconds()
+                    "execution_time": (datetime.now(timezone.utc) - cycle_start).total_seconds(),
                 }
 
                 # Update state history
@@ -378,7 +383,7 @@ except ImportError as e:
                     "timestamp": cycle_start.isoformat(),
                     "status": "failed",
                     "error": str(e),
-                    "execution_time": (datetime.now(timezone.utc) - cycle_start).total_seconds()
+                    "execution_time": (datetime.now(timezone.utc) - cycle_start).total_seconds(),
                 }
 
         async def _observe_state(self):
@@ -392,13 +397,13 @@ except ImportError as e:
                 "system_performance": {
                     "cpu_usage": 0.3,  # Would be actual metrics in production
                     "memory_usage": 0.5,
-                    "response_time": 0.1
+                    "response_time": 0.1,
                 },
                 "learning_metrics": {
                     "engagement_level": self.context.get("engagement_level", 0.8),
                     "difficulty_level": self.context.get("difficulty_level", "medium"),
-                    "progress_rate": self.context.get("progress_rate", 0.75)
-                }
+                    "progress_rate": self.context.get("progress_rate", 0.75),
+                },
             }
 
         async def _apply_policy(self, state: dict, context: dict):
@@ -413,11 +418,23 @@ except ImportError as e:
             if content_needed:
                 action = {"type": "load_content", "priority": "high", "urgency": "immediate"}
             elif user_struggling:
-                action = {"type": "provide_assistance", "priority": "high", "method": "adaptive_hints"}
+                action = {
+                    "type": "provide_assistance",
+                    "priority": "high",
+                    "method": "adaptive_hints",
+                }
             elif engagement_low:
-                action = {"type": "increase_engagement", "priority": "medium", "method": "gamification"}
+                action = {
+                    "type": "increase_engagement",
+                    "priority": "medium",
+                    "method": "gamification",
+                }
             elif assessment_due:
-                action = {"type": "start_assessment", "priority": "medium", "assessment_type": "adaptive"}
+                action = {
+                    "type": "start_assessment",
+                    "priority": "medium",
+                    "assessment_type": "adaptive",
+                }
             else:
                 action = {"type": "continue_lesson", "priority": "low", "mode": "standard"}
 
@@ -425,7 +442,7 @@ except ImportError as e:
             action["personalization"] = {
                 "learning_style": context.get("learning_style", "visual"),
                 "pace": context.get("preferred_pace", "normal"),
-                "difficulty_preference": context.get("difficulty_preference", "adaptive")
+                "difficulty_preference": context.get("difficulty_preference", "adaptive"),
             }
 
             return action
@@ -441,7 +458,7 @@ except ImportError as e:
                 result = {
                     "success": True,
                     "action_type": action["type"],
-                    "execution_time": (datetime.now(timezone.utc) - action_start).total_seconds()
+                    "execution_time": (datetime.now(timezone.utc) - action_start).total_seconds(),
                 }
 
                 return result
@@ -451,7 +468,7 @@ except ImportError as e:
                     "success": False,
                     "error": str(e),
                     "action_type": action["type"],
-                    "execution_time": (datetime.now(timezone.utc) - action_start).total_seconds()
+                    "execution_time": (datetime.now(timezone.utc) - action_start).total_seconds(),
                 }
 
         async def _calculate_reward(self, result: dict, state: dict, action: dict):
@@ -477,9 +494,9 @@ except ImportError as e:
 
             # Calculate final reward
             total_reward = (
-                base_reward * self.reward_calculator["success_weight"] +
-                efficiency_bonus * self.reward_calculator["efficiency_weight"] +
-                context_bonus * self.reward_calculator["quality_weight"]
+                base_reward * self.reward_calculator["success_weight"]
+                + efficiency_bonus * self.reward_calculator["efficiency_weight"]
+                + context_bonus * self.reward_calculator["quality_weight"]
             )
 
             return max(min(total_reward, 2.0), -1.0)  # Cap reward between -1 and 2
@@ -498,7 +515,7 @@ except ImportError as e:
 
             # Maintain history size limit
             if len(self.state_history) > self.max_history_size:
-                self.state_history = self.state_history[-self.max_history_size:]
+                self.state_history = self.state_history[-self.max_history_size :]
 
     class SwarmController:
         def __init__(self, num_workers: int = 5, *args, **kwargs):
@@ -514,14 +531,14 @@ except ImportError as e:
             self.load_balancer = {
                 "strategy": kwargs.get("load_strategy", "round_robin"),
                 "worker_loads": [0] * num_workers,
-                "max_tasks_per_worker": kwargs.get("max_tasks_per_worker", 10)
+                "max_tasks_per_worker": kwargs.get("max_tasks_per_worker", 10),
             }
 
             # Initialize consensus mechanism
             self.consensus_config = {
                 "threshold": kwargs.get("consensus_threshold", 0.7),
                 "voting_method": kwargs.get("voting_method", "majority"),
-                "min_votes": kwargs.get("min_votes", 3)
+                "min_votes": kwargs.get("min_votes", 3),
             }
 
             logger.info("SwarmController initialized with %d workers", num_workers)
@@ -603,11 +620,20 @@ except ImportError as e:
 
                 # Generate result based on task type
                 if task_type == "content_generation":
-                    result_data = {"content": f"Generated content for {task.get('topic', 'unknown')}", "quality_score": 0.85}
+                    result_data = {
+                        "content": f"Generated content for {task.get('topic', 'unknown')}",
+                        "quality_score": 0.85,
+                    }
                 elif task_type == "quiz_generation":
-                    result_data = {"questions": [{"id": f"q{i}", "text": f"Question {i}"} for i in range(5)], "difficulty": "medium"}
+                    result_data = {
+                        "questions": [{"id": f"q{i}", "text": f"Question {i}"} for i in range(5)],
+                        "difficulty": "medium",
+                    }
                 elif task_type == "terrain_generation":
-                    result_data = {"terrain_data": "3D terrain model", "environment_type": task.get("environment", "classroom")}
+                    result_data = {
+                        "terrain_data": "3D terrain model",
+                        "environment_type": task.get("environment", "classroom"),
+                    }
                 else:
                     result_data = {"processed": True, "task_type": task_type}
 
@@ -617,7 +643,7 @@ except ImportError as e:
                     "result": result_data,
                     "status": "completed",
                     "execution_time": (datetime.now(timezone.utc) - task_start).total_seconds(),
-                    "timestamp": datetime.now(timezone.utc).isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
 
             except Exception as e:
@@ -627,13 +653,17 @@ except ImportError as e:
                     "status": "failed",
                     "error": str(e),
                     "execution_time": (datetime.now(timezone.utc) - task_start).total_seconds(),
-                    "timestamp": datetime.now(timezone.utc).isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
 
         async def _apply_consensus(self, results: list):
             """Apply consensus mechanism to results using voting"""
             if len(results) < self.consensus_config["min_votes"]:
-                logger.warning("Insufficient results for consensus: %d < %d", len(results), self.consensus_config["min_votes"])
+                logger.warning(
+                    "Insufficient results for consensus: %d < %d",
+                    len(results),
+                    self.consensus_config["min_votes"],
+                )
                 return results
 
             consensus_results = []
@@ -682,13 +712,14 @@ except ImportError as e:
 
             if successful_results:
                 # Return result with best execution time among successful ones
-                return min(successful_results, key=lambda r: r.get("execution_time", float('inf')))
+                return min(successful_results, key=lambda r: r.get("execution_time", float("inf")))
             else:
                 # If no successful results, return the one with least severe error
                 return min(results, key=lambda r: len(r.get("error", "")))
 
         def _quality_weighted_vote(self, results: list):
             """Apply quality-weighted voting to select best result"""
+
             def calculate_quality_score(result):
                 base_score = 1.0 if result.get("status") == "completed" else 0.0
 
@@ -732,18 +763,18 @@ except ImportError as e:
                 "workers": {
                     "total_workers": self.num_workers,
                     "worker_loads": self.load_balancer["worker_loads"],
-                    "average_load": sum(self.load_balancer["worker_loads"]) / self.num_workers
+                    "average_load": sum(self.load_balancer["worker_loads"]) / self.num_workers,
                 },
                 "tasks": {
                     "queue_size": self.task_queue.qsize(),
                     "results_pending": self.results_queue.qsize(),
-                    "active_tasks": len(self.active_tasks)
+                    "active_tasks": len(self.active_tasks),
                 },
                 "consensus": {
                     "threshold": self.consensus_config["threshold"],
                     "voting_method": self.consensus_config["voting_method"],
-                    "min_votes": self.consensus_config["min_votes"]
-                }
+                    "min_votes": self.consensus_config["min_votes"],
+                },
             }
 
     class ContextManager:
@@ -758,11 +789,9 @@ except ImportError as e:
         async def update_context(self, key: str, value: Any):
             "Update context with new information"
             self.current_context[key] = value
-            self.context_history.append({
-                "timestamp": datetime.now(timezone.utc),
-                "key": key,
-                "value": value
-            })
+            self.context_history.append(
+                {"timestamp": datetime.now(timezone.utc), "key": key, "value": value}
+            )
             return True
 
         async def get_context(self, key: str = None):
@@ -851,6 +880,7 @@ class AgentPool:
     def _create_agent(self, agent_type: str) -> Any:
         """Create an agent of specified type"""
         from langchain_openai import ChatOpenAI
+
         llm = ChatOpenAI(
             model=settings.OPENAI_MODEL,
             temperature=settings.OPENAI_TEMPERATURE,
@@ -1021,9 +1051,7 @@ class ResultAggregator:
         ):
             aggregated["game_mechanics"] = result["game_mechanics"]
 
-    def _aggregate_content_results(
-        self, results: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def _aggregate_content_results(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Aggregate content generation results"""
         if not results:
             return {}
@@ -1044,9 +1072,7 @@ class ResultAggregator:
 
         return aggregated
 
-    async def _aggregate_quiz_results(
-        self, results: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    async def _aggregate_quiz_results(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Aggregate quiz generation results"""
         if not results:
             return {}
@@ -1072,9 +1098,7 @@ class ResultAggregator:
 
         # Update best result with combined questions
         if "quiz" in best_result:
-            best_result["quiz"]["questions"] = unique_questions[
-                :20
-            ]  # Limit to 20 questions
+            best_result["quiz"]["questions"] = unique_questions[:20]  # Limit to 20 questions
 
         return best_result
 
@@ -1089,18 +1113,14 @@ class ResultAggregator:
         aggregated = {}
 
         if content_results:
-            aggregated["content"] = await self._aggregate_content_results(
-                content_results
-            )
+            aggregated["content"] = await self._aggregate_content_results(content_results)
 
         if quiz_results:
             aggregated["quiz"] = await self._aggregate_quiz_results(quiz_results)
 
         return aggregated
 
-    async def _default_aggregation(
-        self, results: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    async def _default_aggregation(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Default aggregation strategy"""
         if not results:
             return {}
@@ -1169,53 +1189,57 @@ class AgentManager:
             await self.mcp_context.update_context("request", request.dict())
             await self.mcp_context.update_context("subject", request.subject)
             await self.mcp_context.update_context("grade_level", request.grade_level)
-            await self.mcp_context.update_context("learning_objectives", request.learning_objectives)
+            await self.mcp_context.update_context(
+                "learning_objectives", request.learning_objectives
+            )
 
             # 2. Initialize SPARC state for this task
-            sparc_state = await self.sparc_manager.initialize_state({
-                "task_id": task_id,
-                "environment": request.environment_type,
-                "subject": request.subject,
-                "grade_level": request.grade_level,
-                "objectives": request.learning_objectives,
-                "user_context": {
-                    "user_id": user.id if user else None,
-                    "role": user.role if user else None
+            sparc_state = await self.sparc_manager.initialize_state(
+                {
+                    "task_id": task_id,
+                    "environment": request.environment_type,
+                    "subject": request.subject,
+                    "grade_level": request.grade_level,
+                    "objectives": request.learning_objectives,
+                    "user_context": {
+                        "user_id": user.id if user else None,
+                        "role": user.role if user else None,
+                    },
                 }
-            })
+            )
 
             # 3. Route task to appropriate agents
-            agent_types = await self.task_router.route_task(
-                "generate_content", request.dict()
-            )
+            agent_types = await self.task_router.route_task("generate_content", request.dict())
 
             logger.info(f"Task {task_id} routed to agents: {agent_types}")
 
             # 4. Use Swarm for parallel agent execution
             swarm_tasks = []
             for agent_type in agent_types:
-                swarm_tasks.append({
-                    "agent_type": agent_type,
-                    "request": request.dict(),
-                    "task_id": task_id,
-                    "context": await self.mcp_context.get_context()
-                })
+                swarm_tasks.append(
+                    {
+                        "agent_type": agent_type,
+                        "request": request.dict(),
+                        "task_id": task_id,
+                        "context": await self.mcp_context.get_context(),
+                    }
+                )
 
             # Execute via swarm controller for parallel processing
-            if hasattr(self.swarm_controller, 'distribute_tasks'):
+            if hasattr(self.swarm_controller, "distribute_tasks"):
                 swarm_results = await self.swarm_controller.distribute_tasks(swarm_tasks)
             else:
                 # Fallback to regular parallel execution
-                swarm_results = await self._execute_agents_parallel(
-                    agent_types, request, task_id
-                )
+                swarm_results = await self._execute_agents_parallel(agent_types, request, task_id)
 
             # 5. Update SPARC state with agent results
-            await self.sparc_manager.update_state({
-                "task_id": task_id,
-                "agent_results": swarm_results,
-                "action": "content_generation_complete"
-            })
+            await self.sparc_manager.update_state(
+                {
+                    "task_id": task_id,
+                    "agent_results": swarm_results,
+                    "action": "content_generation_complete",
+                }
+            )
 
             # 6. Aggregate results
             aggregated_result = await self.result_aggregator.aggregate_results(
@@ -1234,17 +1258,19 @@ class AgentManager:
                     "agent_results": aggregated_result,
                     "request": request.dict(),
                     "sparc_state": sparc_state,
-                    "mcp_context": await self.mcp_context.get_context()
+                    "mcp_context": await self.mcp_context.get_context(),
                 }
             )
 
             # 9. Calculate reward using SPARC
-            reward = await self.sparc_manager.calculate_reward({
-                "task_id": task_id,
-                "result": final_result,
-                "objectives_met": len(request.learning_objectives),
-                "execution_time": (datetime.now(timezone.utc) - start_time).total_seconds()
-            })
+            reward = await self.sparc_manager.calculate_reward(
+                {
+                    "task_id": task_id,
+                    "result": final_result,
+                    "objectives_met": len(request.learning_objectives),
+                    "execution_time": (datetime.now(timezone.utc) - start_time).total_seconds(),
+                }
+            )
 
             # 10. Create response
             response = ContentResponse(
@@ -1260,12 +1286,9 @@ class AgentManager:
             )
 
             # 11. Broadcast context update via MCP
-            await self.mcp_server.broadcast_context({
-                "task_id": task_id,
-                "status": "completed",
-                "reward": reward,
-                "content_id": task_id
-            })
+            await self.mcp_server.broadcast_context(
+                {"task_id": task_id, "status": "completed", "reward": reward, "content_id": task_id}
+            )
 
             # Update task status
             self.active_tasks[task_id]["status"] = "completed"
@@ -1373,8 +1396,7 @@ class AgentManager:
             "system_health": (
                 "healthy"
                 if all(
-                    status["available"] + status["active"] > 0
-                    for status in pool_status.values()
+                    status["available"] + status["active"] > 0 for status in pool_status.values()
                 )
                 else "degraded"
             ),

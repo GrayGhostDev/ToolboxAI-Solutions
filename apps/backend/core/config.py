@@ -9,9 +9,10 @@ from pathlib import Path
 # Load environment variables from .env file
 try:
     from dotenv import load_dotenv
+
     # Load .env file from project root
     project_root = Path(__file__).resolve().parent.parent.parent.parent
-    env_file = project_root / '.env'
+    env_file = project_root / ".env"
     if env_file.exists():
         load_dotenv(env_file)
         print(f"Loaded .env file from {env_file}")
@@ -19,7 +20,7 @@ except ImportError:
     pass
 
 # Add the project root to Python path to find toolboxai_settings
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
@@ -27,6 +28,7 @@ from toolboxai_settings import settings
 
 # Get the centralized configuration
 _env_config = settings
+
 
 class Settings:
     """Settings wrapper for backward compatibility"""
@@ -121,11 +123,11 @@ class Settings:
     # Demo Authentication
     @property
     def DEMO_USERNAME(self):
-        return getattr(self._config, 'DEMO_USERNAME', 'demo@example.com')
+        return getattr(self._config, "DEMO_USERNAME", "demo@example.com")
 
     @property
     def DEMO_PASSWORD(self):
-        return getattr(self._config, 'DEMO_PASSWORD', 'demo123')
+        return getattr(self._config, "DEMO_PASSWORD", "demo123")
 
     # Educational Settings
     @property
@@ -260,6 +262,7 @@ class Settings:
             "CORS_ORIGINS": self.CORS_ORIGINS,
             # Add more as needed
         }
+
 
 # Create singleton instance
 settings = Settings()

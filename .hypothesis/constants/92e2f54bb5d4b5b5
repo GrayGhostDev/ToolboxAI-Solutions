@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/v1/endpoints/api_keys.py
-# hypothesis_version: 6.139.2
-
-[401, 403, 404, 500, '/api-keys', '/create', '/list', '/roblox/content', '/usage-stats', '/validate', '/{key_id}', 'API Keys', 'API key not found', 'API key required', 'Basic script', 'Educational subject', 'Grade level', 'Include revoked keys', 'Invalid API key', 'ServerScript', 'Validation error', 'X-API-Key', 'X-Place-ID', 'api_key_id', 'code', 'compliance_status', 'content', 'dict', 'difficulty', 'error', 'general', 'interactive', 'intermediate', 'key_id', 'message', 'metadata', 'middle', 'place_ids', 'rate_limit', 'rate_limit_remaining', 'recommendations', 'risk_score', 'scopes', 'script', 'script_type', 'strict_mode', 'success', 'topic', 'total_requests', 'valid', 'vulnerabilities']

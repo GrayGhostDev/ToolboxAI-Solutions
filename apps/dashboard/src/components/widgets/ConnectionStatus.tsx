@@ -1,99 +1,82 @@
-import React, { useEffect, useState } from 'react';
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import Tooltip from '@mui/material/Tooltip';
-import CircularProgress from '@mui/material/CircularProgress';
+import React from 'react';
+import { Group, Badge, Tooltip, Loader, Box } from '@mantine/core';
 import {
-  WifiOff,
-  Wifi,
-  WifiTethering,
-  Warning,
-  Error as ErrorIcon,
-} from '@mui/icons-material';
-import { websocketService } from '../../services/websocket';
-import { WebSocketState } from '../../types/websocket';
+  IconWifiOff,
+  IconWifi,
+  IconWifi1,
+  IconAlertTriangle,
+  IconX,
+} from '@tabler/icons-react';
+import { usePusherContext } from '../PusherProvider';
 
 interface ConnectionStatusProps {
   showLabel?: boolean;
-  size?: 'small' | 'medium';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
 const ConnectionStatus: React.FunctionComponent<ConnectionStatusProps> = ({
   showLabel = true,
-  size = 'small',
+  size = 'sm',
 }) => {
-  const [connectionState, setConnectionState] = useState<WebSocketState>(
-    websocketService.getState()
-  );
-  const [latency, setLatency] = useState<number | null>(null);
-
-  useEffect(() => {
-    // Subscribe to connection state changes
-    const unsubscribe = websocketService.onConnectionStatusChange((state) => {
-      setConnectionState(state);
-    });
-
-    // Subscribe to latency updates
-    const interval = setInterval(() => {
-      const stats = websocketService.getStats();
-      setLatency(stats.latency || null);
-    }, 5000);
-
-    return () => {
-      unsubscribe();
-      clearInterval(interval);
-    };
-  }, []);
+  const { isConnected, connectionState, debugInfo } = usePusherContext();
 
   const getStatusConfig = () => {
     switch (connectionState) {
-      case WebSocketState.CONNECTED:
+      case 'connected':
         return {
-          icon: <Wifi fontSize={size} />,
+          icon: <IconWifi size={size === 'sm' ? 16 : 20} />,
           label: 'Connected',
-          color: 'success' as const,
-          tooltip: latency ? `Connected (${latency}ms)` : 'Connected to server',
+          color: 'green' as const,
+          tooltip: `Connected to Pusher${debugInfo?.fallbackToPolling ? ' (Polling Mode)' : ''}`,
         };
-      case WebSocketState.CONNECTING:
+      case 'connecting':
         return {
-          icon: <CircularProgress size={size === 'small' ? 16 : 20} thickness={4} />,
+          icon: <Loader size={size === 'sm' ? 16 : 20} />,
           label: 'Connecting',
-          color: 'info' as const,
-          tooltip: 'Establishing connection...',
+          color: 'blue' as const,
+          tooltip: 'Establishing Pusher connection...',
         };
-      case WebSocketState.RECONNECTING:
+      case 'reconnecting':
         return {
-          icon: <WifiTethering fontSize={size} />,
+          icon: <IconWifi1 size={size === 'sm' ? 16 : 20} />,
           label: 'Reconnecting',
-          color: 'warning' as const,
-          tooltip: 'Attempting to reconnect...',
+          color: 'yellow' as const,
+          tooltip: 'Attempting to reconnect to Pusher...',
         };
-      case WebSocketState.DISCONNECTING:
+      case 'polling':
         return {
-          icon: <Warning fontSize={size} />,
-          label: 'Disconnecting',
-          color: 'warning' as const,
-          tooltip: 'Closing connection...',
+          icon: <IconWifi1 size={size === 'sm' ? 16 : 20} />,
+          label: 'Polling',
+          color: 'orange' as const,
+          tooltip: 'Using polling fallback for real-time updates',
         };
-      case WebSocketState.DISCONNECTED:
+      case 'disconnected':
         return {
-          icon: <WifiOff fontSize={size} />,
+          icon: <IconWifiOff size={size === 'sm' ? 16 : 20} />,
           label: 'Disconnected',
-          color: 'default' as const,
-          tooltip: 'Not connected to server',
+          color: 'gray' as const,
+          tooltip: 'Not connected to Pusher',
         };
-      case WebSocketState.ERROR:
+      case 'failed':
+      case 'error':
         return {
-          icon: <ErrorIcon fontSize={size} />,
+          icon: <IconX size={size === 'sm' ? 16 : 20} />,
           label: 'Error',
-          color: 'error' as const,
-          tooltip: 'Connection error occurred',
+          color: 'red' as const,
+          tooltip: `Pusher connection error: ${debugInfo?.lastError || 'Unknown error'}`,
+        };
+      case 'disabled':
+        return {
+          icon: <IconAlertTriangle size={size === 'sm' ? 16 : 20} />,
+          label: 'Disabled',
+          color: 'gray' as const,
+          tooltip: 'Real-time updates are disabled',
         };
       default:
         return {
-          icon: <WifiOff fontSize={size} />,
+          icon: <IconWifiOff size={size === 'sm' ? 16 : 20} />,
           label: 'Unknown',
-          color: 'default' as const,
+          color: 'gray' as const,
           tooltip: 'Connection status unknown',
         };
     }
@@ -102,23 +85,19 @@ const ConnectionStatus: React.FunctionComponent<ConnectionStatusProps> = ({
   const config = getStatusConfig();
 
   return (
-    <Tooltip title={config.tooltip} arrow placement="bottom">
-      <Box sx={{ display: 'inline-flex', alignItems: 'center' }}>
-        <Chip
-          icon={config.icon}
-          label={showLabel ? config.label : undefined}
+    <Tooltip label={config.tooltip} position="bottom">
+      <Box>
+        <Badge
+          leftSection={config.icon}
           color={config.color}
           size={size}
-          variant={connectionState === WebSocketState.CONNECTED ? 'filled' : 'outlined'}
-          sx={{
-            '& .MuiChip-icon': {
-              marginLeft: showLabel ? undefined : 0,
-            },
-            minWidth: showLabel ? undefined : 'auto',
-            paddingLeft: showLabel ? undefined : 1,
-            paddingRight: showLabel ? undefined : 1,
+          variant={isConnected ? 'filled' : 'outline'}
+          style={{
+            cursor: 'help',
           }}
-        />
+        >
+          {showLabel ? config.label : null}
+        </Badge>
       </Box>
     </Tooltip>
   );

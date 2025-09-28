@@ -5,11 +5,8 @@
 
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Container from '@mui/material/Container';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { Box, Text, Button, Container, Title } from '@mantine/core';
+import { IconArrowLeft } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import EnvironmentPreview from './EnvironmentPreview';
 
@@ -19,15 +16,15 @@ const EnvironmentPreviewPage: React.FunctionComponent<Record<string, any>> = () 
 
   if (!environmentId) {
     return (
-      <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Typography variant="h4" color="error">
+      <Container size="md" mt="xl">
+        <Title order={1} c="red">
           Environment ID not found
-        </Typography>
+        </Title>
         <Button
-          variant="contained"
-          startIcon={<ArrowBackIcon />}
-          onClick={(e: React.MouseEvent) => () => navigate('/')}
-          sx={{ mt: 2 }}
+          variant="filled"
+          leftSection={<IconArrowLeft size={16} />}
+          onClick={() => navigate('/')}
+          mt="md"
         >
           Back to Dashboard
         </Button>
@@ -36,26 +33,27 @@ const EnvironmentPreviewPage: React.FunctionComponent<Record<string, any>> = () 
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box style={{ minHeight: '100vh' }}>
       {/* Header */}
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+      <Box p="md" style={{ borderBottom: '1px solid #e0e0e0' }}>
         <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={(e: React.MouseEvent) => () => navigate(-1)}
-          sx={{ mb: 2 }}
+          leftSection={<IconArrowLeft size={16} />}
+          onClick={() => navigate(-1)}
+          mb="md"
+          variant="subtle"
         >
           Back
         </Button>
-        <Typography variant="h4" component="h1">
+        <Title order={1}>
           Environment Preview
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
+        </Title>
+        <Text c="dimmed">
           Preview your Roblox educational environment
-        </Typography>
+        </Text>
       </Box>
 
       {/* Environment Preview */}
-      <Box sx={{ p: 2 }}>
+      <Box p="md">
         <EnvironmentPreview
           environmentId={environmentId}
           onClose={() => navigate(-1)}

@@ -79,6 +79,7 @@ async def _initialize_auth_system(app: FastAPI) -> None:
     """Initialize authentication and authorization system"""
     try:
         from apps.backend.api.auth.auth import initialize_auth
+
         initialize_auth()  # This is a synchronous function
         logger.info("Authentication system initialized")
     except ImportError as e:
@@ -89,6 +90,7 @@ async def _initialize_database(app: FastAPI) -> None:
     """Initialize database connections and services"""
     try:
         from apps.backend.services.database import db_service
+
         # Database initialization if needed
         logger.info("Database services initialized")
     except ImportError as e:
@@ -100,6 +102,7 @@ async def _initialize_external_services(app: FastAPI) -> None:
     try:
         # Initialize Pusher service
         from apps.backend.services.pusher_realtime import get_pusher_service
+
         pusher_service = get_pusher_service()
         if pusher_service:
             logger.info("Pusher service initialized")
@@ -107,10 +110,28 @@ async def _initialize_external_services(app: FastAPI) -> None:
         # Initialize Supabase if available
         try:
             from apps.backend.core.supabase_config import initialize_supabase_for_agents
+
             await initialize_supabase_for_agents()
             logger.info("Supabase services initialized")
         except ImportError:
             logger.debug("Supabase services not available")
+
+        # Initialize Performance Optimizations
+        try:
+            from apps.backend.core.performance_optimization import (
+                initialize_performance_optimizations,
+                warm_all_caches,
+            )
+
+            await initialize_performance_optimizations()
+            logger.info("Performance optimizations initialized")
+
+            # Warm caches if not in testing mode
+            if not app.state.get("testing_mode", False):
+                await warm_all_caches()
+                logger.info("Cache warming completed")
+        except ImportError as e:
+            logger.warning(f"Performance optimizations not available: {e}")
 
     except Exception as e:
         logger.warning(f"Could not initialize external services: {e}")
@@ -120,12 +141,14 @@ async def _initialize_agent_systems(app: FastAPI) -> None:
     """Initialize AI agent systems"""
     try:
         from apps.backend.agents.agent import initialize_agents
+
         await initialize_agents()
         logger.info("Agent systems initialized")
 
         # Initialize agent service queue if available
         try:
             from apps.backend.services.agent_service import get_agent_service
+
             agent_service = get_agent_service()
             if agent_service:
                 logger.info("Agent service queue initialized")
@@ -141,6 +164,7 @@ async def _initialize_monitoring(app: FastAPI) -> None:
     try:
         # Initialize secrets manager
         from apps.backend.core.security.secrets import init_secrets_manager
+
         init_secrets_manager()
         logger.info("Secrets manager initialized")
 
@@ -151,8 +175,8 @@ async def _initialize_monitoring(app: FastAPI) -> None:
                 "app_name": settings.APP_NAME,
                 "version": settings.APP_VERSION,
                 "environment": settings.ENVIRONMENT,
-                "startup_time": "completed"
-            }
+                "startup_time": "completed",
+            },
         )
 
     except Exception as e:
@@ -163,6 +187,7 @@ async def _shutdown_agent_systems(app: FastAPI) -> None:
     """Shutdown AI agent systems"""
     try:
         from apps.backend.agents.agent import shutdown_agents
+
         await shutdown_agents()
         logger.info("Agent systems shutdown completed")
 
@@ -184,6 +209,17 @@ async def _shutdown_agent_systems(app: FastAPI) -> None:
 async def _shutdown_external_services(app: FastAPI) -> None:
     """Shutdown external service connections"""
     try:
+        # Cleanup performance optimizations
+        try:
+            from apps.backend.core.performance_optimization import (
+                shutdown_performance_optimizations,
+            )
+
+            await shutdown_performance_optimizations()
+            logger.info("Performance optimizations shutdown completed")
+        except ImportError:
+            logger.debug("Performance optimizations not available for shutdown")
+
         # Cleanup any Pusher connections
         logger.info("External services shutdown completed")
     except Exception as e:
@@ -208,8 +244,8 @@ async def _cleanup_monitoring(app: FastAPI) -> None:
             extra_fields={
                 "app_name": settings.APP_NAME,
                 "version": settings.APP_VERSION,
-                "shutdown_time": "completed"
-            }
+                "shutdown_time": "completed",
+            },
         )
 
     except Exception as e:

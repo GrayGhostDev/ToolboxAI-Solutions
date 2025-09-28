@@ -1,0 +1,357 @@
+# ToolBoxAI Optimized AlertManager Configuration
+# ==============================================
+# Consolidated and enterprise-grade alert routing and notification system
+# Supports multiple notification channels with intelligent routing
+#
+# Version: 2.0.0
+# Last Updated: 2025-09-26
+
+global:
+  # SMTP Configuration for email notifications
+  smtp_smarthost: '${SMTP_SMARTHOST:-localhost:587}'
+  smtp_from: '${ALERT_FROM_EMAIL:-alerts@toolboxai.com}'
+  smtp_auth_username: '${SMTP_USERNAME:-}'
+  smtp_auth_password: '${SMTP_PASSWORD:-}'
+  smtp_require_tls: true
+  smtp_hello: 'toolboxai-alertmanager'
+
+  # Slack configuration
+  slack_api_url: '${SLACK_API_URL:-}'
+
+  # PagerDuty configuration
+  pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+
+  # Webhook timeout
+  http_config:
+    timeout: 30s
+
+  # Resolve timeout
+  resolve_timeout: 5m
+
+# Templates for custom message formatting
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# ============================================================================
+# ROUTING CONFIGURATION
+# ============================================================================
+
+route:
+  # Default grouping and timing
+  group_by: ['alertname', 'cluster', 'service', 'environment']
+  group_wait: 30s         # Wait for additional alerts before sending
+  group_interval: 5m      # How long to wait before sending updated group
+  repeat_interval: 4h     # How long to wait before re-sending alerts
+  receiver: 'default-webhook'
+
+  # Sub-routes for different alert types and severities
+  routes:
+    # Critical Production Alerts - Immediate notification
+    - match:
+        severity: critical
+        environment: production
+      receiver: 'critical-production'
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 30m
+      continue: true  # Also send to default channels
+
+    # High Priority Alerts - Fast notification
+    - match:
+        severity: high
+      receiver: 'high-priority'
+      group_wait: 30s
+      group_interval: 2m
+      repeat_interval: 1h
+
+    # Warning Alerts - Standard notification
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 2m
+      group_interval: 10m
+      repeat_interval: 12h
+
+    # Info/Maintenance Alerts - Low priority
+    - match:
+        severity: info
+      receiver: 'info-alerts'
+      group_wait: 10m
+      group_interval: 30m
+      repeat_interval: 24h
+
+    # Database-specific alerts
+    - match_re:
+        service: '(database|postgres|redis)'
+        severity: '(critical|high)'
+      receiver: 'database-alerts'
+      group_wait: 15s
+      repeat_interval: 30m
+
+    # Security-related alerts
+    - match_re:
+        alertname: '.*(security|breach|unauthorized|failed_login).*'
+      receiver: 'security-alerts'
+      group_wait: 5s
+      group_interval: 30s
+      repeat_interval: 15m
+
+    # Performance alerts
+    - match_re:
+        alertname: '.*(latency|performance|slow|timeout).*'
+      receiver: 'performance-alerts'
+      group_wait: 1m
+      repeat_interval: 2h
+
+    # Development environment - Less urgent
+    - match:
+        environment: development
+      receiver: 'dev-alerts'
+      group_wait: 5m
+      group_interval: 30m
+      repeat_interval: 24h
+
+    # Staging environment
+    - match:
+        environment: staging
+      receiver: 'staging-alerts'
+      group_wait: 2m
+      group_interval: 10m
+      repeat_interval: 6h
+
+# ============================================================================
+# RECEIVER CONFIGURATIONS
+# ============================================================================
+
+receivers:
+  # Default webhook receiver
+  - name: 'default-webhook'
+    webhook_configs:
+      - url: '${DEFAULT_WEBHOOK_URL:-http://localhost:5001/webhook/alerts}'
+        send_resolved: true
+        max_alerts: 50
+        http_config:
+          timeout: 10s
+        title: 'ToolBoxAI Alert: {{ .GroupLabels.alertname }}'
+        text: |-
+          {{ range .Alerts }}
+          **Alert:** {{ .Annotations.summary }}
+          **Description:** {{ .Annotations.description }}
+          **Severity:** {{ .Labels.severity }}
+          **Environment:** {{ .Labels.environment }}
+          **Service:** {{ .Labels.service }}
+          **Instance:** {{ .Labels.instance }}
+          **Time:** {{ .StartsAt }}
+          {{ end }}
+
+  # Critical Production Alerts - Multiple channels
+  - name: 'critical-production'
+    email_configs:
+      - to: '${CRITICAL_EMAIL_LIST:-ops-critical@toolboxai.com}'
+        from: '${ALERT_FROM_EMAIL:-alerts@toolboxai.com}'
+        subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }} - {{ .GroupLabels.environment }}'
+        html: |-
+          <h2 style="color: #e74c3c;">🚨 Critical Production Alert</h2>
+          <table border="1" cellpadding="10">
+          {{ range .Alerts }}
+          <tr>
+            <td><strong>Alert:</strong></td>
+            <td>{{ .Annotations.summary }}</td>
+          </tr>
+          <tr>
+            <td><strong>Description:</strong></td>
+            <td>{{ .Annotations.description }}</td>
+          </tr>
+          <tr>
+            <td><strong>Service:</strong></td>
+            <td>{{ .Labels.service }}</td>
+          </tr>
+          <tr>
+            <td><strong>Instance:</strong></td>
+            <td>{{ .Labels.instance }}</td>
+          </tr>
+          <tr>
+            <td><strong>Started:</strong></td>
+            <td>{{ .StartsAt }}</td>
+          </tr>
+          {{ end }}
+          </table>
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL:-}'
+        channel: '#critical-alerts'
+        title: '🚨 Critical Production Alert'
+        text: |-
+          {{ range .Alerts }}
+          *Alert:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          *Service:* {{ .Labels.service }}
+          *Environment:* {{ .Labels.environment }}
+          *Time:* {{ .StartsAt }}
+          {{ end }}
+        color: 'danger'
+        send_resolved: true
+    pagerduty_configs:
+      - routing_key: '${PAGERDUTY_INTEGRATION_KEY:-}'
+        description: '{{ .GroupLabels.alertname }} - {{ .GroupLabels.environment }}'
+        severity: 'critical'
+        details:
+          firing: '{{ .Alerts.Firing | len }}'
+          resolved: '{{ .Alerts.Resolved | len }}'
+          environment: '{{ .GroupLabels.environment }}'
+          service: '{{ .GroupLabels.service }}'
+
+  # High Priority Alerts
+  - name: 'high-priority'
+    email_configs:
+      - to: '${HIGH_PRIORITY_EMAIL_LIST:-ops-high@toolboxai.com}'
+        subject: '⚠️ HIGH: {{ .GroupLabels.alertname }} - {{ .GroupLabels.environment }}'
+        html: |-
+          <h3 style="color: #f39c12;">⚠️ High Priority Alert</h3>
+          {{ range .Alerts }}
+          <p><strong>{{ .Annotations.summary }}</strong></p>
+          <p>{{ .Annotations.description }}</p>
+          <p><em>Service: {{ .Labels.service }} | Environment: {{ .Labels.environment }}</em></p>
+          {{ end }}
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL:-}'
+        channel: '#alerts'
+        title: '⚠️ High Priority Alert'
+        color: 'warning'
+        send_resolved: true
+
+  # Warning Alerts
+  - name: 'warning-alerts'
+    email_configs:
+      - to: '${WARNING_EMAIL_LIST:-ops-warnings@toolboxai.com}'
+        subject: '⚠️ Warning: {{ .GroupLabels.alertname }}'
+        html: |-
+          <h4 style="color: #f39c12;">⚠️ Warning Alert</h4>
+          {{ range .Alerts }}
+          <p>{{ .Annotations.summary }}</p>
+          <p><small>{{ .Annotations.description }}</small></p>
+          {{ end }}
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL:-}'
+        channel: '#monitoring'
+        color: 'warning'
+        send_resolved: true
+
+  # Info/Maintenance Alerts
+  - name: 'info-alerts'
+    webhook_configs:
+      - url: '${INFO_WEBHOOK_URL:-http://localhost:5001/webhook/info}'
+        send_resolved: true
+        title: 'ℹ️ Info: {{ .GroupLabels.alertname }}'
+
+  # Database-specific alerts
+  - name: 'database-alerts'
+    email_configs:
+      - to: '${DBA_EMAIL_LIST:-dba@toolboxai.com}'
+        subject: '🗄️ Database Alert: {{ .GroupLabels.alertname }}'
+        html: |-
+          <h3 style="color: #3498db;">🗄️ Database Alert</h3>
+          {{ range .Alerts }}
+          <p><strong>{{ .Annotations.summary }}</strong></p>
+          <p>{{ .Annotations.description }}</p>
+          <p><em>Database: {{ .Labels.service }} | Instance: {{ .Labels.instance }}</em></p>
+          {{ end }}
+
+  # Security alerts
+  - name: 'security-alerts'
+    email_configs:
+      - to: '${SECURITY_EMAIL_LIST:-security@toolboxai.com}'
+        subject: '🔒 Security Alert: {{ .GroupLabels.alertname }}'
+        html: |-
+          <h2 style="color: #e74c3c;">🔒 Security Alert</h2>
+          {{ range .Alerts }}
+          <p><strong>{{ .Annotations.summary }}</strong></p>
+          <p>{{ .Annotations.description }}</p>
+          <p><em>Immediate investigation required</em></p>
+          {{ end }}
+    slack_configs:
+      - api_url: '${SECURITY_SLACK_WEBHOOK:-}'
+        channel: '#security-alerts'
+        title: '🔒 Security Alert'
+        color: 'danger'
+
+  # Performance alerts
+  - name: 'performance-alerts'
+    webhook_configs:
+      - url: '${PERFORMANCE_WEBHOOK_URL:-http://localhost:5001/webhook/performance}'
+        send_resolved: true
+        title: '⚡ Performance Alert: {{ .GroupLabels.alertname }}'
+
+  # Development environment alerts
+  - name: 'dev-alerts'
+    webhook_configs:
+      - url: '${DEV_WEBHOOK_URL:-http://localhost:5001/webhook/dev}'
+        send_resolved: true
+        title: '🔧 Dev Alert: {{ .GroupLabels.alertname }}'
+
+  # Staging environment alerts
+  - name: 'staging-alerts'
+    email_configs:
+      - to: '${STAGING_EMAIL_LIST:-staging@toolboxai.com}'
+        subject: '🎭 Staging Alert: {{ .GroupLabels.alertname }}'
+
+# ============================================================================
+# INHIBIT RULES
+# ============================================================================
+
+inhibit_rules:
+  # Inhibit warning alerts when critical alerts are firing for the same service
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service', 'instance', 'environment']
+
+  # Inhibit high priority alerts when critical alerts are firing
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'high'
+    equal: ['alertname', 'service', 'instance', 'environment']
+
+  # Inhibit info alerts when any higher severity alerts are firing
+  - source_match_re:
+      severity: '(critical|high|warning)'
+    target_match:
+      severity: 'info'
+    equal: ['alertname', 'service', 'instance', 'environment']
+
+  # Inhibit service alerts when the entire cluster is down
+  - source_match:
+      alertname: 'ClusterDown'
+    target_match_re:
+      alertname: '(ServiceDown|HighLatency|DatabaseDown)'
+    equal: ['cluster', 'environment']
+
+  # Inhibit individual container alerts when the node is down
+  - source_match:
+      alertname: 'NodeDown'
+    target_match_re:
+      alertname: '(ContainerDown|PodCrashLooping)'
+    equal: ['instance', 'environment']
+
+# ============================================================================
+# MUTE TIME WINDOWS (Optional)
+# ============================================================================
+
+# Uncomment to enable maintenance windows
+# mute_time_intervals:
+#   - name: 'maintenance-window'
+#     time_intervals:
+#       - times:
+#           - start_time: '02:00'
+#             end_time: '06:00'
+#         weekdays: ['saturday', 'sunday']
+#         location: 'UTC'
+#
+#   - name: 'business-hours'
+#     time_intervals:
+#       - times:
+#           - start_time: '09:00'
+#             end_time: '17:00'
+#         weekdays: ['monday:friday']
+#         location: 'America/New_York'

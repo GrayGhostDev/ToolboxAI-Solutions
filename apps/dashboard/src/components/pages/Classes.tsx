@@ -1,34 +1,34 @@
 import * as React from "react";
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
-import AvatarGroup from '@mui/material/AvatarGroup';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Box from '@mui/material/Box';
-import LinearProgress from '@mui/material/LinearProgress';
-import TextField from '@mui/material/TextField';
-import InputAdornment from '@mui/material/InputAdornment';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import SelectChangeEvent from '@mui/material/SelectChangeEvent';
+import {
+  Card,
+  Text,
+  Button,
+  Stack,
+  Avatar,
+  Badge,
+  ActionIcon,
+  Menu,
+  Box,
+  Progress,
+  TextInput,
+  Select,
+  Grid,
+  Group,
+  Divider,
+  Loader
+} from '@mantine/core';
 
 import { useNavigate } from "react-router-dom";
-import Grid from "@mui/material/Grid";
-import AddIcon from "@mui/icons-material/Add";
-import SearchIcon from "@mui/icons-material/Search";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import PeopleIcon from "@mui/icons-material/People";
-import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import {
+  IconPlus,
+  IconSearch,
+  IconDots,
+  IconUsers,
+  IconRocket,
+  IconEdit,
+  IconTrash,
+  IconEye
+} from "@tabler/icons-react";
 import { useAppDispatch, useAppSelector } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
 import { setClasses, removeClass, setClassOnlineStatus } from "../../store/slices/classesSlice";
@@ -213,380 +213,366 @@ export default function Classes() {
     return filtered;
   }, [classes, searchTerm, filterGrade, filterStatus, sortBy]);
   return (
-    <Grid container spacing={3}>
+    <Grid gutter="md">
       {/* Header */}
-      <Grid item xs={12}>
+      <Grid.Col span={12}>
         <Card>
-          <CardContent>
-            <Stack
-              direction={{ xs: "column", md: "row" }}
-              justifyContent="space-between"
-              alignItems={{ xs: "flex-start", md: "center" }}
-              gap={2}
-            >
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                My Classes
-              </Typography>
-              <Stack direction="row" gap={2} sx={{ width: { xs: "100%", md: "auto" }, flexWrap: "wrap" }}>
-                <TextField
-                  size="small"
-                  placeholder="Search classes..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  sx={{ minWidth: 200 }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon />
-                      </InputAdornment>
-                    ),
-                  }}
-                  data-testid="search-input"
-                />
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel id="grade-filter-label">Grade</InputLabel>
-                  <Select
-                    labelId="grade-filter-label"
-                    id="grade-filter"
-                    value={filterGrade}
-                    label="Grade"
-                    onChange={(e: SelectChangeEvent) => setFilterGrade(e.target.value)}
-                    data-testid="grade-filter"
-                  >
-                    <MenuItem value="all">All Grades</MenuItem>
-                    <MenuItem value="1">Grade 1</MenuItem>
-                    <MenuItem value="2">Grade 2</MenuItem>
-                    <MenuItem value="3">Grade 3</MenuItem>
-                    <MenuItem value="4">Grade 4</MenuItem>
-                    <MenuItem value="5">Grade 5</MenuItem>
-                    <MenuItem value="6">Grade 6</MenuItem>
-                    <MenuItem value="7">Grade 7</MenuItem>
-                    <MenuItem value="8">Grade 8</MenuItem>
-                    <MenuItem value="9">Grade 9</MenuItem>
-                    <MenuItem value="10">Grade 10</MenuItem>
-                    <MenuItem value="11">Grade 11</MenuItem>
-                    <MenuItem value="12">Grade 12</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel id="status-filter-label">Status</InputLabel>
-                  <Select
-                    labelId="status-filter-label"
-                    id="status-filter"
-                    value={filterStatus}
-                    label="Status"
-                    onChange={(e: SelectChangeEvent) => setFilterStatus(e.target.value)}
-                    data-testid="status-filter"
-                  >
-                    <MenuItem value="all">All Status</MenuItem>
-                    <MenuItem value="online">Online</MenuItem>
-                    <MenuItem value="offline">Offline</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel id="sort-by-label">Sort By</InputLabel>
-                  <Select
-                    labelId="sort-by-label"
-                    id="sort-by"
-                    value={sortBy}
-                    label="Sort By"
-                    onChange={(e: SelectChangeEvent) => setSortBy(e.target.value)}
-                    data-testid="sort-by"
-                  >
-                    <MenuItem value="name">Name</MenuItem>
-                    <MenuItem value="grade">Grade</MenuItem>
-                    <MenuItem value="students">Students</MenuItem>
-                    <MenuItem value="progress">Progress</MenuItem>
-                  </Select>
-                </FormControl>
-                {role === "teacher" && (
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={(e: React.MouseEvent) => () => setCreateClassOpen(true)}
-                    data-testid="create-class-button"
-                  >
-                    Create Class
-                  </Button>
-                )}
-              </Stack>
-            </Stack>
-          </CardContent>
+          <Stack
+            justify="space-between"
+            align={{ base: "flex-start", md: "center" }}
+            gap="md"
+            style={{ flexDirection: "row", flexWrap: "wrap" }}
+          >
+            <Text size="xl" fw={600}>
+              My Classes
+            </Text>
+            <Group gap="md" style={{ flexWrap: "wrap" }}>
+              <TextInput
+                size="sm"
+                placeholder="Search classes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ minWidth: 200 }}
+                leftSection={<IconSearch size={16} />}
+                data-testid="search-input"
+              />
+              <Select
+                size="sm"
+                placeholder="Grade"
+                value={filterGrade}
+                onChange={(value) => setFilterGrade(value || "all")}
+                data={[
+                  { value: "all", label: "All Grades" },
+                  { value: "1", label: "Grade 1" },
+                  { value: "2", label: "Grade 2" },
+                  { value: "3", label: "Grade 3" },
+                  { value: "4", label: "Grade 4" },
+                  { value: "5", label: "Grade 5" },
+                  { value: "6", label: "Grade 6" },
+                  { value: "7", label: "Grade 7" },
+                  { value: "8", label: "Grade 8" },
+                  { value: "9", label: "Grade 9" },
+                  { value: "10", label: "Grade 10" },
+                  { value: "11", label: "Grade 11" },
+                  { value: "12", label: "Grade 12" },
+                ]}
+                style={{ minWidth: 120 }}
+                data-testid="grade-filter"
+              />
+              <Select
+                size="sm"
+                placeholder="Status"
+                value={filterStatus}
+                onChange={(value) => setFilterStatus(value || "all")}
+                data={[
+                  { value: "all", label: "All Status" },
+                  { value: "online", label: "Online" },
+                  { value: "offline", label: "Offline" },
+                ]}
+                style={{ minWidth: 120 }}
+                data-testid="status-filter"
+              />
+              <Select
+                size="sm"
+                placeholder="Sort By"
+                value={sortBy}
+                onChange={(value) => setSortBy(value || "name")}
+                data={[
+                  { value: "name", label: "Name" },
+                  { value: "grade", label: "Grade" },
+                  { value: "students", label: "Students" },
+                  { value: "progress", label: "Progress" },
+                ]}
+                style={{ minWidth: 120 }}
+                data-testid="sort-by"
+              />
+              {role === "teacher" && (
+                <Button
+                  leftSection={<IconPlus size={16} />}
+                  onClick={() => setCreateClassOpen(true)}
+                  data-testid="create-class-button"
+                >
+                  Create Class
+                </Button>
+              )}
+            </Group>
+          </Stack>
         </Card>
-      </Grid>
+      </Grid.Col>
       {/* Stats Overview */}
-      <Grid item xs={12} md={3}>
+      <Grid.Col span={{ base: 12, md: 3 }}>
         <Card>
-          <CardContent>
-            <Stack spacing={1}>
-              <Typography variant="caption" color="text.secondary">
-                Total Students
-              </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                {classes.reduce((sum, c) => sum + c.studentCount, 0)}
-              </Typography>
-            </Stack>
-          </CardContent>
+          <Stack gap="xs">
+            <Text size="xs" c="dimmed">
+              Total Students
+            </Text>
+            <Text size="xl" fw={700}>
+              {classes.reduce((sum, c) => sum + c.studentCount, 0)}
+            </Text>
+          </Stack>
         </Card>
-      </Grid>
-      <Grid item xs={12} md={3}>
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, md: 3 }}>
         <Card>
-          <CardContent>
-            <Stack spacing={1}>
-              <Typography variant="caption" color="text.secondary">
-                Active Classes
-              </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                {classes.length}
-              </Typography>
-            </Stack>
-          </CardContent>
+          <Stack gap="xs">
+            <Text size="xs" c="dimmed">
+              Active Classes
+            </Text>
+            <Text size="xl" fw={700}>
+              {classes.length}
+            </Text>
+          </Stack>
         </Card>
-      </Grid>
-      <Grid item xs={12} md={3}>
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, md: 3 }}>
         <Card>
-          <CardContent>
-            <Stack spacing={1}>
-              <Typography variant="caption" color="text.secondary">
-                Average XP
-              </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                {Math.round(
-                  classes.reduce((sum, c) => sum + c.averageXP, 0) / classes.length || 0
-                )}
-              </Typography>
-            </Stack>
-          </CardContent>
+          <Stack gap="xs">
+            <Text size="xs" c="dimmed">
+              Average XP
+            </Text>
+            <Text size="xl" fw={700}>
+              {Math.round(
+                classes.reduce((sum, c) => sum + c.averageXP, 0) / classes.length || 0
+              )}
+            </Text>
+          </Stack>
         </Card>
-      </Grid>
-      <Grid item xs={12} md={3}>
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, md: 3 }}>
         <Card>
-          <CardContent>
-            <Stack spacing={1}>
-              <Typography variant="caption" color="text.secondary">
-                Avg Completion
-              </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                {Math.round(
-                  classes.reduce((sum, c) => sum + c.completionRate, 0) / classes.length || 0
-                )}
-                %
-              </Typography>
-            </Stack>
-          </CardContent>
+          <Stack gap="xs">
+            <Text size="xs" c="dimmed">
+              Avg Completion
+            </Text>
+            <Text size="xl" fw={700}>
+              {Math.round(
+                classes.reduce((sum, c) => sum + c.completionRate, 0) / classes.length || 0
+              )}
+              %
+            </Text>
+          </Stack>
         </Card>
-      </Grid>
+      </Grid.Col>
       {/* Class Cards */}
       {loading ? (
-        <Grid item xs={12}>
-          <Typography>Loading classes...</Typography>
-        </Grid>
+        <Grid.Col span={12}>
+          <Group justify="center">
+            <Loader />
+            <Text>Loading classes...</Text>
+          </Group>
+        </Grid.Col>
       ) : filteredClasses.length === 0 ? (
-        <Grid item xs={12}>
+        <Grid.Col span={12}>
           <Card>
-            <CardContent>
-              <Typography align="center" color="text.secondary">
-                No classes found. Create your first class to get started!
-              </Typography>
-            </CardContent>
+            <Text ta="center" c="dimmed">
+              No classes found. Create your first class to get started!
+            </Text>
           </Card>
-        </Grid>
+        </Grid.Col>
       ) : (
         <>
-          <Grid item xs={12} data-testid="classes-list" className="classes-grid">
+          <Grid.Col span={12} data-testid="classes-list" className="classes-grid">
             {/* Hidden element for test detection */}
             <div style={{ display: 'none' }}>Classes List Container</div>
-          </Grid>
+          </Grid.Col>
           {filteredClasses.map((classData) => (
-            <Grid
+            <Grid.Col
               key={classData.id}
-              item
-              xs={12}
-              md={6}
-              lg={4}
+              span={{ base: 12, md: 6, lg: 4 }}
               data-testid="class-row"
               className="class-card"
             >
             <Card
               data-testid="class-card"
-              sx={{
+              style={{
                 height: "100%",
-                transition: "all 0.3s",
+                transition: "all 0.3s ease",
                 cursor: "pointer",
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: 4,
-                },
               }}
-              onClick={(e: React.MouseEvent) => () => navigate(`/classes/${classData.id}`)}
+              onClick={() => navigate(`/classes/${classData.id}`)}
+              __hover={{
+                transform: "translateY(-4px)",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+              }}
             >
-              <CardContent>
-                <Stack spacing={2}>
-                  {/* Header */}
-                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                    <Stack>
-                      <Stack direction="row" alignItems="center" gap={1}>
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: 600 }}
-                          data-testid="class-name"
+              <Stack gap="md">
+                {/* Header */}
+                <Group justify="space-between" align="flex-start">
+                  <Stack gap="xs">
+                    <Group gap="xs" align="center">
+                      <Text
+                        size="lg"
+                        fw={600}
+                        data-testid="class-name"
+                      >
+                        {classData.name}
+                      </Text>
+                      {classData.isOnline && (
+                        <Badge
+                          color="green"
+                          size="sm"
+                          data-testid="online-status"
                         >
-                          {classData.name}
-                        </Typography>
-                        {classData.isOnline && (
-                          <Chip
-                            label="Online"
-                            size="small"
-                            color="success"
-                            sx={{ height: 20 }}
-                            data-testid="online-status"
-                          />
-                        )}
-                      </Stack>
-                      <Typography variant="caption" color="text.secondary">
-                        Grade {classData.grade} • {classData.schedule}
-                      </Typography>
-                    </Stack>
-                    <IconButton
-                      size="small"
-                      onClick={(e: React.MouseEvent) => (e) => handleMenuOpen(e, classData)}
-                      aria-label="More options"
-                      data-testid="class-menu-button"
-                    >
-                      <MoreVertIcon />
-                    </IconButton>
+                          Online
+                        </Badge>
+                      )}
+                    </Group>
+                    <Text size="sm" c="dimmed">
+                      Grade {classData.grade} • {classData.schedule}
+                    </Text>
                   </Stack>
-                  {/* Students */}
-                  <Stack direction="row" alignItems="center" spacing={2}>
-                    <AvatarGroup max={4} sx={{ "& .MuiAvatar-root": { width: 32, height: 32 } }}>
-                      {classData.studentAvatars.map((avatar, index) => (
-                        <Avatar key={index} src={avatar} />
-                      ))}
-                    </AvatarGroup>
-                    <Stack>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {classData.studentCount} Students
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Avg. {classData.averageXP} XP
-                      </Typography>
-                    </Stack>
+                  <ActionIcon
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMenuOpen(e, classData);
+                    }}
+                    aria-label="More options"
+                    data-testid="class-menu-button"
+                  >
+                    <IconDots size={16} />
+                  </ActionIcon>
+                </Group>
+                {/* Students */}
+                <Group gap="md" align="center">
+                  <Avatar.Group spacing="sm">
+                    {classData.studentAvatars.slice(0, 4).map((avatar, index) => (
+                      <Avatar key={index} src={avatar} size="sm" />
+                    ))}
+                    {classData.studentAvatars.length > 4 && (
+                      <Avatar size="sm">+{classData.studentAvatars.length - 4}</Avatar>
+                    )}
+                  </Avatar.Group>
+                  <Stack gap="xs">
+                    <Text size="sm" fw={500}>
+                      {classData.studentCount} Students
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      Avg. {classData.averageXP} XP
+                    </Text>
                   </Stack>
-                  {/* Progress */}
-                  <Box>
-                    <Stack direction="row" justifyContent="space-between" mb={0.5}>
-                      <Typography variant="caption" color="text.secondary">
-                        Completion Rate
-                      </Typography>
-                      <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                        {classData.completionRate}%
-                      </Typography>
-                    </Stack>
-                    <LinearProgress
-                      variant="determinate"
-                      value={classData.completionRate}
-                      sx={{ height: 8, borderRadius: 4 }}
-                    />
-                  </Box>
-                  {/* Next Lesson */}
-                  <Box
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 2,
-                      bgcolor: "background.default",
+                </Group>
+                {/* Progress */}
+                <Box>
+                  <Group justify="space-between" mb="xs">
+                    <Text size="xs" c="dimmed">
+                      Completion Rate
+                    </Text>
+                    <Text size="xs" fw={600}>
+                      {classData.completionRate}%
+                    </Text>
+                  </Group>
+                  <Progress
+                    value={classData.completionRate}
+                    size="lg"
+                    radius="xl"
+                  />
+                </Box>
+                {/* Next Lesson */}
+                <Box
+                  style={{
+                    padding: 12,
+                    borderRadius: 8,
+                    backgroundColor: "var(--mantine-color-gray-0)",
+                  }}
+                >
+                  <Text size="xs" c="dimmed">
+                    Next Lesson
+                  </Text>
+                  <Text size="sm" fw={500}>
+                    {classData.nextLesson}
+                  </Text>
+                </Box>
+                {/* Actions */}
+                <Group gap="xs">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    leftSection={<IconEye size={14} />}
+                    style={{ flex: 1 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('View button clicked for class:', classData.id);
+                      const route = `/classes/${classData.id}`;
+                      console.log('Navigating to:', route);
+                      navigate(route);
                     }}
                   >
-                    <Typography variant="caption" color="text.secondary">
-                      Next Lesson
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {classData.nextLesson}
-                    </Typography>
-                  </Box>
-                  {/* Actions */}
-                  <Stack direction="row" gap={1}>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<VisibilityIcon />}
-                      sx={{ flex: 1 }}
-                      onClick={(e: React.MouseEvent) => () => {
-                        console.log('View button clicked for class:', classData.id);
-                        const route = `/classes/${classData.id}`;
-                        console.log('Navigating to:', route);
-                        navigate(route);
-                      }}
-                    >
-                      View
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      startIcon={<RocketLaunchIcon />}
-                      sx={{ flex: 1 }}
-                      onClick={(e: React.MouseEvent) => () => handlePushToRoblox(classData)}
-                    >
-                      Roblox
-                    </Button>
-                  </Stack>
-                </Stack>
-              </CardContent>
+                    View
+                  </Button>
+                  <Button
+                    size="sm"
+                    leftSection={<IconRocket size={14} />}
+                    style={{ flex: 1 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePushToRoblox(classData);
+                    }}
+                  >
+                    Roblox
+                  </Button>
+                </Group>
+              </Stack>
             </Card>
-          </Grid>
+          </Grid.Col>
         ))}
         </>
       )}
       {/* Action Menu */}
       <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
+        opened={Boolean(anchorEl)}
         onClose={handleMenuClose}
+        position="bottom-end"
       >
-        <MenuItem onClick={(e: React.MouseEvent) => () => {
-          if (selectedClass) {
-            navigate(getClassDetailsRoute(selectedClass.id));
-          }
-          handleMenuClose();
-        }}>
-          <VisibilityIcon fontSize="small" sx={{ mr: 1 }} />
+        <Menu.Item
+          leftSection={<IconEye size={16} />}
+          onClick={() => {
+            if (selectedClass) {
+              navigate(getClassDetailsRoute(selectedClass.id));
+            }
+            handleMenuClose();
+          }}
+        >
           View Details
-        </MenuItem>
-        <MenuItem onClick={(e: React.MouseEvent) => () => {
-          if (selectedClass) {
-            handleEditClass(selectedClass);
-          }
-        }}
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconEdit size={16} />}
+          onClick={() => {
+            if (selectedClass) {
+              handleEditClass(selectedClass);
+            }
+          }}
           data-testid="edit-class"
         >
-          <EditIcon fontSize="small" sx={{ mr: 1 }} />
           Edit Class
-        </MenuItem>
-        <MenuItem onClick={(e: React.MouseEvent) => () => {
-          // TODO: Navigate to manage students page
-          handleMenuClose();
-        }}
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconUsers size={16} />}
+          onClick={() => {
+            // TODO: Navigate to manage students page
+            handleMenuClose();
+          }}
           data-testid="manage-students"
         >
-          <PeopleIcon fontSize="small" sx={{ mr: 1 }} />
           Manage Students
-        </MenuItem>
+        </Menu.Item>
         {selectedClass && !selectedClass.isOnline && (
-          <MenuItem
-            onClick={(e: React.MouseEvent) => () => selectedClass && handlePushToRoblox(selectedClass)}
+          <Menu.Item
+            leftSection={<IconRocket size={16} />}
+            onClick={() => selectedClass && handlePushToRoblox(selectedClass)}
             data-testid="push-to-roblox"
           >
-            <RocketLaunchIcon fontSize="small" sx={{ mr: 1 }} />
             Push to Roblox
-          </MenuItem>
+          </Menu.Item>
         )}
-        <MenuItem
-          onClick={(e: React.MouseEvent) => () => selectedClass && handleDeleteClass(selectedClass)}
-          sx={{ color: "error.main" }}
+        <Menu.Item
+          leftSection={<IconTrash size={16} />}
+          color="red"
+          onClick={() => selectedClass && handleDeleteClass(selectedClass)}
           data-testid="delete-class"
         >
-          <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
           Delete Class
-        </MenuItem>
+        </Menu.Item>
       </Menu>
       {/* Create Class Dialog */}
       <CreateClassDialog
@@ -717,12 +703,12 @@ export default function Classes() {
       )}
       {/* Student Progress Tracker for Teachers */}
       {role === "teacher" && (
-        <Grid item xs={12}>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+        <Grid.Col span={12}>
+          <Text size="lg" mb="md" fw={600}>
             Student Progress Tracker
-          </Typography>
+          </Text>
           <StudentProgressTracker />
-        </Grid>
+        </Grid.Col>
       )}
     </Grid>
   );

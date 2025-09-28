@@ -15,6 +15,23 @@ from .review_agent import ReviewSeverity, ReviewFinding
 from .testing_agent import TestType, TestStatus, TestResult, TestSuiteResult
 from .orchestrator import OrchestrationRequest, OrchestrationResult, WorkflowType
 
+# New orchestration system imports (preferred) - lazy import to avoid circular imports
+UnifiedOrchestrator = None
+create_orchestrator = None
+OrchestrationCompat = None
+
+def _get_new_orchestration():
+    """Lazy import of new orchestration system."""
+    global UnifiedOrchestrator, create_orchestrator, OrchestrationCompat
+    if UnifiedOrchestrator is None:
+        try:
+            from ..orchestration import UnifiedOrchestrator, create_orchestrator
+            from .orchestrator_compat import OrchestrationCompat
+        except ImportError as e:
+            import logging
+            logging.warning(f"Could not import new orchestration system: {e}")
+    return UnifiedOrchestrator, create_orchestrator, OrchestrationCompat
+
 # Import agent classes lazily to avoid circular imports
 if TYPE_CHECKING:
     from .supervisor import SupervisorAgent
@@ -71,11 +88,14 @@ __all__ = [
     "TestStatus",
     "TestResult",
     "TestSuiteResult",
-    # Orchestration
+    # Orchestration (legacy)
     "Orchestrator",
     "OrchestrationRequest",
     "OrchestrationResult",
     "WorkflowType",
+    # New orchestration system
+    "UnifiedOrchestrator",
+    "OrchestrationCompat",
     # Factory functions
     "create_orchestrator",
     "create_agent",

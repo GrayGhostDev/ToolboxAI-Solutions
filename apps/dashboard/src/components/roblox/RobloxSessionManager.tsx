@@ -6,90 +6,71 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardActions from '@mui/material/CardActions';
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid';
-import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import Chip from '@mui/material/Chip';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import TextField from '@mui/material/TextField';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Switch from '@mui/material/Switch';
-import Slider from '@mui/material/Slider';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
-import Avatar from '@mui/material/Avatar';
-import AvatarGroup from '@mui/material/AvatarGroup';
-import Tooltip from '@mui/material/Tooltip';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import Stepper from '@mui/material/Stepper';
-import Step from '@mui/material/Step';
-import StepLabel from '@mui/material/StepLabel';
-import StepContent from '@mui/material/StepContent';
-import Paper from '@mui/material/Paper';
-import Divider from '@mui/material/Divider';
-import Stack from '@mui/material/Stack';
-import Badge from '@mui/material/Badge';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import FormGroup from '@mui/material/FormGroup';
-import FormLabel from '@mui/material/FormLabel';
-import RadioGroup from '@mui/material/RadioGroup';
-import Radio from '@mui/material/Radio';
-import Autocomplete from '@mui/material/Autocomplete';
 import {
-  PlayArrow,
-  Pause,
-  Stop,
-  Settings,
-  People,
-  Schedule,
-  Lock,
-  LockOpen,
-  Add,
-  Edit,
-  Delete,
-  ContentCopy,
-  Share,
-  QrCode2,
-  Link,
-  Timer,
-  School,
-  Assignment,
-  Quiz,
-  Terrain,
-  Games,
-  EmojiEvents,
-  Warning,
-  CheckCircle,
-  Info,
-  Groups,
-  PersonAdd,
-  PersonRemove,
-  Refresh,
-  Download,
-  Upload,
-  Save,
-  Cancel
-} from '@mui/icons-material';
+  Box,
+  Card,
+  Text,
+  Grid,
+  Button,
+  ActionIcon,
+  Badge,
+  Modal,
+  TextInput,
+  Select,
+  Checkbox,
+  Switch,
+  Slider,
+  List,
+  Avatar,
+  Group,
+  Tooltip,
+  Alert,
+  Stepper,
+  Paper,
+  Stack,
+  Title,
+  Radio,
+  MultiSelect,
+  Textarea,
+  Divider
+} from '@mantine/core';
+import { useMantineTheme } from '@mantine/hooks';
+import {
+  IconPlayerPlay,
+  IconPlayerPause,
+  IconPlayerStop,
+  IconSettings,
+  IconUsers,
+  IconCalendar,
+  IconLock,
+  IconLockOpen,
+  IconPlus,
+  IconEdit,
+  IconTrash,
+  IconCopy,
+  IconShare,
+  IconQrcode,
+  IconLink,
+  IconClock,
+  IconSchool,
+  IconNotes,
+  IconHelp,
+  IconMountain,
+  IconDeviceGamepad2,
+  IconTrophy,
+  IconAlertTriangle,
+  IconCircleCheck,
+  IconInfoCircle,
+  IconUserPlus,
+  IconUserMinus,
+  IconRefresh,
+  IconDownload,
+  IconUpload,
+  IconDeviceFloppy,
+  IconX
+} from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
-import { useWebSocketContext } from '../../contexts/WebSocketContext';
+import { usePusherContext } from '../../contexts/PusherContext';
 import { WebSocketMessageType } from '../../types/websocket';
 import { useAppSelector } from '../../store';
 
@@ -606,9 +587,9 @@ const SESSION_TEMPLATES: SessionTemplate[] = [
 ];
 
 export const RobloxSessionManager: React.FunctionComponent<Record<string, any>> = () => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const navigate = useNavigate();
-  const { sendMessage, on, isConnected } = useWebSocketContext();
+  const { sendMessage, on, isConnected } = usePusherContext();
   const currentUser = useAppSelector(state => state.user);
   
   const [sessions, setSessions] = useState<RobloxSession[]>([]);
@@ -858,536 +839,504 @@ export const RobloxSessionManager: React.FunctionComponent<Record<string, any>> 
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* Header */}
       <Card>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Games color="primary" fontSize="large" />
+        <Card.Section p="md">
+          <Group justify="space-between" align="center">
+            <Group align="center">
+              <IconDeviceGamepad2 color={theme.colors.blue[6]} size={32} />
               <Box>
-                <Typography variant="h5">Session Manager</Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Title order={3}>Session Manager</Title>
+                <Text size="sm" c="dimmed">
                   Create and manage Roblox educational game sessions
-                </Typography>
+                </Text>
               </Box>
-            </Box>
-            
+            </Group>
+
             <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
+              leftSection={<IconPlus size={16} />}
+              onClick={() => setCreateDialogOpen(true)}
             >
               New Session
             </Button>
-          </Box>
-        </CardContent>
+          </Group>
+        </Card.Section>
       </Card>
 
       {/* Sessions Grid */}
-      <Grid container spacing={2} sx={{ flex: 1, overflow: 'auto' }}>
+      <Grid gutter="md" style={{ flex: 1, overflow: 'auto' }}>
         {sessions.map((session) => (
-          <Grid item xs={12} md={6} lg={4} key={session.id}>
+          <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={session.id}>
             <Card
-              sx={{
+              style={{
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                border: session.status === 'active' ? 2 : 1,
-                borderColor: session.status === 'active' 
-                  ? 'success.main' 
-                  : alpha(theme.palette.divider, 0.2)
+                border: session.status === 'active' ? `2px solid ${theme.colors.green[6]}` : `1px solid ${theme.colors.gray[3]}`
               }}
             >
-              <CardContent sx={{ flex: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
+              <Card.Section p="md" style={{ flex: 1 }}>
+                <Group justify="space-between" align="flex-start" mb="md">
                   <Box>
-                    <Typography variant="h6" gutterBottom>
+                    <Text size="lg" fw={600} mb="xs">
                       {session.name}
-                    </Typography>
-                    <Chip
-                      label={session.status}
-                      size="small"
-                      color={getSessionStatusColor(session.status) as any}
-                    />
+                    </Text>
+                    <Badge
+                      color={
+                        getSessionStatusColor(session.status) === 'info' ? 'blue' :
+                        getSessionStatusColor(session.status) === 'success' ? 'green' :
+                        getSessionStatusColor(session.status) === 'warning' ? 'yellow' : 'gray'
+                      }
+                      size="sm"
+                    >
+                      {session.status}
+                    </Badge>
                   </Box>
-                  
-                  <Stack direction="row" spacing={0.5}>
+
+                  <Group gap="xs">
                     {session.settings.accessType === 'private' && (
-                      <Tooltip title="Private Session">
-                        <Lock fontSize="small" color="action" />
+                      <Tooltip label="Private Session">
+                        <IconLock size={16} color={theme.colors.gray[6]} />
                       </Tooltip>
                     )}
                     {session.settings.recordSession && (
-                      <Tooltip title="Recording Enabled">
-                        <Badge variant="dot" color="error">
-                          <Timer fontSize="small" color="action" />
-                        </Badge>
+                      <Tooltip label="Recording Enabled">
+                        <Box style={{ position: 'relative' }}>
+                          <IconClock size={16} color={theme.colors.gray[6]} />
+                          <Box
+                            style={{
+                              position: 'absolute',
+                              top: -2,
+                              right: -2,
+                              width: 6,
+                              height: 6,
+                              backgroundColor: theme.colors.red[6],
+                              borderRadius: '50%'
+                            }}
+                          />
+                        </Box>
                       </Tooltip>
                     )}
-                  </Stack>
-                </Box>
+                  </Group>
+                </Group>
 
                 {session.description && (
-                  <Typography variant="body2" color="text.secondary" paragraph>
+                  <Text size="sm" c="dimmed" mb="md">
                     {session.description}
-                  </Typography>
+                  </Text>
                 )}
 
-                <Grid container spacing={1} sx={{ mb: 2 }}>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">Subject</Typography>
-                    <Typography variant="body2">{session.content.subject}</Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">Grade</Typography>
-                    <Typography variant="body2">Level {session.content.gradeLevel}</Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">Environment</Typography>
-                    <Typography variant="body2">{session.content.environmentType}</Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">Players</Typography>
-                    <Typography variant="body2">
+                <Grid gutter="xs" mb="md">
+                  <Grid.Col span={6}>
+                    <Text size="xs" c="dimmed">Subject</Text>
+                    <Text size="sm">{session.content.subject}</Text>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Text size="xs" c="dimmed">Grade</Text>
+                    <Text size="sm">Level {session.content.gradeLevel}</Text>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Text size="xs" c="dimmed">Environment</Text>
+                    <Text size="sm">{session.content.environmentType}</Text>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Text size="xs" c="dimmed">Players</Text>
+                    <Text size="sm">
                       {session.metrics.activePlayers}/{session.settings.maxPlayers}
-                    </Typography>
-                  </Grid>
+                    </Text>
+                  </Grid.Col>
                 </Grid>
 
                 {session.participants.students.length > 0 && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <AvatarGroup max={4} sx={{ '& .MuiAvatar-root': { width: 24, height: 24, fontSize: 12 } }}>
+                  <Group align="center" mb="md">
+                    <Avatar.Group spacing="sm">
                       {session.participants.students
                         .filter(s => s.status === 'active')
+                        .slice(0, 4)
                         .map((student) => (
-                          <Avatar key={student.id}>
+                          <Avatar key={student.id} size={24}>
                             {student.name[0]}
                           </Avatar>
                         ))}
-                    </AvatarGroup>
-                    <Typography variant="caption" color="text.secondary">
+                      {session.participants.students.filter(s => s.status === 'active').length > 4 && (
+                        <Avatar size={24}>+{session.participants.students.filter(s => s.status === 'active').length - 4}</Avatar>
+                      )}
+                    </Avatar.Group>
+                    <Text size="xs" c="dimmed">
                       {session.participants.students.filter(s => s.status === 'active').length} active
-                    </Typography>
-                  </Box>
+                    </Text>
+                  </Group>
                 )}
 
                 {session.settings.timeLimit && (
-                  <Alert severity="info" sx={{ mt: 2, py: 0 }}>
-                    <Typography variant="caption">
+                  <Alert color="blue" mt="md">
+                    <Text size="xs">
                       {session.settings.timeLimit} minute time limit
-                    </Typography>
+                    </Text>
                   </Alert>
                 )}
-              </CardContent>
+              </Card.Section>
 
               <Divider />
 
-              <CardActions>
-                {session.status === 'draft' && (
-                  <>
-                    <Button
-                      size="small"
-                      startIcon={<Edit />}
-                      onClick={(e: React.MouseEvent) => () => {
-                        setSelectedSession(session);
-                        setSettingsDialogOpen(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      size="small"
-                      color="success"
-                      startIcon={<PlayArrow />}
-                      onClick={(e: React.MouseEvent) => () => handleStartSession(session.id)}
-                    >
-                      Start
-                    </Button>
-                  </>
-                )}
-                
-                {session.status === 'active' && (
-                  <>
-                    <Button
-                      size="small"
-                      color="warning"
-                      startIcon={<Pause />}
-                      onClick={(e: React.MouseEvent) => () => handlePauseSession(session.id)}
-                    >
-                      Pause
-                    </Button>
-                    <Button
-                      size="small"
-                      color="error"
-                      startIcon={<Stop />}
-                      onClick={(e: React.MouseEvent) => () => handleStopSession(session.id)}
-                    >
-                      Stop
-                    </Button>
-                  </>
-                )}
-                
-                {session.status === 'paused' && (
-                  <Button
-                    size="small"
-                    color="success"
-                    startIcon={<PlayArrow />}
-                    onClick={(e: React.MouseEvent) => () => handleStartSession(session.id)}
-                  >
-                    Resume
-                  </Button>
-                )}
+              <Card.Section p="md">
+                <Group>
+                  {session.status === 'draft' && (
+                    <>
+                      <Button
+                        size="sm"
+                        leftSection={<IconEdit size={16} />}
+                        onClick={() => {
+                          setSelectedSession(session);
+                          setSettingsDialogOpen(true);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        color="green"
+                        leftSection={<IconPlayerPlay size={16} />}
+                        onClick={() => handleStartSession(session.id)}
+                      >
+                        Start
+                      </Button>
+                    </>
+                  )}
 
-                <IconButton
-                  size="small"
-                  onClick={(e: React.MouseEvent) => () => handleDuplicateSession(session)}
-                >
-                  <ContentCopy fontSize="small" />
-                </IconButton>
-                
-                <IconButton
-                  size="small"
-                  onClick={(e: React.MouseEvent) => () => {
-                    setSelectedSession(session);
-                    setInviteDialogOpen(true);
-                  }}
-                >
-                  <Share fontSize="small" />
-                </IconButton>
-                
-                {(session.status === 'draft' || session.status === 'completed') && (
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={(e: React.MouseEvent) => () => handleDeleteSession(session.id)}
+                  {session.status === 'active' && (
+                    <>
+                      <Button
+                        size="sm"
+                        color="yellow"
+                        leftSection={<IconPlayerPause size={16} />}
+                        onClick={() => handlePauseSession(session.id)}
+                      >
+                        Pause
+                      </Button>
+                      <Button
+                        size="sm"
+                        color="red"
+                        leftSection={<IconPlayerStop size={16} />}
+                        onClick={() => handleStopSession(session.id)}
+                      >
+                        Stop
+                      </Button>
+                    </>
+                  )}
+
+                  {session.status === 'paused' && (
+                    <Button
+                      size="sm"
+                      color="green"
+                      leftSection={<IconPlayerPlay size={16} />}
+                      onClick={() => handleStartSession(session.id)}
+                    >
+                      Resume
+                    </Button>
+                  )}
+
+                  <ActionIcon
+                    size="sm"
+                    onClick={() => handleDuplicateSession(session)}
                   >
-                    <Delete fontSize="small" />
-                  </IconButton>
-                )}
-              </CardActions>
+                    <IconCopy size={16} />
+                  </ActionIcon>
+
+                  <ActionIcon
+                    size="sm"
+                    onClick={() => {
+                      setSelectedSession(session);
+                      setInviteDialogOpen(true);
+                    }}
+                  >
+                    <IconShare size={16} />
+                  </ActionIcon>
+
+                  {(session.status === 'draft' || session.status === 'completed') && (
+                    <ActionIcon
+                      size="sm"
+                      color="red"
+                      onClick={() => handleDeleteSession(session.id)}
+                    >
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                  )}
+                </Group>
+              </Card.Section>
             </Card>
-          </Grid>
+          </Grid.Col>
         ))}
       </Grid>
 
       {/* Create Session Dialog */}
-      <Dialog
-        open={createDialogOpen}
+      <Modal
+        opened={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
+        title="Create New Session"
+        size="lg"
       >
-        <DialogTitle>Create New Session</DialogTitle>
-        <DialogContent>
-          <Stepper activeStep={activeStep} orientation="vertical">
-            <Step>
-              <StepLabel>Basic Information</StepLabel>
-              <StepContent>
-                <Box sx={{ mt: 2 }}>
-                  <TextField
-                    fullWidth
-                    label="Session Name"
-                    value={newSession.name}
-                    onChange={(e) => setNewSession({ ...newSession, name: e.target.value })}
-                    sx={{ mb: 2 }}
+        <Stepper active={activeStep} orientation="vertical">
+          <Stepper.Step label="Basic Information">
+            <Stack gap="md" mt="md">
+              <TextInput
+                label="Session Name"
+                value={newSession.name}
+                onChange={(event) => setNewSession({ ...newSession, name: event.currentTarget.value })}
+              />
+              <Textarea
+                label="Description (Optional)"
+                rows={3}
+                value={newSession.description}
+                onChange={(event) => setNewSession({ ...newSession, description: event.currentTarget.value })}
+              />
+
+              <Box>
+                <Text size="sm" fw={600} mb="sm">
+                  Quick Templates
+                </Text>
+                <Group gap="xs" wrap="wrap">
+                  {SESSION_TEMPLATES.map((template) => (
+                    <Badge
+                      key={template.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => handleApplyTemplate(template)}
+                      color={selectedTemplateId === template.id ? 'blue' : 'gray'}
+                      variant={selectedTemplateId === template.id ? 'filled' : 'outline'}
+                    >
+                      {template.name}
+                    </Badge>
+                  ))}
+                </Group>
+              </Box>
+            </Stack>
+          </Stepper.Step>
+
+          <Stepper.Step label="Content Settings">
+            <Grid gutter="md" mt="md">
+              <Grid.Col span={6}>
+                <Select
+                  label="Subject"
+                  value={newSession.content?.subject}
+                  onChange={(value) => setNewSession({
+                    ...newSession,
+                    content: { ...newSession.content!, subject: value || '' }
+                  })}
+                  data={[
+                    { value: 'Mathematics', label: 'Mathematics' },
+                    { value: 'Science', label: 'Science' },
+                    { value: 'English', label: 'English' },
+                    { value: 'History', label: 'History' },
+                    { value: 'Geography', label: 'Geography' }
+                  ]}
+                />
+              </Grid.Col>
+
+              <Grid.Col span={6}>
+                <Select
+                  label="Grade Level"
+                  value={newSession.content?.gradeLevel?.toString()}
+                  onChange={(value) => setNewSession({
+                    ...newSession,
+                    content: { ...newSession.content!, gradeLevel: Number(value) }
+                  })}
+                  data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(grade => ({
+                    value: grade.toString(),
+                    label: `Grade ${grade}`
+                  }))}
+                />
+              </Grid.Col>
+
+              <Grid.Col span={12}>
+                <Select
+                  label="Environment Type"
+                  value={newSession.content?.environmentType}
+                  onChange={(value) => setNewSession({
+                    ...newSession,
+                    content: { ...newSession.content!, environmentType: value || '' }
+                  })}
+                  data={[
+                    { value: 'classroom', label: 'Classroom' },
+                    { value: 'laboratory', label: 'Laboratory' },
+                    { value: 'outdoor', label: 'Outdoor' },
+                    { value: 'space_station', label: 'Space Station' },
+                    { value: 'underwater', label: 'Underwater' },
+                    { value: 'historical', label: 'Historical' }
+                  ]}
+                />
+              </Grid.Col>
+
+              <Grid.Col span={12}>
+                <Group align="center">
+                  <Text size="sm">Include Quiz</Text>
+                  <Switch
+                    checked={newSession.content?.hasQuiz}
+                    onChange={(event) => setNewSession({
+                      ...newSession,
+                      content: { ...newSession.content!, hasQuiz: event.currentTarget.checked }
+                    })}
                   />
-                  <TextField
-                    fullWidth
-                    label="Description (Optional)"
-                    multiline
-                    rows={3}
-                    value={newSession.description}
-                    onChange={(e) => setNewSession({ ...newSession, description: e.target.value })}
-                    sx={{ mb: 2 }}
+                </Group>
+              </Grid.Col>
+            </Grid>
+          </Stepper.Step>
+
+          <Stepper.Step label="Session Settings">
+            <Stack gap="md" mt="md">
+              <Box>
+                <Text size="sm" mb="sm">Access Type</Text>
+                <Radio.Group
+                  value={newSession.settings?.accessType}
+                  onChange={(value) => setNewSession({
+                    ...newSession,
+                    settings: { ...newSession.settings!, accessType: value as any }
+                  })}
+                >
+                  <Group>
+                    <Radio value="public" label="Public" />
+                    <Radio value="private" label="Private" />
+                    <Radio value="invite-only" label="Invite Only" />
+                  </Group>
+                </Radio.Group>
+              </Box>
+
+              {newSession.settings?.accessType === 'private' && (
+                <TextInput
+                  label="Access Code"
+                  value={newSession.settings?.accessCode}
+                  onChange={(event) => setNewSession({
+                    ...newSession,
+                    settings: { ...newSession.settings!, accessCode: event.currentTarget.value }
+                  })}
+                  rightSection={
+                    <Button size="xs" onClick={generateAccessCode}>
+                      Generate
+                    </Button>
+                  }
+                />
+              )}
+
+              <Grid gutter="md">
+                <Grid.Col span={6}>
+                  <Text size="sm" mb="sm">Max Players: {newSession.settings?.maxPlayers}</Text>
+                  <Slider
+                    value={newSession.settings?.maxPlayers}
+                    onChange={(value) => setNewSession({
+                      ...newSession,
+                      settings: { ...newSession.settings!, maxPlayers: value }
+                    })}
+                    min={1}
+                    max={50}
+                    step={5}
+                    marks
                   />
-                  
-                  <Typography variant="subtitle2" gutterBottom>
-                    Quick Templates
-                  </Typography>
-                  <Stack direction="row" spacing={1}>
-                    {SESSION_TEMPLATES.map((template) => (
-                      <Chip
-                        key={template.id}
-                        label={template.name}
-                        onClick={(e: React.MouseEvent) => () => handleApplyTemplate(template)}
-                        clickable
-                        color={selectedTemplateId === template.id ? 'primary' : 'default'}
-                        variant={selectedTemplateId === template.id ? 'filled' : 'outlined'}
-                      />
-                    ))}
-                  </Stack>
-                </Box>
-              </StepContent>
-            </Step>
+                </Grid.Col>
 
-            <Step>
-              <StepLabel>Content Settings</StepLabel>
-              <StepContent>
-                <Grid container spacing={2} sx={{ mt: 1 }}>
-                  <Grid item xs={6}>
-                    <FormControl fullWidth>
-                      <InputLabel>Subject</InputLabel>
-                      <Select
-                        value={newSession.content?.subject}
-                        onChange={(e) => setNewSession({
-                          ...newSession,
-                          content: { ...newSession.content!, subject: e.target.value }
-                        })}
-                      >
-                        <MenuItem value="Mathematics">Mathematics</MenuItem>
-                        <MenuItem value="Science">Science</MenuItem>
-                        <MenuItem value="English">English</MenuItem>
-                        <MenuItem value="History">History</MenuItem>
-                        <MenuItem value="Geography">Geography</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  
-                  <Grid item xs={6}>
-                    <FormControl fullWidth>
-                      <InputLabel>Grade Level</InputLabel>
-                      <Select
-                        value={newSession.content?.gradeLevel}
-                        onChange={(e) => setNewSession({
-                          ...newSession,
-                          content: { ...newSession.content!, gradeLevel: Number(e.target.value) }
-                        })}
-                      >
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(grade => (
-                          <MenuItem key={grade} value={grade}>Grade {grade}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  
-                  <Grid item xs={12}>
-                    <FormControl fullWidth>
-                      <InputLabel>Environment Type</InputLabel>
-                      <Select
-                        value={newSession.content?.environmentType}
-                        onChange={(e) => setNewSession({
-                          ...newSession,
-                          content: { ...newSession.content!, environmentType: e.target.value }
-                        })}
-                      >
-                        <MenuItem value="classroom">Classroom</MenuItem>
-                        <MenuItem value="laboratory">Laboratory</MenuItem>
-                        <MenuItem value="outdoor">Outdoor</MenuItem>
-                        <MenuItem value="space_station">Space Station</MenuItem>
-                        <MenuItem value="underwater">Underwater</MenuItem>
-                        <MenuItem value="historical">Historical</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={newSession.content?.hasQuiz}
-                          onChange={(e) => setNewSession({
-                            ...newSession,
-                            content: { ...newSession.content!, hasQuiz: e.target.checked }
-                          })}
-                        />
-                      }
-                      label="Include Quiz"
-                    />
-                  </Grid>
-                </Grid>
-              </StepContent>
-            </Step>
-
-            <Step>
-              <StepLabel>Session Settings</StepLabel>
-              <StepContent>
-                <Grid container spacing={2} sx={{ mt: 1 }}>
-                  <Grid item xs={12}>
-                    <FormControl component="fieldset">
-                      <FormLabel>Access Type</FormLabel>
-                      <RadioGroup
-                        row
-                        value={newSession.settings?.accessType}
-                        onChange={(e) => setNewSession({
-                          ...newSession,
-                          settings: { ...newSession.settings!, accessType: e.target.value as any }
-                        })}
-                      >
-                        <FormControlLabel value="public" control={<Radio />} label="Public" />
-                        <FormControlLabel value="private" control={<Radio />} label="Private" />
-                        <FormControlLabel value="invite-only" control={<Radio />} label="Invite Only" />
-                      </RadioGroup>
-                    </FormControl>
-                  </Grid>
-
-                  {newSession.settings?.accessType === 'private' && (
-                    <Grid item xs={12}>
-                      <TextField
-                        label="Access Code"
-                        value={newSession.settings?.accessCode}
-                        onChange={(e) => setNewSession({
-                          ...newSession,
-                          settings: { ...newSession.settings!, accessCode: e.target.value }
-                        })}
-                        InputProps={{
-                          endAdornment: (
-                            <Button size="small" onClick={(e: React.MouseEvent) => generateAccessCode}>
-                              Generate
-                            </Button>
-                          )
-                        }}
-                      />
-                    </Grid>
-                  )}
-
-                  <Grid item xs={6}>
-                    <Typography gutterBottom>Max Players: {newSession.settings?.maxPlayers}</Typography>
-                    <Slider
-                      value={newSession.settings?.maxPlayers}
-                      onChange={(e, value) => setNewSession({
-                        ...newSession,
-                        settings: { ...newSession.settings!, maxPlayers: value as number }
-                      })}
-                      min={1}
-                      max={50}
-                      marks
-                      step={5}
-                    />
-                  </Grid>
-
-                  <Grid item xs={6}>
-                    <Typography gutterBottom>Time Limit (minutes): {newSession.settings?.timeLimit || 'None'}</Typography>
-                    <Slider
-                      value={newSession.settings?.timeLimit || 0}
-                      onChange={(e, value) => setNewSession({
-                        ...newSession,
-                        settings: { ...newSession.settings!, timeLimit: value as number || undefined }
-                      })}
-                      min={0}
-                      max={120}
-                      marks
-                      step={15}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <FormGroup>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={newSession.settings?.allowLateJoin}
-                            onChange={(e) => setNewSession({
-                              ...newSession,
-                              settings: { ...newSession.settings!, allowLateJoin: e.target.checked }
-                            })}
-                          />
-                        }
-                        label="Allow Late Join"
-                      />
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={newSession.settings?.recordSession}
-                            onChange={(e) => setNewSession({
-                              ...newSession,
-                              settings: { ...newSession.settings!, recordSession: e.target.checked }
-                            })}
-                          />
-                        }
-                        label="Record Session"
-                      />
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={newSession.settings?.enableChat}
-                            onChange={(e) => setNewSession({
-                              ...newSession,
-                              settings: { ...newSession.settings!, enableChat: e.target.checked }
-                            })}
-                          />
-                        }
-                        label="Enable Chat"
-                      />
-                    </FormGroup>
-                  </Grid>
-                </Grid>
-              </StepContent>
-            </Step>
-
-            <Step>
-              <StepLabel optional={<Typography variant="caption">Optional</Typography>}>
-                Invite Students
-              </StepLabel>
-              <StepContent>
-                <Box sx={{ mt: 2 }}>
-                  <Autocomplete
-                    multiple
-                    options={['student1', 'student2', 'student3']} // Would be fetched from API
-                    value={selectedStudents}
-                    onChange={(e, value) => setSelectedStudents(value)}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Search students..."
-                        placeholder="Type to search"
-                      />
-                    )}
+                <Grid.Col span={6}>
+                  <Text size="sm" mb="sm">Time Limit (minutes): {newSession.settings?.timeLimit || 'None'}</Text>
+                  <Slider
+                    value={newSession.settings?.timeLimit || 0}
+                    onChange={(value) => setNewSession({
+                      ...newSession,
+                      settings: { ...newSession.settings!, timeLimit: value || undefined }
+                    })}
+                    min={0}
+                    max={120}
+                    step={15}
+                    marks
                   />
-                  
-                  <Alert severity="info" sx={{ mt: 2 }}>
-                    <AlertTitle>Note</AlertTitle>
-                    You can also invite students after creating the session
-                  </Alert>
-                </Box>
-              </StepContent>
-            </Step>
-          </Stepper>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={(e: React.MouseEvent) => () => {
+                </Grid.Col>
+              </Grid>
+
+              <Stack gap="xs">
+                <Checkbox
+                  label="Allow Late Join"
+                  checked={newSession.settings?.allowLateJoin}
+                  onChange={(event) => setNewSession({
+                    ...newSession,
+                    settings: { ...newSession.settings!, allowLateJoin: event.currentTarget.checked }
+                  })}
+                />
+                <Checkbox
+                  label="Record Session"
+                  checked={newSession.settings?.recordSession}
+                  onChange={(event) => setNewSession({
+                    ...newSession,
+                    settings: { ...newSession.settings!, recordSession: event.currentTarget.checked }
+                  })}
+                />
+                <Checkbox
+                  label="Enable Chat"
+                  checked={newSession.settings?.enableChat}
+                  onChange={(event) => setNewSession({
+                    ...newSession,
+                    settings: { ...newSession.settings!, enableChat: event.currentTarget.checked }
+                  })}
+                />
+              </Stack>
+            </Stack>
+          </Stepper.Step>
+
+          <Stepper.Step label="Invite Students" description="Optional">
+            <Stack gap="md" mt="md">
+              <MultiSelect
+                label="Search students..."
+                placeholder="Type to search"
+                data={['student1', 'student2', 'student3']} // Would be fetched from API
+                value={selectedStudents}
+                onChange={setSelectedStudents}
+                searchable
+              />
+
+              <Alert color="blue">
+                <Text size="sm" fw={600}>Note</Text>
+                <Text size="sm">You can also invite students after creating the session</Text>
+              </Alert>
+            </Stack>
+          </Stepper.Step>
+        </Stepper>
+
+        <Group justify="flex-end" mt="lg">
+          <Button variant="outline" onClick={() => {
             setCreateDialogOpen(false);
             resetNewSession();
           }}>
             Cancel
           </Button>
           {activeStep > 0 && (
-            <Button onClick={(e: React.MouseEvent) => () => setActiveStep(prev => prev - 1)}>
+            <Button variant="outline" onClick={() => setActiveStep(prev => prev - 1)}>
               Back
             </Button>
           )}
-          <Button
-            variant="contained"
-            onClick={(e: React.MouseEvent) => handleCreateSession}
-          >
+          <Button onClick={handleCreateSession}>
             {activeStep < 3 ? 'Next' : 'Create Session'}
           </Button>
-        </DialogActions>
-      </Dialog>
+        </Group>
+      </Modal>
 
       {/* Empty State */}
       {sessions.length === 0 && (
         <Box
-          sx={{
+          style={{
             flex: 1,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexDirection: 'column',
-            gap: 2
+            gap: '16px'
           }}
         >
-          <Games sx={{ fontSize: 64, color: 'text.disabled' }} />
-          <Typography variant="h6" color="text.secondary">
+          <IconDeviceGamepad2 size={64} color={theme.colors.gray[4]} />
+          <Text size="lg" c="dimmed">
             No sessions yet
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+          </Text>
+          <Text size="sm" c="dimmed">
             Create your first educational game session
-          </Typography>
+          </Text>
           <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
+            leftSection={<IconPlus size={16} />}
+            onClick={() => setCreateDialogOpen(true)}
           >
             Create Session
           </Button>

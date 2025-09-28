@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/swarm/swarm_controller.py
-# hypothesis_version: 6.139.2
-
-[0.0, 0.1, 0.7, 1.0, 30.0, 120, 300, 'Swarm paused', 'Swarm resumed', 'active', 'active_tasks', 'completed_tasks', 'config', 'curriculum_standards', 'error', 'execution_time', 'initializing', 'metrics', 'new_worker_count', 'paused', 'primary_subject', 'priority', 'resources', 'round_robin', 'scaling', 'shutting_down', 'state', 'subject', 'swarm_initialized', 'swarm_paused', 'swarm_resumed', 'swarm_scaled', 'swarm_shutdown', 'swarm_shutting_down', 'target_grade_level', 'task_completed', 'task_id', 'task_submitted', 'task_type', 'tasks', 'workers']

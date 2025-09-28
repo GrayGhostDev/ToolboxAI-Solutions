@@ -2,14 +2,7 @@
 Assessment schema definitions
 """
 
-from ..models.schemas import (
-    Quiz,
-    QuizQuestion,
-    QuizOption,
-    QuizResponse,
-    QuizType,
-    DifficultyLevel
-)
+from ..models.schemas import Quiz, QuizQuestion, QuizOption, QuizResponse, QuizType, DifficultyLevel
 
 # Assessment-related schemas
 AssessmentRequest = Quiz
@@ -31,5 +24,5 @@ __all__ = [
     "Question",
     "Option",
     "QuestionType",
-    "Difficulty"
+    "Difficulty",
 ]

@@ -1,41 +1,27 @@
 /**
  * RobloxAIChat Component
- * 
+ *
  * Interactive AI chat interface for guiding users through Roblox world creation
  * Provides real-time communication with AI agents to collect parameters and
  * generate personalized educational environments based on templates.
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
-import IconButton from '@mui/material/IconButton';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import Tooltip from '@mui/material/Tooltip';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
+import { Box, Paper, Text, TextInput, Button, Badge, Stack, Avatar, ActionIcon, Loader, Alert, Tooltip, Group, useMantineTheme, Textarea, Progress } from '@mantine/core';
 import {
-  Send,
-  AutoAwesome,
-  School,
-  Terrain,
-  Quiz,
-  Code,
-  Mic,
-  MicOff,
-  Refresh,
-  Clear,
-  Download,
-  Share
-} from '@mui/icons-material';
+  IconSend,
+  IconSparkles,
+  IconSchool,
+  IconMountain,
+  IconQuestionMark,
+  IconCode,
+  IconMicrophone,
+  IconMicrophoneOff,
+  IconRefresh,
+  IconX,
+  IconDownload,
+  IconShare
+} from '@tabler/icons-react';
 import { useAppSelector, useAppDispatch } from '../../store';
 import { pusherService } from '../../services/pusher';
 import { api } from '../../services/api';
@@ -85,32 +71,32 @@ interface RobloxSpec {
 
 const SUGGESTED_PROMPTS = [
   {
-    icon: <School />,
+    icon: <IconSchool />,
     text: "Create a math classroom for grade 5 students",
     category: "education"
   },
   {
-    icon: <Terrain />,
+    icon: <IconMountain />,
     text: "Build a space station for science experiments",
     category: "environment"
   },
   {
-    icon: <Quiz />,
+    icon: <IconQuestionMark />,
     text: "Design a history quiz adventure in ancient Rome",
     category: "quiz"
   },
   {
-    icon: <Code />,
+    icon: <IconCode />,
     text: "Make an interactive coding playground",
     category: "programming"
   }
 ];
 
 export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector(state => state.user);
-  
+
   // State
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -125,12 +111,12 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
   const [generatedEnvironment, setGeneratedEnvironment] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
-  
+
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const streamingMessageRef = useRef<string>('');
-  
+
   // COMPLETELY DISABLED AUTO-SCROLL TO PREVENT PAGE JUMPING
   // const scrollToBottom = useCallback(() => {
   //   const messagesContainer = document.getElementById('chat-messages-container');
@@ -142,7 +128,7 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
   // useEffect(() => {
   //   setTimeout(scrollToBottom, 100);
   // }, [messages, scrollToBottom]);
-  
+
   // Initialize WebSocket connection and subscriptions
   useEffect(() => {
     const initializeChat = async () => {
@@ -150,19 +136,19 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
         if (!pusherService.isConnected()) {
           await pusherService.connect();
         }
-        
+
         // Subscribe to agent chat events
         const subscriptionId = pusherService.subscribe(
           `agent-chat-${conversationId}`,
           handleWebSocketMessage
         );
-        
+
         // Add welcome message
         addMessage({
           type: 'ai',
           content: "Hello! I'm your AI assistant for creating Roblox educational environments. I'll help you design the perfect world for your students. What kind of learning experience would you like to create?",
         });
-        
+
         return () => {
           pusherService.unsubscribe(subscriptionId);
         };
@@ -171,51 +157,51 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
         setError('Failed to connect to AI assistant. Please refresh the page.');
       }
     };
-    
+
     initializeChat();
   }, [conversationId]);
-  
+
   // Handle WebSocket messages
   const handleWebSocketMessage = useCallback((message: any) => {
     const { type, payload } = message;
-    
+
     switch (type) {
       case WebSocketMessageType.AGENT_CHAT_TOKEN:
         handleStreamingToken(payload as AgentChatTokenMessage);
         break;
-        
+
       case WebSocketMessageType.AGENT_CHAT_COMPLETE:
         handleStreamingComplete(payload as AgentChatCompleteMessage);
         break;
-        
+
       case WebSocketMessageType.AGENT_FOLLOWUP:
         handleFollowupQuestions(payload as AgentFollowupMessage);
         break;
-        
+
       case WebSocketMessageType.ROBLOX_ENV_PROGRESS:
         handleGenerationProgress(payload as RobloxEnvProgressMessage);
         break;
-        
+
       case WebSocketMessageType.ROBLOX_ENV_READY:
         handleEnvironmentReady(payload as RobloxEnvReadyMessage);
         break;
-        
+
       case WebSocketMessageType.ROBLOX_ENV_ERROR:
         handleGenerationError(payload as RobloxEnvErrorMessage);
         break;
     }
   }, []);
-  
+
   // Handle streaming tokens
   const handleStreamingToken = useCallback((payload: AgentChatTokenMessage) => {
     if (payload.conversationId !== conversationId) return;
-    
+
     streamingMessageRef.current += payload.token;
-    
+
     setMessages(prev => {
       const updated = [...prev];
       const lastMessage = updated[updated.length - 1];
-      
+
       if (lastMessage && lastMessage.isStreaming) {
         lastMessage.content = streamingMessageRef.current;
       } else {
@@ -227,38 +213,38 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
           isStreaming: true
         });
       }
-      
+
       return updated;
     });
   }, [conversationId]);
-  
+
   // Handle streaming complete
   const handleStreamingComplete = useCallback((payload: AgentChatCompleteMessage) => {
     if (payload.conversationId !== conversationId) return;
-    
+
     setMessages(prev => {
       const updated = [...prev];
       const lastMessage = updated[updated.length - 1];
-      
+
       if (lastMessage && lastMessage.isStreaming) {
         lastMessage.content = payload.content;
         lastMessage.isStreaming = false;
       }
-      
+
       return updated;
     });
-    
+
     streamingMessageRef.current = '';
     setIsStreaming(false);
     setIsLoading(false);
   }, [conversationId]);
-  
+
   // Handle followup questions
   const handleFollowupQuestions = useCallback((payload: AgentFollowupMessage) => {
     if (payload.conversationId !== conversationId) return;
-    
+
     setMissingFields(payload.missingFields);
-    
+
     if (payload.questions && payload.questions.length > 0) {
       addMessage({
         type: 'ai',
@@ -270,12 +256,12 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
       });
     }
   }, [conversationId]);
-  
+
   // Handle generation progress
   const handleGenerationProgress = useCallback((payload: RobloxEnvProgressMessage) => {
     setGenerationProgress(payload.percentage);
     setGenerationStage(payload.stage);
-    
+
     if (payload.message) {
       addMessage({
         type: 'system',
@@ -287,29 +273,29 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
       });
     }
   }, []);
-  
+
   // Handle environment ready
   const handleEnvironmentReady = useCallback((payload: RobloxEnvReadyMessage) => {
     setIsGenerating(false);
     setGeneratedEnvironment(payload);
-    
+
     addMessage({
       type: 'ai',
       content: `🎉 Your Roblox environment is ready! You can now preview, download, or share your creation.`,
     });
   }, []);
-  
+
   // Handle generation error
   const handleGenerationError = useCallback((payload: RobloxEnvErrorMessage) => {
     setIsGenerating(false);
     setError(payload.error);
-    
+
     addMessage({
       type: 'system',
       content: `❌ Generation failed: ${payload.error}`,
     });
   }, []);
-  
+
   // Add message helper
   const addMessage = useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
     setMessages(prev => [...prev, {
@@ -318,22 +304,22 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
       timestamp: new Date()
     }]);
   }, []);
-  
+
   // Send message
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
-    
+
     // Add user message
     addMessage({
       type: 'user',
       content: content.trim()
     });
-    
+
     setInputValue('');
     setIsLoading(true);
     setIsStreaming(true);
     streamingMessageRef.current = '';
-    
+
     try {
       // Send to AI agent via WebSocket
       await pusherService.send(WebSocketMessageType.AGENT_CHAT_USER, {
@@ -348,7 +334,7 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
       } as AgentChatUserMessage, {
         channel: `agent-chat-${conversationId}`
       });
-      
+
     } catch (error) {
       console.error('Failed to send message:', error);
       setError('Failed to send message. Please try again.');
@@ -356,19 +342,19 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
       setIsStreaming(false);
     }
   }, [conversationId, currentSpec, missingFields, currentUser, isLoading, addMessage]);
-  
+
   // Handle input submit
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     sendMessage(inputValue);
   }, [inputValue, sendMessage]);
-  
+
   // Handle suggested prompt
   const handleSuggestedPrompt = useCallback((prompt: string) => {
     setInputValue(prompt);
     sendMessage(prompt);
   }, [sendMessage]);
-  
+
   // Generate environment
   const generateEnvironment = useCallback(async () => {
     if (missingFields.length > 0) {
@@ -378,11 +364,11 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
       });
       return;
     }
-    
+
     setIsGenerating(true);
     setGenerationProgress(0);
     setGenerationStage('initializing');
-    
+
     try {
       await pusherService.send(WebSocketMessageType.ROBLOX_AGENT_REQUEST, {
         conversationId,
@@ -391,19 +377,19 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
       } as RobloxAgentRequest, {
         channel: `agent-chat-${conversationId}`
       });
-      
+
       addMessage({
         type: 'system',
         content: '🚀 Starting environment generation...'
       });
-      
+
     } catch (error) {
       console.error('Failed to start generation:', error);
       setError('Failed to start environment generation.');
       setIsGenerating(false);
     }
   }, [conversationId, currentSpec, missingFields, addMessage]);
-  
+
   // Clear conversation
   const clearConversation = useCallback(() => {
     setMessages([]);
@@ -411,13 +397,13 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
     setMissingFields([]);
     setGeneratedEnvironment(null);
     setError(null);
-    
+
     addMessage({
       type: 'ai',
       content: "Hello! I'm ready to help you create a new Roblox educational environment. What would you like to build?"
     });
   }, [addMessage]);
-  
+
   // Voice recording (placeholder)
   const toggleRecording = useCallback(() => {
     setIsRecording(!isRecording);
@@ -425,262 +411,256 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
   }, [isRecording]);
 
   return (
-    <Paper 
-      elevation={3} 
-      sx={{ 
-        height: '600px', 
-        display: 'flex', 
+    <Paper
+      shadow="md"
+      style={{
+        height: '600px',
+        display: 'flex',
         flexDirection: 'column',
-        bgcolor: theme.palette.background.paper,
-        border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
+        backgroundColor: theme.colors.gray[0],
+        border: `1px solid ${theme.colors.blue[2]}`
       }}
     >
       {/* Header */}
-      <Box sx={{ 
-        p: 2, 
-        borderBottom: `1px solid ${theme.palette.divider}`,
-        bgcolor: alpha(theme.palette.primary.main, 0.05)
+      <Box style={{
+        padding: theme.spacing.md,
+        borderBottom: `1px solid ${theme.colors.gray[3]}`,
+        backgroundColor: theme.colors.blue[0]
       }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-              <AutoAwesome />
+        <Group position="apart" align="center">
+          <Group spacing={theme.spacing.md}>
+            <Avatar color="blue">
+              <IconSparkles />
             </Avatar>
-            <Box>
-              <Typography variant="h6" fontWeight="bold">
+            <div>
+              <Text weight={700} size="lg">
                 Roblox AI Assistant
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
+              </Text>
+              <Text size="xs" color="dimmed">
                 {isStreaming ? 'AI is typing...' : isGenerating ? `Generating (${generationProgress}%)` : 'Ready to help'}
-              </Typography>
-            </Box>
-          </Stack>
-          
-          <Stack direction="row" spacing={1}>
-            <Tooltip title="Clear conversation">
-              <IconButton onClick={(e: React.MouseEvent) => clearConversation} size="small">
-                <Clear />
-              </IconButton>
+              </Text>
+            </div>
+          </Group>
+
+          <Group spacing={theme.spacing.xs}>
+            <Tooltip label="Clear conversation">
+              <ActionIcon onClick={clearConversation} size="sm">
+                <IconX />
+              </ActionIcon>
             </Tooltip>
-            <Tooltip title="Refresh connection">
-              <IconButton onClick={(e: React.MouseEvent) => () => window.location.reload()} size="small">
-                <Refresh />
-              </IconButton>
+            <Tooltip label="Refresh connection">
+              <ActionIcon onClick={() => window.location.reload()} size="sm">
+                <IconRefresh />
+              </ActionIcon>
             </Tooltip>
-          </Stack>
-        </Stack>
+          </Group>
+        </Group>
       </Box>
-      
+
       {/* Error Alert */}
       {error && (
-        <Alert 
-          severity="error" 
+        <Alert
+          color="red"
           onClose={() => setError(null)}
-          sx={{ m: 1 }}
+          style={{ margin: theme.spacing.xs }}
+          withCloseButton
         >
           {error}
         </Alert>
       )}
-      
+
       {/* Messages */}
       <Box
         id="chat-messages-container"
-        sx={{
+        style={{
           flex: 1,
           overflow: 'auto',
-          p: 1,
+          padding: theme.spacing.xs,
           display: 'flex',
           flexDirection: 'column',
-          position: 'relative',  // Ensure relative positioning
-          '&::-webkit-scrollbar': {
-            width: '8px',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: 'rgba(0,0,0,0.1)',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'rgba(0,188,212,0.5)',
-            borderRadius: '4px',
-          },
-        }}>
+          position: 'relative'
+        }}
+      >
         {messages.length === 0 && (
-          <Box sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="h6" gutterBottom>
+          <Box style={{ padding: theme.spacing.lg, textAlign: 'center' }}>
+            <Text size="xl" weight={600} mb="md">
               Welcome to Roblox AI Assistant! 🎮
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
+            </Text>
+            <Text size="sm" color="dimmed" mb="md">
               I'll help you create amazing educational Roblox environments. Try one of these suggestions:
-            </Typography>
-            
-            <Stack spacing={1} sx={{ mt: 2 }}>
+            </Text>
+
+            <Stack spacing={theme.spacing.xs} mt="md">
               {SUGGESTED_PROMPTS.map((prompt, index) => (
-                <Chip
+                <Badge
                   key={index}
-                  icon={prompt.icon}
-                  label={prompt.text}
-                  onClick={(e: React.MouseEvent) => () => handleSuggestedPrompt(prompt.text)}
-                  variant="outlined"
-                  sx={{ 
+                  leftSection={prompt.icon}
+                  variant="outline"
+                  size="lg"
+                  style={{
+                    cursor: 'pointer',
                     justifyContent: 'flex-start',
-                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) }
+                    padding: theme.spacing.sm,
+                    minHeight: '40px',
+                    width: '100%'
                   }}
-                />
+                  onClick={() => handleSuggestedPrompt(prompt.text)}
+                >
+                  {prompt.text}
+                </Badge>
               ))}
             </Stack>
           </Box>
         )}
-        
+
         {messages.map((message) => (
-          <Box key={message.id} sx={{ mb: 2 }}>
-              <Stack 
-                direction="row" 
-                spacing={1}
-                justifyContent={message.type === 'user' ? 'flex-end' : 'flex-start'}
-              >
-                {message.type !== 'user' && (
-                  <Avatar 
-                    sx={{ 
-                      width: 32, 
-                      height: 32,
-                      bgcolor: message.type === 'ai' ? theme.palette.primary.main : theme.palette.grey[500]
-                    }}
-                  >
-                    {message.type === 'ai' ? <AutoAwesome /> : '⚙️'}
-                  </Avatar>
-                )}
-                
-                <Paper
-                  elevation={1}
-                  sx={{
-                    p: 2,
-                    maxWidth: '70%',
-                    bgcolor: message.type === 'user' 
-                      ? theme.palette.primary.main 
-                      : message.type === 'system'
-                      ? alpha(theme.palette.warning.main, 0.1)
-                      : theme.palette.background.default,
-                    color: message.type === 'user' ? theme.palette.primary.contrastText : 'inherit',
-                    borderRadius: 2
-                  }}
+          <Box key={message.id} mb="md">
+            <Group
+              spacing={theme.spacing.xs}
+              position={message.type === 'user' ? 'right' : 'left'}
+            >
+              {message.type !== 'user' && (
+                <Avatar
+                  size={32}
+                  color={message.type === 'ai' ? 'blue' : 'gray'}
                 >
-                  <Typography 
-                    variant="body2" 
-                    sx={{ whiteSpace: 'pre-wrap' }}
-                  >
-                    {message.content}
-                    {message.isStreaming && (
-                      <Box component="span" sx={{ ml: 0.5 }}>
-                        <CircularProgress size={12} />
-                      </Box>
-                    )}
-                  </Typography>
-                  
-                  {message.metadata?.progress !== undefined && (
-                    <Box sx={{ mt: 1 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        {message.metadata.stage}: {message.metadata.progress}%
-                      </Typography>
-                    </Box>
+                  {message.type === 'ai' ? <IconSparkles /> : '⚙️'}
+                </Avatar>
+              )}
+
+              <Paper
+                shadow="xs"
+                style={{
+                  padding: theme.spacing.md,
+                  maxWidth: '70%',
+                  backgroundColor: message.type === 'user'
+                    ? theme.colors.blue[6]
+                    : message.type === 'system'
+                    ? theme.colors.yellow[1]
+                    : theme.colors.gray[0],
+                  color: message.type === 'user' ? 'white' : 'inherit',
+                  borderRadius: theme.radius.md
+                }}
+              >
+                <Text
+                  size="sm"
+                  style={{ whiteSpace: 'pre-wrap' }}
+                >
+                  {message.content}
+                  {message.isStreaming && (
+                    <span style={{ marginLeft: theme.spacing.xs }}>
+                      <Loader size={12} />
+                    </span>
                   )}
-                </Paper>
-                
-                {message.type === 'user' && (
-                  <Avatar sx={{ width: 32, height: 32 }}>
-                    {currentUser?.firstName?.[0] || 'U'}
-                  </Avatar>
+                </Text>
+
+                {message.metadata?.progress !== undefined && (
+                  <Box mt="xs">
+                    <Text size="xs" color="dimmed">
+                      {message.metadata.stage}: {message.metadata.progress}%
+                    </Text>
+                  </Box>
                 )}
-              </Stack>
-            </Box>
+              </Paper>
+
+              {message.type === 'user' && (
+                <Avatar size={32}>
+                  {currentUser?.firstName?.[0] || 'U'}
+                </Avatar>
+              )}
+            </Group>
+          </Box>
         ))}
-        
+
         {/* Generation Progress */}
         {isGenerating && (
-          <Box sx={{ p: 2, textAlign: 'center' }}>
-            <CircularProgress variant="determinate" value={generationProgress} />
-            <Typography variant="body2" sx={{ mt: 1 }}>
+          <Box style={{ padding: theme.spacing.md, textAlign: 'center' }}>
+            <Progress value={generationProgress} animated />
+            <Text size="sm" mt="xs">
               {generationStage}: {generationProgress}%
-            </Typography>
+            </Text>
           </Box>
         )}
-        
+
         {/* Generated Environment Actions */}
         {generatedEnvironment && (
-          <Box sx={{ p: 2, bgcolor: alpha(theme.palette.success.main, 0.1), borderRadius: 1 }}>
-            <Typography variant="subtitle2" gutterBottom>
+          <Box style={{
+            padding: theme.spacing.md,
+            backgroundColor: theme.colors.green[1],
+            borderRadius: theme.radius.sm
+          }}>
+            <Text weight={600} mb="xs">
               🎉 Environment Ready!
-            </Typography>
-            <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+            </Text>
+            <Group spacing={theme.spacing.xs} mt="xs">
               <Button
-                size="small"
-                startIcon={<Download />}
-                onClick={(e: React.MouseEvent) => () => window.open(generatedEnvironment.downloadUrl)}
+                size="xs"
+                leftIcon={<IconDownload />}
+                onClick={() => window.open(generatedEnvironment.downloadUrl)}
               >
                 Download
               </Button>
               <Button
-                size="small"
-                startIcon={<Share />}
-                onClick={(e: React.MouseEvent) => () => navigator.share?.({ url: generatedEnvironment.previewUrl })}
+                size="xs"
+                leftIcon={<IconShare />}
+                onClick={() => navigator.share?.({ url: generatedEnvironment.previewUrl })}
               >
                 Share
               </Button>
-            </Stack>
+            </Group>
           </Box>
         )}
-        
+
         {/* Scroll anchor removed to prevent page jumping */}
       </Box>
-      
+
       {/* Input */}
-      <Box sx={{ 
-        p: 2, 
-        borderTop: `1px solid ${theme.palette.divider}`,
-        bgcolor: alpha(theme.palette.background.paper, 0.8)
+      <Box style={{
+        padding: theme.spacing.md,
+        borderTop: `1px solid ${theme.colors.gray[3]}`,
+        backgroundColor: theme.colors.gray[0]
       }}>
         <form onSubmit={handleSubmit}>
-          <Stack direction="row" spacing={1} alignItems="flex-end">
-            <TextField
+          <Group spacing={theme.spacing.xs} align="end">
+            <Textarea
               ref={inputRef}
-              fullWidth
-              multiline
+              style={{ flex: 1 }}
               maxRows={3}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Describe the Roblox environment you'd like to create..."
               disabled={isLoading}
-              variant="outlined"
-              size="small"
+              size="sm"
             />
-            
-            <Tooltip title={isRecording ? "Stop recording" : "Voice input"}>
-              <IconButton 
-                onClick={(e: React.MouseEvent) => toggleRecording}
-                color={isRecording ? "error" : "default"}
+
+            <Tooltip label={isRecording ? "Stop recording" : "Voice input"}>
+              <ActionIcon
+                onClick={toggleRecording}
+                color={isRecording ? "red" : "gray"}
                 disabled={isLoading}
               >
-                {isRecording ? <MicOff /> : <Mic />}
-              </IconButton>
+                {isRecording ? <IconMicrophoneOff /> : <IconMicrophone />}
+              </ActionIcon>
             </Tooltip>
-            
+
             <Button
               type="submit"
-              variant="contained"
               disabled={!inputValue.trim() || isLoading}
-              endIcon={<Send />}
+              rightIcon={<IconSend />}
             >
               Send
             </Button>
-          </Stack>
+          </Group>
         </form>
-        
+
         {missingFields.length === 0 && Object.keys(currentSpec).length > 0 && (
-          <Box sx={{ mt: 1 }}>
+          <Box mt="xs">
             <Button
-              variant="outlined"
-              color="success"
-              onClick={(e: React.MouseEvent) => generateEnvironment}
+              variant="outline"
+              color="green"
+              onClick={generateEnvironment}
               disabled={isGenerating}
-              startIcon={<AutoAwesome />}
+              leftIcon={<IconSparkles />}
               fullWidth
             >
               Generate Roblox Environment

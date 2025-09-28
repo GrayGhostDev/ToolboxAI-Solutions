@@ -48,17 +48,9 @@ def _register_trust_middleware(app: FastAPI) -> None:
 
         allowed_hosts = ["*"]  # Configure based on environment
         if settings.ENVIRONMENT == "production":
-            allowed_hosts = [
-                "localhost",
-                "127.0.0.1",
-                "*.toolboxai.io",
-                "*.onrender.com"
-            ]
+            allowed_hosts = ["localhost", "127.0.0.1", "*.toolboxai.io", "*.onrender.com"]
 
-        app.add_middleware(
-            TrustedHostMiddleware,
-            allowed_hosts=allowed_hosts
-        )
+        app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
         logger.info("Trusted host middleware registered")
 
     except Exception as e:
@@ -84,21 +76,23 @@ def _register_cors_middleware(app: FastAPI) -> None:
 
         # Configure CORS origins based on environment
         allowed_origins = ["*"]  # Default for development
-        if hasattr(settings, 'ALLOWED_ORIGINS'):
+        if hasattr(settings, "ALLOWED_ORIGINS"):
             allowed_origins = settings.ALLOWED_ORIGINS
         elif settings.ENVIRONMENT == "production":
             allowed_origins = [
                 "https://toolboxai.io",
                 "https://*.toolboxai.io",
-                "https://*.onrender.com"
+                "https://*.onrender.com",
             ]
 
         cors_config = SecureCORSConfig(
             allowed_origins_env=allowed_origins,
-            allowed_methods_env=getattr(settings, 'ALLOWED_METHODS', ["GET", "POST", "PUT", "DELETE", "OPTIONS"]),
-            allowed_headers_env=getattr(settings, 'ALLOWED_HEADERS', ["*"]),
+            allowed_methods_env=getattr(
+                settings, "ALLOWED_METHODS", ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+            ),
+            allowed_headers_env=getattr(settings, "ALLOWED_HEADERS", ["*"]),
             environment=settings.ENVIRONMENT,
-            debug=settings.DEBUG
+            debug=settings.DEBUG,
         )
 
         app.add_middleware(
@@ -115,8 +109,15 @@ def _register_security_middleware(app: FastAPI) -> None:
     """Register security middleware"""
     try:
         from apps.backend.core.security.middleware import SecurityMiddleware
-        from apps.backend.core.security.headers import SecurityHeadersMiddleware, SecurityHeadersConfig
-        from apps.backend.core.rate_limiter import RateLimitConfig, RateLimitStrategy, RateLimitScope
+        from apps.backend.core.security.headers import (
+            SecurityHeadersMiddleware,
+            SecurityHeadersConfig,
+        )
+        from apps.backend.core.rate_limiter import (
+            RateLimitConfig,
+            RateLimitStrategy,
+            RateLimitScope,
+        )
 
         # Security middleware
         app.add_middleware(
@@ -125,8 +126,8 @@ def _register_security_middleware(app: FastAPI) -> None:
                 requests_per_minute=100,
                 burst_size=150,
                 strategy=RateLimitStrategy.SLIDING_WINDOW,
-                scope=RateLimitScope.IP
-            )
+                scope=RateLimitScope.IP,
+            ),
         )
 
         # Security headers middleware
@@ -135,14 +136,14 @@ def _register_security_middleware(app: FastAPI) -> None:
             content_type_nosniff=True,
             x_frame_options="DENY",
             x_content_type_options="nosniff",
-            referrer_policy="strict-origin-when-cross-origin"
+            referrer_policy="strict-origin-when-cross-origin",
         )
 
         app.add_middleware(
             SecurityHeadersMiddleware,
             hsts_max_age=security_headers_config.hsts_max_age,
             csp_policy=security_headers_config.get_csp_policy(),
-            x_frame_options=security_headers_config.x_frame_options
+            x_frame_options=security_headers_config.x_frame_options,
         )
 
         logger.info("Security middleware registered")
@@ -157,12 +158,11 @@ def _register_versioning_middleware(app: FastAPI) -> None:
         from apps.backend.core.versioning import (
             VersionStrategy,
             APIVersionMiddleware,
-            create_version_manager
+            create_version_manager,
         )
 
         version_manager = create_version_manager(
-            default_version="1.0.0",
-            strategy=VersionStrategy.HEADER
+            default_version="1.0.0", strategy=VersionStrategy.HEADER
         )
 
         app.add_middleware(APIVersionMiddleware, version_manager=version_manager)
@@ -187,9 +187,9 @@ def _register_compression_middleware(app: FastAPI) -> None:
                     "text/plain",
                     "text/html",
                     "text/css",
-                    "application/javascript"
-                }
-            )
+                    "application/javascript",
+                },
+            ),
         )
         logger.info("Compression middleware registered")
 
@@ -215,13 +215,13 @@ def _register_resilience_middleware(app: FastAPI) -> None:
         from apps.backend.api.middleware.resilience import (
             ResilienceMiddleware,
             RetryMiddleware,
-            BulkheadMiddleware
+            BulkheadMiddleware,
         )
         from apps.backend.core.rate_limiter import (
             RateLimitMiddleware,
             RateLimitConfig,
             RateLimitStrategy,
-            RateLimitScope
+            RateLimitScope,
         )
 
         # Resilience middleware
@@ -233,33 +233,28 @@ def _register_resilience_middleware(app: FastAPI) -> None:
             max_retries=3,
             retry_delay=1.0,
             exponential_backoff=True,
-            backoff_factor=2.0
+            backoff_factor=2.0,
         )
 
         # Bulkhead middleware
-        app.add_middleware(
-            BulkheadMiddleware,
-            max_concurrent_requests=200,
-            max_queue_size=100
-        )
+        app.add_middleware(BulkheadMiddleware, max_concurrent_requests=200, max_queue_size=100)
 
         # Rate limiting middleware (if Redis is available)
-        if hasattr(settings, 'REDIS_URL') and settings.REDIS_URL:
+        if hasattr(settings, "REDIS_URL") and settings.REDIS_URL:
             try:
                 import redis
+
                 redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
 
                 rate_limit_config = RateLimitConfig(
                     requests_per_minute=120,
                     burst_size=200,
                     strategy=RateLimitStrategy.SLIDING_WINDOW,
-                    scope=RateLimitScope.IP
+                    scope=RateLimitScope.IP,
                 )
 
                 app.add_middleware(
-                    RateLimitMiddleware,
-                    redis_client=redis_client,
-                    config=rate_limit_config
+                    RateLimitMiddleware, redis_client=redis_client, config=rate_limit_config
                 )
                 logger.info("Redis-based rate limiting enabled")
 
@@ -280,8 +275,7 @@ def _register_metrics_middleware(app: FastAPI) -> None:
 
         # Create instrumentator for metrics collection
         instrumentator = Instrumentator(
-            should_group_status_codes=False,
-            excluded_handlers=["/metrics", "/health"]
+            should_group_status_codes=False, excluded_handlers=["/metrics", "/health"]
         )
 
         instrumentator.instrument(app).expose(app, endpoint="/metrics")

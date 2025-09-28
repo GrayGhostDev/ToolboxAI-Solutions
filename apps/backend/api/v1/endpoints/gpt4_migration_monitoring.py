@@ -29,8 +29,10 @@ migration_system = GPT4MigrationSystem()
 
 # Request/Response Models
 
+
 class APIRequestTracking(BaseModel):
     """Model for tracking API requests"""
+
     model: str = Field(..., description="OpenAI model used")
     input_tokens: int = Field(..., ge=0, description="Number of input tokens")
     output_tokens: int = Field(..., ge=0, description="Number of output tokens")
@@ -42,18 +44,21 @@ class APIRequestTracking(BaseModel):
 
 class AlertAcknowledgment(BaseModel):
     """Model for alert acknowledgment"""
+
     alert_id: str = Field(..., description="Alert ID to acknowledge")
     user: str = Field(..., description="User acknowledging the alert")
 
 
 class AlertResolution(BaseModel):
     """Model for alert resolution"""
+
     alert_id: str = Field(..., description="Alert ID to resolve")
     user: str = Field(..., description="User resolving the alert")
 
 
 class BudgetUpdate(BaseModel):
     """Model for budget limit updates"""
+
     period: str = Field(..., description="Budget period (daily, weekly, monthly)")
     limit: float = Field(..., ge=0, description="Budget limit in dollars")
     alert_threshold: float = Field(default=0.8, ge=0, le=1, description="Alert threshold (0-1)")
@@ -61,6 +66,7 @@ class BudgetUpdate(BaseModel):
 
 class PhaseAdvancement(BaseModel):
     """Model for migration phase advancement"""
+
     new_phase: str = Field(..., description="New migration phase")
 
 
@@ -72,10 +78,11 @@ async def get_current_user():
 
 # Endpoints
 
+
 @router.post("/initialize", response_model=Dict[str, Any])
 async def initialize_monitoring(
     phase: str = Query(default="preparation", description="Initial migration phase"),
-    current_user = Depends(get_current_user)
+    current_user=Depends(get_current_user),
 ):
     """Initialize the GPT-4.1 migration monitoring system"""
 
@@ -86,11 +93,15 @@ async def initialize_monitoring(
         result = await migration_system.initialize(migration_phase)
 
         if result["status"] == "success":
-            logger.info(f"Migration monitoring initialized in {phase} phase by {current_user.get('user_id')}")
+            logger.info(
+                f"Migration monitoring initialized in {phase} phase by {current_user.get('user_id')}"
+            )
             return JSONResponse(content=result, status_code=200)
         else:
             logger.error(f"Failed to initialize migration monitoring: {result.get('error')}")
-            raise HTTPException(status_code=500, detail=result.get("error", "Initialization failed"))
+            raise HTTPException(
+                status_code=500, detail=result.get("error", "Initialization failed")
+            )
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid migration phase: {phase}")
@@ -101,8 +112,7 @@ async def initialize_monitoring(
 
 @router.post("/track-request", response_model=Dict[str, Any])
 async def track_api_request(
-    request_data: APIRequestTracking,
-    current_user = Depends(get_current_user)
+    request_data: APIRequestTracking, current_user=Depends(get_current_user)
 ):
     """Track a single OpenAI API request"""
 
@@ -120,7 +130,7 @@ async def track_api_request(
             latency=request_data.latency,
             success=request_data.success,
             category=category,
-            endpoint=request_data.endpoint
+            endpoint=request_data.endpoint,
         )
 
         return result
@@ -146,14 +156,13 @@ async def get_migration_status():
 @router.get("/dashboard/{layout_name}", response_model=Dict[str, Any])
 async def get_dashboard_data(
     layout_name: str = "default",
-    force_refresh: bool = Query(default=False, description="Force refresh cached data")
+    force_refresh: bool = Query(default=False, description="Force refresh cached data"),
 ):
     """Get dashboard data for specified layout"""
 
     try:
         dashboard_data = await migration_system.dashboard.get_dashboard_data(
-            layout_name,
-            force_refresh=force_refresh
+            layout_name, force_refresh=force_refresh
         )
         return dashboard_data
 
@@ -176,9 +185,7 @@ async def get_available_layouts():
 
 
 @router.post("/monitoring-cycle", response_model=Dict[str, Any])
-async def run_monitoring_cycle(
-    current_user = Depends(get_current_user)
-):
+async def run_monitoring_cycle(current_user=Depends(get_current_user)):
     """Run a complete monitoring cycle"""
 
     try:
@@ -192,8 +199,7 @@ async def run_monitoring_cycle(
 
 @router.post("/advance-phase", response_model=Dict[str, Any])
 async def advance_migration_phase(
-    phase_data: PhaseAdvancement,
-    current_user = Depends(get_current_user)
+    phase_data: PhaseAdvancement, current_user=Depends(get_current_user)
 ):
     """Advance to the next migration phase"""
 
@@ -201,11 +207,15 @@ async def advance_migration_phase(
         new_phase = MigrationPhase(phase_data.new_phase.lower())
         result = await migration_system.advance_migration_phase(new_phase)
 
-        logger.info(f"Migration phase advanced to {new_phase.value} by {current_user.get('user_id')}")
+        logger.info(
+            f"Migration phase advanced to {new_phase.value} by {current_user.get('user_id')}"
+        )
         return result
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid migration phase: {phase_data.new_phase}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid migration phase: {phase_data.new_phase}"
+        )
     except Exception as e:
         logger.error(f"Failed to advance migration phase: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -215,7 +225,7 @@ async def advance_migration_phase(
 async def get_active_alerts(
     severity: Optional[str] = Query(default=None, description="Filter by severity"),
     category: Optional[str] = Query(default=None, description="Filter by category"),
-    limit: int = Query(default=50, ge=1, le=1000, description="Maximum number of alerts")
+    limit: int = Query(default=50, ge=1, le=1000, description="Maximum number of alerts"),
 ):
     """Get active alerts with optional filtering"""
 
@@ -237,8 +247,7 @@ async def get_active_alerts(
 
         # Get alerts
         alerts = migration_system.alert_manager.get_active_alerts(
-            severity_filter=severity_filter,
-            category_filter=category_filter
+            severity_filter=severity_filter, category_filter=category_filter
         )
 
         # Limit results
@@ -257,7 +266,7 @@ async def get_active_alerts(
                 "acknowledged": alert.acknowledged,
                 "resolved": alert.resolved,
                 "escalation_level": alert.escalation_level,
-                "metadata": alert.metadata
+                "metadata": alert.metadata,
             }
             for alert in alerts
         ]
@@ -266,7 +275,7 @@ async def get_active_alerts(
             "alerts": alert_data,
             "total_count": len(alert_data),
             "filtered": bool(severity or category),
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     except HTTPException:
@@ -277,10 +286,7 @@ async def get_active_alerts(
 
 
 @router.post("/alerts/acknowledge", response_model=Dict[str, Any])
-async def acknowledge_alert(
-    ack_data: AlertAcknowledgment,
-    current_user = Depends(get_current_user)
-):
+async def acknowledge_alert(ack_data: AlertAcknowledgment, current_user=Depends(get_current_user)):
     """Acknowledge an alert"""
 
     try:
@@ -292,7 +298,7 @@ async def acknowledge_alert(
                 "status": "success",
                 "alert_id": ack_data.alert_id,
                 "acknowledged_by": ack_data.user,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         else:
             raise HTTPException(status_code=404, detail="Alert not found")
@@ -305,10 +311,7 @@ async def acknowledge_alert(
 
 
 @router.post("/alerts/resolve", response_model=Dict[str, Any])
-async def resolve_alert(
-    resolve_data: AlertResolution,
-    current_user = Depends(get_current_user)
-):
+async def resolve_alert(resolve_data: AlertResolution, current_user=Depends(get_current_user)):
     """Resolve an alert"""
 
     try:
@@ -320,7 +323,7 @@ async def resolve_alert(
                 "status": "success",
                 "alert_id": resolve_data.alert_id,
                 "resolved_by": resolve_data.user,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         else:
             raise HTTPException(status_code=404, detail="Alert not found")
@@ -370,7 +373,7 @@ async def get_cost_analysis(
             "avg_cost_per_request": analysis.avg_cost_per_request,
             "tokens_per_dollar": analysis.tokens_per_dollar,
             "efficiency_score": analysis.efficiency_score,
-            "cost_trends": analysis.cost_trends
+            "cost_trends": analysis.cost_trends,
         }
 
     except Exception as e:
@@ -392,20 +395,17 @@ async def get_cost_projection():
 
 
 @router.post("/cost/budget", response_model=Dict[str, Any])
-async def update_budget_limit(
-    budget_data: BudgetUpdate,
-    current_user = Depends(get_current_user)
-):
+async def update_budget_limit(budget_data: BudgetUpdate, current_user=Depends(get_current_user)):
     """Update budget limit for a specific period"""
 
     try:
         migration_system.cost_tracker.set_budget_limit(
-            budget_data.period,
-            budget_data.limit,
-            budget_data.alert_threshold
+            budget_data.period, budget_data.limit, budget_data.alert_threshold
         )
 
-        logger.info(f"Budget limit updated for {budget_data.period}: ${budget_data.limit} by {current_user.get('user_id')}")
+        logger.info(
+            f"Budget limit updated for {budget_data.period}: ${budget_data.limit} by {current_user.get('user_id')}"
+        )
 
         return {
             "status": "success",
@@ -413,7 +413,7 @@ async def update_budget_limit(
             "limit": budget_data.limit,
             "alert_threshold": budget_data.alert_threshold,
             "updated_by": current_user.get("user_id"),
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     except Exception as e:
@@ -422,9 +422,7 @@ async def update_budget_limit(
 
 
 @router.get("/performance/real-time/{model}", response_model=Dict[str, Any])
-async def get_real_time_performance(
-    model: str
-):
+async def get_real_time_performance(model: str):
     """Get real-time performance metrics for a specific model"""
 
     try:
@@ -439,12 +437,14 @@ async def get_real_time_performance(
 @router.get("/performance/summary/{model}", response_model=Dict[str, Any])
 async def get_performance_summary(
     model: str,
-    days_back: int = Query(default=7, ge=1, le=90, description="Number of days to analyze")
+    days_back: int = Query(default=7, ge=1, le=90, description="Number of days to analyze"),
 ):
     """Get performance summary for a specific model"""
 
     try:
-        summary = migration_system.performance_analyzer.generate_performance_summary(model, days_back)
+        summary = migration_system.performance_analyzer.generate_performance_summary(
+            model, days_back
+        )
 
         return {
             "period_start": summary.period_start.isoformat(),
@@ -461,12 +461,12 @@ async def get_performance_summary(
                     "expected_value": anomaly.expected_value,
                     "deviation_percentage": anomaly.deviation_percentage,
                     "description": anomaly.description,
-                    "recommendations": anomaly.recommendations
+                    "recommendations": anomaly.recommendations,
                 }
                 for anomaly in summary.anomalies
             ],
             "overall_score": summary.overall_score,
-            "recommendations": summary.recommendations
+            "recommendations": summary.recommendations,
         }
 
     except Exception as e:
@@ -488,9 +488,7 @@ async def get_optimization_recommendations():
 
 
 @router.get("/export", response_model=Dict[str, Any])
-async def export_monitoring_data(
-    current_user = Depends(get_current_user)
-):
+async def export_monitoring_data(current_user=Depends(get_current_user)):
     """Export all monitoring data for analysis"""
 
     try:
@@ -505,9 +503,7 @@ async def export_monitoring_data(
 
 
 @router.post("/control/stop", response_model=Dict[str, Any])
-async def stop_monitoring(
-    current_user = Depends(get_current_user)
-):
+async def stop_monitoring(current_user=Depends(get_current_user)):
     """Stop the monitoring system"""
 
     try:
@@ -518,7 +514,7 @@ async def stop_monitoring(
         return {
             "status": "stopped",
             "stopped_by": current_user.get("user_id"),
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     except Exception as e:
@@ -527,9 +523,7 @@ async def stop_monitoring(
 
 
 @router.post("/control/restart", response_model=Dict[str, Any])
-async def restart_monitoring(
-    current_user = Depends(get_current_user)
-):
+async def restart_monitoring(current_user=Depends(get_current_user)):
     """Restart the monitoring system"""
 
     try:
@@ -540,7 +534,7 @@ async def restart_monitoring(
         return {
             "status": "restarted",
             "restarted_by": current_user.get("user_id"),
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     except Exception as e:
@@ -562,9 +556,9 @@ async def get_monitoring_health():
                 "cost_tracker": True,
                 "performance_analyzer": True,
                 "alert_manager": True,
-                "dashboard": True
+                "dashboard": True,
             },
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     except Exception as e:

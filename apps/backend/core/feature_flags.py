@@ -13,8 +13,10 @@ from redis.exceptions import RedisError
 
 logger = logging.getLogger(__name__)
 
+
 class FeatureFlag(Enum):
     """Feature flags for Phase 1 implementation"""
+
     GPT5_MIGRATION = "gpt5_migration"
     OAUTH21_COMPLIANCE = "oauth21_compliance"
     ENHANCED_MONITORING = "enhanced_monitoring"
@@ -23,6 +25,7 @@ class FeatureFlag(Enum):
     SECURITY_HEADERS = "security_headers"
     JWT_ROTATION = "jwt_rotation"
     DEVELOPMENT_AUTH_BYPASS = "development_auth_bypass"  # Secure gated development bypass
+
 
 class FeatureFlagManager:
     """Centralized feature flag management with Redis backend"""
@@ -36,7 +39,7 @@ class FeatureFlagManager:
                 password=os.getenv("REDIS_PASSWORD"),
                 decode_responses=True,
                 socket_connect_timeout=5,
-                socket_timeout=5
+                socket_timeout=5,
             )
             # Test connection
             self.redis_client.ping()
@@ -61,8 +64,7 @@ class FeatureFlagManager:
 
         # Environment variable overrides (for testing/deployment)
         self.env_overrides = {
-            flag.value: os.getenv(f"FF_{flag.value.upper()}")
-            for flag in FeatureFlag
+            flag.value: os.getenv(f"FF_{flag.value.upper()}") for flag in FeatureFlag
         }
 
     def is_enabled(self, flag: FeatureFlag, user_id: Optional[str] = None) -> bool:
@@ -83,7 +85,7 @@ class FeatureFlagManager:
             try:
                 user_value = self.redis_client.get(user_flag_key)
                 if user_value is not None:
-                    return user_value.lower() == 'true'
+                    return user_value.lower() == "true"
             except (RedisError, Exception) as e:
                 logger.error(f"Error checking user flag {user_flag_key}: {e}")
 
@@ -92,14 +94,14 @@ class FeatureFlagManager:
             try:
                 redis_value = self.redis_client.get(flag_key)
                 if redis_value is not None:
-                    return redis_value.lower() == 'true'
+                    return redis_value.lower() == "true"
             except (RedisError, Exception) as e:
                 logger.error(f"Error checking flag {flag_key}: {e}")
 
         # Check environment variable override
         env_value = self.env_overrides.get(flag.value)
         if env_value is not None:
-            return env_value.lower() in ('true', '1', 'yes', 'on')
+            return env_value.lower() in ("true", "1", "yes", "on")
 
         # Return default value
         return self.default_flags.get(flag.value, False)
@@ -132,10 +134,7 @@ class FeatureFlagManager:
 
     def get_all_flags(self, user_id: Optional[str] = None) -> Dict[str, bool]:
         """Get the status of all feature flags"""
-        return {
-            flag.value: self.is_enabled(flag, user_id)
-            for flag in FeatureFlag
-        }
+        return {flag.value: self.is_enabled(flag, user_id) for flag in FeatureFlag}
 
     def enable_percentage_rollout(self, flag: FeatureFlag, percentage: int):
         """
@@ -181,6 +180,7 @@ class FeatureFlagManager:
 
             # Use consistent hashing for user assignment
             import hashlib
+
             user_hash = int(hashlib.md5(user_id.encode()).hexdigest(), 16)
             return (user_hash % 100) < percentage
 
@@ -213,7 +213,7 @@ class FeatureFlagManager:
         health = {
             "redis_available": self.redis_available,
             "flags_configured": len(self.default_flags),
-            "env_overrides": sum(1 for v in self.env_overrides.values() if v is not None)
+            "env_overrides": sum(1 for v in self.env_overrides.values() if v is not None),
         }
 
         if self.redis_available:
@@ -228,6 +228,7 @@ class FeatureFlagManager:
 
         return health
 
+
 # Global instance for application-wide use
 try:
     feature_flags = FeatureFlagManager()
@@ -236,6 +237,7 @@ except Exception as e:
     logger.error(f"Failed to initialize feature flag manager: {e}")
     # Create a minimal fallback instance
     feature_flags = None
+
 
 def get_feature_flags() -> FeatureFlagManager:
     """Get or create the feature flag manager instance"""

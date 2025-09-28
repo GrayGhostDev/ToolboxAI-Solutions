@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/api/v1/endpoints/schools.py
-# hypothesis_version: 6.139.2
-
-[100, 403, 404, '/', '/{school_id}', '1', '123 Education St', '12345', 'CA', 'Demo School', 'Learning City', 'School not found', 'USA', 'admin', 'info@demoschool.edu', 'message', 'router', 'success']

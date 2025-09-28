@@ -10,6 +10,7 @@ from uuid import UUID
 
 class ClassBase(BaseModel):
     """Base class model with common fields"""
+
     name: str = Field(..., min_length=1, max_length=200)
     subject: str = Field(..., min_length=1, max_length=100)
     grade_level: int = Field(..., ge=1, le=12)
@@ -24,11 +25,13 @@ class ClassBase(BaseModel):
 
 class ClassCreate(ClassBase):
     """Model for creating a new class"""
+
     teacher_id: Optional[UUID] = None  # Will be set from current user if not provided
 
 
 class ClassUpdate(BaseModel):
     """Model for updating a class"""
+
     name: Optional[str] = Field(None, min_length=1, max_length=200)
     subject: Optional[str] = Field(None, min_length=1, max_length=100)
     grade_level: Optional[int] = Field(None, ge=1, le=12)
@@ -43,6 +46,7 @@ class ClassUpdate(BaseModel):
 
 class ClassSummary(ClassBase):
     """Model for class summary (matches frontend expectations)"""
+
     id: str  # UUID as string for frontend compatibility
     teacher_id: str  # UUID as string
     student_count: int = 0
@@ -50,7 +54,7 @@ class ClassSummary(ClassBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    @validator('id', 'teacher_id', pre=True)
+    @validator("id", "teacher_id", pre=True)
     def convert_uuid_to_string(cls, v):
         """Convert UUID to string for frontend compatibility"""
         if isinstance(v, UUID):
@@ -64,6 +68,7 @@ class ClassSummary(ClassBase):
 
 class ClassDetails(ClassSummary):
     """Detailed class model with relationships"""
+
     teacher_name: Optional[str] = None
     students: List[dict] = []  # Will be populated with student data
     total_lessons: int = 0
@@ -75,17 +80,20 @@ class ClassDetails(ClassSummary):
 
 class EnrollmentBase(BaseModel):
     """Base enrollment model"""
+
     status: str = Field("active", pattern="^(active|dropped|completed)$")
 
 
 class EnrollmentCreate(EnrollmentBase):
     """Model for creating enrollment"""
+
     class_id: UUID
     student_id: UUID
 
 
 class EnrollmentUpdate(EnrollmentBase):
     """Model for updating enrollment"""
+
     status: Optional[str] = Field(None, pattern="^(active|dropped|completed)$")
     final_grade: Optional[float] = Field(None, ge=0, le=100)
     attendance_percentage: Optional[float] = Field(None, ge=0, le=100)
@@ -93,6 +101,7 @@ class EnrollmentUpdate(EnrollmentBase):
 
 class EnrollmentResponse(EnrollmentBase):
     """Enrollment response model"""
+
     id: str
     class_id: str
     student_id: str
@@ -103,7 +112,7 @@ class EnrollmentResponse(EnrollmentBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    @validator('id', 'class_id', 'student_id', pre=True)
+    @validator("id", "class_id", "student_id", pre=True)
     def convert_uuid_to_string(cls, v):
         """Convert UUID to string for frontend compatibility"""
         if isinstance(v, UUID):
@@ -117,6 +126,7 @@ class EnrollmentResponse(EnrollmentBase):
 # Response models for API consistency
 class ClassResponse(BaseModel):
     """Standard API response wrapper for class operations"""
+
     status: str = "success"
     data: ClassSummary
     message: str = ""
@@ -124,6 +134,7 @@ class ClassResponse(BaseModel):
 
 class ClassListResponse(BaseModel):
     """Standard API response wrapper for class lists"""
+
     status: str = "success"
     data: List[ClassSummary]
     total: int
@@ -134,6 +145,7 @@ class ClassListResponse(BaseModel):
 
 class ClassDetailsResponse(BaseModel):
     """Standard API response wrapper for class details"""
+
     status: str = "success"
     data: ClassDetails
     message: str = ""

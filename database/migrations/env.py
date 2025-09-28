@@ -20,8 +20,8 @@ try:
 except ImportError:
     # Fallback to old model locations for compatibility
     try:
-        from src.dashboard.backend.models import Base
-        from src.dashboard.backend.models import *
+        from database.models import Base
+        from database.models import *
     except ImportError:
         print("Warning: Could not import models. Creating empty Base.")
         from sqlalchemy.orm import declarative_base

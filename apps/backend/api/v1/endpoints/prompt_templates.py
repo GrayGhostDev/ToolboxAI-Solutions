@@ -8,11 +8,19 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from pydantic import BaseModel, Field
 
-from core.prompts.integration import PromptTemplateIntegration
-from core.prompts.models import (
-    UserProfile, ContentRequirements, PersonalizationData,
-    UniquenessEnhancement, ConversationStage, ContentType, GradeLevel,
-    SubjectArea, LearningStyle, EngagementLevel, UniquenessFactor
+from apps.backend.core.prompts.integration import PromptTemplateIntegration
+from apps.backend.core.prompts.models import (
+    UserProfile,
+    ContentRequirements,
+    PersonalizationData,
+    UniquenessEnhancement,
+    ConversationStage,
+    ContentType,
+    GradeLevel,
+    SubjectArea,
+    LearningStyle,
+    EngagementLevel,
+    UniquenessFactor,
 )
 
 logger = logging.getLogger(__name__)
@@ -23,6 +31,7 @@ prompt_integration = PromptTemplateIntegration()
 # Router setup
 router = APIRouter(prefix="/prompt-templates", tags=["Prompt Templates"])
 
+
 # Request/Response Models
 class StartConversationRequest(BaseModel):
     user_id: str
@@ -32,10 +41,12 @@ class StartConversationRequest(BaseModel):
     cultural_background: Optional[str] = None
     initial_message: Optional[str] = None
 
+
 class ProcessInputRequest(BaseModel):
     conversation_id: str
     user_input: str
     additional_context: Optional[Dict[str, Any]] = None
+
 
 class PersonalizationRequest(BaseModel):
     conversation_id: str
@@ -47,12 +58,14 @@ class PersonalizationRequest(BaseModel):
     colors: List[str] = Field(default_factory=list)
     story_elements: List[str] = Field(default_factory=list)
 
+
 class UniquenessRequest(BaseModel):
     conversation_id: str
     factors: List[str] = Field(default_factory=list)
     creative_twists: List[str] = Field(default_factory=list)
     personal_touches: List[str] = Field(default_factory=list)
     trending_elements: List[str] = Field(default_factory=list)
+
 
 class ConversationResponse(BaseModel):
     conversation_id: str
@@ -63,6 +76,7 @@ class ConversationResponse(BaseModel):
     validation: Dict[str, Any]
     next_steps: List[str]
     conversation_status: Dict[str, Any]
+
 
 class ValidationResponse(BaseModel):
     is_valid: bool
@@ -77,10 +91,12 @@ class ValidationResponse(BaseModel):
     quality_metrics: Dict[str, float]
     readiness_score: float
 
+
 class WorkflowResponse(BaseModel):
     workflow_plan: Dict[str, Any]
     execution_results: Dict[str, Any]
     content_ready: bool
+
 
 class AnalyticsResponse(BaseModel):
     conversation_id: str
@@ -92,9 +108,11 @@ class AnalyticsResponse(BaseModel):
     validation_summary: Dict[str, Any]
     readiness_score: float
 
+
 # Helper function to get current user (mock for now)
 def get_current_user():
     """Mock user for development"""
+
     class MockUser:
         def __init__(self):
             self.id = "dev-user-001"
@@ -103,6 +121,7 @@ def get_current_user():
             self.display_name = "Development Teacher"
 
     return MockUser()
+
 
 @router.post("/conversations/start", response_model=ConversationResponse)
 async def start_conversation(request: StartConversationRequest):
@@ -115,7 +134,7 @@ async def start_conversation(request: StartConversationRequest):
             role=request.role,
             experience_level=request.experience_level,
             interests=request.interests,
-            cultural_background=request.cultural_background
+            cultural_background=request.cultural_background,
         )
 
         # Start conversation
@@ -129,13 +148,17 @@ async def start_conversation(request: StartConversationRequest):
         )
 
         # Get validation
-        validation = await prompt_integration.validation_system.validate_conversation_context(context)
+        validation = await prompt_integration.validation_system.validate_conversation_context(
+            context
+        )
 
         # Get next steps
         next_steps = await prompt_integration.guidance_system.get_next_steps(context)
 
         # Get conversation status
-        conversation_status = await prompt_integration.flow_manager.get_conversation_status(context.conversation_id)
+        conversation_status = await prompt_integration.flow_manager.get_conversation_status(
+            context.conversation_id
+        )
 
         return ConversationResponse(
             conversation_id=context.conversation_id,
@@ -145,15 +168,16 @@ async def start_conversation(request: StartConversationRequest):
             guidance=guidance,
             validation=validation.dict(),
             next_steps=next_steps,
-            conversation_status=conversation_status
+            conversation_status=conversation_status,
         )
 
     except Exception as e:
         logger.error(f"Failed to start conversation: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start conversation: {str(e)}"
+            detail=f"Failed to start conversation: {str(e)}",
         )
+
 
 @router.post("/conversations/process", response_model=ConversationResponse)
 async def process_user_input(request: ProcessInputRequest):
@@ -161,8 +185,10 @@ async def process_user_input(request: ProcessInputRequest):
 
     try:
         # Process input
-        prompt_response, flow_decision, response_metadata = await prompt_integration.process_user_input(
-            request.conversation_id, request.user_input, request.additional_context
+        prompt_response, flow_decision, response_metadata = (
+            await prompt_integration.process_user_input(
+                request.conversation_id, request.user_input, request.additional_context
+            )
         )
 
         return ConversationResponse(
@@ -173,20 +199,18 @@ async def process_user_input(request: ProcessInputRequest):
             guidance=response_metadata["guidance"],
             validation=response_metadata["validation"],
             next_steps=response_metadata["next_steps"],
-            conversation_status=response_metadata["conversation_status"]
+            conversation_status=response_metadata["conversation_status"],
         )
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to process user input: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process user input: {str(e)}"
+            detail=f"Failed to process user input: {str(e)}",
         )
+
 
 @router.post("/conversations/{conversation_id}/personalize")
 async def personalize_content(conversation_id: str, request: PersonalizationRequest):
@@ -201,7 +225,7 @@ async def personalize_content(conversation_id: str, request: PersonalizationRequ
             school_theme=request.school_theme,
             mascot=request.mascot,
             colors=request.colors,
-            story_elements=request.story_elements
+            story_elements=request.story_elements,
         )
 
         # Apply personalization
@@ -212,20 +236,18 @@ async def personalize_content(conversation_id: str, request: PersonalizationRequ
             "message": "Personalization data added successfully",
             "personalized_prompt": result["personalized_prompt"],
             "personalization_score": result["personalization_score"],
-            "suggestions": result["suggestions"]
+            "suggestions": result["suggestions"],
         }
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to personalize content: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to personalize content: {str(e)}"
+            detail=f"Failed to personalize content: {str(e)}",
         )
+
 
 @router.post("/conversations/{conversation_id}/enhance-uniqueness")
 async def enhance_uniqueness(conversation_id: str, request: UniquenessRequest):
@@ -242,20 +264,18 @@ async def enhance_uniqueness(conversation_id: str, request: UniquenessRequest):
             "message": "Uniqueness enhancement applied successfully",
             "enhanced_prompt": result["enhanced_prompt"],
             "uniqueness_score": result["uniqueness_score"],
-            "suggestions": result["suggestions"]
+            "suggestions": result["suggestions"],
         }
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to enhance uniqueness: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to enhance uniqueness: {str(e)}"
+            detail=f"Failed to enhance uniqueness: {str(e)}",
         )
+
 
 @router.get("/conversations/{conversation_id}/validate", response_model=ValidationResponse)
 async def validate_conversation(conversation_id: str):
@@ -276,20 +296,18 @@ async def validate_conversation(conversation_id: str):
             suggestions=result["validation_result"]["suggestions"],
             optimization_suggestions=result["optimization_suggestions"],
             quality_metrics=result["quality_metrics"],
-            readiness_score=result["readiness_score"]
+            readiness_score=result["readiness_score"],
         )
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to validate conversation: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to validate conversation: {str(e)}"
+            detail=f"Failed to validate conversation: {str(e)}",
         )
+
 
 @router.post("/conversations/{conversation_id}/generate-workflow", response_model=WorkflowResponse)
 async def generate_workflow(conversation_id: str, background_tasks: BackgroundTasks):
@@ -302,20 +320,18 @@ async def generate_workflow(conversation_id: str, background_tasks: BackgroundTa
         return WorkflowResponse(
             workflow_plan=result["workflow_plan"],
             execution_results=result["execution_results"],
-            content_ready=result["content_ready"]
+            content_ready=result["content_ready"],
         )
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to generate workflow: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate workflow: {str(e)}"
+            detail=f"Failed to generate workflow: {str(e)}",
         )
+
 
 @router.get("/conversations/{conversation_id}/analytics", response_model=AnalyticsResponse)
 async def get_conversation_analytics(conversation_id: str):
@@ -328,16 +344,14 @@ async def get_conversation_analytics(conversation_id: str):
         return AnalyticsResponse(**analytics)
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to get analytics: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get analytics: {str(e)}"
+            detail=f"Failed to get analytics: {str(e)}",
         )
+
 
 @router.get("/conversations")
 async def list_conversations():
@@ -346,17 +360,15 @@ async def list_conversations():
     try:
         conversations = prompt_integration.get_active_conversations()
 
-        return {
-            "conversations": conversations,
-            "count": len(conversations)
-        }
+        return {"conversations": conversations, "count": len(conversations)}
 
     except Exception as e:
         logger.error(f"Failed to list conversations: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list conversations: {str(e)}"
+            detail=f"Failed to list conversations: {str(e)}",
         )
+
 
 @router.delete("/conversations/{conversation_id}")
 async def cleanup_conversation(conversation_id: str):
@@ -369,16 +381,16 @@ async def cleanup_conversation(conversation_id: str):
             return {"success": True, "message": "Conversation cleaned up successfully"}
         else:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Conversation not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found"
             )
 
     except Exception as e:
         logger.error(f"Failed to cleanup conversation: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to cleanup conversation: {str(e)}"
+            detail=f"Failed to cleanup conversation: {str(e)}",
         )
+
 
 @router.get("/system/status")
 async def get_system_status():
@@ -392,8 +404,9 @@ async def get_system_status():
         logger.error(f"Failed to get system status: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get system status: {str(e)}"
+            detail=f"Failed to get system status: {str(e)}",
         )
+
 
 @router.get("/templates")
 async def list_templates():
@@ -410,19 +423,20 @@ async def list_templates():
                     "stage": template.stage.value,
                     "content_type": template.content_type.value if template.content_type else None,
                     "priority": template.priority,
-                    "is_active": template.is_active
+                    "is_active": template.is_active,
                 }
                 for template in templates
             ],
-            "count": len(templates)
+            "count": len(templates),
         }
 
     except Exception as e:
         logger.error(f"Failed to list templates: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list templates: {str(e)}"
+            detail=f"Failed to list templates: {str(e)}",
         )
+
 
 @router.get("/guidance/{stage}")
 async def get_guidance(stage: str):
@@ -434,8 +448,7 @@ async def get_guidance(stage: str):
             conversation_stage = ConversationStage(stage)
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid stage: {stage}"
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid stage: {stage}"
             )
 
         # Get guidance
@@ -449,14 +462,5 @@ async def get_guidance(stage: str):
         logger.error(f"Failed to get guidance: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get guidance: {str(e)}"
+            detail=f"Failed to get guidance: {str(e)}",
         )
-
-
-
-
-
-
-
-
-

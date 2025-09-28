@@ -10,10 +10,24 @@ vi.setConfig({ testTimeout: 10000 });
  * Testing connection, channel management, message handling, and reconnection logic
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach, MockedFunction } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, MockedFunction } from 'vitest';
 import Pusher, { Channel, PresenceChannel } from 'pusher-js';
 import { PusherService, pusherService } from '../../services/pusher';
-import { PusherService } from '../../services/pusher';
+
+// Define WebSocket states for tests
+enum WebSocketState {
+  CONNECTING = 'connecting',
+  CONNECTED = 'connected',
+  DISCONNECTING = 'disconnecting',
+  DISCONNECTED = 'disconnected',
+}
+
+// Define Pusher event types
+enum PusherEventType {
+  CONTENT_UPDATE = 'content-update',
+  USER_JOIN = 'user-join',
+  USER_LEAVE = 'user-leave',
+}
 
 // Mock Pusher
 vi.mock('pusher-js');

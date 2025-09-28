@@ -86,7 +86,7 @@ receivers:
         from: 'alerts@toolboxai.com'
         smarthost: 'smtp.gmail.com:587'
         auth_username: 'alerts@toolboxai.com'
-        auth_password: 'YOUR_EMAIL_PASSWORD'
+        auth_password: '${EMAIL_PASSWORD:-change-me}'
         headers:
           Subject: '🔔 [{{ .GroupLabels.severity | toUpper }}] {{ .GroupLabels.alertname }}'
 
@@ -97,7 +97,7 @@ receivers:
         from: 'alerts@toolboxai.com'
         smarthost: 'smtp.gmail.com:587'
         auth_username: 'alerts@toolboxai.com'
-        auth_password: 'YOUR_EMAIL_PASSWORD'
+        auth_password: '${EMAIL_PASSWORD:-change-me}'
         headers:
           Subject: '🚨 CRITICAL SECURITY: {{ .GroupLabels.alertname }}'
     slack_configs:
@@ -135,7 +135,7 @@ receivers:
         from: 'alerts@toolboxai.com'
         smarthost: 'smtp.gmail.com:587'
         auth_username: 'alerts@toolboxai.com'
-        auth_password: 'YOUR_EMAIL_PASSWORD'
+        auth_password: '${EMAIL_PASSWORD:-change-me}'
 
   # Operations critical
   - name: 'ops-critical'
@@ -144,7 +144,7 @@ receivers:
         from: 'alerts@toolboxai.com'
         smarthost: 'smtp.gmail.com:587'
         auth_username: 'alerts@toolboxai.com'
-        auth_password: 'YOUR_EMAIL_PASSWORD'
+        auth_password: '${EMAIL_PASSWORD:-change-me}'
         send_resolved: true
     slack_configs:
       - api_url: 'YOUR_SLACK_WEBHOOK_URL'

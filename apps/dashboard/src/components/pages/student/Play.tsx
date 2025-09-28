@@ -1,28 +1,33 @@
 import { useState } from "react";
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Grid from '@mui/material/Grid';
-import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
-import Avatar from '@mui/material/Avatar';
-import Paper from '@mui/material/Paper';
-import IconButton from '@mui/material/IconButton';
-import Divider from '@mui/material/Divider';
-import Alert from '@mui/material/Alert';
-import LinearProgress from '@mui/material/LinearProgress';
+import {
+  Box,
+  Card,
+  Text,
+  Button,
+  Grid,
+  Stack,
+  Badge,
+  Avatar,
+  Paper,
+  ActionIcon,
+  Divider,
+  Alert,
+  Progress,
+  Group,
+  Title,
+  Container,
+  Center
+} from '@mantine/core';
 
 import {
-  SportsEsports,
-  PlayArrow,
-  Stars,
-  Timer,
-  People,
-  EmojiEvents,
-  Refresh,
-} from "@mui/icons-material";
+  IconDeviceGamepad2,
+  IconPlayerPlay,
+  IconStars,
+  IconClock,
+  IconUsers,
+  IconTrophy,
+  IconRefresh,
+} from "@tabler/icons-react";
 import { useAppSelector } from "../../../store";
 interface RobloxWorld {
   id: string;
@@ -131,207 +136,212 @@ export default function Play() {
     }
   };
   return (
-    <Box>
-      <Stack direction="row" justifyContent="between" alignItems="center" mb={3}>
+    <Container size="xl">
+      <Group justify="space-between" align="center" mb="xl">
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 600 }}>
+          <Title order={2} fw={600}>
             Roblox Learning Worlds
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
+          </Title>
+          <Text size="md" c="dimmed">
             Learn through immersive gaming experiences
-          </Typography>
+          </Text>
         </Box>
-        <IconButton onClick={(e: React.MouseEvent) => () => window.location.reload()}>
-          <Refresh />
-        </IconButton>
-      </Stack>
+        <ActionIcon onClick={() => window.location.reload()}>
+          <IconRefresh />
+        </ActionIcon>
+      </Group>
       {/* Current Session Info */}
       {user && (
-        <Alert severity="info" sx={{ mb: 3 }}>
-          <Typography variant="body2">
-            Welcome back, <strong>{user.displayName}</strong>! 
+        <Alert color="blue" mb="xl">
+          <Text size="sm">
+            Welcome back, <strong>{user.displayName}</strong>!
             You currently have <strong>{userXP} XP</strong> and are Level <strong>{Math.floor(userXP / 100) + 1}</strong>.
-          </Typography>
+          </Text>
         </Alert>
       )}
-      <Grid container spacing={3}>
+      <Grid>
         {worlds.map((world) => (
-          <Grid item xs={12} md={6} lg={4} key={world.id}>
+          <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={world.id}>
             <Card
-              sx={{
+              style={{
                 height: "100%",
                 opacity: world.isLocked ? 0.6 : 1,
                 transition: "transform 0.2s",
-                "&:hover": {
-                  transform: world.isLocked ? "none" : "translateY(-4px)",
+              }}
+              styles={{
+                root: {
+                  "&:hover": {
+                    transform: world.isLocked ? "none" : "translateY(-4px)",
+                  },
                 },
               }}
+              padding="md"
             >
               <Box
-                sx={{
+                style={{
                   height: 120,
                   background: `linear-gradient(135deg, ${getSubjectColor(world.subject)}22 0%, ${getSubjectColor(world.subject)}44 100%)`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   position: "relative",
+                  borderRadius: 8,
+                  marginBottom: 16,
                 }}
               >
-                <SportsEsports sx={{ fontSize: 48, color: getSubjectColor(world.subject) }} />
+                <IconDeviceGamepad2 size={48} color={getSubjectColor(world.subject)} />
                 {world.isLocked && (
-                  <Chip
-                    label="Locked"
-                    size="small"
-                    sx={{
+                  <Badge
+                    size="sm"
+                    style={{
                       position: "absolute",
                       top: 8,
                       right: 8,
                     }}
-                  />
+                  >
+                    Locked
+                  </Badge>
                 )}
               </Box>
-              <CardContent>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                  {world.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {world.description}
-                </Typography>
-                <Stack spacing={2}>
-                  <Stack direction="row" spacing={1} flexWrap="wrap">
-                    <Chip
-                      label={world.difficulty}
-                      size="small"
-                      color={getDifficultyColor(world.difficulty) as any}
-                    />
-                    <Chip
-                      label={world.subject}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </Stack>
-                  <Stack spacing={1}>
-                    <Stack direction="row" justifyContent="between" alignItems="center">
-                      <Typography variant="caption" color="text.secondary">
-                        Completion Rate
-                      </Typography>
-                      <Typography variant="caption" fontWeight={600}>
-                        {world.completionRate}%
-                      </Typography>
-                    </Stack>
-                    <LinearProgress
-                      variant="determinate"
-                      value={world.completionRate}
-                      sx={{ height: 6, borderRadius: 3 }}
-                    />
-                  </Stack>
-                  <Divider />
-                  <Stack spacing={1}>
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Timer fontSize="small" />
-                      <Typography variant="caption">
-                        ~{world.estimatedTime} minutes
-                      </Typography>
-                    </Stack>
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <People fontSize="small" />
-                      <Typography variant="caption">
-                        {world.playerCount} players online
-                      </Typography>
-                    </Stack>
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Stars fontSize="small" />
-                      <Typography variant="caption">
-                        +{world.xpReward} XP reward
-                      </Typography>
-                    </Stack>
-                  </Stack>
-                  {world.badges.length > 0 && (
-                    <>
-                      <Divider />
-                      <Box>
-                        <Typography variant="caption" color="text.secondary" mb={1} display="block">
-                          Available Badges:
-                        </Typography>
-                        <Stack direction="row" spacing={0.5} flexWrap="wrap">
-                          {world.badges.map((badge, index) => (
-                            <Chip
-                              key={index}
-                              label={badge}
-                              size="small"
-                              variant="outlined"
-                              color="secondary"
-                            />
-                          ))}
-                        </Stack>
-                      </Box>
-                    </>
-                  )}
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    size="large"
-                    startIcon={<PlayArrow />}
-                    onClick={(e: React.MouseEvent) => () => handleJoinWorld(world.id)}
-                    disabled={world.isLocked || loading}
-                    sx={{
-                      borderRadius: 2,
-                      textTransform: "none",
-                      fontWeight: 600,
-                      py: 1.5,
-                    }}
+              <Title order={4} fw={600} mb="xs">
+                {world.name}
+              </Title>
+              <Text size="sm" c="dimmed" mb="md">
+                {world.description}
+              </Text>
+              <Stack gap="md">
+                <Group gap="xs" wrap="wrap">
+                  <Badge
+                    size="sm"
+                    color={getDifficultyColor(world.difficulty)}
                   >
-                    {world.isLocked ? "Unlock Required" : "Join World"}
-                  </Button>
+                    {world.difficulty}
+                  </Badge>
+                  <Badge
+                    size="sm"
+                    variant="outline"
+                  >
+                    {world.subject}
+                  </Badge>
+                </Group>
+                <Stack gap="xs">
+                  <Group justify="space-between" align="center">
+                    <Text size="xs" c="dimmed">
+                      Completion Rate
+                    </Text>
+                    <Text size="xs" fw={600}>
+                      {world.completionRate}%
+                    </Text>
+                  </Group>
+                  <Progress
+                    value={world.completionRate}
+                    size="sm"
+                    radius="md"
+                  />
                 </Stack>
-              </CardContent>
+                <Divider />
+                <Stack gap="xs">
+                  <Group gap="xs" align="center">
+                    <IconClock size={16} />
+                    <Text size="xs">
+                      ~{world.estimatedTime} minutes
+                    </Text>
+                  </Group>
+                  <Group gap="xs" align="center">
+                    <IconUsers size={16} />
+                    <Text size="xs">
+                      {world.playerCount} players online
+                    </Text>
+                  </Group>
+                  <Group gap="xs" align="center">
+                    <IconStars size={16} />
+                    <Text size="xs">
+                      +{world.xpReward} XP reward
+                    </Text>
+                  </Group>
+                </Stack>
+                {world.badges.length > 0 && (
+                  <>
+                    <Divider />
+                    <Box>
+                      <Text size="xs" c="dimmed" mb="xs">
+                        Available Badges:
+                      </Text>
+                      <Group gap="xs" wrap="wrap">
+                        {world.badges.map((badge, index) => (
+                          <Badge
+                            key={index}
+                            size="sm"
+                            variant="outline"
+                            color="violet"
+                          >
+                            {badge}
+                          </Badge>
+                        ))}
+                      </Group>
+                    </Box>
+                  </>
+                )}
+                <Button
+                  fullWidth
+                  size="md"
+                  leftSection={<IconPlayerPlay />}
+                  onClick={() => handleJoinWorld(world.id)}
+                  disabled={world.isLocked || loading}
+                  style={{
+                    borderRadius: 8,
+                    fontWeight: 600,
+                    padding: "12px 16px",
+                  }}
+                >
+                  {world.isLocked ? "Unlock Required" : "Join World"}
+                </Button>
+              </Stack>
             </Card>
-          </Grid>
+          </Grid.Col>
         ))}
       </Grid>
       {/* Quick Tips */}
-      <Card sx={{ mt: 4 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Gaming Tips for Learning
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={4}>
-              <Stack direction="row" spacing={1}>
-                <EmojiEvents color="primary" />
-                <Box>
-                  <Typography variant="subtitle2">Earn XP</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Complete lessons and challenges to gain experience points
-                  </Typography>
-                </Box>
-              </Stack>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Stack direction="row" spacing={1}>
-                <Stars color="secondary" />
-                <Box>
-                  <Typography variant="subtitle2">Collect Badges</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Achieve specific goals to unlock special badges
-                  </Typography>
-                </Box>
-              </Stack>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Stack direction="row" spacing={1}>
-                <People color="success" />
-                <Box>
-                  <Typography variant="subtitle2">Play Together</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Join friends in multiplayer learning experiences
-                  </Typography>
-                </Box>
-              </Stack>
-            </Grid>
-          </Grid>
-        </CardContent>
+      <Card mt="xl" padding="md">
+        <Title order={4} mb="md">
+          Gaming Tips for Learning
+        </Title>
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Group gap="md">
+              <IconTrophy color="blue" />
+              <Box>
+                <Text fw={500}>Earn XP</Text>
+                <Text size="xs" c="dimmed">
+                  Complete lessons and challenges to gain experience points
+                </Text>
+              </Box>
+            </Group>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Group gap="md">
+              <IconStars color="violet" />
+              <Box>
+                <Text fw={500}>Collect Badges</Text>
+                <Text size="xs" c="dimmed">
+                  Achieve specific goals to unlock special badges
+                </Text>
+              </Box>
+            </Group>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Group gap="md">
+              <IconUsers color="green" />
+              <Box>
+                <Text fw={500}>Play Together</Text>
+                <Text size="xs" c="dimmed">
+                  Join friends in multiplayer learning experiences
+                </Text>
+              </Box>
+            </Group>
+          </Grid.Col>
+        </Grid>
       </Card>
-    </Box>
+    </Container>
   );
 }

@@ -46,6 +46,20 @@ python_functions = "test_*"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 
+# Register pytest markers to prevent collection errors
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "docker: Docker-related tests",
+    "makefile: Makefile command tests",
+    "celery: Celery task tests",
+    "performance: Performance tests",
+    "slow: Slow-running tests",
+    "skipif: Conditional skipping",
+    "e2e: End-to-end tests",
+    "asyncio: Async tests",
+]
+
 # Basedpyright Configuration - 2025 Production Ready
 [tool.basedpyright]
 # File inclusion and exclusion
@@ -87,8 +101,8 @@ reportUnusedImport = "warning"
 useLibraryCodeForTypes = true
 autoImportCompletions = true
 
-# Stub path for type definitions
-stubPath = "src/shared/types"
+# Stub path for type definitions (removed - directory doesn't exist)
+# stubPath = "src/shared/types"
 
 # Additional Python paths
 extraPaths = [
@@ -114,7 +128,6 @@ extraPaths = [
     "src",
     "src/shared",
     "src/shared/utils",
-    "src/shared/types",
 ]
 
 # Basedpyright-specific enhanced features

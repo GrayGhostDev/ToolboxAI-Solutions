@@ -8,12 +8,14 @@ from typing import Final
 
 class APIVersion(str, Enum):
     """API version constants"""
+
     V1 = "v1"
     V2 = "v2"
 
 
 class UserRole(str, Enum):
     """User role definitions"""
+
     STUDENT = "student"
     TEACHER = "teacher"
     ADMIN = "admin"
@@ -23,6 +25,7 @@ class UserRole(str, Enum):
 
 class ContentType(str, Enum):
     """Content type definitions"""
+
     LESSON = "lesson"
     QUIZ = "quiz"
     SCRIPT = "script"
@@ -33,6 +36,7 @@ class ContentType(str, Enum):
 
 class ContentStatus(str, Enum):
     """Content generation status"""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -42,6 +46,7 @@ class ContentStatus(str, Enum):
 
 class Status(str, Enum):
     """General status definitions"""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     ENABLED = "enabled"
@@ -56,6 +61,7 @@ class Status(str, Enum):
 
 class SessionStatus(str, Enum):
     """Session status definitions"""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     EXPIRED = "expired"
@@ -64,6 +70,7 @@ class SessionStatus(str, Enum):
 
 class OperationStatus(str, Enum):
     """General operation status"""
+
     SUCCESS = "success"
     ERROR = "error"
     WARNING = "warning"
@@ -72,6 +79,7 @@ class OperationStatus(str, Enum):
 
 class Priority(IntEnum):
     """Priority levels for tasks/operations"""
+
     LOW = 1
     NORMAL = 2
     HIGH = 3
@@ -81,6 +89,7 @@ class Priority(IntEnum):
 
 class CacheKeys(str, Enum):
     """Redis cache key patterns"""
+
     USER_SESSION = "user:session:{user_id}"
     CONTENT_CACHE = "content:cache:{content_id}"
     QUIZ_CACHE = "quiz:cache:{quiz_id}"
@@ -90,6 +99,7 @@ class CacheKeys(str, Enum):
 
 class EventTypes(str, Enum):
     """WebSocket/Pusher event types"""
+
     USER_CONNECTED = "user_connected"
     USER_DISCONNECTED = "user_disconnected"
     CONTENT_GENERATED = "content_generated"
@@ -100,6 +110,7 @@ class EventTypes(str, Enum):
 
 class LogLevels(str, Enum):
     """Logging levels"""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -109,6 +120,7 @@ class LogLevels(str, Enum):
 
 class Permissions(str, Enum):
     """Permission definitions"""
+
     READ_CONTENT = "read:content"
     WRITE_CONTENT = "write:content"
     DELETE_CONTENT = "delete:content"
@@ -121,6 +133,7 @@ class Permissions(str, Enum):
 
 class DatabaseTables(str, Enum):
     """Database table names"""
+
     USERS = "users"
     SESSIONS = "sessions"
     CONTENT = "content"
@@ -164,7 +177,7 @@ ERROR_CODES = {
     "CONTENT_GENERATION_FAILED": "E007",
     "PLUGIN_CONNECTION_FAILED": "E008",
     "DATABASE_ERROR": "E009",
-    "CACHE_ERROR": "E010"
+    "CACHE_ERROR": "E010",
 }
 
 # HTTP status messages
@@ -178,7 +191,7 @@ HTTP_STATUS_MESSAGES = {
     422: "Validation Error",
     429: "Rate Limit Exceeded",
     500: "Internal Server Error",
-    503: "Service Unavailable"
+    503: "Service Unavailable",
 }
 
 __all__ = [
@@ -212,5 +225,5 @@ __all__ = [
     "PLUGIN_HEARTBEAT_INTERVAL",
     "PLUGIN_TIMEOUT",
     "ERROR_CODES",
-    "HTTP_STATUS_MESSAGES"
+    "HTTP_STATUS_MESSAGES",
 ]

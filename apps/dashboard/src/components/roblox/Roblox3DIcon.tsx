@@ -1,32 +1,32 @@
 /**
  * Roblox 3D Icon Component
- * 
+ *
  * Displays 3D icons from the parsed design assets
  * with interactive hover effects and animations
  */
 
 import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import Tooltip from '@mui/material/Tooltip';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import Zoom from '@mui/material/Zoom';
-import Fade from '@mui/material/Fade';
-import Fade from '@mui/material/Fade';
 import {
-  School,
-  SportsEsports,
-  Quiz,
-  Terrain,
-  Psychology,
-  Groups,
-  Games,
-  AutoAwesome
-} from '@mui/icons-material';
+  Box,
+  Tooltip,
+  ActionIcon,
+  Text,
+  Badge,
+  Group,
+  useMantineTheme,
+  Transition,
+  rem
+} from '@mantine/core';
+import {
+  IconSchool,
+  IconDeviceGamepad2,
+  IconQuestionMark,
+  IconMountain,
+  IconBrain,
+  IconUsers,
+  IconDeviceGamepad,
+  IconSparkles
+} from '@tabler/icons-react';
 
 interface IconData {
   name: string;
@@ -67,23 +67,23 @@ const ICON_IMAGES = {
 };
 
 const ICON_MAPPINGS = {
-  'ABC_CUBE': { icon: School, color: '#4caf50' },
-  'BACKPACK': { icon: Groups, color: '#2196f3' },
-  'BADGE': { icon: AutoAwesome, color: '#ff9800' },
-  'BASKETBALL': { icon: SportsEsports, color: '#f44336' },
-  'BOARD': { icon: Terrain, color: '#9c27b0' },
-  'BOOKS': { icon: School, color: '#4caf50' },
-  'CRAYON': { icon: School, color: '#ff5722' },
-  'ERASER': { icon: School, color: '#607d8b' },
-  'GRADUATION_CAP': { icon: School, color: '#ffc107' },
-  'LAMP': { icon: School, color: '#ffeb3b' },
-  'LIGHT_BULB': { icon: Psychology, color: '#ffeb3b' },
-  'OPEN_BOOK': { icon: School, color: '#4caf50' },
-  'PAPER': { icon: School, color: '#e0e0e0' },
-  'PENCIL': { icon: School, color: '#ff5722' },
-  'RULER': { icon: School, color: '#9e9e9e' },
-  'SOCCER_BALL': { icon: SportsEsports, color: '#4caf50' },
-  'TROPHY': { icon: AutoAwesome, color: '#ffc107' }
+  'ABC_CUBE': { icon: IconSchool, color: '#4caf50' },
+  'BACKPACK': { icon: IconUsers, color: '#2196f3' },
+  'BADGE': { icon: IconSparkles, color: '#ff9800' },
+  'BASKETBALL': { icon: IconDeviceGamepad2, color: '#f44336' },
+  'BOARD': { icon: IconMountain, color: '#9c27b0' },
+  'BOOKS': { icon: IconSchool, color: '#4caf50' },
+  'CRAYON': { icon: IconSchool, color: '#ff5722' },
+  'ERASER': { icon: IconSchool, color: '#607d8b' },
+  'GRADUATION_CAP': { icon: IconSchool, color: '#ffc107' },
+  'LAMP': { icon: IconSchool, color: '#ffeb3b' },
+  'LIGHT_BULB': { icon: IconBrain, color: '#ffeb3b' },
+  'OPEN_BOOK': { icon: IconSchool, color: '#4caf50' },
+  'PAPER': { icon: IconSchool, color: '#e0e0e0' },
+  'PENCIL': { icon: IconSchool, color: '#ff5722' },
+  'RULER': { icon: IconSchool, color: '#9e9e9e' },
+  'SOCCER_BALL': { icon: IconDeviceGamepad2, color: '#4caf50' },
+  'TROPHY': { icon: IconSparkles, color: '#ffc107' }
 };
 
 export const Roblox3DIcon: React.FunctionComponent<Roblox3DIconProps> = ({
@@ -93,7 +93,7 @@ export const Roblox3DIcon: React.FunctionComponent<Roblox3DIconProps> = ({
   animated = true,
   onClick
 }) => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -116,34 +116,39 @@ export const Roblox3DIcon: React.FunctionComponent<Roblox3DIconProps> = ({
 
   const iconElement = (
     <Box
-      sx={{
+      style={{
         position: 'relative',
         display: 'inline-block',
         cursor: icon.isUnlocked && onClick ? 'pointer' : 'default',
         transform: isHovered ? 'scale(1.1) rotate(5deg)' : 'scale(1) rotate(0deg)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         opacity: icon.isUnlocked ? 1 : 0.5,
-        filter: icon.isUnlocked ? 'none' : 'grayscale(100%)',
+        filter: icon.isUnlocked ? 'none' : 'grayscale(100%)'
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={(e: React.MouseEvent) => handleClick}
+      onClick={handleClick}
     >
       <Box
-        sx={{
+        style={{
           width: iconSize,
           height: iconSize,
-          borderRadius: 2,
-          background: `linear-gradient(145deg, ${alpha(iconMapping.color, 0.1)}, ${alpha(iconMapping.color, 0.05)})`,
-          border: `2px solid ${alpha(iconMapping.color, 0.3)}`,
+          borderRadius: rem(8),
+          background: `linear-gradient(145deg, ${theme.fn.rgba(iconMapping.color, 0.1)}, ${theme.fn.rgba(iconMapping.color, 0.05)})`,
+          border: `2px solid ${theme.fn.rgba(iconMapping.color, 0.3)}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
           overflow: 'hidden',
-          '&:hover': {
-            border: `2px solid ${iconMapping.color}`,
-            boxShadow: `0 8px 25px ${alpha(iconMapping.color, 0.3)}`,
+          transition: 'all 0.3s ease'
+        }}
+        styles={{
+          root: {
+            '&:hover': {
+              border: `2px solid ${iconMapping.color}`,
+              boxShadow: `0 8px 25px ${theme.fn.rgba(iconMapping.color, 0.3)}`
+            }
           }
         }}
       >
@@ -153,7 +158,7 @@ export const Roblox3DIcon: React.FunctionComponent<Roblox3DIconProps> = ({
             component="img"
             src={ICON_IMAGES[iconKey]}
             alt={icon.name}
-            sx={{
+            style={{
               width: '100%',
               height: '100%',
               objectFit: 'cover',
@@ -164,12 +169,12 @@ export const Roblox3DIcon: React.FunctionComponent<Roblox3DIconProps> = ({
             }}
           />
         )}
-        
+
         {/* Fallback icon */}
         <IconComponent
-          sx={{
-            fontSize: iconSize * 0.6,
-            color: iconMapping.color,
+          size={iconSize * 0.6}
+          color={iconMapping.color}
+          style={{
             zIndex: 2,
             position: 'relative'
           }}
@@ -177,54 +182,44 @@ export const Roblox3DIcon: React.FunctionComponent<Roblox3DIconProps> = ({
 
         {/* Level indicator */}
         {icon.level > 0 && (
-          <Box
-            sx={{
+          <Badge
+            size="xs"
+            variant="filled"
+            style={{
               position: 'absolute',
               top: -4,
               right: -4,
-              width: 16,
-              height: 16,
-              borderRadius: '50%',
-              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '0.7rem',
-              fontWeight: 600,
-              color: 'white',
+              background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
               zIndex: 3
             }}
           >
             {icon.level}
-          </Box>
+          </Badge>
         )}
 
         {/* Lock overlay for locked icons */}
         {!icon.isUnlocked && (
           <Box
-            sx={{
+            style={{
               position: 'absolute',
               top: 0,
               left: 0,
               right: 0,
               bottom: 0,
-              background: alpha('#000', 0.5),
+              background: theme.fn.rgba('#000', 0.5),
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               zIndex: 4
             }}
           >
-            <Typography
-              variant="caption"
-              sx={{
-                color: 'white',
-                fontWeight: 600,
-                fontSize: '0.6rem'
-              }}
+            <Text
+              size="xs"
+              c="white"
+              fw={600}
             >
               LOCKED
-            </Typography>
+            </Text>
           </Box>
         )}
       </Box>
@@ -237,42 +232,40 @@ export const Roblox3DIcon: React.FunctionComponent<Roblox3DIconProps> = ({
 
   return (
     <Tooltip
-      title={
+      label={
         <Box>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+          <Text size="sm" fw={600} mb="xs">
             {icon.name.replace(/_/g, ' ')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          </Text>
+          <Text size="xs" c="dimmed" mb="xs">
             {icon.description}
-          </Typography>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Chip
-              label={icon.category}
-              size="small"
-              sx={{
-                fontSize: '0.7rem',
-                height: 20,
-                background: `linear-gradient(135deg, ${iconMapping.color}, ${alpha(iconMapping.color, 0.7)})`,
+          </Text>
+          <Group spacing="xs" align="center">
+            <Badge
+              size="sm"
+              style={{
+                background: `linear-gradient(135deg, ${iconMapping.color}, ${theme.fn.rgba(iconMapping.color, 0.7)})`,
                 color: 'white'
               }}
-            />
+            >
+              {icon.category}
+            </Badge>
             {icon.level > 0 && (
-              <Chip
-                label={`Level ${icon.level}`}
-                size="small"
-                sx={{
-                  fontSize: '0.7rem',
-                  height: 20,
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              <Badge
+                size="sm"
+                style={{
+                  background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
                   color: 'white'
                 }}
-              />
+              >
+                Level {icon.level}
+              </Badge>
             )}
-          </Stack>
+          </Group>
         </Box>
       }
-      arrow
-      placement="top"
+      withArrow
+      position="top"
     >
       {iconElement}
     </Tooltip>

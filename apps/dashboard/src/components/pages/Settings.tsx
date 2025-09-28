@@ -1,82 +1,53 @@
 import * as React from "react";
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import Switch from '@mui/material/Switch';
-import TextField from '@mui/material/TextField';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormGroup from '@mui/material/FormGroup';
-import Checkbox from '@mui/material/Checkbox';
-import Radio from '@mui/material/Radio';
-import RadioGroup from '@mui/material/RadioGroup';
-import Divider from '@mui/material/Divider';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
-import IconButton from '@mui/material/IconButton';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import Box from '@mui/material/Box';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import Avatar from '@mui/material/Avatar';
-import Badge from '@mui/material/Badge';
-import Chip from '@mui/material/Chip';
+import {
+  Card,
+  Text,
+  Button,
+  Stack,
+  Switch,
+  TextInput,
+  Select,
+  Checkbox,
+  Radio,
+  Divider,
+  ActionIcon,
+  Alert,
+  Box,
+  Tabs,
+  Avatar,
+  Badge,
+  Grid,
+  Group,
+  Textarea
+} from '@mantine/core';
 
-import Grid2 from "@mui/material/Unstable_Grid2";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import SecurityIcon from "@mui/icons-material/Security";
-import PaletteIcon from "@mui/icons-material/Palette";
-import LanguageIcon from "@mui/icons-material/Language";
-import AccessibilityIcon from "@mui/icons-material/Accessibility";
-import StorageIcon from "@mui/icons-material/Storage";
-import EditIcon from "@mui/icons-material/Edit";
-import SaveIcon from "@mui/icons-material/Save";
-import CancelIcon from "@mui/icons-material/Cancel";
-import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DownloadIcon from "@mui/icons-material/Download";
-import VpnKeyIcon from "@mui/icons-material/VpnKey";
-import EmailIcon from "@mui/icons-material/Email";
-import SmartphoneIcon from "@mui/icons-material/Smartphone";
+import {
+  IconUser,
+  IconBell,
+  IconShield,
+  IconPalette,
+  IconWorld,
+  IconAccessible,
+  IconDatabase,
+  IconEdit,
+  IconDeviceFloppy,
+  IconX,
+  IconCamera,
+  IconTrash,
+  IconDownload,
+  IconKey,
+  IconMail,
+  IconDeviceMobile,
+  IconSettings
+} from "@tabler/icons-react";
 import { useAppSelector, useAppDispatch } from "../../store";
 import { setTheme } from "../../store/slices/uiSlice";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`settings-tabpanel-${index}`}
-      aria-labelledby={`settings-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
-    </div>
-  );
-}
 
 export default function Settings() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.user);
   const theme = useAppSelector((s) => s.ui.theme);
-  const [activeTab, setActiveTab] = React.useState(0);
+  const [activeTab, setActiveTab] = React.useState("0");
   const [editMode, setEditMode] = React.useState(false);
   const [adminSettings, setAdminSettings] = React.useState({
     agentDashboard: {
@@ -103,594 +74,480 @@ export default function Settings() {
     timezone: "PST",
   });
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  };
-
   const handleSaveProfile = () => {
     setEditMode(false);
     console.log("Saving profile:", profileData);
   };
 
   return (
-    <Grid2 container spacing={3}>
+    <Grid gutter="md">
       {/* Header */}
-      <Grid2 xs={12}>
+      <Grid.Col span={12}>
         <Card>
-          <CardContent>
-            <Stack
-              direction={{ xs: "column", md: "row" }}
-              justifyContent="space-between"
-              alignItems={{ xs: "flex-start", md: "center" }}
-              gap={2}
-            >
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                Settings
-              </Typography>
-              <Button variant="contained" startIcon={<SaveIcon />}>
-                Save All Changes
-              </Button>
-            </Stack>
-          </CardContent>
+          <Group justify="space-between" align="center">
+            <Text size="xl" fw={600}>
+              Settings
+            </Text>
+            <Button leftSection={<IconDeviceFloppy size={16} />}>
+              Save All Changes
+            </Button>
+          </Group>
         </Card>
-      </Grid2>
+      </Grid.Col>
 
       {/* Settings Tabs */}
-      <Grid2 xs={12}>
+      <Grid.Col span={12}>
         <Card>
-          <CardContent>
-            <Tabs value={activeTab} onChange={handleTabChange} aria-label="settings tabs">
-              <Tab icon={<AccountCircleIcon />} label="Profile" />
-              <Tab icon={<NotificationsIcon />} label="Notifications" />
-              <Tab icon={<SecurityIcon />} label="Security" />
-              <Tab icon={<PaletteIcon />} label="Appearance" />
-              <Tab icon={<LanguageIcon />} label="Language" />
-              <Tab icon={<AccessibilityIcon />} label="Accessibility" />
-              <Tab icon={<StorageIcon />} label="Data" />
-              {user.role === "admin" && <Tab icon={<AdminPanelSettingsIcon />} label="Admin" />}
-            </Tabs>
+          <Tabs value={activeTab} onTabChange={(value) => setActiveTab(value || "0")}>
+            <Tabs.List>
+              <Tabs.Tab value="0" leftSection={<IconUser size={16} />}>
+                Profile
+              </Tabs.Tab>
+              <Tabs.Tab value="1" leftSection={<IconBell size={16} />}>
+                Notifications
+              </Tabs.Tab>
+              <Tabs.Tab value="2" leftSection={<IconShield size={16} />}>
+                Security
+              </Tabs.Tab>
+              <Tabs.Tab value="3" leftSection={<IconPalette size={16} />}>
+                Appearance
+              </Tabs.Tab>
+              <Tabs.Tab value="4" leftSection={<IconWorld size={16} />}>
+                Language
+              </Tabs.Tab>
+              <Tabs.Tab value="5" leftSection={<IconAccessible size={16} />}>
+                Accessibility
+              </Tabs.Tab>
+              <Tabs.Tab value="6" leftSection={<IconDatabase size={16} />}>
+                Data
+              </Tabs.Tab>
+              {user.role === "admin" && (
+                <Tabs.Tab value="7" leftSection={<IconSettings size={16} />}>
+                  Admin
+                </Tabs.Tab>
+              )}
+            </Tabs.List>
 
             {/* Profile Tab */}
-            <TabPanel value={activeTab} index={0}>
-              <Grid2 container spacing={3}>
-                <Grid2 xs={12} md={4}>
-                  <Stack alignItems="center" spacing={2}>
+            <Tabs.Panel value="0" pt="md">
+              <Grid gutter="md">
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                  <Stack align="center" gap="md">
                     <Badge
-                      overlap="circular"
-                      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                      badgeContent={
-                        <IconButton
-                          size="small"
-                          sx={{
-                            bgcolor: "primary.main",
-                            color: "white",
-                            "&:hover": { bgcolor: "primary.dark" },
-                          }}
-                        >
-                          <PhotoCameraIcon fontSize="small" />
-                        </IconButton>
-                      }
+                      variant="light"
+                      size="xl"
+                      style={{ position: "relative" }}
                     >
                       <Avatar
                         src={(user as any).avatarUrl}
-                        sx={{ width: 120, height: 120 }}
+                        size="xl"
                       >
                         {(user as any).displayName?.[0]}
                       </Avatar>
+                      <ActionIcon
+                        size="sm"
+                        variant="filled"
+                        style={{ position: "absolute", bottom: 0, right: 0 }}
+                      >
+                        <IconCamera size={14} />
+                      </ActionIcon>
                     </Badge>
-                    <Typography variant="h6">{profileData.displayName}</Typography>
-                    <Chip label={user.role} color="primary" />
-                    <Stack direction="row" gap={1}>
+                    <Text size="lg" fw={600}>{profileData.displayName}</Text>
+                    <Badge color="blue">{user.role}</Badge>
+                    <Group gap="xs">
                       {!editMode ? (
                         <Button
-                          variant="outlined"
-                          startIcon={<EditIcon />}
-                          onClick={(e: React.MouseEvent) => () => setEditMode(true)}
+                          variant="outline"
+                          leftSection={<IconEdit size={16} />}
+                          onClick={() => setEditMode(true)}
                         >
                           Edit Profile
                         </Button>
                       ) : (
                         <>
                           <Button
-                            variant="contained"
-                            startIcon={<SaveIcon />}
-                            onClick={(e: React.MouseEvent) => handleSaveProfile}
+                            leftSection={<IconDeviceFloppy size={16} />}
+                            onClick={handleSaveProfile}
                           >
                             Save
                           </Button>
                           <Button
-                            variant="outlined"
-                            startIcon={<CancelIcon />}
-                            onClick={(e: React.MouseEvent) => () => setEditMode(false)}
+                            variant="outline"
+                            leftSection={<IconX size={16} />}
+                            onClick={() => setEditMode(false)}
                           >
                             Cancel
                           </Button>
                         </>
                       )}
-                    </Stack>
+                    </Group>
                   </Stack>
-                </Grid2>
-                <Grid2 xs={12} md={8}>
-                  <Stack spacing={2}>
-                    <TextField
-                      fullWidth
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 8 }}>
+                  <Stack gap="md">
+                    <TextInput
                       label="Display Name"
                       value={profileData.displayName}
                       onChange={(e) => setProfileData({ ...profileData, displayName: e.target.value })}
                       disabled={!editMode}
                     />
-                    <TextField
-                      fullWidth
+                    <TextInput
                       label="Email"
                       value={profileData.email}
                       onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                       disabled={!editMode}
                     />
-                    <TextField
-                      fullWidth
+                    <TextInput
                       label="Phone"
                       value={profileData.phone}
                       onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
                       disabled={!editMode}
                     />
-                    <TextField
-                      fullWidth
+                    <Textarea
                       label="Bio"
-                      multiline
                       rows={3}
                       value={profileData.bio}
                       onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
                       disabled={!editMode}
                     />
-                    <Grid2 container spacing={2}>
-                      <Grid2 xs={12} md={6}>
-                        <TextField
-                          fullWidth
+                    <Grid gutter="md">
+                      <Grid.Col span={{ base: 12, md: 6 }}>
+                        <TextInput
                           label="Location"
                           value={profileData.location}
                           onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
                           disabled={!editMode}
                         />
-                      </Grid2>
-                      <Grid2 xs={12} md={6}>
-                        <FormControl fullWidth disabled={!editMode}>
-                          <InputLabel>Timezone</InputLabel>
-                          <Select
-                            value={profileData.timezone}
-                            label="Timezone"
-                            onChange={(e) => setProfileData({ ...profileData, timezone: e.target.value })}
-                          >
-                            <MenuItem value="PST">PST</MenuItem>
-                            <MenuItem value="EST">EST</MenuItem>
-                            <MenuItem value="CST">CST</MenuItem>
-                            <MenuItem value="MST">MST</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Grid2>
-                    </Grid2>
+                      </Grid.Col>
+                      <Grid.Col span={{ base: 12, md: 6 }}>
+                        <Select
+                          label="Timezone"
+                          value={profileData.timezone}
+                          onChange={(value) => setProfileData({ ...profileData, timezone: value || "PST" })}
+                          disabled={!editMode}
+                          data={[
+                            { value: "PST", label: "PST" },
+                            { value: "EST", label: "EST" },
+                            { value: "CST", label: "CST" },
+                            { value: "MST", label: "MST" },
+                          ]}
+                        />
+                      </Grid.Col>
+                    </Grid>
                   </Stack>
-                </Grid2>
-              </Grid2>
-            </TabPanel>
+                </Grid.Col>
+              </Grid>
+            </Tabs.Panel>
 
             {/* Notifications Tab */}
-            <TabPanel value={activeTab} index={1}>
-              <Stack spacing={3}>
-                <Alert severity="info">
-                  <AlertTitle>Notification Preferences</AlertTitle>
-                  Choose how you want to receive notifications about important updates and activities.
+            <Tabs.Panel value="1" pt="md">
+              <Stack gap="md">
+                <Alert color="blue">
+                  <Text fw={600}>Notification Preferences</Text>
+                  <Text size="sm">Choose how you want to receive notifications about important updates and activities.</Text>
                 </Alert>
-                
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Email Notifications
-                    </Typography>
-                    <FormGroup>
-                      <FormControlLabel
-                        control={<Checkbox defaultChecked />}
-                        label="New messages"
-                      />
-                      <FormControlLabel
-                        control={<Checkbox defaultChecked />}
-                        label="Assignment updates"
-                      />
-                      <FormControlLabel
-                        control={<Checkbox defaultChecked />}
-                        label="Grade posted"
-                      />
-                      <FormControlLabel
-                        control={<Checkbox />}
-                        label="Weekly progress reports"
-                      />
-                      <FormControlLabel
-                        control={<Checkbox />}
-                        label="System updates"
-                      />
-                    </FormGroup>
-                  </CardContent>
+
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Email Notifications
+                  </Text>
+                  <Stack gap="sm">
+                    <Checkbox defaultChecked label="New messages" />
+                    <Checkbox defaultChecked label="Assignment updates" />
+                    <Checkbox defaultChecked label="Grade posted" />
+                    <Checkbox label="Weekly progress reports" />
+                    <Checkbox label="System updates" />
+                  </Stack>
                 </Card>
 
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Push Notifications
-                    </Typography>
-                    <FormGroup>
-                      <FormControlLabel
-                        control={<Checkbox defaultChecked />}
-                        label="Direct messages"
-                      />
-                      <FormControlLabel
-                        control={<Checkbox defaultChecked />}
-                        label="Class announcements"
-                      />
-                      <FormControlLabel
-                        control={<Checkbox />}
-                        label="Achievement unlocked"
-                      />
-                      <FormControlLabel
-                        control={<Checkbox />}
-                        label="Reminder for assignments"
-                      />
-                    </FormGroup>
-                  </CardContent>
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Push Notifications
+                  </Text>
+                  <Stack gap="sm">
+                    <Checkbox defaultChecked label="Direct messages" />
+                    <Checkbox defaultChecked label="Class announcements" />
+                    <Checkbox label="Achievement unlocked" />
+                    <Checkbox label="Reminder for assignments" />
+                  </Stack>
                 </Card>
 
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Notification Schedule
-                    </Typography>
-                    <RadioGroup defaultValue="immediate">
-                      <FormControlLabel value="immediate" control={<Radio />} label="Immediately" />
-                      <FormControlLabel value="hourly" control={<Radio />} label="Hourly digest" />
-                      <FormControlLabel value="daily" control={<Radio />} label="Daily digest" />
-                      <FormControlLabel value="weekly" control={<Radio />} label="Weekly digest" />
-                    </RadioGroup>
-                  </CardContent>
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Notification Schedule
+                  </Text>
+                  <Radio.Group defaultValue="immediate">
+                    <Stack gap="sm">
+                      <Radio value="immediate" label="Immediately" />
+                      <Radio value="hourly" label="Hourly digest" />
+                      <Radio value="daily" label="Daily digest" />
+                      <Radio value="weekly" label="Weekly digest" />
+                    </Stack>
+                  </Radio.Group>
                 </Card>
               </Stack>
-            </TabPanel>
+            </Tabs.Panel>
 
             {/* Security Tab */}
-            <TabPanel value={activeTab} index={2}>
-              <Stack spacing={3}>
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Password
-                    </Typography>
-                    <Stack spacing={2}>
-                      <Typography variant="body2" color="text.secondary">
-                        Last changed: 30 days ago
-                      </Typography>
-                      <Button variant="outlined" startIcon={<VpnKeyIcon />}>
-                        Change Password
+            <Tabs.Panel value="2" pt="md">
+              <Stack gap="md">
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Password
+                  </Text>
+                  <Stack gap="md">
+                    <Text size="sm" c="dimmed">
+                      Last changed: 30 days ago
+                    </Text>
+                    <Button variant="outline" leftSection={<IconKey size={16} />}>
+                      Change Password
+                    </Button>
+                  </Stack>
+                </Card>
+
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Two-Factor Authentication
+                  </Text>
+                  <Stack gap="md">
+                    <Switch defaultChecked label="Enable two-factor authentication" />
+                    <Group gap="md">
+                      <Button variant="outline" leftSection={<IconDeviceMobile size={16} />}>
+                        Configure Authenticator App
                       </Button>
-                    </Stack>
-                  </CardContent>
+                      <Button variant="outline" leftSection={<IconMail size={16} />}>
+                        Configure Email 2FA
+                      </Button>
+                    </Group>
+                  </Stack>
                 </Card>
 
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Two-Factor Authentication
-                    </Typography>
-                    <Stack spacing={2}>
-                      <FormControlLabel
-                        control={<Switch defaultChecked />}
-                        label="Enable two-factor authentication"
-                      />
-                      <Stack direction="row" gap={2}>
-                        <Button variant="outlined" startIcon={<SmartphoneIcon />}>
-                          Configure Authenticator App
-                        </Button>
-                        <Button variant="outlined" startIcon={<EmailIcon />}>
-                          Configure Email 2FA
-                        </Button>
-                      </Stack>
-                    </Stack>
-                  </CardContent>
-                </Card>
-
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Active Sessions
-                    </Typography>
-                    <List>
-                      <ListItem>
-                        <ListItemText
-                          primary="Chrome on Windows"
-                          secondary="San Francisco, CA • Active now"
-                        />
-                        <ListItemSecondaryAction>
-                          <Chip label="Current" color="success" size="small" />
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                      <ListItem>
-                        <ListItemText
-                          primary="Safari on iPhone"
-                          secondary="San Francisco, CA • 2 hours ago"
-                        />
-                        <ListItemSecondaryAction>
-                          <Button size="small" color="error">
-                            Revoke
-                          </Button>
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                    </List>
-                  </CardContent>
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Active Sessions
+                  </Text>
+                  <Stack gap="md">
+                    <Group justify="space-between" align="center">
+                      <Box>
+                        <Text fw={500}>Chrome on Windows</Text>
+                        <Text size="sm" c="dimmed">San Francisco, CA • Active now</Text>
+                      </Box>
+                      <Badge color="green" size="sm">Current</Badge>
+                    </Group>
+                    <Group justify="space-between" align="center">
+                      <Box>
+                        <Text fw={500}>Safari on iPhone</Text>
+                        <Text size="sm" c="dimmed">San Francisco, CA • 2 hours ago</Text>
+                      </Box>
+                      <Button size="sm" color="red">
+                        Revoke
+                      </Button>
+                    </Group>
+                  </Stack>
                 </Card>
               </Stack>
-            </TabPanel>
+            </Tabs.Panel>
 
             {/* Appearance Tab */}
-            <TabPanel value={activeTab} index={3}>
-              <Stack spacing={3}>
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Theme
-                    </Typography>
-                    <RadioGroup
-                      value={theme}
-                      onChange={(e) => dispatch(setTheme(e.target.value as any))}
-                    >
-                      <FormControlLabel value="light" control={<Radio />} label="Light" />
-                      <FormControlLabel value="dark" control={<Radio />} label="Dark" />
-                      <FormControlLabel value="auto" control={<Radio />} label="System default" />
-                    </RadioGroup>
-                  </CardContent>
-                </Card>
-
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Color Scheme
-                    </Typography>
-                    <Stack direction="row" gap={2}>
-                      {["#2563EB", "#9333EA", "#22C55E", "#EF4444", "#F59E0B"].map((color) => (
-                        <Box
-                          key={color}
-                          sx={{
-                            width: 40,
-                            height: 40,
-                            bgcolor: color,
-                            borderRadius: 2,
-                            cursor: "pointer",
-                            border: "2px solid transparent",
-                            "&:hover": {
-                              border: "2px solid",
-                              borderColor: "primary.main",
-                            },
-                          }}
-                        />
-                      ))}
+            <Tabs.Panel value="3" pt="md">
+              <Stack gap="md">
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Theme
+                  </Text>
+                  <Radio.Group
+                    value={theme}
+                    onChange={(value) => dispatch(setTheme(value as any))}
+                  >
+                    <Stack gap="sm">
+                      <Radio value="light" label="Light" />
+                      <Radio value="dark" label="Dark" />
+                      <Radio value="auto" label="System default" />
                     </Stack>
-                  </CardContent>
+                  </Radio.Group>
                 </Card>
 
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Display Options
-                    </Typography>
-                    <FormGroup>
-                      <FormControlLabel
-                        control={<Switch defaultChecked />}
-                        label="Show animations"
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Color Scheme
+                  </Text>
+                  <Group gap="md">
+                    {["#2563EB", "#9333EA", "#22C55E", "#EF4444", "#F59E0B"].map((color) => (
+                      <Box
+                        key={color}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          backgroundColor: color,
+                          borderRadius: 8,
+                          cursor: "pointer",
+                          border: "2px solid transparent",
+                        }}
                       />
-                      <FormControlLabel
-                        control={<Switch defaultChecked />}
-                        label="Compact mode"
-                      />
-                      <FormControlLabel
-                        control={<Switch />}
-                        label="High contrast"
-                      />
-                    </FormGroup>
-                  </CardContent>
+                    ))}
+                  </Group>
+                </Card>
+
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Display Options
+                  </Text>
+                  <Stack gap="sm">
+                    <Switch defaultChecked label="Show animations" />
+                    <Switch defaultChecked label="Compact mode" />
+                    <Switch label="High contrast" />
+                  </Stack>
                 </Card>
               </Stack>
-            </TabPanel>
+            </Tabs.Panel>
 
             {/* Language Tab */}
-            <TabPanel value={activeTab} index={4}>
-              <Stack spacing={3}>
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Language Preference
-                    </Typography>
-                    <FormControl fullWidth>
-                      <InputLabel>Language</InputLabel>
-                      <Select defaultValue="en" label="Language">
-                        <MenuItem value="en">English</MenuItem>
-                        <MenuItem value="es">Español</MenuItem>
-                        <MenuItem value="fr">Français</MenuItem>
-                        <MenuItem value="de">Deutsch</MenuItem>
-                        <MenuItem value="zh">中文</MenuItem>
-                        <MenuItem value="ja">日本語</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </CardContent>
+            <Tabs.Panel value="4" pt="md">
+              <Stack gap="md">
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Language Preference
+                  </Text>
+                  <Select
+                    label="Language"
+                    defaultValue="en"
+                    data={[
+                      { value: "en", label: "English" },
+                      { value: "es", label: "Español" },
+                      { value: "fr", label: "Français" },
+                      { value: "de", label: "Deutsch" },
+                      { value: "zh", label: "中文" },
+                      { value: "ja", label: "日本語" },
+                    ]}
+                  />
                 </Card>
 
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Regional Settings
-                    </Typography>
-                    <Stack spacing={2}>
-                      <FormControl fullWidth>
-                        <InputLabel>Date Format</InputLabel>
-                        <Select defaultValue="mm/dd/yyyy" label="Date Format">
-                          <MenuItem value="mm/dd/yyyy">MM/DD/YYYY</MenuItem>
-                          <MenuItem value="dd/mm/yyyy">DD/MM/YYYY</MenuItem>
-                          <MenuItem value="yyyy-mm-dd">YYYY-MM-DD</MenuItem>
-                        </Select>
-                      </FormControl>
-                      <FormControl fullWidth>
-                        <InputLabel>Time Format</InputLabel>
-                        <Select defaultValue="12h" label="Time Format">
-                          <MenuItem value="12h">12-hour</MenuItem>
-                          <MenuItem value="24h">24-hour</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Stack>
-                  </CardContent>
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Regional Settings
+                  </Text>
+                  <Stack gap="md">
+                    <Select
+                      label="Date Format"
+                      defaultValue="mm/dd/yyyy"
+                      data={[
+                        { value: "mm/dd/yyyy", label: "MM/DD/YYYY" },
+                        { value: "dd/mm/yyyy", label: "DD/MM/YYYY" },
+                        { value: "yyyy-mm-dd", label: "YYYY-MM-DD" },
+                      ]}
+                    />
+                    <Select
+                      label="Time Format"
+                      defaultValue="12h"
+                      data={[
+                        { value: "12h", label: "12-hour" },
+                        { value: "24h", label: "24-hour" },
+                      ]}
+                    />
+                  </Stack>
                 </Card>
               </Stack>
-            </TabPanel>
+            </Tabs.Panel>
 
             {/* Accessibility Tab */}
-            <TabPanel value={activeTab} index={5}>
-              <Stack spacing={3}>
-                <Alert severity="info">
-                  <AlertTitle>Accessibility Features</AlertTitle>
-                  Customize the platform to meet your accessibility needs.
+            <Tabs.Panel value="5" pt="md">
+              <Stack gap="md">
+                <Alert color="blue">
+                  <Text fw={600}>Accessibility Features</Text>
+                  <Text size="sm">Customize the platform to meet your accessibility needs.</Text>
                 </Alert>
 
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Visual
-                    </Typography>
-                    <FormGroup>
-                      <FormControlLabel
-                        control={<Switch />}
-                        label="Large text"
-                      />
-                      <FormControlLabel
-                        control={<Switch />}
-                        label="High contrast"
-                      />
-                      <FormControlLabel
-                        control={<Switch />}
-                        label="Reduce motion"
-                      />
-                      <FormControlLabel
-                        control={<Switch />}
-                        label="Screen reader optimization"
-                      />
-                    </FormGroup>
-                  </CardContent>
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Visual
+                  </Text>
+                  <Stack gap="sm">
+                    <Switch label="Large text" />
+                    <Switch label="High contrast" />
+                    <Switch label="Reduce motion" />
+                    <Switch label="Screen reader optimization" />
+                  </Stack>
                 </Card>
 
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Keyboard Navigation
-                    </Typography>
-                    <FormGroup>
-                      <FormControlLabel
-                        control={<Switch defaultChecked />}
-                        label="Enable keyboard shortcuts"
-                      />
-                      <FormControlLabel
-                        control={<Switch />}
-                        label="Show focus indicators"
-                      />
-                      <FormControlLabel
-                        control={<Switch />}
-                        label="Tab navigation hints"
-                      />
-                    </FormGroup>
-                  </CardContent>
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Keyboard Navigation
+                  </Text>
+                  <Stack gap="sm">
+                    <Switch defaultChecked label="Enable keyboard shortcuts" />
+                    <Switch label="Show focus indicators" />
+                    <Switch label="Tab navigation hints" />
+                  </Stack>
                 </Card>
               </Stack>
-            </TabPanel>
+            </Tabs.Panel>
 
             {/* Data Tab */}
-            <TabPanel value={activeTab} index={6}>
-              <Stack spacing={3}>
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Data Management
-                    </Typography>
-                    <Stack spacing={2}>
-                      <Button variant="outlined" startIcon={<DownloadIcon />}>
-                        Download My Data
-                      </Button>
-                      <Button variant="outlined" color="error" startIcon={<DeleteIcon />}>
-                        Delete My Account
-                      </Button>
-                    </Stack>
-                  </CardContent>
+            <Tabs.Panel value="6" pt="md">
+              <Stack gap="md">
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Data Management
+                  </Text>
+                  <Stack gap="md">
+                    <Button variant="outline" leftSection={<IconDownload size={16} />}>
+                      Download My Data
+                    </Button>
+                    <Button variant="outline" color="red" leftSection={<IconTrash size={16} />}>
+                      Delete My Account
+                    </Button>
+                  </Stack>
                 </Card>
 
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                      Privacy Settings
-                    </Typography>
-                    <FormGroup>
-                      <FormControlLabel
-                        control={<Switch defaultChecked />}
-                        label="Allow analytics"
-                      />
-                      <FormControlLabel
-                        control={<Switch />}
-                        label="Share progress with parents"
-                      />
-                      <FormControlLabel
-                        control={<Switch defaultChecked />}
-                        label="Show on leaderboards"
-                      />
-                    </FormGroup>
-                  </CardContent>
+                <Card variant="outline">
+                  <Text size="lg" fw={600} mb="md">
+                    Privacy Settings
+                  </Text>
+                  <Stack gap="sm">
+                    <Switch defaultChecked label="Allow analytics" />
+                    <Switch label="Share progress with parents" />
+                    <Switch defaultChecked label="Show on leaderboards" />
+                  </Stack>
                 </Card>
               </Stack>
-            </TabPanel>
+            </Tabs.Panel>
 
             {/* Admin Settings Tab - Only visible to admins */}
             {user.role === "admin" && (
-              <TabPanel value={activeTab} index={7}>
-                <Stack spacing={3}>
-                  <Alert severity="warning">
-                    <AlertTitle>Administrator Settings</AlertTitle>
-                    These settings affect system-wide behavior and should be changed carefully.
+              <Tabs.Panel value="7" pt="md">
+                <Stack gap="md">
+                  <Alert color="yellow">
+                    <Text fw={600}>Administrator Settings</Text>
+                    <Text size="sm">These settings affect system-wide behavior and should be changed carefully.</Text>
                   </Alert>
 
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                        Agent Dashboard Access
-                      </Typography>
-                      <FormGroup>
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={adminSettings.agentDashboard.teacherAccess}
-                              onChange={(e) =>
-                                setAdminSettings({
-                                  ...adminSettings,
-                                  agentDashboard: {
-                                    ...adminSettings.agentDashboard,
-                                    teacherAccess: e.target.checked,
-                                  },
-                                })
-                              }
-                            />
-                          }
-                          label="Allow teachers to access Agent Dashboard"
-                        />
-                        <Typography variant="caption" color="text.secondary" sx={{ ml: 4.5, mt: 0.5 }}>
-                          When enabled, teachers will see the Agent System option in their navigation menu
-                        </Typography>
-                      </FormGroup>
+                  <Card variant="outline">
+                    <Text size="lg" fw={600} mb="md">
+                      Agent Dashboard Access
+                    </Text>
+                    <Stack gap="md">
+                      <Switch
+                        checked={adminSettings.agentDashboard.teacherAccess}
+                        onChange={(e) =>
+                          setAdminSettings({
+                            ...adminSettings,
+                            agentDashboard: {
+                              ...adminSettings.agentDashboard,
+                              teacherAccess: e.currentTarget.checked,
+                            },
+                          })
+                        }
+                        label="Allow teachers to access Agent Dashboard"
+                        description="When enabled, teachers will see the Agent System option in their navigation menu"
+                      />
 
-                      <Divider sx={{ my: 2 }} />
+                      <Divider />
 
-                      <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                      <Text size="md" fw={600}>
                         Agent Dashboard Configuration
-                      </Typography>
-                      <Stack spacing={2}>
-                        <TextField
-                          fullWidth
+                      </Text>
+                      <Stack gap="md">
+                        <TextInput
                           type="number"
                           label="Auto-refresh Interval (seconds)"
                           value={adminSettings.agentDashboard.autoRefreshInterval}
@@ -703,11 +560,11 @@ export default function Settings() {
                               },
                             })
                           }
-                          InputProps={{ inputProps: { min: 5, max: 300 } }}
-                          helperText="How often the dashboard should refresh data"
+                          min={5}
+                          max={300}
+                          description="How often the dashboard should refresh data"
                         />
-                        <TextField
-                          fullWidth
+                        <TextInput
                           type="number"
                           label="Max Concurrent Tasks"
                           value={adminSettings.agentDashboard.maxConcurrentTasks}
@@ -720,161 +577,146 @@ export default function Settings() {
                               },
                             })
                           }
-                          InputProps={{ inputProps: { min: 1, max: 50 } }}
-                          helperText="Maximum number of tasks that can run simultaneously"
+                          min={1}
+                          max={50}
+                          description="Maximum number of tasks that can run simultaneously"
                         />
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={adminSettings.agentDashboard.enableResourceMonitoring}
-                              onChange={(e) =>
-                                setAdminSettings({
-                                  ...adminSettings,
-                                  agentDashboard: {
-                                    ...adminSettings.agentDashboard,
-                                    enableResourceMonitoring: e.target.checked,
-                                  },
-                                })
-                              }
-                            />
+                        <Switch
+                          checked={adminSettings.agentDashboard.enableResourceMonitoring}
+                          onChange={(e) =>
+                            setAdminSettings({
+                              ...adminSettings,
+                              agentDashboard: {
+                                ...adminSettings.agentDashboard,
+                                enableResourceMonitoring: e.currentTarget.checked,
+                              },
+                            })
                           }
                           label="Enable Resource Monitoring"
                         />
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={adminSettings.agentDashboard.enableWorktreeCoordination}
-                              onChange={(e) =>
-                                setAdminSettings({
-                                  ...adminSettings,
-                                  agentDashboard: {
-                                    ...adminSettings.agentDashboard,
-                                    enableWorktreeCoordination: e.target.checked,
-                                  },
-                                })
-                              }
-                            />
+                        <Switch
+                          checked={adminSettings.agentDashboard.enableWorktreeCoordination}
+                          onChange={(e) =>
+                            setAdminSettings({
+                              ...adminSettings,
+                              agentDashboard: {
+                                ...adminSettings.agentDashboard,
+                                enableWorktreeCoordination: e.currentTarget.checked,
+                              },
+                            })
                           }
                           label="Enable Worktree Coordination"
                         />
                       </Stack>
-                    </CardContent>
+                    </Stack>
                   </Card>
 
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                        System Limits
-                      </Typography>
-                      <Stack spacing={2}>
-                        <TextField
-                          fullWidth
-                          type="number"
-                          label="Max Agents Per Type"
-                          value={adminSettings.systemLimits.maxAgentsPerType}
-                          onChange={(e) =>
-                            setAdminSettings({
-                              ...adminSettings,
-                              systemLimits: {
-                                ...adminSettings.systemLimits,
-                                maxAgentsPerType: parseInt(e.target.value) || 5,
-                              },
-                            })
-                          }
-                          InputProps={{ inputProps: { min: 1, max: 20 } }}
-                          helperText="Maximum number of agents of each type that can be created"
-                        />
-                        <TextField
-                          fullWidth
-                          type="number"
-                          label="Task Queue Size"
-                          value={adminSettings.systemLimits.taskQueueSize}
-                          onChange={(e) =>
-                            setAdminSettings({
-                              ...adminSettings,
-                              systemLimits: {
-                                ...adminSettings.systemLimits,
-                                taskQueueSize: parseInt(e.target.value) || 1000,
-                              },
-                            })
-                          }
-                          InputProps={{ inputProps: { min: 100, max: 10000 } }}
-                          helperText="Maximum number of tasks that can be queued"
-                        />
+                  <Card variant="outline">
+                    <Text size="lg" fw={600} mb="md">
+                      System Limits
+                    </Text>
+                    <Stack gap="md">
+                      <TextInput
+                        type="number"
+                        label="Max Agents Per Type"
+                        value={adminSettings.systemLimits.maxAgentsPerType}
+                        onChange={(e) =>
+                          setAdminSettings({
+                            ...adminSettings,
+                            systemLimits: {
+                              ...adminSettings.systemLimits,
+                              maxAgentsPerType: parseInt(e.target.value) || 5,
+                            },
+                          })
+                        }
+                        min={1}
+                        max={20}
+                        description="Maximum number of agents of each type that can be created"
+                      />
+                      <TextInput
+                        type="number"
+                        label="Task Queue Size"
+                        value={adminSettings.systemLimits.taskQueueSize}
+                        onChange={(e) =>
+                          setAdminSettings({
+                            ...adminSettings,
+                            systemLimits: {
+                              ...adminSettings.systemLimits,
+                              taskQueueSize: parseInt(e.target.value) || 1000,
+                            },
+                          })
+                        }
+                        min={100}
+                        max={10000}
+                        description="Maximum number of tasks that can be queued"
+                      />
 
-                        <Divider />
+                      <Divider />
 
-                        <Typography variant="subtitle2">Auto-scaling</Typography>
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={adminSettings.systemLimits.enableAutoScaling}
+                      <Text size="md" fw={600}>Auto-scaling</Text>
+                      <Switch
+                        checked={adminSettings.systemLimits.enableAutoScaling}
+                        onChange={(e) =>
+                          setAdminSettings({
+                            ...adminSettings,
+                            systemLimits: {
+                              ...adminSettings.systemLimits,
+                              enableAutoScaling: e.currentTarget.checked,
+                            },
+                          })
+                        }
+                        label="Enable Auto-scaling"
+                      />
+                      {adminSettings.systemLimits.enableAutoScaling && (
+                        <Grid gutter="md">
+                          <Grid.Col span={6}>
+                            <TextInput
+                              type="number"
+                              label="Min Agents"
+                              value={adminSettings.systemLimits.minAgents}
                               onChange={(e) =>
                                 setAdminSettings({
                                   ...adminSettings,
                                   systemLimits: {
                                     ...adminSettings.systemLimits,
-                                    enableAutoScaling: e.target.checked,
+                                    minAgents: parseInt(e.target.value) || 1,
                                   },
                                 })
                               }
+                              min={1}
+                              max={10}
                             />
-                          }
-                          label="Enable Auto-scaling"
-                        />
-                        {adminSettings.systemLimits.enableAutoScaling && (
-                          <Grid2 container spacing={2}>
-                            <Grid2 xs={6}>
-                              <TextField
-                                fullWidth
-                                type="number"
-                                label="Min Agents"
-                                value={adminSettings.systemLimits.minAgents}
-                                onChange={(e) =>
-                                  setAdminSettings({
-                                    ...adminSettings,
-                                    systemLimits: {
-                                      ...adminSettings.systemLimits,
-                                      minAgents: parseInt(e.target.value) || 1,
-                                    },
-                                  })
-                                }
-                                InputProps={{ inputProps: { min: 1, max: 10 } }}
-                              />
-                            </Grid2>
-                            <Grid2 xs={6}>
-                              <TextField
-                                fullWidth
-                                type="number"
-                                label="Max Agents"
-                                value={adminSettings.systemLimits.maxAgents}
-                                onChange={(e) =>
-                                  setAdminSettings({
-                                    ...adminSettings,
-                                    systemLimits: {
-                                      ...adminSettings.systemLimits,
-                                      maxAgents: parseInt(e.target.value) || 10,
-                                    },
-                                  })
-                                }
-                                InputProps={{ inputProps: { min: 1, max: 50 } }}
-                              />
-                            </Grid2>
-                          </Grid2>
-                        )}
-                      </Stack>
-                    </CardContent>
+                          </Grid.Col>
+                          <Grid.Col span={6}>
+                            <TextInput
+                              type="number"
+                              label="Max Agents"
+                              value={adminSettings.systemLimits.maxAgents}
+                              onChange={(e) =>
+                                setAdminSettings({
+                                  ...adminSettings,
+                                  systemLimits: {
+                                    ...adminSettings.systemLimits,
+                                    maxAgents: parseInt(e.target.value) || 10,
+                                  },
+                                })
+                              }
+                              min={1}
+                              max={50}
+                            />
+                          </Grid.Col>
+                        </Grid>
+                      )}
+                    </Stack>
                   </Card>
 
-                  <Stack direction="row" gap={2} justifyContent="flex-end">
-                    <Button variant="outlined" onClick={(e: React.MouseEvent) => () => window.location.reload()}>
+                  <Group justify="flex-end" gap="md">
+                    <Button variant="outline" onClick={() => window.location.reload()}>
                       Reset to Defaults
                     </Button>
                     <Button
-                      variant="contained"
-                      color="primary"
-                      startIcon={<SaveIcon />}
-                      onClick={(e: React.MouseEvent) => () => {
+                      leftSection={<IconDeviceFloppy size={16} />}
+                      onClick={() => {
                         // Save admin settings to backend
                         console.log("Saving admin settings:", adminSettings);
                         // TODO: Call API to save settings
@@ -882,13 +724,13 @@ export default function Settings() {
                     >
                       Save Admin Settings
                     </Button>
-                  </Stack>
+                  </Group>
                 </Stack>
-              </TabPanel>
+              </Tabs.Panel>
             )}
-          </CardContent>
+          </Tabs>
         </Card>
-      </Grid2>
-    </Grid2>
+      </Grid.Col>
+    </Grid>
   );
 }

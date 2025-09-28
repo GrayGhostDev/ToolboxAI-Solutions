@@ -10,8 +10,13 @@ import uuid
 from enum import Enum
 
 from .models import (
-    ConversationContext, WorkflowStep, ContentGenerationPlan, AgentTrigger,
-    ContentType, ConversationStage, ValidationResult
+    ConversationContext,
+    WorkflowStep,
+    ContentGenerationPlan,
+    AgentTrigger,
+    ContentType,
+    ConversationStage,
+    ValidationResult,
 )
 from .conversation_flow import ConversationFlowManager
 from .content_validation import ContentValidationSystem
@@ -21,24 +26,47 @@ logger = logging.getLogger(__name__)
 # Import agent types with fallback for missing modules
 try:
     from core.agents import (
-        SupervisorAgent, ContentAgent, QuizAgent, TerrainAgent,
-        ScriptAgent, ReviewAgent, TestingAgent, Orchestrator
+        SupervisorAgent,
+        ContentAgent,
+        QuizAgent,
+        TerrainAgent,
+        ScriptAgent,
+        ReviewAgent,
+        TestingAgent,
+        Orchestrator,
     )
 except ImportError as e:
     logger.warning(f"Could not import all agents: {e}")
+
     # Provide mock classes as fallback
-    class SupervisorAgent: pass
-    class ContentAgent: pass
-    class QuizAgent: pass
-    class TerrainAgent: pass
-    class ScriptAgent: pass
-    class ReviewAgent: pass
-    class TestingAgent: pass
-    class Orchestrator: pass
+    class SupervisorAgent:
+        pass
+
+    class ContentAgent:
+        pass
+
+    class QuizAgent:
+        pass
+
+    class TerrainAgent:
+        pass
+
+    class ScriptAgent:
+        pass
+
+    class ReviewAgent:
+        pass
+
+    class TestingAgent:
+        pass
+
+    class Orchestrator:
+        pass
 
 
 class WorkflowStatus(str, Enum):
     """Status of workflow execution"""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -48,6 +76,7 @@ class WorkflowStatus(str, Enum):
 
 class AgentType(str, Enum):
     """Types of agents available for workflow orchestration"""
+
     SUPERVISOR = "supervisor"
     CONTENT = "content"
     QUIZ = "quiz"
@@ -105,57 +134,96 @@ class WorkflowOrchestrator:
         """Define capabilities of each agent type"""
         return {
             AgentType.SUPERVISOR: [
-                "task_delegation", "workflow_management", "quality_oversight",
-                "agent_coordination", "decision_making"
+                "task_delegation",
+                "workflow_management",
+                "quality_oversight",
+                "agent_coordination",
+                "decision_making",
             ],
             AgentType.CONTENT: [
-                "lesson_creation", "educational_content", "learning_objectives",
-                "curriculum_alignment", "age_appropriate_content"
+                "lesson_creation",
+                "educational_content",
+                "learning_objectives",
+                "curriculum_alignment",
+                "age_appropriate_content",
             ],
             AgentType.QUIZ: [
-                "assessment_creation", "question_generation", "scoring_systems",
-                "feedback_generation", "difficulty_adjustment"
+                "assessment_creation",
+                "question_generation",
+                "scoring_systems",
+                "feedback_generation",
+                "difficulty_adjustment",
             ],
             AgentType.TERRAIN: [
-                "environment_design", "3d_modeling", "spatial_layout",
-                "atmospheric_design", "interactive_elements"
+                "environment_design",
+                "3d_modeling",
+                "spatial_layout",
+                "atmospheric_design",
+                "interactive_elements",
             ],
             AgentType.SCRIPT: [
-                "lua_scripting", "game_mechanics", "interaction_systems",
-                "performance_optimization", "error_handling"
+                "lua_scripting",
+                "game_mechanics",
+                "interaction_systems",
+                "performance_optimization",
+                "error_handling",
             ],
             AgentType.REVIEW: [
-                "content_review", "quality_assessment", "compliance_check",
-                "accessibility_validation", "educational_effectiveness"
+                "content_review",
+                "quality_assessment",
+                "compliance_check",
+                "accessibility_validation",
+                "educational_effectiveness",
             ],
             AgentType.TESTING: [
-                "functionality_testing", "performance_testing", "user_testing",
-                "bug_detection", "compatibility_testing"
+                "functionality_testing",
+                "performance_testing",
+                "user_testing",
+                "bug_detection",
+                "compatibility_testing",
             ],
             AgentType.PERSONALIZATION: [
-                "user_profiling", "cultural_adaptation", "interest_matching",
-                "localization", "accessibility_customization"
+                "user_profiling",
+                "cultural_adaptation",
+                "interest_matching",
+                "localization",
+                "accessibility_customization",
             ],
             AgentType.CREATIVITY: [
-                "creative_storytelling", "visual_design", "unique_mechanics",
-                "engaging_narratives", "innovative_approaches"
+                "creative_storytelling",
+                "visual_design",
+                "unique_mechanics",
+                "engaging_narratives",
+                "innovative_approaches",
             ],
             AgentType.UNIQUENESS: [
-                "uniqueness_enhancement", "trending_elements", "custom_features",
-                "personalization_depth", "memorable_experiences"
+                "uniqueness_enhancement",
+                "trending_elements",
+                "custom_features",
+                "personalization_depth",
+                "memorable_experiences",
             ],
             AgentType.VALIDATION: [
-                "content_validation", "quality_metrics", "completeness_check",
-                "standards_compliance", "best_practices"
+                "content_validation",
+                "quality_metrics",
+                "completeness_check",
+                "standards_compliance",
+                "best_practices",
             ],
             AgentType.GENERATION: [
-                "content_generation", "asset_creation", "integration",
-                "workflow_execution", "progress_tracking"
+                "content_generation",
+                "asset_creation",
+                "integration",
+                "workflow_execution",
+                "progress_tracking",
             ],
             AgentType.DEPLOYMENT: [
-                "deployment_planning", "environment_setup", "user_access",
-                "monitoring_setup", "maintenance_planning"
-            ]
+                "deployment_planning",
+                "environment_setup",
+                "user_access",
+                "monitoring_setup",
+                "maintenance_planning",
+            ],
         }
 
     def _define_workflow_templates(self) -> Dict[ContentType, List[WorkflowStep]]:
@@ -168,7 +236,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.SUPERVISOR.value,
                     required_data=["learning_objectives", "grade_level", "subject_area"],
                     output_data=["requirements_analysis"],
-                    estimated_duration=5
+                    estimated_duration=5,
                 ),
                 WorkflowStep(
                     name="Create Content Structure",
@@ -176,7 +244,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.CONTENT.value,
                     required_data=["requirements_analysis"],
                     output_data=["content_structure"],
-                    estimated_duration=10
+                    estimated_duration=10,
                 ),
                 WorkflowStep(
                     name="Personalize Content",
@@ -184,7 +252,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.PERSONALIZATION.value,
                     required_data=["content_structure", "user_profile"],
                     output_data=["personalized_content"],
-                    estimated_duration=8
+                    estimated_duration=8,
                 ),
                 WorkflowStep(
                     name="Enhance Uniqueness",
@@ -192,7 +260,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.CREATIVITY.value,
                     required_data=["personalized_content"],
                     output_data=["unique_content"],
-                    estimated_duration=12
+                    estimated_duration=12,
                 ),
                 WorkflowStep(
                     name="Design Environment",
@@ -200,7 +268,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.TERRAIN.value,
                     required_data=["unique_content"],
                     output_data=["environment_design"],
-                    estimated_duration=15
+                    estimated_duration=15,
                 ),
                 WorkflowStep(
                     name="Generate Scripts",
@@ -208,7 +276,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.SCRIPT.value,
                     required_data=["environment_design"],
                     output_data=["lua_scripts"],
-                    estimated_duration=20
+                    estimated_duration=20,
                 ),
                 WorkflowStep(
                     name="Review and Validate",
@@ -216,7 +284,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.REVIEW.value,
                     required_data=["lua_scripts", "environment_design"],
                     output_data=["review_results"],
-                    estimated_duration=10
+                    estimated_duration=10,
                 ),
                 WorkflowStep(
                     name="Test Functionality",
@@ -224,8 +292,8 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.TESTING.value,
                     required_data=["review_results"],
                     output_data=["test_results"],
-                    estimated_duration=15
-                )
+                    estimated_duration=15,
+                ),
             ],
             ContentType.QUIZ: [
                 WorkflowStep(
@@ -234,7 +302,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.SUPERVISOR.value,
                     required_data=["learning_objectives", "assessment_type"],
                     output_data=["assessment_requirements"],
-                    estimated_duration=5
+                    estimated_duration=5,
                 ),
                 WorkflowStep(
                     name="Generate Questions",
@@ -242,7 +310,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.QUIZ.value,
                     required_data=["assessment_requirements"],
                     output_data=["quiz_questions"],
-                    estimated_duration=15
+                    estimated_duration=15,
                 ),
                 WorkflowStep(
                     name="Personalize Questions",
@@ -250,7 +318,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.PERSONALIZATION.value,
                     required_data=["quiz_questions", "user_profile"],
                     output_data=["personalized_questions"],
-                    estimated_duration=8
+                    estimated_duration=8,
                 ),
                 WorkflowStep(
                     name="Create Interactive Interface",
@@ -258,7 +326,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.TERRAIN.value,
                     required_data=["personalized_questions"],
                     output_data=["quiz_interface"],
-                    estimated_duration=12
+                    estimated_duration=12,
                 ),
                 WorkflowStep(
                     name="Implement Quiz Logic",
@@ -266,7 +334,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.SCRIPT.value,
                     required_data=["quiz_interface"],
                     output_data=["quiz_scripts"],
-                    estimated_duration=18
+                    estimated_duration=18,
                 ),
                 WorkflowStep(
                     name="Validate Quiz Quality",
@@ -274,8 +342,8 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.REVIEW.value,
                     required_data=["quiz_scripts"],
                     output_data=["quiz_validation"],
-                    estimated_duration=8
-                )
+                    estimated_duration=8,
+                ),
             ],
             ContentType.SIMULATION: [
                 WorkflowStep(
@@ -284,7 +352,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.CONTENT.value,
                     required_data=["learning_objectives", "simulation_type"],
                     output_data=["simulation_framework"],
-                    estimated_duration=20
+                    estimated_duration=20,
                 ),
                 WorkflowStep(
                     name="Create 3D Environment",
@@ -292,7 +360,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.TERRAIN.value,
                     required_data=["simulation_framework"],
                     output_data=["simulation_environment"],
-                    estimated_duration=25
+                    estimated_duration=25,
                 ),
                 WorkflowStep(
                     name="Implement Simulation Logic",
@@ -300,7 +368,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.SCRIPT.value,
                     required_data=["simulation_environment"],
                     output_data=["simulation_scripts"],
-                    estimated_duration=30
+                    estimated_duration=30,
                 ),
                 WorkflowStep(
                     name="Add Personalization",
@@ -308,7 +376,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.PERSONALIZATION.value,
                     required_data=["simulation_scripts"],
                     output_data=["personalized_simulation"],
-                    estimated_duration=15
+                    estimated_duration=15,
                 ),
                 WorkflowStep(
                     name="Enhance Realism",
@@ -316,7 +384,7 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.CREATIVITY.value,
                     required_data=["personalized_simulation"],
                     output_data=["realistic_simulation"],
-                    estimated_duration=18
+                    estimated_duration=18,
                 ),
                 WorkflowStep(
                     name="Performance Optimization",
@@ -324,14 +392,13 @@ class WorkflowOrchestrator:
                     agent_type=AgentType.SCRIPT.value,
                     required_data=["realistic_simulation"],
                     output_data=["optimized_simulation"],
-                    estimated_duration=12
-                )
-            ]
+                    estimated_duration=12,
+                ),
+            ],
         }
 
     async def create_workflow_plan(
-        self,
-        conversation_context: ConversationContext
+        self, conversation_context: ConversationContext
     ) -> ContentGenerationPlan:
         """Create a comprehensive workflow plan based on conversation context"""
 
@@ -356,7 +423,7 @@ class WorkflowOrchestrator:
             "engagement_score": 0.0,
             "educational_value_score": 0.0,
             "technical_quality_score": 0.0,
-            "personalization_score": 0.0
+            "personalization_score": 0.0,
         }
 
         plan = ContentGenerationPlan(
@@ -365,7 +432,7 @@ class WorkflowOrchestrator:
             estimated_total_time=total_time,
             required_agents=required_agents,
             expected_outputs=["content", "environment", "scripts", "validation_report"],
-            quality_metrics=quality_metrics
+            quality_metrics=quality_metrics,
         )
 
         self.active_workflows[plan.plan_id] = plan
@@ -375,9 +442,7 @@ class WorkflowOrchestrator:
         return plan
 
     async def execute_workflow(
-        self,
-        plan_id: str,
-        progress_callback: Optional[callable] = None
+        self, plan_id: str, progress_callback: Optional[callable] = None
     ) -> Dict[str, Any]:
         """Execute a workflow plan with progress tracking"""
 
@@ -394,7 +459,7 @@ class WorkflowOrchestrator:
             "progress_percentage": 0.0,
             "outputs": {},
             "errors": [],
-            "quality_metrics": plan.quality_metrics
+            "quality_metrics": plan.quality_metrics,
         }
 
         try:
@@ -411,18 +476,22 @@ class WorkflowOrchestrator:
                 step_result = await self._execute_workflow_step(step, plan, results)
 
                 if step_result["success"]:
-                    results["completed_steps"].append({
-                        "step_name": step.name,
-                        "completed_at": datetime.utcnow().isoformat(),
-                        "outputs": step_result["outputs"]
-                    })
+                    results["completed_steps"].append(
+                        {
+                            "step_name": step.name,
+                            "completed_at": datetime.utcnow().isoformat(),
+                            "outputs": step_result["outputs"],
+                        }
+                    )
                     results["outputs"].update(step_result["outputs"])
                 else:
-                    results["errors"].append({
-                        "step_name": step.name,
-                        "error": step_result["error"],
-                        "timestamp": datetime.utcnow().isoformat()
-                    })
+                    results["errors"].append(
+                        {
+                            "step_name": step.name,
+                            "error": step_result["error"],
+                            "timestamp": datetime.utcnow().isoformat(),
+                        }
+                    )
                     # Decide whether to continue or stop
                     if step_result["critical"]:
                         results["status"] = WorkflowStatus.FAILED.value
@@ -439,18 +508,12 @@ class WorkflowOrchestrator:
         except Exception as e:
             logger.error(f"Workflow execution failed: {e}")
             results["status"] = WorkflowStatus.FAILED.value
-            results["errors"].append({
-                "error": str(e),
-                "timestamp": datetime.utcnow().isoformat()
-            })
+            results["errors"].append({"error": str(e), "timestamp": datetime.utcnow().isoformat()})
 
         return results
 
     async def _execute_workflow_step(
-        self,
-        step: WorkflowStep,
-        plan: ContentGenerationPlan,
-        current_results: Dict[str, Any]
+        self, step: WorkflowStep, plan: ContentGenerationPlan, current_results: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Execute a single workflow step"""
 
@@ -463,14 +526,14 @@ class WorkflowOrchestrator:
                 return {
                     "success": False,
                     "error": f"Agent {agent_type} not available",
-                    "critical": True
+                    "critical": True,
                 }
 
             # Prepare input data
             input_data = self._prepare_step_input(step, plan, current_results)
 
             # Execute agent task
-            if hasattr(agent, 'execute_task'):
+            if hasattr(agent, "execute_task"):
                 result = await agent.execute_task(input_data)
             else:
                 # Fallback for agents without execute_task method
@@ -479,22 +542,15 @@ class WorkflowOrchestrator:
             return {
                 "success": True,
                 "outputs": result.get("outputs", {}),
-                "quality_metrics": result.get("quality_metrics", {})
+                "quality_metrics": result.get("quality_metrics", {}),
             }
 
         except Exception as e:
             logger.error(f"Step execution failed: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "critical": False
-            }
+            return {"success": False, "error": str(e), "critical": False}
 
     def _prepare_step_input(
-        self,
-        step: WorkflowStep,
-        plan: ContentGenerationPlan,
-        current_results: Dict[str, Any]
+        self, step: WorkflowStep, plan: ContentGenerationPlan, current_results: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Prepare input data for a workflow step"""
 
@@ -503,7 +559,7 @@ class WorkflowOrchestrator:
             "step_description": step.description,
             "conversation_context": plan.conversation_context.dict(),
             "required_data": step.required_data,
-            "output_data": step.output_data
+            "output_data": step.output_data,
         }
 
         # Add data from previous steps
@@ -521,7 +577,9 @@ class WorkflowOrchestrator:
 
         return input_data
 
-    async def _fallback_agent_execution(self, agent: Any, input_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _fallback_agent_execution(
+        self, agent: Any, input_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Fallback execution for agents without execute_task method"""
 
         # This would be implemented based on the actual agent interfaces
@@ -529,19 +587,13 @@ class WorkflowOrchestrator:
         return {
             "outputs": {
                 "generated_content": f"Mock content from {type(agent).__name__}",
-                "quality_score": 0.8
+                "quality_score": 0.8,
             },
-            "quality_metrics": {
-                "completeness": 0.8,
-                "accuracy": 0.8,
-                "creativity": 0.7
-            }
+            "quality_metrics": {"completeness": 0.8, "accuracy": 0.8, "creativity": 0.7},
         }
 
     async def _calculate_final_metrics(
-        self,
-        plan: ContentGenerationPlan,
-        results: Dict[str, Any]
+        self, plan: ContentGenerationPlan, results: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Calculate final quality metrics for the workflow"""
 
@@ -553,7 +605,7 @@ class WorkflowOrchestrator:
             "educational_value_score": 0.88,
             "technical_quality_score": 0.82,
             "personalization_score": 0.87,
-            "overall_score": 0.86
+            "overall_score": 0.86,
         }
 
     async def get_workflow_status(self, plan_id: str) -> Optional[Dict[str, Any]]:
@@ -565,11 +617,15 @@ class WorkflowOrchestrator:
 
         return {
             "plan_id": plan_id,
-            "content_type": plan.conversation_context.requirements.content_type.value if plan.conversation_context.requirements else "unknown",
+            "content_type": (
+                plan.conversation_context.requirements.content_type.value
+                if plan.conversation_context.requirements
+                else "unknown"
+            ),
             "total_steps": len(plan.workflow_steps),
             "estimated_time": plan.estimated_total_time,
             "required_agents": plan.required_agents,
-            "created_at": plan.created_at.isoformat()
+            "created_at": plan.created_at.isoformat(),
         }
 
     async def cancel_workflow(self, plan_id: str) -> bool:
@@ -591,11 +647,7 @@ class WorkflowOrchestrator:
         return list(self.agents.keys())
 
     async def create_agent_trigger(
-        self,
-        agent_name: str,
-        trigger_type: str,
-        trigger_data: Dict[str, Any],
-        priority: int = 1
+        self, agent_name: str, trigger_type: str, trigger_data: Dict[str, Any], priority: int = 1
     ) -> AgentTrigger:
         """Create a trigger for agent activation"""
 
@@ -603,7 +655,7 @@ class WorkflowOrchestrator:
             agent_name=agent_name,
             trigger_type=trigger_type,
             trigger_data=trigger_data,
-            priority=priority
+            priority=priority,
         )
 
         # Process trigger based on type
@@ -656,12 +708,3 @@ class WorkflowOrchestrator:
             del self.active_workflows[plan_id]
 
         logger.info(f"Cleaned up {len(to_remove)} old workflows")
-
-
-
-
-
-
-
-
-

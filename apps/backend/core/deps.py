@@ -54,7 +54,7 @@ def get_db() -> Session:
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Optional[AsyncSession] = Depends(get_async_db)
+    db: Optional[AsyncSession] = Depends(get_async_db),
 ) -> User:
     """
     Get current authenticated user from JWT token.
@@ -73,11 +73,7 @@ async def get_current_user(
 
     try:
         # Decode JWT token
-        payload = jwt.decode(
-            token,
-            settings.JWT_SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
 
         user_id = payload.get("sub")
         if user_id is None:
@@ -94,21 +90,17 @@ async def get_current_user(
                 email=payload.get("email", "test@example.com"),
                 username=payload.get("username", "test_user"),
                 role=payload.get("role", "student"),
-                is_active=True
+                is_active=True,
             )
 
         # Get user from database
         user = await db.get(User, int(user_id))
         if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         if not user.is_active:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User account is disabled"
+                status_code=status.HTTP_403_FORBIDDEN, detail="User account is disabled"
             )
 
         return user
@@ -127,9 +119,7 @@ async def get_current_user(
         )
 
 
-def get_current_active_user(
-    current_user: User = Depends(get_current_user)
-) -> User:
+def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
     """
     Get current active user.
 
@@ -144,8 +134,7 @@ def get_current_active_user(
     """
     if not current_user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is disabled"
+            status_code=status.HTTP_403_FORBIDDEN, detail="User account is disabled"
         )
     return current_user
 
@@ -160,11 +149,12 @@ def require_role(allowed_roles: list[str]):
     Returns:
         Dependency function that checks user role
     """
+
     def role_checker(current_user: User = Depends(get_current_user)) -> User:
         if current_user.role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Role '{current_user.role}' not authorized for this action"
+                detail=f"Role '{current_user.role}' not authorized for this action",
             )
         return current_user
 

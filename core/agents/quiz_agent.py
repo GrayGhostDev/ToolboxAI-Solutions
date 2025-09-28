@@ -25,16 +25,16 @@ sys.path.insert(0, str(project_root))
 
 # Database integration
 try:
-    from core.database.repositories import (
+    from database.core.repositories import (
         QuizRepository, ContentRepository, 
         LessonRepository, ProgressRepository,
         AnalyticsRepository
     )
-    from core.database.models import (
+    from database.models.models import (
         Quiz as DBQuiz, QuizQuestion as DBQuizQuestion,
         QuizAttempt, QuizResponse, DifficultyLevel
     )
-    from core.database.connection_manager import get_async_session
+    from database.connection_manager import get_async_session
     DATABASE_AVAILABLE = True
 except ImportError as e:
     DATABASE_AVAILABLE = False

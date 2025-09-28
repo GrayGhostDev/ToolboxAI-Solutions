@@ -20,7 +20,7 @@ from apps.backend.api.v1.endpoints import (
     plugins,
     roblox,
     terminal,
-    users
+    users,
 )
 
 # Initialize logger

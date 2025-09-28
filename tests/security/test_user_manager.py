@@ -312,8 +312,7 @@ class TestSecureUserManager:
         assert self.user_manager._user_exists("testuser", "test@example.com") is True
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_create_user_success(self):
+    async def test_create_user_success(self):
         """Test successful user creation"""
         # Mock database operations
         mock_user = Mock()
@@ -345,8 +344,9 @@ async def test_create_user_success(self):
         mock_audit.assert_called_once()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_create_user_validation_failure(self):
+
+
+    async def test_create_user_validation_failure(self):
         """Test user creation with validation failure"""
         with pytest.raises(ValueError):
             await self.user_manager.create_user(
@@ -357,8 +357,9 @@ async def test_create_user_validation_failure(self):
             )
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_create_user_already_exists(self):
+
+
+    async def test_create_user_already_exists(self):
         """Test user creation when user already exists"""
         # Mock user exists
         mock_existing_user = Mock()
@@ -373,8 +374,9 @@ async def test_create_user_already_exists(self):
             )
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_authenticate_success(self):
+
+
+    async def test_authenticate_success(self):
         """Test successful authentication"""
         # Mock user data
         mock_user = Mock()
@@ -409,8 +411,9 @@ async def test_authenticate_success(self):
         mock_audit.assert_called_once()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_authenticate_user_not_found(self):
+
+
+    async def test_authenticate_user_not_found(self):
         """Test authentication with non-existent user"""
         # Mock user not found
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -427,8 +430,9 @@ async def test_authenticate_user_not_found(self):
             mock_record.assert_called_once()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_authenticate_wrong_password(self):
+
+
+    async def test_authenticate_wrong_password(self):
         """Test authentication with wrong password"""
         # Mock user data
         mock_user = Mock()
@@ -451,8 +455,9 @@ async def test_authenticate_wrong_password(self):
             mock_record.assert_called_once()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_authenticate_user_inactive(self):
+
+
+    async def test_authenticate_user_inactive(self):
         """Test authentication with inactive user"""
         mock_user = Mock()
         mock_user.id = 1
@@ -469,8 +474,9 @@ async def test_authenticate_user_inactive(self):
             )
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_authenticate_password_expired(self):
+
+
+    async def test_authenticate_password_expired(self):
         """Test authentication with expired password"""
         mock_user = Mock()
         mock_user.id = 1
@@ -490,8 +496,9 @@ async def test_authenticate_password_expired(self):
             )
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_authenticate_locked_out(self):
+
+
+    async def test_authenticate_locked_out(self):
         """Test authentication when user is locked out"""
         self.mock_redis.get.return_value = "locked"  # User is locked out
         
@@ -503,8 +510,9 @@ async def test_authenticate_locked_out(self):
             )
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_change_password_success(self):
+
+
+    async def test_change_password_success(self):
         """Test successful password change"""
         # Mock user data
         mock_user = Mock()
@@ -533,8 +541,9 @@ async def test_change_password_success(self):
         mock_invalidate.assert_called_once()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_change_password_wrong_current(self):
+
+
+    async def test_change_password_wrong_current(self):
         """Test password change with wrong current password"""
         mock_user = Mock()
         mock_user.password_hash = self.user_manager._hash_password("CorrectPass123!")
@@ -549,8 +558,9 @@ async def test_change_password_wrong_current(self):
             )
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_change_password_reused(self):
+
+
+    async def test_change_password_reused(self):
         """Test password change with reused password"""
         mock_user = Mock()
         mock_user.username = "testuser"
@@ -568,8 +578,9 @@ async def test_change_password_reused(self):
                 )
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_reset_password_success(self):
+
+
+    async def test_reset_password_success(self):
         """Test successful password reset"""
         mock_user = Mock()
         mock_user.id = 1
@@ -595,8 +606,9 @@ async def test_reset_password_success(self):
         mock_audit.assert_called_once()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_reset_password_invalid_token(self):
+
+
+    async def test_reset_password_invalid_token(self):
         """Test password reset with invalid token"""
         with patch.object(self.user_manager, '_validate_reset_token', return_value=None):
             with pytest.raises(AuthenticationError, match="Invalid or expired"):
@@ -606,8 +618,9 @@ async def test_reset_password_invalid_token(self):
                 )
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_enable_mfa_success(self):
+
+
+    async def test_enable_mfa_success(self):
         """Test successful MFA enablement"""
         mock_user = Mock()
         mock_user.id = 1
@@ -626,8 +639,9 @@ async def test_enable_mfa_success(self):
         mock_audit.assert_called_once()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_enable_mfa_user_not_found(self):
+
+
+    async def test_enable_mfa_user_not_found(self):
         """Test MFA enablement with non-existent user"""
         self.mock_db.query.return_value.filter.return_value.first.return_value = None
         
@@ -685,8 +699,9 @@ async def test_enable_mfa_user_not_found(self):
         self.mock_db.commit.assert_called_once()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_is_locked_out_redis(self):
+
+
+    async def test_is_locked_out_redis(self):
         """Test lockout check with Redis"""
         # Not locked out
         self.mock_redis.exists.return_value = 0
@@ -697,8 +712,9 @@ async def test_is_locked_out_redis(self):
         assert await self.user_manager._is_locked_out("testuser") is True
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_is_locked_out_no_redis(self):
+
+
+    async def test_is_locked_out_no_redis(self):
         """Test lockout check without Redis"""
         manager = SecureUserManager(
             db_session=self.mock_db,
@@ -709,8 +725,9 @@ async def test_is_locked_out_no_redis(self):
         assert await manager._is_locked_out("testuser") is False
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_record_failed_attempt_with_lockout(self):
+
+
+    async def test_record_failed_attempt_with_lockout(self):
         """Test recording failed attempt that triggers lockout"""
         mock_user = Mock()
         mock_user.failed_login_attempts = 4  # One less than max
@@ -730,8 +747,9 @@ async def test_record_failed_attempt_with_lockout(self):
         mock_audit.assert_called_once()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_is_password_reused_redis(self):
+
+
+    async def test_is_password_reused_redis(self):
         """Test password reuse check with Redis"""
         user_id = 1
         password = "TestPass123!"
@@ -747,8 +765,9 @@ async def test_is_password_reused_redis(self):
         assert result is False
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_add_to_password_history(self):
+
+
+    async def test_add_to_password_history(self):
         """Test adding password to history"""
         user_id = 1
         password_hash = "hashed_password"
@@ -759,8 +778,9 @@ async def test_add_to_password_history(self):
         self.mock_redis.ltrim.assert_called()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_invalidate_user_sessions(self):
+
+
+    async def test_invalidate_user_sessions(self):
         """Test invalidating all user sessions"""
         mock_sessions = [Mock(), Mock()]
         mock_sessions[0].session_token = "token1"
@@ -779,8 +799,9 @@ async def test_invalidate_user_sessions(self):
         self.mock_db.commit.assert_called()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_audit_log_creation(self):
+
+
+    async def test_audit_log_creation(self):
         """Test audit log creation"""
         # Mock AuditLog
         with patch('apps.backend.core.security.user_manager.AuditLog') as mock_audit_class:
@@ -800,8 +821,9 @@ async def test_audit_log_creation(self):
         self.mock_db.commit.assert_called_once()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_audit_log_failure(self):
+
+
+    async def test_audit_log_failure(self):
         """Test audit log failure handling"""
         self.mock_db.add.side_effect = Exception("Database error")
         
@@ -818,8 +840,9 @@ class TestSecureUserManagerIntegration:
     """Integration tests for SecureUserManager"""
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_complete_user_lifecycle(self):
+
+
+    async def test_complete_user_lifecycle(self):
         """Test complete user lifecycle"""
         mock_db = Mock()
         mock_redis = Mock()
@@ -874,8 +897,9 @@ async def test_complete_user_lifecycle(self):
                     assert token == "session_token"
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_lockout_mechanism(self):
+
+
+    async def test_lockout_mechanism(self):
         """Test account lockout mechanism"""
         mock_db = Mock()
         mock_redis = Mock()
@@ -1049,8 +1073,9 @@ class TestErrorHandling:
         assert result is False
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
-async def test_database_error_handling(self):
+
+
+    async def test_database_error_handling(self):
         """Test database error handling"""
         mock_db = Mock()
         mock_db.query.side_effect = Exception("Database connection failed")

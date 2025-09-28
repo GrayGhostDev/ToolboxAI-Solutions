@@ -31,7 +31,7 @@ async def list_users(
     role: Optional[str] = Query(default=None, description="Filter by role"),
     sort_by: str = Query(default="created_at", description="Sort field"),
     sort_order: str = Query(default="desc", enum=["asc", "desc"], description="Sort order"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """List users with pagination and filtering (admin only)."""
 
@@ -39,7 +39,7 @@ async def list_users(
         raise HTTPException(status_code=403, detail="Only admins can list users")
 
     # Try to get real data from database
-    if db_service and hasattr(db_service, 'pool') and db_service.pool:
+    if db_service and hasattr(db_service, "pool") and db_service.pool:
         try:
             # Build query conditions
             conditions = []
@@ -48,7 +48,9 @@ async def list_users(
 
             if search:
                 param_count += 1
-                conditions.append(f"(username ILIKE ${param_count} OR email ILIKE ${param_count} OR first_name ILIKE ${param_count} OR last_name ILIKE ${param_count})")
+                conditions.append(
+                    f"(username ILIKE ${param_count} OR email ILIKE ${param_count} OR first_name ILIKE ${param_count} OR last_name ILIKE ${param_count})"
+                )
                 params.append(f"%{search}%")
 
             if role:
@@ -66,7 +68,14 @@ async def list_users(
             order_direction = "ASC" if sort_order == "asc" else "DESC"
 
             # Validate sort field
-            valid_sort_fields = ["created_at", "username", "email", "first_name", "last_name", "role"]
+            valid_sort_fields = [
+                "created_at",
+                "username",
+                "email",
+                "first_name",
+                "last_name",
+                "role",
+            ]
             if sort_by not in valid_sort_fields:
                 sort_by = "created_at"
 
@@ -101,14 +110,14 @@ async def list_users(
                         "page": page,
                         "page_size": page_size,
                         "total": total,
-                        "total_pages": (total + page_size - 1) // page_size
+                        "total_pages": (total + page_size - 1) // page_size,
                     },
                     "filters_applied": {
                         "search": search,
                         "role": role,
                         "sort_by": sort_by,
-                        "sort_order": sort_order
-                    }
+                        "sort_order": sort_order,
+                    },
                 }
 
         except Exception as e:
@@ -126,7 +135,7 @@ async def list_users(
             "is_active": True,
             "is_verified": True,
             "created_at": "2024-09-01T08:00:00",
-            "last_login": "2025-01-08T09:00:00"
+            "last_login": "2025-01-08T09:00:00",
         },
         {
             "id": str(uuid.uuid4()),
@@ -138,7 +147,7 @@ async def list_users(
             "is_active": True,
             "is_verified": True,
             "created_at": "2024-09-15T10:00:00",
-            "last_login": "2025-01-08T14:00:00"
+            "last_login": "2025-01-08T14:00:00",
         },
         {
             "id": str(uuid.uuid4()),
@@ -150,8 +159,8 @@ async def list_users(
             "is_active": True,
             "is_verified": True,
             "created_at": "2024-09-20T11:00:00",
-            "last_login": "2025-01-07T18:00:00"
-        }
+            "last_login": "2025-01-07T18:00:00",
+        },
     ]
 
     # Apply filters to sample data
@@ -160,10 +169,11 @@ async def list_users(
     if search:
         search_lower = search.lower()
         filtered_users = [
-            u for u in filtered_users
-            if search_lower in u["username"].lower() or
-               search_lower in u["email"].lower() or
-               search_lower in f"{u['first_name']} {u['last_name']}".lower()
+            u
+            for u in filtered_users
+            if search_lower in u["username"].lower()
+            or search_lower in u["email"].lower()
+            or search_lower in f"{u['first_name']} {u['last_name']}".lower()
         ]
 
     if role:
@@ -187,21 +197,20 @@ async def list_users(
             "page": page,
             "page_size": page_size,
             "total": total,
-            "total_pages": (total + page_size - 1) // page_size
+            "total_pages": (total + page_size - 1) // page_size,
         },
         "filters_applied": {
             "search": search,
             "role": role,
             "sort_by": sort_by,
-            "sort_order": sort_order
-        }
+            "sort_order": sort_order,
+        },
     }
 
 
 @admin_router.post("/users")
 async def create_user(
-    user_data: Dict[str, Any],
-    current_user: User = Depends(get_current_user)
+    user_data: Dict[str, Any], current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Create a new user (admin only)."""
 
@@ -235,7 +244,7 @@ async def create_user(
     if role not in valid_roles:
         raise HTTPException(status_code=422, detail=f"Invalid role. Must be one of: {valid_roles}")
 
-    if db_service and hasattr(db_service, 'pool') and db_service.pool:
+    if db_service and hasattr(db_service, "pool") and db_service.pool:
         try:
             # Check if user already exists
             check_query = """
@@ -245,10 +254,13 @@ async def create_user(
             async with db_service.pool.acquire() as conn:
                 existing = await conn.fetchrow(check_query, email, username)
                 if existing:
-                    raise HTTPException(status_code=409, detail="User with this email or username already exists")
+                    raise HTTPException(
+                        status_code=409, detail="User with this email or username already exists"
+                    )
 
             # Hash password
             from passlib.context import CryptContext
+
             pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
             password_hash = pwd_context.hash(password)
 
@@ -275,7 +287,7 @@ async def create_user(
                     role,
                     True,  # is_active
                     True,  # is_verified
-                    created_at
+                    created_at,
                 )
 
                 return dict(row)
@@ -295,7 +307,7 @@ async def create_user(
         "role": role,
         "is_active": True,
         "is_verified": True,
-        "created_at": datetime.now().isoformat()
+        "created_at": datetime.now().isoformat(),
     }
 
     logger.info(f"User created (mock): {new_user['id']} by admin {current_user.id}")
@@ -303,10 +315,7 @@ async def create_user(
 
 
 @admin_router.get("/users/{user_id}")
-async def get_user(
-    user_id: str,
-    current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+async def get_user(user_id: str, current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
     """Get user details (admin only)."""
 
     if current_user.role.lower() != "admin":
@@ -318,7 +327,7 @@ async def get_user(
     except ValueError:
         raise HTTPException(status_code=422, detail="Invalid user ID format")
 
-    if db_service and hasattr(db_service, 'pool') and db_service.pool:
+    if db_service and hasattr(db_service, "pool") and db_service.pool:
         try:
             query = """
                 SELECT id, username, email, first_name, last_name, role,
@@ -344,13 +353,13 @@ async def get_user(
             "id": user_id,
             "username": current_user.username,
             "email": current_user.email,
-            "first_name": getattr(current_user, 'first_name', None) or "Admin",
-            "last_name": getattr(current_user, 'last_name', None) or "User",
-            "role": current_user.role.lower() if hasattr(current_user, 'role') else "admin",
-            "is_active": getattr(current_user, 'is_active', True),
-            "is_verified": getattr(current_user, 'is_verified', True),
-            "created_at": getattr(current_user, 'created_at', datetime(2024, 1, 1)).isoformat(),
-            "last_login": datetime.now().isoformat()
+            "first_name": getattr(current_user, "first_name", None) or "Admin",
+            "last_name": getattr(current_user, "last_name", None) or "User",
+            "role": current_user.role.lower() if hasattr(current_user, "role") else "admin",
+            "is_active": getattr(current_user, "is_active", True),
+            "is_verified": getattr(current_user, "is_verified", True),
+            "created_at": getattr(current_user, "created_at", datetime(2024, 1, 1)).isoformat(),
+            "last_login": datetime.now().isoformat(),
         }
 
     raise HTTPException(status_code=404, detail="User not found")
@@ -358,9 +367,7 @@ async def get_user(
 
 @admin_router.put("/users/{user_id}")
 async def update_user(
-    user_id: str,
-    update_data: Dict[str, Any],
-    current_user: User = Depends(get_current_user)
+    user_id: str, update_data: Dict[str, Any], current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Update user details (admin only)."""
 
@@ -397,7 +404,7 @@ async def update_user(
                      is_active, is_verified, created_at, last_login
         """
 
-        if db_service and hasattr(db_service, 'pool') and db_service.pool:
+        if db_service and hasattr(db_service, "pool") and db_service.pool:
             async with db_service.pool.acquire() as conn:
                 row = await conn.fetchrow(query, *params)
                 if row:
@@ -423,7 +430,7 @@ async def update_user(
         "is_active": update_data.get("is_active", True),
         "is_verified": update_data.get("is_verified", True),
         "created_at": "2024-01-01T00:00:00",
-        "last_login": datetime.now().isoformat()
+        "last_login": datetime.now().isoformat(),
     }
 
     return mock_user
@@ -431,8 +438,7 @@ async def update_user(
 
 @admin_router.delete("/users/{user_id}")
 async def deactivate_user(
-    user_id: str,
-    current_user: User = Depends(get_current_user)
+    user_id: str, current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Deactivate user (admin only). We don't actually delete users, just deactivate them."""
 
@@ -454,7 +460,7 @@ async def deactivate_user(
             RETURNING id, username, email, first_name, last_name
         """
 
-        if db_service and hasattr(db_service, 'pool') and db_service.pool:
+        if db_service and hasattr(db_service, "pool") and db_service.pool:
             async with db_service.pool.acquire() as conn:
                 row = await conn.fetchrow(query, uuid.UUID(user_id))
                 if row:
@@ -464,10 +470,12 @@ async def deactivate_user(
                     return {
                         "success": True,
                         "message": f"User {user_info['username']} has been deactivated",
-                        "user": user_info
+                        "user": user_info,
                     }
                 else:
-                    raise HTTPException(status_code=404, detail="User not found or already deactivated")
+                    raise HTTPException(
+                        status_code=404, detail="User not found or already deactivated"
+                    )
         else:
             # For testing without database, return 404 for invalid UUIDs
             raise HTTPException(status_code=404, detail="User not found")

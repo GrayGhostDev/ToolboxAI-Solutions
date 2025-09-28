@@ -1,21 +1,15 @@
 import React, { useState } from 'react';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import Paper from '@mui/material/Paper';
-import Badge from '@mui/material/Badge';
-import Chip from '@mui/material/Chip';
+import { Text, Box, Tabs, Paper, Badge } from '@mantine/core';
 import {
-  Group,
-  School,
-  Settings,
-  History,
-  Assessment,
-  Security,
-  Storage,
-  IntegrationInstructions,
-} from '@mui/icons-material';
+  IconUsers,
+  IconSchool,
+  IconSettings,
+  IconHistory,
+  IconChartBar,
+  IconShield,
+  IconDatabase,
+  IconPlugConnected,
+} from '@tabler/icons-react';
 import UserManagement from './UserManagement';
 import Schools from './Schools';
 import SystemSettings from './SystemSettings';
@@ -23,285 +17,267 @@ import ActivityLogs from './ActivityLogs';
 
 interface TabPanelProps {
   children?: React.ReactNode;
-  index: number;
-  value: number;
+  value: string;
 }
 
 function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`admin-tabpanel-${index}`}
-      aria-labelledby={`admin-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ pt: 3 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  );
-}
-
-function a11yProps(index: number) {
-  return {
-    id: `admin-tab-${index}`,
-    'aria-controls': `admin-tabpanel-${index}`,
-  };
+  const { children } = props;
+  return <Box pt="lg">{children}</Box>;
 }
 
 const AdminControlPanel: React.FunctionComponent<Record<string, any>> = () => {
-  const [tabValue, setTabValue] = useState(0);
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
+  const [activeTab, setActiveTab] = useState<string | null>('users');
 
   const tabs = [
-    { label: 'Users', icon: <Group />, badge: null },
-    { label: 'Schools', icon: <School />, badge: null },
-    { label: 'System Settings', icon: <Settings />, badge: null },
-    { label: 'Integrations', icon: <IntegrationInstructions />, badge: null },
-    { label: 'Security', icon: <Security />, badge: '3' },
-    { label: 'Activity Logs', icon: <History />, badge: 'New' },
-    { label: 'Analytics', icon: <Assessment />, badge: null },
-    { label: 'Storage', icon: <Storage />, badge: null },
+    { value: 'users', label: 'Users', icon: <IconUsers size={16} /> },
+    { value: 'schools', label: 'Schools', icon: <IconSchool size={16} /> },
+    { value: 'settings', label: 'System Settings', icon: <IconSettings size={16} /> },
+    { value: 'integrations', label: 'Integrations', icon: <IconPlugConnected size={16} /> },
+    { value: 'security', label: 'Security', icon: <IconShield size={16} />, badge: '3' },
+    { value: 'logs', label: 'Activity Logs', icon: <IconHistory size={16} />, badge: 'New' },
+    { value: 'analytics', label: 'Analytics', icon: <IconChartBar size={16} /> },
+    { value: 'storage', label: 'Storage', icon: <IconDatabase size={16} /> },
   ];
 
   return (
-    <Box sx={{ width: '100%' }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+    <Box w="100%">
+      <Text size="xl" fw={600} mb="lg">
         Admin Control Panel
-      </Typography>
-      
-      <Paper sx={{ width: '100%' }}>
-        <Tabs
-          value={tabValue}
-          onChange={handleTabChange}
-          aria-label="admin control panel tabs"
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{
-            borderBottom: 1,
-            borderColor: 'divider',
-            '& .MuiTab-root': {
-              minHeight: 64,
-              textTransform: 'none',
-            },
-          }}
-        >
-          {tabs.map((tab, index) => (
-            <Tab
-              key={index}
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  {tab.icon}
-                  <span>{tab.label}</span>
-                  {tab.badge && (
-                    <Chip
-                      label={tab.badge}
-                      size="small"
-                      color={tab.badge === 'New' ? 'primary' : 'error'}
-                      sx={{ height: 20, fontSize: '0.75rem' }}
-                    />
-                  )}
-                </Box>
-              }
-              {...a11yProps(index)}
-            />
-          ))}
+      </Text>
+
+      <Paper>
+        <Tabs value={activeTab} onChange={setActiveTab}>
+          <Tabs.List>
+            {tabs.map((tab) => (
+              <Tabs.Tab
+                key={tab.value}
+                value={tab.value}
+                leftSection={tab.icon}
+                rightSection={
+                  tab.badge && (
+                    <Badge
+                      size="xs"
+                      color={tab.badge === 'New' ? 'blue' : 'red'}
+                    >
+                      {tab.badge}
+                    </Badge>
+                  )
+                }
+              >
+                {tab.label}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
         </Tabs>
-        
-        <TabPanel value={tabValue} index={0}>
-          <UserManagement />
-        </TabPanel>
-        
-        <TabPanel value={tabValue} index={1}>
-          <Schools />
-        </TabPanel>
-        
-        <TabPanel value={tabValue} index={2}>
-          <SystemSettings />
-        </TabPanel>
-        
-        <TabPanel value={tabValue} index={3}>
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Integrations Management
-            </Typography>
-            <Typography variant="body1" color="text.secondary" paragraph>
-              Configure and manage third-party integrations including LMS systems, authentication providers, and API connections.
-            </Typography>
-            
-            <Box sx={{ mt: 3 }}>
-              {/* Integration cards */}
-              <Paper sx={{ p: 2, mb: 2 }}>
-                <Typography variant="h6">Canvas LMS</Typography>
-                <Chip label="Connected" color="success" size="small" sx={{ mt: 1 }} />
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  Last sync: 2 hours ago
-                </Typography>
-              </Paper>
-              
-              <Paper sx={{ p: 2, mb: 2 }}>
-                <Typography variant="h6">Schoology</Typography>
-                <Chip label="Disconnected" color="error" size="small" sx={{ mt: 1 }} />
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  Click to configure
-                </Typography>
-              </Paper>
-              
-              <Paper sx={{ p: 2, mb: 2 }}>
-                <Typography variant="h6">Google Classroom</Typography>
-                <Chip label="Pending" color="warning" size="small" sx={{ mt: 1 }} />
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  Authentication required
-                </Typography>
-              </Paper>
+
+        <Tabs.Panel value="users">
+          <TabPanel value="users">
+            <UserManagement />
+          </TabPanel>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="schools">
+          <TabPanel value="schools">
+            <Schools />
+          </TabPanel>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="settings">
+          <TabPanel value="settings">
+            <SystemSettings />
+          </TabPanel>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="integrations">
+          <TabPanel value="integrations">
+            <Box p="lg">
+              <Text size="lg" fw={500} mb="xs">
+                Integrations Management
+              </Text>
+              <Text c="dimmed" mb="lg">
+                Configure and manage third-party integrations including LMS systems, authentication providers, and API connections.
+              </Text>
+
+              <Box mt="lg">
+                {/* Integration cards */}
+                <Paper p="md" mb="md">
+                  <Text fw={500}>Canvas LMS</Text>
+                  <Badge color="green" size="sm" mt="xs">
+                    Connected
+                  </Badge>
+                  <Text size="sm" mt="xs">
+                    Last sync: 2 hours ago
+                  </Text>
+                </Paper>
+
+                <Paper p="md" mb="md">
+                  <Text fw={500}>Schoology</Text>
+                  <Badge color="red" size="sm" mt="xs">
+                    Disconnected
+                  </Badge>
+                  <Text size="sm" mt="xs">
+                    Click to configure
+                  </Text>
+                </Paper>
+
+                <Paper p="md" mb="md">
+                  <Text fw={500}>Google Classroom</Text>
+                  <Badge color="orange" size="sm" mt="xs">
+                    Pending
+                  </Badge>
+                  <Text size="sm" mt="xs">
+                    Authentication required
+                  </Text>
+                </Paper>
+              </Box>
             </Box>
-          </Box>
-        </TabPanel>
-        
-        <TabPanel value={tabValue} index={4}>
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Security Settings
-            </Typography>
-            <Typography variant="body1" color="text.secondary" paragraph>
-              Manage security policies, authentication settings, and compliance requirements.
-            </Typography>
-            
-            <Box sx={{ mt: 3 }}>
-              <Paper sx={{ p: 3, mb: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  Security Alerts
-                </Typography>
-                <Chip label="3 new alerts" color="error" />
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2" color="error">
-                    • 5 failed login attempts from IP 192.168.1.100
-                  </Typography>
-                  <Typography variant="body2" color="warning">
-                    • Password policy update required
-                  </Typography>
-                  <Typography variant="body2" color="info">
-                    • SSL certificate expires in 30 days
-                  </Typography>
-                </Box>
-              </Paper>
-              
-              <Paper sx={{ p: 3, mb: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  Compliance Status
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                  <Chip label="FERPA Compliant" color="success" />
-                  <Chip label="COPPA Compliant" color="success" />
-                  <Chip label="GDPR Ready" color="warning" />
-                </Box>
-              </Paper>
-            </Box>
-          </Box>
-        </TabPanel>
-        
-        <TabPanel value={tabValue} index={5}>
-          <ActivityLogs />
-        </TabPanel>
-        
-        <TabPanel value={tabValue} index={6}>
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Platform Analytics
-            </Typography>
-            <Typography variant="body1" color="text.secondary" paragraph>
-              View detailed analytics about platform usage, performance metrics, and user engagement.
-            </Typography>
-            
-            <Box sx={{ mt: 3, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 2 }}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h4">1,234</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Total Users
-                </Typography>
-              </Paper>
-              
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h4">456</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Active Sessions
-                </Typography>
-              </Paper>
-              
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h4">89%</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  System Uptime
-                </Typography>
-              </Paper>
-              
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h4">2.3s</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Avg Response Time
-                </Typography>
-              </Paper>
-            </Box>
-          </Box>
-        </TabPanel>
-        
-        <TabPanel value={tabValue} index={7}>
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Storage Management
-            </Typography>
-            <Typography variant="body1" color="text.secondary" paragraph>
-              Monitor and manage storage usage across the platform.
-            </Typography>
-            
-            <Box sx={{ mt: 3 }}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  Storage Usage
-                </Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2">
-                    Used: 45.2 GB / 100 GB (45.2%)
-                  </Typography>
-                  <Box sx={{ 
-                    width: '100%', 
-                    height: 20, 
-                    bgcolor: 'grey.200', 
-                    borderRadius: 1, 
-                    mt: 1,
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}>
-                    <Box sx={{ 
-                      width: '45.2%', 
-                      height: '100%', 
-                      bgcolor: 'primary.main',
-                      borderRadius: 1
-                    }} />
+          </TabPanel>
+        </Tabs.Panel>
+        <Tabs.Panel value="security">
+          <TabPanel value="security">
+            <Box p="lg">
+              <Text size="lg" fw={500} mb="xs">
+                Security Settings
+              </Text>
+              <Text c="dimmed" mb="lg">
+                Manage security policies, authentication settings, and compliance requirements.
+              </Text>
+
+              <Box mt="lg">
+                <Paper p="lg" mb="md">
+                  <Text fw={500} mb="sm">
+                    Security Alerts
+                  </Text>
+                  <Badge color="red" mb="md">
+                    3 new alerts
+                  </Badge>
+                  <Box mt="md">
+                    <Text size="sm" c="red">
+                      • 5 failed login attempts from IP 192.168.1.100
+                    </Text>
+                    <Text size="sm" c="orange">
+                      • Password policy update required
+                    </Text>
+                    <Text size="sm" c="blue">
+                      • SSL certificate expires in 30 days
+                    </Text>
                   </Box>
-                </Box>
-                
-                <Box sx={{ mt: 3 }}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Storage Breakdown
-                  </Typography>
-                  <Typography variant="body2">• User Files: 25.3 GB</Typography>
-                  <Typography variant="body2">• Course Content: 12.8 GB</Typography>
-                  <Typography variant="body2">• System Files: 5.1 GB</Typography>
-                  <Typography variant="body2">• Backups: 2.0 GB</Typography>
-                </Box>
-              </Paper>
+                </Paper>
+
+                <Paper p="lg" mb="md">
+                  <Text fw={500} mb="sm">
+                    Compliance Status
+                  </Text>
+                  <Box style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+                    <Badge color="green">FERPA Compliant</Badge>
+                    <Badge color="green">COPPA Compliant</Badge>
+                    <Badge color="orange">GDPR Ready</Badge>
+                  </Box>
+                </Paper>
+              </Box>
             </Box>
-          </Box>
-        </TabPanel>
+          </TabPanel>
+        </Tabs.Panel>
+        <Tabs.Panel value="logs">
+          <TabPanel value="logs">
+            <ActivityLogs />
+          </TabPanel>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="analytics">
+          <TabPanel value="analytics">
+            <Box p="lg">
+              <Text size="lg" fw={500} mb="xs">
+                Platform Analytics
+              </Text>
+              <Text c="dimmed" mb="lg">
+                View detailed analytics about platform usage, performance metrics, and user engagement.
+              </Text>
+
+              <Box mt="lg" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+                <Paper p="lg">
+                  <Text size="xl" fw={700}>1,234</Text>
+                  <Text size="sm" c="dimmed">
+                    Total Users
+                  </Text>
+                </Paper>
+
+                <Paper p="lg">
+                  <Text size="xl" fw={700}>456</Text>
+                  <Text size="sm" c="dimmed">
+                    Active Sessions
+                  </Text>
+                </Paper>
+
+                <Paper p="lg">
+                  <Text size="xl" fw={700}>89%</Text>
+                  <Text size="sm" c="dimmed">
+                    System Uptime
+                  </Text>
+                </Paper>
+
+                <Paper p="lg">
+                  <Text size="xl" fw={700}>2.3s</Text>
+                  <Text size="sm" c="dimmed">
+                    Avg Response Time
+                  </Text>
+                </Paper>
+              </Box>
+            </Box>
+          </TabPanel>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="storage">
+          <TabPanel value="storage">
+            <Box p="lg">
+              <Text size="lg" fw={500} mb="xs">
+                Storage Management
+              </Text>
+              <Text c="dimmed" mb="lg">
+                Monitor and manage storage usage across the platform.
+              </Text>
+
+              <Box mt="lg">
+                <Paper p="lg">
+                  <Text fw={500} mb="sm">
+                    Storage Usage
+                  </Text>
+                  <Box mt="md">
+                    <Text size="sm">
+                      Used: 45.2 GB / 100 GB (45.2%)
+                    </Text>
+                    <Box style={{
+                      width: '100%',
+                      height: '20px',
+                      backgroundColor: 'var(--mantine-color-gray-2)',
+                      borderRadius: 'var(--mantine-radius-sm)',
+                      marginTop: '8px',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}>
+                      <Box style={{
+                        width: '45.2%',
+                        height: '100%',
+                        backgroundColor: 'var(--mantine-color-blue-6)',
+                        borderRadius: 'var(--mantine-radius-sm)'
+                      }} />
+                    </Box>
+                  </Box>
+
+                  <Box mt="lg">
+                    <Text fw={500} mb="sm">
+                      Storage Breakdown
+                    </Text>
+                    <Text size="sm">• User Files: 25.3 GB</Text>
+                    <Text size="sm">• Course Content: 12.8 GB</Text>
+                    <Text size="sm">• System Files: 5.1 GB</Text>
+                    <Text size="sm">• Backups: 2.0 GB</Text>
+                  </Box>
+                </Paper>
+              </Box>
+            </Box>
+          </TabPanel>
+        </Tabs.Panel>
       </Paper>
     </Box>
   );

@@ -18,6 +18,7 @@ from apps.backend.core.feature_flags import get_feature_flags, FeatureFlag
 
 logger = logging.getLogger(__name__)
 
+
 class GPT5Service:
     """
     OpenAI GPT-5 service with backward compatibility and fallback support
@@ -45,7 +46,7 @@ class GPT5Service:
                 "max_output": 128000,
                 "supports_reasoning": True,
                 "cost_input": 1.25,  # per 1M tokens
-                "cost_output": 10.00  # per 1M tokens
+                "cost_output": 10.00,  # per 1M tokens
             },
             "gpt-5-mini": {
                 "name": "gpt-5-mini",
@@ -53,7 +54,7 @@ class GPT5Service:
                 "max_output": 64000,
                 "supports_reasoning": True,
                 "cost_input": 0.25,
-                "cost_output": 2.00
+                "cost_output": 2.00,
             },
             "gpt-5-nano": {
                 "name": "gpt-5-nano",
@@ -61,7 +62,7 @@ class GPT5Service:
                 "max_output": 32000,
                 "supports_reasoning": False,
                 "cost_input": 0.05,
-                "cost_output": 0.40
+                "cost_output": 0.40,
             },
             "gpt-5-chat-latest": {
                 "name": "gpt-5-chat-latest",
@@ -69,8 +70,8 @@ class GPT5Service:
                 "max_output": 128000,
                 "supports_reasoning": False,
                 "cost_input": 1.25,
-                "cost_output": 10.00
-            }
+                "cost_output": 10.00,
+            },
         }
 
         # Model migration mapping (GPT-4 -> GPT-5)
@@ -80,7 +81,7 @@ class GPT5Service:
             "gpt-4o-mini": "gpt-5-nano",
             "gpt-4-turbo": "gpt-5",
             "gpt-4-1106-preview": "gpt-5",
-            "gpt-3.5-turbo": "gpt-5-nano"
+            "gpt-3.5-turbo": "gpt-5-nano",
         }
 
         # Fallback configuration
@@ -98,7 +99,7 @@ class GPT5Service:
             "fallback_requests": 0,
             "total_input_tokens": 0,
             "total_output_tokens": 0,
-            "total_cost": 0.0
+            "total_cost": 0.0,
         }
 
     async def chat_completion(
@@ -108,7 +109,7 @@ class GPT5Service:
         temperature: float = 0.7,
         max_tokens: Optional[int] = None,
         stream: bool = False,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Enhanced chat completion with GPT-5 features and fallback support
@@ -138,14 +139,16 @@ class GPT5Service:
         try:
             # Make the API call
             if stream:
-                return await self._stream_completion(model, messages, temperature, max_tokens, **kwargs)
+                return await self._stream_completion(
+                    model, messages, temperature, max_tokens, **kwargs
+                )
             else:
                 response = await self.async_client.chat.completions.create(
                     model=model,
                     messages=messages,
                     temperature=temperature,
                     max_tokens=max_tokens,
-                    **kwargs
+                    **kwargs,
                 )
 
                 # Track usage
@@ -157,7 +160,7 @@ class GPT5Service:
                     "model": response.model,
                     "usage": response.usage.model_dump() if response.usage else None,
                     "finish_reason": response.choices[0].finish_reason,
-                    "gpt5_features": self._extract_gpt5_features(response)
+                    "gpt5_features": self._extract_gpt5_features(response),
                 }
 
         except Exception as e:
@@ -166,7 +169,9 @@ class GPT5Service:
             # Attempt fallback if enabled
             if self.fallback_enabled and model.startswith("gpt-5"):
                 logger.warning(f"Falling back from {model} to {self.fallback_model}")
-                return await self._fallback_completion(messages, temperature, max_tokens, stream, **kwargs)
+                return await self._fallback_completion(
+                    messages, temperature, max_tokens, stream, **kwargs
+                )
 
             raise
 
@@ -176,7 +181,7 @@ class GPT5Service:
         messages: List[Dict[str, str]],
         temperature: float,
         max_tokens: Optional[int],
-        **kwargs
+        **kwargs,
     ) -> AsyncGenerator[str, None]:
         """Handle streaming completions"""
         try:
@@ -186,7 +191,7 @@ class GPT5Service:
                 temperature=temperature,
                 max_tokens=max_tokens,
                 stream=True,
-                **kwargs
+                **kwargs,
             )
 
             async for chunk in stream:
@@ -205,7 +210,7 @@ class GPT5Service:
                     temperature=temperature,
                     max_tokens=max_tokens,
                     stream=True,
-                    **kwargs
+                    **kwargs,
                 )
                 async for chunk in stream:
                     if chunk.choices and chunk.choices[0].delta.content:
@@ -264,14 +269,20 @@ class GPT5Service:
 
         # Set verbosity based on user preference
         if "verbosity" not in kwargs:
-            if any(word in str(messages).lower() for word in ["detailed", "comprehensive", "thorough"]):
+            if any(
+                word in str(messages).lower() for word in ["detailed", "comprehensive", "thorough"]
+            ):
                 kwargs["verbosity"] = "high"
-            elif any(word in str(messages).lower() for word in ["brief", "short", "concise", "summary"]):
+            elif any(
+                word in str(messages).lower() for word in ["brief", "short", "concise", "summary"]
+            ):
                 kwargs["verbosity"] = "low"
             else:
                 kwargs["verbosity"] = self.default_verbosity
 
-        logger.debug(f"GPT-5 parameters: reasoning={kwargs.get('reasoning_effort')}, verbosity={kwargs.get('verbosity')}")
+        logger.debug(
+            f"GPT-5 parameters: reasoning={kwargs.get('reasoning_effort')}, verbosity={kwargs.get('verbosity')}"
+        )
         return kwargs
 
     async def _fallback_completion(
@@ -280,7 +291,7 @@ class GPT5Service:
         temperature: float = 0.7,
         max_tokens: Optional[int] = None,
         stream: bool = False,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Fallback to GPT-4 models when GPT-5 fails
@@ -305,11 +316,7 @@ class GPT5Service:
         try:
             if stream:
                 return await self._stream_completion(
-                    self.fallback_model,
-                    messages,
-                    temperature,
-                    max_tokens,
-                    **kwargs
+                    self.fallback_model, messages, temperature, max_tokens, **kwargs
                 )
 
             response = await self.async_client.chat.completions.create(
@@ -317,7 +324,7 @@ class GPT5Service:
                 messages=messages,
                 temperature=temperature,
                 max_tokens=max_tokens,
-                **kwargs
+                **kwargs,
             )
 
             self._track_usage(response, self.fallback_model)
@@ -328,7 +335,7 @@ class GPT5Service:
                 "usage": response.usage.model_dump() if response.usage else None,
                 "finish_reason": response.choices[0].finish_reason,
                 "fallback": True,
-                "fallback_reason": "GPT-5 unavailable"
+                "fallback_reason": "GPT-5 unavailable",
             }
 
         except Exception as e:
@@ -383,7 +390,7 @@ class GPT5Service:
                 self.usage_stats["fallback_requests"] / self.usage_stats["total_requests"]
                 if self.usage_stats["total_requests"] > 0
                 else 0
-            )
+            ),
         }
 
     def reset_usage_stats(self):
@@ -394,7 +401,7 @@ class GPT5Service:
             "fallback_requests": 0,
             "total_input_tokens": 0,
             "total_output_tokens": 0,
-            "total_cost": 0.0
+            "total_cost": 0.0,
         }
 
     async def health_check(self) -> Dict[str, Any]:
@@ -402,10 +409,14 @@ class GPT5Service:
         health = {
             "service": "GPT5Service",
             "status": "healthy",
-            "gpt5_enabled": self.feature_flags.is_enabled(FeatureFlag.GPT5_MIGRATION) if self.feature_flags else False,
+            "gpt5_enabled": (
+                self.feature_flags.is_enabled(FeatureFlag.GPT5_MIGRATION)
+                if self.feature_flags
+                else False
+            ),
             "fallback_enabled": self.fallback_enabled,
             "models_available": list(self.gpt5_models.keys()),
-            "usage_stats": self.get_usage_stats()
+            "usage_stats": self.get_usage_stats(),
         }
 
         # Test API connectivity
@@ -413,7 +424,7 @@ class GPT5Service:
             test_response = await self.async_client.chat.completions.create(
                 model="gpt-4o-mini",  # Use a cheap model for testing
                 messages=[{"role": "user", "content": "test"}],
-                max_tokens=1
+                max_tokens=1,
             )
             health["api_status"] = "connected"
         except Exception as e:
@@ -422,6 +433,7 @@ class GPT5Service:
 
         return health
 
+
 # Global instance for application-wide use
 try:
     gpt5_service = GPT5Service()
@@ -429,6 +441,7 @@ try:
 except Exception as e:
     logger.error(f"Failed to initialize GPT-5 service: {e}")
     gpt5_service = None
+
 
 def get_gpt5_service() -> GPT5Service:
     """Get or create the GPT-5 service instance"""

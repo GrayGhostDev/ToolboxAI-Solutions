@@ -15,7 +15,17 @@ Backend URL: http://127.0.0.1:8008
 Client ID: 2214511122270781418
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Header, BackgroundTasks, WebSocket, WebSocketDisconnect, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Query,
+    Header,
+    BackgroundTasks,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from fastapi.security import OAuth2PasswordBearer
 from typing import Dict, Any, List, Optional, Union
 from datetime import datetime, timedelta
@@ -40,11 +50,14 @@ except ImportError:
         # Fallback for development
         def get_current_user():
             from pydantic import BaseModel
+
             class MockUser(BaseModel):
                 email: str = "test@example.com"
                 role: str = "teacher"
                 id: Optional[str] = "test_user_id"
+
             return MockUser()
+
 
 try:
     from apps.backend.models.schemas import User, BaseResponse
@@ -63,6 +76,7 @@ except ImportError:
             message: str = ""
             timestamp: datetime = Field(default_factory=datetime.utcnow)
             request_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+
 
 try:
     from apps.backend.services.database import db_service
@@ -84,38 +98,46 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Rate limiting configurations
 RATE_LIMIT_REQUESTS = 100  # per minute
-RATE_LIMIT_BURST = 10      # burst limit
+RATE_LIMIT_BURST = 10  # burst limit
 
 # =============================================================================
 # PYDANTIC MODELS
 # =============================================================================
 
+
 class GameStatus(str, Enum):
     """Game instance status"""
+
     CREATING = "creating"
     ACTIVE = "active"
     PAUSED = "paused"
     COMPLETED = "completed"
     ARCHIVED = "archived"
 
+
 class ContentType(str, Enum):
     """Content generation types"""
+
     LESSON = "lesson"
     QUIZ = "quiz"
     ACTIVITY = "activity"
     TERRAIN = "terrain"
     SCRIPT = "script"
 
+
 class DeploymentStatus(str, Enum):
     """Content deployment status"""
+
     PENDING = "pending"
     DEPLOYING = "deploying"
     DEPLOYED = "deployed"
     FAILED = "failed"
     ROLLBACK = "rollback"
 
+
 class AnalyticsEventType(str, Enum):
     """Custom analytics event types"""
+
     STUDENT_JOIN = "student_join"
     STUDENT_LEAVE = "student_leave"
     QUIZ_START = "quiz_start"
@@ -123,9 +145,11 @@ class AnalyticsEventType(str, Enum):
     CHECKPOINT_REACH = "checkpoint_reach"
     ACHIEVEMENT_UNLOCK = "achievement_unlock"
 
+
 # Request Models
 class CreateGameRequest(BaseModel):
     """Create new educational game instance"""
+
     title: str = Field(..., min_length=3, max_length=100, description="Game title")
     description: Optional[str] = Field(None, max_length=500, description="Game description")
     subject: str = Field(..., description="Educational subject")
@@ -143,76 +167,99 @@ class CreateGameRequest(BaseModel):
                 "grade_level": 7,
                 "max_players": 25,
                 "template_id": "space_station",
-                "settings": {
-                    "enable_voice_chat": False,
-                    "difficulty": "medium"
-                }
+                "settings": {"enable_voice_chat": False, "difficulty": "medium"},
             }
         }
 
+
 class UpdateGameSettingsRequest(BaseModel):
     """Update game settings"""
+
     title: Optional[str] = Field(None, min_length=3, max_length=100)
     description: Optional[str] = Field(None, max_length=500)
     max_players: Optional[int] = Field(None, ge=1, le=50)
     settings: Optional[Dict[str, Any]] = None
     status: Optional[GameStatus] = None
 
+
 class ContentGenerationRequest(BaseModel):
     """Request for AI content generation"""
+
     content_type: ContentType = Field(..., description="Type of content to generate")
     subject: str = Field(..., description="Educational subject")
     grade_level: int = Field(..., ge=1, le=12, description="Target grade level")
-    learning_objectives: List[str] = Field(..., min_items=1, max_items=10, description="Learning objectives")
+    learning_objectives: List[str] = Field(
+        ..., min_items=1, max_items=10, description="Learning objectives"
+    )
     environment_type: str = Field(..., description="Roblox environment type")
     difficulty: str = Field(default="medium", description="Content difficulty")
     duration_minutes: int = Field(default=30, ge=5, le=120, description="Expected duration")
     include_quiz: bool = Field(default=True, description="Include assessment quiz")
-    custom_requirements: Optional[str] = Field(None, max_length=1000, description="Custom requirements")
+    custom_requirements: Optional[str] = Field(
+        None, max_length=1000, description="Custom requirements"
+    )
 
-    @field_validator('learning_objectives')
+    @field_validator("learning_objectives")
     def validate_objectives(cls, v):
         for obj in v:
             if len(obj.strip()) < 10:
-                raise ValueError('Each learning objective must be at least 10 characters')
+                raise ValueError("Each learning objective must be at least 10 characters")
         return v
+
 
 class ContentDeploymentRequest(BaseModel):
     """Deploy content to Roblox game"""
+
     content_id: str = Field(..., description="Generated content ID")
     game_id: str = Field(..., description="Target game instance ID")
-    deploy_options: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Deployment options")
+    deploy_options: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Deployment options"
+    )
     notify_students: bool = Field(default=True, description="Notify students of update")
+
 
 class StudentProgressUpdate(BaseModel):
     """Update student progress"""
+
     student_id: str = Field(..., description="Student identifier")
     game_id: str = Field(..., description="Game instance ID")
     session_id: str = Field(..., description="Current session ID")
     progress_data: Dict[str, Any] = Field(..., description="Progress information")
-    completed_objectives: List[str] = Field(default_factory=list, description="Completed learning objectives")
+    completed_objectives: List[str] = Field(
+        default_factory=list, description="Completed learning objectives"
+    )
     score: Optional[float] = Field(None, ge=0, le=100, description="Current score")
     time_spent_minutes: int = Field(default=0, ge=0, description="Time spent in minutes")
 
+
 class CheckpointSaveRequest(BaseModel):
     """Save student checkpoint"""
+
     student_id: str = Field(..., description="Student identifier")
     game_id: str = Field(..., description="Game instance ID")
     checkpoint_data: Dict[str, Any] = Field(..., description="Checkpoint state data")
     checkpoint_name: Optional[str] = Field(None, description="Checkpoint identifier")
     auto_save: bool = Field(default=False, description="Was this an automatic save")
 
+
 class AnalyticsEventRequest(BaseModel):
     """Track custom analytics event"""
+
     event_type: AnalyticsEventType = Field(..., description="Type of event")
     game_id: Optional[str] = Field(None, description="Game instance ID")
     student_id: Optional[str] = Field(None, description="Student ID")
     session_id: Optional[str] = Field(None, description="Session ID")
-    event_data: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Event-specific data")
-    timestamp: Optional[datetime] = Field(default_factory=datetime.utcnow, description="Event timestamp")
+    event_data: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Event-specific data"
+    )
+    timestamp: Optional[datetime] = Field(
+        default_factory=datetime.utcnow, description="Event timestamp"
+    )
+
 
 class WebhookRequest(BaseModel):
     """Roblox webhook payload"""
+
     event_type: str = Field(..., description="Webhook event type")
     universe_id: str = Field(..., description="Roblox universe ID")
     place_id: Optional[str] = Field(None, description="Roblox place ID")
@@ -220,9 +267,11 @@ class WebhookRequest(BaseModel):
     data: Dict[str, Any] = Field(default_factory=dict, description="Event payload")
     signature: Optional[str] = Field(None, description="Webhook signature")
 
+
 # Response Models
 class GameInstanceResponse(BaseModel):
     """Game instance details"""
+
     game_id: str = Field(..., description="Unique game identifier")
     title: str = Field(..., description="Game title")
     description: Optional[str] = Field(None, description="Game description")
@@ -239,20 +288,26 @@ class GameInstanceResponse(BaseModel):
     settings: Dict[str, Any] = Field(default_factory=dict, description="Game configuration")
     join_url: Optional[str] = Field(None, description="Game join URL")
 
+
 class ContentGenerationResponse(BaseModel):
     """Generated content response"""
+
     content_id: str = Field(..., description="Generated content identifier")
     content_type: ContentType = Field(..., description="Type of generated content")
     status: str = Field(default="completed", description="Generation status")
-    generated_at: datetime = Field(default_factory=datetime.utcnow, description="Generation timestamp")
+    generated_at: datetime = Field(
+        default_factory=datetime.utcnow, description="Generation timestamp"
+    )
     lesson_content: Optional[Dict[str, Any]] = Field(None, description="Generated lesson content")
     quiz_content: Optional[Dict[str, Any]] = Field(None, description="Generated quiz content")
     terrain_config: Optional[Dict[str, Any]] = Field(None, description="Terrain configuration")
     script_content: Optional[Dict[str, Any]] = Field(None, description="Generated scripts")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Generation metadata")
 
+
 class TemplateResponse(BaseModel):
     """Content template information"""
+
     template_id: str = Field(..., description="Template identifier")
     name: str = Field(..., description="Template name")
     description: str = Field(..., description="Template description")
@@ -265,8 +320,10 @@ class TemplateResponse(BaseModel):
     created_at: datetime = Field(..., description="Creation timestamp")
     usage_count: int = Field(default=0, description="Number of times used")
 
+
 class DeploymentStatusResponse(BaseModel):
     """Content deployment status"""
+
     deployment_id: str = Field(..., description="Deployment identifier")
     content_id: str = Field(..., description="Content identifier")
     game_id: str = Field(..., description="Target game ID")
@@ -275,10 +332,14 @@ class DeploymentStatusResponse(BaseModel):
     started_at: datetime = Field(..., description="Deployment start time")
     completed_at: Optional[datetime] = Field(None, description="Deployment completion time")
     error_message: Optional[str] = Field(None, description="Error message if failed")
-    deployed_assets: List[str] = Field(default_factory=list, description="Successfully deployed assets")
+    deployed_assets: List[str] = Field(
+        default_factory=list, description="Successfully deployed assets"
+    )
+
 
 class StudentProgressResponse(BaseModel):
     """Student progress information"""
+
     student_id: str = Field(..., description="Student identifier")
     game_id: str = Field(..., description="Game instance ID")
     overall_progress: float = Field(..., ge=0, le=100, description="Overall progress percentage")
@@ -288,19 +349,27 @@ class StudentProgressResponse(BaseModel):
     last_active: datetime = Field(..., description="Last activity timestamp")
     achievements: List[str] = Field(default_factory=list, description="Unlocked achievements")
     checkpoints: List[Dict[str, Any]] = Field(default_factory=list, description="Saved checkpoints")
-    performance_metrics: Dict[str, Any] = Field(default_factory=dict, description="Performance data")
+    performance_metrics: Dict[str, Any] = Field(
+        default_factory=dict, description="Performance data"
+    )
+
 
 class LeaderboardResponse(BaseModel):
     """Class leaderboard data"""
+
     game_id: str = Field(..., description="Game instance ID")
     leaderboard_type: str = Field(..., description="Leaderboard type (score, progress, time)")
-    generated_at: datetime = Field(default_factory=datetime.utcnow, description="Generation timestamp")
+    generated_at: datetime = Field(
+        default_factory=datetime.utcnow, description="Generation timestamp"
+    )
     entries: List[Dict[str, Any]] = Field(..., description="Leaderboard entries")
     total_students: int = Field(..., description="Total number of students")
     class_average: float = Field(..., description="Class average score/progress")
 
+
 class SessionAnalyticsResponse(BaseModel):
     """Session analytics data"""
+
     session_id: str = Field(..., description="Session identifier")
     game_id: str = Field(..., description="Game instance ID")
     student_count: int = Field(..., description="Number of students in session")
@@ -311,8 +380,10 @@ class SessionAnalyticsResponse(BaseModel):
     activity_heatmap: List[Dict[str, Any]] = Field(..., description="Student activity timeline")
     performance_metrics: Dict[str, Any] = Field(..., description="Performance statistics")
 
+
 class PerformanceMetricsResponse(BaseModel):
     """System performance metrics"""
+
     server_uptime_seconds: int = Field(..., description="Server uptime in seconds")
     active_games: int = Field(..., description="Number of active games")
     total_students_online: int = Field(..., description="Total students currently online")
@@ -322,9 +393,11 @@ class PerformanceMetricsResponse(BaseModel):
     websocket_connections: int = Field(..., description="Active WebSocket connections")
     last_updated: datetime = Field(default_factory=datetime.utcnow, description="Metrics timestamp")
 
+
 # =============================================================================
 # CONNECTION MANAGERS
 # =============================================================================
+
 
 class WebSocketManager:
     """Manages WebSocket connections for real-time updates"""
@@ -346,7 +419,7 @@ class WebSocketManager:
         self.connection_metadata[websocket] = {
             "room_id": room_id,
             "user_id": user_id,
-            "connected_at": datetime.utcnow()
+            "connected_at": datetime.utcnow(),
         }
 
         logger.info(f"WebSocket connected to room {room_id} (user: {user_id})")
@@ -393,6 +466,7 @@ class WebSocketManager:
         """Get number of connections in a room"""
         return len(self.connections.get(room_id, set()))
 
+
 # Global WebSocket manager
 ws_manager = WebSocketManager()
 
@@ -429,6 +503,7 @@ roblox_router = APIRouter(prefix="/roblox", tags=["Roblox Integration"])
 # 1. GAME MANAGEMENT ENDPOINTS
 # =============================================================================
 
+
 @roblox_router.post(
     "/game/create",
     response_model=GameInstanceResponse,
@@ -439,7 +514,7 @@ roblox_router = APIRouter(prefix="/roblox", tags=["Roblox Integration"])
 async def create_game_instance(
     request: CreateGameRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> GameInstanceResponse:
     """
     Create new educational game instance in Roblox platform.
@@ -496,7 +571,7 @@ async def create_game_instance(
     if current_user.role.lower() not in ["teacher", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only teachers and admins can create game instances"
+            detail="Only teachers and admins can create game instances",
         )
 
     # Generate unique game ID
@@ -515,12 +590,12 @@ async def create_game_instance(
         "roblox_universe_id": ROBLOX_UNIVERSE_ID,
         "max_players": request.max_players,
         "current_players": 0,
-        "created_by": current_user.id if hasattr(current_user, 'id') else current_user.email,
+        "created_by": current_user.id if hasattr(current_user, "id") else current_user.email,
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
         "settings": request.settings or {},
         "template_id": request.template_id,
-        "join_url": f"https://www.roblox.com/games/{roblox_place_id}/"
+        "join_url": f"https://www.roblox.com/games/{roblox_place_id}/",
     }
 
     # Store game instance
@@ -533,10 +608,10 @@ async def create_game_instance(
 
     return GameInstanceResponse(**game_instance)
 
+
 @roblox_router.get("/game/{game_id}", response_model=GameInstanceResponse)
 async def get_game_instance(
-    game_id: str,
-    current_user: User = Depends(get_current_user)
+    game_id: str, current_user: User = Depends(get_current_user)
 ) -> GameInstanceResponse:
     """
     Get game instance details.
@@ -546,29 +621,28 @@ async def get_game_instance(
     """
     if game_id not in game_instances:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Game instance {game_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Game instance {game_id} not found"
         )
 
     game_instance = game_instances[game_id]
 
     # Check if user has access to this game
     user_role = current_user.role.lower()
-    if user_role not in ["admin"] and game_instance["created_by"] != (current_user.id if hasattr(current_user, 'id') else current_user.email):
+    if user_role not in ["admin"] and game_instance["created_by"] != (
+        current_user.id if hasattr(current_user, "id") else current_user.email
+    ):
         # Students can access if they're enrolled in the class (simplified check)
         if user_role != "student":
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied to this game instance"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to this game instance"
             )
 
     return GameInstanceResponse(**game_instance)
 
+
 @roblox_router.put("/game/{game_id}/settings", response_model=GameInstanceResponse)
 async def update_game_settings(
-    game_id: str,
-    request: UpdateGameSettingsRequest,
-    current_user: User = Depends(get_current_user)
+    game_id: str, request: UpdateGameSettingsRequest, current_user: User = Depends(get_current_user)
 ) -> GameInstanceResponse:
     """
     Update game instance settings.
@@ -580,20 +654,19 @@ async def update_game_settings(
     """
     if game_id not in game_instances:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Game instance {game_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Game instance {game_id} not found"
         )
 
     game_instance = game_instances[game_id]
 
     # Check permissions
     user_role = current_user.role.lower()
-    user_id = current_user.id if hasattr(current_user, 'id') else current_user.email
+    user_id = current_user.id if hasattr(current_user, "id") else current_user.email
 
     if user_role not in ["admin"] and game_instance["created_by"] != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the game creator or admin can update settings"
+            detail="Only the game creator or admin can update settings",
         )
 
     # Update fields
@@ -608,22 +681,23 @@ async def update_game_settings(
     game_instances[game_id] = game_instance
 
     # Notify connected clients
-    await ws_manager.send_to_room(f"game_{game_id}", {
-        "type": "game_settings_updated",
-        "game_id": game_id,
-        "updates": update_data,
-        "timestamp": datetime.utcnow().isoformat()
-    })
+    await ws_manager.send_to_room(
+        f"game_{game_id}",
+        {
+            "type": "game_settings_updated",
+            "game_id": game_id,
+            "updates": update_data,
+            "timestamp": datetime.utcnow().isoformat(),
+        },
+    )
 
     logger.info(f"Updated settings for game {game_id} by user {current_user.email}")
 
     return GameInstanceResponse(**game_instance)
 
+
 @roblox_router.delete("/game/{game_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_game_instance(
-    game_id: str,
-    current_user: User = Depends(get_current_user)
-):
+async def delete_game_instance(game_id: str, current_user: User = Depends(get_current_user)):
     """
     Archive/delete game instance.
 
@@ -634,20 +708,19 @@ async def delete_game_instance(
     """
     if game_id not in game_instances:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Game instance {game_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Game instance {game_id} not found"
         )
 
     game_instance = game_instances[game_id]
 
     # Check permissions
     user_role = current_user.role.lower()
-    user_id = current_user.id if hasattr(current_user, 'id') else current_user.email
+    user_id = current_user.id if hasattr(current_user, "id") else current_user.email
 
     if user_role not in ["admin"] and game_instance["created_by"] != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the game creator or admin can delete game instances"
+            detail="Only the game creator or admin can delete game instances",
         )
 
     # Archive instead of delete to preserve data
@@ -656,17 +729,18 @@ async def delete_game_instance(
     game_instances[game_id] = game_instance
 
     # Notify connected clients
-    await ws_manager.send_to_room(f"game_{game_id}", {
-        "type": "game_archived",
-        "game_id": game_id,
-        "timestamp": datetime.utcnow().isoformat()
-    })
+    await ws_manager.send_to_room(
+        f"game_{game_id}",
+        {"type": "game_archived", "game_id": game_id, "timestamp": datetime.utcnow().isoformat()},
+    )
 
     logger.info(f"Archived game instance {game_id} by user {current_user.email}")
+
 
 # =============================================================================
 # 2. CONTENT GENERATION ENDPOINTS
 # =============================================================================
+
 
 @roblox_router.post(
     "/content/generate",
@@ -678,7 +752,7 @@ async def delete_game_instance(
 async def generate_educational_content(
     request: ContentGenerationRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> ContentGenerationResponse:
     """
     Generate educational content using AI agents.
@@ -693,7 +767,7 @@ async def generate_educational_content(
     if current_user.role.lower() not in ["teacher", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only teachers and admins can generate content"
+            detail="Only teachers and admins can generate content",
         )
 
     # Generate content ID
@@ -704,10 +778,10 @@ async def generate_educational_content(
         "content_id": content_id,
         "content_type": request.content_type.value,
         "status": "generating",
-        "requested_by": current_user.id if hasattr(current_user, 'id') else current_user.email,
+        "requested_by": current_user.id if hasattr(current_user, "id") else current_user.email,
         "generated_at": datetime.utcnow(),
         "request_data": request.model_dump(),
-        "generation_progress": 0
+        "generation_progress": 0,
     }
 
     generated_content[content_id] = content_record
@@ -716,27 +790,29 @@ async def generate_educational_content(
     background_tasks.add_task(generate_content_async, content_id, request)
 
     # Notify via WebSocket
-    await ws_manager.send_to_user(current_user.id if hasattr(current_user, 'id') else current_user.email, {
-        "type": "content_generation_started",
-        "content_id": content_id,
-        "estimated_time_minutes": estimate_generation_time(request),
-        "timestamp": datetime.utcnow().isoformat()
-    })
+    await ws_manager.send_to_user(
+        current_user.id if hasattr(current_user, "id") else current_user.email,
+        {
+            "type": "content_generation_started",
+            "content_id": content_id,
+            "estimated_time_minutes": estimate_generation_time(request),
+            "timestamp": datetime.utcnow().isoformat(),
+        },
+    )
 
     logger.info(f"Started content generation {content_id} for user {current_user.email}")
 
     return ContentGenerationResponse(
-        content_id=content_id,
-        content_type=request.content_type,
-        status="generating"
+        content_id=content_id, content_type=request.content_type, status="generating"
     )
+
 
 @roblox_router.get("/content/templates", response_model=List[TemplateResponse])
 async def get_content_templates(
     category: Optional[str] = Query(None, description="Filter by category"),
     subject: Optional[str] = Query(None, description="Filter by subject"),
     grade_level: Optional[int] = Query(None, ge=1, le=12, description="Filter by grade level"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> List[TemplateResponse]:
     """
     Get available content templates.
@@ -757,7 +833,7 @@ async def get_content_templates(
             "difficulty": "intermediate",
             "thumbnail_url": "/templates/space_station.png",
             "created_at": datetime.utcnow() - timedelta(days=30),
-            "usage_count": 45
+            "usage_count": 45,
         },
         {
             "template_id": "math_adventure_castle",
@@ -770,7 +846,7 @@ async def get_content_templates(
             "difficulty": "beginner",
             "thumbnail_url": "/templates/math_castle.png",
             "created_at": datetime.utcnow() - timedelta(days=15),
-            "usage_count": 67
+            "usage_count": 67,
         },
         {
             "template_id": "history_time_machine",
@@ -783,23 +859,28 @@ async def get_content_templates(
             "difficulty": "advanced",
             "thumbnail_url": "/templates/time_machine.png",
             "created_at": datetime.utcnow() - timedelta(days=45),
-            "usage_count": 32
-        }
+            "usage_count": 32,
+        },
     ]
 
     # Apply filters
     filtered_templates = templates
 
     if category:
-        filtered_templates = [t for t in filtered_templates if t["category"].lower() == category.lower()]
+        filtered_templates = [
+            t for t in filtered_templates if t["category"].lower() == category.lower()
+        ]
 
     if subject:
-        filtered_templates = [t for t in filtered_templates if t["subject"].lower() == subject.lower()]
+        filtered_templates = [
+            t for t in filtered_templates if t["subject"].lower() == subject.lower()
+        ]
 
     if grade_level:
         filtered_templates = [t for t in filtered_templates if grade_level in t["grade_levels"]]
 
     return [TemplateResponse(**template) for template in filtered_templates]
+
 
 @roblox_router.post(
     "/content/deploy",
@@ -811,7 +892,7 @@ async def get_content_templates(
 async def deploy_content_to_game(
     request: ContentDeploymentRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> DeploymentStatusResponse:
     """
     Deploy generated content to a Roblox game instance.
@@ -825,21 +906,20 @@ async def deploy_content_to_game(
     if current_user.role.lower() not in ["teacher", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only teachers and admins can deploy content"
+            detail="Only teachers and admins can deploy content",
         )
 
     # Verify content exists
     if request.content_id not in generated_content:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Content {request.content_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Content {request.content_id} not found"
         )
 
     # Verify game exists
     if request.game_id not in game_instances:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Game instance {request.game_id} not found"
+            detail=f"Game instance {request.game_id} not found",
         )
 
     # Generate deployment ID
@@ -853,9 +933,9 @@ async def deploy_content_to_game(
         "status": DeploymentStatus.PENDING.value,
         "progress": 0,
         "started_at": datetime.utcnow(),
-        "requested_by": current_user.id if hasattr(current_user, 'id') else current_user.email,
+        "requested_by": current_user.id if hasattr(current_user, "id") else current_user.email,
         "deploy_options": request.deploy_options or {},
-        "deployed_assets": []
+        "deployed_assets": [],
     }
 
     deployments[deployment_id] = deployment
@@ -867,10 +947,10 @@ async def deploy_content_to_game(
 
     return DeploymentStatusResponse(**deployment)
 
+
 @roblox_router.get("/content/{content_id}/status")
 async def get_content_deployment_status(
-    content_id: str,
-    current_user: User = Depends(get_current_user)
+    content_id: str, current_user: User = Depends(get_current_user)
 ) -> Union[ContentGenerationResponse, List[DeploymentStatusResponse]]:
     """
     Get content generation or deployment status.
@@ -885,26 +965,26 @@ async def get_content_deployment_status(
 
     # Check for deployments
     content_deployments = [
-        deployment for deployment in deployments.values()
-        if deployment["content_id"] == content_id
+        deployment for deployment in deployments.values() if deployment["content_id"] == content_id
     ]
 
     if not content_deployments:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No content or deployments found for {content_id}"
+            detail=f"No content or deployments found for {content_id}",
         )
 
     return [DeploymentStatusResponse(**deployment) for deployment in content_deployments]
+
 
 # =============================================================================
 # 3. STUDENT PROGRESS ENDPOINTS
 # =============================================================================
 
+
 @roblox_router.post("/progress/update", status_code=status.HTTP_200_OK)
 async def update_student_progress(
-    request: StudentProgressUpdate,
-    current_user: User = Depends(get_current_user)
+    request: StudentProgressUpdate, current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Update student progress in a game instance.
@@ -921,26 +1001,32 @@ async def update_student_progress(
             "student_id": request.student_id,
             "game_id": request.game_id,
             "created_at": datetime.utcnow(),
-            "sessions": []
+            "sessions": [],
         }
 
     progress = student_progress[progress_key]
-    progress.update({
-        "last_updated": datetime.utcnow(),
-        "current_session_id": request.session_id,
-        "progress_data": request.progress_data,
-        "completed_objectives": request.completed_objectives,
-        "current_score": request.score,
-        "total_time_minutes": progress.get("total_time_minutes", 0) + request.time_spent_minutes
-    })
+    progress.update(
+        {
+            "last_updated": datetime.utcnow(),
+            "current_session_id": request.session_id,
+            "progress_data": request.progress_data,
+            "completed_objectives": request.completed_objectives,
+            "current_score": request.score,
+            "total_time_minutes": progress.get("total_time_minutes", 0)
+            + request.time_spent_minutes,
+        }
+    )
 
     # Notify real-time systems
-    await ws_manager.send_to_room(f"game_{request.game_id}", {
-        "type": "student_progress_updated",
-        "student_id": request.student_id,
-        "progress": request.progress_data,
-        "timestamp": datetime.utcnow().isoformat()
-    })
+    await ws_manager.send_to_room(
+        f"game_{request.game_id}",
+        {
+            "type": "student_progress_updated",
+            "student_id": request.student_id,
+            "progress": request.progress_data,
+            "timestamp": datetime.utcnow().isoformat(),
+        },
+    )
 
     logger.info(f"Updated progress for student {request.student_id} in game {request.game_id}")
 
@@ -948,14 +1034,15 @@ async def update_student_progress(
         "status": "success",
         "message": "Student progress updated successfully",
         "student_id": request.student_id,
-        "game_id": request.game_id
+        "game_id": request.game_id,
     }
+
 
 @roblox_router.get("/progress/{student_id}", response_model=StudentProgressResponse)
 async def get_student_progress(
     student_id: str,
     game_id: Optional[str] = Query(None, description="Specific game ID"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> StudentProgressResponse:
     """
     Get comprehensive student progress data.
@@ -964,10 +1051,12 @@ async def get_student_progress(
     scores, time spent, achievements, and performance metrics.
     """
     # Check permissions - students can only view their own progress
-    if current_user.role.lower() == "student" and student_id != (current_user.id if hasattr(current_user, 'id') else current_user.email):
+    if current_user.role.lower() == "student" and student_id != (
+        current_user.id if hasattr(current_user, "id") else current_user.email
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Students can only view their own progress"
+            detail="Students can only view their own progress",
         )
 
     if game_id:
@@ -975,7 +1064,7 @@ async def get_student_progress(
         if progress_key not in student_progress:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No progress found for student {student_id} in game {game_id}"
+                detail=f"No progress found for student {student_id} in game {game_id}",
             )
 
         progress = student_progress[progress_key]
@@ -990,7 +1079,7 @@ async def get_student_progress(
             last_active=progress.get("last_updated", datetime.utcnow()),
             achievements=progress.get("achievements", []),
             checkpoints=progress.get("checkpoints", []),
-            performance_metrics=progress.get("performance_metrics", {})
+            performance_metrics=progress.get("performance_metrics", {}),
         )
 
     # Return aggregated progress across all games
@@ -999,7 +1088,7 @@ async def get_student_progress(
     if not student_games:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No progress found for student {student_id}"
+            detail=f"No progress found for student {student_id}",
         )
 
     # Aggregate data (simplified for demo)
@@ -1022,13 +1111,13 @@ async def get_student_progress(
         last_active=max(p.get("last_updated", datetime.utcnow()) for p in student_games),
         achievements=list(set(all_achievements)),
         checkpoints=[],
-        performance_metrics={"games_played": len(student_games)}
+        performance_metrics={"games_played": len(student_games)},
     )
+
 
 @roblox_router.post("/progress/checkpoint", status_code=status.HTTP_201_CREATED)
 async def save_student_checkpoint(
-    request: CheckpointSaveRequest,
-    current_user: User = Depends(get_current_user)
+    request: CheckpointSaveRequest, current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Save student progress checkpoint.
@@ -1045,16 +1134,17 @@ async def save_student_checkpoint(
             "student_id": request.student_id,
             "game_id": request.game_id,
             "created_at": datetime.utcnow(),
-            "checkpoints": []
+            "checkpoints": [],
         }
 
     # Create checkpoint
     checkpoint = {
         "checkpoint_id": checkpoint_id,
-        "checkpoint_name": request.checkpoint_name or f"Checkpoint {len(student_progress[progress_key].get('checkpoints', [])) + 1}",
+        "checkpoint_name": request.checkpoint_name
+        or f"Checkpoint {len(student_progress[progress_key].get('checkpoints', [])) + 1}",
         "checkpoint_data": request.checkpoint_data,
         "saved_at": datetime.utcnow(),
-        "auto_save": request.auto_save
+        "auto_save": request.auto_save,
     }
 
     # Add to progress record
@@ -1064,7 +1154,9 @@ async def save_student_checkpoint(
     student_progress[progress_key]["checkpoints"].append(checkpoint)
 
     # Keep only last 10 checkpoints per student/game
-    student_progress[progress_key]["checkpoints"] = student_progress[progress_key]["checkpoints"][-10:]
+    student_progress[progress_key]["checkpoints"] = student_progress[progress_key]["checkpoints"][
+        -10:
+    ]
 
     logger.info(f"Saved checkpoint {checkpoint_id} for student {request.student_id}")
 
@@ -1073,15 +1165,16 @@ async def save_student_checkpoint(
         "message": "Checkpoint saved successfully",
         "checkpoint_id": checkpoint_id,
         "student_id": request.student_id,
-        "game_id": request.game_id
+        "game_id": request.game_id,
     }
+
 
 @roblox_router.get("/progress/leaderboard", response_model=LeaderboardResponse)
 async def get_class_leaderboard(
     game_id: str,
     leaderboard_type: str = Query("score", regex="^(score|progress|time)$"),
     limit: int = Query(50, ge=1, le=100),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> LeaderboardResponse:
     """
     Get class leaderboard for a game instance.
@@ -1092,8 +1185,7 @@ async def get_class_leaderboard(
     # Verify game exists
     if game_id not in game_instances:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Game instance {game_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Game instance {game_id} not found"
         )
 
     # Get all progress records for this game
@@ -1103,7 +1195,7 @@ async def get_class_leaderboard(
     sort_key = {
         "score": lambda x: x.get("current_score", 0),
         "progress": lambda x: x.get("progress_data", {}).get("overall_progress", 0),
-        "time": lambda x: x.get("total_time_minutes", 0)
+        "time": lambda x: x.get("total_time_minutes", 0),
     }[leaderboard_type]
 
     sorted_progress = sorted(game_progress, key=sort_key, reverse=True)[:limit]
@@ -1111,30 +1203,36 @@ async def get_class_leaderboard(
     # Build leaderboard entries
     entries = []
     for i, progress in enumerate(sorted_progress):
-        entries.append({
-            "rank": i + 1,
-            "student_id": progress["student_id"],
-            "score": progress.get("current_score", 0),
-            "progress": progress.get("progress_data", {}).get("overall_progress", 0),
-            "time_minutes": progress.get("total_time_minutes", 0),
-            "achievements_count": len(progress.get("achievements", [])),
-            "last_active": progress.get("last_updated", datetime.utcnow()).isoformat()
-        })
+        entries.append(
+            {
+                "rank": i + 1,
+                "student_id": progress["student_id"],
+                "score": progress.get("current_score", 0),
+                "progress": progress.get("progress_data", {}).get("overall_progress", 0),
+                "time_minutes": progress.get("total_time_minutes", 0),
+                "achievements_count": len(progress.get("achievements", [])),
+                "last_active": progress.get("last_updated", datetime.utcnow()).isoformat(),
+            }
+        )
 
     # Calculate class average
-    class_average = sum(sort_key(p) for p in game_progress) / len(game_progress) if game_progress else 0
+    class_average = (
+        sum(sort_key(p) for p in game_progress) / len(game_progress) if game_progress else 0
+    )
 
     return LeaderboardResponse(
         game_id=game_id,
         leaderboard_type=leaderboard_type,
         entries=entries,
         total_students=len(game_progress),
-        class_average=class_average
+        class_average=class_average,
     )
+
 
 # =============================================================================
 # 4. REAL-TIME COMMUNICATION (WebSocket Endpoints)
 # =============================================================================
+
 
 @roblox_router.websocket("/ws/game/{game_id}")
 async def websocket_game_updates(websocket: WebSocket, game_id: str):
@@ -1155,11 +1253,13 @@ async def websocket_game_updates(websocket: WebSocket, game_id: str):
     try:
         # Send initial game state
         if game_id in game_instances:
-            await websocket.send_json({
-                "type": "game_state",
-                "game": game_instances[game_id],
-                "timestamp": datetime.utcnow().isoformat()
-            })
+            await websocket.send_json(
+                {
+                    "type": "game_state",
+                    "game": game_instances[game_id],
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            )
 
         while True:
             # Listen for messages from client
@@ -1167,24 +1267,27 @@ async def websocket_game_updates(websocket: WebSocket, game_id: str):
 
             # Handle different message types
             if data.get("type") == "ping":
-                await websocket.send_json({
-                    "type": "pong",
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                await websocket.send_json(
+                    {"type": "pong", "timestamp": datetime.utcnow().isoformat()}
+                )
             elif data.get("type") == "student_action":
                 # Broadcast student action to other players
-                await ws_manager.send_to_room(f"game_{game_id}", {
-                    "type": "student_action",
-                    "student_id": data.get("student_id"),
-                    "action": data.get("action"),
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                await ws_manager.send_to_room(
+                    f"game_{game_id}",
+                    {
+                        "type": "student_action",
+                        "student_id": data.get("student_id"),
+                        "action": data.get("action"),
+                        "timestamp": datetime.utcnow().isoformat(),
+                    },
+                )
 
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
     except Exception as e:
         logger.error(f"WebSocket error in game {game_id}: {e}")
         ws_manager.disconnect(websocket)
+
 
 @roblox_router.websocket("/ws/content")
 async def websocket_content_generation(websocket: WebSocket):
@@ -1205,11 +1308,13 @@ async def websocket_content_generation(websocket: WebSocket):
             if data.get("type") == "subscribe_content":
                 content_id = data.get("content_id")
                 if content_id in generated_content:
-                    await websocket.send_json({
-                        "type": "content_status",
-                        "content": generated_content[content_id],
-                        "timestamp": datetime.utcnow().isoformat()
-                    })
+                    await websocket.send_json(
+                        {
+                            "type": "content_status",
+                            "content": generated_content[content_id],
+                            "timestamp": datetime.utcnow().isoformat(),
+                        }
+                    )
 
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
@@ -1217,10 +1322,10 @@ async def websocket_content_generation(websocket: WebSocket):
         logger.error(f"WebSocket error in content generation: {e}")
         ws_manager.disconnect(websocket)
 
+
 @roblox_router.post("/webhook", status_code=status.HTTP_200_OK)
 async def handle_roblox_webhook(
-    request: WebhookRequest,
-    x_roblox_signature: Optional[str] = Header(None)
+    request: WebhookRequest, x_roblox_signature: Optional[str] = Header(None)
 ) -> Dict[str, Any]:
     """
     Handle incoming webhooks from Roblox.
@@ -1241,10 +1346,7 @@ async def handle_roblox_webhook(
     # Verify universe ID
     if request.universe_id != ROBLOX_UNIVERSE_ID:
         logger.warning(f"Webhook from unknown universe: {request.universe_id}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid universe ID"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid universe ID")
 
     # Process different event types
     event_type = request.event_type
@@ -1260,12 +1362,15 @@ async def handle_roblox_webhook(
                 game["current_players"] = game.get("current_players", 0) + 1
 
                 # Notify WebSocket clients
-                await ws_manager.send_to_room(f"game_{game['game_id']}", {
-                    "type": "player_joined",
-                    "user_id": user_id,
-                    "current_players": game["current_players"],
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                await ws_manager.send_to_room(
+                    f"game_{game['game_id']}",
+                    {
+                        "type": "player_joined",
+                        "user_id": user_id,
+                        "current_players": game["current_players"],
+                        "timestamp": datetime.utcnow().isoformat(),
+                    },
+                )
                 break
 
     elif event_type == "player_left":
@@ -1278,12 +1383,15 @@ async def handle_roblox_webhook(
                 game["current_players"] = max(0, game.get("current_players", 0) - 1)
 
                 # Notify WebSocket clients
-                await ws_manager.send_to_room(f"game_{game['game_id']}", {
-                    "type": "player_left",
-                    "user_id": user_id,
-                    "current_players": game["current_players"],
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                await ws_manager.send_to_room(
+                    f"game_{game['game_id']}",
+                    {
+                        "type": "player_left",
+                        "user_id": user_id,
+                        "current_players": game["current_players"],
+                        "timestamp": datetime.utcnow().isoformat(),
+                    },
+                )
                 break
 
     elif event_type == "custom_event":
@@ -1291,32 +1399,35 @@ async def handle_roblox_webhook(
         event_data = request.data
 
         # Log analytics event
-        analytics_events.append({
-            "event_id": str(uuid.uuid4()),
-            "event_type": "custom",
-            "universe_id": request.universe_id,
-            "place_id": request.place_id,
-            "user_id": request.user_id,
-            "event_data": event_data,
-            "timestamp": datetime.utcnow()
-        })
+        analytics_events.append(
+            {
+                "event_id": str(uuid.uuid4()),
+                "event_type": "custom",
+                "universe_id": request.universe_id,
+                "place_id": request.place_id,
+                "user_id": request.user_id,
+                "event_data": event_data,
+                "timestamp": datetime.utcnow(),
+            }
+        )
 
     logger.info(f"Processed webhook event: {event_type} from universe {request.universe_id}")
 
     return {
         "status": "success",
         "message": f"Webhook event {event_type} processed successfully",
-        "event_id": str(uuid.uuid4())
+        "event_id": str(uuid.uuid4()),
     }
+
 
 # =============================================================================
 # 5. ANALYTICS ENDPOINTS
 # =============================================================================
 
+
 @roblox_router.get("/analytics/session/{session_id}", response_model=SessionAnalyticsResponse)
 async def get_session_analytics(
-    session_id: str,
-    current_user: User = Depends(get_current_user)
+    session_id: str, current_user: User = Depends(get_current_user)
 ) -> SessionAnalyticsResponse:
     """
     Get detailed analytics for a specific gaming session.
@@ -1337,8 +1448,8 @@ async def get_session_analytics(
             "engagement_metrics": {
                 "average_engagement": 8.2,
                 "peak_engagement": 9.1,
-                "low_engagement_periods": 2
-            }
+                "low_engagement_periods": 2,
+            },
         }
 
     # Calculate analytics metrics
@@ -1353,22 +1464,19 @@ async def get_session_analytics(
             "objectives_met": 12,
             "objectives_total": 15,
             "average_score": 78.3,
-            "improvement_rate": 23.5
+            "improvement_rate": 23.5,
         },
         activity_heatmap=[
             {"minute": i, "activity_level": max(1, 10 - abs(i - 22))}
             for i in range(session.get("duration_minutes", 45))
         ],
-        performance_metrics={
-            "response_time_avg": 1.2,
-            "error_rate": 0.03,
-            "memory_usage": 245.6
-        }
+        performance_metrics={"response_time_avg": 1.2, "error_rate": 0.03, "memory_usage": 245.6},
     )
+
 
 @roblox_router.get("/analytics/performance", response_model=PerformanceMetricsResponse)
 async def get_system_performance_metrics(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> PerformanceMetricsResponse:
     """
     Get real-time system performance metrics.
@@ -1381,7 +1489,7 @@ async def get_system_performance_metrics(
     if current_user.role.lower() != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only administrators can view system performance metrics"
+            detail="Only administrators can view system performance metrics",
         )
 
     # Calculate metrics (in production, use actual system monitoring)
@@ -1398,19 +1506,23 @@ async def get_system_performance_metrics(
     websocket_connections = sum(len(connections) for connections in ws_manager.connections.values())
 
     return PerformanceMetricsResponse(
-        server_uptime_seconds=int((datetime.utcnow() - datetime.utcnow().replace(hour=0, minute=0, second=0)).total_seconds()),
+        server_uptime_seconds=int(
+            (
+                datetime.utcnow() - datetime.utcnow().replace(hour=0, minute=0, second=0)
+            ).total_seconds()
+        ),
         active_games=active_games,
         total_students_online=total_students,
         average_response_time_ms=125.3,  # Mock value
         memory_usage_mb=memory.used / (1024 * 1024),
         cpu_usage_percent=cpu_percent,
-        websocket_connections=websocket_connections
+        websocket_connections=websocket_connections,
     )
+
 
 @roblox_router.post("/analytics/event", status_code=status.HTTP_201_CREATED)
 async def track_analytics_event(
-    request: AnalyticsEventRequest,
-    current_user: User = Depends(get_current_user)
+    request: AnalyticsEventRequest, current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Track custom analytics event.
@@ -1430,7 +1542,7 @@ async def track_analytics_event(
         "event_data": request.event_data or {},
         "timestamp": request.timestamp or datetime.utcnow(),
         "user_agent": None,  # Extract from request headers
-        "ip_address": None   # Extract from request
+        "ip_address": None,  # Extract from request
     }
 
     # Store event
@@ -1440,24 +1552,29 @@ async def track_analytics_event(
     if request.event_type == AnalyticsEventType.ACHIEVEMENT_UNLOCK:
         # Notify other students in the same game
         if request.game_id:
-            await ws_manager.send_to_room(f"game_{request.game_id}", {
-                "type": "achievement_unlocked",
-                "student_id": request.student_id,
-                "achievement": request.event_data.get("achievement"),
-                "timestamp": datetime.utcnow().isoformat()
-            })
+            await ws_manager.send_to_room(
+                f"game_{request.game_id}",
+                {
+                    "type": "achievement_unlocked",
+                    "student_id": request.student_id,
+                    "achievement": request.event_data.get("achievement"),
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
+            )
 
     logger.info(f"Tracked analytics event: {request.event_type} for student {request.student_id}")
 
     return {
         "status": "success",
         "message": "Analytics event tracked successfully",
-        "event_id": event_id
+        "event_id": event_id,
     }
+
 
 # =============================================================================
 # BACKGROUND TASKS
 # =============================================================================
+
 
 async def setup_game_instance(game_id: str, template_id: Optional[str]):
     """Background task to set up a new game instance"""
@@ -1470,11 +1587,14 @@ async def setup_game_instance(game_id: str, template_id: Optional[str]):
             game_instances[game_id]["setup_completed_at"] = datetime.utcnow()
 
             # Notify via WebSocket
-            await ws_manager.send_to_room(f"game_{game_id}", {
-                "type": "game_ready",
-                "game_id": game_id,
-                "timestamp": datetime.utcnow().isoformat()
-            })
+            await ws_manager.send_to_room(
+                f"game_{game_id}",
+                {
+                    "type": "game_ready",
+                    "game_id": game_id,
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
+            )
 
             logger.info(f"Game instance {game_id} setup completed")
 
@@ -1484,13 +1604,20 @@ async def setup_game_instance(game_id: str, template_id: Optional[str]):
             game_instances[game_id]["status"] = "setup_failed"
             game_instances[game_id]["error"] = str(e)
 
+
 async def generate_content_async(content_id: str, request: ContentGenerationRequest):
     """Background task for AI content generation"""
     try:
         content = generated_content[content_id]
 
         # Simulate content generation phases
-        phases = ["analyzing_requirements", "generating_lesson", "creating_quiz", "building_terrain", "finalizing"]
+        phases = [
+            "analyzing_requirements",
+            "generating_lesson",
+            "creating_quiz",
+            "building_terrain",
+            "finalizing",
+        ]
 
         for i, phase in enumerate(phases):
             await asyncio.sleep(5)  # Mock generation time
@@ -1500,45 +1627,54 @@ async def generate_content_async(content_id: str, request: ContentGenerationRequ
             content["current_phase"] = phase
 
             # Notify progress via WebSocket
-            await ws_manager.send_to_room("content_generation", {
-                "type": "generation_progress",
-                "content_id": content_id,
-                "progress": progress,
-                "phase": phase,
-                "timestamp": datetime.utcnow().isoformat()
-            })
+            await ws_manager.send_to_room(
+                "content_generation",
+                {
+                    "type": "generation_progress",
+                    "content_id": content_id,
+                    "progress": progress,
+                    "phase": phase,
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
+            )
 
         # Complete generation
-        content.update({
-            "status": "completed",
-            "generation_progress": 100,
-            "lesson_content": {
-                "title": f"{request.subject} Lesson",
-                "objectives": request.learning_objectives,
-                "content": "Generated educational content...",
-                "activities": ["Activity 1", "Activity 2"]
-            },
-            "quiz_content": {
-                "questions": [
+        content.update(
+            {
+                "status": "completed",
+                "generation_progress": 100,
+                "lesson_content": {
+                    "title": f"{request.subject} Lesson",
+                    "objectives": request.learning_objectives,
+                    "content": "Generated educational content...",
+                    "activities": ["Activity 1", "Activity 2"],
+                },
+                "quiz_content": (
                     {
-                        "question": "Sample question 1",
-                        "type": "multiple_choice",
-                        "options": ["A", "B", "C", "D"],
-                        "correct_answer": "A"
+                        "questions": [
+                            {
+                                "question": "Sample question 1",
+                                "type": "multiple_choice",
+                                "options": ["A", "B", "C", "D"],
+                                "correct_answer": "A",
+                            }
+                        ]
                     }
-                ]
-            } if request.include_quiz else None,
-            "terrain_config": {
-                "environment_type": request.environment_type,
-                "size": "medium",
-                "features": ["hills", "water", "buildings"]
-            },
-            "metadata": {
-                "generation_time_seconds": len(phases) * 5,
-                "ai_model": "gpt-4",
-                "tokens_used": 2500
+                    if request.include_quiz
+                    else None
+                ),
+                "terrain_config": {
+                    "environment_type": request.environment_type,
+                    "size": "medium",
+                    "features": ["hills", "water", "buildings"],
+                },
+                "metadata": {
+                    "generation_time_seconds": len(phases) * 5,
+                    "ai_model": "gpt-4",
+                    "tokens_used": 2500,
+                },
             }
-        })
+        )
 
         logger.info(f"Content generation {content_id} completed successfully")
 
@@ -1547,6 +1683,7 @@ async def generate_content_async(content_id: str, request: ContentGenerationRequ
         content["status"] = "failed"
         content["error"] = str(e)
 
+
 async def deploy_content_async(deployment_id: str, request: ContentDeploymentRequest):
     """Background task for content deployment"""
     try:
@@ -1554,7 +1691,13 @@ async def deploy_content_async(deployment_id: str, request: ContentDeploymentReq
         content = generated_content[request.content_id]
 
         # Simulate deployment phases
-        phases = ["validating_content", "uploading_assets", "configuring_game", "testing", "activating"]
+        phases = [
+            "validating_content",
+            "uploading_assets",
+            "configuring_game",
+            "testing",
+            "activating",
+        ]
 
         for i, phase in enumerate(phases):
             await asyncio.sleep(3)  # Mock deployment time
@@ -1571,12 +1714,19 @@ async def deploy_content_async(deployment_id: str, request: ContentDeploymentReq
                 deployment["deployed_assets"].append("game_config.json")
 
         # Complete deployment
-        deployment.update({
-            "status": DeploymentStatus.DEPLOYED.value,
-            "progress": 100,
-            "completed_at": datetime.utcnow(),
-            "deployed_assets": ["terrain.rbxl", "scripts.lua", "game_config.json", "quiz_data.json"]
-        })
+        deployment.update(
+            {
+                "status": DeploymentStatus.DEPLOYED.value,
+                "progress": 100,
+                "completed_at": datetime.utcnow(),
+                "deployed_assets": [
+                    "terrain.rbxl",
+                    "scripts.lua",
+                    "game_config.json",
+                    "quiz_data.json",
+                ],
+            }
+        )
 
         # Update game instance
         game = game_instances[request.game_id]
@@ -1585,11 +1735,14 @@ async def deploy_content_async(deployment_id: str, request: ContentDeploymentReq
 
         # Notify students if requested
         if request.notify_students:
-            await ws_manager.send_to_room(f"game_{request.game_id}", {
-                "type": "content_updated",
-                "content_id": request.content_id,
-                "timestamp": datetime.utcnow().isoformat()
-            })
+            await ws_manager.send_to_room(
+                f"game_{request.game_id}",
+                {
+                    "type": "content_updated",
+                    "content_id": request.content_id,
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
+            )
 
         logger.info(f"Content deployment {deployment_id} completed successfully")
 
@@ -1597,6 +1750,7 @@ async def deploy_content_async(deployment_id: str, request: ContentDeploymentReq
         logger.error(f"Content deployment {deployment_id} failed: {e}")
         deployment["status"] = DeploymentStatus.FAILED.value
         deployment["error_message"] = str(e)
+
 
 def estimate_generation_time(request: ContentGenerationRequest) -> int:
     """Estimate content generation time in minutes"""
@@ -1614,14 +1768,14 @@ def estimate_generation_time(request: ContentGenerationRequest) -> int:
 
     return base_time
 
+
 # =============================================================================
 # LEGACY OAUTH ENDPOINTS (maintained for backward compatibility)
 # =============================================================================
 
+
 @roblox_router.get("/auth/login")
-async def roblox_oauth_login(
-    current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+async def roblox_oauth_login(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
     """Initiate Roblox OAuth login flow (Legacy endpoint)"""
     state = str(uuid.uuid4())
 
@@ -1638,8 +1792,9 @@ async def roblox_oauth_login(
         "status": "success",
         "oauth_url": oauth_url,
         "state": state,
-        "client_id": ROBLOX_CLIENT_ID
+        "client_id": ROBLOX_CLIENT_ID,
     }
+
 
 @roblox_router.get("/plugin/status")
 async def check_plugin_status() -> Dict[str, Any]:
@@ -1647,8 +1802,7 @@ async def check_plugin_status() -> Dict[str, Any]:
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"http://localhost:{ROBLOX_PLUGIN_PORT}/status",
-                timeout=5.0
+                f"http://localhost:{ROBLOX_PLUGIN_PORT}/status", timeout=5.0
             )
 
             if response.status_code == 200:
@@ -1657,7 +1811,7 @@ async def check_plugin_status() -> Dict[str, Any]:
                     "connected": True,
                     "version": status_data.get("version", "unknown"),
                     "studio_version": status_data.get("studio_version"),
-                    "port": ROBLOX_PLUGIN_PORT
+                    "port": ROBLOX_PLUGIN_PORT,
                 }
     except Exception as e:
         logger.debug(f"Roblox Studio Plugin not available: {e}")
@@ -1666,8 +1820,9 @@ async def check_plugin_status() -> Dict[str, Any]:
         "connected": False,
         "version": None,
         "port": ROBLOX_PLUGIN_PORT,
-        "message": "Plugin not connected. Please ensure Roblox Studio is running with ToolBoxAI plugin installed."
+        "message": "Plugin not connected. Please ensure Roblox Studio is running with ToolBoxAI plugin installed.",
     }
+
 
 # Export router
 __all__ = ["roblox_router", "ws_manager"]

@@ -221,8 +221,8 @@ export LOG_LEVEL=DEBUG
 ### Configuration Files
 - **Docker Compose**: `docker-compose.staging.yml`
 - **Environment**: `.env.staging`
-- **Database Configs**: `configs/postgresql16_staging.conf`
-- **Redis Configs**: `configs/redis7_staging.conf`
+- **Database Configs**: `config/database/postgresql16_staging.conf`
+- **Redis Configs**: `config/database/redis7_staging.conf`
 
 ## Success Metrics
 

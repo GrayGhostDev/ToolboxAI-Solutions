@@ -1,4 +1,0 @@
-# file: /Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/backend/core/performance.py
-# hypothesis_version: 6.139.2
-
-[0.1, 0.95, 0.99, 5.0, -1000, 100, 300, 400, 500, 1000, '0', 'REDIS_URL', 'X-Response-Time', '_cache', 'acquired', 'args', 'available', 'avg_response_time_ms', 'cache_hit_rate', 'cache_hits', 'cache_misses', 'cache_statistics', 'calls', 'close', 'connection_pool', 'created', 'db_queries', 'degraded', 'deletes', 'destroyed', 'error_rate', 'errors', 'healthy', 'hit_rate', 'hits', 'in_use', 'kwargs', 'max_time_ms', 'mean_time_ms', 'memory_items', 'misses', 'namespace', 'p95_response_time_ms', 'p99_response_time_ms', 'performance_metrics', 'query', 'redis_connected', 'released', 'requests', 'requests_per_second', 'response_times', 'services', 'sets', 'status', 'step', 'threshold', 'timestamp', 'total_requests', 'total_time_ms', 'unhealthy', 'uptime_seconds', 'utf-8']

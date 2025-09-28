@@ -29,6 +29,7 @@ logger = logging_manager.get_logger(__name__)
 
 class ErrorSeverity(str, Enum):
     """Error severity levels for logging and monitoring"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -37,6 +38,7 @@ class ErrorSeverity(str, Enum):
 
 class ErrorCategory(str, Enum):
     """Error categories for classification and routing"""
+
     VALIDATION = "validation"
     AUTHENTICATION = "authentication"
     AUTHORIZATION = "authorization"
@@ -53,6 +55,7 @@ class ErrorCategory(str, Enum):
 
 class ErrorDetail(BaseModel):
     """Detailed error information for debugging"""
+
     field: Optional[str] = None
     message: str
     code: Optional[str] = None
@@ -61,6 +64,7 @@ class ErrorDetail(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Standardized error response following REST best practices"""
+
     error: bool = True
     error_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -72,18 +76,16 @@ class ErrorResponse(BaseModel):
     method: Optional[str] = None
     correlation_id: Optional[str] = None
 
-    @field_serializer('timestamp')
+    @field_serializer("timestamp")
     def serialize_timestamp(self, timestamp: datetime, _info) -> str:
         """Serialize datetime to ISO format string"""
         return timestamp.isoformat()
 
     # CLAUDE: Fixed - replaced class Config with model_config for Pydantic v2
     model_config = ConfigDict(
-        json_encoders={
-            datetime: lambda v: v.isoformat()
-        },
+        json_encoders={datetime: lambda v: v.isoformat()},
         use_enum_values=True,
-        validate_assignment=True
+        validate_assignment=True,
     )
 
 
@@ -98,7 +100,7 @@ class ApplicationError(Exception):
         severity: ErrorSeverity = ErrorSeverity.MEDIUM,
         details: Optional[List[ErrorDetail]] = None,
         error_code: Optional[str] = None,
-        log_error: bool = True
+        log_error: bool = True,
     ):
         self.message = message
         self.status_code = status_code
@@ -120,7 +122,7 @@ class ValidationError(ApplicationError):
             category=ErrorCategory.VALIDATION,
             severity=ErrorSeverity.LOW,
             details=details,
-            log_error=False
+            log_error=False,
         )
 
 
@@ -132,7 +134,7 @@ class AuthenticationError(ApplicationError):
             message=message,
             status_code=status.HTTP_401_UNAUTHORIZED,
             category=ErrorCategory.AUTHENTICATION,
-            severity=ErrorSeverity.MEDIUM
+            severity=ErrorSeverity.MEDIUM,
         )
 
 
@@ -144,7 +146,7 @@ class AuthorizationError(ApplicationError):
             message=message,
             status_code=status.HTTP_403_FORBIDDEN,
             category=ErrorCategory.AUTHORIZATION,
-            severity=ErrorSeverity.MEDIUM
+            severity=ErrorSeverity.MEDIUM,
         )
 
 
@@ -160,7 +162,7 @@ class NotFoundError(ApplicationError):
             status_code=status.HTTP_404_NOT_FOUND,
             category=ErrorCategory.NOT_FOUND,
             severity=ErrorSeverity.LOW,
-            log_error=False
+            log_error=False,
         )
 
 
@@ -172,7 +174,7 @@ class ConflictError(ApplicationError):
             message=message,
             status_code=status.HTTP_409_CONFLICT,
             category=ErrorCategory.CONFLICT,
-            severity=ErrorSeverity.LOW
+            severity=ErrorSeverity.LOW,
         )
 
 
@@ -185,7 +187,7 @@ class RateLimitError(ApplicationError):
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             category=ErrorCategory.RATE_LIMIT,
             severity=ErrorSeverity.LOW,
-            log_error=False
+            log_error=False,
         )
         self.retry_after = retry_after
 
@@ -198,7 +200,7 @@ class ExternalServiceError(ApplicationError):
             message=f"External service error ({service}): {message}",
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             category=ErrorCategory.EXTERNAL_SERVICE,
-            severity=ErrorSeverity.HIGH
+            severity=ErrorSeverity.HIGH,
         )
 
 
@@ -214,7 +216,7 @@ class DatabaseError(ApplicationError):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             category=ErrorCategory.DATABASE,
             severity=ErrorSeverity.HIGH,
-            details=details
+            details=details,
         )
 
 
@@ -226,7 +228,7 @@ class ConfigurationError(ApplicationError):
             message=message,
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             category=ErrorCategory.CONFIGURATION,
-            severity=ErrorSeverity.CRITICAL
+            severity=ErrorSeverity.CRITICAL,
         )
 
 
@@ -250,11 +252,7 @@ class ErrorHandler:
         """Register custom error mapper"""
         self.error_mappers[error_type] = handler
 
-    async def handle_error(
-        self,
-        request: Request,
-        exc: Exception
-    ) -> JSONResponse:
+    async def handle_error(self, request: Request, exc: Exception) -> JSONResponse:
         """Main error handling entry point"""
         # Get correlation ID from request or generate new one
         correlation_id = getattr(request.state, "correlation_id", None)
@@ -294,31 +292,26 @@ class ErrorHandler:
             headers["Retry-After"] = str(exc.retry_after)
 
         # Create response - use model_dump for Pydantic v2 with JSON-compatible format
-        if hasattr(error_response, 'model_dump'):
+        if hasattr(error_response, "model_dump"):
             # Pydantic v2
-            response_dict = error_response.model_dump(exclude_none=True, mode='json')
+            response_dict = error_response.model_dump(exclude_none=True, mode="json")
         else:
             # Pydantic v1 fallback
             response_dict = error_response.dict(exclude_none=True)
             # Convert datetime to ISO format string
-            if 'timestamp' in response_dict and hasattr(response_dict['timestamp'], 'isoformat'):
-                response_dict['timestamp'] = response_dict['timestamp'].isoformat()
+            if "timestamp" in response_dict and hasattr(response_dict["timestamp"], "isoformat"):
+                response_dict["timestamp"] = response_dict["timestamp"].isoformat()
 
         # Remove sensitive information in production
         if not self.debug:
             response_dict.pop("debug_info", None)
 
         return JSONResponse(
-            status_code=error_response.status_code,
-            content=response_dict,
-            headers=headers
+            status_code=error_response.status_code, content=response_dict, headers=headers
         )
 
     async def _handle_application_error(
-        self,
-        request: Request,
-        exc: ApplicationError,
-        correlation_id: str
+        self, request: Request, exc: ApplicationError, correlation_id: str
     ) -> ErrorResponse:
         """Handle application-specific errors"""
         return ErrorResponse(
@@ -327,20 +320,20 @@ class ErrorHandler:
             category=exc.category,
             message=exc.message,
             details=exc.details,
-            correlation_id=correlation_id
+            correlation_id=correlation_id,
         )
 
     async def _handle_http_exception(
         self,
         request: Request,
         exc: Union[HTTPException, StarletteHTTPException],
-        correlation_id: str
+        correlation_id: str,
     ) -> ErrorResponse:
         """Handle HTTP exceptions"""
         category = self._map_status_to_category(exc.status_code)
 
         # Extract message
-        if hasattr(exc, 'detail'):
+        if hasattr(exc, "detail"):
             message = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
         else:
             message = str(exc)
@@ -350,14 +343,11 @@ class ErrorHandler:
             status_code=exc.status_code,
             category=category,
             message=message,
-            correlation_id=correlation_id
+            correlation_id=correlation_id,
         )
 
     async def _handle_validation_error(
-        self,
-        request: Request,
-        exc: RequestValidationError,
-        correlation_id: str
+        self, request: Request, exc: RequestValidationError, correlation_id: str
     ) -> ErrorResponse:
         """Handle request validation errors"""
         details = []
@@ -367,12 +357,14 @@ class ErrorHandler:
             if field_path.startswith("body."):
                 field_path = field_path[5:]  # Remove "body." prefix
 
-            details.append(ErrorDetail(
-                field=field_path,
-                message=error.get("msg", "Validation failed"),
-                code=error.get("type"),
-                context={"input": error.get("input")} if self.debug else None
-            ))
+            details.append(
+                ErrorDetail(
+                    field=field_path,
+                    message=error.get("msg", "Validation failed"),
+                    code=error.get("type"),
+                    context={"input": error.get("input")} if self.debug else None,
+                )
+            )
 
         return ErrorResponse(
             error_id=str(uuid.uuid4()),
@@ -380,14 +372,11 @@ class ErrorHandler:
             category=ErrorCategory.VALIDATION,
             message="Request validation failed",
             details=details,
-            correlation_id=correlation_id
+            correlation_id=correlation_id,
         )
 
     async def _handle_value_error(
-        self,
-        request: Request,
-        exc: ValueError,
-        correlation_id: str
+        self, request: Request, exc: ValueError, correlation_id: str
     ) -> ErrorResponse:
         """Handle value errors"""
         return ErrorResponse(
@@ -395,14 +384,11 @@ class ErrorHandler:
             status_code=status.HTTP_400_BAD_REQUEST,
             category=ErrorCategory.VALIDATION,
             message=str(exc) if self.debug else "Invalid input provided",
-            correlation_id=correlation_id
+            correlation_id=correlation_id,
         )
 
     async def _handle_generic_error(
-        self,
-        request: Request,
-        exc: Exception,
-        correlation_id: str
+        self, request: Request, exc: Exception, correlation_id: str
     ) -> ErrorResponse:
         """Handle unexpected errors"""
         # Log full exception for unknown errors
@@ -413,10 +399,9 @@ class ErrorHandler:
 
         details = None
         if self.debug:
-            details = [ErrorDetail(
-                message="Stack trace",
-                context={"traceback": traceback.format_exc()}
-            )]
+            details = [
+                ErrorDetail(message="Stack trace", context={"traceback": traceback.format_exc()})
+            ]
 
         return ErrorResponse(
             error_id=str(uuid.uuid4()),
@@ -424,7 +409,7 @@ class ErrorHandler:
             category=ErrorCategory.INTERNAL,
             message=message,
             details=details,
-            correlation_id=correlation_id
+            correlation_id=correlation_id,
         )
 
     def _map_status_to_category(self, status_code: int) -> ErrorCategory:
@@ -453,7 +438,11 @@ class ErrorHandler:
         log_context = {
             "error_id": error_response.error_id,
             "correlation_id": error_response.correlation_id,
-            "category": error_response.category.value if hasattr(error_response.category, 'value') else error_response.category,
+            "category": (
+                error_response.category.value
+                if hasattr(error_response.category, "value")
+                else error_response.category
+            ),
             "status_code": error_response.status_code,
             "path": error_response.path,
             "method": error_response.method,
@@ -468,23 +457,25 @@ class ErrorHandler:
             logger.error(
                 f"[{error_response.error_id}] {error_response.message}",
                 exc_info=exc if self.debug else None,
-                extra_fields=log_context
+                extra_fields=log_context,
             )
         elif error_response.status_code >= 400:
-            if error_response.category in [ErrorCategory.AUTHENTICATION, ErrorCategory.AUTHORIZATION]:
+            if error_response.category in [
+                ErrorCategory.AUTHENTICATION,
+                ErrorCategory.AUTHORIZATION,
+            ]:
                 logger.warning(
                     f"[{error_response.error_id}] {error_response.message}",
-                    extra_fields=log_context
+                    extra_fields=log_context,
                 )
             else:
                 logger.info(
                     f"[{error_response.error_id}] {error_response.message}",
-                    extra_fields=log_context
+                    extra_fields=log_context,
                 )
         else:
             logger.debug(
-                f"[{error_response.error_id}] {error_response.message}",
-                extra_fields=log_context
+                f"[{error_response.error_id}] {error_response.message}", extra_fields=log_context
             )
 
 

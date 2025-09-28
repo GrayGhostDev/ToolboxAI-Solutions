@@ -1,24 +1,23 @@
 import * as React from "react";
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Alert from '@mui/material/Alert';
-import Stack from '@mui/material/Stack';
-import InputAdornment from '@mui/material/InputAdornment';
-import IconButton from '@mui/material/IconButton';
-import Divider from '@mui/material/Divider';
-import Paper from '@mui/material/Paper';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
+import {
+  Box,
+  Card,
+  TextInput,
+  Button,
+  Text,
+  Alert,
+  Stack,
+  ActionIcon,
+  Divider,
+  Paper,
+  Select,
+  PasswordInput,
+  Group
+} from '@mantine/core';
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Visibility, VisibilityOff, Email, Lock, Person, School } from "@mui/icons-material";
+import { IconEye, IconEyeOff, IconMail, IconLock, IconUser, IconSchool } from "@tabler/icons-react";
 import { register } from "../../services/api";
 import { useAppDispatch } from "../../store";
 import { signInSuccess } from "../../store/slices/userSlice";
@@ -114,51 +113,50 @@ export default function Register() {
 
   return (
     <Box
-      sx={{
+      style={{
         minHeight: "100vh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        p: 2,
+        padding: 16,
       }}
     >
       <Paper
-        elevation={24}
-        sx={{
+        shadow="xl"
+        style={{
           width: "100%",
           maxWidth: 450,
-          borderRadius: 3,
+          borderRadius: 12,
           overflow: "hidden",
         }}
       >
         <Box
-          sx={{
-            p: 3,
+          p="xl"
+          style={{
             background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             color: "white",
             textAlign: "center",
           }}
         >
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+          <Text size="xl" fw={700} mb="xs">
             Join ToolBoxAI
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.9 }}>
+          </Text>
+          <Text size="sm" style={{ opacity: 0.9 }}>
             Create your account for the Educational Platform
-          </Typography>
+          </Text>
         </Box>
 
-        <CardContent sx={{ p: 3 }}>
+        <Box p="xl">
           <Box component="form" onSubmit={handleSubmit}>
-            <Stack spacing={3}>
+            <Stack gap="md">
               {error && (
-                <Alert severity="error" sx={{ borderRadius: 2 }}>
+                <Alert color="red">
                   {error}
                 </Alert>
               )}
 
-              <TextField
-                fullWidth
+              <TextInput
                 name="displayName"
                 label="Full Name"
                 type="text"
@@ -166,22 +164,10 @@ export default function Register() {
                 onChange={handleChange}
                 required
                 disabled={loading}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Person color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
+                leftSection={<IconUser size={16} />}
               />
 
-              <TextField
-                fullWidth
+              <TextInput
                 name="email"
                 label="Email Address"
                 type="email"
@@ -189,120 +175,51 @@ export default function Register() {
                 onChange={handleChange}
                 required
                 disabled={loading}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
+                leftSection={<IconMail size={16} />}
               />
 
-              <FormControl fullWidth required>
-                <InputLabel>Role</InputLabel>
-                <Select
-                  value={formData.role}
-                  label="Role"
-                  onChange={handleRoleChange}
-                  disabled={loading}
-                  startAdornment={
-                    <InputAdornment position="start">
-                      <School color="action" />
-                    </InputAdornment>
-                  }
-                  sx={{
-                    borderRadius: 2,
-                  }}
-                >
-                  <MenuItem value="Student">Student</MenuItem>
-                  <MenuItem value="Teacher">Teacher</MenuItem>
-                  <MenuItem value="Parent">Parent</MenuItem>
-                  <MenuItem value="Admin">Administrator</MenuItem>
-                </Select>
-              </FormControl>
+              <Select
+                label="Role"
+                value={formData.role}
+                onChange={(value) => setFormData(prev => ({ ...prev, role: value || "" }))}
+                disabled={loading}
+                leftSection={<IconSchool size={16} />}
+                required
+                data={[
+                  { value: "Student", label: "Student" },
+                  { value: "Teacher", label: "Teacher" },
+                  { value: "Parent", label: "Parent" },
+                  { value: "Admin", label: "Administrator" },
+                ]}
+              />
 
-              <TextField
-                fullWidth
+              <PasswordInput
                 name="password"
                 label="Password"
-                type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={handleChange}
                 required
                 disabled={loading}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock color="action" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={(e: React.MouseEvent) => () => setShowPassword(!showPassword)}
-                        edge="end"
-                        disabled={loading}
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
+                leftSection={<IconLock size={16} />}
               />
 
-              <TextField
-                fullWidth
+              <PasswordInput
                 name="confirmPassword"
                 label="Confirm Password"
-                type={showConfirmPassword ? "text" : "password"}
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
                 disabled={loading}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock color="action" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={(e: React.MouseEvent) => () => setShowConfirmPassword(!showConfirmPassword)}
-                        edge="end"
-                        disabled={loading}
-                      >
-                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
+                leftSection={<IconLock size={16} />}
               />
 
               <Button
                 type="submit"
                 fullWidth
-                variant="contained"
-                size="large"
+                size="lg"
                 disabled={loading}
-                sx={{
-                  borderRadius: 2,
-                  py: 1.5,
+                loading={loading}
+                style={{
                   textTransform: "none",
                   fontSize: "1rem",
                   fontWeight: 600,
@@ -311,8 +228,8 @@ export default function Register() {
                 {loading ? "Creating Account..." : "Create Account"}
               </Button>
 
-              <Box sx={{ textAlign: "center", mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
+              <Box ta="center" mt="md">
+                <Text size="sm" c="dimmed">
                   Already have an account?{" "}
                   <Link
                     to="/login"
@@ -324,11 +241,11 @@ export default function Register() {
                   >
                     Sign in here
                   </Link>
-                </Typography>
+                </Text>
               </Box>
             </Stack>
           </Box>
-        </CardContent>
+        </Box>
       </Paper>
     </Box>
   );

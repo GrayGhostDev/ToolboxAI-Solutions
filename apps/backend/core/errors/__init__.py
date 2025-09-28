@@ -21,17 +21,14 @@ from .error_handler import (
     NotFoundError,
     RateLimitError,
     ValidationError,
-    
     # Error models
     ErrorCategory,
     ErrorDetail,
     ErrorResponse,
     ErrorSeverity,
-    
     # Handler
     ErrorHandler,
     get_error_handler,
-    
     # FastAPI exception handlers
     handle_application_error,
     handle_generic_exception,
@@ -55,7 +52,7 @@ from .middleware import (
 __all__ = [
     # From error_handler.py
     "ApplicationError",
-    "AuthenticationError", 
+    "AuthenticationError",
     "AuthorizationError",
     "ConflictError",
     "ConfigurationError",
@@ -74,7 +71,6 @@ __all__ = [
     "handle_generic_exception",
     "handle_http_exception",
     "handle_validation_error",
-    
     # From middleware.py
     "ErrorHandlingMiddleware",
     "ErrorLevel",

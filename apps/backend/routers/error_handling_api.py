@@ -16,7 +16,7 @@ from core.agents.error_handling import (
     ErrorHandlingSwarmCoordinator,
     ErrorState,
     ErrorType,
-    ErrorPriority
+    ErrorPriority,
 )
 from core.swarm.error_handling.error_handling_workflow import ErrorHandlingWorkflow
 
@@ -38,6 +38,7 @@ active_workflows = {}
 
 class ErrorReport(BaseModel):
     """Model for error report submission"""
+
     error_message: str = Field(description="Error message")
     error_type: str = Field(description="Type of error")
     stack_trace: Optional[str] = Field(default=None, description="Stack trace")
@@ -50,6 +51,7 @@ class ErrorReport(BaseModel):
 
 class SwarmRequest(BaseModel):
     """Model for swarm processing request"""
+
     errors: List[ErrorReport] = Field(description="List of errors to process")
     strategy: Optional[str] = Field(default="auto", description="Processing strategy")
     async_processing: bool = Field(default=True, description="Process asynchronously")
@@ -58,6 +60,7 @@ class SwarmRequest(BaseModel):
 
 class WorkflowStatus(BaseModel):
     """Model for workflow status response"""
+
     workflow_id: str = Field(description="Workflow identifier")
     status: str = Field(description="Current status")
     errors_processed: int = Field(description="Number of errors processed")
@@ -95,7 +98,7 @@ async def report_error(error_report: ErrorReport, background_tasks: BackgroundTa
             "affected_components": error_report.affected_components,
             "potential_impact": "Unknown",
             "recovery_strategy": None,
-            "metadata": {}
+            "metadata": {},
         }
 
         # Process in background
@@ -105,7 +108,7 @@ async def report_error(error_report: ErrorReport, background_tasks: BackgroundTa
             "status": "success",
             "error_id": error_state["error_id"],
             "message": "Error reported successfully",
-            "processing": "initiated"
+            "processing": "initiated",
         }
 
     except Exception as e:
@@ -144,7 +147,7 @@ async def process_errors(swarm_request: SwarmRequest, background_tasks: Backgrou
                 "affected_components": report.affected_components,
                 "potential_impact": "Unknown",
                 "recovery_strategy": None,
-                "metadata": {}
+                "metadata": {},
             }
             error_states.append(error_state)
 
@@ -154,30 +157,26 @@ async def process_errors(swarm_request: SwarmRequest, background_tasks: Backgrou
         if swarm_request.async_processing:
             # Process asynchronously
             background_tasks.add_task(
-                run_swarm_workflow,
-                workflow_id,
-                error_states,
-                swarm_request.context
+                run_swarm_workflow, workflow_id, error_states, swarm_request.context
             )
 
             return {
                 "status": "success",
                 "workflow_id": workflow_id,
                 "message": f"Processing {len(error_states)} errors asynchronously",
-                "async": True
+                "async": True,
             }
         else:
             # Process synchronously
             result = await swarm_coordinator.orchestrate_error_handling(
-                error_states,
-                swarm_request.context
+                error_states, swarm_request.context
             )
 
             return {
                 "status": "success",
                 "workflow_id": workflow_id,
                 "result": result.model_dump(),
-                "async": False
+                "async": False,
             }
 
     except Exception as e:
@@ -207,7 +206,7 @@ async def get_workflow_status(workflow_id: str):
         errors_processed=workflow.get("errors_processed", 0),
         agents_active=workflow.get("agents_active", []),
         progress_percentage=workflow.get("progress", 0.0),
-        estimated_completion=workflow.get("estimated_completion")
+        estimated_completion=workflow.get("estimated_completion"),
     )
 
 
@@ -230,16 +229,9 @@ async def analyze_error_patterns(timeframe_days: int = 7):
         error_history = []  # Would fetch from database
 
         # Analyze patterns
-        analysis = await pattern_analyzer.analyze_error_patterns(
-            error_history,
-            timeframe_days
-        )
+        analysis = await pattern_analyzer.analyze_error_patterns(error_history, timeframe_days)
 
-        return {
-            "status": "success",
-            "analysis": analysis,
-            "timeframe_days": timeframe_days
-        }
+        return {"status": "success", "analysis": analysis, "timeframe_days": timeframe_days}
 
     except Exception as e:
         logger.error(f"Pattern analysis failed: {e}")
@@ -268,7 +260,7 @@ async def predict_errors(timeframe_hours: int = 24):
             "status": "success",
             "predictions": predictions,
             "timeframe_hours": timeframe_hours,
-            "confidence": 0.0
+            "confidence": 0.0,
         }
 
     except Exception as e:
@@ -291,7 +283,7 @@ async def get_swarm_status():
             "status": "success",
             "swarm_status": status,
             "active_workflows": len(active_workflows),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     except Exception as e:
@@ -301,9 +293,7 @@ async def get_swarm_status():
 
 @router.post("/recovery/trigger", response_model=Dict[str, Any])
 async def trigger_recovery(
-    component: str,
-    strategy: Optional[str] = None,
-    background_tasks: BackgroundTasks = None
+    component: str, strategy: Optional[str] = None, background_tasks: BackgroundTasks = None
 ):
     """
     Trigger recovery for a specific component.
@@ -336,26 +326,23 @@ async def trigger_recovery(
             "affected_components": [component],
             "potential_impact": "Component failure",
             "recovery_strategy": strategy,
-            "metadata": {}
+            "metadata": {},
         }
 
         # Trigger recovery
         if background_tasks:
-            background_tasks.add_task(
-                recovery_orchestrator.orchestrate_recovery,
-                error_state
-            )
+            background_tasks.add_task(recovery_orchestrator.orchestrate_recovery, error_state)
             return {
                 "status": "success",
                 "message": f"Recovery initiated for {component}",
-                "async": True
+                "async": True,
             }
         else:
             recovery_result = await recovery_orchestrator.orchestrate_recovery(error_state)
             return {
                 "status": "success",
                 "recovery_result": recovery_result.model_dump(),
-                "async": False
+                "async": False,
             }
 
     except Exception as e:
@@ -382,14 +369,10 @@ async def get_error_metrics():
         # Add workflow metrics
         metrics["workflows"] = {
             "active": len(active_workflows),
-            "total_processed": sum(w.get("errors_processed", 0) for w in active_workflows.values())
+            "total_processed": sum(w.get("errors_processed", 0) for w in active_workflows.values()),
         }
 
-        return {
-            "status": "success",
-            "metrics": metrics,
-            "timestamp": datetime.now().isoformat()
-        }
+        return {"status": "success", "metrics": metrics, "timestamp": datetime.now().isoformat()}
 
     except Exception as e:
         logger.error(f"Failed to get metrics: {e}")
@@ -397,6 +380,7 @@ async def get_error_metrics():
 
 
 # Background task functions
+
 
 async def process_single_error(error_state: ErrorState):
     """Process a single error in the background"""
@@ -411,9 +395,7 @@ async def process_single_error(error_state: ErrorState):
 
 
 async def run_swarm_workflow(
-    workflow_id: str,
-    error_states: List[ErrorState],
-    context: Dict[str, Any]
+    workflow_id: str, error_states: List[ErrorState], context: Dict[str, Any]
 ):
     """Run swarm workflow in the background"""
     try:
@@ -423,24 +405,23 @@ async def run_swarm_workflow(
             "errors_processed": 0,
             "agents_active": [],
             "progress": 0.0,
-            "started": datetime.now().isoformat()
+            "started": datetime.now().isoformat(),
         }
 
         # Execute workflow
-        result = await swarm_coordinator.orchestrate_error_handling(
-            error_states,
-            context
-        )
+        result = await swarm_coordinator.orchestrate_error_handling(error_states, context)
 
         # Update workflow status
-        active_workflows[workflow_id].update({
-            "status": "completed",
-            "errors_processed": result.errors_processed,
-            "agents_active": result.agents_involved,
-            "progress": 100.0,
-            "completed": datetime.now().isoformat(),
-            "result": result.model_dump()
-        })
+        active_workflows[workflow_id].update(
+            {
+                "status": "completed",
+                "errors_processed": result.errors_processed,
+                "agents_active": result.agents_involved,
+                "progress": 100.0,
+                "completed": datetime.now().isoformat(),
+                "result": result.model_dump(),
+            }
+        )
 
         logger.info(f"Workflow {workflow_id} completed successfully")
 

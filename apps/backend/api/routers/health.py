@@ -33,7 +33,7 @@ async def health_check(request: Request) -> HealthCheck:
         # Calculate uptime
         app = request.app
         current_time = time.time()
-        start_time = getattr(app.state, 'start_time', current_time)
+        start_time = getattr(app.state, "start_time", current_time)
         uptime_seconds = current_time - start_time
 
         # Check all services
@@ -41,23 +41,19 @@ async def health_check(request: Request) -> HealthCheck:
 
         # Determine overall status based on service checks
         unhealthy_services = [
-            name for name, status in services.items()
-            if status.get("status") != "healthy"
+            name for name, status in services.items() if status.get("status") != "healthy"
         ]
 
         overall_status = "degraded" if unhealthy_services else "healthy"
 
         # Create checks dictionary for the model
-        checks = {
-            name: status.get("status") == "healthy"
-            for name, status in services.items()
-        }
+        checks = {name: status.get("status") == "healthy" for name, status in services.items()}
 
         health_data = {
             "status": overall_status,
             "version": settings.APP_VERSION,
             "uptime": uptime_seconds,
-            "checks": checks
+            "checks": checks,
         }
 
         return HealthCheck(**health_data)
@@ -69,16 +65,13 @@ async def health_check(request: Request) -> HealthCheck:
         try:
             app = request.app
             current_time = time.time()
-            start_time = getattr(app.state, 'start_time', current_time)
+            start_time = getattr(app.state, "start_time", current_time)
             uptime_seconds = current_time - start_time
         except:
             uptime_seconds = 0.0
 
         return HealthCheck(
-            status="unhealthy",
-            version=settings.APP_VERSION,
-            uptime=uptime_seconds,
-            checks={}
+            status="unhealthy", version=settings.APP_VERSION, uptime=uptime_seconds, checks={}
         )
 
 
@@ -104,14 +97,14 @@ async def get_app_info() -> BaseResponse:
                 "pusher": True,
                 "roblox_integration": True,
                 "ai_agents": True,
-                "content_generation": True
-            }
+                "content_generation": True,
+            },
         }
 
         return BaseResponse(
             status="success",
             data=app_info,
-            message="Application information retrieved successfully"
+            message="Application information retrieved successfully",
         )
 
     except Exception as e:
@@ -129,27 +122,34 @@ async def get_pusher_status() -> JSONResponse:
     """
     try:
         from apps.backend.services.pusher_realtime import get_pusher_status
+
         status = get_pusher_status()
 
-        return JSONResponse(content={
-            "status": "success",
-            "data": status,
-            "message": "Pusher status retrieved successfully"
-        })
+        return JSONResponse(
+            content={
+                "status": "success",
+                "data": status,
+                "message": "Pusher status retrieved successfully",
+            }
+        )
 
     except ImportError:
-        return JSONResponse(content={
-            "status": "error",
-            "data": {"enabled": False, "error": "Pusher service not available"},
-            "message": "Pusher service not configured"
-        })
+        return JSONResponse(
+            content={
+                "status": "error",
+                "data": {"enabled": False, "error": "Pusher service not available"},
+                "message": "Pusher service not configured",
+            }
+        )
     except Exception as e:
         logger.error(f"Failed to get Pusher status: {e}")
-        return JSONResponse(content={
-            "status": "error",
-            "data": {"enabled": False, "error": str(e)},
-            "message": "Failed to retrieve Pusher status"
-        })
+        return JSONResponse(
+            content={
+                "status": "error",
+                "data": {"enabled": False, "error": str(e)},
+                "message": "Failed to retrieve Pusher status",
+            }
+        )
 
 
 @router.get("/resilience/status")
@@ -162,27 +162,34 @@ async def get_resilience_endpoint_status() -> JSONResponse:
     """
     try:
         from apps.backend.api.middleware.resilience import get_resilience_status
+
         status = await get_resilience_status()
 
-        return JSONResponse(content={
-            "status": "success",
-            "data": status,
-            "message": "Resilience status retrieved successfully"
-        })
+        return JSONResponse(
+            content={
+                "status": "success",
+                "data": status,
+                "message": "Resilience status retrieved successfully",
+            }
+        )
 
     except ImportError:
-        return JSONResponse(content={
-            "status": "error",
-            "data": {"enabled": False, "error": "Resilience features not available"},
-            "message": "Resilience features not configured"
-        })
+        return JSONResponse(
+            content={
+                "status": "error",
+                "data": {"enabled": False, "error": "Resilience features not available"},
+                "message": "Resilience features not configured",
+            }
+        )
     except Exception as e:
         logger.error(f"Failed to get resilience status: {e}")
-        return JSONResponse(content={
-            "status": "error",
-            "data": {"enabled": False, "error": str(e)},
-            "message": "Failed to retrieve resilience status"
-        })
+        return JSONResponse(
+            content={
+                "status": "error",
+                "data": {"enabled": False, "error": str(e)},
+                "message": "Failed to retrieve resilience status",
+            }
+        )
 
 
 @router.get("/circuit-breakers/status")
@@ -195,27 +202,34 @@ async def get_circuit_breakers_endpoint_status() -> JSONResponse:
     """
     try:
         from apps.backend.core.circuit_breaker import get_all_circuit_breakers_status
+
         status = await get_all_circuit_breakers_status()
 
-        return JSONResponse(content={
-            "status": "success",
-            "data": status,
-            "message": "Circuit breakers status retrieved successfully"
-        })
+        return JSONResponse(
+            content={
+                "status": "success",
+                "data": status,
+                "message": "Circuit breakers status retrieved successfully",
+            }
+        )
 
     except ImportError:
-        return JSONResponse(content={
-            "status": "error",
-            "data": {"enabled": False, "error": "Circuit breakers not available"},
-            "message": "Circuit breakers not configured"
-        })
+        return JSONResponse(
+            content={
+                "status": "error",
+                "data": {"enabled": False, "error": "Circuit breakers not available"},
+                "message": "Circuit breakers not configured",
+            }
+        )
     except Exception as e:
         logger.error(f"Failed to get circuit breakers status: {e}")
-        return JSONResponse(content={
-            "status": "error",
-            "data": {"enabled": False, "error": str(e)},
-            "message": "Failed to retrieve circuit breakers status"
-        })
+        return JSONResponse(
+            content={
+                "status": "error",
+                "data": {"enabled": False, "error": str(e)},
+                "message": "Failed to retrieve circuit breakers status",
+            }
+        )
 
 
 @router.post("/circuit-breakers/{breaker_name}/reset")
@@ -233,19 +247,23 @@ async def reset_circuit_breaker(breaker_name: str) -> JSONResponse:
         from apps.backend.core.circuit_breaker import get_all_circuit_breakers_status
 
         # For now, return success - implement actual reset logic when circuit breaker is enhanced
-        return JSONResponse(content={
-            "status": "success",
-            "data": {"breaker_name": breaker_name, "reset": True},
-            "message": f"Circuit breaker {breaker_name} reset successfully"
-        })
+        return JSONResponse(
+            content={
+                "status": "success",
+                "data": {"breaker_name": breaker_name, "reset": True},
+                "message": f"Circuit breaker {breaker_name} reset successfully",
+            }
+        )
 
     except Exception as e:
         logger.error(f"Failed to reset circuit breaker {breaker_name}: {e}")
-        return JSONResponse(content={
-            "status": "error",
-            "data": {"breaker_name": breaker_name, "reset": False, "error": str(e)},
-            "message": f"Failed to reset circuit breaker {breaker_name}"
-        })
+        return JSONResponse(
+            content={
+                "status": "error",
+                "data": {"breaker_name": breaker_name, "reset": False, "error": str(e)},
+                "message": f"Failed to reset circuit breaker {breaker_name}",
+            }
+        )
 
 
 @router.get("/rate-limit/usage/{identifier}")
@@ -266,22 +284,26 @@ async def get_rate_limit_usage(identifier: str) -> JSONResponse:
             "requests_made": 10,
             "requests_remaining": 90,
             "reset_time": datetime.now(timezone.utc).isoformat(),
-            "window_minutes": 1
+            "window_minutes": 1,
         }
 
-        return JSONResponse(content={
-            "status": "success",
-            "data": usage_data,
-            "message": "Rate limit usage retrieved successfully"
-        })
+        return JSONResponse(
+            content={
+                "status": "success",
+                "data": usage_data,
+                "message": "Rate limit usage retrieved successfully",
+            }
+        )
 
     except Exception as e:
         logger.error(f"Failed to get rate limit usage for {identifier}: {e}")
-        return JSONResponse(content={
-            "status": "error",
-            "data": {"identifier": identifier, "error": str(e)},
-            "message": f"Failed to retrieve rate limit usage for {identifier}"
-        })
+        return JSONResponse(
+            content={
+                "status": "error",
+                "data": {"identifier": identifier, "error": str(e)},
+                "message": f"Failed to retrieve rate limit usage for {identifier}",
+            }
+        )
 
 
 @router.get("/sentry/status")
@@ -298,23 +320,27 @@ async def get_sentry_status() -> JSONResponse:
         status_data = {
             "enabled": sentry_manager.initialized,
             "environment": settings.ENVIRONMENT,
-            "dsn_configured": bool(getattr(settings, 'SENTRY_DSN', None)),
-            "sample_rate": getattr(settings, 'SENTRY_SAMPLE_RATE', 1.0)
+            "dsn_configured": bool(getattr(settings, "SENTRY_DSN", None)),
+            "sample_rate": getattr(settings, "SENTRY_SAMPLE_RATE", 1.0),
         }
 
-        return JSONResponse(content={
-            "status": "success",
-            "data": status_data,
-            "message": "Sentry status retrieved successfully"
-        })
+        return JSONResponse(
+            content={
+                "status": "success",
+                "data": status_data,
+                "message": "Sentry status retrieved successfully",
+            }
+        )
 
     except Exception as e:
         logger.error(f"Failed to get Sentry status: {e}")
-        return JSONResponse(content={
-            "status": "error",
-            "data": {"enabled": False, "error": str(e)},
-            "message": "Failed to retrieve Sentry status"
-        })
+        return JSONResponse(
+            content={
+                "status": "error",
+                "data": {"enabled": False, "error": str(e)},
+                "message": "Failed to retrieve Sentry status",
+            }
+        )
 
 
 async def _check_all_services() -> Dict[str, Dict[str, Any]]:
@@ -348,42 +374,41 @@ async def _check_database() -> Dict[str, Any]:
     """Check database connectivity"""
     try:
         from apps.backend.services.database import db_service
+
         # Basic database check - implement actual connectivity test
         return {
             "status": "healthy",
             "type": "postgresql",
-            "last_check": datetime.now(timezone.utc).isoformat()
+            "last_check": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
         return {
             "status": "unhealthy",
             "error": str(e),
-            "last_check": datetime.now(timezone.utc).isoformat()
+            "last_check": datetime.now(timezone.utc).isoformat(),
         }
 
 
 async def _check_redis() -> Dict[str, Any]:
     """Check Redis connectivity"""
     try:
-        if hasattr(settings, 'REDIS_URL') and settings.REDIS_URL:
+        if hasattr(settings, "REDIS_URL") and settings.REDIS_URL:
             import redis
+
             redis_client = redis.from_url(settings.REDIS_URL)
             redis_client.ping()
             return {
                 "status": "healthy",
                 "type": "redis",
-                "last_check": datetime.now(timezone.utc).isoformat()
+                "last_check": datetime.now(timezone.utc).isoformat(),
             }
         else:
-            return {
-                "status": "not_configured",
-                "message": "Redis URL not configured"
-            }
+            return {"status": "not_configured", "message": "Redis URL not configured"}
     except Exception as e:
         return {
             "status": "unhealthy",
             "error": str(e),
-            "last_check": datetime.now(timezone.utc).isoformat()
+            "last_check": datetime.now(timezone.utc).isoformat(),
         }
 
 
@@ -391,17 +416,18 @@ async def _check_pusher() -> Dict[str, Any]:
     """Check Pusher service"""
     try:
         from apps.backend.services.pusher_realtime import get_pusher_status
+
         status = get_pusher_status()
         return {
             "status": "healthy" if status.get("enabled") else "not_configured",
             "details": status,
-            "last_check": datetime.now(timezone.utc).isoformat()
+            "last_check": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
         return {
             "status": "unhealthy",
             "error": str(e),
-            "last_check": datetime.now(timezone.utc).isoformat()
+            "last_check": datetime.now(timezone.utc).isoformat(),
         }
 
 
@@ -409,17 +435,18 @@ async def _check_agents() -> Dict[str, Any]:
     """Check agent systems"""
     try:
         from apps.backend.agents.agent import get_agent_health
+
         health = await get_agent_health()
         return {
             "status": "healthy" if health.get("status") == "healthy" else "degraded",
             "details": health,
-            "last_check": datetime.now(timezone.utc).isoformat()
+            "last_check": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
         return {
             "status": "unhealthy",
             "error": str(e),
-            "last_check": datetime.now(timezone.utc).isoformat()
+            "last_check": datetime.now(timezone.utc).isoformat(),
         }
 
 
@@ -427,19 +454,17 @@ async def _check_supabase() -> Dict[str, Any]:
     """Check Supabase connectivity"""
     try:
         from apps.backend.core.supabase_config import health_check_supabase
+
         health = await health_check_supabase()
         return {
             "status": "healthy" if health else "unhealthy",
-            "last_check": datetime.now(timezone.utc).isoformat()
+            "last_check": datetime.now(timezone.utc).isoformat(),
         }
     except ImportError:
-        return {
-            "status": "not_configured",
-            "message": "Supabase not configured"
-        }
+        return {"status": "not_configured", "message": "Supabase not configured"}
     except Exception as e:
         return {
             "status": "unhealthy",
             "error": str(e),
-            "last_check": datetime.now(timezone.utc).isoformat()
+            "last_check": datetime.now(timezone.utc).isoformat(),
         }

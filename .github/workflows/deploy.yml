@@ -84,8 +84,8 @@ jobs:
       - name: Run Python linting
         run: |
           pip install black flake8 mypy
-          black --check ToolboxAI-Roblox-Environment/
-          flake8 ToolboxAI-Roblox-Environment/ --max-line-length=120
+          black --check apps/backend/ core/ roblox/
+          flake8 apps/backend/ core/ roblox/ --max-line-length=120
       
       - name: Run Python tests
         env:
@@ -94,8 +94,8 @@ jobs:
           JWT_SECRET_KEY: test_secret_key
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          cd ToolboxAI-Roblox-Environment
-          pytest tests/ -v --cov=server --cov=agents --cov=mcp --cov-report=xml
+          cd .
+          pytest tests/ -v --cov=apps.backend --cov=core --cov-report=xml
       
       - name: Run JavaScript tests
         run: |
@@ -105,7 +105,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: ./ToolboxAI-Roblox-Environment/coverage.xml
+          files: ./coverage.xml
           flags: backend
           name: backend-coverage
       
@@ -136,8 +136,8 @@ jobs:
       - name: Build and push API image
         uses: docker/build-push-action@v5
         with:
-          context: ./ToolboxAI-Roblox-Environment
-          file: ./ToolboxAI-Roblox-Environment/Dockerfile
+          context: .
+          file: ./infrastructure/docker/dockerfiles/backend-simple.Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/toolboxai-api:latest

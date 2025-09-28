@@ -1,9 +1,0 @@
-# Safety Policy for ToolBoxAI-Solutions
-# This file defines which security vulnerabilities to ignore
-
-security:
-  # Ignore ecdsa vulnerabilities as they are transitive dependencies
-  # and not directly used in our codebase
-  ignore-vulnerabilities:
-    - 64459:  # CVE-2024-23342 - Minerva attack vulnerability
-    - 64396:  # PVE-2024-64396 - Side-channel attack vulnerability

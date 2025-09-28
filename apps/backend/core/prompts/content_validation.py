@@ -9,9 +9,16 @@ import re
 from enum import Enum
 
 from .models import (
-    ConversationContext, ContentRequirements, PersonalizationData,
-    UniquenessEnhancement, ValidationResult, ContentType, GradeLevel,
-    SubjectArea, EngagementLevel, UniquenessFactor
+    ConversationContext,
+    ContentRequirements,
+    PersonalizationData,
+    UniquenessEnhancement,
+    ValidationResult,
+    ContentType,
+    GradeLevel,
+    SubjectArea,
+    EngagementLevel,
+    UniquenessFactor,
 )
 
 logger = logging.getLogger(__name__)
@@ -19,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 class ValidationSeverity(str, Enum):
     """Severity levels for validation issues"""
+
     CRITICAL = "critical"
     WARNING = "warning"
     SUGGESTION = "suggestion"
@@ -45,36 +53,41 @@ class ContentValidationSystem:
                 "min_length": 10,
                 "max_length": 200,
                 "keywords": ["learn", "understand", "demonstrate", "apply", "analyze", "create"],
-                "severity": ValidationSeverity.CRITICAL
+                "severity": ValidationSeverity.CRITICAL,
             },
             "personalization": {
                 "required": True,
                 "min_elements": 2,
                 "elements": ["student_names", "cultural_elements", "local_references", "interests"],
-                "severity": ValidationSeverity.WARNING
+                "severity": ValidationSeverity.WARNING,
             },
             "uniqueness": {
                 "required": True,
                 "min_factors": 1,
-                "factors": ["custom_theme", "personalized_characters", "unique_mechanics", "creative_storytelling"],
-                "severity": ValidationSeverity.WARNING
+                "factors": [
+                    "custom_theme",
+                    "personalized_characters",
+                    "unique_mechanics",
+                    "creative_storytelling",
+                ],
+                "severity": ValidationSeverity.WARNING,
             },
             "engagement": {
                 "required": True,
                 "min_level": "moderate",
                 "elements": ["interactive", "visual", "auditory", "kinesthetic"],
-                "severity": ValidationSeverity.CRITICAL
+                "severity": ValidationSeverity.CRITICAL,
             },
             "accessibility": {
                 "required": True,
                 "elements": ["multiple_formats", "clear_language", "appropriate_difficulty"],
-                "severity": ValidationSeverity.CRITICAL
+                "severity": ValidationSeverity.CRITICAL,
             },
             "technical_quality": {
                 "required": True,
                 "elements": ["performance", "compatibility", "security", "error_handling"],
-                "severity": ValidationSeverity.WARNING
-            }
+                "severity": ValidationSeverity.WARNING,
+            },
         }
 
     def _load_quality_metrics(self) -> Dict[str, Dict[str, Any]]:
@@ -86,8 +99,8 @@ class ContentValidationSystem:
                     "learning_objectives_clarity": 0.25,
                     "curriculum_alignment": 0.25,
                     "pedagogical_effectiveness": 0.25,
-                    "assessment_quality": 0.25
-                }
+                    "assessment_quality": 0.25,
+                },
             },
             "engagement": {
                 "weight": 0.25,
@@ -95,8 +108,8 @@ class ContentValidationSystem:
                     "interactivity_level": 0.3,
                     "visual_appeal": 0.2,
                     "narrative_quality": 0.2,
-                    "gamification_elements": 0.3
-                }
+                    "gamification_elements": 0.3,
+                },
             },
             "uniqueness": {
                 "weight": 0.2,
@@ -104,8 +117,8 @@ class ContentValidationSystem:
                     "creative_elements": 0.3,
                     "personalization_depth": 0.3,
                     "innovative_approaches": 0.2,
-                    "memorable_features": 0.2
-                }
+                    "memorable_features": 0.2,
+                },
             },
             "technical_quality": {
                 "weight": 0.15,
@@ -113,17 +126,17 @@ class ContentValidationSystem:
                     "performance": 0.3,
                     "usability": 0.3,
                     "accessibility": 0.2,
-                    "reliability": 0.2
-                }
+                    "reliability": 0.2,
+                },
             },
             "completeness": {
                 "weight": 0.1,
                 "criteria": {
                     "required_elements": 0.4,
                     "optional_elements": 0.3,
-                    "documentation": 0.3
-                }
-            }
+                    "documentation": 0.3,
+                },
+            },
         }
 
     def _load_educational_standards(self) -> Dict[str, Dict[str, Any]]:
@@ -132,28 +145,38 @@ class ContentValidationSystem:
             "common_core": {
                 "elementary": {
                     "math": ["number_operations", "geometry", "measurement", "data_analysis"],
-                    "language_arts": ["reading_comprehension", "writing", "speaking", "listening"]
+                    "language_arts": ["reading_comprehension", "writing", "speaking", "listening"],
                 },
                 "middle_school": {
                     "math": ["algebra", "geometry", "statistics", "probability"],
-                    "language_arts": ["literature_analysis", "argumentative_writing", "research_skills"]
+                    "language_arts": [
+                        "literature_analysis",
+                        "argumentative_writing",
+                        "research_skills",
+                    ],
                 },
                 "high_school": {
                     "math": ["advanced_algebra", "trigonometry", "calculus", "statistics"],
-                    "language_arts": ["literature_analysis", "research_papers", "presentation_skills"]
-                }
+                    "language_arts": [
+                        "literature_analysis",
+                        "research_papers",
+                        "presentation_skills",
+                    ],
+                },
             },
             "next_gen_science": {
                 "elementary": ["physical_science", "life_science", "earth_science", "engineering"],
-                "middle_school": ["matter_energy", "motion_stability", "ecosystems", "earth_systems"],
-                "high_school": ["physics", "chemistry", "biology", "earth_space_science"]
-            }
+                "middle_school": [
+                    "matter_energy",
+                    "motion_stability",
+                    "ecosystems",
+                    "earth_systems",
+                ],
+                "high_school": ["physics", "chemistry", "biology", "earth_space_science"],
+            },
         }
 
-    async def validate_conversation_context(
-        self,
-        context: ConversationContext
-    ) -> ValidationResult:
+    async def validate_conversation_context(self, context: ConversationContext) -> ValidationResult:
         """Validate the entire conversation context"""
 
         validation_result = ValidationResult(
@@ -164,7 +187,7 @@ class ContentValidationSystem:
             completeness_score=0.0,
             uniqueness_score=0.0,
             educational_value_score=0.0,
-            engagement_score=0.0
+            engagement_score=0.0,
         )
 
         # Validate requirements
@@ -187,7 +210,9 @@ class ContentValidationSystem:
             uniq_validation = await self.validate_uniqueness(context.uniqueness)
             validation_result.warnings.extend(uniq_validation["warnings"])
             validation_result.suggestions.extend(uniq_validation["suggestions"])
-            validation_result.uniqueness_score = max(validation_result.uniqueness_score, uniq_validation["uniqueness_score"])
+            validation_result.uniqueness_score = max(
+                validation_result.uniqueness_score, uniq_validation["uniqueness_score"]
+            )
 
         # Calculate overall completeness
         validation_result.completeness_score = await self._calculate_completeness_score(context)
@@ -200,24 +225,18 @@ class ContentValidationSystem:
 
         return validation_result
 
-    async def validate_requirements(
-        self,
-        requirements: ContentRequirements
-    ) -> Dict[str, Any]:
+    async def validate_requirements(self, requirements: ContentRequirements) -> Dict[str, Any]:
         """Validate content requirements"""
 
-        result = {
-            "errors": [],
-            "warnings": [],
-            "suggestions": [],
-            "educational_value_score": 0.0
-        }
+        result = {"errors": [], "warnings": [], "suggestions": [], "educational_value_score": 0.0}
 
         # Validate learning objectives
         if not requirements.learning_objectives:
             result["errors"].append("Learning objectives are required")
         else:
-            obj_validation = await self._validate_learning_objectives(requirements.learning_objectives)
+            obj_validation = await self._validate_learning_objectives(
+                requirements.learning_objectives
+            )
             result["errors"].extend(obj_validation["errors"])
             result["warnings"].extend(obj_validation["warnings"])
             result["suggestions"].extend(obj_validation["suggestions"])
@@ -238,16 +257,11 @@ class ContentValidationSystem:
         return result
 
     async def validate_personalization(
-        self,
-        personalization: PersonalizationData
+        self, personalization: PersonalizationData
     ) -> Dict[str, Any]:
         """Validate personalization data"""
 
-        result = {
-            "warnings": [],
-            "suggestions": [],
-            "uniqueness_score": 0.0
-        }
+        result = {"warnings": [], "suggestions": [], "uniqueness_score": 0.0}
 
         # Check for student names
         if not personalization.student_names:
@@ -281,17 +295,10 @@ class ContentValidationSystem:
 
         return result
 
-    async def validate_uniqueness(
-        self,
-        uniqueness: UniquenessEnhancement
-    ) -> Dict[str, Any]:
+    async def validate_uniqueness(self, uniqueness: UniquenessEnhancement) -> Dict[str, Any]:
         """Validate uniqueness enhancement data"""
 
-        result = {
-            "warnings": [],
-            "suggestions": [],
-            "uniqueness_score": 0.0
-        }
+        result = {"warnings": [], "suggestions": [], "uniqueness_score": 0.0}
 
         # Check for uniqueness factors
         if not uniqueness.factors:
@@ -325,18 +332,10 @@ class ContentValidationSystem:
 
         return result
 
-    async def _validate_learning_objectives(
-        self,
-        objectives: List[str]
-    ) -> Dict[str, Any]:
+    async def _validate_learning_objectives(self, objectives: List[str]) -> Dict[str, Any]:
         """Validate learning objectives"""
 
-        result = {
-            "errors": [],
-            "warnings": [],
-            "suggestions": [],
-            "score": 0.0
-        }
+        result = {"errors": [], "warnings": [], "suggestions": [], "score": 0.0}
 
         if not objectives:
             result["errors"].append("At least one learning objective is required")
@@ -350,9 +349,20 @@ class ContentValidationSystem:
                 result["warnings"].append(f"Learning objective {i+1} is too long")
 
             # Check for action verbs
-            action_verbs = ["learn", "understand", "demonstrate", "apply", "analyze", "create", "evaluate", "synthesize"]
+            action_verbs = [
+                "learn",
+                "understand",
+                "demonstrate",
+                "apply",
+                "analyze",
+                "create",
+                "evaluate",
+                "synthesize",
+            ]
             if not any(verb in objective.lower() for verb in action_verbs):
-                result["suggestions"].append(f"Learning objective {i+1} should include an action verb")
+                result["suggestions"].append(
+                    f"Learning objective {i+1} should include an action verb"
+                )
 
             # Check for specificity
             if len(objective.split()) < 5:
@@ -364,16 +374,11 @@ class ContentValidationSystem:
         return result
 
     async def _validate_grade_level_appropriateness(
-        self,
-        requirements: ContentRequirements
+        self, requirements: ContentRequirements
     ) -> Dict[str, Any]:
         """Validate grade level appropriateness"""
 
-        result = {
-            "warnings": [],
-            "suggestions": [],
-            "score": 0.0
-        }
+        result = {"warnings": [], "suggestions": [], "score": 0.0}
 
         grade_level = requirements.grade_level
         subject_area = requirements.subject_area
@@ -381,11 +386,15 @@ class ContentValidationSystem:
         # Check for appropriate complexity
         if grade_level in [GradeLevel.PRE_K, GradeLevel.KINDERGARTEN]:
             if requirements.engagement_level == EngagementLevel.IMMERSIVE:
-                result["warnings"].append("Very young students may find immersive content overwhelming")
+                result["warnings"].append(
+                    "Very young students may find immersive content overwhelming"
+                )
             result["score"] = 0.8
         elif grade_level in [GradeLevel.ELEMENTARY_1_2, GradeLevel.ELEMENTARY_3_5]:
             if requirements.engagement_level == EngagementLevel.PASSIVE:
-                result["suggestions"].append("Elementary students benefit from more interactive content")
+                result["suggestions"].append(
+                    "Elementary students benefit from more interactive content"
+                )
             result["score"] = 0.9
         elif grade_level in [GradeLevel.MIDDLE_SCHOOL, GradeLevel.HIGH_SCHOOL]:
             if requirements.engagement_level == EngagementLevel.PASSIVE:
@@ -396,22 +405,17 @@ class ContentValidationSystem:
 
         return result
 
-    async def _validate_engagement_level(
-        self,
-        requirements: ContentRequirements
-    ) -> Dict[str, Any]:
+    async def _validate_engagement_level(self, requirements: ContentRequirements) -> Dict[str, Any]:
         """Validate engagement level appropriateness"""
 
-        result = {
-            "warnings": [],
-            "suggestions": [],
-            "score": 0.0
-        }
+        result = {"warnings": [], "suggestions": [], "score": 0.0}
 
         engagement_level = requirements.engagement_level
 
         if engagement_level == EngagementLevel.PASSIVE:
-            result["warnings"].append("Passive content may not be engaging enough for most students")
+            result["warnings"].append(
+                "Passive content may not be engaging enough for most students"
+            )
             result["score"] = 0.5
         elif engagement_level == EngagementLevel.MODERATE:
             result["score"] = 0.8
@@ -422,10 +426,7 @@ class ContentValidationSystem:
 
         return result
 
-    async def _calculate_completeness_score(
-        self,
-        context: ConversationContext
-    ) -> float:
+    async def _calculate_completeness_score(self, context: ConversationContext) -> float:
         """Calculate completeness score for the conversation context"""
 
         score = 0.0
@@ -472,10 +473,7 @@ class ContentValidationSystem:
 
         return min(1.0, score)
 
-    async def _calculate_engagement_score(
-        self,
-        context: ConversationContext
-    ) -> float:
+    async def _calculate_engagement_score(self, context: ConversationContext) -> float:
         """Calculate engagement score based on context"""
 
         score = 0.0
@@ -509,10 +507,7 @@ class ContentValidationSystem:
 
         return min(1.0, score)
 
-    async def get_validation_summary(
-        self,
-        context: ConversationContext
-    ) -> Dict[str, Any]:
+    async def get_validation_summary(self, context: ConversationContext) -> Dict[str, Any]:
         """Get a summary of validation results"""
 
         validation_result = await self.validate_conversation_context(context)
@@ -523,12 +518,12 @@ class ContentValidationSystem:
             "quality_scores": {
                 "educational_value": int(validation_result.educational_value_score * 100),
                 "engagement": int(validation_result.engagement_score * 100),
-                "uniqueness": int(validation_result.uniqueness_score * 100)
+                "uniqueness": int(validation_result.uniqueness_score * 100),
             },
             "critical_issues": len(validation_result.errors),
             "warnings": len(validation_result.warnings),
             "suggestions": len(validation_result.suggestions),
-            "next_steps": []
+            "next_steps": [],
         }
 
         # Generate next steps based on validation results
@@ -542,15 +537,8 @@ class ContentValidationSystem:
             summary["next_steps"].append("Add more unique and creative elements")
 
         if validation_result.engagement_score < 0.6:
-            summary["next_steps"].append("Increase engagement level for better student participation")
+            summary["next_steps"].append(
+                "Increase engagement level for better student participation"
+            )
 
         return summary
-
-
-
-
-
-
-
-
-

@@ -7,6 +7,7 @@ Stripe Webhook Endpoint
 
 Enable by setting STRIPE_WEBHOOK_SECRET and adding this route to the app.
 """
+
 from __future__ import annotations
 
 import json
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import stripe  # type: ignore
+
     STRIPE_AVAILABLE = True
 except Exception:  # pragma: no cover
     STRIPE_AVAILABLE = False

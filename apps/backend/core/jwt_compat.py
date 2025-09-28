@@ -11,12 +11,14 @@ jose_available = False
 
 try:
     import jwt
+
     jwt_available = True
     logger.info("Using PyJWT for JWT operations")
 except ImportError:
     logger.warning("PyJWT not available, trying python-jose")
     try:
         from jose import jwt
+
         jose_available = True
         logger.info("Using python-jose for JWT operations")
     except ImportError:
@@ -27,7 +29,7 @@ except ImportError:
 
 # Export the working jwt module
 if jwt_available or jose_available:
-    __all__ = ['jwt']
+    __all__ = ["jwt"]
 else:
     raise ImportError("No JWT implementation available")
 
