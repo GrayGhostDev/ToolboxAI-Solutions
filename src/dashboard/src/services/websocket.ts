@@ -1,11 +1,11 @@
 /**
- * WebSocket Service for ToolboxAI Dashboard
+ * Pusher Service for ToolboxAI Dashboard
  *
- * Manages WebSocket connections, message handling, reconnection logic,
- * and provides a robust real-time communication layer.
+ * Manages Pusher connections, channel subscriptions, message handling,
+ * and provides a robust real-time communication layer using Pusher.
  */
 
-import { io, Socket } from 'socket.io-client';
+import Pusher, { Channel, PresenceChannel } from 'pusher-js';
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, WS_CONFIG, WS_URL } from '../config';
 import {
   MessageAcknowledgment,
@@ -24,27 +24,20 @@ import {
 } from '../types/websocket';
 import ApiClient from './api';
 
-export class WebSocketService {
-  private static instance: WebSocketService | null = null;
-  private socket: Socket | null = null;
+export class PusherService {
+  private static instance: PusherService | null = null;
+  private pusher: Pusher | null = null;
   private options: WebSocketConnectionOptions;
   private state: WebSocketState = WebSocketState.DISCONNECTED;
+  private channels: Map<string, Channel | PresenceChannel> = new Map();
   private subscriptions: Map<string, Set<WebSocketSubscription>> = new Map();
-  private messageQueue: QueuedMessage[] = [];
-  private reconnectAttempts = 0;
-  private reconnectTimer: number | null = null;
-  private heartbeatTimer: number | null = null;
-  private stats: WebSocketStats;
   private messageHandlers: Map<string, Set<WebSocketEventHandler>> = new Map();
   private stateHandlers: Set<WebSocketStateHandler> = new Set();
   private errorHandlers: Set<WebSocketErrorHandler> = new Set();
-  private pendingAcknowledgments: Map<string, (ack: MessageAcknowledgment) => void> = new Map();
   private currentToken: string | undefined;
-  private tokenRefreshCallbacks: Set<() => void> = new Set();
-  private tokenRefreshTimer: number | null = null;
-  private tokenExpiryTime: number | null = null;
   private apiClient: ApiClient | null = null;
   private connectionStatusCallbacks: Set<(status: WebSocketState) => void> = new Set();
+  private stats: WebSocketStats;
 
   constructor(options: Partial<WebSocketConnectionOptions> = {}) {
     this.options = {
