@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState, useEffect } from "react";
 import {
   listSchools,
   createSchool,
@@ -31,7 +31,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import { Add, Edit, Delete, School } from "@mui/icons-material";
+import { Add, Edit, Delete, School, CheckCircle } from "@mui/icons-material";
 
 interface SchoolFormData {
   name: string;
@@ -81,7 +81,7 @@ export default function Schools() {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Refetch when search term changes
-  React.useEffect(() => {
+  useEffect(() => {
     fetchSchools();
   }, [searchTerm, fetchSchools]);
 
@@ -133,7 +133,7 @@ export default function Schools() {
         // Create new school with optimistic update
         await createSchoolOptimistic(schoolData);
       }
-      
+
       setOpenDialog(false);
     } catch (err) {
       console.error("Error saving school:", err);
@@ -152,23 +152,34 @@ export default function Schools() {
         <Typography variant="h4" sx={{ fontWeight: 600 }}>
           Schools Management
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={handleAdd}
-        >
-          Add School
-        </Button>
+        <Stack direction="row" spacing={2}>
+          <TextField
+            placeholder="Search schools..."
+            variant="outlined"
+            size="small"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ width: 200 }}
+          />
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleAdd}
+          >
+            Add School
+          </Button>
+        </Stack>
       </Stack>
 
-      <Card>
-        <CardContent>
+      <Paper elevation={1}>
+        <Card>
+          <CardContent>
           {error && (
             <Box sx={{ mb: 2, p: 2, bgcolor: 'error.light', borderRadius: 1 }}>
               <Typography color="error">{error}</Typography>
             </Box>
           )}
-          
+
           <TableContainer>
             <Table>
               <TableHead>
@@ -216,15 +227,25 @@ export default function Schools() {
                       </TableCell>
                       <TableCell>{school.createdAt}</TableCell>
                       <TableCell>
-                        <IconButton 
-                          onClick={() => handleEdit(school)} 
+                        <IconButton
+                          onClick={() => handleEdit(school)}
                           size="small"
                           disabled={loading}
                         >
                           <Edit />
                         </IconButton>
-                        <IconButton 
-                          onClick={() => handleDelete(school.id)} 
+                        {school.status !== "active" && (
+                          <IconButton
+                            onClick={() => activateSchool(school.id)}
+                            size="small"
+                            color="success"
+                            disabled={loading}
+                          >
+                            <CheckCircle />
+                          </IconButton>
+                        )}
+                        <IconButton
+                          onClick={() => handleDelete(school.id)}
                           size="small"
                           color="error"
                           disabled={loading}
@@ -240,11 +261,12 @@ export default function Schools() {
           </TableContainer>
         </CardContent>
       </Card>
+      </Paper>
 
-      <Dialog 
-        open={openDialog} 
-        onClose={() => setOpenDialog(false)} 
-        maxWidth="md" 
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        maxWidth="md"
         fullWidth
         keepMounted={false}
         disableRestoreFocus={false}
@@ -341,14 +363,14 @@ export default function Schools() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button 
+          <Button
             onClick={() => setOpenDialog(false)}
             disabled={loading}
           >
             Cancel
           </Button>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             onClick={handleSave}
             disabled={loading || !formData.name || !formData.address || !formData.city || !formData.state || !formData.zip_code}
           >

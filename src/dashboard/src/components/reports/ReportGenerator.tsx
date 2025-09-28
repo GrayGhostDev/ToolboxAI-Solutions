@@ -14,6 +14,7 @@ import {
   TextField,
   Chip,
   LinearProgress,
+  CircularProgress,
   Alert,
   Stack,
   Divider,
@@ -212,7 +213,7 @@ const ReportGenerator: React.FC = () => {
 
       // Call API to generate report
       const response = await apiClient.post('/api/v1/reports/generate', params);
-      
+
       // Add to recent reports
       const newReport: GeneratedReport = {
         id: response.data.id,
@@ -341,12 +342,12 @@ const ReportGenerator: React.FC = () => {
                 {selectedReport && (
                   <>
                     <Divider sx={{ my: 3 }} />
-                    
+
                     {/* Report Parameters */}
                     <Typography variant="h6" gutterBottom>
                       Report Parameters
                     </Typography>
-                    
+
                     <Grid container spacing={2} sx={{ mt: 1 }}>
                       {/* Format Selection */}
                       <Grid item xs={12} sm={6}>

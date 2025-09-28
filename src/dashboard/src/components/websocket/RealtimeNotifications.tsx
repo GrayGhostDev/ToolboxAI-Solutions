@@ -34,8 +34,8 @@ import {
   DoneAll as MarkAllReadIcon
 } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../store';
-import { 
-  selectNotifications, 
+import {
+  selectNotifications,
   selectUnreadNotificationCount,
   markNotificationRead,
   markAllNotificationsRead,
@@ -57,7 +57,7 @@ export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
   const notifications = useAppSelector(selectNotifications);
   const unreadCount = useAppSelector(selectUnreadNotificationCount);
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-  const [autoMarkReadTimer, setAutoMarkReadTimer] = useState<NodeJS.Timeout | null>(null);
+  const [autoMarkReadTimer, setAutoMarkReadTimer] = useState<number | null>(null);
 
   const visibleNotifications = notifications.slice(0, maxNotifications);
   const open = Boolean(anchorEl);
@@ -67,7 +67,7 @@ export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
     if (notification.type === 'achievement') return <AchievementIcon color="warning" />;
     if (notification.type === 'quiz') return <QuizIcon color="primary" />;
     if (notification.type === 'lesson') return <LessonIcon color="secondary" />;
-    
+
     switch (notification.severity) {
       case 'success':
         return <SuccessIcon color="success" />;
@@ -97,7 +97,7 @@ export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
   // Handle popover open
   const handleOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
-    
+
     // Auto mark as read after delay
     if (autoMarkReadDelay > 0 && unreadCount > 0) {
       const timer = setTimeout(() => {
@@ -110,7 +110,7 @@ export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
   // Handle popover close
   const handleClose = () => {
     setAnchorEl(null);
-    
+
     // Clear auto-read timer
     if (autoMarkReadTimer) {
       clearTimeout(autoMarkReadTimer);
@@ -264,8 +264,8 @@ export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
                             {notification.message}
                           </Typography>
                           <Typography variant="caption" color="text.disabled">
-                            {formatDistanceToNow(new Date(notification.timestamp), { 
-                              addSuffix: true 
+                            {formatDistanceToNow(new Date(notification.timestamp), {
+                              addSuffix: true
                             })}
                           </Typography>
                         </>
@@ -279,7 +279,7 @@ export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
           )}
 
           {/* Footer */}
-          {notifications.length > maxNotifications && (
+          {notifications.length > 0 && (
             <Box
               sx={{
                 p: 1,
@@ -288,9 +288,18 @@ export const RealtimeNotifications: React.FC<RealtimeNotificationsProps> = ({
                 borderColor: 'divider'
               }}
             >
-              <Typography variant="caption" color="text.secondary">
-                Showing {maxNotifications} of {notifications.length} notifications
-              </Typography>
+              {notifications.length > maxNotifications && (
+                <Typography variant="caption" color="text.secondary" display="block" mb={1}>
+                  Showing {maxNotifications} of {notifications.length} notifications
+                </Typography>
+              )}
+              <Button
+                size="small"
+                onClick={handleClearAll}
+                sx={{ textTransform: 'none' }}
+              >
+                Clear All
+              </Button>
             </Box>
           )}
         </Paper>
@@ -313,7 +322,7 @@ export const RealtimeNotificationToast: React.FC = () => {
       if (latest.id !== latestNotification?.id) {
         setLatestNotification(latest);
         setOpen(true);
-        
+
         // Auto-hide after 5 seconds
         setTimeout(() => setOpen(false), 5000);
       }

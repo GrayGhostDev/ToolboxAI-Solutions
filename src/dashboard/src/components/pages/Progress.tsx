@@ -92,12 +92,12 @@ export default function Progress() {
     filters,
     comparisons,
   } = useAppSelector((state) => state.progress);
-  
+
   const user = useAppSelector((state) => state.user);
   const [activeTab, setActiveTab] = useState(0);
   const [selectedSubject, setSelectedSubject] = useState<string>("all");
   const [timeRange, setTimeRange] = useState(30);
-  
+
   // Fetch progress data on mount
   useEffect(() => {
     if (user.role === "student" && user.id) {
@@ -106,10 +106,10 @@ export default function Progress() {
       dispatch(fetchClassProgress({ classId: user.classIds[0], daysBack: timeRange }));
     }
   }, [dispatch, user, timeRange]);
-  
+
   const currentProgress = currentStudentId ? studentProgress[currentStudentId] : null;
   const currentClass = currentClassId ? classProgress[currentClassId] : null;
-  
+
   const handleRefresh = () => {
     if (currentStudentId) {
       dispatch(fetchStudentProgress({ studentId: currentStudentId, daysBack: timeRange }));
@@ -118,17 +118,17 @@ export default function Progress() {
       dispatch(fetchClassProgress({ classId: currentClassId, daysBack: timeRange }));
     }
   };
-  
+
   const handleExportReport = () => {
     if (currentStudentId) {
       dispatch(generateProgressReport({ studentId: currentStudentId, format: "pdf" }));
     }
   };
-  
+
   const handleCompareStudents = (studentIds: string[]) => {
     dispatch(compareStudents(studentIds));
   };
-  
+
   // Mock data for demonstration (will be replaced with real data from API)
   const mockXPData = [
     { date: "Mon", xp: 150 },
@@ -139,7 +139,7 @@ export default function Progress() {
     { date: "Sat", xp: 250 },
     { date: "Sun", xp: 380 },
   ];
-  
+
   const mockSubjectData = [
     { subject: "Math", mastery: 85, hours: 12 },
     { subject: "Science", mastery: 72, hours: 10 },
@@ -147,7 +147,7 @@ export default function Progress() {
     { subject: "History", mastery: 68, hours: 8 },
     { subject: "Arts", mastery: 95, hours: 6 },
   ];
-  
+
   const mockSkillData = [
     { skill: "Problem Solving", level: 85 },
     { skill: "Critical Thinking", level: 78 },
@@ -156,7 +156,7 @@ export default function Progress() {
     { skill: "Communication", level: 75 },
     { skill: "Digital Literacy", level: 95 },
   ];
-  
+
   const mockBadges = [
     { id: "1", name: "Math Wizard", icon: "🧙", rarity: "epic", earned: true },
     { id: "2", name: "Speed Reader", icon: "📚", rarity: "rare", earned: true },
@@ -165,7 +165,7 @@ export default function Progress() {
     { id: "5", name: "Team Player", icon: "🤝", rarity: "rare", earned: true },
     { id: "6", name: "Early Bird", icon: "🌅", rarity: "common", earned: true },
   ];
-  
+
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
       case "legendary": return "#FFD700";
@@ -174,7 +174,7 @@ export default function Progress() {
       default: return "#888888";
     }
   };
-  
+
   if (loading && !currentProgress && !currentClass) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -182,7 +182,7 @@ export default function Progress() {
       </Box>
     );
   }
-  
+
   return (
     <Grid2 container spacing={3}>
       {/* Header */}
@@ -222,7 +222,7 @@ export default function Progress() {
           </CardContent>
         </Card>
       </Grid2>
-      
+
       {error && (
         <Grid2 size={12}>
           <Alert severity="error" onClose={() => dispatch(clearError())}>
@@ -230,14 +230,16 @@ export default function Progress() {
           </Alert>
         </Grid2>
       )}
-      
+
       {/* Key Metrics */}
       <Grid2 size={{ xs: 12, md: 3 }}>
         <Card>
           <CardContent>
             <Stack spacing={2}>
               <Stack direction="row" alignItems="center" spacing={1}>
-                <LocalFireDepartment color="error" />
+                <Tooltip title="Consecutive days of activity">
+                  <LocalFireDepartment color="error" />
+                </Tooltip>
                 <Typography variant="caption" color="text.secondary">
                   Current Streak
                 </Typography>
@@ -245,12 +247,14 @@ export default function Progress() {
               <Typography variant="h3" sx={{ fontWeight: 700 }}>
                 7 Days
               </Typography>
-              <Chip label="Personal Best!" color="success" size="small" />
+              <Badge badgeContent="NEW" color="primary">
+                <Chip label="Personal Best!" color="success" size="small" />
+              </Badge>
             </Stack>
           </CardContent>
         </Card>
       </Grid2>
-      
+
       <Grid2 size={{ xs: 12, md: 3 }}>
         <Card>
           <CardContent>
@@ -274,7 +278,7 @@ export default function Progress() {
           </CardContent>
         </Card>
       </Grid2>
-      
+
       <Grid2 size={{ xs: 12, md: 3 }}>
         <Card>
           <CardContent>
@@ -293,7 +297,7 @@ export default function Progress() {
           </CardContent>
         </Card>
       </Grid2>
-      
+
       <Grid2 size={{ xs: 12, md: 3 }}>
         <Card>
           <CardContent>
@@ -307,6 +311,12 @@ export default function Progress() {
               <Typography variant="h3" sx={{ fontWeight: 700 }}>
                 Level 12
               </Typography>
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                <TrendingDown color="error" fontSize="small" />
+                <Typography variant="caption" color="error.main">
+                  -2 levels this month
+                </Typography>
+              </Stack>
               <Typography variant="caption" color="text.secondary">
                 450 XP to Level 13
               </Typography>
@@ -314,7 +324,7 @@ export default function Progress() {
           </CardContent>
         </Card>
       </Grid2>
-      
+
       {/* Charts Section */}
       <Grid2 size={12}>
         <Card>
@@ -325,7 +335,7 @@ export default function Progress() {
               <Tab label="Skills Radar" />
               <Tab label="Achievements" />
             </Tabs>
-            
+
             {/* XP Progress Chart */}
             {activeTab === 0 && (
               <Box>
@@ -351,7 +361,7 @@ export default function Progress() {
                 </ResponsiveContainer>
               </Box>
             )}
-            
+
             {/* Subject Mastery Chart */}
             {activeTab === 1 && (
               <Box>
@@ -370,7 +380,7 @@ export default function Progress() {
                     <Bar yAxisId="right" dataKey="hours" fill="#82ca9d" name="Hours" />
                   </BarChart>
                 </ResponsiveContainer>
-                
+
                 <Grid2 container spacing={2} sx={{ mt: 3 }}>
                   {mockSubjectData.map((subject) => (
                     <Grid2 key={subject.subject} size={{ xs: 12, sm: 6, md: 2.4 }}>
@@ -407,7 +417,7 @@ export default function Progress() {
                 </Grid2>
               </Box>
             )}
-            
+
             {/* Skills Radar Chart */}
             {activeTab === 2 && (
               <Box>
@@ -431,7 +441,7 @@ export default function Progress() {
                 </ResponsiveContainer>
               </Box>
             )}
-            
+
             {/* Achievements */}
             {activeTab === 3 && (
               <Box>
@@ -480,7 +490,7 @@ export default function Progress() {
                     </Grid2>
                   ))}
                 </Grid2>
-                
+
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 3 }}>
                   <Typography variant="body2" color="text.secondary">
                     Earned: {mockBadges.filter(b => b.earned).length} / {mockBadges.length}
@@ -496,7 +506,7 @@ export default function Progress() {
           </CardContent>
         </Card>
       </Grid2>
-      
+
       {/* Recent Activity */}
       <Grid2 size={{ xs: 12, md: 6 }}>
         <Card>
@@ -535,7 +545,7 @@ export default function Progress() {
           </CardContent>
         </Card>
       </Grid2>
-      
+
       {/* Improvement Suggestions */}
       <Grid2 size={{ xs: 12, md: 6 }}>
         <Card>

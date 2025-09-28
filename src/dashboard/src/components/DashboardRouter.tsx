@@ -72,8 +72,8 @@ const DashboardRouter: React.FC = () => {
 
   return (
     <Routes>
-      {/* Default route - redirect to role-specific dashboard */}
-      <Route path="/" element={<Navigate to={userConfig.defaultRoute} replace />} />
+      {/* Default route - render role-specific dashboard component */}
+      <Route path="/" element={getDashboardComponent()} />
 
       {/* Admin Routes */}
       <Route path="/admin/*" element={
@@ -149,7 +149,7 @@ const DashboardRouter: React.FC = () => {
           <ProfilePage />
         </ProtectedRoute>
       } />
-      
+
       <Route path="/settings" element={
         <ProtectedRoute>
           <SettingsPage />
@@ -158,19 +158,19 @@ const DashboardRouter: React.FC = () => {
 
       {/* Error pages */}
       <Route path="/unauthorized" element={
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          height: '100vh' 
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh'
         }}>
           <h1>Unauthorized Access</h1>
           <p>You don't have permission to access this page.</p>
           <button onClick={() => window.history.back()}>Go Back</button>
         </div>
       } />
-      
+
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

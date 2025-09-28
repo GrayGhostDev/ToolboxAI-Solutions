@@ -8,7 +8,7 @@ import { addActivity, addEvent } from "../store/slices/dashboardSlice";
 class WebSocketService {
   private socket: Socket | null = null;
   private reconnectAttempts = 0;
-  private reconnectTimer: NodeJS.Timeout | null = null;
+  private reconnectTimer: number | null = null;
 
   connect(): void {
     if (this.socket?.connected) {
@@ -16,13 +16,13 @@ class WebSocketService {
     }
 
     const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    
+
     // Don't attempt connection without a valid token
     if (!token) {
       console.log("WebSocket: Skipping connection - no auth token available");
       return;
     }
-    
+
     this.socket = io(WS_URL, {
       path: '/socket.io/',
       auth: {

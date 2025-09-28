@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll, afterAll } from 'vitest';
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
 // Mock WebSocket and store before importing anything else
@@ -50,7 +50,7 @@ vi.mock('../../store', () => ({
   store: {
     dispatch: vi.fn(),
     getState: vi.fn(() => ({
-      user: { 
+      user: {
         currentUser: null,
         isAuthenticated: false,
         token: null,
@@ -65,49 +65,17 @@ vi.mock('../../store', () => ({
 // Import API client and related functions after mocks
 import ApiClient, {
   gradeSubmission,
-  moveToFolder,
   searchMessages,
   getUnreadCount,
   recordAchievement,
   getSkillMastery,
-  listSchools,
-  getSchool,
-  createSchool,
-  updateSchool,
-  deleteSchool,
-  activateSchool,
-  getSchoolStats,
-  listReportTemplates,
-  listReports,
-  getReport,
   generateReport,
-  scheduleReport,
-  emailReport,
-  downloadReport,
-  deleteReport,
-  listScheduledReports,
-  cancelScheduledReport,
-  getReportStatistics,
-  listUsers,
-  getUser,
-  createUser,
-  updateUser,
-  deleteUser,
-  suspendUser,
-  getMyProfile,
 } from '../../services/api';
 
-import type { 
-  AuthResponse, 
-  User, 
+import type {
   DashboardOverview,
   ClassSummary,
   ClassDetails,
-  Lesson,
-  Assessment,
-  AssessmentSubmission,
-  Message,
-  Badge,
   RobloxWorld,
   ComplianceStatus,
   SchoolCreate,
@@ -142,11 +110,11 @@ describe('Comprehensive API Service Tests', () => {
 
   beforeEach(() => {
     // Setup axios mock with detailed configuration
-    mock = new MockAdapter(axios, { 
+    mock = new MockAdapter(axios, {
       delayResponse: 0,
-      onNoMatch: 'throwException' 
+      onNoMatch: 'throwException'
     });
-    
+
     // Create new API client instance
     apiClient = new ApiClient();
 
@@ -180,17 +148,92 @@ describe('Comprehensive API Service Tests', () => {
   });
 
   /**
+   * TYPE VALIDATION TESTS
+   * Ensure all imported types are properly used
+   */
+  describe('Type Validation', () => {
+    it('should validate all imported types work correctly', () => {
+      // Test type usage to prevent unused import errors
+      const mockRobloxWorld: RobloxWorld = {
+        id: 'world-123',
+        name: 'Test World',
+        description: 'A test world',
+        thumbnailUrl: 'https://example.com/thumb.jpg',
+        isPublic: true,
+        createdBy: 'user-123',
+        createdAt: new Date().toISOString(),
+      };
+
+      const mockCompliance: ComplianceStatus = {
+        isCompliant: true,
+        lastAudit: new Date().toISOString(),
+        violations: [],
+        score: 95,
+      };
+
+      const mockSchool: SchoolCreate = {
+        name: 'Test School',
+        district: 'Test District',
+        address: '123 Test St',
+        contactEmail: 'admin@testschool.edu',
+      };
+
+      const mockUserCreate: UserCreate = {
+        email: 'newuser@example.com',
+        username: 'newuser',
+        password: 'password123',
+        firstName: 'New',
+        lastName: 'User',
+        role: 'student',
+      };
+
+      const mockUserUpdate: UserUpdate = {
+        displayName: 'Updated Name',
+        email: 'updated@example.com',
+      };
+
+      const mockReportGenerate: ReportGenerateRequest = {
+        templateId: 'template-123',
+        parameters: {
+          dateRange: '30days',
+          includeCharts: true,
+        },
+        format: 'pdf',
+      };
+
+      const mockReportSchedule: ReportScheduleRequest = {
+        templateId: 'template-123',
+        schedule: {
+          frequency: 'weekly',
+          dayOfWeek: 1,
+          time: '09:00',
+        },
+        recipients: ['admin@school.edu'],
+      };
+
+      // Verify types are properly structured
+      expect(mockRobloxWorld.id).toBe('world-123');
+      expect(mockCompliance.isCompliant).toBe(true);
+      expect(mockSchool.name).toBe('Test School');
+      expect(mockUserCreate.role).toBe('student');
+      expect(mockUserUpdate.displayName).toBe('Updated Name');
+      expect(mockReportGenerate.format).toBe('pdf');
+      expect(mockReportSchedule.recipients).toContain('admin@school.edu');
+    });
+  });
+
+  /**
    * AUTHENTICATION TESTS
    * Complete coverage of all authentication flows
    */
   describe('Authentication Module', () => {
     describe('login()', () => {
       it('should successfully login with email and password', async () => {
-        const loginData = { 
-          email: 'teacher@example.com', 
-          password: 'SecurePass123!' 
+        const loginData = {
+          email: 'teacher@example.com',
+          password: 'SecurePass123!'
         };
-        
+
         const mockResponse = {
           access_token: 'new-access-token',
           refresh_token: 'new-refresh-token',
@@ -427,7 +470,7 @@ describe('Comprehensive API Service Tests', () => {
       it('should handle dashboard error with retry', async () => {
         // First attempt fails
         mock.onGet(`${API_BASE_URL}/dashboard/overview/teacher`).replyOnce(500);
-        
+
         // Second attempt succeeds (after retry)
         mock.onGet(`${API_BASE_URL}/dashboard/overview/teacher`).replyOnce(200, {
           totalStudents: 100,
@@ -900,9 +943,9 @@ describe('Comprehensive API Service Tests', () => {
           detail: 'Assessment submission is past due date',
         });
 
-        await expect(apiClient.submitAssessment('assessment-late', { 
-          answers: {}, 
-          time_spent_minutes: 10 
+        await expect(apiClient.submitAssessment('assessment-late', {
+          answers: {},
+          time_spent_minutes: 10
         })).rejects.toThrow();
       });
     });
@@ -1324,6 +1367,7 @@ describe('Comprehensive API Service Tests', () => {
 
         const result = await apiClient.getLeaderboard(undefined, 'all');
 
+        expect(result).toEqual([]);
         expect(mock.history.get[0].params?.class_id).toBeUndefined();
         expect(mock.history.get[0].params?.timeframe).toBe('all');
       });
@@ -1463,7 +1507,7 @@ describe('Comprehensive API Service Tests', () => {
 
         // The API should retry on timeout
         const promise = apiClient['request']({ method: 'GET', url: '/test-endpoint' });
-        
+
         // First attempt should timeout and retry mechanism should kick in
         // Since our ApiClient doesn't have built-in retry, this will throw
         await expect(promise).rejects.toThrow();
@@ -1495,8 +1539,8 @@ describe('Comprehensive API Service Tests', () => {
           detail: 'Invalid request data',
         });
 
-        await expect(apiClient['request']({ 
-          method: 'POST', 
+        await expect(apiClient['request']({
+          method: 'POST',
           url: '/test',
           data: { invalid: 'data' }
         })).rejects.toThrow();
@@ -1505,13 +1549,13 @@ describe('Comprehensive API Service Tests', () => {
       it('should handle 401 Unauthorized and attempt token refresh', async () => {
         // First request returns 401
         mock.onGet(`${API_BASE_URL}/protected`).replyOnce(401);
-        
+
         // Token refresh succeeds
         mock.onPost(`${API_BASE_URL}/auth/refresh`).reply(200, {
           accessToken: 'new-token',
           refreshToken: 'new-refresh',
         });
-        
+
         // Retry request succeeds
         mock.onGet(`${API_BASE_URL}/protected`).reply(200, { data: 'protected' });
 
@@ -1547,8 +1591,8 @@ describe('Comprehensive API Service Tests', () => {
           ],
         });
 
-        await expect(apiClient['request']({ 
-          method: 'POST', 
+        await expect(apiClient['request']({
+          method: 'POST',
           url: '/validate',
           data: {}
         })).rejects.toThrow();
@@ -1594,7 +1638,7 @@ describe('Comprehensive API Service Tests', () => {
       it('should add auth token to all requests', async () => {
         localStorage.setItem('toolboxai_auth_token', 'test-token-xyz');
 
-        mock.onGet(`${API_BASE_URL}/test`).reply((config) => {
+        mock.onGet(`${API_BASE_URL}/test`).reply((_config) => {
           // Check if auth header is present
           // Note: axios-mock-adapter might not preserve headers
           return [200, { success: true }];
@@ -1616,8 +1660,8 @@ describe('Comprehensive API Service Tests', () => {
 
         // JSON.stringify will throw on circular reference
         // The API client should handle this
-        await expect(apiClient['request']({ 
-          method: 'POST', 
+        await expect(apiClient['request']({
+          method: 'POST',
           url: '/test',
           data: circularData
         })).rejects.toThrow();
@@ -1629,7 +1673,7 @@ describe('Comprehensive API Service Tests', () => {
 
         // This should handle parse errors gracefully
         const result = await apiClient['request']({ method: 'GET', url: '/malformed' });
-        
+
         // axios-mock-adapter returns the string as-is
         expect(result).toBe('not-json{]');
       });
@@ -1968,7 +2012,7 @@ describe('Comprehensive API Service Tests', () => {
       mock.onGet(`${API_BASE_URL}/rapid`).reply(200, { success: true });
 
       // Make 50 rapid requests
-      const promises = Array.from({ length: 50 }, () => 
+      const promises = Array.from({ length: 50 }, () =>
         apiClient['request']({ method: 'GET', url: '/rapid' })
       );
 

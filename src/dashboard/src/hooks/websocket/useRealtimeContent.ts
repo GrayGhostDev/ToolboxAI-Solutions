@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useWebSocket } from './useWebSocket';
-import { 
+import {
   ContentGenerationRequest,
   ContentGenerationProgress,
   ContentGenerationComplete,
@@ -48,14 +48,14 @@ const initialState: ContentGenerationState = {
 export function useRealtimeContent(
   options: UseRealtimeContentOptions = {}
 ): UseRealtimeContentReturn {
-  const { 
-    requestContent, 
-    onContentProgress, 
+  const {
+    requestContent,
+    onContentProgress,
     onContentComplete,
     sendMessage,
-    isConnected 
+    isConnected
   } = useWebSocket();
-  
+
   const {
     onProgress,
     onComplete,
@@ -63,53 +63,53 @@ export function useRealtimeContent(
     autoCleanup = true,
     cleanupDelay = 30000 // 30 seconds
   } = options;
-  
+
   const [state, setState] = useState<ContentGenerationState>(initialState);
-  const cleanupTimerRef = useRef<NodeJS.Timeout | null>(null);
-  
+  const cleanupTimerRef = useRef<number | null>(null);
+
   // Store callbacks in refs
   const onProgressRef = useRef(onProgress);
   const onCompleteRef = useRef(onComplete);
   const onErrorRef = useRef(onError);
-  
+
   onProgressRef.current = onProgress;
   onCompleteRef.current = onComplete;
   onErrorRef.current = onError;
-  
+
   // Generate unique request ID
   const generateRequestId = useCallback(() => {
     return `content_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }, []);
-  
+
   // Handle progress updates
   const handleProgress = useCallback((progress: ContentGenerationProgress) => {
     if (progress.requestId !== state.requestId) return;
-    
+
     setState(prev => ({
       ...prev,
       status: 'processing',
       progress
     }));
-    
+
     if (onProgressRef.current) {
       onProgressRef.current(progress);
     }
   }, [state.requestId]);
-  
+
   // Handle completion
   const handleComplete = useCallback((result: ContentGenerationComplete) => {
     if (result.requestId !== state.requestId) return;
-    
+
     setState(prev => ({
       ...prev,
       status: 'completed',
       result
     }));
-    
+
     if (onCompleteRef.current) {
       onCompleteRef.current(result);
     }
-    
+
     // Auto cleanup after delay
     if (autoCleanup) {
       cleanupTimerRef.current = setTimeout(() => {
@@ -117,7 +117,7 @@ export function useRealtimeContent(
       }, cleanupDelay);
     }
   }, [state.requestId, autoCleanup, cleanupDelay]);
-  
+
   // Handle error
   const handleError = useCallback((error: string) => {
     setState(prev => ({
@@ -125,12 +125,12 @@ export function useRealtimeContent(
       status: 'error',
       error
     }));
-    
+
     if (onErrorRef.current) {
       onErrorRef.current(error);
     }
   }, []);
-  
+
   // Generate content
   const generateContent = useCallback(async (
     request: Omit<ContentGenerationRequest, 'requestId'>
@@ -139,19 +139,19 @@ export function useRealtimeContent(
       handleError('Not connected to WebSocket server');
       return;
     }
-    
+
     // Clear any existing cleanup timer
     if (cleanupTimerRef.current) {
       clearTimeout(cleanupTimerRef.current);
       cleanupTimerRef.current = null;
     }
-    
+
     const requestId = generateRequestId();
     const fullRequest: ContentGenerationRequest = {
       ...request,
       requestId
     };
-    
+
     setState({
       requestId,
       status: 'pending',
@@ -159,7 +159,7 @@ export function useRealtimeContent(
       result: null,
       error: null
     });
-    
+
     try {
       await requestContent(fullRequest);
       setState(prev => ({ ...prev, status: 'processing' }));
@@ -167,24 +167,24 @@ export function useRealtimeContent(
       handleError(error instanceof Error ? error.message : 'Failed to request content');
     }
   }, [isConnected, requestContent, generateRequestId, handleError]);
-  
+
   // Cancel generation
   const cancelGeneration = useCallback(() => {
     if (!state.requestId || state.status === 'completed') return;
-    
+
     sendMessage(
       WebSocketMessageType.CANCEL_CONTENT_GENERATION,
       { requestId: state.requestId },
       { channel: WebSocketChannel.CONTENT_GENERATION }
     );
-    
+
     setState(prev => ({
       ...prev,
       status: 'idle',
       error: 'Generation cancelled'
     }));
   }, [state.requestId, state.status, sendMessage]);
-  
+
   // Reset state
   const reset = useCallback(() => {
     if (cleanupTimerRef.current) {
@@ -193,20 +193,20 @@ export function useRealtimeContent(
     }
     setState(initialState);
   }, []);
-  
+
   // Subscribe to progress and completion events
   useEffect(() => {
     if (!state.requestId || state.status === 'idle') return;
-    
+
     const unsubscribeProgress = onContentProgress(handleProgress);
     const unsubscribeComplete = onContentComplete(handleComplete);
-    
+
     return () => {
       unsubscribeProgress();
       unsubscribeComplete();
     };
   }, [state.requestId, state.status, onContentProgress, onContentComplete, handleProgress, handleComplete]);
-  
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -215,7 +215,7 @@ export function useRealtimeContent(
       }
     };
   }, []);
-  
+
   return {
     state,
     isGenerating: state.status === 'pending' || state.status === 'processing',
@@ -240,24 +240,24 @@ export function useMultipleContentGeneration(
 } {
   const [requests, setRequests] = useState<Map<string, ContentGenerationState>>(new Map());
   const { requestContent, onContentProgress, onContentComplete, isConnected } = useWebSocket();
-  
+
   const activeCount = Array.from(requests.values()).filter(
     r => r.status === 'pending' || r.status === 'processing'
   ).length;
-  
+
   const canGenerate = isConnected && activeCount < maxConcurrent;
-  
+
   const generateContent = useCallback(async (
     request: Omit<ContentGenerationRequest, 'requestId'>
   ): Promise<string | null> => {
     if (!canGenerate) return null;
-    
+
     const requestId = `multi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const fullRequest: ContentGenerationRequest = {
       ...request,
       requestId
     };
-    
+
     setRequests(prev => new Map(prev).set(requestId, {
       requestId,
       status: 'pending',
@@ -265,7 +265,7 @@ export function useMultipleContentGeneration(
       result: null,
       error: null
     }));
-    
+
     try {
       await requestContent(fullRequest);
       return requestId;
@@ -282,7 +282,7 @@ export function useMultipleContentGeneration(
       return null;
     }
   }, [canGenerate, requestContent]);
-  
+
   const cancelGeneration = useCallback((requestId: string) => {
     setRequests(prev => {
       const next = new Map(prev);
@@ -294,7 +294,7 @@ export function useMultipleContentGeneration(
       return next;
     });
   }, []);
-  
+
   const clearCompleted = useCallback(() => {
     setRequests(prev => {
       const next = new Map(prev);
@@ -306,7 +306,7 @@ export function useMultipleContentGeneration(
       return next;
     });
   }, []);
-  
+
   // Subscribe to progress and completion events
   useEffect(() => {
     const handleProgress = (progress: ContentGenerationProgress) => {
@@ -320,7 +320,7 @@ export function useMultipleContentGeneration(
         return next;
       });
     };
-    
+
     const handleComplete = (result: ContentGenerationComplete) => {
       setRequests(prev => {
         const next = new Map(prev);
@@ -332,16 +332,16 @@ export function useMultipleContentGeneration(
         return next;
       });
     };
-    
+
     const unsubscribeProgress = onContentProgress(handleProgress);
     const unsubscribeComplete = onContentComplete(handleComplete);
-    
+
     return () => {
       unsubscribeProgress();
       unsubscribeComplete();
     };
   }, [onContentProgress, onContentComplete]);
-  
+
   return {
     requests,
     activeCount,

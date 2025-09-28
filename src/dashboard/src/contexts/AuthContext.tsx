@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [userConfig, setUserConfig] = useState<ReturnType<typeof getUserConfig> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [tokenRefreshTimer, setTokenRefreshTimer] = useState<NodeJS.Timeout | null>(null);
+  const [tokenRefreshTimer, setTokenRefreshTimer] = useState<number | null>(null);
   const navigate = useNavigate();
   const apiClient = new ApiClient();
 
@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const testUser = Object.values(TEST_USERS).find(
         u => u.email === email || u.username === email
       );
-      
+
       if (testUser && testUser.password === password) {
         // Use test user credentials
         const response = await apiClient.login(testUser.username, password);
@@ -106,15 +106,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (tokenRefreshTimer) {
       clearTimeout(tokenRefreshTimer);
     }
-    
+
     try {
       // Parse JWT to get expiry time
       const payload = JSON.parse(atob(accessToken.split('.')[1]));
       const expiryTime = payload.exp * 1000; // Convert to milliseconds
-      
+
       // Schedule refresh 5 minutes before expiry
       const refreshTime = expiryTime - Date.now() - (5 * 60 * 1000);
-      
+
       if (refreshTime > 0) {
         const timer = setTimeout(async () => {
           try {
@@ -123,7 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('Automatic token refresh failed:', error);
           }
         }, refreshTime);
-        
+
         setTokenRefreshTimer(timer);
         console.log(`Token refresh scheduled for ${new Date(expiryTime - 5 * 60 * 1000).toISOString()}`);
       }
@@ -131,26 +131,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Failed to schedule token refresh:', error);
     }
   }, [tokenRefreshTimer]);
-  
+
   // Handle successful authentication
   const handleAuthSuccess = useCallback((response: AuthResponse) => {
     const { user, accessToken, refreshToken } = response;
-    
+
     // Store tokens
     localStorage.setItem(AUTH_TOKEN_KEY, accessToken);
     localStorage.setItem(AUTH_REFRESH_TOKEN_KEY, refreshToken);
-    
+
     // Schedule automatic token refresh
     scheduleTokenRefresh(accessToken);
-    
+
     // Set user state
     setUser(user);
     const config = getUserConfig(user.role as UserRole);
     setUserConfig(config);
-    
+
     // Navigate to appropriate dashboard
     navigate(config.defaultRoute);
-    
+
     // Show success notification
     store.dispatch(addNotification({
       type: 'success',
@@ -172,23 +172,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearTimeout(tokenRefreshTimer);
         setTokenRefreshTimer(null);
       }
-      
+
       // Clear local state and storage
       setUser(null);
       setUserConfig(null);
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
-      
+
       // Navigate to login
       navigate('/login');
-      
+
       // Show notification
       store.dispatch(addNotification({
         type: 'info',
         message: 'You have been logged out successfully.',
         autoHide: true,
       }));
-      
+
       setIsLoading(false);
     }
   }, [apiClient, navigate, tokenRefreshTimer]);
@@ -199,7 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await apiClient.register(userData);
       handleAuthSuccess(response);
-      
+
       // Show welcome notification
       store.dispatch(addNotification({
         type: 'success',
@@ -221,12 +221,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Update user profile
   const updateProfile = useCallback(async (updates: Partial<User>) => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       const updatedUser = await apiClient.updateUser(user.id, updates);
       setUser(updatedUser);
-      
+
       store.dispatch(addNotification({
         type: 'success',
         message: 'Profile updated successfully.',
@@ -250,17 +250,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
-    
+
     try {
       const response = await apiClient.refreshToken(refreshToken);
       handleAuthSuccess(response);
-      
+
       // Also refresh WebSocket connection with new token
       const { websocketService } = await import('../services/websocket');
       if (websocketService.isConnected()) {
         await websocketService.refreshToken(response.accessToken);
       }
-      
+
       return response;
     } catch (error) {
       await logout();
@@ -271,7 +271,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Check permission based on user role
   const checkPermission = useCallback((permission: string): boolean => {
     if (!userConfig) return false;
-    
+
     const permissions = {
       'view.dashboard': userConfig.features.dashboard.showWelcomeMessage,
       'view.analytics': userConfig.features.dashboard.showStatistics,
@@ -282,7 +282,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       'send.messages': userConfig.features.notifications.types.includes('message'),
       // Add more permission mappings as needed
     };
-    
+
     return permissions[permission] || false;
   }, [userConfig]);
 
@@ -292,7 +292,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.warn('Role switching is only available in development mode');
       return;
     }
-    
+
     const testUser = Object.values(TEST_USERS).find(u => u.role === role);
     if (testUser) {
       login(testUser.email, testUser.password);
@@ -307,17 +307,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
   }, [tokenRefreshTimer]);
-  
+
   // Initialize WebSocket connection when authenticated
   useEffect(() => {
     const initWebSocket = async () => {
-      if (user && isAuthenticated) {
+      if (user && !!user) {
         const token = localStorage.getItem(AUTH_TOKEN_KEY);
         if (token) {
           const { websocketService } = await import('../services/websocket');
           try {
             await websocketService.connect(token);
-            
+
             // Register token refresh callback
             websocketService.onTokenRefresh(() => {
               refreshAuth();
@@ -328,9 +328,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     };
-    
+
     initWebSocket();
-  }, [user, isAuthenticated, refreshAuth]);
+  }, [user, refreshAuth]);
 
   const value = {
     user,

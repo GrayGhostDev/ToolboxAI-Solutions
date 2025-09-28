@@ -60,14 +60,14 @@ interface PerformanceIndicatorProps {
   refreshInterval?: number; // in seconds
 }
 
-export function PerformanceIndicator({ 
+export function PerformanceIndicator({
   showSystemHealth = true,
   autoRefresh = true,
-  refreshInterval = 30 
+  refreshInterval = 30
 }: PerformanceIndicatorProps) {
   const theme = useTheme();
   const { isConnected, subscribe, unsubscribe } = useWebSocketContext();
-  
+
   const [metrics, setMetrics] = useState<PerformanceMetric[]>([]);
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,7 +79,7 @@ export function PerformanceIndicator({
     try {
       setLoading(true);
       setError(null);
-      
+
       // Fetch performance metrics and system health
       const [metricsResponse, healthResponse] = await Promise.all([
         apiClient['request']<any>({
@@ -104,7 +104,7 @@ export function PerformanceIndicator({
           value: metricsResponse.metrics.completion_rate || 78.5,
           unit: "%",
           target: 80,
-          status: (metricsResponse.metrics.completion_rate || 78.5) >= 80 ? "excellent" : 
+          status: (metricsResponse.metrics.completion_rate || 78.5) >= 80 ? "excellent" :
                  (metricsResponse.metrics.completion_rate || 78.5) >= 70 ? "good" : "warning",
           trend: "up",
           trendValue: 2.3,
@@ -117,7 +117,7 @@ export function PerformanceIndicator({
           value: metricsResponse.metrics.average_score || 84.2,
           unit: "%",
           target: 85,
-          status: (metricsResponse.metrics.average_score || 84.2) >= 85 ? "excellent" : 
+          status: (metricsResponse.metrics.average_score || 84.2) >= 85 ? "excellent" :
                  (metricsResponse.metrics.average_score || 84.2) >= 75 ? "good" : "warning",
           trend: "up",
           trendValue: 1.7,
@@ -130,7 +130,7 @@ export function PerformanceIndicator({
           value: metricsResponse.metrics.engagement_rate || 92.1,
           unit: "%",
           target: 90,
-          status: (metricsResponse.metrics.engagement_rate || 92.1) >= 90 ? "excellent" : 
+          status: (metricsResponse.metrics.engagement_rate || 92.1) >= 90 ? "excellent" :
                  (metricsResponse.metrics.engagement_rate || 92.1) >= 80 ? "good" : "warning",
           trend: "stable",
           trendValue: 0.5,
@@ -143,7 +143,7 @@ export function PerformanceIndicator({
           value: metricsResponse.metrics.avg_response_time || 245,
           unit: "ms",
           target: 300,
-          status: (metricsResponse.metrics.avg_response_time || 245) <= 200 ? "excellent" : 
+          status: (metricsResponse.metrics.avg_response_time || 245) <= 200 ? "excellent" :
                  (metricsResponse.metrics.avg_response_time || 245) <= 300 ? "good" : "warning",
           trend: "down",
           trendValue: -12.3,
@@ -263,7 +263,7 @@ export function PerformanceIndicator({
     } catch (err: any) {
       setError(err.message || 'Failed to load performance data');
       console.error('Error fetching performance data:', err);
-      
+
       // Use mock data as fallback
       const mockMetrics: PerformanceMetric[] = [
         {
@@ -324,7 +324,7 @@ export function PerformanceIndicator({
         const { metricId, value, status, trend } = message.payload;
         setMetrics(prevMetrics =>
           prevMetrics.map(metric =>
-            metric.id === metricId 
+            metric.id === metricId
               ? { ...metric, value, status, trend, lastUpdated: new Date().toISOString() }
               : metric
           )
@@ -353,7 +353,12 @@ export function PerformanceIndicator({
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string, metricName?: string) => {
+    // Use Speed icon for performance-related metrics
+    if (metricName?.toLowerCase().includes('response') || metricName?.toLowerCase().includes('speed')) {
+      return <Speed color={status === 'excellent' ? 'success' : status === 'good' ? 'info' : 'warning'} />;
+    }
+
     switch (status) {
       case "excellent":
         return <CheckCircle color="success" />;
@@ -415,10 +420,12 @@ export function PerformanceIndicator({
               </Typography>
               <Stack direction="row" spacing={1} alignItems="center">
                 {isConnected && autoRefresh && (
-                  <Chip label="Live" color="success" size="small" />
+                  <Badge badgeContent="●" color="success">
+                    <Chip label="Live" color="success" size="small" />
+                  </Badge>
                 )}
-                <Chip 
-                  label={systemHealth.overall.toUpperCase()} 
+                <Chip
+                  label={systemHealth.overall.toUpperCase()}
                   color={systemHealth.overall === "healthy" ? "success" : "warning"}
                   size="small"
                 />
@@ -427,7 +434,7 @@ export function PerformanceIndicator({
                 </IconButton>
               </Stack>
             </Stack>
-            
+
             {error && (
               <Alert severity="warning" sx={{ mb: 2 }}>
                 Using fallback data: {error}
@@ -478,10 +485,10 @@ export function PerformanceIndicator({
                 <LinearProgress
                   variant="determinate"
                   value={systemHealth.memoryUsage}
-                  sx={{ 
-                    height: 6, 
+                  sx={{
+                    height: 6,
                     borderRadius: 3,
-                    '& .MuiLinearProgress-bar': { 
+                    '& .MuiLinearProgress-bar': {
                       backgroundColor: systemHealth.memoryUsage > 80 ? 'error.main' : 'primary.main'
                     }
                   }}
@@ -495,10 +502,10 @@ export function PerformanceIndicator({
                 <LinearProgress
                   variant="determinate"
                   value={systemHealth.cpuUsage}
-                  sx={{ 
-                    height: 6, 
+                  sx={{
+                    height: 6,
                     borderRadius: 3,
-                    '& .MuiLinearProgress-bar': { 
+                    '& .MuiLinearProgress-bar': {
                       backgroundColor: systemHealth.cpuUsage > 80 ? 'error.main' : 'success.main'
                     }
                   }}
@@ -530,7 +537,7 @@ export function PerformanceIndicator({
                     </Stack>
                   </Box>
                   <Avatar sx={{ bgcolor: getStatusColor(metric.status) + '20', width: 40, height: 40 }}>
-                    {getStatusIcon(metric.status)}
+                    {getStatusIcon(metric.status, metric.name)}
                   </Avatar>
                 </Stack>
 
@@ -541,20 +548,20 @@ export function PerformanceIndicator({
                     </Typography>
                     <Stack direction="row" alignItems="center" spacing={0.5}>
                       {getTrendIcon(metric.trend)}
-                      <Typography 
-                        variant="caption" 
+                      <Typography
+                        variant="caption"
                         color={metric.trend === "up" ? "success.main" : metric.trend === "down" ? "error.main" : "text.secondary"}
                       >
                         {metric.trendValue > 0 ? "+" : ""}{metric.trendValue.toFixed(1)}%
                       </Typography>
                     </Stack>
                   </Stack>
-                  
+
                   <LinearProgress
                     variant="determinate"
                     value={Math.min((metric.value / metric.target) * 100, 100)}
-                    sx={{ 
-                      height: 6, 
+                    sx={{
+                      height: 6,
                       borderRadius: 3,
                       '& .MuiLinearProgress-bar': { backgroundColor: getStatusColor(metric.status) }
                     }}
@@ -575,7 +582,7 @@ export function PerformanceIndicator({
       {/* Last Update Info */}
       <Paper sx={{ p: 1 }}>
         <Typography variant="caption" color="text.secondary" align="center" display="block">
-          Last updated: {lastRefresh.toLocaleTimeString()} 
+          Last updated: {lastRefresh.toLocaleTimeString()}
           {autoRefresh && ` • Next update in ${refreshInterval}s`}
         </Typography>
       </Paper>

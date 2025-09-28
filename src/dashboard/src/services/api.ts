@@ -3,7 +3,6 @@ import { API_BASE_URL, AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, API_TIMEOUT } fro
 import { store } from '@/store';
 import { addNotification } from "../store/slices/uiSlice";
 import type {
-  ApiResponse,
   AuthResponse,
   User,
   UserCreate,
@@ -36,7 +35,7 @@ class ApiClient {
           "Content-Type": "application/json",
         },
       });
-      
+
       if (!this.client) {
         throw new Error("Failed to create axios client instance");
       }
@@ -66,7 +65,7 @@ class ApiClient {
         if (response.config.method && ['post', 'put', 'delete'].includes(response.config.method.toLowerCase())) {
           const url = response.config.url || '';
           let message = '';
-          
+
           // Determine success message based on endpoint
           if (url.includes('/register')) {
             message = 'Registration successful! Welcome to ToolBoxAI.';
@@ -99,7 +98,7 @@ class ApiClient {
           } else if (url.includes('/classes') && response.config.method === 'delete') {
             message = 'Class deleted successfully!';
           }
-          
+
           if (message) {
             store.dispatch(addNotification({
               type: 'success',
@@ -144,11 +143,11 @@ class ApiClient {
 
         // Handle other errors with user-friendly messages
         let errorMessage = 'An unexpected error occurred. Please try again.';
-        
+
         if (error.response) {
           const status = error.response.status;
           const data = error.response.data;
-          
+
           // Extract error message from response
           if (data?.message) {
             errorMessage = data.message;
@@ -156,7 +155,7 @@ class ApiClient {
             // Handle Pydantic validation errors (422)
             if (Array.isArray(data.detail)) {
               // Extract messages from validation error array
-              const errors = data.detail.map((err: any) => 
+              const errors = data.detail.map((err: { msg?: string; message?: string }) =>
                 err.msg || err.message || 'Validation error'
               );
               errorMessage = errors.join(', ');
@@ -218,26 +217,26 @@ class ApiClient {
     if (!this.client) {
       throw new Error("API client not initialized");
     }
-    
+
     try {
       const response: AxiosResponse<T> = await this.client(config);
-      
+
       // Handle 204 No Content responses (typically from DELETE operations)
       if (response.status === 204) {
         return undefined as unknown as T;
       }
-      
+
       // Check if the response is already in the expected format (for auth endpoints)
       // Auth endpoints return data directly, not wrapped in ApiResponse
       if (response.data !== undefined) {
         return response.data as T;
       }
-      
+
       // Only throw error if we expected data but got none
       if (config.method?.toUpperCase() !== 'DELETE') {
         throw new Error("No data in response");
       }
-      
+
       return undefined as unknown as T;
     } catch (error) {
       console.error("API Error:", {
@@ -254,17 +253,17 @@ class ApiClient {
   async login(email: string, password: string): Promise<AuthResponse> {
     // Handle both email and username inputs
     const username = email.includes('@') ? email.split('@')[0] : email;
-    
+
     // Debug logging
-    console.log('Login attempt with:', { username, email });
-    
+    console.error('Login attempt with:', { username, email });
+
     const response = await this.request<AuthResponse>({
       method: "POST",
       url: "/auth/login",
       data: { username, password },
     });
-    
-    console.log('Login response:', response);
+
+    console.error('Login response:', response);
     return response;
   }
 
@@ -277,7 +276,7 @@ class ApiClient {
     // Map frontend fields to backend expected format
     const [firstName, ...lastNameParts] = data.displayName.split(' ');
     const lastName = lastNameParts.join(' ') || firstName;
-    
+
     const backendData = {
       email: data.email,
       password: data.password,
@@ -286,13 +285,13 @@ class ApiClient {
       last_name: lastName,
       role: data.role,
     };
-    
-    const response = await this.request<any>({
+
+    const response = await this.request<AuthResponse>({
       method: "POST",
       url: "/auth/register",
       data: backendData,
     });
-    
+
     // Map backend response to frontend format
     return {
       accessToken: response.access_token || response.accessToken,
@@ -443,7 +442,7 @@ class ApiClient {
 
   async createAssessment(data: Partial<Assessment>): Promise<Assessment> {
     // Transform camelCase to snake_case for backend
-    const transformedData: any = {};
+    const transformedData: Record<string, unknown> = {};
     if (data.title !== undefined) transformedData.title = data.title;
     if (data.lessonId !== undefined) transformedData.lesson_id = data.lessonId;
     if (data.classId !== undefined) transformedData.class_id = data.classId;
@@ -454,7 +453,7 @@ class ApiClient {
     if (data.maxSubmissions !== undefined) transformedData.max_attempts = data.maxSubmissions;
     // Note: Assessment interface doesn't have description property
     if (data.status !== undefined) transformedData.status = data.status;
-    
+
     return this.request<Assessment>({
       method: "POST",
       url: "/assessments/",
@@ -462,7 +461,7 @@ class ApiClient {
     });
   }
 
-  async submitAssessment(assessmentId: string, data: { answers: any; time_spent_minutes?: number }): Promise<AssessmentSubmission> {
+  async submitAssessment(assessmentId: string, data: { answers: Record<string, unknown>; time_spent_minutes?: number }): Promise<AssessmentSubmission> {
     return this.request<AssessmentSubmission>({
       method: "POST",
       url: `/assessments/${assessmentId}/submit`,
@@ -508,30 +507,30 @@ class ApiClient {
     });
   }
 
-  async getClassProgress(classId: string): Promise<any> {
-    return this.request<any>({
+  async getClassProgress(classId: string): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>({
       method: "GET",
       url: `/progress/class/${classId}`,
     });
   }
 
-  async getLessonAnalytics(lessonId: string): Promise<any> {
-    return this.request<any>({
+  async getLessonAnalytics(lessonId: string): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>({
       method: "GET",
       url: `/progress/lesson/${lessonId}`,
     });
   }
 
-  async updateProgress(lessonId: string, progressPercentage: number, timeSpentMinutes: number, score?: number): Promise<any> {
-    return this.request<any>({
+  async updateProgress(lessonId: string, progressPercentage: number, timeSpentMinutes: number, score?: number): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>({
       method: "POST",
       url: `/progress/update`,
       params: { lesson_id: lessonId, progress_percentage: progressPercentage, time_spent_minutes: timeSpentMinutes, score },
     });
   }
 
-  async getProgressAnalytics(filters?: { studentId?: string; classId?: string; subject?: string }): Promise<any> {
-    return this.request<any>({
+  async getProgressAnalytics(filters?: { studentId?: string; classId?: string; subject?: string }): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>({
       method: "GET",
       url: `/progress/analytics`,
       params: filters,
@@ -625,8 +624,8 @@ class ApiClient {
     });
   }
 
-  async getMessageThread(threadId: string): Promise<any> {
-    return this.request<any>({
+  async getMessageThread(threadId: string): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>({
       method: "GET",
       url: `/messages/thread/${threadId}`,
     });
@@ -684,8 +683,8 @@ class ApiClient {
     });
   }
 
-  async getMessageStats(): Promise<any> {
-    return this.request<any>({
+  async getMessageStats(): Promise<Record<string, unknown>> {
+    return this.request<Record<string, unknown>>({
       method: "GET",
       url: "/messages/stats",
     });
@@ -703,7 +702,7 @@ class ApiClient {
     return this.request<void>({
       method: "POST",
       url: "/compliance/consent",
-      data: { 
+      data: {
         consent_type: type,  // Backend expects 'consent_type' not 'type'
         granted: true,       // Backend requires this field
         details: {          // Optional additional details
@@ -789,7 +788,7 @@ export const getAssessmentSubmissions = apiClient.getAssessmentSubmissions.bind(
 export const publishAssessment = apiClient.publishAssessment.bind(apiClient);
 
 export const gradeSubmission = async (submissionId: string, data: { score: number; feedback?: string }) => {
-  return apiClient['request']<any>({
+  return apiClient['request']<Record<string, unknown>>({
     method: 'POST',
     url: `/assessments/submissions/${submissionId}/grade`,
     data,
@@ -811,7 +810,7 @@ export const getMessageStats = apiClient.getMessageStats.bind(apiClient);
 export const markAsRead = apiClient.markMessageAsRead.bind(apiClient);
 
 export const moveToFolder = async (messageId: string, folder: string) => {
-  return apiClient['request']<any>({
+  return apiClient['request']<Record<string, unknown>>({
     method: 'PUT',
     url: `/messages/${messageId}/move`,
     data: { folder },
@@ -819,7 +818,7 @@ export const moveToFolder = async (messageId: string, folder: string) => {
 };
 
 export const searchMessages = async (query: string) => {
-  return apiClient['request']<any>({
+  return apiClient['request']<Record<string, unknown>>({
     method: 'GET',
     url: `/messages/search`,
     params: { q: query },
@@ -827,21 +826,21 @@ export const searchMessages = async (query: string) => {
 };
 
 export const getUnreadCount = async () => {
-  const response = await apiClient['request']<any>({
+  const response = await apiClient['request']<{ count?: number }>({
     method: 'GET',
     url: `/messages/unread-count`,
   });
   return response.count || 0;
 };
 
-// Progress-related exports  
+// Progress-related exports
 export const getClassProgress = apiClient.getClassProgress.bind(apiClient);
 export const getLessonAnalytics = apiClient.getLessonAnalytics.bind(apiClient);
 export const updateProgress = apiClient.updateProgress.bind(apiClient);
 export const getProgressAnalytics = apiClient.getProgressAnalytics.bind(apiClient);
 
 export const recordAchievement = async (studentId: string, data: { badgeId: string; xpEarned: number }) => {
-  return apiClient['request']<any>({
+  return apiClient['request']<Record<string, unknown>>({
     method: 'POST',
     url: `/progress/student/${studentId}/achievement`,
     data,
@@ -849,7 +848,7 @@ export const recordAchievement = async (studentId: string, data: { badgeId: stri
 };
 
 export const getSkillMastery = async (studentId: string, skillId: string) => {
-  return apiClient['request']<any>({
+  return apiClient['request']<Record<string, unknown>>({
     method: 'GET',
     url: `/progress/student/${studentId}/skill/${skillId}`,
   });
@@ -897,7 +896,7 @@ export const listSchools = async (params?: {
     url: `/schools/`,
     params,
   });
-  
+
   // Transform snake_case to camelCase for frontend compatibility
   return schools.map(school => ({
     ...school,
@@ -922,7 +921,7 @@ export const createSchool = async (data: SchoolCreate) => {
     url: `/schools/`,
     data,
   });
-  
+
   // Transform response for frontend compatibility
   return {
     ...school,
@@ -940,7 +939,7 @@ export const updateSchool = async (schoolId: string, data: Partial<SchoolCreate>
     url: `/schools/${schoolId}`,
     data,
   });
-  
+
   // Transform response for frontend compatibility
   return {
     ...school,
@@ -967,7 +966,7 @@ export const activateSchool = async (schoolId: string) => {
 };
 
 export const getSchoolStats = async (schoolId: string) => {
-  return apiClient['request']<any>({
+  return apiClient['request']<Record<string, unknown>>({
     method: 'GET',
     url: `/schools/${schoolId}/stats`,
   });
@@ -982,7 +981,7 @@ export interface ReportTemplate {
   category?: string;
   icon?: string;
   fields?: string[];
-  filters?: any;
+  filters?: Record<string, unknown>;
   default_format: string;
   is_popular: boolean;
   is_active: boolean;
@@ -993,8 +992,8 @@ export interface ReportGenerateRequest {
   type: 'progress' | 'attendance' | 'grades' | 'behavior' | 'assessment' | 'compliance' | 'gamification' | 'custom';
   format?: 'pdf' | 'excel' | 'csv' | 'html' | 'json';
   template_id?: string;
-  filters?: any;
-  parameters?: any;
+  filters?: Record<string, unknown>;
+  parameters?: Record<string, unknown>;
   school_id?: string;
   class_id?: string;
   recipients?: string[];
@@ -1013,8 +1012,8 @@ export interface ReportScheduleRequest {
   day_of_week?: number;
   day_of_month?: number;
   format?: 'pdf' | 'excel' | 'csv' | 'html' | 'json';
-  filters?: any;
-  parameters?: any;
+  filters?: Record<string, unknown>;
+  parameters?: Record<string, unknown>;
   school_id?: string;
   class_id?: string;
   recipients?: string[];
@@ -1029,8 +1028,8 @@ export interface Report {
   status: string;
   template_id?: string;
   generated_by?: string;
-  filters?: any;
-  parameters?: any;
+  filters?: Record<string, unknown>;
+  parameters?: Record<string, unknown>;
   school_id?: string;
   class_id?: string;
   file_path?: string;
@@ -1061,8 +1060,8 @@ export interface ReportSchedule {
   day_of_week?: number;
   day_of_month?: number;
   format: string;
-  filters?: any;
-  parameters?: any;
+  filters?: Record<string, unknown>;
+  parameters?: Record<string, unknown>;
   school_id?: string;
   class_id?: string;
   recipients?: string[];
@@ -1084,7 +1083,7 @@ export const listReportTemplates = async (params?: {
     ...params,
     type: params.type?.toLowerCase(),
   } : undefined;
-  
+
   return apiClient['request']<ReportTemplate[]>({
     method: 'GET',
     url: `/reports/templates`,
@@ -1122,7 +1121,7 @@ export const generateReport = async (data: ReportGenerateRequest) => {
     type: data.type?.toLowerCase(),
     format: data.format?.toLowerCase() || 'pdf',
   };
-  
+
   return apiClient['request']<Report>({
     method: 'POST',
     url: `/reports/generate`,
@@ -1152,7 +1151,7 @@ export const emailReport = async (data: {
 };
 
 export const downloadReport = async (reportId: string) => {
-  return apiClient['request']<any>({
+  return apiClient['request']<Record<string, unknown>>({
     method: 'GET',
     url: `/reports/${reportId}/download`,
   });
@@ -1236,7 +1235,7 @@ export const createUser = async (data: UserCreate) => {
     language: data.language,
     timezone: data.timezone,
   };
-  
+
   return apiClient['request']<User>({
     method: 'POST',
     url: `/users/`,
@@ -1246,7 +1245,7 @@ export const createUser = async (data: UserCreate) => {
 
 export const updateUser = async (userId: string, data: UserUpdate) => {
   // Transform camelCase to snake_case for backend
-  const transformedData: any = {};
+  const transformedData: Record<string, unknown> = {};
   if (data.email !== undefined) transformedData.email = data.email;
   if (data.username !== undefined) transformedData.username = data.username;
   if (data.password !== undefined) transformedData.password = data.password;
@@ -1256,7 +1255,7 @@ export const updateUser = async (userId: string, data: UserUpdate) => {
   if (data.role !== undefined) transformedData.role = data.role;
   if (data.schoolId !== undefined) transformedData.school_id = data.schoolId;
   if (data.isActive !== undefined) transformedData.is_active = data.isActive;
-  
+
   return apiClient['request']<User>({
     method: 'PUT',
     url: `/users/${userId}`,
@@ -1284,3 +1283,7 @@ export const getMyProfile = async () => {
     url: `/users/me/profile`,
   });
 };
+<<<<<<< Current (Your changes)
+=======
+
+>>>>>>> Incoming (Background Agent changes)

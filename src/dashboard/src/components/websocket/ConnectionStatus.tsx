@@ -202,12 +202,32 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
       </Box>
 
       {/* Status */}
-      <Chip
-        label={getStatusText()}
-        color={getStatusColor()}
-        size="small"
-        sx={{ mb: 2 }}
-      />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Chip
+          label={getStatusText()}
+          color={getStatusColor()}
+          size="small"
+        />
+        <Stack direction="row" spacing={1}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={onReconnect}
+            disabled={status.state === WebSocketState.CONNECTING}
+          >
+            Reconnect
+          </Button>
+          <IconButton
+            size="small"
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </IconButton>
+        </Stack>
+      </Box>
+
+      <Collapse in={expanded}>
 
       {/* Progress bar for connecting states */}
       {(status.isConnecting) && (
@@ -233,7 +253,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
           <Typography variant="subtitle2" gutterBottom>
             Statistics
           </Typography>
-          
+
           <Grid container spacing={1}>
             <Grid item xs={6}>
               <Box display="flex" alignItems="center" gap={0.5}>
@@ -243,7 +263,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
                 </Typography>
               </Box>
             </Grid>
-            
+
             <Grid item xs={6}>
               <Box display="flex" alignItems="center" gap={0.5}>
                 <RefreshIcon fontSize="small" color="action" />
@@ -252,7 +272,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
                 </Typography>
               </Box>
             </Grid>
-            
+
             <Grid item xs={6}>
               <Box display="flex" alignItems="center" gap={0.5}>
                 <SendIcon fontSize="small" color="primary" />
@@ -261,7 +281,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
                 </Typography>
               </Box>
             </Grid>
-            
+
             <Grid item xs={6}>
               <Box display="flex" alignItems="center" gap={0.5}>
                 <ReceiveIcon fontSize="small" color="success" />
@@ -278,7 +298,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
               Last connected: {new Date(status.lastConnected).toLocaleTimeString()}
             </Typography>
           )}
-          
+
           {status.lastDisconnected && (
             <Typography variant="caption" display="block">
               Last disconnected: {new Date(status.lastDisconnected).toLocaleTimeString()}
@@ -286,6 +306,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
           )}
         </>
       )}
+      </Collapse>
     </Paper>
   );
 };
@@ -293,7 +314,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
 // Mini status indicator for app bar
 export const ConnectionStatusIndicator: React.FC = () => {
   const status = useWebSocketStatus();
-  
+
   const getColor = () => {
     switch (status.state) {
       case WebSocketState.CONNECTED:
@@ -308,7 +329,7 @@ export const ConnectionStatusIndicator: React.FC = () => {
     }
   };
 
-  const isAnimating = status.state === WebSocketState.CONNECTING || 
+  const isAnimating = status.state === WebSocketState.CONNECTING ||
                       status.state === WebSocketState.RECONNECTING;
 
   return (

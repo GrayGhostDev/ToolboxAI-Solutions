@@ -1,31 +1,33 @@
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll, afterAll } from 'vitest';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
 // Mock WebSocketService
+const mockWebSocketInstance = {
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn(),
+  send: vi.fn(),
+  subscribe: vi.fn(),
+  unsubscribe: vi.fn(),
+  getState: vi.fn(() => 'DISCONNECTED'),
+  isConnected: vi.fn(() => false),
+  onStateChange: vi.fn(),
+  onError: vi.fn(),
+  emit: vi.fn(),
+  on: vi.fn(),
+  off: vi.fn(),
+  reconnect: vi.fn(),
+  getConnectionStats: vi.fn(() => ({
+    connected: false,
+    reconnectAttempts: 0,
+    lastError: null,
+    uptime: 0
+  }))
+};
+
 vi.mock('../../services/websocket', () => ({
   WebSocketService: {
-    getInstance: vi.fn(() => ({
-      connect: vi.fn().mockResolvedValue(undefined),
-      disconnect: vi.fn(),
-      send: vi.fn(),
-      subscribe: vi.fn(),
-      unsubscribe: vi.fn(),
-      getState: vi.fn(() => 'DISCONNECTED'),
-      isConnected: vi.fn(() => false),
-      onStateChange: vi.fn(),
-      onError: vi.fn(),
-      emit: vi.fn(),
-      on: vi.fn(),
-      off: vi.fn(),
-      reconnect: vi.fn(),
-      getConnectionStats: vi.fn(() => ({
-        connected: false,
-        reconnectAttempts: 0,
-        lastError: null,
-        uptime: 0
-      }))
-    }))
+    getInstance: vi.fn(() => mockWebSocketInstance)
   },
   websocketService: {
     connect: vi.fn().mockResolvedValue(undefined),
@@ -50,7 +52,7 @@ vi.mock('../../store', () => ({
   store: {
     dispatch: vi.fn(),
     getState: vi.fn(() => ({
-      user: { 
+      user: {
         currentUser: null,
         token: null,
         refreshToken: null,
@@ -80,8 +82,8 @@ vi.mock('../../store', () => ({
     subscribe: vi.fn(() => vi.fn())
   },
   useAppDispatch: () => vi.fn(),
-  useAppSelector: (selector: any) => selector({
-    user: { 
+  useAppSelector: (selector: (state: unknown) => unknown) => selector({
+    user: {
       currentUser: null,
       token: null,
       refreshToken: null,
@@ -112,20 +114,9 @@ vi.mock('../../store', () => ({
 
 // Import after mocks
 import ApiClient from '../../services/api';
-import type { 
+import type {
   LoginCredentials,
   RegisterData,
-  User,
-  Class,
-  Lesson,
-  Assessment,
-  Message,
-  DashboardData,
-  SchoolData,
-  ReportData,
-  ComplianceData,
-  RewardData,
-  MissionData,
   UserRole
 } from '../../types';
 
@@ -135,17 +126,17 @@ describe('Complete API Service Test Suite', () => {
   let mock: MockAdapter;
   let apiClient: ApiClient;
   let localStorageMock: { [key: string]: string };
-  let consoleErrorSpy: any;
-  let consoleWarnSpy: any;
+  let consoleErrorSpy: unknown;
+  let consoleWarnSpy: unknown;
 
   beforeAll(() => {
     // Capture console errors and warnings
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    
+
     // Fix for axios config serialization in Vitest
     if (typeof globalThis.structuredClone === 'undefined') {
-      globalThis.structuredClone = (obj: any) => {
+      globalThis.structuredClone = (obj: unknown) => {
         try {
           return JSON.parse(JSON.stringify(obj));
         } catch {
@@ -153,7 +144,7 @@ describe('Complete API Service Test Suite', () => {
         }
       };
     }
-    
+
     // Suppress DataCloneError
     const originalConsoleError = console.error;
     console.error = (...args) => {
@@ -162,7 +153,7 @@ describe('Complete API Service Test Suite', () => {
       }
       originalConsoleError(...args);
     };
-    
+
     // Handle unhandled rejections
     process.on('unhandledRejection', (reason) => {
       if (reason?.toString().includes('DataCloneError')) {
@@ -180,13 +171,13 @@ describe('Complete API Service Test Suite', () => {
   beforeEach(() => {
     // Reset mocks
     vi.clearAllMocks();
-    
+
     // Setup axios mock with onNoMatch option to prevent unhandled requests
-    mock = new MockAdapter(axios, { 
+    mock = new MockAdapter(axios, {
       delayResponse: 0,
       onNoMatch: "throwException"
     });
-    
+
     // Create new API client instance
     apiClient = new ApiClient();
 
@@ -245,7 +236,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onPost(`${API_BASE_URL}/auth/login`).reply(200, mockResponse);
 
         const result = await apiClient.login(credentials.email, credentials.password);
-        
+
         expect(result).toEqual(mockResponse);
         expect(localStorage.getItem('toolboxai_auth_token')).toBe('new-access-token');
         expect(localStorage.getItem('toolboxai_refresh_token')).toBe('new-refresh-token');
@@ -267,7 +258,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onPost(`${API_BASE_URL}/auth/login`).reply(200, mockResponse);
 
         const result = await apiClient.login('johndoe', 'password123');
-        
+
         expect(result).toEqual(mockResponse);
         expect(localStorage.getItem('toolboxai_auth_token')).toBe('username-token');
       });
@@ -327,7 +318,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onPost(`${API_BASE_URL}/auth/register`).reply(201, mockResponse);
 
         const result = await apiClient.register(registerData);
-        
+
         expect(result).toEqual(mockResponse);
         expect(mock.history.post[0].data).toBe(JSON.stringify(registerData));
       });
@@ -344,7 +335,7 @@ describe('Complete API Service Test Suite', () => {
           email: 'invalid',
           password: '123',
           username: 'test'
-        } as any)).rejects.toThrow();
+        } as RegisterData)).rejects.toThrow();
       });
 
       it('should handle duplicate email registration', async () => {
@@ -356,7 +347,7 @@ describe('Complete API Service Test Suite', () => {
           email: 'existing@example.com',
           password: 'Password123!',
           username: 'newuser'
-        } as any)).rejects.toThrow();
+        } as RegisterData)).rejects.toThrow();
       });
     });
 
@@ -393,7 +384,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onPost(`${API_BASE_URL}/auth/refresh`).reply(200, mockResponse);
 
         const result = await apiClient.refreshToken();
-        
+
         expect(result).toEqual(mockResponse);
         expect(localStorage.getItem('toolboxai_auth_token')).toBe('refreshed-token');
         expect(localStorage.getItem('toolboxai_refresh_token')).toBe('new-refresh-token');
@@ -412,18 +403,18 @@ describe('Complete API Service Test Suite', () => {
       it('should automatically refresh token on 401 response', async () => {
         // First request returns 401
         mock.onGet(`${API_BASE_URL}/protected`).replyOnce(401);
-        
+
         // Refresh token request
         mock.onPost(`${API_BASE_URL}/auth/refresh`).reply(200, {
           access_token: 'new-token',
           refresh_token: 'new-refresh'
         });
-        
+
         // Retry original request
         mock.onGet(`${API_BASE_URL}/protected`).reply(200, { data: 'protected' });
 
         const result = await apiClient['request']({ method: 'GET', url: '/protected' });
-        
+
         expect(result.data).toBe('protected');
         expect(localStorage.getItem('toolboxai_auth_token')).toBe('new-token');
       });
@@ -451,7 +442,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/auth/me`).reply(200, mockUser);
 
         const result = await apiClient.getCurrentUser();
-        
+
         expect(result).toEqual(mockUser);
       });
 
@@ -473,7 +464,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onPatch(`${API_BASE_URL}/auth/profile`).reply(200, mockResponse);
 
         const result = await apiClient.updateProfile(updates);
-        
+
         expect(result).toEqual(mockResponse);
         expect(mock.history.patch[0].data).toBe(JSON.stringify(updates));
       });
@@ -493,7 +484,7 @@ describe('Complete API Service Test Suite', () => {
           passwordData.current_password,
           passwordData.new_password
         );
-        
+
         expect(result.message).toBe('Password changed successfully');
       });
 
@@ -514,7 +505,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.forgotPassword('user@example.com');
-        
+
         expect(result.message).toBe('Password reset email sent');
       });
 
@@ -524,7 +515,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.resetPassword('reset-token', 'NewPass123!');
-        
+
         expect(result.message).toBe('Password reset successfully');
       });
 
@@ -545,7 +536,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.verifyEmail('verification-token');
-        
+
         expect(result.message).toBe('Email verified successfully');
       });
 
@@ -555,7 +546,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.resendVerificationEmail();
-        
+
         expect(result.message).toBe('Verification email sent');
       });
     });
@@ -583,10 +574,10 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/dashboard/overview/teacher`).reply(200, mockData);
 
         const result = await apiClient.getDashboardOverview('teacher');
-        
+
         expect(result).toEqual(mockData);
-        expect((result as any).totalStudents).toBe(150);
-        expect((result as any).completionRate).toBe(78.5);
+        expect((result as Record<string, unknown>).totalStudents).toBe(150);
+        expect((result as Record<string, unknown>).completionRate).toBe(78.5);
       });
 
       it('should fetch student dashboard overview', async () => {
@@ -603,9 +594,9 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/dashboard/overview/student`).reply(200, mockData);
 
         const result = await apiClient.getDashboardOverview('student');
-        
+
         expect(result).toEqual(mockData);
-        expect((result as any).streakDays).toBe(15);
+        expect((result as Record<string, unknown>).streakDays).toBe(15);
       });
 
       it('should fetch admin dashboard overview', async () => {
@@ -627,9 +618,9 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/dashboard/overview/admin`).reply(200, mockData);
 
         const result = await apiClient.getDashboardOverview('admin');
-        
+
         expect(result).toEqual(mockData);
-        expect((result as any).systemHealth).toBe('healthy');
+        expect((result as Record<string, unknown>).systemHealth).toBe('healthy');
       });
 
       it('should handle dashboard data fetch errors', async () => {
@@ -658,7 +649,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/dashboard/analytics`).reply(200, mockAnalytics);
 
         const result = await apiClient.getAnalytics();
-        
+
         expect(result).toEqual(mockAnalytics);
       });
 
@@ -672,7 +663,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/dashboard/analytics`).reply(200, { data: 'analytics' });
 
         await apiClient.getAnalytics(params);
-        
+
         expect(mock.history.get[0].params).toEqual(params);
       });
     });
@@ -699,7 +690,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/dashboard/activities`).reply(200, mockActivities);
 
         const result = await apiClient.getRecentActivities();
-        
+
         expect(result).toEqual(mockActivities);
         expect(result).toHaveLength(2);
       });
@@ -713,7 +704,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         await apiClient.getRecentActivities({ page: 1, limit: 20 });
-        
+
         expect(mock.history.get[0].params).toEqual({ page: 1, limit: 20 });
       });
     });
@@ -734,7 +725,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/dashboard/notifications`).reply(200, mockNotifications);
 
         const result = await apiClient.getNotifications();
-        
+
         expect(result).toEqual(mockNotifications);
       });
 
@@ -745,7 +736,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.markNotificationRead('notif-1');
-        
+
         expect(result.read).toBe(true);
       });
 
@@ -755,7 +746,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.markAllNotificationsRead();
-        
+
         expect(result.updated).toBe(5);
       });
     });
@@ -785,7 +776,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onPost(`${API_BASE_URL}/classes/`).reply(201, mockResponse);
 
         const result = await apiClient.createClass(newClass);
-        
+
         expect(result).toEqual(mockResponse);
         expect(result.id).toBe('class-123');
         expect(result.name).toBe('Advanced Mathematics');
@@ -814,7 +805,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/classes/`).reply(200, mockClasses);
 
         const result = await apiClient.listClasses();
-        
+
         expect(result).toEqual(mockClasses);
         expect(result).toHaveLength(2);
         expect(result[0].name).toBe('Math 101');
@@ -841,7 +832,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/classes/class-123`).reply(200, mockClass);
 
         const result = await apiClient.getClass('class-123');
-        
+
         expect(result).toEqual(mockClass);
         expect(result.students).toHaveLength(2);
       });
@@ -863,7 +854,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onPatch(`${API_BASE_URL}/classes/class-123`).reply(200, mockResponse);
 
         const result = await apiClient.updateClass('class-123', updates);
-        
+
         expect(result).toEqual(mockResponse);
         expect(result.name).toBe('Updated Physics 301');
       });
@@ -895,7 +886,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.addStudentsToClass('class-123', studentIds);
-        
+
         expect(result.added).toBe(3);
         expect(mock.history.post[0].data).toBe(JSON.stringify({ student_ids: studentIds }));
       });
@@ -928,7 +919,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/classes/class-123/students`).reply(200, mockRoster);
 
         const result = await apiClient.getClassStudents('class-123');
-        
+
         expect(result).toEqual(mockRoster);
         expect(result).toHaveLength(2);
       });
@@ -963,7 +954,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onPost(`${API_BASE_URL}/classes/class-123/assignments`).reply(201, mockResponse);
 
         const result = await apiClient.createAssignment('class-123', assignment);
-        
+
         expect(result).toEqual(mockResponse);
         expect(result.id).toBe('assign-123');
       });
@@ -989,7 +980,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/classes/class-123/assignments`).reply(200, mockAssignments);
 
         const result = await apiClient.getClassAssignments('class-123');
-        
+
         expect(result).toEqual(mockAssignments);
         expect(result).toHaveLength(2);
       });
@@ -1008,7 +999,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.uploadClassMaterial('class-123', formData);
-        
+
         expect(result.id).toBe('material-123');
       });
 
@@ -1031,7 +1022,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/classes/class-123/materials`).reply(200, mockMaterials);
 
         const result = await apiClient.getClassMaterials('class-123');
-        
+
         expect(result).toEqual(mockMaterials);
       });
     });
@@ -1053,7 +1044,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.recordAttendance('class-123', attendanceData);
-        
+
         expect(result.recorded).toBe(3);
       });
 
@@ -1072,7 +1063,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/classes/class-123/attendance`).reply(200, mockAttendance);
 
         const result = await apiClient.getAttendance('class-123', { date: '2024-01-01' });
-        
+
         expect(result).toEqual(mockAttendance);
         expect(result.present).toBe(27);
       });
@@ -1088,7 +1079,7 @@ describe('Complete API Service Test Suite', () => {
           start_date: '2024-01-01',
           end_date: '2024-01-31'
         });
-        
+
         expect(result.average_attendance).toBe(92.5);
       });
     });
@@ -1116,7 +1107,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onPost(`${API_BASE_URL}/classes/class-123/lessons`).reply(201, mockResponse);
 
         const result = await apiClient.createLesson('class-123', lessonData);
-        
+
         expect(result).toEqual(mockResponse);
         expect(result.id).toBe('lesson-123');
       });
@@ -1133,7 +1124,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/lessons/lesson-123`).reply(200, mockLesson);
 
         const result = await apiClient.getLesson('lesson-123');
-        
+
         expect(result).toEqual(mockLesson);
         expect(result.completion_rate).toBe(67);
       });
@@ -1150,7 +1141,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.updateLesson('lesson-123', updates);
-        
+
         expect(result.title).toBe('Updated Algebra Basics');
       });
 
@@ -1177,7 +1168,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.updateLessonProgress('lesson-123', progressData);
-        
+
         expect(result.progress_percentage).toBe(75);
       });
 
@@ -1189,7 +1180,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.getLessonProgress('lesson-123', 'student-1');
-        
+
         expect(result.progress).toBe(60);
       });
 
@@ -1202,7 +1193,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.completeLesson('lesson-123');
-        
+
         expect(result.completed).toBe(true);
         expect(result.score).toBe(95);
       });
@@ -1237,7 +1228,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onPost(`${API_BASE_URL}/assessments/quiz`).reply(201, mockResponse);
 
         const result = await apiClient.createQuiz(quizData);
-        
+
         expect(result).toEqual(mockResponse);
         expect(result.id).toBe('quiz-123');
       });
@@ -1252,7 +1243,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.getQuiz('quiz-123');
-        
+
         expect(result.average_score).toBe(82);
       });
 
@@ -1274,7 +1265,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.submitQuiz('quiz-123', submission);
-        
+
         expect(result.score).toBe(85);
         expect(result.passed).toBe(true);
       });
@@ -1295,7 +1286,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.getQuizResults('quiz-123');
-        
+
         expect(result.statistics.average).toBe(82.5);
       });
     });
@@ -1317,7 +1308,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.scheduleExam(examData);
-        
+
         expect(result.id).toBe('exam-123');
       });
 
@@ -1339,7 +1330,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.getExamReport('exam-123');
-        
+
         expect(result.passed).toBe(25);
         expect(result.average_score).toBe(78.5);
       });
@@ -1358,7 +1349,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.submitGrades('assess-123', grades);
-        
+
         expect(result.graded).toBe(2);
       });
 
@@ -1380,7 +1371,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.getGradebook('class-123');
-        
+
         expect(result.students[0].average).toBe(88.3);
       });
     });
@@ -1409,7 +1400,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/users/`).reply(200, mockUsers);
 
         const result = await apiClient.listUsers();
-        
+
         expect(result).toEqual(mockUsers);
         expect(result).toHaveLength(2);
       });
@@ -1424,7 +1415,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/users/`).reply(200, []);
 
         await apiClient.listUsers(filters);
-        
+
         expect(mock.history.get[0].params).toEqual(filters);
       });
 
@@ -1447,7 +1438,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/users/user-123`).reply(200, mockUser);
 
         const result = await apiClient.getUser('user-123');
-        
+
         expect(result).toEqual(mockUser);
         expect(result.classes).toHaveLength(2);
       });
@@ -1469,7 +1460,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.createUser(userData);
-        
+
         expect(result.id).toBe('user-new');
         expect(result.username).toBe('newuser');
       });
@@ -1487,7 +1478,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.updateUser('user-123', updates);
-        
+
         expect(result.first_name).toBe('Updated');
         expect(result.status).toBe('inactive');
       });
@@ -1516,7 +1507,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.updateUserRole('user-123', 'admin');
-        
+
         expect(result.role).toBe('admin');
       });
 
@@ -1532,7 +1523,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.getRolePermissions('teacher');
-        
+
         expect(result.permissions).toContain('create_class');
       });
     });
@@ -1545,7 +1536,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.activateUser('user-123');
-        
+
         expect(result.status).toBe('active');
       });
 
@@ -1556,7 +1547,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.deactivateUser('user-123');
-        
+
         expect(result.status).toBe('inactive');
       });
 
@@ -1571,7 +1562,7 @@ describe('Complete API Service Test Suite', () => {
           reason: 'Policy violation',
           duration_days: 30
         });
-        
+
         expect(result.status).toBe('suspended');
       });
     });
@@ -1596,7 +1587,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.sendMessage(messageData);
-        
+
         expect(result.id).toBe('msg-123');
         expect(result.subject).toBe('Question about homework');
       });
@@ -1624,7 +1615,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/messages/inbox`).reply(200, mockMessages);
 
         const result = await apiClient.getInbox();
-        
+
         expect(result).toEqual(mockMessages);
         expect(result).toHaveLength(2);
       });
@@ -1633,7 +1624,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/messages/sent`).reply(200, []);
 
         const result = await apiClient.getSentMessages();
-        
+
         expect(result).toEqual([]);
       });
 
@@ -1660,7 +1651,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/messages/msg-123`).reply(200, mockMessage);
 
         const result = await apiClient.getMessage('msg-123');
-        
+
         expect(result).toEqual(mockMessage);
         expect(result.content).toBe('Full message content here');
       });
@@ -1673,7 +1664,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.markMessageRead('msg-123');
-        
+
         expect(result.read).toBe(true);
       });
 
@@ -1697,7 +1688,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.replyToMessage('msg-123', replyData);
-        
+
         expect(result.id).toBe('msg-124');
         expect(result.in_reply_to).toBe('msg-123');
       });
@@ -1712,7 +1703,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.markMessagesRead(messageIds);
-        
+
         expect(result.updated).toBe(3);
       });
 
@@ -1724,7 +1715,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.deleteMessages(messageIds);
-        
+
         expect(result.deleted).toBe(2);
       });
 
@@ -1742,7 +1733,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.sendBroadcastMessage(broadcastData);
-        
+
         expect(result.sent).toBe(3);
         expect(result.message_ids).toHaveLength(3);
       });
@@ -1761,7 +1752,7 @@ describe('Complete API Service Test Suite', () => {
       });
 
       const result = await apiClient.getStudentProgressReport('student-123');
-      
+
       expect(result.overall_progress).toBe(78);
     });
 
@@ -1774,17 +1765,17 @@ describe('Complete API Service Test Suite', () => {
       });
 
       const result = await apiClient.getClassPerformanceReport('class-123');
-      
+
       expect(result.average_grade).toBe(82.5);
     });
 
     it('should export report as PDF', async () => {
       const blob = new Blob(['PDF content'], { type: 'application/pdf' });
-      
+
       mock.onGet(`${API_BASE_URL}/reports/export/report-123`).reply(200, blob);
 
       const result = await apiClient.exportReport('report-123', 'pdf');
-      
+
       expect(result).toBeInstanceOf(Blob);
     });
 
@@ -1801,7 +1792,7 @@ describe('Complete API Service Test Suite', () => {
       });
 
       const result = await apiClient.scheduleReport(scheduleData);
-      
+
       expect(result.id).toBe('schedule-123');
     });
   });
@@ -1821,7 +1812,7 @@ describe('Complete API Service Test Suite', () => {
       mock.onGet(`${API_BASE_URL}/schools/`).reply(200, mockSchools);
 
       const result = await apiClient.listSchools();
-      
+
       expect(result).toEqual(mockSchools);
     });
 
@@ -1839,7 +1830,7 @@ describe('Complete API Service Test Suite', () => {
       });
 
       const result = await apiClient.createSchool(schoolData);
-      
+
       expect(result.id).toBe('school-new');
     });
 
@@ -1853,7 +1844,7 @@ describe('Complete API Service Test Suite', () => {
       });
 
       const result = await apiClient.getSchoolStats('school-123');
-      
+
       expect(result.total_students).toBe(1200);
     });
   });
@@ -1881,7 +1872,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/gamification/rewards`).reply(200, mockRewards);
 
         const result = await apiClient.getRewards();
-        
+
         expect(result).toEqual(mockRewards);
         expect(result).toHaveLength(2);
       });
@@ -1894,7 +1885,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.claimReward('reward-1');
-        
+
         expect(result.success).toBe(true);
         expect(result.new_balance).toBe(50);
       });
@@ -1924,7 +1915,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/gamification/missions`).reply(200, mockMissions);
 
         const result = await apiClient.getMissions();
-        
+
         expect(result).toEqual(mockMissions);
       });
 
@@ -1939,7 +1930,7 @@ describe('Complete API Service Test Suite', () => {
         const result = await apiClient.updateMissionProgress('mission-1', {
           action: 'quiz_completed'
         });
-        
+
         expect(result.progress).toBe(4);
       });
 
@@ -1952,7 +1943,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.completeMission('mission-1');
-        
+
         expect(result.completed).toBe(true);
         expect(result.reward_granted).toBe(50);
       });
@@ -1969,7 +1960,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/gamification/leaderboard/class/class-123`).reply(200, mockLeaderboard);
 
         const result = await apiClient.getClassLeaderboard('class-123');
-        
+
         expect(result).toEqual(mockLeaderboard);
         expect(result[0].student).toBe('Alice');
       });
@@ -1978,7 +1969,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/gamification/leaderboard/global`).reply(200, []);
 
         const result = await apiClient.getGlobalLeaderboard();
-        
+
         expect(result).toEqual([]);
       });
     });
@@ -1998,7 +1989,7 @@ describe('Complete API Service Test Suite', () => {
         mock.onGet(`${API_BASE_URL}/gamification/badges/user/user-123`).reply(200, mockBadges);
 
         const result = await apiClient.getUserBadges('user-123');
-        
+
         expect(result).toEqual(mockBadges);
       });
 
@@ -2010,7 +2001,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.awardBadge('user-123', 'badge-2');
-        
+
         expect(result.badge_id).toBe('badge-2');
       });
     });
@@ -2026,7 +2017,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.getUserPoints('user-123');
-        
+
         expect(result.total_points).toBe(450);
       });
 
@@ -2039,7 +2030,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.addPoints('user-123', 50, 'Quiz completion');
-        
+
         expect(result.points_added).toBe(50);
       });
 
@@ -2052,7 +2043,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.deductPoints('user-123', 100, 'Reward claimed');
-        
+
         expect(result.points_deducted).toBe(100);
       });
     });
@@ -2079,7 +2070,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.createRobloxSession(sessionData);
-        
+
         expect(result.session_id).toBe('session-123');
         expect(result.join_code).toBe('ABC123');
       });
@@ -2092,7 +2083,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.joinRobloxSession('ABC123');
-        
+
         expect(result.session_id).toBe('session-123');
       });
 
@@ -2105,7 +2096,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.endRobloxSession('session-123');
-        
+
         expect(result.duration_minutes).toBe(25);
       });
 
@@ -2122,7 +2113,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.getRobloxSession('session-123');
-        
+
         expect(result.status).toBe('active');
         expect(result.lesson_progress).toBe(65);
       });
@@ -2144,7 +2135,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.syncLessonToRoblox(syncData);
-        
+
         expect(result.synced).toBe(true);
         expect(result.roblox_asset_id).toBe('asset-789');
       });
@@ -2165,7 +2156,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.generateRobloxWorld(worldData);
-        
+
         expect(result.world_id).toBe('world-123');
         expect(result.place_id).toBe(123456789);
       });
@@ -2188,7 +2179,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.trackRobloxProgress(progressData);
-        
+
         expect(result.recorded).toBe(true);
         expect(result.score).toBe(450);
       });
@@ -2204,7 +2195,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.getRobloxPlayerStats('player-123');
-        
+
         expect(result.sessions_played).toBe(42);
         expect(result.achievements_earned).toBe(15);
       });
@@ -2224,7 +2215,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.getRobloxAnalytics();
-        
+
         expect(result.active_sessions).toBe(12);
         expect(result.engagement_rate).toBe(85.5);
       });
@@ -2238,7 +2229,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const result = await apiClient.getRobloxPerformanceMetrics();
-        
+
         expect(result.server_uptime).toBe(99.9);
       });
     });
@@ -2254,7 +2245,7 @@ describe('Complete API Service Test Suite', () => {
       });
 
       const result = await apiClient.getComplianceStatus();
-      
+
       expect(result.compliant).toBe(true);
     });
 
@@ -2272,7 +2263,7 @@ describe('Complete API Service Test Suite', () => {
       });
 
       const result = await apiClient.submitComplianceReport(reportData);
-      
+
       expect(result.report_id).toBe('report-123');
     });
 
@@ -2288,7 +2279,7 @@ describe('Complete API Service Test Suite', () => {
       ]);
 
       const result = await apiClient.getAuditLogs();
-      
+
       expect(result).toHaveLength(1);
       expect(result[0].action).toBe('data_access');
     });
@@ -2305,7 +2296,7 @@ describe('Complete API Service Test Suite', () => {
       mock.onPost(`${API_BASE_URL}/auth/login`).reply(200, mockResponse);
 
       await apiClient.login('test@example.com', 'password');
-      
+
       // WebSocket connection is initialized during login
       expect(mock.history.post).toHaveLength(1);
     });
@@ -2314,7 +2305,7 @@ describe('Complete API Service Test Suite', () => {
       mock.onPost(`${API_BASE_URL}/auth/logout`).reply(204);
 
       await apiClient.logout();
-      
+
       // Verify logout was called
       expect(localStorage.getItem('toolboxai_auth_token')).toBeNull();
     });
@@ -2322,7 +2313,7 @@ describe('Complete API Service Test Suite', () => {
     it('should handle WebSocket reconnection', async () => {
       // Test WebSocket reconnection logic
       const result = await apiClient.ensureWebSocketConnection();
-      
+
       // Should handle reconnection gracefully
       expect(result).toBeUndefined();
     });
@@ -2331,7 +2322,7 @@ describe('Complete API Service Test Suite', () => {
   describe('Error Handling and Retry Logic', () => {
     it('should retry failed requests', async () => {
       let attempts = 0;
-      
+
       mock.onGet(`${API_BASE_URL}/test`).reply(() => {
         attempts++;
         if (attempts < 3) {
@@ -2340,13 +2331,13 @@ describe('Complete API Service Test Suite', () => {
         return [200, { data: 'success' }];
       });
 
-      const result = await apiClient['request']({ 
-        method: 'GET', 
+      const result = await apiClient['request']({
+        method: 'GET',
         url: '/test',
         retry: true,
         maxRetries: 3
       });
-      
+
       expect(result.data).toBe('success');
       expect(attempts).toBe(3);
     });
@@ -2369,17 +2360,17 @@ describe('Complete API Service Test Suite', () => {
         method: 'GET',
         url: '/malformed'
       });
-      
+
       expect(result).toBe('not json');
     });
 
     it('should handle rate limiting with backoff', async () => {
       let attempts = 0;
-      
+
       mock.onGet(`${API_BASE_URL}/rate-limited`).reply(() => {
         attempts++;
         if (attempts < 2) {
-          return [429, { 
+          return [429, {
             error: 'Rate limited',
             retry_after: 1
           }];
@@ -2394,7 +2385,7 @@ describe('Complete API Service Test Suite', () => {
         retry: true
       });
       const duration = Date.now() - startTime;
-      
+
       expect(result.data).toBe('success');
       expect(attempts).toBe(2);
       // Should have waited at least 1 second
@@ -2420,7 +2411,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const dashboard = await apiClient.getDashboardOverview('student');
-        expect((dashboard as any).enrolledCourses).toBe(3);
+        expect((dashboard as Record<string, unknown>).enrolledCourses).toBe(3);
 
         // 3. View classes
         mock.onGet(`${API_BASE_URL}/classes/`).reply(200, [
@@ -2499,7 +2490,7 @@ describe('Complete API Service Test Suite', () => {
           added: 25
         });
 
-        const addResult = await apiClient.addStudentsToClass('new-class', 
+        const addResult = await apiClient.addStudentsToClass('new-class',
           Array(25).fill(0).map((_, i) => `student-${i}`)
         );
         expect(addResult.added).toBe(25);
@@ -2570,7 +2561,7 @@ describe('Complete API Service Test Suite', () => {
         url: '/bulk/import',
         data: largeData
       });
-      
+
       expect(result.imported).toBe(1000);
     });
 
@@ -2586,7 +2577,7 @@ describe('Complete API Service Test Suite', () => {
 
       const startTime = Date.now();
       const results = await Promise.all(
-        requests.map(({ url }) => 
+        requests.map(({ url }) =>
           apiClient['request']({ method: 'GET', url })
         )
       );
@@ -2598,8 +2589,8 @@ describe('Complete API Service Test Suite', () => {
     });
 
     it('should implement request queuing for rate limits', async () => {
-      const requestQueue: Promise<any>[] = [];
-      
+      const requestQueue: Promise<unknown>[] = [];
+
       // Simulate rate-limited endpoint
       let requestCount = 0;
       mock.onGet(`${API_BASE_URL}/rate-limited-endpoint`).reply(() => {
@@ -2622,9 +2613,9 @@ describe('Complete API Service Test Suite', () => {
       }
 
       const results = await Promise.all(requestQueue);
-      
+
       // First 5 should succeed
-      const successful = results.filter((r: any) => !r.error);
+      const successful = results.filter((r: { error?: unknown }) => !r.error);
       expect(successful.length).toBe(5);
     });
   });
@@ -2658,7 +2649,7 @@ describe('Complete API Service Test Suite', () => {
     it('should invalidate cache on mutations', async () => {
       // Setup cache
       mock.onGet(`${API_BASE_URL}/resource`).reply(200, { value: 'original' });
-      
+
       await apiClient['request']({
         method: 'GET',
         url: '/resource',
@@ -2667,7 +2658,7 @@ describe('Complete API Service Test Suite', () => {
 
       // Mutation should invalidate cache
       mock.onPatch(`${API_BASE_URL}/resource`).reply(200, { value: 'updated' });
-      
+
       await apiClient['request']({
         method: 'PATCH',
         url: '/resource',
@@ -2676,7 +2667,7 @@ describe('Complete API Service Test Suite', () => {
 
       // Next GET should fetch fresh data
       mock.onGet(`${API_BASE_URL}/resource`).reply(200, { value: 'updated' });
-      
+
       const result = await apiClient['request']({
         method: 'GET',
         url: '/resource',

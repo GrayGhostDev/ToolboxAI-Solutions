@@ -102,9 +102,9 @@ export const fetchComplianceStatus = createAsyncThunk(
 
 export const recordConsent = createAsyncThunk(
   'compliance/recordConsent',
-  async ({ type, userId, parentId, signature }: { 
-    type: 'coppa' | 'ferpa' | 'gdpr'; 
-    userId: string; 
+  async ({ type, userId, parentId, signature }: {
+    type: 'coppa' | 'ferpa' | 'gdpr';
+    userId: string;
     parentId?: string;
     signature?: string;
   }) => {
@@ -117,9 +117,11 @@ export const recordConsent = createAsyncThunk(
 export const fetchAuditLogs = createAsyncThunk(
   'compliance/fetchAuditLogs',
   async (filters?: { regulation?: string; startDate?: string; endDate?: string }) => {
-    // This would call a specific audit logs endpoint
-    // For now, we'll generate mock data
-    const mockLogs: AuditLog[] = [
+    // This would call a specific audit logs endpoint with filters
+    console.error('Fetching audit logs with filters:', filters);
+
+    // Apply filters to mock data generation
+    let mockLogs: AuditLog[] = [
       {
         id: '1',
         timestamp: new Date().toISOString(),
@@ -143,6 +145,18 @@ export const fetchAuditLogs = createAsyncThunk(
         ipAddress: '192.168.1.2',
       },
     ];
+
+    // Apply filters if provided
+    if (filters?.regulation) {
+      mockLogs = mockLogs.filter(log => log.regulation === filters.regulation);
+    }
+    if (filters?.startDate) {
+      mockLogs = mockLogs.filter(log => new Date(log.timestamp) >= new Date(filters.startDate!));
+    }
+    if (filters?.endDate) {
+      mockLogs = mockLogs.filter(log => new Date(log.timestamp) <= new Date(filters.endDate!));
+    }
+
     return mockLogs;
   }
 );
@@ -150,8 +164,10 @@ export const fetchAuditLogs = createAsyncThunk(
 export const fetchConsentRecords = createAsyncThunk(
   'compliance/fetchConsents',
   async (studentId?: string) => {
-    // This would call a specific consent records endpoint
-    // For now, we'll generate mock data
+    // This would call a specific consent records endpoint for the student
+    console.error('Fetching consent records for student:', studentId);
+
+    // Generate mock data filtered by studentId if provided
     const mockConsents: ConsentRecord[] = [
       {
         id: '1',
@@ -178,6 +194,12 @@ export const fetchConsentRecords = createAsyncThunk(
         expiryDate: new Date(Date.now() + 305 * 86400000).toISOString(),
       },
     ];
+
+    // Filter by studentId if provided
+    if (studentId) {
+      return mockConsents.filter(consent => consent.studentId === studentId);
+    }
+
     return mockConsents;
   }
 );
@@ -244,18 +266,18 @@ const complianceSlice = createSlice({
         state.loading = false;
         state.status = action.payload;
         state.lastChecked = new Date().toISOString();
-        
+
         // Calculate overall score
         const scores = [];
         if (action.payload.coppa) scores.push(action.payload.coppa.score || 0);
         if (action.payload.ferpa) scores.push(action.payload.ferpa.score || 0);
         if (action.payload.gdpr) scores.push(action.payload.gdpr.score || 0);
         if (action.payload.ccpa) scores.push(action.payload.ccpa.score || 0);
-        
-        state.overallScore = scores.length > 0 
+
+        state.overallScore = scores.length > 0
           ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
           : 0;
-          
+
         // Count pending consents (issues)
         let pendingCount = 0;
         if (action.payload.coppa?.issues) pendingCount += action.payload.coppa.issues.length;
@@ -283,7 +305,7 @@ const complianceSlice = createSlice({
           expiryDate: new Date(Date.now() + 365 * 86400000).toISOString(),
         };
         state.consentRecords.unshift(newConsent);
-        
+
         // Add audit log
         const auditLog: AuditLog = {
           id: Date.now().toString(),
@@ -296,7 +318,7 @@ const complianceSlice = createSlice({
           details: `${action.payload.type.toUpperCase()} consent recorded`,
         };
         state.auditLogs.unshift(auditLog);
-        
+
         // Decrement pending consents
         state.pendingConsents = Math.max(0, state.pendingConsents - 1);
       });
@@ -325,12 +347,12 @@ const complianceSlice = createSlice({
   },
 });
 
-export const { 
-  clearError, 
-  updateConsentStatus, 
+export const {
+  clearError,
+  updateConsentStatus,
   addAuditLog,
   incrementPendingConsents,
-  decrementPendingConsents 
+  decrementPendingConsents
 } = complianceSlice.actions;
 
 export default complianceSlice.reducer;

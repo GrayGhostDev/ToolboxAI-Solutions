@@ -25,12 +25,12 @@ import { useAppSelector } from "./store";
 import TeacherRobloxDashboard from "./components/pages/TeacherRobloxDashboard";
 
 export default function AppRoutes() {
-  const role = useAppSelector((s) => s.user.role);
-  
+  const role: UserRole = useAppSelector((s) => s.user.role);
+
   return (
     <Routes>
       <Route path="/" element={<DashboardHome role={role} />} />
-      
+
       {/* Teacher Routes */}
       <Route
         path="/lessons"
@@ -56,7 +56,7 @@ export default function AppRoutes() {
           </RoleGuard>
         }
       />
-      
+
       {/* Student Routes */}
       <Route
         path="/missions"
@@ -90,7 +90,7 @@ export default function AppRoutes() {
           </RoleGuard>
         }
       />
-      
+
       {/* Roblox Routes */}
       <Route
         path="/roblox/*"
@@ -100,7 +100,7 @@ export default function AppRoutes() {
           </RoleGuard>
         }
       />
-      
+
       {/* Shared Routes */}
       <Route
         path="/leaderboard"
@@ -126,7 +126,7 @@ export default function AppRoutes() {
           </RoleGuard>
         }
       />
-      
+
       {/* Admin Routes */}
       <Route
         path="/compliance"
@@ -168,7 +168,7 @@ export default function AppRoutes() {
           </RoleGuard>
         }
       />
-      
+
       {/* Parent Routes */}
       <Route
         path="/messages"
@@ -178,13 +178,13 @@ export default function AppRoutes() {
           </RoleGuard>
         }
       />
-      
+
       {/* Settings - All roles */}
       <Route path="/settings" element={<Settings />} />
-      
+
       {/* Development Test Route */}
       <Route path="/websocket-test" element={<WebSocketTest />} />
-      
+
       {/* Catch all - redirect to home */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

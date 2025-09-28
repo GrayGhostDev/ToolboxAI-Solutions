@@ -1,6 +1,6 @@
 /**
  * WebSocket Test Component
- * 
+ *
  * Comprehensive testing interface for WebSocket functionality
  */
 
@@ -59,6 +59,8 @@ export const WebSocketTest: React.FC = () => {
     requestContent,
     onContentProgress
   } = useWebSocketContext();
+
+  const connectionState = useWebSocketState();
 
   // Local state
   const [messageLog, setMessageLog] = useState<Array<{
@@ -162,14 +164,14 @@ export const WebSocketTest: React.FC = () => {
         { text: testMessage, timestamp: new Date().toISOString() },
         { channel: selectedChannel, awaitAcknowledgment: true, timeout: 5000 }
       );
-      
+
       addToLog('sent', {
         type: 'USER_MESSAGE',
         channel: selectedChannel,
         payload: { text: testMessage },
         result
       });
-      
+
       setTestMessage('');
     } catch (error) {
       addToLog('error', `Send failed: ${error}`);
@@ -191,7 +193,7 @@ export const WebSocketTest: React.FC = () => {
     const subscriptionId = subscribe(selectedChannel, (message) => {
       addToLog('received', { channel: selectedChannel, message });
     });
-    
+
     setActiveSubscriptions(prev => [...prev, subscriptionId]);
     addToLog('system', `Subscribed to channel: ${selectedChannel} (ID: ${subscriptionId})`);
   };
@@ -285,8 +287,13 @@ export const WebSocketTest: React.FC = () => {
               Reconnect Attempts: {stats.reconnectAttempts}
             </Typography>
             {stats.latency && (
-              <Typography variant="body2">
-                Latency: {stats.latency}ms
+            <Typography variant="body2">
+              Latency: {stats.latency}ms
+            </Typography>
+            )}
+            {contentRequestId && (
+              <Typography variant="body2" color="primary">
+                Active Request: {contentRequestId}
               </Typography>
             )}
           </Grid>
@@ -318,7 +325,7 @@ export const WebSocketTest: React.FC = () => {
             </Box>
           </Grid>
         </Grid>
-        
+
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {error.message} ({error.code})
@@ -331,7 +338,7 @@ export const WebSocketTest: React.FC = () => {
         <Typography variant="h6" gutterBottom>
           Message Testing
         </Typography>
-        
+
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <TextField
@@ -451,7 +458,7 @@ export const WebSocketTest: React.FC = () => {
             <ClearIcon />
           </IconButton>
         </Box>
-        
+
         <List sx={{ maxHeight: 400, overflow: 'auto', bgcolor: 'background.default' }}>
           {messageLog.map((entry) => (
             <React.Fragment key={entry.id}>
@@ -472,15 +479,15 @@ export const WebSocketTest: React.FC = () => {
                     <Typography
                       variant="body2"
                       component="pre"
-                      sx={{ 
+                      sx={{
                         whiteSpace: 'pre-wrap',
                         wordBreak: 'break-word',
                         fontFamily: 'monospace',
                         fontSize: '0.85rem'
                       }}
                     >
-                      {typeof entry.message === 'string' 
-                        ? entry.message 
+                      {typeof entry.message === 'string'
+                        ? entry.message
                         : JSON.stringify(entry.message, null, 2)}
                     </Typography>
                   }

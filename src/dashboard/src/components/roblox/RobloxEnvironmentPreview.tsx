@@ -1,6 +1,6 @@
 /**
  * RobloxEnvironmentPreview Component
- * 
+ *
  * 3D preview of Roblox educational environments
  * Displays generated terrain, assets, and interactive elements
  */
@@ -70,6 +70,7 @@ import {
   Upload,
   Share,
   Info,
+  Timer,
   CheckCircle,
   Warning,
   Error as ErrorIcon,
@@ -155,7 +156,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
   const { on, sendMessage, isConnected } = useWebSocketContext();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   const [environment, setEnvironment] = useState<EnvironmentData | null>(null);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('preview');
@@ -205,11 +206,11 @@ export const RobloxEnvironmentPreview: React.FC = () => {
   const handleAssetUpdate = (data: any) => {
     setEnvironment(prev => {
       if (!prev) return null;
-      
-      const updatedAssets = prev.assets.map(asset => 
+
+      const updatedAssets = prev.assets.map(asset =>
         asset.id === data.assetId ? { ...asset, ...data.updates } : asset
       );
-      
+
       return { ...prev, assets: updatedAssets };
     });
   };
@@ -266,7 +267,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
         assetId,
         visible: newVisibility
       });
-      
+
       // Optimistic update
       handleAssetUpdate({
         assetId,
@@ -283,7 +284,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
 
   const exportEnvironment = () => {
     if (!environment) return;
-    
+
     sendMessage(WebSocketMessageType.EXPORT_ENVIRONMENT, {
       environmentId: environment.id,
       format: 'rbxl'
@@ -292,7 +293,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
 
   const shareEnvironment = () => {
     if (!environment) return;
-    
+
     sendMessage(WebSocketMessageType.SHARE_ENVIRONMENT, {
       environmentId: environment.id
     });
@@ -306,12 +307,12 @@ export const RobloxEnvironmentPreview: React.FC = () => {
   };
 
   return (
-    <Box 
+    <Box
       ref={containerRef}
-      sx={{ 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column', 
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         gap: 2,
         bgcolor: isFullscreen ? 'black' : 'transparent'
       }}
@@ -330,14 +331,14 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                   </Typography>
                 </Box>
               </Box>
-              
+
               <Stack direction="row" spacing={1}>
                 {environment && (
                   <>
                     <Chip
                       label={environment.status}
                       size="small"
-                      color={environment.status === 'ready' ? 'success' : 
+                      color={environment.status === 'ready' ? 'success' :
                              environment.status === 'loading' ? 'warning' : 'error'}
                     />
                     <Chip
@@ -423,19 +424,19 @@ export const RobloxEnvironmentPreview: React.FC = () => {
               <IconButton size="small" onClick={togglePlay}>
                 {isPlaying ? <Pause /> : <PlayArrow />}
               </IconButton>
-              
+
               <IconButton size="small" onClick={() => loadEnvironment('current')}>
                 <Refresh />
               </IconButton>
-              
+
               <IconButton size="small" onClick={exportEnvironment}>
                 <Download />
               </IconButton>
-              
+
               <IconButton size="small" onClick={shareEnvironment}>
                 <Share />
               </IconButton>
-              
+
               <IconButton size="small" onClick={toggleFullscreen}>
                 {isFullscreen ? <FullscreenExit /> : <Fullscreen />}
               </IconButton>
@@ -563,7 +564,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                   <Typography variant="h6" gutterBottom>
                     Environment Settings
                   </Typography>
-                  
+
                   {/* Environment Info */}
                   <Box sx={{ mb: 3 }}>
                     <Typography variant="subtitle2" gutterBottom>
@@ -723,7 +724,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                   <Typography variant="h6" gutterBottom>
                     Performance Stats
                   </Typography>
-                  
+
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
                       <Paper sx={{ p: 2, textAlign: 'center' }}>
@@ -734,7 +735,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                         <Typography variant="caption">FPS</Typography>
                       </Paper>
                     </Grid>
-                    
+
                     <Grid item xs={6}>
                       <Paper sx={{ p: 2, textAlign: 'center' }}>
                         <Memory color="warning" />
@@ -744,7 +745,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                         <Typography variant="caption">MB Used</Typography>
                       </Paper>
                     </Grid>
-                    
+
                     <Grid item xs={6}>
                       <Paper sx={{ p: 2, textAlign: 'center' }}>
                         <Timer color="info" />
@@ -754,7 +755,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                         <Typography variant="caption">ms Render</Typography>
                       </Paper>
                     </Grid>
-                    
+
                     <Grid item xs={6}>
                       <Paper sx={{ p: 2, textAlign: 'center' }}>
                         <Storage color="success" />
@@ -770,7 +771,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                     <Typography variant="subtitle2" gutterBottom>
                       Resource Usage
                     </Typography>
-                    
+
                     <Box sx={{ mb: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                         <Typography variant="caption">Polygon Count</Typography>
@@ -781,7 +782,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                       <LinearProgress
                         variant="determinate"
                         value={(environment.metadata.polyCount / 100000) * 100}
-                        color={environment.metadata.polyCount > 80000 ? 'error' : 
+                        color={environment.metadata.polyCount > 80000 ? 'error' :
                                environment.metadata.polyCount > 60000 ? 'warning' : 'success'}
                       />
                     </Box>
@@ -796,7 +797,7 @@ export const RobloxEnvironmentPreview: React.FC = () => {
                       <LinearProgress
                         variant="determinate"
                         value={(environment.metadata.textureMemory / (256 * 1024)) * 100}
-                        color={environment.metadata.textureMemory > 200 * 1024 ? 'error' : 
+                        color={environment.metadata.textureMemory > 200 * 1024 ? 'error' :
                                environment.metadata.textureMemory > 150 * 1024 ? 'warning' : 'success'}
                       />
                     </Box>

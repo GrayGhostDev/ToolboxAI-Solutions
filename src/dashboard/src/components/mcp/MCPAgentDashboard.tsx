@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -126,14 +126,14 @@ const AGENT_COLORS: Record<string, string> = {
   review: "#06B6D4",
 };
 
-export function MCPAgentDashboard({ 
+export function MCPAgentDashboard({
   autoRefresh = true,
-  showLogs = true 
+  showLogs = true
 }: MCPAgentDashboardProps) {
   const theme = useTheme();
   const dispatch = useAppDispatch();
   const { isConnected, subscribe, unsubscribe, sendMessage } = useWebSocketContext();
-  
+
   const [agents, setAgents] = useState<MCPAgent[]>([]);
   const [messages, setMessages] = useState<MCPMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,6 +146,79 @@ export function MCPAgentDashboard({
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const MAX_RECONNECT_ATTEMPTS = 3;
   const RECONNECT_DELAY_BASE = 5000; // Base delay in ms
+
+  // Handle MCP messages
+  const handleMCPMessage = useCallback((message: any) => {
+    switch (message.type) {
+      case 'agents_status':
+        if (message.agents) {
+          setAgents(message.agents);
+        }
+        break;
+      case 'agent_update':
+        setAgents(prevAgents =>
+          prevAgents.map(agent =>
+            agent.id === message.agentId
+              ? { ...agent, ...message.updates }
+              : agent
+          )
+        );
+        break;
+      case 'task_progress':
+        setAgents(prevAgents =>
+          prevAgents.map(agent =>
+            agent.id === message.agentId
+              ? {
+                  ...agent,
+                  currentTask: message.task,
+                  status: "working"
+                }
+              : agent
+          )
+        );
+        break;
+      case 'task_completed':
+        setAgents(prevAgents =>
+          prevAgents.map(agent =>
+            agent.id === message.agentId
+              ? {
+                  ...agent,
+                  currentTask: undefined,
+                  status: "active",
+                  tasksCompleted: agent.tasksCompleted + 1,
+                  lastActivity: new Date().toISOString(),
+                }
+              : agent
+          )
+        );
+        // Add success notification
+        dispatch(addNotification({
+          type: 'success',
+          message: `Task completed by ${agents.find(a => a.id === message.agentId)?.name || 'Agent'}`,
+        }));
+        break;
+      case 'error':
+        dispatch(addNotification({
+          type: 'error',
+          message: `MCP Error: ${message.error}`,
+        }));
+        break;
+      default:
+        // Add to message log
+        setMessages(prevMessages => [
+          {
+            id: Date.now().toString(),
+            type: message.type,
+            agentId: message.agentId || 'system',
+            content: message.content || JSON.stringify(message),
+            timestamp: new Date().toISOString(),
+            data: message,
+          },
+          ...prevMessages.slice(0, 99), // Keep last 100 messages
+        ]);
+        break;
+    }
+  }, [dispatch, agents]);
 
   // Connect to MCP WebSocket server on port 9876 with retry logic
   const connectToMCP = React.useCallback(async () => {
@@ -170,7 +243,7 @@ export function MCPAgentDashboard({
       // Initialize WebSocket connection to MCP server
       const mcpWs = new WebSocket('ws://localhost:9876/mcp');
       setMcpWebSocket(mcpWs);
-      
+
       mcpWs.onopen = () => {
         console.log('Connected to MCP server');
         setReconnectAttempts(0); // Reset attempts on successful connection
@@ -194,7 +267,7 @@ export function MCPAgentDashboard({
       mcpWs.onclose = (event) => {
         console.log('MCP WebSocket connection closed:', event.code, event.reason);
         setMcpWebSocket(null);
-        
+
         // Only retry if autoRefresh is enabled and we haven't exceeded max attempts
         if (autoRefresh && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
           const delay = RECONNECT_DELAY_BASE * Math.pow(2, reconnectAttempts); // Exponential backoff
@@ -213,7 +286,7 @@ export function MCPAgentDashboard({
       console.error('Failed to create WebSocket connection:', err);
       setError(err.message || 'Failed to connect to MCP server');
       setMcpWebSocket(null);
-      
+
       // Use mock data as fallback
       if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS - 1) {
         loadMockData();
@@ -221,10 +294,10 @@ export function MCPAgentDashboard({
     } finally {
       setLoading(false);
     }
-  }, [autoRefresh, reconnectAttempts, mcpWebSocket]);
+  }, [autoRefresh, reconnectAttempts, mcpWebSocket, handleMCPMessage]);
 
   // Handle MCP messages
-  const handleMCPMessage = (message: any) => {
+  const handleMCPMessage = useCallback((message: any) => {
     switch (message.type) {
       case 'agents_status':
         if (message.agents) {
@@ -244,8 +317,8 @@ export function MCPAgentDashboard({
         setAgents(prevAgents =>
           prevAgents.map(agent =>
             agent.id === message.agentId
-              ? { 
-                  ...agent, 
+              ? {
+                  ...agent,
                   currentTask: message.task,
                   status: "working"
                 }
@@ -257,8 +330,8 @@ export function MCPAgentDashboard({
         setAgents(prevAgents =>
           prevAgents.map(agent =>
             agent.id === message.agentId
-              ? { 
-                  ...agent, 
+              ? {
+                  ...agent,
                   currentTask: undefined,
                   status: "active",
                   tasksCompleted: agent.tasksCompleted + 1,
@@ -289,7 +362,7 @@ export function MCPAgentDashboard({
         ]);
         break;
     }
-  };
+  }, [dispatch]);
 
   // Load mock data when MCP is not available
   const loadMockData = () => {
@@ -422,12 +495,12 @@ export function MCPAgentDashboard({
   // Initial connection with cleanup
   useEffect(() => {
     let mounted = true;
-    
+
     // Only connect if component is mounted and no existing connection
     if (mounted && !mcpWebSocket) {
       connectToMCP();
     }
-    
+
     // Cleanup on unmount
     return () => {
       mounted = false;
@@ -448,7 +521,7 @@ export function MCPAgentDashboard({
     return () => {
       unsubscribe(subscriptionId);
     };
-  }, [isConnected, autoRefresh, subscribe, unsubscribe]);
+  }, [isConnected, autoRefresh, subscribe, unsubscribe, handleMCPMessage]);
 
   // Send task to agent
   const handleSendTask = async () => {
@@ -551,15 +624,15 @@ export function MCPAgentDashboard({
                 {mcpWebSocket && mcpWebSocket.readyState === WebSocket.OPEN ? (
                   <Chip label="MCP Connected" color="success" size="small" />
                 ) : reconnectAttempts > 0 ? (
-                  <Chip 
-                    label={`Reconnecting... (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`} 
-                    color="warning" 
-                    size="small" 
+                  <Chip
+                    label={`Reconnecting... (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`}
+                    color="warning"
+                    size="small"
                   />
                 ) : (
                   <Chip label="MCP Offline" color="default" size="small" />
                 )}
-                <IconButton 
+                <IconButton
                   onClick={() => {
                     setReconnectAttempts(0);
                     connectToMCP();
@@ -640,15 +713,15 @@ export function MCPAgentDashboard({
                       <Typography variant="h6" sx={{ fontWeight: 600 }}>
                         {agent.name}
                       </Typography>
-                      <Chip 
-                        label={agent.status} 
-                        size="small" 
+                      <Chip
+                        label={agent.status}
+                        size="small"
                         color={getStatusColor(agent.status) as any}
                         icon={getStatusIcon(agent.status)}
                       />
                     </Box>
                   </Stack>
-                  <IconButton 
+                  <IconButton
                     size="small"
                     onClick={() => {
                       setSelectedAgent(agent);
@@ -745,6 +818,114 @@ export function MCPAgentDashboard({
           </Card>
         </Grid>
       ))}
+
+      {/* Performance Analytics */}
+      <Grid item xs={12}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+              Agent Performance Analytics
+            </Typography>
+            <Box sx={{ height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={agents[0]?.metrics || []}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="timestamp" />
+                  <YAxis />
+                  <Tooltip />
+                  <Area
+                    type="monotone"
+                    dataKey="responseTime"
+                    stackId="1"
+                    stroke="#8884d8"
+                    fill="#8884d8"
+                    fillOpacity={0.6}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="memoryUsage"
+                    stackId="1"
+                    stroke="#82ca9d"
+                    fill="#82ca9d"
+                    fillOpacity={0.6}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* System Metrics with Icons */}
+      <Grid item xs={12} md={6}>
+        <Card>
+          <CardContent>
+            <Stack spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Memory color="primary" />
+                <Typography variant="h6">Memory Usage</Typography>
+              </Stack>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Speed color="secondary" />
+                <Typography variant="body1">Response Speed Metrics</Typography>
+              </Stack>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <School color="info" />
+                <Typography variant="body2">Educational Content Processing</Typography>
+              </Stack>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* Task Distribution Chart */}
+      <Grid item xs={12} md={6}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+              Task Distribution
+            </Typography>
+            <Box sx={{ height: 250 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={agents.map(agent => ({
+                    name: agent.name.split(' ')[0],
+                    tasks: agent.tasksCompleted,
+                    responseTime: agent.avgResponseTime
+                  }))}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="tasks" fill="#8884d8" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* Warning Indicators */}
+      <Grid item xs={12} md={6}>
+        <Card>
+          <CardContent>
+            <Stack spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Warning color="warning" />
+                <Typography variant="h6">System Alerts</Typography>
+              </Stack>
+              <Typography variant="body2">
+                All systems operational
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Grid>
 
       {/* Message Log */}
       {showLogs && (

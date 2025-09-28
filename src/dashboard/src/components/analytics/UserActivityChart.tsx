@@ -47,14 +47,14 @@ interface UserActivityChartProps {
   autoRefresh?: boolean;
 }
 
-export function UserActivityChart({ 
-  timeRange = "7d", 
+export function UserActivityChart({
+  timeRange = "7d",
   height = 350,
-  autoRefresh = true 
+  autoRefresh = true
 }: UserActivityChartProps) {
   const theme = useTheme();
   const { isConnected, subscribe, unsubscribe } = useWebSocketContext();
-  
+
   const [data, setData] = useState<UserActivityData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,10 +66,10 @@ export function UserActivityChart({
     try {
       setLoading(true);
       setError(null);
-      
+
       const endDate = new Date();
       const startDate = new Date();
-      
+
       // Calculate start date based on time range
       switch (timeRange) {
         case "24h":
@@ -113,7 +113,7 @@ export function UserActivityChart({
         const now = new Date();
         const days = timeRange === "24h" ? 24 : timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
         const interval = timeRange === "24h" ? "hours" : "days";
-        
+
         for (let i = days - 1; i >= 0; i--) {
           const date = new Date(now);
           if (interval === "hours") {
@@ -121,9 +121,9 @@ export function UserActivityChart({
           } else {
             date.setDate(date.getDate() - i);
           }
-          
+
           mockData.push({
-            date: interval === "hours" 
+            date: interval === "hours"
               ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
               : date.toLocaleDateString(),
             activeUsers: Math.floor(Math.random() * 500) + 300 + (interval === "hours" ? Math.sin(i / 4) * 100 : 0),
@@ -140,16 +140,16 @@ export function UserActivityChart({
     } catch (err: any) {
       setError(err.message || 'Failed to load user activity data');
       console.error('Error fetching user activity:', err);
-      
+
       // Use mock data as fallback
       const mockData: UserActivityData[] = [];
       const now = new Date();
       const days = timeRange === "7d" ? 7 : 30;
-      
+
       for (let i = days - 1; i >= 0; i--) {
         const date = new Date(now);
         date.setDate(date.getDate() - i);
-        
+
         mockData.push({
           date: date.toLocaleDateString(),
           activeUsers: Math.floor(Math.random() * 500) + 300,
@@ -179,7 +179,7 @@ export function UserActivityChart({
         setData(prevData => {
           const newData = [...prevData];
           const lastIndex = newData.length - 1;
-          
+
           if (lastIndex >= 0) {
             // Update the latest data point
             newData[lastIndex] = {
@@ -191,7 +191,7 @@ export function UserActivityChart({
               engagementRate: message.payload.engagementRate || newData[lastIndex].engagementRate,
             };
           }
-          
+
           return newData;
         });
       }
@@ -245,7 +245,7 @@ export function UserActivityChart({
 
   const renderChart = () => {
     const color = getMetricColor(selectedMetric);
-    
+
     switch (chartType) {
       case "bar":
         return (
@@ -260,10 +260,11 @@ export function UserActivityChart({
                 borderRadius: 8,
               }}
             />
+            <Legend />
             <Bar dataKey={selectedMetric} fill={color} radius={[4, 4, 0, 0]} />
           </BarChart>
         );
-      
+
       case "area":
         return (
           <AreaChart data={data}>
@@ -277,6 +278,7 @@ export function UserActivityChart({
                 borderRadius: 8,
               }}
             />
+            <Legend />
             <Area
               type="monotone"
               dataKey={selectedMetric}
@@ -286,7 +288,7 @@ export function UserActivityChart({
             />
           </AreaChart>
         );
-      
+
       default:
         return (
           <LineChart data={data}>
@@ -300,6 +302,7 @@ export function UserActivityChart({
                 borderRadius: 8,
               }}
             />
+            <Legend />
             <Line
               type="monotone"
               dataKey={selectedMetric}
@@ -364,19 +367,19 @@ export function UserActivityChart({
             </FormControl>
           </Stack>
         </Stack>
-        
+
         {error && (
           <Alert severity="warning" sx={{ mb: 2 }}>
             Using fallback data: {error}
           </Alert>
         )}
-        
+
         <Box sx={{ width: "100%", height }}>
           <ResponsiveContainer>
             {renderChart()}
           </ResponsiveContainer>
         </Box>
-        
+
         <Stack direction="row" justifyContent="center" spacing={1} mt={2}>
           <Typography variant="caption" color="text.secondary">
             {getMetricLabel(selectedMetric)} over {timeRange}

@@ -1,6 +1,6 @@
 /**
  * WebSocket Type Definitions for ToolboxAI Dashboard
- * 
+ *
  * Provides comprehensive type definitions for WebSocket communication
  * between the Dashboard and Backend services.
  */
@@ -22,21 +22,21 @@ export enum WebSocketMessageType {
   DISCONNECT = 'disconnect',
   PING = 'ping',
   PONG = 'pong',
-  ERROR = 'error',
-  
+  ERROR_MESSAGE = 'error',
+
   // Subscription Management
   SUBSCRIBE = 'subscribe',
   UNSUBSCRIBE = 'unsubscribe',
   SUBSCRIBED = 'subscribed',
   UNSUBSCRIBED = 'unsubscribed',
-  
+
   // Content Generation
   CONTENT_REQUEST = 'content_request',
   CONTENT_RESPONSE = 'content_response',
   CONTENT_UPDATE = 'content_update',
   CONTENT_PROGRESS = 'content_progress',
   CONTENT_ERROR = 'content_error',
-  
+
   // Quiz Events
   QUIZ_START = 'quiz_start',
   QUIZ_RESPONSE = 'quiz_response',
@@ -46,19 +46,19 @@ export enum WebSocketMessageType {
   QUIZ_RESULTS = 'quiz_results',
   QUIZ_UPDATE = 'quiz_update',
   REQUEST_QUIZ_RESULTS = 'request_quiz_results',
-  
+
   // Progress Tracking
   PROGRESS_UPDATE = 'progress_update',
   STUDENT_PROGRESS = 'student_progress',
   CLASS_PROGRESS = 'class_progress',
-  
+
   // Collaboration
   USER_JOIN = 'user_join',
   USER_LEAVE = 'user_leave',
   USER_MESSAGE = 'user_message',
   CURSOR_UPDATE = 'cursor_update',
   CONTENT_EDIT = 'content_edit',
-  
+
   // Roblox Events
   ROBLOX_EVENT = 'roblox_event',
   ENVIRONMENT_UPDATE = 'environment_update',
@@ -69,14 +69,14 @@ export enum WebSocketMessageType {
   TOGGLE_ASSET = 'toggle_asset',
   EXPORT_ENVIRONMENT = 'export_environment',
   SHARE_ENVIRONMENT = 'share_environment',
-  
+
   // Student/Teacher Events
   STUDENT_STATUS = 'student_status',
   CLASS_METRICS = 'class_metrics',
   REQUEST_PROGRESS = 'request_progress',
   TEACHER_MESSAGE = 'teacher_message',
   TEACHER_INTERVENTION = 'teacher_intervention',
-  
+
   // Session Events
   SESSION_UPDATE = 'session_update',
   SESSION_STATUS = 'session_status',
@@ -84,20 +84,20 @@ export enum WebSocketMessageType {
   CREATE_SESSION = 'create_session',
   SESSION_CONTROL = 'session_control',
   DELETE_SESSION = 'delete_session',
-  
+
   // Plugin Events
   PLUGIN_STATUS_REQUEST = 'plugin_status_request',
   GET_ACTIVE_SESSIONS = 'get_active_sessions',
   CONTENT_GENERATION_REQUEST = 'content_generation_request',
-  
+
   // Broadcast Messages
   BROADCAST = 'broadcast',
   BROADCAST_SENT = 'broadcast_sent',
-  
+
   // System Notifications
   SYSTEM_NOTIFICATION = 'system_notification',
   SYSTEM_ALERT = 'system_alert',
-  
+
   // Analytics
   ANALYTICS_EVENT = 'analytics_event',
   METRICS_UPDATE = 'metrics_update'
@@ -115,7 +115,7 @@ export enum WebSocketChannel {
 }
 
 // Base Message Interface
-export interface WebSocketMessage<T = any> {
+export interface WebSocketMessage<T = unknown> {
   type: WebSocketMessageType;
   payload?: T;
   channel?: string;
@@ -123,11 +123,11 @@ export interface WebSocketMessage<T = any> {
   messageId?: string;
   correlationId?: string;
   sender?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Response Message
-export interface WebSocketResponse<T = any> extends WebSocketMessage<T> {
+export interface WebSocketResponse<T = unknown> extends WebSocketMessage<T> {
   success: boolean;
   error?: string;
   statusCode?: number;
@@ -153,7 +153,7 @@ export interface WebSocketError {
   code: string;
   message: string;
   timestamp: string;
-  details?: any;
+  details?: unknown;
   recoverable?: boolean;
 }
 
@@ -186,9 +186,9 @@ export interface ContentGenerationProgress {
   estimatedTimeRemaining?: number;
   artifacts?: {
     scripts?: string[];
-    terrain?: any;
+    terrain?: unknown;
     assets?: string[];
-    quiz?: any;
+    quiz?: unknown;
   };
 }
 
@@ -197,10 +197,10 @@ export interface ContentGenerationResponse {
   status: 'completed' | 'failed' | 'cancelled';
   content?: {
     scripts: string[];
-    terrain: any;
+    terrain: unknown;
     assets: string[];
-    quiz: any;
-    metadata: Record<string, any>;
+    quiz: unknown;
+    metadata: Record<string, unknown>;
   };
   error?: string;
   duration?: number;
@@ -212,7 +212,7 @@ export interface QuizMessage {
   studentId: string;
   action: 'start' | 'answer' | 'skip' | 'complete' | 'timeout';
   questionId?: string;
-  answer?: any;
+  answer?: unknown;
   score?: number;
   timeSpent?: number;
 }
@@ -224,7 +224,7 @@ export interface QuizFeedback {
   score: number;
   feedback: string;
   explanation?: string;
-  nextQuestion?: any;
+  nextQuestion?: unknown;
 }
 
 // Progress Messages
@@ -237,7 +237,7 @@ export interface ProgressUpdate {
   achievements?: string[];
   xpEarned?: number;
   timeSpent?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Collaboration Messages
@@ -245,10 +245,10 @@ export interface CollaborationMessage {
   roomId: string;
   userId: string;
   action: 'join' | 'leave' | 'edit' | 'cursor' | 'select';
-  data?: any;
+  data?: unknown;
   position?: { x: number; y: number };
   selection?: { start: number; end: number };
-  changes?: any[];
+  changes?: unknown[];
 }
 
 // Roblox Messages
@@ -256,7 +256,7 @@ export interface RobloxEventMessage {
   eventType: string;
   worldId?: string;
   playerId?: string;
-  data: any;
+  data: unknown;
   serverTime?: string;
   performance?: {
     fps?: number;
@@ -307,7 +307,7 @@ export interface QueuedMessage {
 }
 
 // Event Handler Types
-export type WebSocketEventHandler<T = any> = (data: T) => void | Promise<void>;
+export type WebSocketEventHandler<T = unknown> = (data: T) => void | Promise<void>;
 export type WebSocketErrorHandler = (error: WebSocketError) => void;
 export type WebSocketStateHandler = (state: WebSocketState, previousState?: WebSocketState) => void;
 
@@ -327,7 +327,7 @@ export interface UserPresence {
   status: 'online' | 'away' | 'busy' | 'offline';
   lastActivity?: string;
   location?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Channel Information
@@ -335,7 +335,7 @@ export interface ChannelInfo {
   name: string;
   subscribers: number;
   created?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Export utility type for strongly typed messages

@@ -291,6 +291,84 @@ const RealTimeAnalytics: React.FC = () => {
         </Grid>
       </Grid>
 
+      {/* Assignment Metrics */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={6}>
+          <Paper elevation={2} sx={{ p: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Assignment color="primary" />
+              <Typography variant="h6">Assignment Analytics</Typography>
+            </Box>
+            <Box sx={{ height: 200 }}>
+              <Bar
+                data={{
+                  labels: ['Math', 'Science', 'English', 'History', 'Art'],
+                  datasets: [
+                    {
+                      label: 'Completed',
+                      data: [85, 78, 92, 68, 74],
+                      backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                      borderColor: 'rgba(54, 162, 235, 1)',
+                      borderWidth: 1,
+                    },
+                    {
+                      label: 'Pending',
+                      data: [15, 22, 8, 32, 26],
+                      backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                      borderColor: 'rgba(255, 99, 132, 1)',
+                      borderWidth: 1,
+                    }
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: 'top' as const,
+                    },
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                    },
+                  },
+                }}
+              />
+            </Box>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Paper elevation={2} sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>Recent Activity Summary</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <Avatar sx={{ bgcolor: 'success.main' }}>
+                <CheckCircle />
+              </Avatar>
+              <Box>
+                <Typography variant="body1">24 assignments completed today</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  15% increase from yesterday
+                </Typography>
+              </Box>
+            </Box>
+            <Divider sx={{ my: 2 }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Avatar sx={{ bgcolor: 'warning.main' }}>
+                <Schedule />
+              </Avatar>
+              <Box>
+                <Typography variant="body1">12 assignments due this week</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Across 5 different subjects
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+
       {/* Charts Row */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={8}>
