@@ -9,7 +9,6 @@ import Pusher, { Channel, PresenceChannel } from 'pusher-js';
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, WS_CONFIG, WS_URL } from '../config';
 import {
   MessageAcknowledgment,
-  QueuedMessage,
   WebSocketChannel,
   WebSocketConnectionOptions,
   WebSocketError,
@@ -284,9 +283,31 @@ export class PusherService {
     if (!this.subscriptions.has(sanitizedChannel)) {
       this.subscriptions.set(sanitizedChannel, new Set());
 
-      // Send subscription request to server
-      if (this.state === WebSocketState.CONNECTED) {
-        this.send(WebSocketMessageType.SUBSCRIBE, { channels: [sanitizedChannel] });
+      // Subscribe to Pusher channel
+      if (this.state === WebSocketState.CONNECTED && this.pusher) {
+        const pusherChannel = this.getChannel(sanitizedChannel);
+        if (pusherChannel) {
+          // Bind to all events on this channel
+          pusherChannel.bind_global((eventName: string, data: unknown) => {
+            const message: WebSocketMessage = {
+              type: eventName as WebSocketMessageType,
+              payload: data,
+              channel: sanitizedChannel,
+              timestamp: new Date().toISOString(),
+            };
+
+            // Handle message with all subscriptions for this channel
+            const subs = this.subscriptions.get(sanitizedChannel);
+            if (subs) {
+              for (const sub of subs) {
+                if (!sub.filter || sub.filter(message)) {
+                  sub.handler(data);
+                  this.stats.messagesReceived++;
+                }
+              }
+            }
+          });
+        }
       }
     }
 
@@ -314,11 +335,15 @@ export class PusherService {
       if (subscription) {
         subs.delete(subscription);
 
-        // If no more subscriptions for this channel, unsubscribe from server
+        // If no more subscriptions for this channel, unsubscribe from Pusher
         if (subs.size === 0) {
           this.subscriptions.delete(channel);
-          if (this.state === WebSocketState.CONNECTED) {
-            this.send(WebSocketMessageType.UNSUBSCRIBE, { channels: [channel] });
+          if (this.state === WebSocketState.CONNECTED && this.pusher) {
+            const pusherChannel = this.channels.get(channel);
+            if (pusherChannel) {
+              this.pusher.unsubscribe(channel);
+              this.channels.delete(channel);
+            }
           }
         }
 
@@ -385,107 +410,83 @@ export class PusherService {
     return this.state === WebSocketState.CONNECTED;
   }
 
+
+  /**
+   * Refresh token and reconnect
+   */
+  public async refreshTokenAndReconnect(): Promise<void> {
+    try {
+      const newToken = await this.refreshTokenWithAPI();
+      if (newToken) {
+        this.disconnect('Token refresh');
+        await this.connect(newToken);
+      }
+    } catch (error) {
+      this.log('Token refresh failed:', error);
+      throw error;
+    }
+  }
+
   // Private methods
 
-  private setupSocketHandlers(): void {
-    if (!this.socket) return;
+  private setupPusherHandlers(): void {
+    if (!this.pusher) return;
 
-    // Handle incoming messages
-    this.socket.on('message', (message: WebSocketMessage) => {
-      this.handleMessage(message);
-    });
-
-    // Handle disconnection
-    this.socket.on('disconnect', (reason: string) => {
-      this.handleDisconnect(reason);
-    });
-
-    // Handle errors
-    this.socket.on('error', (error: Error | unknown) => {
-      let errorMessage = 'Socket error';
-      if (error && typeof error === 'object') {
-        errorMessage = error.message || error.description || 'Unknown socket error';
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-
-      this.handleError({
-        code: 'SOCKET_ERROR',
-        message: errorMessage,
-        timestamp: new Date().toISOString(),
-        details: error,
-        recoverable: true,
-      });
-    });
-
-    // Handle connect_error specifically
-    this.socket.on('connect_error', (error: Error | unknown) => {
-      let errorMessage = 'Connection error';
-      if (error && typeof error === 'object') {
-        errorMessage = error.message || error.description || 'Failed to connect to server';
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-
-      this.log('Connect error:', errorMessage);
-      this.handleError({
-        code: 'CONNECT_ERROR',
-        message: errorMessage,
-        timestamp: new Date().toISOString(),
-        recoverable: true,
-      });
-    });
-
-    // Handle reconnection events
-    this.socket.on('reconnect', (attemptNumber: number) => {
-      this.log(`Reconnected after ${attemptNumber} attempts`);
-      this.setState(WebSocketState.CONNECTED);
-      this.reconnectAttempts = 0;
-      this.resubscribeChannels();
-    });
-
-    // Handle pong messages for heartbeat
-    this.socket.on('pong', () => {
-      this.updateLatency();
-    });
-
-    // Handle authentication events
-    this.socket.on('auth_success', (data) => {
-      this.log('Authentication successful:', data);
-    });
-
-    this.socket.on('auth_failed', async (error) => {
-      this.log('Authentication failed:', error);
+    // Connection state handlers
+    this.pusher.connection.bind('state_change', (states: { previous: string; current: string }) => {
+      this.log(`Pusher connection state changed: ${states.previous} -> ${states.current}`);
       
-      // Try to refresh token and reconnect
-      try {
-        const newToken = await this.refreshTokenWithAPI();
-        if (newToken) {
-          this.log('Token refreshed after auth failure, reconnecting...');
-          this.disconnect('Token refreshed');
-          await this.connect(newToken);
-        } else {
-          throw new Error('Token refresh failed');
-        }
-      } catch (refreshError) {
-        this.handleError({
-          code: 'AUTH_FAILED',
-          message: `Authentication failed and token refresh failed: ${refreshError instanceof Error ? refreshError.message : 'Unknown error'}`,
-          timestamp: new Date().toISOString(),
-          recoverable: false,
-        });
+      switch (states.current) {
+        case 'connected':
+          this.setState(WebSocketState.CONNECTED);
+          this.resubscribeChannels();
+          break;
+        case 'connecting':
+          this.setState(WebSocketState.CONNECTING);
+          break;
+        case 'disconnected':
+          this.setState(WebSocketState.DISCONNECTED);
+          break;
+        case 'unavailable':
+          this.setState(WebSocketState.ERROR);
+          break;
       }
     });
 
-    // Handle token refresh events
-    this.socket.on('token_refreshed', (data) => {
-      this.log('Token refreshed:', data);
-      this.tokenRefreshCallbacks.forEach((callback) => callback());
+    // Connection established
+    this.pusher.connection.bind('connected', () => {
+      this.log('Pusher connected successfully');
+      this.stats.reconnectAttempts = 0;
+      this.setState(WebSocketState.CONNECTED);
     });
 
-    this.socket.on('token_expired', () => {
-      this.log('Token expired, attempting refresh');
-      this.handleTokenExpiration();
+    // Connection errors
+    this.pusher.connection.bind('error', (error: { type: string; error: { message: string } }) => {
+      this.log('Pusher connection error:', error);
+      this.handleError({
+        code: 'PUSHER_ERROR',
+        message: error.error?.message || 'Pusher connection error',
+        timestamp: new Date().toISOString(),
+        recoverable: true,
+      });
+    });
+
+    // Disconnected
+    this.pusher.connection.bind('disconnected', () => {
+      this.log('Pusher disconnected');
+      this.setState(WebSocketState.DISCONNECTED);
+    });
+
+    // Failed to connect
+    this.pusher.connection.bind('failed', () => {
+      this.log('Pusher connection failed');
+      this.setState(WebSocketState.ERROR);
+      this.handleError({
+        code: 'CONNECTION_FAILED',
+        message: 'Failed to connect to Pusher',
+        timestamp: new Date().toISOString(),
+        recoverable: true,
+      });
     });
   }
 
@@ -904,26 +905,6 @@ export class PusherService {
     }
   }
 
-  /**
-   * Manually refresh token and reconnect WebSocket
-   */
-  public async refreshTokenAndReconnect(): Promise<void> {
-    this.log('Manual token refresh requested');
-    const newToken = await this.refreshTokenWithAPI();
-    
-    if (newToken) {
-      this.currentToken = newToken;
-      
-      if (this.isConnected()) {
-        this.log('Reconnecting with new token...');
-        this.disconnect('Token refreshed manually');
-        await this.connect(newToken);
-      }
-    } else {
-      this.log('Manual token refresh failed');
-      throw new Error('Failed to refresh token');
-    }
-  }
   
   /**
    * Refresh token before reconnection attempt
@@ -982,158 +963,7 @@ export class PusherService {
     }
   }
 
-  /**
-   * Subscribe to a Pusher channel
-   */
-  public subscribe(
-    channelName: string,
-    handler: WebSocketEventHandler,
-    filter?: (message: WebSocketMessage) => boolean
-  ): string {
-    const channel = this.getChannel(channelName);
-    if (!channel) {
-      throw new Error(`Failed to subscribe to channel: ${channelName}`);
-    }
 
-    const subscriptionId = `${channelName}-${Date.now()}`;
-    
-    // Store subscription
-    if (!this.subscriptions.has(channelName)) {
-      this.subscriptions.set(channelName, new Set());
-    }
-    this.subscriptions.get(channelName)!.add({ channel: channelName, handler, filter, subscriptionId });
-
-    // Bind to all events on this channel
-    channel.bind_global((eventName: string, data: unknown) => {
-      const message: WebSocketMessage = {
-        type: eventName as WebSocketMessageType,
-        payload: data,
-        channel: channelName,
-        timestamp: new Date().toISOString(),
-      };
-
-      if (!filter || filter(message)) {
-        handler(data);
-        this.stats.messagesReceived++;
-      }
-    });
-
-    this.log(`Subscribed to channel: ${channelName}`);
-    return subscriptionId;
-  }
-
-  /**
-   * Unsubscribe from a channel
-   */
-  public unsubscribe(subscriptionId: string): void {
-    for (const [channelName, subscriptions] of this.subscriptions.entries()) {
-      for (const subscription of subscriptions) {
-        if (subscription.subscriptionId === subscriptionId) {
-          subscriptions.delete(subscription);
-          
-          // If no more subscriptions for this channel, unsubscribe from Pusher
-          if (subscriptions.size === 0) {
-            const channel = this.channels.get(channelName);
-            if (channel) {
-              this.pusher?.unsubscribe(channelName);
-              this.channels.delete(channelName);
-            }
-            this.subscriptions.delete(channelName);
-          }
-          
-          this.log(`Unsubscribed from channel: ${channelName}`);
-          return;
-        }
-      }
-    }
-  }
-
-  /**
-   * Get current connection state
-   */
-  public getState(): WebSocketState {
-    return this.state;
-  }
-
-  /**
-   * Check if connected
-   */
-  public isConnected(): boolean {
-    return this.state === WebSocketState.CONNECTED;
-  }
-
-  /**
-   * Add connection status change callback
-   */
-  public onConnectionStatusChange(callback: (status: WebSocketState) => void): void {
-    this.connectionStatusCallbacks.add(callback);
-  }
-
-  /**
-   * Refresh token and reconnect
-   */
-  public async refreshTokenAndReconnect(): Promise<void> {
-    try {
-      const newToken = await this.refreshTokenWithAPI();
-      if (newToken) {
-        this.disconnect('Token refresh');
-        await this.connect(newToken);
-      }
-    } catch (error) {
-      this.log('Token refresh failed:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Setup Pusher event handlers
-   */
-  private setupPusherHandlers(): void {
-    if (!this.pusher) return;
-
-    // Connection state handlers
-    this.pusher.connection.bind('state_change', (states: { previous: string; current: string }) => {
-      this.log(`Pusher connection state changed: ${states.previous} -> ${states.current}`);
-      
-      switch (states.current) {
-        case 'connected':
-          this.setState(WebSocketState.CONNECTED);
-          break;
-        case 'connecting':
-          this.setState(WebSocketState.CONNECTING);
-          break;
-        case 'disconnected':
-          this.setState(WebSocketState.DISCONNECTED);
-          break;
-        case 'unavailable':
-          this.setState(WebSocketState.ERROR);
-          break;
-      }
-    });
-
-    // Connection established
-    this.pusher.connection.bind('connected', () => {
-      this.log('Pusher connected successfully');
-      this.stats.reconnectAttempts = 0;
-    });
-
-    // Connection errors
-    this.pusher.connection.bind('error', (error: { type: string; error: { message: string } }) => {
-      this.log('Pusher connection error:', error);
-      this.handleError({
-        code: 'PUSHER_ERROR',
-        message: error.error?.message || 'Pusher connection error',
-        timestamp: new Date().toISOString(),
-        recoverable: true,
-      });
-    });
-
-    // Disconnected
-    this.pusher.connection.bind('disconnected', () => {
-      this.log('Pusher disconnected');
-      this.setState(WebSocketState.DISCONNECTED);
-    });
-  }
 
   private log(...args: unknown[]): void {
     if (this.options.debug) {
@@ -1173,5 +1003,8 @@ export const isWebSocketConnected = () => pusherService.isConnected();
 export const onWebSocketConnectionStatusChange = (callback: (status: WebSocketState) => void) => 
   pusherService.onConnectionStatusChange(callback);
 
-// Export both for backward compatibility
+// Export both for backward compatibility  
 export const websocketService = pusherService;
+export const WebSocketService = PusherService;
+
+export default pusherService;

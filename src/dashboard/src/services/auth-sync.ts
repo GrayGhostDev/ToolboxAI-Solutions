@@ -53,7 +53,7 @@ export interface AuthEvent {
   userId?: string;
   sessionId?: string;
   reason?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 // ================================
@@ -63,9 +63,9 @@ export interface AuthEvent {
 export class AuthSyncService {
   private static instance: AuthSyncService | null = null;
   private config: AuthSyncConfig;
-  private tokenRefreshTimer: NodeJS.Timeout | null = null;
-  private sessionMonitor: NodeJS.Timeout | null = null;
-  private inactivityTimer: NodeJS.Timeout | null = null;
+  private tokenRefreshTimer: number | null = null;
+  private sessionMonitor: number | null = null;
+  private inactivityTimer: number | null = null;
   private currentSession: SessionInfo | null = null;
   private lastActivity: number = Date.now();
   private isInitialized: boolean = false;
@@ -104,7 +104,7 @@ export class AuthSyncService {
       return;
     }
 
-    console.log('🔐 Initializing Authentication Sync Service');
+    console.error('🔐 Initializing Authentication Sync Service');
 
     try {
       // Check for existing token
@@ -131,7 +131,7 @@ export class AuthSyncService {
       this.setupCleanupHandlers();
 
       this.isInitialized = true;
-      console.log('✅ Auth sync service initialized');
+      console.error('✅ Auth sync service initialized');
 
     } catch (error) {
       console.error('❌ Failed to initialize auth sync:', error);
@@ -166,7 +166,7 @@ export class AuthSyncService {
     }
   }
 
-  private decodeJWT(token: string): any {
+  private decodeJWT(token: string): Record<string, unknown> {
     try {
       const parts = token.split('.');
       if (parts.length !== 3) return null;
@@ -187,14 +187,14 @@ export class AuthSyncService {
 
     // Token is still valid
     if (timeUntilExpiry > thresholdMs) {
-      console.log(`✅ Token valid for ${Math.round(timeUntilExpiry / 60000)} minutes`);
+      console.error(`✅ Token valid for ${Math.round(timeUntilExpiry / 60000)} minutes`);
       this.scheduleTokenRefresh(authToken);
       return;
     }
 
     // Token needs refresh
     if (timeUntilExpiry > 0 && authToken.refreshToken) {
-      console.log('🔄 Token expiring soon, refreshing...');
+      console.error('🔄 Token expiring soon, refreshing...');
       await this.refreshToken(authToken.refreshToken);
     } else if (timeUntilExpiry <= 0) {
       console.warn('⚠️ Token expired, logging out...');
@@ -206,7 +206,7 @@ export class AuthSyncService {
     const checkTokenExpiry = () => {
       const authToken = this.getStoredToken();
       if (!authToken) {
-        console.log('No token found, stopping refresh timer');
+        console.error('No token found, stopping refresh timer');
         this.clearTokenRefreshTimer();
         return;
       }
@@ -244,7 +244,7 @@ export class AuthSyncService {
     const thresholdMs = this.config.tokenRefreshThreshold * 60 * 1000;
     const refreshIn = Math.max(timeUntilExpiry - thresholdMs, 0);
 
-    console.log(`⏰ Scheduling token refresh in ${Math.round(refreshIn / 60000)} minutes`);
+    console.error(`⏰ Scheduling token refresh in ${Math.round(refreshIn / 60000)} minutes`);
 
     this.clearTokenRefreshTimer();
     this.tokenRefreshTimer = setTimeout(() => {
@@ -268,7 +268,7 @@ export class AuthSyncService {
         throw new Error('No refresh token available');
       }
 
-      console.log('🔄 Refreshing authentication token...');
+      console.error('🔄 Refreshing authentication token...');
 
       const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: 'POST',
@@ -313,7 +313,7 @@ export class AuthSyncService {
           this.scheduleTokenRefresh(newAuthToken);
         }
 
-        console.log('✅ Token refreshed successfully');
+        console.error('✅ Token refreshed successfully');
 
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -346,7 +346,7 @@ export class AuthSyncService {
       this.checkSessionStatus();
     }, 60000); // Check every minute
 
-    console.log('📊 Session monitoring started');
+    console.error('📊 Session monitoring started');
   }
 
   private setupActivityTracking(): void {
@@ -445,31 +445,31 @@ export class AuthSyncService {
     }
 
     // Handle force logout from backend
-    terminalSync.on('terminal1:force_logout', (data: any) => {
+    terminalSync.on('terminal1:force_logout', (data: { reason?: string }) => {
       console.warn('⚠️ Force logout received from backend:', data.reason);
       this.handleForceLogout(data.reason);
     });
 
     // Handle session updates from backend
-    terminalSync.on('terminal1:session_update', (data: any) => {
+    terminalSync.on('terminal1:session_update', (data: SessionInfo) => {
       this.handleSessionUpdate(data);
     });
 
     // Handle permission changes
-    terminalSync.on('terminal1:permission_change', (data: any) => {
+    terminalSync.on('terminal1:permission_change', (data: { userId: string; newRole: string }) => {
       this.handlePermissionChange(data);
     });
 
     // Handle token invalidation
-    terminalSync.on('terminal1:token_invalidated', (data: any) => {
+    terminalSync.on('terminal1:token_invalidated', (_data: { reason?: string }) => {
       console.warn('⚠️ Token invalidated by backend');
       this.handleAuthFailure('token_invalidated');
     });
 
-    console.log('🔄 Backend synchronization established');
+    console.error('🔄 Backend synchronization established');
   }
 
-  private notifyTokenRefresh(token: string): void {
+  private notifyTokenRefresh(_token: string): void {
     if (!terminalSync) return;
 
     // Update WebSocket connections with new token
@@ -477,7 +477,7 @@ export class AuthSyncService {
     connections.forEach(terminal => {
       if (terminalSync.isTerminalConnected(terminal)) {
         terminalSync.sendToTerminal(terminal, {
-          to: terminal as any,
+          to: terminal,
           type: 'token_refreshed',
           payload: {
             terminal: 'terminal2',
@@ -488,7 +488,7 @@ export class AuthSyncService {
       }
     });
 
-    console.log('📡 Token refresh notified to all terminals');
+    console.error('📡 Token refresh notified to all terminals');
   }
 
   // ================================
@@ -508,7 +508,7 @@ export class AuthSyncService {
           action: () => {
             this.lastActivity = Date.now();
             this.setupInactivityTimer();
-            console.log('✅ Session extended');
+            console.error('✅ Session extended');
           }
         }
       ]
@@ -545,17 +545,17 @@ export class AuthSyncService {
     this.performLogout('force_logout');
   }
 
-  private handleSessionUpdate(data: any): void {
+  private handleSessionUpdate(data: { terminate?: boolean; extend?: boolean }): void {
     if (data.terminate) {
       this.handleForceLogout('session_terminated_by_admin');
     } else if (data.extend) {
       this.lastActivity = Date.now();
-      console.log('✅ Session extended by backend');
+      console.error('✅ Session extended by backend');
     }
   }
 
-  private handlePermissionChange(data: any): void {
-    console.log('🔐 Permission change detected:', data);
+  private handlePermissionChange(data: { userId: string; newRole: string }): void {
+    console.error('🔐 Permission change detected:', data);
     
     store.dispatch(addNotification({
       type: 'info',
@@ -643,7 +643,7 @@ export class AuthSyncService {
   }
 
   public async logout(): Promise<void> {
-    console.log('👋 User initiated logout');
+    console.error('👋 User initiated logout');
     
     try {
       // Notify backend
@@ -727,7 +727,7 @@ export class AuthSyncService {
 
     // Log to console in development
     if (import.meta.env.DEV) {
-      console.log('📝 Auth event:', event);
+      console.error('📝 Auth event:', event);
     }
   }
 
@@ -744,7 +744,7 @@ export class AuthSyncService {
   }
 
   private cleanup(): void {
-    console.log('🧹 Cleaning up auth sync service');
+    console.error('🧹 Cleaning up auth sync service');
     
     this.clearTokenRefreshTimer();
     
@@ -777,7 +777,7 @@ export class AuthSyncService {
   public shutdown(): void {
     this.cleanup();
     this.isInitialized = false;
-    console.log('✅ Auth sync service shut down');
+    console.error('✅ Auth sync service shut down');
   }
 
   // ================================
@@ -799,7 +799,7 @@ export class AuthSyncService {
 
   public updateConfig(newConfig: Partial<AuthSyncConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    console.log('⚙️ Auth sync config updated:', this.config);
+    console.error('⚙️ Auth sync config updated:', this.config);
     
     // Restart monitoring with new config
     if (this.isInitialized) {
@@ -811,7 +811,7 @@ export class AuthSyncService {
   public extendSession(): void {
     this.lastActivity = Date.now();
     this.setupInactivityTimer();
-    console.log('✅ Session extended manually');
+    console.error('✅ Session extended manually');
   }
 
   public isInitializedStatus(): boolean {
