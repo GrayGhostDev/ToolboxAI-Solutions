@@ -1,0 +1,14 @@
+{
+  "primary_model": "gpt-5",
+  "fallback_model": "gpt-4.1-turbo",
+  "rollout_percentage": 10.0,
+  "enable_fallback": true,
+  "enable_response_compatibility": true,
+  "enable_performance_metrics": true,
+  "max_retries": 3,
+  "timeout_seconds": 60,
+  "cache_responses": true,
+  "cache_ttl_seconds": 3600,
+  "activated_at": "2025-09-21T03:26:31.649246",
+  "activation_phase": "Phase 3 - Day 3"
+}

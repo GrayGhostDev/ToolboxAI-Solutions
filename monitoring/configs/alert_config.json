@@ -1,0 +1,149 @@
+{
+  "rules": [
+    {
+      "name": "test_pass_rate_critical",
+      "category": "test",
+      "severity": "critical",
+      "condition": "less_than",
+      "threshold": 70.0,
+      "metric_path": "test_pass_rate",
+      "duration_minutes": 5,
+      "cooldown_minutes": 15,
+      "auto_resolve": false,
+      "enabled": true
+    },
+    {
+      "name": "test_pass_rate_declining",
+      "category": "test",
+      "severity": "high",
+      "condition": "less_than",
+      "threshold": 80.0,
+      "metric_path": "test_pass_rate",
+      "duration_minutes": 10,
+      "cooldown_minutes": 30,
+      "auto_resolve": false,
+      "enabled": true
+    },
+    {
+      "name": "test_failures_spike",
+      "category": "test",
+      "severity": "high",
+      "condition": "greater_than",
+      "threshold": 50,
+      "metric_path": "failing_tests",
+      "duration_minutes": 3,
+      "cooldown_minutes": 20,
+      "auto_resolve": false,
+      "enabled": true
+    },
+    {
+      "name": "critical_security_issues",
+      "category": "security",
+      "severity": "critical",
+      "condition": "greater_than",
+      "threshold": 0,
+      "metric_path": "critical_issues",
+      "duration_minutes": 1,
+      "cooldown_minutes": 60,
+      "auto_resolve": false,
+      "enabled": true
+    },
+    {
+      "name": "security_score_declining",
+      "category": "security",
+      "severity": "medium",
+      "condition": "less_than",
+      "threshold": 85.0,
+      "metric_path": "security_score",
+      "duration_minutes": 15,
+      "cooldown_minutes": 60,
+      "auto_resolve": false,
+      "enabled": true
+    },
+    {
+      "name": "bundle_size_critical",
+      "category": "performance",
+      "severity": "high",
+      "condition": "greater_than",
+      "threshold": 1000.0,
+      "metric_path": "bundle_size_kb",
+      "duration_minutes": 5,
+      "cooldown_minutes": 30,
+      "auto_resolve": false,
+      "enabled": true
+    },
+    {
+      "name": "api_latency_high",
+      "category": "performance",
+      "severity": "medium",
+      "condition": "greater_than",
+      "threshold": 500.0,
+      "metric_path": "api_latency_ms",
+      "duration_minutes": 10,
+      "cooldown_minutes": 20,
+      "auto_resolve": false,
+      "enabled": true
+    },
+    {
+      "name": "error_rate_spike",
+      "category": "performance",
+      "severity": "high",
+      "condition": "greater_than",
+      "threshold": 0.05,
+      "metric_path": "error_rate",
+      "duration_minutes": 5,
+      "cooldown_minutes": 15,
+      "auto_resolve": false,
+      "enabled": true
+    },
+    {
+      "name": "memory_usage_critical",
+      "category": "system",
+      "severity": "critical",
+      "condition": "greater_than",
+      "threshold": 4096.0,
+      "metric_path": "memory_usage_mb",
+      "duration_minutes": 5,
+      "cooldown_minutes": 20,
+      "auto_resolve": false,
+      "enabled": true
+    },
+    {
+      "name": "cpu_usage_high",
+      "category": "system",
+      "severity": "medium",
+      "condition": "greater_than",
+      "threshold": 90.0,
+      "metric_path": "cpu_utilization",
+      "duration_minutes": 10,
+      "cooldown_minutes": 30,
+      "auto_resolve": false,
+      "enabled": true
+    },
+    {
+      "name": "progress_stalled",
+      "category": "progress",
+      "severity": "high",
+      "condition": "less_than",
+      "threshold": 2.0,
+      "metric_path": "progress_rate_per_hour",
+      "duration_minutes": 60,
+      "cooldown_minutes": 120,
+      "auto_resolve": false,
+      "enabled": true
+    },
+    {
+      "name": "deadline_risk",
+      "category": "progress",
+      "severity": "critical",
+      "condition": "greater_than",
+      "threshold": 40.0,
+      "metric_path": "elapsed_hours",
+      "duration_minutes": 5,
+      "cooldown_minutes": 180,
+      "auto_resolve": false,
+      "enabled": true
+    }
+  ],
+  "last_updated": "2025-09-21T07:29:13.508456"
+}
