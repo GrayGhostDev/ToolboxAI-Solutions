@@ -48,6 +48,20 @@ yarn-error.log*
 
 # OS
 .DS_Store
+
+# Archives (unless specifically needed)
+Archive/
+Archive/2025-*/
+Archive/migration_attempts/
+
+# Test artifacts
+tests/reports/
+tests/visual_regression/screenshots/
+*.html
+*.xml
+.coverage
+htmlcov/
+.pytest_cache/
 Thumbs.db
 
 # Environment variables
