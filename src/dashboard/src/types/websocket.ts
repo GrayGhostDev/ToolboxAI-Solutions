@@ -22,7 +22,7 @@ export enum WebSocketMessageType {
   DISCONNECT = 'disconnect',
   PING = 'ping',
   PONG = 'pong',
-  ERROR = 'error',
+  ERROR_MESSAGE = 'error',
   
   // Subscription Management
   SUBSCRIBE = 'subscribe',
@@ -115,7 +115,7 @@ export enum WebSocketChannel {
 }
 
 // Base Message Interface
-export interface WebSocketMessage<T = any> {
+export interface WebSocketMessage<T = unknown> {
   type: WebSocketMessageType;
   payload?: T;
   channel?: string;
@@ -123,11 +123,11 @@ export interface WebSocketMessage<T = any> {
   messageId?: string;
   correlationId?: string;
   sender?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Response Message
-export interface WebSocketResponse<T = any> extends WebSocketMessage<T> {
+export interface WebSocketResponse<T = unknown> extends WebSocketMessage<T> {
   success: boolean;
   error?: string;
   statusCode?: number;
@@ -153,7 +153,7 @@ export interface WebSocketError {
   code: string;
   message: string;
   timestamp: string;
-  details?: any;
+  details?: unknown;
   recoverable?: boolean;
 }
 
@@ -186,9 +186,9 @@ export interface ContentGenerationProgress {
   estimatedTimeRemaining?: number;
   artifacts?: {
     scripts?: string[];
-    terrain?: any;
+    terrain?: unknown;
     assets?: string[];
-    quiz?: any;
+    quiz?: unknown;
   };
 }
 
@@ -197,10 +197,10 @@ export interface ContentGenerationResponse {
   status: 'completed' | 'failed' | 'cancelled';
   content?: {
     scripts: string[];
-    terrain: any;
+    terrain: unknown;
     assets: string[];
-    quiz: any;
-    metadata: Record<string, any>;
+    quiz: unknown;
+    metadata: Record<string, unknown>;
   };
   error?: string;
   duration?: number;
@@ -212,7 +212,7 @@ export interface QuizMessage {
   studentId: string;
   action: 'start' | 'answer' | 'skip' | 'complete' | 'timeout';
   questionId?: string;
-  answer?: any;
+  answer?: unknown;
   score?: number;
   timeSpent?: number;
 }
@@ -224,7 +224,7 @@ export interface QuizFeedback {
   score: number;
   feedback: string;
   explanation?: string;
-  nextQuestion?: any;
+  nextQuestion?: unknown;
 }
 
 // Progress Messages
@@ -237,7 +237,7 @@ export interface ProgressUpdate {
   achievements?: string[];
   xpEarned?: number;
   timeSpent?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Collaboration Messages
@@ -245,10 +245,10 @@ export interface CollaborationMessage {
   roomId: string;
   userId: string;
   action: 'join' | 'leave' | 'edit' | 'cursor' | 'select';
-  data?: any;
+  data?: unknown;
   position?: { x: number; y: number };
   selection?: { start: number; end: number };
-  changes?: any[];
+  changes?: unknown[];
 }
 
 // Roblox Messages
@@ -256,7 +256,7 @@ export interface RobloxEventMessage {
   eventType: string;
   worldId?: string;
   playerId?: string;
-  data: any;
+  data: unknown;
   serverTime?: string;
   performance?: {
     fps?: number;
@@ -307,7 +307,7 @@ export interface QueuedMessage {
 }
 
 // Event Handler Types
-export type WebSocketEventHandler<T = any> = (data: T) => void | Promise<void>;
+export type WebSocketEventHandler<T = unknown> = (data: T) => void | Promise<void>;
 export type WebSocketErrorHandler = (error: WebSocketError) => void;
 export type WebSocketStateHandler = (state: WebSocketState, previousState?: WebSocketState) => void;
 
@@ -327,7 +327,7 @@ export interface UserPresence {
   status: 'online' | 'away' | 'busy' | 'offline';
   lastActivity?: string;
   location?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Channel Information
@@ -335,7 +335,7 @@ export interface ChannelInfo {
   name: string;
   subscribers: number;
   created?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Export utility type for strongly typed messages

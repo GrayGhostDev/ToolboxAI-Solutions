@@ -5,10 +5,10 @@
  * @version 2025
  */
 
-import type { RouteParams, QueryParams } from '../types/utility-types';
+import React from 'react';
 
 // Enhanced route parameter types
-export interface DashboardParams extends Record<string, never> {
+export interface DashboardParams {
   // Dashboard route has no parameters
 }
 

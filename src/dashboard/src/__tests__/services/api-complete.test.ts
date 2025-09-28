@@ -1,31 +1,33 @@
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll, afterAll } from 'vitest';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
 // Mock WebSocketService
+const mockWebSocketInstance = {
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn(),
+  send: vi.fn(),
+  subscribe: vi.fn(),
+  unsubscribe: vi.fn(),
+  getState: vi.fn(() => 'DISCONNECTED'),
+  isConnected: vi.fn(() => false),
+  onStateChange: vi.fn(),
+  onError: vi.fn(),
+  emit: vi.fn(),
+  on: vi.fn(),
+  off: vi.fn(),
+  reconnect: vi.fn(),
+  getConnectionStats: vi.fn(() => ({
+    connected: false,
+    reconnectAttempts: 0,
+    lastError: null,
+    uptime: 0
+  }))
+};
+
 vi.mock('../../services/websocket', () => ({
   WebSocketService: {
-    getInstance: vi.fn(() => ({
-      connect: vi.fn().mockResolvedValue(undefined),
-      disconnect: vi.fn(),
-      send: vi.fn(),
-      subscribe: vi.fn(),
-      unsubscribe: vi.fn(),
-      getState: vi.fn(() => 'DISCONNECTED'),
-      isConnected: vi.fn(() => false),
-      onStateChange: vi.fn(),
-      onError: vi.fn(),
-      emit: vi.fn(),
-      on: vi.fn(),
-      off: vi.fn(),
-      reconnect: vi.fn(),
-      getConnectionStats: vi.fn(() => ({
-        connected: false,
-        reconnectAttempts: 0,
-        lastError: null,
-        uptime: 0
-      }))
-    }))
+    getInstance: vi.fn(() => mockWebSocketInstance)
   },
   websocketService: {
     connect: vi.fn().mockResolvedValue(undefined),
@@ -80,7 +82,7 @@ vi.mock('../../store', () => ({
     subscribe: vi.fn(() => vi.fn())
   },
   useAppDispatch: () => vi.fn(),
-  useAppSelector: (selector: any) => selector({
+  useAppSelector: (selector: (state: unknown) => unknown) => selector({
     user: { 
       currentUser: null,
       token: null,
@@ -115,17 +117,6 @@ import ApiClient from '../../services/api';
 import type { 
   LoginCredentials,
   RegisterData,
-  User,
-  Class,
-  Lesson,
-  Assessment,
-  Message,
-  DashboardData,
-  SchoolData,
-  ReportData,
-  ComplianceData,
-  RewardData,
-  MissionData,
   UserRole
 } from '../../types';
 
@@ -135,8 +126,8 @@ describe('Complete API Service Test Suite', () => {
   let mock: MockAdapter;
   let apiClient: ApiClient;
   let localStorageMock: { [key: string]: string };
-  let consoleErrorSpy: any;
-  let consoleWarnSpy: any;
+  let consoleErrorSpy: unknown;
+  let consoleWarnSpy: unknown;
 
   beforeAll(() => {
     // Capture console errors and warnings
@@ -145,7 +136,7 @@ describe('Complete API Service Test Suite', () => {
     
     // Fix for axios config serialization in Vitest
     if (typeof globalThis.structuredClone === 'undefined') {
-      globalThis.structuredClone = (obj: any) => {
+      globalThis.structuredClone = (obj: unknown) => {
         try {
           return JSON.parse(JSON.stringify(obj));
         } catch {
@@ -344,7 +335,7 @@ describe('Complete API Service Test Suite', () => {
           email: 'invalid',
           password: '123',
           username: 'test'
-        } as any)).rejects.toThrow();
+        } as RegisterData)).rejects.toThrow();
       });
 
       it('should handle duplicate email registration', async () => {
@@ -356,7 +347,7 @@ describe('Complete API Service Test Suite', () => {
           email: 'existing@example.com',
           password: 'Password123!',
           username: 'newuser'
-        } as any)).rejects.toThrow();
+        } as RegisterData)).rejects.toThrow();
       });
     });
 
@@ -585,8 +576,8 @@ describe('Complete API Service Test Suite', () => {
         const result = await apiClient.getDashboardOverview('teacher');
         
         expect(result).toEqual(mockData);
-        expect((result as any).totalStudents).toBe(150);
-        expect((result as any).completionRate).toBe(78.5);
+        expect((result as Record<string, unknown>).totalStudents).toBe(150);
+        expect((result as Record<string, unknown>).completionRate).toBe(78.5);
       });
 
       it('should fetch student dashboard overview', async () => {
@@ -605,7 +596,7 @@ describe('Complete API Service Test Suite', () => {
         const result = await apiClient.getDashboardOverview('student');
         
         expect(result).toEqual(mockData);
-        expect((result as any).streakDays).toBe(15);
+        expect((result as Record<string, unknown>).streakDays).toBe(15);
       });
 
       it('should fetch admin dashboard overview', async () => {
@@ -629,7 +620,7 @@ describe('Complete API Service Test Suite', () => {
         const result = await apiClient.getDashboardOverview('admin');
         
         expect(result).toEqual(mockData);
-        expect((result as any).systemHealth).toBe('healthy');
+        expect((result as Record<string, unknown>).systemHealth).toBe('healthy');
       });
 
       it('should handle dashboard data fetch errors', async () => {
@@ -2420,7 +2411,7 @@ describe('Complete API Service Test Suite', () => {
         });
 
         const dashboard = await apiClient.getDashboardOverview('student');
-        expect((dashboard as any).enrolledCourses).toBe(3);
+        expect((dashboard as Record<string, unknown>).enrolledCourses).toBe(3);
 
         // 3. View classes
         mock.onGet(`${API_BASE_URL}/classes/`).reply(200, [
@@ -2598,7 +2589,7 @@ describe('Complete API Service Test Suite', () => {
     });
 
     it('should implement request queuing for rate limits', async () => {
-      const requestQueue: Promise<any>[] = [];
+      const requestQueue: Promise<unknown>[] = [];
       
       // Simulate rate-limited endpoint
       let requestCount = 0;
@@ -2624,7 +2615,7 @@ describe('Complete API Service Test Suite', () => {
       const results = await Promise.all(requestQueue);
       
       // First 5 should succeed
-      const successful = results.filter((r: any) => !r.error);
+      const successful = results.filter((r: { error?: unknown }) => !r.error);
       expect(successful.length).toBe(5);
     });
   });

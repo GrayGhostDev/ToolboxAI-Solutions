@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { vi, beforeAll, afterAll } from 'vitest';
 
 // Mock localStorage
 const localStorageMock = {
@@ -15,17 +15,17 @@ global.localStorage = localStorageMock as Storage;
 // Fix for DataCloneError with axios in Vitest
 // Override structuredClone to handle non-serializable objects
 if (typeof structuredClone === 'undefined') {
-  global.structuredClone = (obj: any) => {
+  global.structuredClone = (obj: unknown) => {
     return JSON.parse(JSON.stringify(obj));
   };
 } else {
   // Override existing structuredClone to handle axios config objects
   const originalStructuredClone = global.structuredClone;
-  global.structuredClone = (obj: any, options?: any) => {
+  global.structuredClone = (obj: unknown, options?: unknown) => {
     try {
       // Try the original first
       return originalStructuredClone(obj, options);
-    } catch (e) {
+    } catch (_e) {
       // If it fails (e.g., with functions), fallback to JSON serialization
       // This removes functions but preserves data structure
       const serializable = JSON.parse(JSON.stringify(obj, (key, value) => {
@@ -47,7 +47,7 @@ class WebSocketMock {
   addEventListener = vi.fn();
   removeEventListener = vi.fn();
 }
-global.WebSocket = WebSocketMock as any;
+global.WebSocket = WebSocketMock as unknown as typeof WebSocket;
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -81,7 +81,7 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 // Suppress console errors in tests
 const originalError = console.error;
 beforeAll(() => {
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     if (
       typeof args[0] === 'string' &&
       (args[0].includes('Warning: ReactDOM.render') ||

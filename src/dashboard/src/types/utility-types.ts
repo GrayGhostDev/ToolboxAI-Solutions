@@ -7,6 +7,8 @@
  * @version 2025
  */
 
+import React from 'react';
+
 // Import comprehensive utility types from type-fest
 export type {
   // Basic utilities
@@ -108,29 +110,29 @@ export type ComponentPropsWithoutRef<T extends keyof JSX.IntrinsicElements | Rea
     : Record<string, unknown>;
 
 // Redux/State management types
-export type Action<T = any> = {
+export type Action<T = unknown> = {
   type: string;
   payload?: T;
 };
 
 export type Reducer<S, A extends Action> = (state: S, action: A) => S;
 
-export type AsyncAction<T = any> = (
+export type AsyncAction<T = unknown> = (
   dispatch: Dispatch<Action>, 
-  getState: () => any
+  getState: () => unknown
 ) => Promise<T>;
 
 export type Dispatch<A extends Action = Action> = (action: A) => void;
 
 // API response types
-export type ApiResponse<T = any> = {
+export type ApiResponse<T = unknown> = {
   data: T;
   success: boolean;
   message?: string;
   errors?: string[];
 };
 
-export type PaginatedResponse<T = any> = ApiResponse<T[]> & {
+export type PaginatedResponse<T = unknown> = ApiResponse<T[]> & {
   pagination: {
     page: number;
     limit: number;
@@ -159,7 +161,7 @@ export type FormState<T extends FormData = FormData> = {
 };
 
 // Validation types
-export type ValidationRule<T = any> = (value: T) => string | undefined;
+export type ValidationRule<T = unknown> = (value: T) => string | undefined;
 
 export type ValidationSchema<T extends FormData> = {
   [K in keyof T]?: ValidationRule<T[K]>[];
@@ -175,12 +177,12 @@ export type RouteParams = Record<string, string>;
 export type QueryParams = Record<string, string | string[] | undefined>;
 export type NavigateOptions = {
   replace?: boolean;
-  state?: any;
+  state?: unknown;
 };
 
 // WebSocket types
 export type WebSocketEventType = 'open' | 'close' | 'error' | 'message';
-export type WebSocketEventHandler<T = any> = (data: T) => void;
+export type WebSocketEventHandler<T = unknown> = (data: T) => void;
 
 // Error handling types
 export type ErrorBoundaryState = {
@@ -218,7 +220,7 @@ export const isBoolean = (value: unknown): value is boolean => typeof value === 
 export const isObject = (value: unknown): value is Record<string, unknown> => 
   value !== null && typeof value === 'object' && !Array.isArray(value);
 export const isArray = (value: unknown): value is unknown[] => Array.isArray(value);
-export const isFunction = (value: unknown): value is (...args: any[]) => any => typeof value === 'function';
+export const isFunction = (value: unknown): value is (...args: unknown[]) => unknown => typeof value === 'function';
 export const isDefined = <T>(value: T | undefined | null): value is T => value !== undefined && value !== null;
 export const isEmpty = (value: unknown): boolean => {
   if (value === null || value === undefined) return true;
