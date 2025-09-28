@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll, afterAll } from 'vitest';
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
 // Mock WebSocket and store before importing anything else
@@ -65,49 +65,17 @@ vi.mock('../../store', () => ({
 // Import API client and related functions after mocks
 import ApiClient, {
   gradeSubmission,
-  moveToFolder,
   searchMessages,
   getUnreadCount,
   recordAchievement,
   getSkillMastery,
-  listSchools,
-  getSchool,
-  createSchool,
-  updateSchool,
-  deleteSchool,
-  activateSchool,
-  getSchoolStats,
-  listReportTemplates,
-  listReports,
-  getReport,
   generateReport,
-  scheduleReport,
-  emailReport,
-  downloadReport,
-  deleteReport,
-  listScheduledReports,
-  cancelScheduledReport,
-  getReportStatistics,
-  listUsers,
-  getUser,
-  createUser,
-  updateUser,
-  deleteUser,
-  suspendUser,
-  getMyProfile,
 } from '../../services/api';
 
 import type { 
-  AuthResponse, 
-  User, 
   DashboardOverview,
   ClassSummary,
   ClassDetails,
-  Lesson,
-  Assessment,
-  AssessmentSubmission,
-  Message,
-  Badge,
   RobloxWorld,
   ComplianceStatus,
   SchoolCreate,
