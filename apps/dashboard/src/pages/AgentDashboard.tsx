@@ -1,63 +1,73 @@
 /**
- * Agent System Dashboard
+ * Agent Dashboard Component
  *
- * Admin-only dashboard for monitoring and controlling the AI agent system.
- * Admins can enable access for teachers through settings.
+ * Main dashboard for monitoring and managing AI agents in the ToolBoxAI system.
+ * Provides real-time status updates via Pusher integration.
+ *
+ * Features:
+ * - Real-time agent status monitoring
+ * - Task execution interface
+ * - Performance metrics display
+ * - System health indicators
+ * - Agent configuration management
+ *
+ * @author ToolboxAI Team
+ * @created 2025-09-21
+ * @version 1.0.0
  */
-import React, { useState, useEffect, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
-import LinearProgress from '@mui/material/LinearProgress';
-import IconButton from '@mui/material/IconButton';
-import Button from '@mui/material/Button';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import CircularProgress from '@mui/material/CircularProgress';
-import Tooltip from '@mui/material/Tooltip';
-import Badge from '@mui/material/Badge';
-import Divider from '@mui/material/Divider';
-import Switch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  SmartToy as AgentIcon,
-  Memory as ResourceIcon,
-  Assignment as TaskIcon,
-  Speed as PerformanceIcon,
-  Refresh as RefreshIcon,
-  PlayArrow as StartIcon,
-  Stop as StopIcon,
-  Settings as SettingsIcon,
-  CheckCircle as SuccessIcon,
-  Error as ErrorIcon,
-  Warning as WarningIcon,
-  Info as InfoIcon,
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
-  CloudQueue as QueueIcon,
-} from '@mui/icons-material';
+  Box,
+  Card,
+  SimpleGrid,
+  Text,
+  Button,
+  Badge,
+  Alert,
+  Skeleton,
+  Tooltip,
+  ActionIcon,
+  Modal,
+  Progress,
+  List,
+  Group,
+  Stack,
+  Flex,
+  Indicator,
+  Title,
+  Container,
+} from '@mantine/core';
+import {
+  IconRefresh,
+  IconPlayerPlay,
+  IconPlayerStop,
+  IconSettings,
+  IconChartBar,
+  IconAlertTriangle,
+  IconCircleCheck,
+  IconClock,
+  IconCpu,
+  IconDatabase,
+  IconServer,
+  IconActivity,
+  IconBrain,
+  IconRobot,
+  IconCloud,
+  IconNetwork,
+  IconMemory,
+  IconClock24,
+  IconPlayerPlayFilled,
+  IconPlayerStopFilled,
+} from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { useAuth } from '../hooks/useAuth';
-import { orchestratorApi } from '../services/orchestratorApi';
-import { pusherService } from '../services/pusher';
-import { Chart as ChartJS, ArcElement, Tooltip as ChartTooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement } from 'chart.js';
-import { Doughnut, Bar } from 'react-chartjs-2';
-// Register Chart.js components
-ChartJS.register(ArcElement, ChartTooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement);
+import { RootState } from '@/store';
+import { useAuth } from '@/hooks/useAuth';
+import { orchestratorApi } from '@/services/orchestratorApi';
+import { pusherService } from '@/services/pusher';
+import { showNotification } from '@mantine/notifications';
+
 interface AgentInfo {
   name: string;
   category: string;
@@ -66,6 +76,7 @@ interface AgentInfo {
   status: string;
   metrics: Record<string, any>;
 }
+
 interface SystemStatus {
   orchestrator: {
     is_running: boolean;
@@ -92,6 +103,7 @@ interface SystemStatus {
   };
   worktrees?: any;
 }
+
 interface TaskInfo {
   task_id: string;
   status: string;
@@ -100,31 +112,37 @@ interface TaskInfo {
   message?: string;
   result?: any;
 }
-const AgentDashboard: React.FunctionComponent<Record<string, any>> = () => {
+
+const AgentDashboard: React.FunctionComponent = () => {
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const settings = useSelector((state: RootState) => state.settings);
+
   // State
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [agents, setAgents] = useState<AgentInfo[]>([]);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [recentTasks, setRecentTasks] = useState<TaskInfo[]>([]);
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(5000);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+
   // Check access permissions
   const canAccess = useCallback(() => {
     if (hasRole('admin')) return true;
     if (hasRole('teacher') && settings?.agentDashboard?.teacherAccess) return true;
     return false;
   }, [hasRole, settings]);
+
   // Redirect if no access
   useEffect(() => {
     if (!canAccess()) {
       navigate('/dashboard');
     }
   }, [canAccess, navigate]);
+
   // Fetch agents
   const fetchAgents = useCallback(async () => {
     try {
@@ -134,6 +152,7 @@ const AgentDashboard: React.FunctionComponent<Record<string, any>> = () => {
       console.error('Failed to fetch agents:', err);
     }
   }, []);
+
   // Fetch system status
   const fetchSystemStatus = useCallback(async () => {
     try {
@@ -143,6 +162,7 @@ const AgentDashboard: React.FunctionComponent<Record<string, any>> = () => {
       console.error('Failed to fetch system status:', err);
     }
   }, []);
+
   // Initial load
   useEffect(() => {
     const loadData = async () => {
@@ -161,6 +181,7 @@ const AgentDashboard: React.FunctionComponent<Record<string, any>> = () => {
     };
     loadData();
   }, [fetchAgents, fetchSystemStatus]);
+
   // Auto-refresh
   useEffect(() => {
     if (!autoRefresh) return;
@@ -169,9 +190,11 @@ const AgentDashboard: React.FunctionComponent<Record<string, any>> = () => {
     }, refreshInterval);
     return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval, fetchSystemStatus]);
+
   // Subscribe to Pusher for real-time updates
   useEffect(() => {
     const channel = pusherService.subscribe('agent-system');
+
     channel.bind('task-update', (data: any) => {
       // Update task in recentTasks if it exists
       setRecentTasks(prev => {
@@ -184,6 +207,7 @@ const AgentDashboard: React.FunctionComponent<Record<string, any>> = () => {
         return [data, ...prev].slice(0, 10); // Keep last 10 tasks
       });
     });
+
     channel.bind('agent-status', (data: any) => {
       // Update agent status
       setAgents(prev => {
@@ -196,14 +220,17 @@ const AgentDashboard: React.FunctionComponent<Record<string, any>> = () => {
         return prev;
       });
     });
+
     channel.bind('system-metrics', (data: any) => {
       // Update system metrics
       setSystemStatus(prev => prev ? { ...prev, ...data } : null);
     });
+
     return () => {
       pusherService.unsubscribe('agent-system');
     };
   }, []);
+
   // Submit test task
   const submitTestTask = async () => {
     try {
@@ -215,12 +242,25 @@ const AgentDashboard: React.FunctionComponent<Record<string, any>> = () => {
         },
         priority: 3,
       });
+
       // Add to recent tasks
       setRecentTasks(prev => [result, ...prev].slice(0, 10));
+
+      showNotification({
+        title: 'Task Submitted',
+        message: `Task ${result.task_id} submitted successfully`,
+        color: 'green',
+      });
     } catch (err) {
       console.error('Failed to submit test task:', err);
+      showNotification({
+        title: 'Task Failed',
+        message: 'Failed to submit test task',
+        color: 'red',
+      });
     }
   };
+
   // Format uptime
   const formatUptime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -228,502 +268,248 @@ const AgentDashboard: React.FunctionComponent<Record<string, any>> = () => {
     const secs = Math.floor(seconds % 60);
     return `${hours}h ${minutes}m ${secs}s`;
   };
+
   // Get status color
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'running':
       case 'available':
       case 'completed':
-        return 'success';
+        return 'green';
       case 'pending':
       case 'queued':
-        return 'info';
+        return 'blue';
       case 'failed':
       case 'error':
-        return 'error';
+        return 'red';
       case 'busy':
       case 'in_progress':
-        return 'warning';
+        return 'yellow';
       default:
-        return 'default';
+        return 'gray';
     }
   };
-  // Get status icon
-  const getStatusIcon = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'running':
-      case 'available':
-      case 'completed':
-        return <SuccessIcon fontSize="small" />;
-      case 'failed':
-      case 'error':
-        return <ErrorIcon fontSize="small" />;
-      case 'pending':
-      case 'queued':
-        return <InfoIcon fontSize="small" />;
-      case 'busy':
-      case 'in_progress':
-        return <WarningIcon fontSize="small" />;
-      default:
-        return null;
-    }
-  };
-  // Prepare chart data
-  const agentDistributionData = systemStatus ? {
-    labels: Object.keys(systemStatus.agents),
-    datasets: [{
-      data: Object.values(systemStatus.agents),
-      backgroundColor: [
-        '#FF6384',
-        '#36A2EB',
-        '#FFCE56',
-        '#4BC0C0',
-        '#9966FF',
-        '#FF9F40',
-      ],
-    }],
-  } : null;
-  const taskStatusData = systemStatus ? {
-    labels: ['Pending', 'Active', 'Completed', 'Failed'],
-    datasets: [{
-      label: 'Tasks',
-      data: [
-        systemStatus.tasks.pending,
-        systemStatus.tasks.active,
-        systemStatus.tasks.completed,
-        systemStatus.tasks.failed,
-      ],
-      backgroundColor: ['#36A2EB', '#FFCE56', '#4BC0C0', '#FF6384'],
-    }],
-  } : null;
-  const resourceUsageData = systemStatus ? {
-    labels: ['CPU', 'Memory', 'Disk'],
-    datasets: [{
-      label: 'Usage %',
-      data: [
-        systemStatus.resources.cpu_percent,
-        systemStatus.resources.memory_percent,
-        systemStatus.resources.disk_usage_percent,
-      ],
-      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
-      borderWidth: 1,
-    }],
-  } : null;
+
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-        <CircularProgress />
-      </Box>
+      <Container size="xl" p="md">
+        <Stack spacing="md">
+          <Skeleton height={60} />
+          <SimpleGrid cols={4} spacing="md">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} height={120} />
+            ))}
+          </SimpleGrid>
+          <Skeleton height={400} />
+        </Stack>
+      </Container>
     );
   }
+
   if (error) {
     return (
-      <Alert severity="error">
-        <AlertTitle>Error</AlertTitle>
+      <Alert color="red" title="Error">
         {error}
       </Alert>
     );
   }
+
   return (
-    <Box>
+    <Container size="xl" p="md">
       {/* Header */}
-      <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
-        <Typography variant="h4" component="h1">
-          <AgentIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+      <Group position="apart" mb="xl">
+        <Title order={2}>
+          <IconBrain size={28} style={{ verticalAlign: 'middle', marginRight: 8 }} />
           Agent System Dashboard
-        </Typography>
-        <Box display="flex" gap={2} alignItems="center">
-          <FormControlLabel
-            control={
-              <Switch
-                checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
-              />
-            }
-            label="Auto-refresh"
-          />
-          <IconButton onClick={(e: React.MouseEvent) => fetchSystemStatus} title="Refresh">
-            <RefreshIcon />
-          </IconButton>
+        </Title>
+        <Group>
+          <Button
+            variant="subtle"
+            leftIcon={<IconRefresh size={16} />}
+            onClick={fetchSystemStatus}
+          >
+            Refresh
+          </Button>
           {hasRole('admin') && (
-            <IconButton onClick={(e: React.MouseEvent) => () => navigate('/settings/agents')} title="Settings">
-              <SettingsIcon />
-            </IconButton>
+            <Button
+              variant="light"
+              leftIcon={<IconSettings size={16} />}
+              onClick={() => navigate('/settings/agents')}
+            >
+              Settings
+            </Button>
           )}
-        </Box>
-      </Box>
+        </Group>
+      </Group>
+
       {/* System Overview */}
-      <Grid container spacing={3} mb={3}>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+      <SimpleGrid cols={4} spacing="md" mb="xl">
+        <Card shadow="sm">
+          <Group position="apart">
+            <div>
+              <Text color="dimmed" size="xs" tt="uppercase" fw={700}>
                 System Status
-              </Typography>
-              <Box display="flex" alignItems="center">
+              </Text>
+              <Group spacing="xs" mt="xs">
                 {systemStatus?.orchestrator.is_running ? (
                   <>
-                    <SuccessIcon color="success" sx={{ mr: 1 }} />
-                    <Typography variant="h6" color="success.main">
-                      Running
-                    </Typography>
+                    <IconCircleCheck size={20} color="green" />
+                    <Text size="lg" fw={500} color="green">Running</Text>
                   </>
                 ) : (
                   <>
-                    <ErrorIcon color="error" sx={{ mr: 1 }} />
-                    <Typography variant="h6" color="error.main">
-                      Stopped
-                    </Typography>
+                    <IconAlertTriangle size={20} color="red" />
+                    <Text size="lg" fw={500} color="red">Stopped</Text>
                   </>
                 )}
-              </Box>
-              <Typography variant="body2" color="textSecondary" mt={1}>
+              </Group>
+              <Text size="xs" color="dimmed" mt="xs">
                 Uptime: {formatUptime(systemStatus?.orchestrator.uptime || 0)}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+              </Text>
+            </div>
+            <IconServer size={30} color="gray" />
+          </Group>
+        </Card>
+
+        <Card shadow="sm">
+          <Group position="apart">
+            <div>
+              <Text color="dimmed" size="xs" tt="uppercase" fw={700}>
                 Total Agents
-              </Typography>
-              <Typography variant="h4">
-                {agents.length}
-              </Typography>
-              <Typography variant="body2" color="textSecondary" mt={1}>
+              </Text>
+              <Text size="xl" fw={700}>{agents.length}</Text>
+              <Text size="xs" color="dimmed" mt="xs">
                 Across {Object.keys(systemStatus?.agents || {}).length} categories
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+              </Text>
+            </div>
+            <IconRobot size={30} color="gray" />
+          </Group>
+        </Card>
+
+        <Card shadow="sm">
+          <Group position="apart">
+            <div>
+              <Text color="dimmed" size="xs" tt="uppercase" fw={700}>
                 Tasks Processed
-              </Typography>
-              <Typography variant="h4">
+              </Text>
+              <Text size="xl" fw={700}>
                 {systemStatus?.orchestrator.total_processed || 0}
-              </Typography>
-              <Box display="flex" gap={1} mt={1}>
-                <Chip
-                  size="small"
-                  label={`${systemStatus?.tasks.active || 0} active`}
-                  color="warning"
-                />
-                <Chip
-                  size="small"
-                  label={`${systemStatus?.tasks.pending || 0} pending`}
-                  color="info"
-                />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+              </Text>
+              <Group spacing="xs" mt="xs">
+                <Badge color="yellow" size="sm">
+                  {systemStatus?.tasks.active || 0} active
+                </Badge>
+                <Badge color="blue" size="sm">
+                  {systemStatus?.tasks.pending || 0} pending
+                </Badge>
+              </Group>
+            </div>
+            <IconActivity size={30} color="gray" />
+          </Group>
+        </Card>
+
+        <Card shadow="sm">
+          <Group position="apart">
+            <div>
+              <Text color="dimmed" size="xs" tt="uppercase" fw={700}>
                 Resource Usage
-              </Typography>
-              <Box>
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2">CPU</Typography>
-                  <Typography variant="body2">
-                    {systemStatus?.resources.cpu_percent.toFixed(1)}%
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={systemStatus?.resources.cpu_percent || 0}
-                  sx={{ my: 0.5 }}
-                />
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2">Memory</Typography>
-                  <Typography variant="body2">
-                    {systemStatus?.resources.memory_percent.toFixed(1)}%
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={systemStatus?.resources.memory_percent || 0}
-                  color="secondary"
-                />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-      {/* Tabs */}
-      <Paper sx={{ mb: 3 }}>
-        <Tabs value={selectedTab} onChange={(e, v) => setSelectedTab(v)}>
-          <Tab label="Agents" icon={<AgentIcon />} iconPosition="start" />
-          <Tab label="Tasks" icon={<TaskIcon />} iconPosition="start" />
-          <Tab label="Resources" icon={<ResourceIcon />} iconPosition="start" />
-          <Tab label="Analytics" icon={<PerformanceIcon />} iconPosition="start" />
-        </Tabs>
-        <Box p={3}>
-          {/* Agents Tab */}
-          {selectedTab === 0 && (
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={8}>
-                <Typography variant="h6" gutterBottom>
-                  Registered Agents
-                </Typography>
-                <TableContainer component={Paper} variant="outlined">
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Agent</TableCell>
-                        <TableCell>Category</TableCell>
-                        <TableCell>Status</TableCell>
-                        <TableCell>Capabilities</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {agents.slice(0, 10).map((agent) => (
-                        <TableRow key={agent.name}>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="medium">
-                              {agent.name}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              size="small"
-                              label={agent.category}
-                              variant="outlined"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              size="small"
-                              label={agent.status}
-                              color={getStatusColor(agent.status) as any}
-                              icon={getStatusIcon(agent.status) as any}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="caption" color="textSecondary">
-                              {agent.capabilities.length || 0} capabilities
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography variant="h6" gutterBottom>
-                  Agent Distribution
-                </Typography>
-                {agentDistributionData && (
-                  <Doughnut
-                    data={agentDistributionData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: 'bottom',
-                        },
-                      },
-                    }}
-                    height={300}
+              </Text>
+              <Stack spacing="xs" mt="xs">
+                <div>
+                  <Text size="xs" color="dimmed">CPU</Text>
+                  <Progress
+                    value={systemStatus?.resources.cpu_percent || 0}
+                    color={systemStatus?.resources.cpu_percent > 80 ? 'red' : 'blue'}
+                    size="sm"
                   />
-                )}
-              </Grid>
-            </Grid>
-          )}
-          {/* Tasks Tab */}
-          {selectedTab === 1 && (
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={8}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography variant="h6">
-                    Recent Tasks
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    startIcon={<PlayArrow />}
-                    onClick={(e: React.MouseEvent) => submitTestTask}
-                  >
-                    Submit Test Task
-                  </Button>
-                </Box>
-                <TableContainer component={Paper} variant="outlined">
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Task ID</TableCell>
-                        <TableCell>Type</TableCell>
-                        <TableCell>Status</TableCell>
-                        <TableCell>Created</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {recentTasks.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={4} align="center">
-                            <Typography variant="body2" color="textSecondary">
-                              No recent tasks
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        recentTasks.map((task) => (
-                          <TableRow key={task.task_id}>
-                            <TableCell>
-                              <Typography variant="caption" fontFamily="monospace">
-                                {task.task_id.substring(0, 8)}...
-                              </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Chip
-                                size="small"
-                                label={task.agent_type}
-                                variant="outlined"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Chip
-                                size="small"
-                                label={task.status}
-                                color={getStatusColor(task.status) as any}
-                                icon={getStatusIcon(task.status) as any}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Typography variant="caption">
-                                {new Date(task.created_at).toLocaleTimeString()}
-                              </Typography>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography variant="h6" gutterBottom>
-                  Task Status
-                </Typography>
-                {taskStatusData && (
-                  <Bar
-                    data={taskStatusData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          display: false,
-                        },
-                      },
-                    }}
-                    height={300}
+                </div>
+                <div>
+                  <Text size="xs" color="dimmed">Memory</Text>
+                  <Progress
+                    value={systemStatus?.resources.memory_percent || 0}
+                    color={systemStatus?.resources.memory_percent > 80 ? 'red' : 'green'}
+                    size="sm"
                   />
+                </div>
+              </Stack>
+            </div>
+            <IconCpu size={30} color="gray" />
+          </Group>
+        </Card>
+      </SimpleGrid>
+
+      {/* Agents Grid */}
+      <Card shadow="sm" mb="xl">
+        <Group position="apart" mb="md">
+          <Text size="lg" fw={600}>Registered Agents</Text>
+          <Button
+            variant="light"
+            leftIcon={<IconPlayerPlay size={16} />}
+            onClick={submitTestTask}
+          >
+            Submit Test Task
+          </Button>
+        </Group>
+
+        <SimpleGrid cols={3} spacing="md">
+          {agents.map((agent) => (
+            <Card key={agent.name} shadow="xs" p="sm" withBorder>
+              <Group position="apart" mb="xs">
+                <Text fw={500}>{agent.name}</Text>
+                <Badge color={getStatusColor(agent.status)} size="sm">
+                  {agent.status}
+                </Badge>
+              </Group>
+              <Text size="xs" color="dimmed" mb="xs">
+                {agent.description}
+              </Text>
+              <Text size="xs" color="dimmed">
+                {agent.capabilities.length} capabilities
+              </Text>
+            </Card>
+          ))}
+        </SimpleGrid>
+      </Card>
+
+      {/* Recent Tasks */}
+      <Card shadow="sm">
+        <Text size="lg" fw={600} mb="md">Recent Tasks</Text>
+        {recentTasks.length === 0 ? (
+          <Text color="dimmed" ta="center" py="xl">
+            No recent tasks
+          </Text>
+        ) : (
+          <Stack spacing="xs">
+            {recentTasks.map((task) => (
+              <Card key={task.task_id} shadow="xs" p="xs" withBorder>
+                <Group position="apart">
+                  <Group spacing="xs">
+                    <Text size="xs" fw={500} style={{ fontFamily: 'monospace' }}>
+                      {task.task_id.substring(0, 8)}...
+                    </Text>
+                    <Badge variant="outline" size="sm">
+                      {task.agent_type}
+                    </Badge>
+                    <Badge color={getStatusColor(task.status)} size="sm">
+                      {task.status}
+                    </Badge>
+                  </Group>
+                  <Text size="xs" color="dimmed">
+                    {new Date(task.created_at).toLocaleTimeString()}
+                  </Text>
+                </Group>
+                {task.message && (
+                  <Text size="xs" color="dimmed" mt="xs">
+                    {task.message}
+                  </Text>
                 )}
-              </Grid>
-            </Grid>
-          )}
-          {/* Resources Tab */}
-          {selectedTab === 2 && (
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <Typography variant="h6" gutterBottom>
-                  Resource Utilization
-                </Typography>
-                {resourceUsageData && (
-                  <Bar
-                    data={resourceUsageData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                          max: 100,
-                        },
-                      },
-                      plugins: {
-                        legend: {
-                          display: false,
-                        },
-                      },
-                    }}
-                    height={300}
-                  />
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography variant="h6" gutterBottom>
-                  System Metrics
-                </Typography>
-                <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Grid container spacing={2}>
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="textSecondary">
-                        Processes
-                      </Typography>
-                      <Typography variant="h6">
-                        {systemStatus?.resources.process_count || 0}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="textSecondary">
-                        Network Sent
-                      </Typography>
-                      <Typography variant="h6">
-                        {(systemStatus?.resources.network_sent_mb || 0).toFixed(2)} MB
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="textSecondary">
-                        Network Received
-                      </Typography>
-                      <Typography variant="h6">
-                        {(systemStatus?.resources.network_recv_mb || 0).toFixed(2)} MB
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="body2" color="textSecondary">
-                        Free Disk
-                      </Typography>
-                      <Typography variant="h6">
-                        {(systemStatus?.resources.disk_free_gb || 0).toFixed(1)} GB
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                </Paper>
-              </Grid>
-            </Grid>
-          )}
-          {/* Analytics Tab */}
-          {selectedTab === 3 && (
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <Alert severity="info">
-                  <AlertTitle>Analytics Dashboard</AlertTitle>
-                  Advanced analytics and performance metrics will be available in the next update.
-                  This will include:
-                  <ul>
-                    <li>Task completion rates by agent type</li>
-                    <li>Average processing times</li>
-                    <li>Error rates and patterns</li>
-                    <li>Resource optimization suggestions</li>
-                    <li>Historical trends and predictions</li>
-                  </ul>
-                </Alert>
-              </Grid>
-            </Grid>
-          )}
-        </Box>
-      </Paper>
-    </Box>
+              </Card>
+            ))}
+          </Stack>
+        )}
+      </Card>
+    </Container>
   );
 };
+
 export default AgentDashboard;

@@ -1,35 +1,35 @@
 import { useState, useEffect } from "react";
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
-import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
-import LinearProgress from '@mui/material/LinearProgress';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import IconButton from '@mui/material/IconButton';
-import Button from '@mui/material/Button';
-import Skeleton from '@mui/material/Skeleton';
-
 import {
-  School,
-  Person,
-  TrendingUp,
-  Assessment,
-  EmojiEvents,
-  SportsEsports,
-  Refresh,
-  Download,
-  VerifiedUser,
-  Warning,
-} from "@mui/icons-material";
+  Box,
+  Button,
+  Text,
+  Title,
+  Paper,
+  Stack,
+  Grid,
+  Container,
+  Card,
+  Group,
+  Badge,
+  Alert,
+  Select,
+  ActionIcon,
+  Progress,
+  Skeleton,
+  SimpleGrid,
+} from '@mantine/core';
+import {
+  IconSchool,
+  IconUser,
+  IconTrendingUp,
+  IconChartBar,
+  IconTrophy,
+  IconPlayerPlay,
+  IconRefresh,
+  IconDownload,
+  IconShieldCheck,
+  IconAlertTriangle,
+} from '@tabler/icons-react';
 import {
   LineChart,
   Line,
@@ -57,7 +57,9 @@ import {
   setTimeRange,
   clearError,
 } from "../../../store/slices/analyticsSlice";
+
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1'];
+
 export default function Analytics() {
   const dispatch = useAppDispatch();
   const {
@@ -72,18 +74,25 @@ export default function Analytics() {
     timeRange,
     lastUpdated,
   } = useAppSelector((state) => state.analytics);
+
   const [selectedTab, setSelectedTab] = useState(0);
+
   useEffect(() => {
     // Load all analytics data on mount
     dispatch(refreshAllAnalytics(timeRange));
   }, [dispatch, timeRange]);
-  const handleTimeRangeChange = (newRange: string) => {
-    dispatch(setTimeRange(newRange));
-    dispatch(refreshAllAnalytics(newRange));
+
+  const handleTimeRangeChange = (newRange: string | null) => {
+    if (newRange) {
+      dispatch(setTimeRange(newRange));
+      dispatch(refreshAllAnalytics(newRange));
+    }
   };
+
   const handleRefresh = () => {
     dispatch(refreshAllAnalytics(timeRange));
   };
+
   const handleExport = () => {
     // Generate CSV or PDF report
     const data = {
@@ -100,273 +109,259 @@ export default function Analytics() {
     a.download = `analytics-report-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
   };
+
   const StatCard = ({ title, value, subtitle, icon, color }: any) => (
-    <Card>
-      <CardContent>
-        <Stack direction="row" alignItems="center" justifyContent="between">
-          <Box>
-            <Typography color="text.secondary" variant="overline">
-              {title}
-            </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color }}>
-              {value}
-            </Typography>
-            {subtitle && (
-              <Typography variant="body2" color="text.secondary">
-                {subtitle}
-              </Typography>
-            )}
-          </Box>
-          <Box
-            sx={{
-              backgroundColor: color + "15",
-              borderRadius: 2,
-              p: 1.5,
-              display: "flex",
-              alignItems: "center",
-              color,
-            }}
-          >
-            {icon}
-          </Box>
-        </Stack>
-      </CardContent>
+    <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Group justify="space-between" align="center">
+        <Box>
+          <Text size="sm" c="dimmed" fw={500}>
+            {title}
+          </Text>
+          <Title order={3} style={{ color }}>
+            {value}
+          </Title>
+          {subtitle && (
+            <Text size="xs" c="dimmed">
+              {subtitle}
+            </Text>
+          )}
+        </Box>
+        <Box
+          style={{
+            backgroundColor: color + "15",
+            borderRadius: 8,
+            padding: 12,
+            display: "flex",
+            alignItems: "center",
+            color,
+          }}
+        >
+          {icon}
+        </Box>
+      </Group>
     </Card>
   );
+
   if (loading && !platform) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Stack spacing={3}>
-          <Skeleton variant="rectangular" height={60} />
-          <Grid container spacing={3}>
+      <Box style={{ padding: 24 }}>
+        <Stack gap="lg">
+          <Skeleton height={60} />
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="lg">
             {[1, 2, 3, 4].map((i) => (
-              <Grid item xs={12} sm={6} md={3} key={`skeleton-grid-${i}`}>
-                <Skeleton variant="rectangular" height={140} />
-              </Grid>
+              <Skeleton key={`skeleton-grid-${i}`} height={140} />
             ))}
-          </Grid>
-          <Skeleton variant="rectangular" height={400} />
+          </SimpleGrid>
+          <Skeleton height={400} />
         </Stack>
       </Box>
     );
   }
+
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" sx={{ fontWeight: 600 }}>
-          Platform Analytics
-        </Typography>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <FormControl sx={{ minWidth: 120 }}>
-            <InputLabel>Time Range</InputLabel>
-            <Select
-              value={timeRange}
-              label="Time Range"
-              onChange={(e) => handleTimeRangeChange(e.target.value)}
-            >
-              <MenuItem value="7d">Last 7 days</MenuItem>
-              <MenuItem value="30d">Last 30 days</MenuItem>
-              <MenuItem value="90d">Last 90 days</MenuItem>
-              <MenuItem value="1y">Last year</MenuItem>
-            </Select>
-          </FormControl>
-          <IconButton onClick={(e: React.MouseEvent) => handleRefresh} disabled={loading}>
-            <Refresh />
-          </IconButton>
-          <Button variant="outlined" startIcon={<Download />} onClick={(e: React.MouseEvent) => handleExport}>
+      <Group justify="space-between" align="center" mb="lg">
+        <Title order={2}>Platform Analytics</Title>
+        <Group gap="md">
+          <Select
+            label="Time Range"
+            value={timeRange}
+            onChange={handleTimeRangeChange}
+            data={[
+              { value: '7d', label: 'Last 7 days' },
+              { value: '30d', label: 'Last 30 days' },
+              { value: '90d', label: 'Last 90 days' },
+              { value: '1y', label: 'Last year' },
+            ]}
+            style={{ minWidth: 120 }}
+          />
+          <ActionIcon onClick={handleRefresh} disabled={loading} size="lg" variant="light">
+            <IconRefresh />
+          </ActionIcon>
+          <Button variant="outline" leftSection={<IconDownload size={16} />} onClick={handleExport}>
             Export
           </Button>
-        </Stack>
-      </Stack>
+        </Group>
+      </Group>
+
       {error && (
-        <Alert severity="error" onClose={() => dispatch(clearError())} sx={{ mb: 3 }}>
+        <Alert
+          variant="light"
+          color="red"
+          onClose={() => dispatch(clearError())}
+          withCloseButton
+          mb="lg"
+        >
           {error}
         </Alert>
       )}
+
       {lastUpdated && (
-        <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+        <Text size="xs" c="dimmed" mb="md">
           Last updated: {new Date(lastUpdated).toLocaleString()}
-        </Typography>
+        </Text>
       )}
+
       {/* Overview Stats */}
-      <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Total Users"
-            value={platform?.totalUsers?.toLocaleString() || '0'}
-            subtitle={platform?.growthRate ? `+${platform.growthRate}% growth` : 'Loading...'}
-            icon={<Person />}
-            color="#1976d2"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Schools"
-            value={platform?.totalSchools || 0}
-            subtitle="Active institutions"
-            icon={<School />}
-            color="#2e7d32"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Lessons"
-            value={platform?.totalLessons || 0}
-            subtitle="Total available"
-            icon={<Assessment />}
-            color="#ed6c02"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Avg Completion"
-            value={`${platform?.averageCompletion || 0}%`}
-            subtitle="Across all courses"
-            icon={<TrendingUp />}
-            color="#9c27b0"
-          />
-        </Grid>
-      </Grid>
-      <Grid container spacing={3}>
+      <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="lg" mb="xl">
+        <StatCard
+          title="Total Users"
+          value={platform?.totalUsers?.toLocaleString() || '0'}
+          subtitle={platform?.growthRate ? `+${platform.growthRate}% growth` : 'Loading...'}
+          icon={<IconUser size={24} />}
+          color="#1976d2"
+        />
+        <StatCard
+          title="Schools"
+          value={platform?.totalSchools || 0}
+          subtitle="Active institutions"
+          icon={<IconSchool size={24} />}
+          color="#2e7d32"
+        />
+        <StatCard
+          title="Lessons"
+          value={platform?.totalLessons || 0}
+          subtitle="Total available"
+          icon={<IconChartBar size={24} />}
+          color="#ed6c02"
+        />
+        <StatCard
+          title="Avg Completion"
+          value={`${platform?.averageCompletion || 0}%`}
+          subtitle="Across all courses"
+          icon={<IconTrendingUp size={24} />}
+          color="#9c27b0"
+        />
+      </SimpleGrid>
+
+      <Grid gutter="lg">
         {/* Top Performers */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-                <EmojiEvents />
-                Top Performers
-              </Typography>
-              {loading ? (
-                <Stack spacing={2}>
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={`skeleton-performer-${i}`} variant="rectangular" height={60} />
-                  ))}
-                </Stack>
-              ) : (
-                <Stack spacing={2}>
-                  {(performance?.topPerformers || []).slice(0, 5).map((performer, index) => (
-                    <Paper key={performer.id || `performer-${index}`} sx={{ p: 2 }}>
-                      <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Stack direction="row" alignItems="center" spacing={2}>
-                          <Chip 
-                            label={`#${index + 1}`} 
-                            size="small" 
-                            color={index === 0 ? "warning" : index < 3 ? "primary" : "default"}
-                          />
-                          <Typography fontWeight={500}>{performer.name}</Typography>
-                        </Stack>
-                        <Stack direction="row" spacing={1}>
-                          <Chip label={`${performer.xp.toLocaleString()} XP`} size="small" />
-                          <Chip label={`Lvl ${performer.level}`} size="small" color="primary" />
-                          <Chip label={`${performer.badges} badges`} size="small" color="secondary" />
-                        </Stack>
-                      </Stack>
-                    </Paper>
-                  ))}
-                </Stack>
-              )}
-            </CardContent>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card shadow="sm" padding="lg" radius="md" withBorder>
+            <Group mb="md">
+              <IconTrophy size={20} />
+              <Title order={4}>Top Performers</Title>
+            </Group>
+            {loading ? (
+              <Stack gap="md">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={`skeleton-performer-${i}`} height={60} />
+                ))}
+              </Stack>
+            ) : (
+              <Stack gap="md">
+                {(performance?.topPerformers || []).slice(0, 5).map((performer, index) => (
+                  <Paper key={performer.id || `performer-${index}`} p="md" withBorder>
+                    <Group justify="space-between">
+                      <Group gap="md">
+                        <Badge
+                          size="lg"
+                          color={index === 0 ? "yellow" : index < 3 ? "blue" : "gray"}
+                        >
+                          #{index + 1}
+                        </Badge>
+                        <Text fw={500}>{performer.name}</Text>
+                      </Group>
+                      <Group gap="xs">
+                        <Badge variant="light">{performer.xp.toLocaleString()} XP</Badge>
+                        <Badge variant="light" color="blue">Lvl {performer.level}</Badge>
+                        <Badge variant="light" color="gray">{performer.badges} badges</Badge>
+                      </Group>
+                    </Group>
+                  </Paper>
+                ))}
+              </Stack>
+            )}
           </Card>
-        </Grid>
+        </Grid.Col>
+
         {/* Subject Mastery */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-                <Assessment />
-                Subject Mastery
-              </Typography>
-              {loading ? (
-                <Stack spacing={2}>
-                  {[1, 2, 3, 4].map((i) => (
-                    <Skeleton key={`skeleton-subject-${i}`} variant="rectangular" height={60} />
-                  ))}
-                </Stack>
-              ) : (
-                <Stack spacing={2}>
-                  {(subjects?.subjects || subjectMastery || []).map((subject: any, index: number) => (
-                    <Box key={(subject as any).name || (subject as any).subject || `subject-${index}`}>
-                      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-                        <Typography variant="body2" fontWeight={500}>
-                          {(subject as any).name || (subject as any).subject}
-                        </Typography>
-                        <Typography variant="caption">
-                          {(((subject as any).averageScore || (subject as any).mastery || 0) as number).toFixed(1)}%
-                        </Typography>
-                      </Stack>
-                      <LinearProgress
-                        variant="determinate"
-                        value={(subject as any).completionRate || (subject as any).mastery || 0}
-                        sx={{ 
-                          height: 8, 
-                          borderRadius: 4,
-                          bgcolor: 'grey.200',
-                          '& .MuiLinearProgress-bar': {
-                            bgcolor: (((subject as any).completionRate || (subject as any).mastery || 0) as number) >= 80 ? 'success.main' : 
-                                    (((subject as any).completionRate || (subject as any).mastery || 0) as number) >= 60 ? 'warning.main' : 'error.main'
-                          }
-                        }}
-                      />
-                      <Typography variant="caption" color="text.secondary">
-                        {(((subject as any).completionRate || (subject as any).mastery || 0) as number).toFixed(1)}% mastery
-                      </Typography>
-                    </Box>
-                  ))}
-                </Stack>
-              )}
-            </CardContent>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card shadow="sm" padding="lg" radius="md" withBorder>
+            <Group mb="md">
+              <IconChartBar size={20} />
+              <Title order={4}>Subject Mastery</Title>
+            </Group>
+            {loading ? (
+              <Stack gap="md">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={`skeleton-subject-${i}`} height={60} />
+                ))}
+              </Stack>
+            ) : (
+              <Stack gap="md">
+                {(subjects?.subjects || subjectMastery || []).map((subject: any, index: number) => (
+                  <Box key={(subject as any).name || (subject as any).subject || `subject-${index}`}>
+                    <Group justify="space-between" mb="xs">
+                      <Text size="sm" fw={500}>
+                        {(subject as any).name || (subject as any).subject}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {(((subject as any).averageScore || (subject as any).mastery || 0) as number).toFixed(1)}%
+                      </Text>
+                    </Group>
+                    <Progress
+                      value={(subject as any).completionRate || (subject as any).mastery || 0}
+                      size="md"
+                      radius="xl"
+                      color={
+                        (((subject as any).completionRate || (subject as any).mastery || 0) as number) >= 80
+                          ? 'green'
+                          : (((subject as any).completionRate || (subject as any).mastery || 0) as number) >= 60
+                          ? 'yellow'
+                          : 'red'
+                      }
+                    />
+                    <Text size="xs" c="dimmed" mt="xs">
+                      {(((subject as any).completionRate || (subject as any).mastery || 0) as number).toFixed(1)}% mastery
+                    </Text>
+                  </Box>
+                ))}
+              </Stack>
+            )}
           </Card>
-        </Grid>
+        </Grid.Col>
+
         {/* Roblox Engagement */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-                <SportsEsports />
-                Roblox Engagement Analytics
-              </Typography>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={4}>
-                  <Paper sx={{ p: 2, textAlign: "center" }}>
-                    <Typography variant="h3" color="primary" fontWeight={700}>
-                      {platform?.activeUsers?.toLocaleString() || '0'}
-                    </Typography>
-                    <Typography color="text.secondary">
-                      Active Users Today
-                    </Typography>
-                  </Paper>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Paper sx={{ p: 2, textAlign: "center" }}>
-                    <Typography variant="h3" color="secondary" fontWeight={700}>
-                      {platform?.averageEngagement || 0}%
-                    </Typography>
-                    <Typography color="text.secondary">
-                      Engagement Rate
-                    </Typography>
-                  </Paper>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Paper sx={{ p: 2 }}>
-                    <Typography variant="subtitle1" fontWeight={600} mb={1}>
-                      Popular Worlds
-                    </Typography>
-                    <Stack spacing={1}>
-                      {['Math Adventure', 'Science Lab', 'History Quest'].map((world, index) => (
-                        <Chip
-                          key={`world-${index}`}
-                          label={world}
-                          size="small"
-                          variant="outlined"
-                        />
-                      ))}
-                    </Stack>
-                  </Paper>
-                </Grid>
-              </Grid>
-            </CardContent>
+        <Grid.Col span={12}>
+          <Card shadow="sm" padding="lg" radius="md" withBorder>
+            <Group mb="md">
+              <IconPlayerPlay size={20} />
+              <Title order={4}>Roblox Engagement Analytics</Title>
+            </Group>
+            <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
+              <Paper p="md" withBorder style={{ textAlign: "center" }}>
+                <Title order={3} c="blue" fw={700}>
+                  {platform?.activeUsers?.toLocaleString() || '0'}
+                </Title>
+                <Text c="dimmed">Active Users Today</Text>
+              </Paper>
+              <Paper p="md" withBorder style={{ textAlign: "center" }}>
+                <Title order={3} c="gray" fw={700}>
+                  {platform?.averageEngagement || 0}%
+                </Title>
+                <Text c="dimmed">Engagement Rate</Text>
+              </Paper>
+              <Paper p="md" withBorder>
+                <Text fw={600} mb="sm">
+                  Popular Worlds
+                </Text>
+                <Stack gap="xs">
+                  {['Math Adventure', 'Science Lab', 'History Quest'].map((world, index) => (
+                    <Badge
+                      key={`world-${index}`}
+                      size="lg"
+                      variant="outline"
+                      fullWidth
+                    >
+                      {world}
+                    </Badge>
+                  ))}
+                </Stack>
+              </Paper>
+            </SimpleGrid>
           </Card>
-        </Grid>
+        </Grid.Col>
       </Grid>
     </Box>
   );
