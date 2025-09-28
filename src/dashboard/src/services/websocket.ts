@@ -1,11 +1,11 @@
 /**
- * Pusher Service for ToolboxAI Dashboard
- *
- * Manages Pusher connections, channel subscriptions, message handling,
- * and provides a robust real-time communication layer using Pusher.
+ * WebSocket Service for ToolboxAI Dashboard
+ * 
+ * Note: This uses Socket.IO for WebSocket communication.
+ * For Pusher implementation, see the separate Pusher service files.
  */
 
-import Pusher, { Channel, PresenceChannel } from 'pusher-js';
+import { io, Socket } from 'socket.io-client';
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, WS_CONFIG, WS_URL } from '../config';
 import {
   MessageAcknowledgment,
@@ -24,20 +24,27 @@ import {
 } from '../types/websocket';
 import ApiClient from './api';
 
-export class PusherService {
-  private static instance: PusherService | null = null;
-  private pusher: Pusher | null = null;
+export class WebSocketService {
+  private static instance: WebSocketService | null = null;
+  private socket: Socket | null = null;
   private options: WebSocketConnectionOptions;
   private state: WebSocketState = WebSocketState.DISCONNECTED;
-  private channels: Map<string, Channel | PresenceChannel> = new Map();
   private subscriptions: Map<string, Set<WebSocketSubscription>> = new Map();
+  private messageQueue: QueuedMessage[] = [];
+  private reconnectAttempts = 0;
+  private reconnectTimer: number | null = null;
+  private heartbeatTimer: number | null = null;
+  private stats: WebSocketStats;
   private messageHandlers: Map<string, Set<WebSocketEventHandler>> = new Map();
   private stateHandlers: Set<WebSocketStateHandler> = new Set();
   private errorHandlers: Set<WebSocketErrorHandler> = new Set();
+  private pendingAcknowledgments: Map<string, (ack: MessageAcknowledgment) => void> = new Map();
   private currentToken: string | undefined;
+  private tokenRefreshCallbacks: Set<() => void> = new Set();
+  private tokenRefreshTimer: number | null = null;
+  private tokenExpiryTime: number | null = null;
   private apiClient: ApiClient | null = null;
   private connectionStatusCallbacks: Set<(status: WebSocketState) => void> = new Set();
-  private stats: WebSocketStats;
 
   constructor(options: Partial<WebSocketConnectionOptions> = {}) {
     this.options = {
@@ -143,7 +150,7 @@ export class PusherService {
         };
 
         // Connection error handler
-        const errorHandler = (error: any) => {
+        const errorHandler = (error: Error | unknown) => {
           this.log('Connection failed:', error);
           this.socket?.off('connect', connectHandler);
           this.socket?.off('connect_error', errorHandler);
@@ -208,7 +215,7 @@ export class PusherService {
   /**
    * Send a message through WebSocket
    */
-  public send<T = any>(
+  public send<T = unknown>(
     type: WebSocketMessageType,
     payload?: T,
     options: {
@@ -402,7 +409,7 @@ export class PusherService {
     });
 
     // Handle errors
-    this.socket.on('error', (error: any) => {
+    this.socket.on('error', (error: Error | unknown) => {
       let errorMessage = 'Socket error';
       if (error && typeof error === 'object') {
         errorMessage = error.message || error.description || 'Unknown socket error';
@@ -420,7 +427,7 @@ export class PusherService {
     });
 
     // Handle connect_error specifically
-    this.socket.on('connect_error', (error: any) => {
+    this.socket.on('connect_error', (error: Error | unknown) => {
       let errorMessage = 'Connection error';
       if (error && typeof error === 'object') {
         errorMessage = error.message || error.description || 'Failed to connect to server';
@@ -471,7 +478,7 @@ export class PusherService {
       } catch (refreshError) {
         this.handleError({
           code: 'AUTH_FAILED',
-          message: error.message || 'Authentication failed and token refresh failed',
+          message: `Authentication failed and token refresh failed: ${refreshError instanceof Error ? refreshError.message : 'Unknown error'}`,
           timestamp: new Date().toISOString(),
           recoverable: false,
         });
@@ -621,7 +628,7 @@ export class PusherService {
           });
         }
       }
-    }, delay) as any;
+    }, delay) as unknown;
   }
 
   private clearReconnectTimer(): void {
@@ -639,7 +646,7 @@ export class PusherService {
         const pingTime = Date.now();
         this.send(WebSocketMessageType.PING, { timestamp: pingTime });
       }
-    }, this.options.heartbeatInterval!) as any;
+    }, this.options.heartbeatInterval!) as unknown;
   }
 
   private stopHeartbeat(): void {
@@ -800,7 +807,7 @@ export class PusherService {
 
       this.currentToken = newToken;
 
-      this.socket.emit('refresh_token', { token: newToken }, (ack: any) => {
+      this.socket.emit('refresh_token', { token: newToken }, (ack: { success?: boolean; error?: string }) => {
         if (ack?.success) {
           this.log('Token refresh successful');
           resolve();
@@ -845,7 +852,7 @@ export class PusherService {
       if (refreshTime > 0) {
         this.tokenRefreshTimer = setTimeout(() => {
           this.handleTokenExpiration();
-        }, refreshTime) as any;
+        }, refreshTime) as unknown;
         
         this.log(`Token refresh scheduled for ${new Date(expiryTime - 5 * 60 * 1000).toISOString()}`);
       }
@@ -939,9 +946,9 @@ export class PusherService {
     return await this.refreshTokenWithAPI();
   }
   
-  private log(...args: any[]): void {
+  private log(...args: unknown[]): void {
     if (this.options.debug) {
-      console.log('[WebSocket]', ...args);
+      console.error('[WebSocket]', ...args);
     }
   }
 }
@@ -960,7 +967,7 @@ export const websocketService = new WebSocketService({
 export const connectWebSocket = (token?: string) => websocketService.connect(token);
 export const disconnectWebSocket = (reason?: string) => websocketService.disconnect(reason);
 export const refreshWebSocketToken = () => websocketService.refreshTokenAndReconnect();
-export const sendWebSocketMessage = <T = any>(
+export const sendWebSocketMessage = <T = unknown>(
   type: WebSocketMessageType,
   payload?: T,
   options?: { channel?: string; awaitAcknowledgment?: boolean; timeout?: number }
