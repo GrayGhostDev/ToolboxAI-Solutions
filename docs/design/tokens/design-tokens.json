@@ -1,0 +1,310 @@
+{
+  "color": {
+    "brand": {
+      "primary": {
+        "value": "#1976d2",
+        "comment": "Educational blue - primary brand color for actions and navigation"
+      },
+      "secondary": {
+        "value": "#2e7d32",
+        "comment": "Success green - for positive feedback and completion states"
+      }
+    },
+    "semantic": {
+      "success": {
+        "value": "#2e7d32",
+        "comment": "Success state color"
+      },
+      "warning": {
+        "value": "#f57c00",
+        "comment": "Warning state color"
+      },
+      "error": {
+        "value": "#d32f2f",
+        "comment": "Error state color"
+      },
+      "info": {
+        "value": "#0288d1",
+        "comment": "Information state color"
+      }
+    },
+    "neutral": {
+      "0": {
+        "value": "#ffffff",
+        "comment": "Pure white for backgrounds"
+      },
+      "50": {
+        "value": "#fafafa",
+        "comment": "Light gray for subtle backgrounds"
+      },
+      "100": {
+        "value": "#f5f5f5",
+        "comment": "Light gray for section backgrounds"
+      },
+      "200": {
+        "value": "#eeeeee",
+        "comment": "Border and divider color"
+      },
+      "300": {
+        "value": "#e0e0e0",
+        "comment": "Disabled state backgrounds"
+      },
+      "400": {
+        "value": "#bdbdbd",
+        "comment": "Placeholder text color"
+      },
+      "500": {
+        "value": "#9e9e9e",
+        "comment": "Secondary text color"
+      },
+      "600": {
+        "value": "#757575",
+        "comment": "Icon color"
+      },
+      "700": {
+        "value": "#616161",
+        "comment": "Body text color"
+      },
+      "800": {
+        "value": "#424242",
+        "comment": "Secondary heading color"
+      },
+      "900": {
+        "value": "#212121",
+        "comment": "Primary text color"
+      }
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "primary": {
+        "value": "Roboto, 'Helvetica Neue', Arial, sans-serif",
+        "comment": "Primary font family for interface text"
+      },
+      "monospace": {
+        "value": "'Roboto Mono', 'Courier New', monospace",
+        "comment": "Monospace font for code and technical content"
+      }
+    },
+    "fontSize": {
+      "xs": {
+        "value": "0.75rem",
+        "comment": "12px - Small captions and metadata"
+      },
+      "sm": {
+        "value": "0.875rem",
+        "comment": "14px - Small body text and labels"
+      },
+      "base": {
+        "value": "1rem",
+        "comment": "16px - Base body text size"
+      },
+      "lg": {
+        "value": "1.125rem",
+        "comment": "18px - Large body text"
+      },
+      "xl": {
+        "value": "1.25rem",
+        "comment": "20px - Small headings"
+      },
+      "2xl": {
+        "value": "1.5rem",
+        "comment": "24px - Medium headings"
+      },
+      "3xl": {
+        "value": "1.875rem",
+        "comment": "30px - Large headings"
+      },
+      "4xl": {
+        "value": "2.25rem",
+        "comment": "36px - Extra large headings"
+      }
+    },
+    "fontWeight": {
+      "normal": {
+        "value": "400",
+        "comment": "Regular weight for body text"
+      },
+      "medium": {
+        "value": "500",
+        "comment": "Medium weight for emphasis"
+      },
+      "semibold": {
+        "value": "600",
+        "comment": "Semi-bold for subheadings"
+      },
+      "bold": {
+        "value": "700",
+        "comment": "Bold for headings and important text"
+      }
+    },
+    "lineHeight": {
+      "tight": {
+        "value": "1.25",
+        "comment": "Tight line height for headings"
+      },
+      "normal": {
+        "value": "1.5",
+        "comment": "Normal line height for body text"
+      },
+      "relaxed": {
+        "value": "1.625",
+        "comment": "Relaxed line height for long-form content"
+      }
+    }
+  },
+  "spacing": {
+    "xs": {
+      "value": "0.25rem",
+      "comment": "4px - Extra small spacing"
+    },
+    "sm": {
+      "value": "0.5rem",
+      "comment": "8px - Small spacing"
+    },
+    "base": {
+      "value": "1rem",
+      "comment": "16px - Base spacing unit"
+    },
+    "lg": {
+      "value": "1.5rem",
+      "comment": "24px - Large spacing"
+    },
+    "xl": {
+      "value": "2rem",
+      "comment": "32px - Extra large spacing"
+    },
+    "2xl": {
+      "value": "3rem",
+      "comment": "48px - Section spacing"
+    },
+    "3xl": {
+      "value": "4rem",
+      "comment": "64px - Page-level spacing"
+    }
+  },
+  "borderRadius": {
+    "none": {
+      "value": "0",
+      "comment": "No border radius"
+    },
+    "sm": {
+      "value": "0.25rem",
+      "comment": "4px - Small border radius"
+    },
+    "base": {
+      "value": "0.5rem",
+      "comment": "8px - Base border radius"
+    },
+    "lg": {
+      "value": "0.75rem",
+      "comment": "12px - Large border radius"
+    },
+    "full": {
+      "value": "9999px",
+      "comment": "Fully rounded borders"
+    }
+  },
+  "shadow": {
+    "sm": {
+      "value": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+      "comment": "Small shadow for subtle elevation"
+    },
+    "base": {
+      "value": "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+      "comment": "Base shadow for cards and modals"
+    },
+    "lg": {
+      "value": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+      "comment": "Large shadow for prominent elevation"
+    },
+    "xl": {
+      "value": "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+      "comment": "Extra large shadow for maximum elevation"
+    }
+  },
+  "animation": {
+    "duration": {
+      "fast": {
+        "value": "150ms",
+        "comment": "Fast animations for immediate feedback"
+      },
+      "normal": {
+        "value": "300ms",
+        "comment": "Normal duration for most transitions"
+      },
+      "slow": {
+        "value": "500ms",
+        "comment": "Slow animations for complex transitions"
+      }
+    },
+    "easing": {
+      "linear": {
+        "value": "linear",
+        "comment": "Linear easing for simple animations"
+      },
+      "easeInOut": {
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "comment": "Ease in-out for natural feeling animations"
+      },
+      "easeOut": {
+        "value": "cubic-bezier(0, 0, 0.2, 1)",
+        "comment": "Ease out for exit animations"
+      },
+      "easeIn": {
+        "value": "cubic-bezier(0.4, 0, 1, 1)",
+        "comment": "Ease in for entrance animations"
+      }
+    }
+  },
+  "educational": {
+    "gradeLevel": {
+      "elementary": {
+        "primary": "#4caf50",
+        "secondary": "#81c784",
+        "comment": "Green palette for elementary education"
+      },
+      "middle": {
+        "primary": "#ff9800",
+        "secondary": "#ffb74d",
+        "comment": "Orange palette for middle school"
+      },
+      "high": {
+        "primary": "#2196f3",
+        "secondary": "#64b5f6",
+        "comment": "Blue palette for high school"
+      },
+      "college": {
+        "primary": "#9c27b0",
+        "secondary": "#ba68c8",
+        "comment": "Purple palette for college/university"
+      }
+    },
+    "subject": {
+      "math": {
+        "value": "#f44336",
+        "comment": "Red for mathematics"
+      },
+      "science": {
+        "value": "#4caf50",
+        "comment": "Green for science"
+      },
+      "english": {
+        "value": "#2196f3",
+        "comment": "Blue for English/Language Arts"
+      },
+      "history": {
+        "value": "#ff9800",
+        "comment": "Orange for history/social studies"
+      },
+      "art": {
+        "value": "#9c27b0",
+        "comment": "Purple for arts"
+      },
+      "other": {
+        "value": "#607d8b",
+        "comment": "Gray for other subjects"
+      }
+    }
+  }
+}
