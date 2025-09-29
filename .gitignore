@@ -181,20 +181,22 @@ design_files/
 *.ma
 *.mb
 
-# Large JSON files from image parsing
-images/obj/*.json
-images/sketch/*.json
-images/blend/*.json
-
 # Design file parsing outputs (allow images folder)
 parsed_*.json
 **/parsed_*.json
 design_parsing_output/
 **/design_parsing_output/
+
+# Allow images folder and its contents
 !images/
 !**/images/
 !images/**/*
 !**/images/**/*
+
+# Large JSON files from image parsing (must come AFTER negations)
+images/obj/*.json
+images/sketch/*.json
+images/blend/*.json
 
 # Test outputs for design parsing
 test_design_files.py
