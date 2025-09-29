@@ -190,9 +190,10 @@ jobs:
 
               return 0 if passed else 1
 
-          exit_code = asyncio.run(main())
-          echo \"passed=$([[ $exit_code -eq 0 ]] && echo 'true' || echo 'false')\" >> $GITHUB_OUTPUT
-          " || true
+          sys.exit(asyncio.run(main()))
+          "
+          EXIT_CODE=$?
+          echo "passed=$([[ $EXIT_CODE -eq 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
 
       - name: Build Optimization Analysis
         id: build
@@ -226,8 +227,8 @@ jobs:
               return 0
 
           asyncio.run(main())
-          echo \"optimized=true\" >> $GITHUB_OUTPUT
-          " || true
+          "
+          echo "optimized=true" >> $GITHUB_OUTPUT
 
       - name: Environment Validation
         id: environment
@@ -265,13 +266,14 @@ jobs:
 
               return 0 if valid else 1
 
-          exit_code = asyncio.run(main())
-          echo \"valid=$([[ $exit_code -eq 0 ]] && echo 'true' || echo 'false')\" >> $GITHUB_OUTPUT
-          " || true
+          sys.exit(asyncio.run(main()))
+          "
+          EXIT_CODE=$?
+          echo "valid=$([[ $EXIT_CODE -eq 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
 
       - name: Deployment Readiness Check
         id: deployment
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/production'
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         run: |
           python -c "
           import asyncio
@@ -303,9 +305,10 @@ jobs:
 
               return 0 if ready else 1
 
-          exit_code = asyncio.run(main())
-          echo \"ready=$([[ $exit_code -eq 0 ]] && echo 'true' || echo 'false')\" >> $GITHUB_OUTPUT
-          " || true
+          sys.exit(asyncio.run(main()))
+          "
+          EXIT_CODE=$?
+          echo "ready=$([[ $EXIT_CODE -eq 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
 
       - name: Pipeline Monitoring
         id: monitoring

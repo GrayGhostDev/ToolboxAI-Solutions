@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       validation-type: ${{ steps.determine-validation.outputs.type }}
-      changed-files: ${{ steps.changed-files.outputs.files }}
+      changed-files: ${{ steps.changed-files.outputs.all_changed_files }}
       should-run-api-sync: ${{ steps.determine-validation.outputs.api-sync }}
       should-run-coverage: ${{ steps.determine-validation.outputs.coverage }}
 
