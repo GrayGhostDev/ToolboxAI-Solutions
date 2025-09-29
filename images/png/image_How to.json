@@ -1,0 +1,146 @@
+{
+  "success": true,
+  "file_path": "design_files/Figma File/How to.jpg",
+  "file_name": "How to.jpg",
+  "file_type": ".jpg",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "JPEG",
+    "mode": "RGB",
+    "size": {
+      "width": 1823,
+      "height": 3988,
+      "total_pixels": 7270124
+    },
+    "has_transparency": false,
+    "color_channels": 3,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 40468,
+      "most_common": [
+        [
+          1013243,
+          [
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          481,
+          [
+            254,
+            255,
+            255
+          ]
+        ],
+        [
+          1,
+          [
+            252,
+            255,
+            255
+          ]
+        ],
+        [
+          16,
+          [
+            251,
+            255,
+            255
+          ]
+        ],
+        [
+          6,
+          [
+            250,
+            255,
+            255
+          ]
+        ],
+        [
+          19,
+          [
+            249,
+            255,
+            255
+          ]
+        ],
+        [
+          24,
+          [
+            247,
+            255,
+            255
+          ]
+        ],
+        [
+          1,
+          [
+            245,
+            255,
+            255
+          ]
+        ],
+        [
+          6,
+          [
+            244,
+            255,
+            255
+          ]
+        ],
+        [
+          15,
+          [
+            243,
+            255,
+            255
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          65,
+          65,
+          65
+        ],
+        "frequency": 7822
+      },
+      {
+        "color": [
+          229,
+          229,
+          229
+        ],
+        "frequency": 4352
+      },
+      {
+        "color": [
+          255,
+          255,
+          255
+        ],
+        "frequency": 1385
+      },
+      {
+        "color": [
+          254,
+          254,
+          254
+        ],
+        "frequency": 308
+      },
+      {
+        "color": [
+          62,
+          62,
+          62
+        ],
+        "frequency": 213
+      }
+    ]
+  }
+}

@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/stuudy-3d-icons_NjhhMjYzMmIyMzI4MmUwMDM5ZDY0Yzlj/PNG/ERASER_1.png",
+  "file_name": "ERASER_1.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 3000,
+      "height": 3000,
+      "total_pixels": 9000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 27051,
+      "most_common": [
+        [
+          11,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            254,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            253,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            251,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          2,
+          [
+            249,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            246,
+            255,
+            255,
+            7
+          ]
+        ],
+        [
+          1,
+          [
+            245,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            243,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            236,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            245,
+            254,
+            255,
+            1
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 16353
+      },
+      {
+        "color": [
+          255,
+          119,
+          132,
+          255
+        ],
+        "frequency": 64
+      },
+      {
+        "color": [
+          230,
+          223,
+          211,
+          255
+        ],
+        "frequency": 51
+      },
+      {
+        "color": [
+          255,
+          124,
+          135,
+          255
+        ],
+        "frequency": 51
+      },
+      {
+        "color": [
+          255,
+          126,
+          138,
+          255
+        ],
+        "frequency": 49
+      }
+    ]
+  }
+}

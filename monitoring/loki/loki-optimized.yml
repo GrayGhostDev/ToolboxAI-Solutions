@@ -1,0 +1,363 @@
+# ToolBoxAI Optimized Loki Configuration
+# =====================================
+# High-performance log aggregation with optimized storage and indexing
+# Supports multi-tenant architecture and efficient querying
+#
+# Version: 2.0.0
+# Last Updated: 2025-09-26
+
+# Authentication and multi-tenancy
+auth_enabled: false  # Set to true for multi-tenant deployments
+
+# Server configuration
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  http_server_read_timeout: 30s
+  http_server_write_timeout: 30s
+  http_server_idle_timeout: 120s
+  grpc_server_max_recv_msg_size: 104857600  # 100MB
+  grpc_server_max_send_msg_size: 104857600  # 100MB
+  log_level: info
+  log_format: json
+
+# Common configuration for all components
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+    # Uncomment for S3 storage
+    # s3:
+    #   endpoint: '${S3_ENDPOINT:-}'
+    #   bucketnames: '${S3_BUCKET:-loki-chunks}'
+    #   region: '${AWS_REGION:-us-east-1}'
+    #   access_key_id: '${AWS_ACCESS_KEY_ID:-}'
+    #   secret_access_key: '${AWS_SECRET_ACCESS_KEY:-}'
+    #   insecure: false
+    #   sse_encryption: true
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+      # For production, use etcd or consul
+      # store: etcd
+      # etcd:
+      #   endpoints: ['etcd:2379']
+
+# ============================================================================
+# INGESTER CONFIGURATION
+# ============================================================================
+
+ingester:
+  # Chunk configuration for optimal performance
+  chunk_encoding: snappy
+  chunk_idle_period: 30m       # How long chunks stay in memory
+  chunk_retain_period: 1m      # How long to keep chunks after flushing
+  chunk_target_size: 1572864   # 1.5MB target chunk size
+  chunk_block_size: 262144     # 256KB blocks
+
+  # Flush configuration
+  max_chunk_age: 1h            # Force flush after 1 hour
+  flush_op_timeout: 10s
+  max_transfer_retries: 10
+
+  # WAL (Write-Ahead Log) configuration
+  wal:
+    enabled: true
+    dir: /loki/wal
+    checkpoint_duration: 5m
+    flush_on_shutdown: true
+    replay_memory_ceiling: 1GB
+
+  # Lifecycle configuration
+  lifecycler:
+    address: 127.0.0.1
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+    final_sleep: 30s
+    num_tokens: 512
+
+# ============================================================================
+# QUERIER CONFIGURATION
+# ============================================================================
+
+querier:
+  # Query timeout and limits
+  query_timeout: 300s
+  query_ingesters_within: 3h
+  max_concurrent: 20
+
+  # Engine configuration
+  engine:
+    timeout: 5m
+    max_look_back_period: 30s
+
+# Query frontend for query parallelization and caching
+query_range:
+  # Result caching
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 500        # Increased cache size
+        ttl: 24h               # 24-hour cache TTL
+
+  # Query splitting and parallelization
+  split_queries_by_interval: 15m
+  align_queries_with_step: true
+  cache_results: true
+  max_retries: 5
+  parallelise_shardable_queries: true
+
+# Query scheduler for load balancing
+query_scheduler:
+  max_outstanding_requests_per_tenant: 256
+
+# ============================================================================
+# STORAGE CONFIGURATION
+# ============================================================================
+
+schema_config:
+  configs:
+    # Current schema (v12 is latest stable)
+    - from: 2023-01-01
+      store: boltdb-shipper
+      object_store: filesystem
+      schema: v12
+      index:
+        prefix: loki_index_
+        period: 24h
+
+    # Future schema for optimization (uncomment when ready)
+    # - from: 2025-01-01
+    #   store: tsdb
+    #   object_store: filesystem
+    #   schema: v12
+    #   index:
+    #     prefix: loki_tsdb_
+    #     period: 24h
+
+# Storage configuration
+storage_config:
+  # BoltDB Shipper (current)
+  boltdb_shipper:
+    active_index_directory: /loki/boltdb-shipper-active
+    cache_location: /loki/boltdb-shipper-cache
+    cache_ttl: 24h
+    shared_store: filesystem
+
+    # Index optimization
+    build_per_tenant_index: false
+    query_ready_num_days: 0
+
+  # Filesystem configuration
+  filesystem:
+    directory: /loki/chunks
+
+  # Index queries cache
+  index_queries_cache_config:
+    embedded_cache:
+      enabled: true
+      max_size_mb: 256
+      ttl: 24h
+
+# ============================================================================
+# LIMITS AND PERFORMANCE TUNING
+# ============================================================================
+
+limits_config:
+  # Ingestion limits
+  ingestion_rate_mb: 50          # 50MB/s per tenant
+  ingestion_burst_size_mb: 100   # 100MB burst
+  max_line_size: 256KB           # Maximum log line size
+  max_line_size_truncate: true   # Truncate oversized lines
+
+  # Query limits
+  max_query_series: 5000         # Max series per query
+  max_query_parallelism: 32      # Max parallel queries
+  max_query_length: 721h         # ~30 days max query range
+  max_entries_limit_per_query: 10000
+  max_streams_per_user: 10000
+
+  # Per-stream limits
+  per_stream_rate_limit: 5MB     # 5MB/s per stream
+  per_stream_rate_limit_burst: 20MB  # 20MB burst per stream
+
+  # Retention and cleanup
+  retention_period: 30d          # 30-day default retention
+  enforce_metric_name: false
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h  # 7 days
+  creation_grace_period: 10m
+
+  # Cardinality limits
+  max_global_streams_per_user: 5000
+  max_chunks_per_query: 2000000
+  max_concurrent_tail_requests: 10
+
+  # Split queries by time
+  split_queries_by_interval: 30m
+  max_cache_freshness_per_query: 10m
+
+  # TSDB specific limits (for future use)
+  tsdb_max_query_parallelism: 512
+  tsdb_max_bytes_per_shard: 600MB
+
+# ============================================================================
+# COMPACTOR CONFIGURATION
+# ============================================================================
+
+compactor:
+  working_directory: /loki/compactor
+  shared_store: filesystem
+
+  # Compaction scheduling
+  compaction_interval: 10m
+  apply_retention_interval: 1h
+
+  # Retention settings
+  retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 150
+  delete_request_cancel_period: 24h
+
+  # Performance tuning
+  max_compaction_parallelism: 4
+
+# ============================================================================
+# ANALYTICS AND MONITORING
+# ============================================================================
+
+analytics:
+  reporting_enabled: false
+
+# Metrics configuration
+metrics:
+  # Disable high-cardinality metrics if needed
+  global:
+    evaluation_interval: 30s
+
+# ============================================================================
+# TABLE MANAGER CONFIGURATION
+# ============================================================================
+
+table_manager:
+  retention_deletes_enabled: true
+  retention_period: 30d
+  poll_interval: 2m
+
+  # Index table management
+  creation_grace_period: 3h
+
+  # Throughput configuration
+  index_tables_provisioning:
+    enable_ondemand_throughput_mode: true
+    provisioned_write_throughput: 3000
+    provisioned_read_throughput: 1000
+    inactive_write_throughput: 1
+    inactive_read_throughput: 300
+
+  chunk_tables_provisioning:
+    enable_ondemand_throughput_mode: true
+    provisioned_write_throughput: 3000
+    provisioned_read_throughput: 1000
+    inactive_write_throughput: 1
+    inactive_read_throughput: 300
+
+# ============================================================================
+# RULER CONFIGURATION (for alerting on logs)
+# ============================================================================
+
+ruler:
+  # AlertManager integration
+  alertmanager_url: http://alertmanager:9093
+
+  # External URL for building links
+  external_url: '${LOKI_EXTERNAL_URL:-http://loki:3100}'
+
+  # Rule evaluation
+  evaluation_interval: 1m
+  poll_interval: 1m
+
+  # Storage for rules
+  storage:
+    type: local
+    local:
+      directory: /loki/rules
+
+  # Ring configuration
+  ring:
+    kvstore:
+      store: inmemory
+
+  # Ruler specific limits
+  rule_path: /loki/rules-temp
+  enable_api: true
+  enable_sharding: false
+
+# ============================================================================
+# DISTRIBUTOR CONFIGURATION
+# ============================================================================
+
+distributor:
+  ring:
+    kvstore:
+      store: inmemory
+
+# ============================================================================
+# FRONTEND CONFIGURATION
+# ============================================================================
+
+frontend:
+  # Query result compression
+  compress_responses: true
+
+  # Downstream URL
+  downstream_url: http://querier:3100
+
+  # Query stats logging
+  log_queries_longer_than: 5s
+  max_outstanding_per_tenant: 256
+
+# Query frontend worker
+frontend_worker:
+  frontend_address: loki-query-frontend:9095
+  grpc_client_config:
+    max_send_msg_size: 104857600
+
+# ============================================================================
+# TRACING CONFIGURATION (Optional)
+# ============================================================================
+
+# Uncomment for distributed tracing
+# tracing:
+#   enabled: true
+#   jaeger:
+#     agent:
+#       host: jaeger-agent
+#       port: 6831
+#     endpoint: http://jaeger-collector:14268/api/traces
+#     sampler:
+#       type: const
+#       param: 1.0
+
+# ============================================================================
+# MEMBERLIST CONFIGURATION (for clustering)
+# ============================================================================
+
+# Uncomment for multi-instance deployment
+# memberlist:
+#   abort_if_cluster_join_fails: false
+#   bind_port: 7946
+#   join_members:
+#     - loki-1:7946
+#     - loki-2:7946
+#     - loki-3:7946
+#   max_join_backoff: 1m
+#   max_join_retries: 10
+#   min_join_backoff: 1s

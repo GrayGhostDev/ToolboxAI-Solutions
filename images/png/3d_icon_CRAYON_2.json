@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/stuudy-3d-icons_NjhhMjYzMmIyMzI4MmUwMDM5ZDY0Yzlj/PNG/CRAYON_2.png",
+  "file_name": "CRAYON_2.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 3000,
+      "height": 3000,
+      "total_pixels": 9000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 26471,
+      "most_common": [
+        [
+          1,
+          [
+            247,
+            118,
+            70,
+            123
+          ]
+        ],
+        [
+          1,
+          [
+            237,
+            101,
+            59,
+            64
+          ]
+        ],
+        [
+          1,
+          [
+            246,
+            117,
+            70,
+            139
+          ]
+        ],
+        [
+          1,
+          [
+            247,
+            117,
+            70,
+            187
+          ]
+        ],
+        [
+          1,
+          [
+            237,
+            113,
+            81,
+            210
+          ]
+        ],
+        [
+          1,
+          [
+            201,
+            44,
+            25,
+            128
+          ]
+        ],
+        [
+          1,
+          [
+            247,
+            123,
+            77,
+            132
+          ]
+        ],
+        [
+          1,
+          [
+            247,
+            121,
+            77,
+            244
+          ]
+        ],
+        [
+          1,
+          [
+            242,
+            99,
+            51,
+            208
+          ]
+        ],
+        [
+          1,
+          [
+            242,
+            98,
+            51,
+            208
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 18501
+      },
+      {
+        "color": [
+          248,
+          131,
+          86,
+          255
+        ],
+        "frequency": 66
+      },
+      {
+        "color": [
+          248,
+          131,
+          87,
+          255
+        ],
+        "frequency": 57
+      },
+      {
+        "color": [
+          248,
+          132,
+          87,
+          255
+        ],
+        "frequency": 54
+      },
+      {
+        "color": [
+          249,
+          237,
+          225,
+          255
+        ],
+        "frequency": 51
+      }
+    ]
+  }
+}

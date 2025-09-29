@@ -1,0 +1,79 @@
+# TruffleHog exclusions for ToolBoxAI-Solutions
+# ============================================
+# Exclude paths from secret scanning
+# Updated: 2025-09-25
+# ============================================
+
+# Documentation and examples
+docs/
+*.md
+*.txt
+CHANGELOG.md
+README.md
+
+# Configuration templates (no real secrets)
+.env.example
+.env.template
+**/env-templates/
+config/env-templates/
+
+# Test files (fake/test data)
+tests/
+**/*test*
+**/*mock*
+**/fixtures/
+conftest.py
+
+# Build artifacts
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+dist/
+build/
+.coverage
+htmlcov/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker build context
+.dockerignore
+**/Dockerfile*
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Logs
+*.log
+logs/
+tmp/
+
+# Archives
+Archive/
+backups/
+
+# Package files
+package-lock.json
+yarn.lock
+requirements.lock
+
+# Generated files
+coverage-report.json
+*.generated.*
+auto-generated/
+
+# Known false positives (example keys)
+# Add specific patterns for your known test/example keys
+sk-proj-example
+sk-ant-example
+test_secret_key
+your_api_key_here
+your_secret_here

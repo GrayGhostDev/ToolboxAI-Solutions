@@ -1,0 +1,367 @@
+# ============================================
+# TOOLBOXAI MONITORING STACK (TEMPLATE)
+# ============================================
+# Comprehensive observability with Grafana, Loki, Jaeger, and Prometheus
+# Use with: docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up
+# Updated: 2025-09-28
+# ============================================
+#
+# ⚠️ IMPORTANT: This is a template configuration.
+# 📍 For the ACTUAL PRODUCTION deployment with running containers, see:
+#    docs/08-operations/monitoring/PROMETHEUS_IMPLEMENTATION_2025.md
+#
+# Current production containers (as of 2025-09-28):
+# - Prometheus: ced4f25f065961fa (port 9090)
+# - Grafana: 435fb9a29d6d7c8d (port 3000)
+# - Loki: 03ca72de474e3be4 (port 3100)
+# - Promtail: 48dec4e7fb08997 (port 9080)
+# - Jaeger: 6ceb03cd6bc9159c (ports 16686/4317)
+# - OpenTelemetry: a3de9f68b91a9081 (ports 4317/4318)
+# ============================================
+
+version: '3.9'
+
+services:
+  # ----------------------------------------
+  # Prometheus (Metrics Collection) - Enhanced
+  # ----------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: toolboxai-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=10GB'
+      - '--web.enable-admin-api'
+    volumes:
+      - ../../config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../../config/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - ../../config/prometheus/recording_rules.yml:/etc/prometheus/recording_rules.yml:ro
+      - prometheus_data:/prometheus:Z
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+      - backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ----------------------------------------
+  # Grafana (Visualization Dashboard)
+  # ----------------------------------------
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: toolboxai-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource,redis-datasource
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3000}
+      GF_SMTP_ENABLED: ${GRAFANA_SMTP_ENABLED:-false}
+      GF_AUTH_ANONYMOUS_ENABLED: false
+      GF_LOG_LEVEL: info
+      GF_ANALYTICS_REPORTING_ENABLED: false
+    volumes:
+      - grafana_data:/var/lib/grafana:Z
+      - ../../config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../../config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+      - loki
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ----------------------------------------
+  # Loki (Log Aggregation)
+  # ----------------------------------------
+  loki:
+    image: grafana/loki:2.9.3
+    container_name: toolboxai-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ../../config/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki_data:/loki:Z
+    ports:
+      - "3100:3100"
+    networks:
+      - monitoring
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ----------------------------------------
+  # Promtail (Log Shipper)
+  # ----------------------------------------
+  promtail:
+    image: grafana/promtail:2.9.3
+    container_name: toolboxai-promtail
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/promtail-config.yml
+    volumes:
+      - ../../config/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - backend_logs:/app/logs:ro
+      - celery_logs:/celery/logs:ro
+      - agent_logs:/agent/logs:ro
+    networks:
+      - monitoring
+      - backend
+    depends_on:
+      - loki
+
+  # ----------------------------------------
+  # Jaeger (Distributed Tracing)
+  # ----------------------------------------
+  jaeger:
+    image: jaegertracing/all-in-one:1.52
+    container_name: toolboxai-jaeger
+    restart: unless-stopped
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: ":9411"
+      COLLECTOR_OTLP_ENABLED: true
+      SPAN_STORAGE_TYPE: badger
+      BADGER_EPHEMERAL: false
+      BADGER_DIRECTORY_VALUE: /badger/data
+      BADGER_DIRECTORY_KEY: /badger/key
+    volumes:
+      - jaeger_data:/badger:Z
+    ports:
+      - "5775:5775/udp"  # Zipkin Thrift
+      - "6831:6831/udp"  # Jaeger Thrift
+      - "6832:6832/udp"  # Jaeger Thrift Binary
+      - "5778:5778"      # Configuration
+      - "16686:16686"    # Jaeger UI
+      - "14250:14250"    # gRPC
+      - "14268:14268"    # HTTP collector
+      - "14269:14269"    # Admin port
+      - "9411:9411"      # Zipkin collector
+      - "4317:4317"      # OTLP gRPC
+      - "4318:4318"      # OTLP HTTP
+    networks:
+      - monitoring
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:14269/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ----------------------------------------
+  # Alertmanager (Alert Routing)
+  # ----------------------------------------
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: toolboxai-alertmanager
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--log.level=info'
+    volumes:
+      - ../../config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager:Z
+    ports:
+      - "9093:9093"
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ----------------------------------------
+  # Node Exporter (Host Metrics)
+  # ----------------------------------------
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: toolboxai-node-exporter
+    restart: unless-stopped
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/host/root'
+      - '--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)'
+      - '--collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro
+    ports:
+      - "9100:9100"
+    networks:
+      - monitoring
+    pid: host
+
+  # ----------------------------------------
+  # cAdvisor (Container Metrics)
+  # ----------------------------------------
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    container_name: toolboxai-cadvisor
+    restart: unless-stopped
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+      - /cgroup:/cgroup:ro
+    ports:
+      - "8082:8080"
+    networks:
+      - monitoring
+    command:
+      - '--housekeeping_interval=10s'
+      - '--docker_only=true'
+      - '--disable_metrics=disk,network,tcp,udp,percpu,sched,process'
+
+  # ----------------------------------------
+  # Postgres Exporter (Database Metrics)
+  # ----------------------------------------
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: toolboxai-postgres-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: postgresql://${POSTGRES_USER:-toolboxai}:${POSTGRES_PASSWORD:-devpass2024}@postgres:5432/${POSTGRES_DB:-toolboxai}?sslmode=disable
+      PG_EXPORTER_AUTO_DISCOVER_DATABASES: true
+      PG_EXPORTER_INCLUDE_DATABASES: ${POSTGRES_DB:-toolboxai}
+    ports:
+      - "9187:9187"
+    networks:
+      - monitoring
+      - database
+    depends_on:
+      - postgres
+
+  # ----------------------------------------
+  # Redis Exporter (Cache Metrics)
+  # ----------------------------------------
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.55.0
+    container_name: toolboxai-redis-exporter
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    ports:
+      - "9121:9121"
+    networks:
+      - monitoring
+      - cache
+    depends_on:
+      - redis
+
+  # ----------------------------------------
+  # Blackbox Exporter (Endpoint Monitoring)
+  # ----------------------------------------
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.24.0
+    container_name: toolboxai-blackbox-exporter
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/blackbox_exporter/blackbox.yml'
+    volumes:
+      - ../../config/blackbox/blackbox.yml:/etc/blackbox_exporter/blackbox.yml:ro
+    ports:
+      - "9115:9115"
+    networks:
+      - monitoring
+      - backend
+
+  # ----------------------------------------
+  # Tempo (Trace Storage - Alternative to Jaeger)
+  # ----------------------------------------
+  tempo:
+    image: grafana/tempo:2.3.0
+    container_name: toolboxai-tempo
+    restart: unless-stopped
+    command: [ "-config.file=/etc/tempo.yml" ]
+    volumes:
+      - ../../config/tempo/tempo.yml:/etc/tempo.yml:ro
+      - tempo_data:/tmp/tempo:Z
+    ports:
+      - "3200:3200"   # Tempo
+      - "9095:9095"   # Tempo gRPC
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    networks:
+      - monitoring
+      - backend
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local
+  jaeger_data:
+    driver: local
+  alertmanager_data:
+    driver: local
+  tempo_data:
+    driver: local
+  # Reference existing volumes from main compose
+  backend_logs:
+    external: true
+  celery_logs:
+    external: true
+  agent_logs:
+    external: true
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  monitoring:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-monitoring
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24
+  # Reference existing networks
+  backend:
+    external: true
+  database:
+    external: true
+  cache:
+    external: true

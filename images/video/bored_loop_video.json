@@ -1,0 +1,49 @@
+{
+  "success": true,
+  "file_path": "design_files/bored_loop.mp4",
+  "file_name": "bored_loop.mp4",
+  "file_type": ".mp4",
+  "parsed_data": {
+    "format": "video",
+    "file_format": "mov,mp4,m4a,3gp,3g2,mj2",
+    "duration": 5.0,
+    "size": 2020089,
+    "bitrate": 3232142,
+    "streams": [
+      {
+        "index": 0,
+        "codec_type": "video",
+        "codec_name": "h264",
+        "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+        "profile": "Main",
+        "level": 50,
+        "width": 1800,
+        "height": 1360,
+        "aspect_ratio": "45:34",
+        "frame_rate": "24/1",
+        "pixel_format": "yuv420p",
+        "color_space": null,
+        "color_primaries": null,
+        "color_trc": null
+      },
+      {
+        "index": 1,
+        "codec_type": "audio",
+        "codec_name": "aac",
+        "codec_long_name": "AAC (Advanced Audio Coding)",
+        "profile": "LC",
+        "level": null,
+        "sample_rate": "48000",
+        "channels": 2,
+        "channel_layout": "stereo",
+        "bit_rate": "316295"
+      }
+    ],
+    "metadata": {
+      "major_brand": "mp42",
+      "minor_version": "0",
+      "compatible_brands": "mp42mp41",
+      "creation_time": "2021-08-17T14:10:26.000000Z"
+    }
+  }
+}

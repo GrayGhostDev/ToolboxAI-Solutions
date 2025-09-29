@@ -1,0 +1,38 @@
+{
+  "mcpServers": {
+    "educational-content": {
+      "command": "python",
+      "args": ["-m", "core.mcp.servers.educational_content"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}",
+        "REDIS_URL": "${REDIS_URL}"
+      }
+    },
+    "analytics": {
+      "command": "python",
+      "args": ["-m", "core.mcp.servers.analytics"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}",
+        "REDIS_URL": "${REDIS_URL}"
+      }
+    },
+    "roblox-integration": {
+      "command": "python",
+      "args": ["-m", "core.mcp.servers.roblox"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}",
+        "REDIS_URL": "${REDIS_URL}",
+        "ROBLOX_API_KEY": "${ROBLOX_API_KEY}"
+      }
+    },
+    "agent-coordinator": {
+      "command": "python",
+      "args": ["-m", "core.mcp.servers.agent_coordinator"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}",
+        "REDIS_URL": "${REDIS_URL}",
+        "COORDINATOR_PORT": "8888"
+      }
+    }
+  }
+}

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Renewal</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 4px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+        .card-inner {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin: 0;
+            font-weight: 700;
+        }
+        .renewal-badge {
+            text-align: center;
+            margin: 25px 0;
+        }
+        .renewal-badge .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .content h2 {
+            color: #1a1a1a;
+            font-size: 28px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .content p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .subscription-card {
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f1ff 100%);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 1px solid #e5e7ff;
+            position: relative;
+            overflow: hidden;
+        }
+        .subscription-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .plan-name {
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .plan-price {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin: 15px 0;
+        }
+        .plan-price .currency {
+            font-size: 20px;
+            vertical-align: super;
+        }
+        .plan-price .period {
+            font-size: 16px;
+            color: #999;
+            font-weight: 400;
+        }
+        .renewal-details {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-row .label {
+            color: #666;
+            font-size: 15px;
+        }
+        .detail-row .value {
+            color: #1a1a1a;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .features-list {
+            margin: 25px 0;
+            padding: 0;
+            list-style: none;
+        }
+        .features-list li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+            color: #666;
+            font-size: 15px;
+        }
+        .features-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #22c55e;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .button-container {
+            text-align: center;
+            margin: 35px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: transform 0.2s;
+            margin: 0 8px;
+        }
+        .button.secondary {
+            background: #fff;
+            color: #667eea !important;
+            border: 2px solid #667eea;
+            box-shadow: none;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+        .notice-box {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 25px 0;
+        }
+        .notice-box p {
+            margin: 0;
+            color: #92400e;
+            font-size: 14px;
+        }
+        .notice-box p strong {
+            color: #78350f;
+        }
+        .benefits-section {
+            margin: 30px 0;
+        }
+        .benefits-section h3 {
+            color: #1a1a1a;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .benefit-card {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+        }
+        .benefit-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .benefit-content h4 {
+            color: #1a1a1a;
+            font-size: 16px;
+            margin: 0 0 5px 0;
+        }
+        .benefit-content p {
+            color: #666;
+            font-size: 14px;
+            margin: 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e5e5;
+        }
+        .footer p {
+            color: #999;
+            font-size: 13px;
+            margin: 5px 0;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-inner">
+                <div class="logo">
+                    <h1>{{ app_name }}</h1>
+                </div>
+
+                <div class="renewal-badge">
+                    <span class="badge">Renewal Notice</span>
+                </div>
+
+                <div class="content">
+                    <h2>Your Subscription is Renewing Soon</h2>
+
+                    <p style="text-align: center; font-size: 18px; color: #666;">
+                        Hi {{ customer_name }}, thanks for being a valued member!
+                    </p>
+
+                    <div class="subscription-card">
+                        <div class="plan-name">Current Plan</div>
+                        <div class="plan-price">
+                            <span class="currency">$</span>{{ amount }}
+                            <span class="period">/{{ billing_period }}</span>
+                        </div>
+                        <h3 style="margin: 0; font-size: 24px; color: #1a1a1a;">{{ plan_name }}</h3>
+
+                        <div class="renewal-details">
+                            <div class="detail-row">
+                                <span class="label">Renewal Date</span>
+                                <span class="value">{{ renewal_date }}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Payment Method</span>
+                                <span class="value">{{ payment_method }}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Next Billing Amount</span>
+                                <span class="value">${{ amount }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="benefits-section">
+                        <h3>What You'll Continue to Enjoy</h3>
+
+                        {% if benefits %}
+                        {% for benefit in benefits %}
+                        <div class="benefit-card">
+                            <div class="benefit-icon">{{ benefit.icon|default('✨') }}</div>
+                            <div class="benefit-content">
+                                <h4>{{ benefit.title }}</h4>
+                                <p>{{ benefit.description }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <ul class="features-list">
+                            <li>Unlimited access to all premium features</li>
+                            <li>Priority customer support</li>
+                            <li>Advanced analytics and reporting</li>
+                            <li>Team collaboration tools</li>
+                            <li>Regular feature updates</li>
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="notice-box">
+                        <p>
+                            <strong>📅 Automatic Renewal:</strong> Your subscription will automatically renew on
+                            <strong>{{ renewal_date }}</strong> and you'll be charged <strong>${{ amount }}</strong>
+                            to your {{ payment_method }} on file.
+                        </p>
+                    </div>
+
+                    <div class="button-container">
+                        <a href="{{ manage_subscription_url }}" class="button">Manage Subscription</a>
+                        <a href="{{ update_payment_url }}" class="button secondary">Update Payment</a>
+                    </div>
+
+                    <div style="background: #f8f9ff; border-radius: 8px; padding: 20px; margin: 30px 0;">
+                        <h3 style="color: #667eea; margin: 0 0 15px 0; font-size: 18px;">Need to Make Changes?</h3>
+
+                        <p style="margin: 10px 0; font-size: 14px; color: #666;">
+                            <strong>Change Your Plan:</strong> Upgrade or downgrade anytime from your
+                            <a href="{{ manage_subscription_url }}" style="color: #667eea;">subscription settings</a>.
+                        </p>
+
+                        <p style="margin: 10px 0; font-size: 14px; color: #666;">
+                            <strong>Update Payment Method:</strong> Keep your payment information current in your
+                            <a href="{{ update_payment_url }}" style="color: #667eea;">billing settings</a>.
+                        </p>
+
+                        <p style="margin: 10px 0; font-size: 14px; color: #666;">
+                            <strong>Cancel Subscription:</strong> You can cancel anytime before {{ renewal_date }} to avoid renewal charges.
+                        </p>
+                    </div>
+
+                    {% if discount_available %}
+                    <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 8px; padding: 20px; margin: 25px 0; border: 1px solid #bbf7d0;">
+                        <h3 style="color: #22c55e; margin: 0 0 10px 0; font-size: 18px;">🎉 Loyalty Discount Available!</h3>
+                        <p style="margin: 0; color: #166534; font-size: 14px;">
+                            As a valued customer, you're eligible for {{ discount_percentage }}% off your next renewal.
+                            <a href="{{ apply_discount_url }}" style="color: #22c55e; font-weight: 600;">Apply Discount →</a>
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="footer">
+                    <p><strong>Thank you for your continued support!</strong></p>
+                    <p style="margin-top: 15px;">
+                        <a href="{{ app_url }}/billing">Billing History</a> •
+                        <a href="{{ app_url }}/subscription">Subscription Details</a> •
+                        <a href="{{ app_url }}/help">Help Center</a>
+                    </p>
+                    <p style="margin-top: 15px; font-size: 12px; color: #bbb;">
+                        You're receiving this email because you have an active subscription with {{ app_name }}.
+                        <a href="{{ unsubscribe_url }}" style="color: #bbb;">Manage email preferences</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

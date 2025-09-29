@@ -1,0 +1,338 @@
+# ApplicationSet for Multi-Environment Deployments
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: toolboxai-environments
+  namespace: argocd
+spec:
+  generators:
+    # Git Generator - discovers environments from git
+    - git:
+        repoURL: https://github.com/toolboxai-solutions/infrastructure
+        revision: HEAD
+        directories:
+          - path: environments/*
+
+    # List Generator - explicit environment list
+    - list:
+        elements:
+          - env: dev
+            cluster: https://kubernetes.default.svc
+            namespace: toolboxai-dev
+            autoSync: true
+            prune: true
+          - env: staging
+            cluster: https://kubernetes.default.svc
+            namespace: toolboxai-staging
+            autoSync: true
+            prune: true
+          - env: prod
+            cluster: https://kubernetes.default.svc
+            namespace: toolboxai-prod
+            autoSync: false  # Manual sync for production
+            prune: false
+
+  template:
+    metadata:
+      name: '{{env}}-toolboxai'
+      labels:
+        environment: '{{env}}'
+        app.kubernetes.io/name: toolboxai
+        app.kubernetes.io/part-of: toolboxai-platform
+    spec:
+      project: toolboxai
+
+      source:
+        repoURL: https://github.com/toolboxai-solutions/infrastructure
+        targetRevision: HEAD
+        path: 'environments/{{env}}'
+        helm:
+          valueFiles:
+            - values.yaml
+            - 'values-{{env}}.yaml'
+
+      destination:
+        server: '{{cluster}}'
+        namespace: '{{namespace}}'
+
+      syncPolicy:
+        automated:
+          prune: '{{prune}}'
+          selfHeal: '{{autoSync}}'
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+
+      revisionHistoryLimit: 10
+---
+# ApplicationSet for Microservices
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: toolboxai-microservices
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          # Services list
+          - list:
+              elements:
+                - service: backend
+                  port: 8008
+                  replicas: 3
+                - service: dashboard
+                  port: 3000
+                  replicas: 3
+                - service: content-generator
+                  port: 8080
+                  replicas: 2
+                - service: compliance-validator
+                  port: 8081
+                  replicas: 2
+                - service: ai-orchestrator
+                  port: 8082
+                  replicas: 2
+          # Environments
+          - list:
+              elements:
+                - env: dev
+                  imageTag: latest
+                  autoSync: true
+                - env: staging
+                  imageTag: staging
+                  autoSync: true
+                - env: prod
+                  imageTag: v1.0.0
+                  autoSync: false
+
+  template:
+    metadata:
+      name: '{{service}}-{{env}}'
+      labels:
+        service: '{{service}}'
+        environment: '{{env}}'
+        app.kubernetes.io/name: '{{service}}'
+        app.kubernetes.io/part-of: toolboxai
+    spec:
+      project: toolboxai
+
+      source:
+        repoURL: https://github.com/toolboxai-solutions/applications
+        targetRevision: HEAD
+        path: 'services/{{service}}/k8s'
+        kustomize:
+          images:
+            - 'toolboxai.azurecr.io/{{service}}:{{imageTag}}'
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: 'toolboxai-{{env}}'
+
+      syncPolicy:
+        automated:
+          prune: '{{autoSync}}'
+          selfHeal: '{{autoSync}}'
+        syncOptions:
+          - CreateNamespace=true
+
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas
+---
+# ApplicationSet for Pull Request Previews
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: pr-preview-environments
+  namespace: argocd
+spec:
+  generators:
+    - pullRequest:
+        github:
+          owner: toolboxai-solutions
+          repo: applications
+          tokenRef:
+            secretName: github-token
+            key: token
+        requeueAfterSeconds: 60
+
+  template:
+    metadata:
+      name: 'pr-{{number}}-{{branch}}'
+      labels:
+        environment: pr-preview
+        pr-number: '{{number}}'
+        app.kubernetes.io/name: pr-preview
+        app.kubernetes.io/part-of: toolboxai
+    spec:
+      project: toolboxai
+
+      source:
+        repoURL: https://github.com/toolboxai-solutions/applications
+        targetRevision: '{{head_sha}}'
+        path: k8s/preview
+        helm:
+          parameters:
+            - name: image.tag
+              value: 'pr-{{number}}'
+            - name: ingress.host
+              value: 'pr-{{number}}.preview.toolboxai.solutions'
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: 'pr-{{number}}'
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+
+      # Auto-delete after PR is closed
+      revisionHistoryLimit: 0
+---
+# ApplicationSet for Compliance Tools
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: compliance-tools
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - tool: falco
+            chart: falco
+            repo: https://falcosecurity.github.io/charts
+            version: 3.8.4
+            namespace: falco-system
+          - tool: gatekeeper
+            chart: gatekeeper
+            repo: https://open-policy-agent.github.io/gatekeeper/charts
+            version: 3.14.0
+            namespace: gatekeeper-system
+          - tool: kyverno
+            chart: kyverno
+            repo: https://kyverno.github.io/kyverno
+            version: 3.1.0
+            namespace: kyverno
+          - tool: trivy-operator
+            chart: trivy-operator
+            repo: https://aquasecurity.github.io/helm-charts
+            version: 0.19.1
+            namespace: trivy-system
+
+  template:
+    metadata:
+      name: 'compliance-{{tool}}'
+      labels:
+        category: compliance
+        tool: '{{tool}}'
+        app.kubernetes.io/name: '{{tool}}'
+        app.kubernetes.io/part-of: compliance-suite
+    spec:
+      project: toolboxai
+
+      source:
+        repoURL: '{{repo}}'
+        chart: '{{chart}}'
+        targetRevision: '{{version}}'
+        helm:
+          releaseName: '{{tool}}'
+          values: |
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 1000
+              fsGroup: 1000
+
+            serviceMonitor:
+              enabled: true
+              labels:
+                monitoring: prometheus
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+---
+# ApplicationSet for Monitoring Stack
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: monitoring-stack
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: prometheus-stack
+            namespace: monitoring
+            chart: kube-prometheus-stack
+            repo: https://prometheus-community.github.io/helm-charts
+            version: 51.3.0
+          - name: loki-stack
+            namespace: monitoring
+            chart: loki-stack
+            repo: https://grafana.github.io/helm-charts
+            version: 2.9.11
+          - name: jaeger
+            namespace: monitoring
+            chart: jaeger
+            repo: https://jaegertracing.github.io/helm-charts
+            version: 0.71.14
+
+  template:
+    metadata:
+      name: 'monitoring-{{name}}'
+      labels:
+        category: monitoring
+        app.kubernetes.io/name: '{{name}}'
+        app.kubernetes.io/part-of: monitoring-stack
+    spec:
+      project: toolboxai
+
+      source:
+        repoURL: '{{repo}}'
+        chart: '{{chart}}'
+        targetRevision: '{{version}}'
+        helm:
+          releaseName: '{{name}}'
+          valueFiles:
+            - https://raw.githubusercontent.com/toolboxai-solutions/infrastructure/main/monitoring/{{name}}/values.yaml
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+
+      syncPolicy:
+        automated:
+          prune: false  # Don't auto-prune monitoring
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Astronauto (variation)/10.png",
+  "file_name": "10.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 188533,
+      "most_common": [
+        [
+          933,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          12,
+          [
+            254,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          15,
+          [
+            253,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          10,
+          [
+            252,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          14,
+          [
+            250,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          10,
+          [
+            249,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          7,
+          [
+            248,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          6,
+          [
+            247,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          2,
+          [
+            246,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          8,
+          [
+            245,
+            255,
+            255,
+            255
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "frequency": 9697
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 6551
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          2
+        ],
+        "frequency": 141
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          3
+        ],
+        "frequency": 87
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          4
+        ],
+        "frequency": 80
+      }
+    ]
+  }
+}

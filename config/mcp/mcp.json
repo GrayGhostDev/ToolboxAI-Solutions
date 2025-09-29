@@ -1,0 +1,121 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+      ],
+      "env": {
+        "MCP_FS_DENY": "${HOME}/Library/**:${HOME}/.ssh/**:${HOME}/Library/Keychains/**:${HOME}/.config/claude/secrets/**:venv/**:node_modules/**:.git/**:__pycache__/**",
+        "MCP_FS_ENABLE_WRITE": "true"
+      },
+      "description": "Filesystem access for ToolBoxAI-Solutions project",
+      "scope": "project"
+    },
+    "ide": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-ide"
+      ],
+      "description": "IDE integration for Cursor/Claude Code",
+      "scope": "project"
+    },
+    "git": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-git"
+      ],
+      "description": "Git repository management for ToolBoxAI-Solutions",
+      "scope": "project"
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}",
+        "GITHUB_API_BASE_URL": "${GITHUB_API_BASE_URL:-}"
+      },
+      "description": "GitHub API integration for GrayGhostDev/ToolBoxAI-Solutions",
+      "scope": "project"
+    },
+    "docker": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-docker"
+      ],
+      "env": {
+        "MCP_DOCKER_MAX_CONCURRENCY": "2",
+        "MCP_DOCKER_PULL_POLICY": "if-not-present"
+      },
+      "description": "Docker management for containerized services",
+      "scope": "project"
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres"
+      ],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}",
+        "PGUSER": "${PGUSER}",
+        "PGPASSWORD": "${PGPASSWORD}",
+        "PGHOST": "${PGHOST:-localhost}",
+        "PGPORT": "${PGPORT:-5432}",
+        "PGDATABASE": "${PGDATABASE}"
+      },
+      "description": "PostgreSQL access for educational platform database",
+      "scope": "project"
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {
+        "MCP_MEMORY_DIR": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.claude/memory",
+        "MCP_MEMORY_MAX_ITEMS": "2000"
+      },
+      "description": "Persistent memory store for ToolBoxAI context",
+      "scope": "project"
+    },
+    "toolboxai-orchestrator": {
+      "command": "python",
+      "args": [
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/mcp/server.py"
+      ],
+      "env": {
+        "MCP_SERVER_TYPE": "orchestrator",
+        "REDIS_URL": "${REDIS_URL:-redis://localhost:6381/0}",
+        "DATABASE_URL": "${DATABASE_URL:-postgresql://eduplatform:eduplatform2024@localhost:5434/educational_platform_dev}",
+        "PUSHER_APP_ID": "${PUSHER_APP_ID}",
+        "PUSHER_KEY": "${PUSHER_KEY}",
+        "PUSHER_SECRET": "${PUSHER_SECRET}",
+        "PUSHER_CLUSTER": "${PUSHER_CLUSTER:-us2}",
+        "BACKEND_PORT": "8009",
+        "BACKEND_URL": "http://localhost:8009"
+      },
+      "description": "ToolBoxAI MCP orchestrator server for agent coordination",
+      "scope": "project"
+    }
+  },
+  "projectSettings": {
+    "name": "ToolBoxAI-Solutions",
+    "version": "2.0.0",
+    "rootPath": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
+    "pythonPath": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/venv/bin/python",
+    "nodeModulesPath": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/node_modules",
+    "backendPort": 8009,
+    "dashboardPort": 5179,
+    "mcpOrchestratorPort": 9877
+  }
+}

@@ -1,0 +1,372 @@
+# App of Apps Pattern for ToolBoxAI Solutions
+# Root application that manages all other applications
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: toolboxai-platform
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: toolboxai-platform
+    app.kubernetes.io/part-of: toolboxai
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: toolboxai
+
+  source:
+    repoURL: https://github.com/toolboxai-solutions/infrastructure
+    targetRevision: HEAD
+    path: infrastructure/argocd/apps
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  revisionHistoryLimit: 10
+---
+# ArgoCD Project for ToolBoxAI
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: toolboxai
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: toolboxai-project
+    app.kubernetes.io/part-of: toolboxai
+spec:
+  description: ToolBoxAI Educational Platform Project
+
+  # Source repositories
+  sourceRepos:
+    - https://github.com/toolboxai-solutions/infrastructure
+    - https://github.com/toolboxai-solutions/applications
+    - https://charts.bitnami.com/bitnami
+    - https://prometheus-community.github.io/helm-charts
+    - https://charts.jetstack.io
+    - https://kubernetes.github.io/ingress-nginx
+
+  # Allowed destinations
+  destinations:
+    - namespace: '*'
+      server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+
+  # Cluster resource whitelist
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: ''
+      kind: ResourceQuota
+    - group: ''
+      kind: LimitRange
+    - group: 'rbac.authorization.k8s.io'
+      kind: ClusterRole
+    - group: 'rbac.authorization.k8s.io'
+      kind: ClusterRoleBinding
+    - group: 'apiextensions.k8s.io'
+      kind: CustomResourceDefinition
+    - group: 'admissionregistration.k8s.io'
+      kind: ValidatingWebhookConfiguration
+    - group: 'admissionregistration.k8s.io'
+      kind: MutatingWebhookConfiguration
+    - group: 'cert-manager.io'
+      kind: ClusterIssuer
+    - group: 'cert-manager.io'
+      kind: Certificate
+    - group: 'monitoring.coreos.com'
+      kind: PrometheusRule
+    - group: 'monitoring.coreos.com'
+      kind: ServiceMonitor
+
+  # Namespace resource whitelist
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  # Roles
+  roles:
+    - name: admin
+      policies:
+        - p, proj:toolboxai:admin, applications, *, toolboxai/*, allow
+        - p, proj:toolboxai:admin, repositories, *, *, allow
+        - p, proj:toolboxai:admin, clusters, *, *, allow
+      groups:
+        - toolboxai:admins
+
+    - name: developer
+      policies:
+        - p, proj:toolboxai:developer, applications, get, toolboxai/*, allow
+        - p, proj:toolboxai:developer, applications, create, toolboxai/dev-*, allow
+        - p, proj:toolboxai:developer, applications, update, toolboxai/dev-*, allow
+        - p, proj:toolboxai:developer, applications, delete, toolboxai/dev-*, allow
+        - p, proj:toolboxai:developer, applications, sync, toolboxai/dev-*, allow
+        - p, proj:toolboxai:developer, applications, action/*, toolboxai/dev-*, allow
+      groups:
+        - toolboxai:developers
+
+    - name: readonly
+      policies:
+        - p, proj:toolboxai:readonly, applications, get, toolboxai/*, allow
+      groups:
+        - toolboxai:readonly
+
+  # Sync windows (maintenance windows)
+  syncWindows:
+    - kind: deny
+      schedule: "0 22 * * 0-4"  # No deploys weekdays 10 PM - 6 AM
+      duration: 8h
+      applications:
+        - "prod-*"
+      manualSync: false
+    - kind: allow
+      schedule: "0 6 * * 1-5"   # Allow deploys weekdays 6 AM - 10 PM
+      duration: 16h
+      applications:
+        - "*"
+      manualSync: true
+
+  # Orphaned resources monitoring
+  orphanedResources:
+    warn: true
+---
+# Core Infrastructure Application
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: core-infrastructure
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: core-infrastructure
+    app.kubernetes.io/part-of: toolboxai
+spec:
+  project: toolboxai
+
+  source:
+    repoURL: https://github.com/toolboxai-solutions/infrastructure
+    targetRevision: HEAD
+    path: infrastructure/core
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-prod.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: toolboxai-system
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+  health:
+    progressDeadlineSeconds: 600
+---
+# Backend Application
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backend
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/part-of: toolboxai
+spec:
+  project: toolboxai
+
+  source:
+    repoURL: https://github.com/toolboxai-solutions/applications
+    targetRevision: HEAD
+    path: apps/backend/k8s
+    kustomize:
+      images:
+        - toolboxai.azurecr.io/backend:v1.0.0
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: toolboxai-prod
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+---
+# Dashboard Application
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dashboard
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: dashboard
+    app.kubernetes.io/part-of: toolboxai
+spec:
+  project: toolboxai
+
+  source:
+    repoURL: https://github.com/toolboxai-solutions/applications
+    targetRevision: HEAD
+    path: apps/dashboard/k8s
+    kustomize:
+      images:
+        - toolboxai.azurecr.io/dashboard:v1.0.0
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: toolboxai-prod
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+# Database Application
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: database
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: database
+    app.kubernetes.io/part-of: toolboxai
+spec:
+  project: toolboxai
+
+  source:
+    repoURL: https://charts.bitnami.com/bitnami
+    chart: postgresql
+    targetRevision: 13.2.24
+    helm:
+      releaseName: postgresql
+      values: |
+        auth:
+          database: toolboxai
+          existingSecret: postgres-credentials
+        architecture: replication
+        primary:
+          persistence:
+            enabled: true
+            size: 100Gi
+            storageClass: gp3-encrypted
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 2Gi
+            limits:
+              cpu: 4000m
+              memory: 8Gi
+        readReplicas:
+          replicaCount: 2
+          persistence:
+            enabled: true
+            size: 100Gi
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+            labels:
+              monitoring: prometheus
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: database
+
+  syncPolicy:
+    automated:
+      prune: false  # Don't auto-prune database
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+# Redis Cache Application
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: redis
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/part-of: toolboxai
+spec:
+  project: toolboxai
+
+  source:
+    repoURL: https://charts.bitnami.com/bitnami
+    chart: redis
+    targetRevision: 18.6.1
+    helm:
+      releaseName: redis
+      values: |
+        architecture: replication
+        auth:
+          enabled: true
+          existingSecret: redis-credentials
+        master:
+          persistence:
+            enabled: true
+            size: 10Gi
+            storageClass: gp3-encrypted
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+        replica:
+          replicaCount: 2
+          persistence:
+            enabled: true
+            size: 10Gi
+          resources:
+            requests:
+              cpu: 150m
+              memory: 256Mi
+        sentinel:
+          enabled: true
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cache
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

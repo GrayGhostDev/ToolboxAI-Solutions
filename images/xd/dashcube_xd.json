@@ -1,0 +1,20 @@
+{
+  "success": true,
+  "file_path": "design_files/dashcube_NjhhMjYzMmIyMzI4MmUwMDM5ZDY0Yzlj/DashcubeXD.xd",
+  "file_name": "DashcubeXD.xd",
+  "file_type": ".xd",
+  "parsed_data": {
+    "format": "adobe_xd",
+    "version": "unknown",
+    "artboards": [],
+    "components": [],
+    "styles": [],
+    "assets": [],
+    "interactions": [
+      {
+        "version": "0.24"
+      }
+    ],
+    "prototypes": []
+  }
+}

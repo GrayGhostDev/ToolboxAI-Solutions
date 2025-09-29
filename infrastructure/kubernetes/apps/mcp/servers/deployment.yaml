@@ -1,0 +1,189 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mcp-server
+  namespace: mcp
+  labels:
+    app: mcp-server
+    component: context-management
+    version: v1
+spec:
+  serviceName: mcp-server-headless
+  replicas: 3
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: mcp-server
+      component: context-management
+  template:
+    metadata:
+      labels:
+        app: mcp-server
+        component: context-management
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: mcp-server-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      initContainers:
+      - name: wait-for-redis
+        image: busybox:latest
+        command: ['sh', '-c', 'until nc -z redis-service.default.svc.cluster.local 6379; do echo waiting for redis; sleep 2; done']
+      containers:
+      - name: mcp-server
+        image: toolboxai/mcp-server:latest
+        imagePullPolicy: IfNotPresent
+        command: ["python"]
+        args: ["-m", "core.mcp.server"]
+        ports:
+        - name: websocket
+          containerPort: 9876
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: MCP_HOST
+          value: "0.0.0.0"
+        - name: MCP_PORT
+          value: "9876"
+        - name: MAX_TOKENS
+          value: "128000"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mcp-jwt-secret
+              key: secret-key
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: connection-string
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: DYNAMODB_TABLE_PREFIX
+          value: "mcp-production"
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          tcpSocket:
+            port: websocket
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import asyncio, websockets; asyncio.run(websockets.connect('ws://localhost:9876/health'))"
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        volumeMounts:
+        - name: context-storage
+          mountPath: /data/contexts
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+      nodeSelector:
+        workload: mcp
+      tolerations:
+      - key: "workload"
+        operator: "Equal"
+        value: "mcp"
+        effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - mcp-server
+            topologyKey: kubernetes.io/hostname
+  volumeClaimTemplates:
+  - metadata:
+      name: context-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: gp3-encrypted
+      resources:
+        requests:
+          storage: 50Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-server-headless
+  namespace: mcp
+  labels:
+    app: mcp-server
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: mcp-server
+  ports:
+  - name: websocket
+    port: 9876
+    targetPort: websocket
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-server
+  namespace: mcp
+  labels:
+    app: mcp-server
+    component: context-management
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  type: LoadBalancer
+  selector:
+    app: mcp-server
+    component: context-management
+  ports:
+  - name: websocket
+    port: 9876
+    targetPort: websocket
+    protocol: TCP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 86400  # 24 hours for WebSocket connections

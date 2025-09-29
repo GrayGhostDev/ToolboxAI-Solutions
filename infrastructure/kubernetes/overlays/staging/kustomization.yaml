@@ -1,0 +1,156 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: toolboxai-staging
+  annotations:
+    config.kubernetes.io/local-config: "true"
+
+# Base
+bases:
+- ../../base
+
+# Namespace override
+namespace: toolboxai-staging
+
+# Name Prefix
+namePrefix: staging-
+
+# Common Labels
+commonLabels:
+  environment: staging
+  tier: staging
+
+# Common Annotations
+commonAnnotations:
+  environment: staging
+  managed-by: kustomize
+  contact: devops@toolboxai.solutions
+  backup-policy: "daily"
+
+# Image Tags for Staging
+images:
+- name: ghcr.io/toolboxai-solutions/backend
+  newTag: staging-latest
+- name: postgres
+  newTag: 15-alpine
+- name: redis
+  newTag: 7-alpine
+
+# Resource Adjustments for Staging
+replicas:
+- name: backend
+  count: 2
+- name: redis
+  count: 1
+
+# Strategic Merge Patches
+patchesStrategicMerge:
+- config-patch.yaml
+- resource-patch.yaml
+- ingress-patch.yaml
+
+# JSON Patches for Staging
+patches:
+# Adjust resources for staging environment
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: backend
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/cpu
+      value: "300m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: "512Mi"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/cpu
+      value: "1000m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: "1Gi"
+
+- target:
+    group: apps
+    version: v1
+    kind: StatefulSet
+    name: postgres
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/cpu
+      value: "500m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: "1Gi"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/cpu
+      value: "1500m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: "2Gi"
+
+# Adjust HPA for staging
+- target:
+    group: autoscaling
+    version: v2
+    kind: HorizontalPodAutoscaler
+    name: backend-hpa
+  patch: |-
+    - op: replace
+      path: /spec/minReplicas
+      value: 2
+    - op: replace
+      path: /spec/maxReplicas
+      value: 5
+
+# ConfigMap Generators for Staging
+configMapGenerator:
+- name: staging-config
+  literals:
+  - ENVIRONMENT=staging
+  - LOG_LEVEL=info
+  - DEBUG=false
+  - CACHE_TTL=300
+  - RATE_LIMIT_PER_MINUTE=500
+  - DATABASE_POOL_SIZE=10
+  - REDIS_POOL_SIZE=10
+  - BACKUP_ENABLED=true
+  - MONITORING_ENABLED=true
+
+# Secret Generators for Staging
+secretGenerator:
+- name: staging-secrets
+  literals:
+  - DATABASE_PASSWORD=STAGING_CHANGE_ME_DATABASE_PASSWORD
+  - REDIS_PASSWORD=STAGING_CHANGE_ME_REDIS_PASSWORD
+  - JWT_SECRET_KEY=STAGING_CHANGE_ME_JWT_SECRET_KEY
+  - OPENAI_API_KEY=STAGING_CHANGE_ME_OPENAI_API_KEY
+  type: Opaque
+
+# Storage adjustments for staging
+patchesJson6902:
+- target:
+    group: ""
+    version: v1
+    kind: PersistentVolumeClaim
+    name: agent-data
+  patch: |-
+    - op: replace
+      path: /spec/resources/requests/storage
+      value: "10Gi"
+
+- target:
+    group: ""
+    version: v1
+    kind: PersistentVolumeClaim
+    name: redis-data
+  patch: |-
+    - op: replace
+      path: /spec/resources/requests/storage
+      value: "5Gi"
+
+# Add staging-specific resources
+resources:
+- staging-ingress.yaml

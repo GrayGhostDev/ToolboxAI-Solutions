@@ -1,0 +1,430 @@
+# ToolBoxAI Unified Prometheus Configuration
+# ==========================================
+# Consolidated and optimized configuration for comprehensive monitoring
+# Supports multiple environments: development, staging, production
+#
+# Version: 2.0.0
+# Last Updated: 2025-09-26
+
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'toolboxai-cluster'
+    environment: '${ENVIRONMENT:-development}'
+    datacenter: '${DATACENTER:-local}'
+    prometheus_replica: '${PROMETHEUS_REPLICA:-1}'
+
+# Rule files for recording rules and alerts
+rule_files:
+  - "rules/alerts/*.yml"
+  - "rules/recording/*.yml"
+  - "rules/business/*.yml"
+
+# Alertmanager configuration with high availability
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+          - alertmanager-replica:9093
+      timeout: 10s
+      path_prefix: /
+      api_version: v2
+
+# ============================================================================
+# SCRAPE CONFIGURATIONS
+# ============================================================================
+
+scrape_configs:
+  # Prometheus Self-Monitoring
+  - job_name: 'prometheus'
+    honor_labels: true
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - target_label: service
+        replacement: 'prometheus'
+      - target_label: component
+        replacement: 'monitoring'
+
+  # ============================================================================
+  # TOOLBOXAI APPLICATION SERVICES
+  # ============================================================================
+
+  # Main FastAPI Backend - Primary Service
+  - job_name: 'toolboxai-backend-api'
+    static_configs:
+      - targets:
+          # Local development
+          - 'localhost:8009'
+          - 'fastapi-main:8009'
+          - 'backend:8009'
+          # Production
+          - 'toolboxai-backend.onrender.com:443'
+          # Staging
+          - 'host.docker.internal:8008'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 8s
+    honor_labels: true
+    scheme: '${BACKEND_SCHEME:-http}'
+    tls_config:
+      insecure_skip_verify: false
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*):(\d+)'
+        target_label: instance
+        replacement: '${1}'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'backend-api'
+      - source_labels: [__address__]
+        target_label: component
+        replacement: 'fastapi'
+      - source_labels: [__address__]
+        regex: '.*onrender\.com.*'
+        target_label: environment
+        replacement: 'production'
+      - source_labels: [__address__]
+        regex: '.*docker\.internal.*'
+        target_label: environment
+        replacement: 'staging'
+    metric_relabel_configs:
+      # Optimize high-cardinality metrics
+      - source_labels: [__name__]
+        regex: 'http_request_duration_seconds_bucket'
+        action: drop
+      - source_labels: [__name__]
+        regex: 'http_requests_total'
+        target_label: __tmp_keep
+        replacement: 'yes'
+
+  # Dashboard Frontend Application
+  - job_name: 'toolboxai-dashboard'
+    static_configs:
+      - targets:
+          - 'localhost:5179'
+          - 'dashboard-frontend:5179'
+          - 'dashboard:5179'
+          - 'toolboxai-dashboard.onrender.com:443'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    scheme: '${FRONTEND_SCHEME:-http}'
+    tls_config:
+      insecure_skip_verify: false
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'frontend'
+      - source_labels: [__address__]
+        target_label: component
+        replacement: 'react'
+
+  # MCP Server (Model Context Protocol)
+  - job_name: 'mcp-server'
+    static_configs:
+      - targets: ['mcp-server:9877']
+    metrics_path: '/metrics'
+    scrape_interval: 20s
+    relabel_configs:
+      - target_label: service
+        replacement: 'mcp'
+      - target_label: component
+        replacement: 'context-protocol'
+
+  # Agent Coordinator Service
+  - job_name: 'agent-coordinator'
+    static_configs:
+      - targets:
+          - 'agent-coordinator:8888'
+          - 'localhost:8888'
+    metrics_path: '/metrics'
+    scrape_interval: 20s
+    relabel_configs:
+      - target_label: service
+        replacement: 'agents'
+      - target_label: component
+        replacement: 'coordinator'
+
+  # Flask Bridge (Roblox Integration)
+  - job_name: 'roblox-bridge'
+    static_configs:
+      - targets:
+          - 'flask-bridge:5001'
+          - 'localhost:5001'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'roblox-bridge'
+      - target_label: component
+        replacement: 'flask'
+
+  # Ghost Backend (Legacy Support)
+  - job_name: 'ghost-backend'
+    static_configs:
+      - targets: ['ghost-backend:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'ghost'
+      - target_label: component
+        replacement: 'legacy'
+
+  # ============================================================================
+  # INFRASTRUCTURE SERVICES
+  # ============================================================================
+
+  # PostgreSQL Database Exporter
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 15s
+    relabel_configs:
+      - target_label: service
+        replacement: 'database'
+      - target_label: database_type
+        replacement: 'postgresql'
+
+  # Redis Cache Exporter
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 15s
+    relabel_configs:
+      - target_label: service
+        replacement: 'cache'
+      - target_label: database_type
+        replacement: 'redis'
+
+  # Node Exporter - System Metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+    relabel_configs:
+      - target_label: service
+        replacement: 'system'
+      - target_label: component
+        replacement: 'node'
+
+  # cAdvisor - Container Metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 20s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: service
+        replacement: 'containers'
+      - target_label: component
+        replacement: 'docker'
+
+  # Nginx Web Server Exporter
+  - job_name: 'nginx-exporter'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'loadbalancer'
+      - target_label: component
+        replacement: 'nginx'
+
+  # ============================================================================
+  # MONITORING STACK SERVICES
+  # ============================================================================
+
+  # Grafana Self-Monitoring
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'visualization'
+      - target_label: component
+        replacement: 'grafana'
+
+  # AlertManager Self-Monitoring
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets:
+          - 'alertmanager:9093'
+          - 'alertmanager-replica:9093'
+    metrics_path: /metrics
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'alerting'
+      - target_label: component
+        replacement: 'alertmanager'
+
+  # Loki Log Aggregation
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'logging'
+      - target_label: component
+        replacement: 'loki'
+
+  # ============================================================================
+  # HEALTH CHECK AND BLACKBOX MONITORING
+  # ============================================================================
+
+  # Health Check Monitoring (Blackbox Exporter Style)
+  - job_name: 'toolboxai-health-checks'
+    static_configs:
+      - targets:
+          - 'http://fastapi-main:8009/health'
+          - 'http://dashboard-frontend:5179/health'
+          - 'http://mcp-server:9877/health'
+          - 'http://agent-coordinator:8888/health'
+          - 'https://toolboxai-backend.onrender.com/health'
+          - 'https://toolboxai-dashboard.onrender.com/health'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+      - source_labels: [__param_target]
+        regex: 'https?://([^:/]+).*'
+        target_label: service
+        replacement: '${1}-health'
+
+  # SSL Certificate Monitoring
+  - job_name: 'ssl-expiry'
+    static_configs:
+      - targets:
+          - 'toolboxai-backend.onrender.com:443'
+          - 'toolboxai-dashboard.onrender.com:443'
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    scrape_interval: 3600s  # Check hourly
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # ============================================================================
+  # BUSINESS AND PERFORMANCE METRICS
+  # ============================================================================
+
+  # Business Metrics Collection
+  - job_name: 'toolboxai-business-metrics'
+    static_configs:
+      - targets: ['fastapi-main:8009']
+    metrics_path: '/metrics/business'
+    scrape_interval: 30s
+    honor_labels: true
+    relabel_configs:
+      - target_label: service
+        replacement: 'business'
+      - target_label: metric_type
+        replacement: 'kpi'
+
+  # Performance and Load Testing Metrics
+  - job_name: 'toolboxai-performance'
+    static_configs:
+      - targets: ['fastapi-main:8009']
+    metrics_path: '/metrics/performance'
+    scrape_interval: 60s
+    scrape_timeout: 30s
+    honor_labels: true
+    relabel_configs:
+      - target_label: service
+        replacement: 'performance'
+      - target_label: metric_type
+        replacement: 'benchmark'
+
+# ============================================================================
+# STORAGE CONFIGURATION
+# ============================================================================
+
+storage:
+  tsdb:
+    # Retention policies optimized for different environments
+    retention.time: '${PROMETHEUS_RETENTION_TIME:-30d}'
+    retention.size: '${PROMETHEUS_RETENTION_SIZE:-20GB}'
+    wal-compression: true
+    min-block-duration: 2h
+    max-block-duration: 25h
+    no-lockfile: false
+
+    # Compaction optimizations
+    allow-overlapping-blocks: false
+    enable-exemplar-storage: true
+    max-exemplars: 100000
+
+# ============================================================================
+# REMOTE STORAGE (Optional - for long-term retention)
+# ============================================================================
+
+# Uncomment and configure for external TSDB integration
+# remote_write:
+#   - url: "http://thanos-receiver:19291/api/v1/receive"
+#     queue_config:
+#       capacity: 1000
+#       max_samples_per_send: 500
+#       batch_send_deadline: 5s
+#       min_shards: 2
+#       max_shards: 20
+#       max_backoff: 5s
+#     metadata_config:
+#       send: true
+#       send_interval: 30s
+#     write_relabel_configs:
+#       # Only send important metrics for long-term storage
+#       - source_labels: [__name__]
+#         regex: '(up|http_requests_total|cpu_usage|memory_usage|disk_usage)'
+#         action: keep
+
+# remote_read:
+#   - url: "http://thanos-query:10902/api/v1/query"
+#     read_recent: true
+
+# ============================================================================
+# FEATURE FLAGS AND EXPERIMENTAL FEATURES
+# ============================================================================
+
+feature_flags:
+  - name: "promql-at-modifier"
+  - name: "remote-write-receiver"
+  - name: "expand-external-labels"
+  - name: "exemplar-storage"
+
+# ============================================================================
+# TRACING INTEGRATION (Optional)
+# ============================================================================
+
+# Uncomment to enable tracing integration
+# tracing:
+#   endpoint: "jaeger:14268/api/traces"
+#   insecure: true
+#   timeout: 5s
+#   headers:
+#     x-trace-source: "prometheus"

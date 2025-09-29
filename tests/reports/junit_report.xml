@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="1" tests="2" time="2.973" timestamp="2025-09-20T02:22:35.601546-04:00" hostname="Mac"><testcase classname="" name="tests.integration.test_enhanced_content_endpoints" time="0.000"><skipped message="collection skipped">('/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/integration/test_enhanced_content_endpoints.py', 631, "Skipped: could not import 'core.agents.enhanced_content_pipeline': cannot import name 'SPARCOrchestrator' from 'core.sparc' (/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/sparc/__init__.py)")</skipped></testcase><testcase classname="" name="tests.test_enhanced_content_pipeline" time="0.000"><error message="collection failure">ImportError while importing test module '/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/tests/test_enhanced_content_pipeline.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Users/grayghostdata/.pyenv/versions/3.12.11/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_enhanced_content_pipeline.py:21: in &lt;module&gt;
+    from core.agents.enhanced_content_pipeline import (
+core/agents/enhanced_content_pipeline.py:28: in &lt;module&gt;
+    from core.sparc import SPARCOrchestrator
+E   ImportError: cannot import name 'SPARCOrchestrator' from 'core.sparc' (/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/core/sparc/__init__.py)</error></testcase></testsuite></testsuites>

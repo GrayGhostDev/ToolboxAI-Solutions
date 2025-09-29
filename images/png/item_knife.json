@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Item/knife.png",
+  "file_name": "knife.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 13542,
+      "most_common": [
+        [
+          1072,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          32,
+          [
+            240,
+            255,
+            255,
+            103
+          ]
+        ],
+        [
+          32,
+          [
+            239,
+            255,
+            255,
+            95
+          ]
+        ],
+        [
+          16,
+          [
+            238,
+            255,
+            255,
+            59
+          ]
+        ],
+        [
+          16,
+          [
+            237,
+            255,
+            255,
+            29
+          ]
+        ],
+        [
+          16,
+          [
+            236,
+            255,
+            255,
+            41
+          ]
+        ],
+        [
+          16,
+          [
+            235,
+            255,
+            255,
+            75
+          ]
+        ],
+        [
+          16,
+          [
+            234,
+            255,
+            255,
+            49
+          ]
+        ],
+        [
+          16,
+          [
+            254,
+            254,
+            255,
+            255
+          ]
+        ],
+        [
+          16,
+          [
+            240,
+            253,
+            255,
+            105
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 18681
+      },
+      {
+        "color": [
+          255,
+          139,
+          79,
+          255
+        ],
+        "frequency": 23
+      },
+      {
+        "color": [
+          200,
+          198,
+          205,
+          255
+        ],
+        "frequency": 22
+      },
+      {
+        "color": [
+          195,
+          192,
+          199,
+          255
+        ],
+        "frequency": 22
+      },
+      {
+        "color": [
+          194,
+          191,
+          199,
+          255
+        ],
+        "frequency": 22
+      }
+    ]
+  }
+}

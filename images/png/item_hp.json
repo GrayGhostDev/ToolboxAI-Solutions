@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Item/hp.png",
+  "file_name": "hp.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 22030,
+      "most_common": [
+        [
+          400,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          32,
+          [
+            255,
+            247,
+            255,
+            31
+          ]
+        ],
+        [
+          16,
+          [
+            255,
+            227,
+            255,
+            9
+          ]
+        ],
+        [
+          16,
+          [
+            209,
+            189,
+            189,
+            66
+          ]
+        ],
+        [
+          16,
+          [
+            239,
+            239,
+            239,
+            32
+          ]
+        ],
+        [
+          16,
+          [
+            242,
+            75,
+            119,
+            224
+          ]
+        ],
+        [
+          32,
+          [
+            242,
+            76,
+            119,
+            224
+          ]
+        ],
+        [
+          48,
+          [
+            241,
+            76,
+            119,
+            224
+          ]
+        ],
+        [
+          64,
+          [
+            245,
+            72,
+            119,
+            224
+          ]
+        ],
+        [
+          16,
+          [
+            227,
+            56,
+            105,
+            226
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 17667
+      },
+      {
+        "color": [
+          237,
+          229,
+          229,
+          255
+        ],
+        "frequency": 35
+      },
+      {
+        "color": [
+          238,
+          231,
+          231,
+          255
+        ],
+        "frequency": 33
+      },
+      {
+        "color": [
+          238,
+          230,
+          230,
+          255
+        ],
+        "frequency": 32
+      },
+      {
+        "color": [
+          238,
+          161,
+          177,
+          255
+        ],
+        "frequency": 25
+      }
+    ]
+  }
+}

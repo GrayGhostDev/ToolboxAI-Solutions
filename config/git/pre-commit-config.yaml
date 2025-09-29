@@ -1,0 +1,88 @@
+# Pre-commit hooks for security, code quality, and documentation
+# Install: pip install pre-commit
+# Setup: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # SECURITY HOOKS - Run first to catch credential leaks
+  # =====================================================
+
+  # Detect secrets in code
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: |
+          (?x)^(
+            .*\.env\.example|
+            .*\.env\.test|
+            .*/fixtures/.*|
+            .*/test_.*\.py|
+            .*/__tests__/.*
+          )$
+
+  # Scan for hardcoded passwords and API keys
+  - repo: https://github.com/zricethezav/gitleaks
+    rev: v8.18.1
+    hooks:
+      - id: gitleaks
+
+  # Check for common Python security issues
+  - repo: https://github.com/PyCQA/bandit
+    rev: '1.7.5'
+    hooks:
+      - id: bandit
+        args: ['-ll', '--skip', 'B101,B601']
+        files: '\.py$'
+        exclude: 'tests/'
+
+  # DOCUMENTATION HOOKS
+  # ===================
+  # Documentation validation
+  - repo: local
+    hooks:
+      - id: validate-documentation-structure
+        name: Validate documentation structure
+        entry: python3 scripts/documentation/validate-structure.py
+        language: system
+        files: ^docs/.*\.md$
+        pass_filenames: false
+
+      - id: check-internal-links
+        name: Check internal documentation links
+        entry: python3 scripts/documentation/check-links.py --internal-only
+        language: system
+        files: ^docs/.*\.md$
+        pass_filenames: false
+
+      - id: update-timestamps
+        name: Update documentation timestamps
+        entry: python3 scripts/documentation/update-timestamps.py
+        language: system
+        files: ^docs/.*\.md$
+        pass_filenames: false
+
+
+  # YAML validation
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.32.0
+    hooks:
+      - id: yamllint
+        args: ['-d', '{extends: default, rules: {line-length: {max: 120}}}']
+
+  # General file checks (including security)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: detect-private-key  # SECURITY: Detect private keys
+      - id: check-added-large-files  # SECURITY: Prevent large file commits
+        args: ['--maxkb=1000']
+      - id: trailing-whitespace
+        files: ^docs/.*\.md$
+      - id: end-of-file-fixer
+        files: ^docs/.*\.md$
+      - id: check-yaml
+      - id: check-json
+      - id: mixed-line-ending
+        files: ^docs/.*\.md$

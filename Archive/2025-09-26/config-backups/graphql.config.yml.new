@@ -1,0 +1,48 @@
+# GraphQL Configuration for IDE Support (JetBrains WebStorm/VS Code)
+# This configuration enables auto-completion, validation, and other IDE features
+
+projects:
+  # Backend GraphQL configuration
+  backend:
+    schema:
+      - "schema/**/*.graphql"
+    documents: null
+    extensions:
+      endpoints:
+        default:
+          url: "http://localhost:8008/graphql"
+          headers:
+            Authorization: "Bearer ${env:AUTH_TOKEN}"
+      introspection: true
+
+  # Frontend GraphQL configuration
+  frontend:
+    schema:
+      - "schema/**/*.graphql"
+      - "http://localhost:8008/graphql"  # For introspection during development
+    documents:
+      - "apps/dashboard/src/**/*.{graphql,tsx,ts}"
+    extensions:
+      endpoints:
+        default:
+          url: "http://localhost:8008/graphql"
+        production:
+          url: "${env:VITE_GRAPHQL_ENDPOINT}"
+      codegen:
+        generates:
+          apps/dashboard/src/graphql/generated/graphql.ts:
+            plugins:
+              - typescript
+              - typescript-operations
+              - typescript-react-apollo
+            config:
+              withHooks: true
+              withComponent: false
+              withHOC: false
+              scalars:
+                DateTime: string
+                UUID: string
+                JSON: any
+              strictScalars: true
+              typesPrefix: I
+              skipTypename: false

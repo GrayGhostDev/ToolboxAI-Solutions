@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/stuudy-3d-icons_NjhhMjYzMmIyMzI4MmUwMDM5ZDY0Yzlj/PNG/RULER_1.png",
+  "file_name": "RULER_1.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 3000,
+      "height": 3000,
+      "total_pixels": 9000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 34997,
+      "most_common": [
+        [
+          2,
+          [
+            184,
+            109,
+            14,
+            32
+          ]
+        ],
+        [
+          1,
+          [
+            185,
+            110,
+            14,
+            32
+          ]
+        ],
+        [
+          1,
+          [
+            184,
+            110,
+            14,
+            32
+          ]
+        ],
+        [
+          1,
+          [
+            193,
+            116,
+            29,
+            32
+          ]
+        ],
+        [
+          1,
+          [
+            209,
+            139,
+            21,
+            224
+          ]
+        ],
+        [
+          1,
+          [
+            209,
+            140,
+            21,
+            224
+          ]
+        ],
+        [
+          1,
+          [
+            187,
+            111,
+            16,
+            32
+          ]
+        ],
+        [
+          1,
+          [
+            185,
+            110,
+            16,
+            32
+          ]
+        ],
+        [
+          1,
+          [
+            189,
+            113,
+            16,
+            32
+          ]
+        ],
+        [
+          1,
+          [
+            212,
+            144,
+            24,
+            224
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 18037
+      },
+      {
+        "color": [
+          235,
+          187,
+          82,
+          255
+        ],
+        "frequency": 33
+      },
+      {
+        "color": [
+          227,
+          172,
+          75,
+          37
+        ],
+        "frequency": 31
+      },
+      {
+        "color": [
+          227,
+          172,
+          68,
+          37
+        ],
+        "frequency": 30
+      },
+      {
+        "color": [
+          240,
+          196,
+          87,
+          255
+        ],
+        "frequency": 27
+      }
+    ]
+  }
+}

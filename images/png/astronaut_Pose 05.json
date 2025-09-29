@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Astronaut/Pose 05.png",
+  "file_name": "Pose 05.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 75633,
+      "most_common": [
+        [
+          2707,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            254,
+            255,
+            255,
+            191
+          ]
+        ],
+        [
+          127,
+          [
+            254,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          1,
+          [
+            252,
+            255,
+            255,
+            151
+          ]
+        ],
+        [
+          139,
+          [
+            251,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          139,
+          [
+            250,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          1,
+          [
+            249,
+            255,
+            255,
+            177
+          ]
+        ],
+        [
+          167,
+          [
+            248,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          181,
+          [
+            247,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          1,
+          [
+            246,
+            255,
+            255,
+            145
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 17759
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "frequency": 153
+      },
+      {
+        "color": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "frequency": 127
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          2
+        ],
+        "frequency": 96
+      },
+      {
+        "color": [
+          0,
+          0,
+          0,
+          3
+        ],
+        "frequency": 61
+      }
+    ]
+  }
+}

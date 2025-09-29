@@ -1,0 +1,162 @@
+# ToolBoxAI Solutions - Production Environment Configuration
+# Copy this file to terraform.tfvars and update with your values
+
+# Basic Configuration
+aws_region                = "us-east-1"
+disaster_recovery_region  = "us-west-2"
+owner_email              = "production-owner@company.com"
+alert_email              = "production-alerts@company.com"
+critical_alert_email     = "critical-alerts@company.com"
+
+# Security Configuration (VERY RESTRICTED)
+allowed_ssh_ips = [
+  # Only allow specific management IPs
+  # "BASTION_IP/32",          # Replace with actual bastion IP
+  # "ADMIN_WORKSTATION/32"    # Replace with admin workstation IP
+]
+
+# Domain and SSL Configuration
+domain_name = "toolboxai.solutions"
+ssl_certificate_arn = "arn:aws:acm:us-east-1:ACCOUNT:certificate/CERTIFICATE-ID"
+cloudfront_aliases = [
+  "toolboxai.solutions",
+  "www.toolboxai.solutions",
+  "app.toolboxai.solutions"
+]
+cloudfront_price_class = "PriceClass_All"  # Global distribution
+
+# API Keys (Set these as environment variables for security)
+# openai_api_key    = "sk-..."        # Set via TF_VAR_openai_api_key
+# anthropic_api_key = "sk-ant-..."    # Set via TF_VAR_anthropic_api_key
+# pusher_app_id     = "123456"        # Set via TF_VAR_pusher_app_id
+# pusher_key        = "abc..."        # Set via TF_VAR_pusher_key
+# pusher_secret     = "def..."        # Set via TF_VAR_pusher_secret
+
+# High Availability Configuration
+enable_multi_region      = false  # Set to true for multi-region deployment
+enable_disaster_recovery = true
+enable_vpc_peering      = false
+dr_kms_key_arn          = "arn:aws:kms:us-west-2:ACCOUNT:key/KEY-ID"
+
+# Security Configuration
+enable_shield_advanced   = false  # Set to true for DDoS protection ($3000/month)
+enable_waf_geo_blocking = false
+blocked_countries       = []      # e.g., ["CN", "RU"] to block specific countries
+allowed_countries       = []      # Leave empty to allow all countries
+
+# Monitoring and Alerting
+# pagerduty_endpoint = "https://events.pagerduty.com/integration/..."  # Set via TF_VAR_pagerduty_endpoint
+enable_enhanced_monitoring = true
+monitoring_retention_years = 7
+
+# Performance Configuration
+enable_performance_insights            = true
+performance_insights_retention_period = 731  # 2 years
+
+# Cost Optimization
+enable_reserved_instances = true
+reserved_instance_count   = 10
+enable_savings_plans      = true
+savings_plan_commitment   = 100  # USD per hour
+
+# Compliance Configuration
+compliance_frameworks = ["SOC2", "GDPR", "HIPAA"]
+enable_audit_logging  = true
+audit_log_retention_years = 7
+enable_data_encryption = true
+
+# Backup and Recovery
+backup_retention_years     = 7
+enable_cross_region_backup = true
+backup_schedule = {
+  daily_backup_time   = "05:00"  # 5 AM UTC
+  weekly_backup_day   = "SUN"
+  monthly_backup_day  = 1
+  yearly_backup_month = 1
+}
+
+# Scaling Configuration
+auto_scaling_policies = {
+  scale_up_threshold    = 60   # CPU percentage
+  scale_down_threshold  = 30   # CPU percentage
+  scale_up_cooldown     = 60   # seconds
+  scale_down_cooldown   = 300  # seconds
+  min_capacity          = 5    # minimum instances
+  max_capacity          = 50   # maximum instances
+}
+enable_predictive_scaling = true
+
+# Database Configuration
+database_performance_tier = "enterprise"  # standard, high, enterprise
+enable_read_replicas     = true
+read_replica_count       = 3
+
+# CDN Configuration
+cdn_configuration = {
+  enable_compression       = true
+  enable_http2            = true
+  cache_policy_id         = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"  # CachingDisabled
+  origin_request_policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"  # CORS-S3Origin
+  response_headers_policy_id = "67f7725c-6f97-4210-82d7-5512b31e9d03"  # SecurityHeadersPolicy
+}
+
+# Security Headers
+security_headers = {
+  enable_hsts              = true
+  enable_content_type_options = true
+  enable_frame_options     = true
+  enable_xss_protection    = true
+  enable_referrer_policy   = true
+  enable_csp              = true
+  csp_directive           = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.pusher.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' wss://*.pusher.com https://*.pusher.com;"
+}
+
+# API Rate Limiting
+api_rate_limits = {
+  requests_per_second = 1000
+  burst_capacity     = 2000
+  enable_throttling  = true
+}
+
+# Maintenance Windows (UTC times)
+maintenance_windows = {
+  database_maintenance_window = "sun:03:00-sun:04:00"
+  cluster_maintenance_window  = "sun:04:00-sun:05:00"
+  system_maintenance_window   = "sun:02:00-sun:06:00"
+}
+
+# Data Retention Policies
+data_retention_policies = {
+  application_logs_days = 365  # 1 year
+  access_logs_days     = 90   # 3 months
+  metrics_data_days    = 365  # 1 year
+  user_data_years      = 7    # 7 years
+  backup_data_years    = 7    # 7 years
+}
+
+# Production Feature Flags
+production_feature_flags = {
+  enable_experimental_features = false  # Never enable in production
+  enable_debug_endpoints      = false  # Never enable in production
+  enable_admin_panel          = true
+  enable_metrics_dashboard    = true
+  enable_health_checks        = true
+  enable_graceful_shutdown    = true
+  enable_circuit_breakers     = true
+  enable_retry_mechanisms     = true
+}
+
+# Business Continuity
+business_continuity_config = {
+  rto_minutes = 60   # 1 hour Recovery Time Objective
+  rpo_minutes = 15   # 15 minutes Recovery Point Objective
+  enable_chaos_engineering = false  # Consider enabling for resilience testing
+  enable_disaster_recovery_testing = true
+}
+
+# Support and Operations
+support_configuration = {
+  enable_24x7_monitoring = true
+  escalation_levels     = 3
+  on_call_rotation_hours = 168  # 1 week rotation
+}

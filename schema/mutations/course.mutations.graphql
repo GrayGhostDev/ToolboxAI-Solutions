@@ -1,0 +1,657 @@
+# Course and educational content mutations
+
+extend type Mutation {
+  """
+  Create a new course
+  """
+  createCourse(
+    input: CreateCourseInput!
+  ): CourseResult! @auth(requires: TEACHER)
+
+  """
+  Update an existing course
+  """
+  updateCourse(
+    id: UUID!
+    input: UpdateCourseInput!
+  ): CourseResult! @auth(requires: TEACHER)
+
+  """
+  Delete a course
+  """
+  deleteCourse(
+    id: UUID!
+  ): DeleteResult! @auth(requires: TEACHER)
+
+  """
+  Publish a course
+  """
+  publishCourse(
+    id: UUID!
+  ): CourseResult! @auth(requires: TEACHER)
+
+  """
+  Archive a course
+  """
+  archiveCourse(
+    id: UUID!
+  ): CourseResult! @auth(requires: TEACHER)
+
+  """
+  Duplicate a course
+  """
+  duplicateCourse(
+    id: UUID!
+    title: String!
+  ): CourseResult! @auth(requires: TEACHER)
+
+  """
+  Enroll in a course
+  """
+  enrollInCourse(
+    courseId: UUID!
+    enrollmentCode: String
+  ): EnrollmentResult! @auth
+
+  """
+  Unenroll from a course
+  """
+  unenrollFromCourse(
+    courseId: UUID!
+    reason: String
+  ): EnrollmentResult! @auth
+
+  """
+  Add student to course (teacher)
+  """
+  addStudentToCourse(
+    courseId: UUID!
+    studentId: UUID!
+  ): EnrollmentResult! @auth(requires: TEACHER)
+
+  """
+  Remove student from course (teacher)
+  """
+  removeStudentFromCourse(
+    courseId: UUID!
+    studentId: UUID!
+    reason: String
+  ): EnrollmentResult! @auth(requires: TEACHER)
+
+  """
+  Create a new lesson
+  """
+  createLesson(
+    courseId: UUID!
+    input: CreateLessonInput!
+  ): LessonResult! @auth(requires: TEACHER)
+
+  """
+  Update a lesson
+  """
+  updateLesson(
+    id: UUID!
+    input: UpdateLessonInput!
+  ): LessonResult! @auth(requires: TEACHER)
+
+  """
+  Delete a lesson
+  """
+  deleteLesson(
+    id: UUID!
+  ): DeleteResult! @auth(requires: TEACHER)
+
+  """
+  Reorder lessons
+  """
+  reorderLessons(
+    courseId: UUID!
+    lessonIds: [UUID!]!
+  ): ReorderResult! @auth(requires: TEACHER)
+
+  """
+  Add content block to lesson
+  """
+  addContentBlock(
+    lessonId: UUID!
+    input: ContentBlockInput!
+  ): ContentBlockResult! @auth(requires: TEACHER)
+
+  """
+  Update content block
+  """
+  updateContentBlock(
+    id: UUID!
+    input: ContentBlockInput!
+  ): ContentBlockResult! @auth(requires: TEACHER)
+
+  """
+  Delete content block
+  """
+  deleteContentBlock(
+    id: UUID!
+  ): DeleteResult! @auth(requires: TEACHER)
+
+  """
+  Mark lesson as completed
+  """
+  completeLesson(
+    lessonId: UUID!
+    timeSpent: Int
+  ): ProgressResult! @auth
+
+  """
+  Update course settings
+  """
+  updateCourseSettings(
+    courseId: UUID!
+    input: CourseSettingsInput!
+  ): CourseSettingsResult! @auth(requires: TEACHER)
+
+  """
+  Generate AI content for lesson
+  """
+  generateContent(
+    lessonId: UUID!
+    input: GenerateContentInput!
+  ): ContentGenerationResult! @auth(requires: TEACHER) @rateLimit(max: 10, window: "1h")
+}
+
+# Input types
+
+input CreateCourseInput {
+  """
+  Course title
+  """
+  title: String!
+
+  """
+  Course code
+  """
+  code: String!
+
+  """
+  Course description
+  """
+  description: String!
+
+  """
+  Subject area
+  """
+  subject: Subject!
+
+  """
+  Difficulty level
+  """
+  difficulty: DifficultyLevel!
+
+  """
+  Thumbnail image URL
+  """
+  thumbnail: URL
+
+  """
+  Start date
+  """
+  startDate: DateTime
+
+  """
+  End date
+  """
+  endDate: DateTime
+
+  """
+  Maximum students
+  """
+  maxStudents: Int
+
+  """
+  Course tags
+  """
+  tags: [String!]
+
+  """
+  Initial settings
+  """
+  settings: CourseSettingsInput
+}
+
+input UpdateCourseInput {
+  """
+  Course title
+  """
+  title: String
+
+  """
+  Course description
+  """
+  description: String
+
+  """
+  Subject area
+  """
+  subject: Subject
+
+  """
+  Difficulty level
+  """
+  difficulty: DifficultyLevel
+
+  """
+  Thumbnail image URL
+  """
+  thumbnail: URL
+
+  """
+  Start date
+  """
+  startDate: DateTime
+
+  """
+  End date
+  """
+  endDate: DateTime
+
+  """
+  Maximum students
+  """
+  maxStudents: Int
+
+  """
+  Course tags
+  """
+  tags: [String!]
+}
+
+input CreateLessonInput {
+  """
+  Lesson title
+  """
+  title: String!
+
+  """
+  Lesson description
+  """
+  description: String!
+
+  """
+  Order in course
+  """
+  order: Int
+
+  """
+  Estimated duration in minutes
+  """
+  duration: Int!
+
+  """
+  Learning objectives
+  """
+  objectives: [String!]!
+
+  """
+  Initial content blocks
+  """
+  content: [ContentBlockInput!]
+
+  """
+  Prerequisite lesson IDs
+  """
+  prerequisites: [UUID!]
+
+  """
+  Initial status
+  """
+  status: LessonStatus = DRAFT
+}
+
+input UpdateLessonInput {
+  """
+  Lesson title
+  """
+  title: String
+
+  """
+  Lesson description
+  """
+  description: String
+
+  """
+  Order in course
+  """
+  order: Int
+
+  """
+  Estimated duration
+  """
+  duration: Int
+
+  """
+  Learning objectives
+  """
+  objectives: [String!]
+
+  """
+  Lesson status
+  """
+  status: LessonStatus
+}
+
+input ContentBlockInput {
+  """
+  Block type
+  """
+  type: ContentBlockType!
+
+  """
+  Block content
+  """
+  content: JSON!
+
+  """
+  Block title
+  """
+  title: String
+
+  """
+  Order in lesson
+  """
+  order: Int
+
+  """
+  Additional metadata
+  """
+  metadata: JSON
+}
+
+input CourseSettingsInput {
+  """
+  Allow late submissions
+  """
+  allowLateSubmissions: Boolean
+
+  """
+  Late penalty percentage
+  """
+  latePenalty: Float
+
+  """
+  Allow quiz retakes
+  """
+  allowQuizRetakes: Boolean
+
+  """
+  Max quiz attempts
+  """
+  maxQuizAttempts: Int
+
+  """
+  Show correct answers
+  """
+  showCorrectAnswers: Boolean
+
+  """
+  Enable peer review
+  """
+  enablePeerReview: Boolean
+
+  """
+  Enable discussions
+  """
+  enableDiscussions: Boolean
+
+  """
+  Custom settings
+  """
+  custom: JSON
+}
+
+input GenerateContentInput {
+  """
+  Content type to generate
+  """
+  type: ContentGenerationType!
+
+  """
+  Topic for content
+  """
+  topic: String!
+
+  """
+  Additional context
+  """
+  context: String
+
+  """
+  Target grade level
+  """
+  gradeLevel: String
+
+  """
+  Include Roblox elements
+  """
+  includeRoblox: Boolean = false
+
+  """
+  Language
+  """
+  language: String = "en"
+}
+
+enum ContentGenerationType {
+  LESSON_PLAN
+  QUIZ
+  PRESENTATION
+  EXERCISE
+  ROBLOX_ACTIVITY
+}
+
+# Result types
+
+type CourseResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  Created/updated course
+  """
+  course: Course
+}
+
+type EnrollmentResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  Enrollment details
+  """
+  enrollment: Enrollment
+}
+
+type LessonResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  Created/updated lesson
+  """
+  lesson: Lesson
+}
+
+type ContentBlockResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  Content block
+  """
+  contentBlock: ContentBlock
+}
+
+type DeleteResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  ID of deleted item
+  """
+  deletedId: UUID
+}
+
+type ReorderResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  New order
+  """
+  newOrder: [UUID!]
+}
+
+type ProgressResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  Updated progress
+  """
+  progress: StudentProgress
+}
+
+type CourseSettingsResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  Updated settings
+  """
+  settings: CourseSettings
+}
+
+type ContentGenerationResult implements MutationResult {
+  """
+  Success status
+  """
+  success: Boolean!
+
+  """
+  Error list
+  """
+  errors: [Error!]
+
+  """
+  Status message
+  """
+  message: String
+
+  """
+  Generated content
+  """
+  content: JSON
+
+  """
+  Generation ID for tracking
+  """
+  generationId: UUID
+
+  """
+  Token usage
+  """
+  tokensUsed: Int
+}

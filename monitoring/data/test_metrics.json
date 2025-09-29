@@ -1,0 +1,13 @@
+{
+  "timestamp": "2025-09-21T07:29:29.226547",
+  "pass_rate": 0.0,
+  "total_tests": 127,
+  "passed": 0,
+  "failed": 0,
+  "skipped": 0,
+  "errors": 0,
+  "trend": "stable",
+  "target_pass_rate": 95.0,
+  "tests_to_fix": 0,
+  "failing_tests": []
+}

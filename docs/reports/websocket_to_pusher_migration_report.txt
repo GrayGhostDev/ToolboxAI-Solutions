@@ -1,0 +1,143 @@
+============================================================
+WebSocket to Pusher Migration Report
+============================================================
+
+Total test files scanned: 176
+Files with WebSocket references: 59
+Files successfully migrated: 32
+Files failed to migrate: 0
+
+Successfully Migrated Files:
+----------------------------------------
+✅ tests/conftest.py
+   - Replaced: mock_websocket -> mock_pusher_as_websocket
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+✅ tests/test_integration_chat.py
+   - Replaced: ws://.*?/ws -> pusher://app_key@cluster
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   - Replaced: async with websockets\.connect\( -> async with async_mock_pusher_context() as pusher:
+        # Connect using Pusher
+   ... and 1 more changes
+✅ tests/test_comprehensive_fixes.py
+   - Replaced: from.*websocket.*import -> from tests.fixtures.pusher_test_utils import
+✅ tests/test_enhanced_content_pipeline.py
+   - Replaced: from.*websocket.*import -> from tests.fixtures.pusher_test_utils import
+✅ tests/integration/conftest.py
+   - Replaced: mock_websocket -> mock_pusher_as_websocket
+   - Replaced: ws://.*?/ws -> pusher://app_key@cluster
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   ... and 1 more changes
+✅ tests/integration/test_comprehensive_verification.py
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   - Replaced: async with websockets\.connect\( -> async with async_mock_pusher_context() as pusher:
+        # Connect using Pusher
+   - Replaced: await websocket\.send\( -> await pusher.trigger(
+✅ tests/integration/test_mcp_integration.py
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   - Replaced: async with websockets\.connect\( -> async with async_mock_pusher_context() as pusher:
+        # Connect using Pusher
+   - Replaced: await websocket\.send\( -> await pusher.trigger(
+✅ tests/integration/test_e2e_content_workflow.py
+   - Replaced: from.*websocket.*import -> from tests.fixtures.pusher_test_utils import
+   - Replaced: ws://.*?/ws -> pusher://app_key@cluster
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   ... and 1 more changes
+✅ tests/integration/test_websocket_pipeline_validation.py
+   - Replaced: from.*websocket.*import -> from tests.fixtures.pusher_test_utils import
+   - Replaced: mock_websocket -> mock_pusher_as_websocket
+   - Replaced: ['\"]content_update['\"] -> 'content-update'
+   ... and 4 more changes
+✅ tests/integration/test_fastapi_integration.py
+   - Replaced: ws://.*?/ws -> pusher://app_key@cluster
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   - Replaced: async with websockets\.connect\( -> async with async_mock_pusher_context() as pusher:
+        # Connect using Pusher
+   ... and 1 more changes
+✅ tests/integration/test_realtime_communication.py
+   - Replaced: from.*websocket.*import -> from tests.fixtures.pusher_test_utils import
+   - Replaced: ws\.send\( -> pusher.trigger(
+   - Replaced: ws://.*?/ws -> pusher://app_key@cluster
+   ... and 3 more changes
+✅ tests/integration/test_dashboard_integration.py
+   - Replaced: ws\.send\( -> pusher.trigger(
+✅ tests/integration/test_full_integration.py
+   - Replaced: ws\.send\( -> pusher.trigger(
+   - Replaced: ws://.*?/ws -> pusher://app_key@cluster
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   ... and 1 more changes
+✅ tests/integration/test_runner.py
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   - Replaced: async with websockets\.connect\( -> async with async_mock_pusher_context() as pusher:
+        # Connect using Pusher
+✅ tests/integration/test_fastapi_comprehensive.py
+   - Replaced: ws://.*?/ws -> pusher://app_key@cluster
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   - Replaced: async with websockets\.connect\( -> async with async_mock_pusher_context() as pusher:
+        # Connect using Pusher
+   ... and 1 more changes
+✅ tests/integration/test_complete_integration.py
+   - Replaced: ws\.send\( -> pusher.trigger(
+✅ tests/integration/test_websocket_integration.py
+   - Replaced: ws\.send\( -> pusher.trigger(
+   - Replaced: ws://.*?/ws -> pusher://app_key@cluster
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   ... and 2 more changes
+✅ tests/integration/test_supabase_integration.py
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   - Replaced: async with websockets\.connect\( -> async with async_mock_pusher_context() as pusher:
+        # Connect using Pusher
+   - Replaced: await websocket\.send\( -> await pusher.trigger(
+✅ tests/integration/test_roblox_integration.py
+   - Replaced: mock_websocket -> mock_pusher_as_websocket
+   - Replaced: ['\"]content_update['\"] -> 'content-update'
+   - Replaced: ['\"]progress_update['\"] -> 'progress-update'
+   ... and 3 more changes
+✅ tests/integration/test_comprehensive_system_validation.py
+   - Replaced: from.*websocket.*import -> from tests.fixtures.pusher_test_utils import
+   - Replaced: mock_websocket -> mock_pusher_as_websocket
+   - Replaced: ws://.*?/ws -> pusher://app_key@cluster
+✅ tests/performance/test_websocket_performance.py
+   - Replaced: ws\.send\( -> pusher.trigger(
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   - Replaced: async with websockets\.connect\( -> async with async_mock_pusher_context() as pusher:
+        # Connect using Pusher
+✅ tests/performance/test_comprehensive_performance.py
+   - Replaced: ws://.*?/ws -> pusher://app_key@cluster
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   - Replaced: async with websockets\.connect\( -> async with async_mock_pusher_context() as pusher:
+        # Connect using Pusher
+   ... and 1 more changes
+✅ tests/performance/test_load.py
+   - Replaced: ws\.send\( -> pusher.trigger(
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   - Replaced: async with websockets\.connect\( -> async with async_mock_pusher_context() as pusher:
+        # Connect using Pusher
+✅ tests/e2e/test_e2e_integration.py
+   - Replaced: ws\.send\( -> pusher.trigger(
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+   - Replaced: async with websockets\.connect\( -> async with async_mock_pusher_context() as pusher:
+        # Connect using Pusher
+✅ tests/unit/core/test_security.py
+   - Replaced: from.*websocket.*import -> from tests.fixtures.pusher_test_utils import
+   - Replaced: mock_websocket -> mock_pusher_as_websocket
+✅ tests/unit/core/test_websocket_metrics_token_expired.py
+   - Replaced: mock_websocket -> mock_pusher_as_websocket
+✅ tests/unit/core/test_mcp_fixed.py
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+✅ tests/unit/core/test_server_unit_core.py
+   - Replaced: from.*websocket.*import -> from tests.fixtures.pusher_test_utils import
+✅ tests/unit/core/test_websocket_channel_rbac_and_capacity.py
+   - Replaced: from.*websocket.*import -> from tests.fixtures.pusher_test_utils import
+✅ tests/unit/core/test_mcp.py
+   - Replaced: import websockets -> from tests.fixtures.pusher_mocks import MockPusherService
+✅ tests/unit/core/test_websocket_config_overrides.py
+   - Replaced: from.*websocket.*import -> from tests.fixtures.pusher_test_utils import
+✅ tests/e2e/realtime-websocket.spec.ts
+   - Replaced: ws://.*?/ws -> pusher://app_key@cluster
+   - Replaced: new WebSocket\( -> new PusherService(
+   - Replaced: WebSocket\( -> PusherConnection(
+   ... and 1 more changes
+
+Migration Summary:
+----------------------------------------
+Success Rate: 54.2%

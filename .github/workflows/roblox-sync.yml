@@ -3,10 +3,10 @@ name: Roblox Studio Sync
 on:
   push:
     paths:
-      - 'ToolboxAI-Roblox-Environment/Roblox/**'
-      - 'ToolboxAI-Roblox-Environment/agents/**'
-      - 'ToolboxAI-Roblox-Environment/server/**'
-      - 'ToolboxAI-Roblox-Environment/mcp/**'
+      - 'roblox/**'
+      - 'core/agents/**'
+      - 'apps/backend/**'
+      - 'core/mcp/**'
     branches: [main, develop]
   workflow_dispatch:
     inputs:
@@ -37,24 +37,24 @@ jobs:
       
       - name: Validate Lua syntax
         run: |
-          find ToolboxAI-Roblox-Environment/Roblox -name "*.lua" -exec luacheck {} \; || true
+          find roblox -name "*.lua" -exec luacheck {} \; || true
       
       - name: Check for common issues
         run: |
           echo "Checking for common Roblox script issues..."
           
           # Check for deprecated APIs
-          if grep -r "workspace.CurrentCamera" ToolboxAI-Roblox-Environment/Roblox/; then
+          if grep -r "workspace.CurrentCamera" roblox/; then
             echo "Warning: Found deprecated API usage"
           fi
           
           # Check for security issues
-          if grep -r "loadstring" ToolboxAI-Roblox-Environment/Roblox/; then
+          if grep -r "loadstring" roblox/; then
             echo "Warning: loadstring usage detected - potential security risk"
           fi
           
           # Check for performance issues
-          if grep -r "wait()" ToolboxAI-Roblox-Environment/Roblox/; then
+          if grep -r "wait()" roblox/; then
             echo "Warning: wait() usage detected - consider using task.wait()"
           fi
 
@@ -69,17 +69,17 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       
       - name: Install dependencies
         run: |
-          cd ToolboxAI-Roblox-Environment
+          cd .
           pip install -r requirements.txt
       
       - name: Start MCP Server
         run: |
-          cd ToolboxAI-Roblox-Environment
-          python mcp/server.py &
+          cd .
+          python core/mcp/server.py &
           sleep 5
       
       - name: Trigger Agent Pipeline
@@ -89,11 +89,11 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
         run: |
-          cd ToolboxAI-Roblox-Environment
+          cd .
           python -c "
           import asyncio
-          from agents.plugin_communication import PluginCommunicationHub
-          from agents.supervisor import SupervisorAgent
+          from core.agents.plugin_communication import PluginCommunicationHub
+          from core.agents.supervisor import SupervisorAgent
           
           async def generate_content():
               # Initialize communication hub
@@ -130,7 +130,7 @@ jobs:
                   
                   # Save generated content
                   if response['status'] == 'success':
-                      with open(f'Roblox/Scripts/Generated/{theme}_complete.lua', 'w') as f:
+                      with open(f'roblox/Scripts/Generated/{theme}_complete.lua', 'w') as f:
                           f.write(response['scripts'])
               
               await hub.cleanup()
@@ -140,17 +140,17 @@ jobs:
       
       - name: Run Agent Tests
         run: |
-          cd ToolboxAI-Roblox-Environment
+          cd .
           pytest tests/unit/test_agents.py -v --tb=short
       
       - name: Generate Build Report
         run: |
-          cd ToolboxAI-Roblox-Environment
+          cd .
           python -c "
           import json
           import os
           from datetime import datetime
-          
+
           report = {
               'build_id': '${{ github.run_id }}',
               'commit': '${{ github.sha }}',
@@ -159,9 +159,9 @@ jobs:
               'generated_files': [],
               'status': 'success'
           }
-          
+
           # List generated files
-          generated_dir = 'Roblox/Scripts/Generated'
+          generated_dir = 'roblox/Scripts/Generated'
           if os.path.exists(generated_dir):
               for file in os.listdir(generated_dir):
                   report['generated_files'].append({
@@ -174,16 +174,16 @@ jobs:
           "
       
       - name: Upload generated scripts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: generated-scripts
-          path: ToolboxAI-Roblox-Environment/Roblox/Scripts/Generated/
+          path: roblox/Scripts/Generated/
       
       - name: Upload build report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-report
-          path: ToolboxAI-Roblox-Environment/build_report.json
+          path: build_report.json
 
   sync-to-roblox:
     name: Sync to Roblox Studio
@@ -195,16 +195,16 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Download generated scripts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: generated-scripts
-          path: ToolboxAI-Roblox-Environment/Roblox/Scripts/Generated/
+          path: roblox/Scripts/Generated/
       
       - name: Download build report
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: build-report
-          path: ToolboxAI-Roblox-Environment/
+          path: .
       
       - name: Install Rojo
         run: |
@@ -218,27 +218,27 @@ jobs:
             "tree": {
               "\$className": "DataModel",
               "ServerScriptService": {
-                "\$path": "ToolboxAI-Roblox-Environment/Roblox/Scripts/ServerScripts",
+                "\$path": "roblox/Scripts/ServerScripts",
                 "APIs": {
-                  "\$path": "ToolboxAI-Roblox-Environment/Roblox/API"
+                  "\$path": "roblox/API"
                 }
               },
               "StarterPlayer": {
                 "StarterPlayerScripts": {
-                  "\$path": "ToolboxAI-Roblox-Environment/Roblox/Scripts/ClientScripts"
+                  "\$path": "roblox/Scripts/ClientScripts"
                 }
               },
               "ReplicatedStorage": {
                 "Modules": {
-                  "\$path": "ToolboxAI-Roblox-Environment/Roblox/Scripts/ModuleScripts"
+                  "\$path": "roblox/Scripts/ModuleScripts"
                 },
                 "Plugins": {
-                  "\$path": "ToolboxAI-Roblox-Environment/Roblox/Plugins"
+                  "\$path": "roblox/Plugins"
                 }
               },
               "ServerStorage": {
                 "Generated": {
-                  "\$path": "ToolboxAI-Roblox-Environment/Roblox/Scripts/Generated"
+                  "\$path": "roblox/Scripts/Generated"
                 }
               }
             }
@@ -250,7 +250,7 @@ jobs:
           rojo build -o ToolboxAI.rbxl
       
       - name: Upload place file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: roblox-place
           path: ToolboxAI.rbxl

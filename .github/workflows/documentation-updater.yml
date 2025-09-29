@@ -1,0 +1,367 @@
+name: Documentation Updater
+
+on:
+  push:
+    branches: [main, feature/*, develop]
+    paths:
+      - 'apps/backend/**/*.py'
+      - 'apps/dashboard/**/*.ts'
+      - 'apps/dashboard/**/*.tsx'
+      - 'apps/dashboard/**/*.js'
+      - 'apps/dashboard/**/*.jsx'
+      - 'core/**/*.py'
+      - 'database/**/*.py'
+      - 'config/**/*.yaml'
+      - 'config/**/*.yml'
+      - 'config/**/*.json'
+      - '*.env*'
+      - 'pyproject.toml'
+      - 'package.json'
+      - 'docker-compose*.yml'
+
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/backend/**/*.py'
+      - 'apps/dashboard/**/*.ts'
+      - 'apps/dashboard/**/*.tsx'
+      - 'core/**/*.py'
+      - 'database/**/*.py'
+      - 'config/**/*.yaml'
+      - 'config/**/*.yml'
+
+  workflow_dispatch:
+    inputs:
+      commit_hash:
+        description: 'Specific commit hash to analyze'
+        required: false
+        type: string
+      force_update:
+        description: 'Force update all documentation'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  documentation-update:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better change detection
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install aiohttp jinja2 pyyaml
+
+      - name: Install Node.js dependencies
+        run: |
+          npm install
+
+      - name: Create logs directory
+        run: |
+          mkdir -p logs/doc-updater
+
+      - name: Run documentation updater
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_HASH: ${{ github.event.inputs.commit_hash || github.sha }}
+          FORCE_UPDATE: ${{ github.event.inputs.force_update || 'false' }}
+        run: |
+          cd $GITHUB_WORKSPACE
+
+          # Determine the commit to analyze
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            COMMIT_TO_ANALYZE="${{ github.event.pull_request.head.sha }}"
+          elif [ -n "${{ github.event.inputs.commit_hash }}" ]; then
+            COMMIT_TO_ANALYZE="${{ github.event.inputs.commit_hash }}"
+          else
+            COMMIT_TO_ANALYZE="${{ github.sha }}"
+          fi
+
+          echo "Analyzing commit: $COMMIT_TO_ANALYZE"
+
+          # Run the documentation updater
+          python3 scripts/doc-updater/doc_updater.py \
+            --commit "$COMMIT_TO_ANALYZE" \
+            --config config/doc-updater-rules.yaml \
+            2>&1 | tee logs/doc-updater/ci-run.log
+
+      - name: Check for documentation changes
+        id: doc_changes
+        run: |
+          if git diff --quiet HEAD docs/; then
+            echo "changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate generated documentation
+        if: steps.doc_changes.outputs.changes == 'true'
+        run: |
+          # Run validation checks
+          python3 -c "
+          import sys
+          sys.path.append('scripts/doc-updater')
+          from cross_reference import CrossReferenceValidator
+          from pathlib import Path
+          import asyncio
+          import json
+
+          async def validate():
+              validator = CrossReferenceValidator(Path('.'))
+              # Get list of changed docs
+              result = await validator.validate_updates([])
+              print(json.dumps(result, indent=2))
+
+              # Exit with error if validation fails
+              if result.get('broken_links') or result.get('missing_references'):
+                  sys.exit(1)
+
+          asyncio.run(validate())
+          "
+
+      - name: Generate validation report
+        if: always()
+        run: |
+          python3 -c "
+          import sys
+          sys.path.append('scripts/doc-updater')
+          from cross_reference import CrossReferenceValidator
+          from pathlib import Path
+          import asyncio
+
+          async def generate_report():
+              validator = CrossReferenceValidator(Path('.'))
+              result = await validator.validate_updates([])
+              report = await validator.generate_reference_report(result)
+
+              with open('logs/doc-updater/validation-report.md', 'w') as f:
+                  f.write(report)
+
+              print('Validation report generated')
+
+          asyncio.run(generate_report())
+          "
+
+      - name: Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-report
+          path: logs/doc-updater/validation-report.md
+
+      - name: Upload update logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: update-logs
+          path: logs/doc-updater/
+
+      - name: Create Pull Request for documentation updates
+        if: steps.doc_changes.outputs.changes == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            docs: Auto-update documentation for commit ${{ github.sha }}
+
+            🤖 Generated with [Claude Code](https://claude.ai/code)
+
+            Co-Authored-By: Claude <noreply@anthropic.com>
+          title: "📚 Auto-update documentation for commit ${{ github.sha }}"
+          body: |
+            ## Auto-Generated Documentation Updates
+
+            This PR contains automatically generated documentation updates based on code changes in commit ${{ github.sha }}.
+
+            ### Changes Detected
+            - Commit: ${{ github.sha }}
+            - Branch: ${{ github.ref_name }}
+            - Message: ${{ github.event.head_commit.message }}
+
+            ### Files Updated
+            ${{ steps.doc_changes.outputs.files }}
+
+            ### Validation Status
+            ✅ Documentation validation passed
+
+            ### Review Checklist
+            - [ ] Review auto-generated content for accuracy
+            - [ ] Check code examples and API documentation
+            - [ ] Verify cross-references and links
+            - [ ] Approve and merge if content is correct
+
+            ### Artifacts
+            - [Validation Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - [Update Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            ---
+            🤖 This PR was automatically created by the Documentation Updater system.
+          branch: docs/auto-update-${{ github.sha }}
+          delete-branch: true
+
+      - name: Comment on PR with validation results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Read validation report if it exists
+            let reportContent = '';
+            try {
+              reportContent = fs.readFileSync('logs/doc-updater/validation-report.md', 'utf8');
+            } catch (error) {
+              reportContent = 'Validation report not generated.';
+            }
+
+            // Read update logs
+            let logContent = '';
+            try {
+              logContent = fs.readFileSync('logs/doc-updater/ci-run.log', 'utf8');
+            } catch (error) {
+              logContent = 'Update logs not available.';
+            }
+
+            const comment = `## 📚 Documentation Update Results
+
+            The documentation updater has analyzed this PR for potential documentation updates.
+
+            ### Validation Results
+
+            \`\`\`
+            ${reportContent.substring(0, 2000)}${reportContent.length > 2000 ? '...\n(truncated)' : ''}
+            \`\`\`
+
+            ### Update Log Summary
+
+            \`\`\`
+            ${logContent.split('\n').slice(-20).join('\n')}
+            \`\`\`
+
+            <details>
+            <summary>Full Update Log</summary>
+
+            \`\`\`
+            ${logContent}
+            \`\`\`
+
+            </details>
+
+            ---
+            🤖 This comment was automatically generated by the Documentation Updater system.
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Create issue for validation failures
+        if: failure() && github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `🚨 Documentation Update Failed - ${context.sha.substring(0, 7)}`;
+
+            const body = `## Documentation Update Failure
+
+            The automatic documentation update failed for commit ${context.sha}.
+
+            ### Details
+            - **Commit**: ${context.sha}
+            - **Branch**: ${context.ref}
+            - **Workflow Run**: [${context.runId}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+
+            ### Required Actions
+            - [ ] Review the workflow logs
+            - [ ] Fix any validation errors
+            - [ ] Re-run the documentation updater manually
+            - [ ] Update documentation if needed
+
+            ### Logs
+            Check the [workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for detailed logs.
+
+            ---
+            🤖 This issue was automatically created by the Documentation Updater system.
+            `;
+
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['documentation', 'automation', 'bug']
+            });
+
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: documentation-update
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Clean up old documentation update branches
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: branches } = await github.rest.repos.listBranches({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+
+            const docBranches = branches.filter(branch =>
+              branch.name.startsWith('docs/auto-update-')
+            );
+
+            // Sort by name (which includes timestamp) and keep only the latest 10
+            docBranches.sort((a, b) => b.name.localeCompare(a.name));
+            const branchesToDelete = docBranches.slice(10);
+
+            for (const branch of branchesToDelete) {
+              try {
+                await github.rest.git.deleteRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `heads/${branch.name}`
+                });
+                console.log(`Deleted branch: ${branch.name}`);
+              } catch (error) {
+                console.log(`Failed to delete branch ${branch.name}: ${error.message}`);
+              }
+            }

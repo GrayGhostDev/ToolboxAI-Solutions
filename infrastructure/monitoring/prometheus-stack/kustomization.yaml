@@ -1,0 +1,70 @@
+# Kustomization for Prometheus Stack Deployment
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring
+
+resources:
+  - namespace.yaml
+  - prometheus-operator.yaml
+  - prometheus-rules.yaml
+  - service-monitors.yaml
+  - grafana-dashboards.yaml
+
+helmCharts:
+  - name: kube-prometheus-stack
+    repo: https://prometheus-community.github.io/helm-charts
+    version: 51.3.0
+    releaseName: monitoring
+    namespace: monitoring
+    valuesFile: values.yaml
+
+configMapGenerator:
+  - name: grafana-dashboards
+    files:
+      - dashboards/toolboxai-overview.json
+      - dashboards/toolboxai-backend.json
+      - dashboards/toolboxai-dashboard.json
+      - dashboards/compliance.json
+      - dashboards/security.json
+
+secretGenerator:
+  - name: monitoring-secrets
+    literals:
+      - GRAFANA_SECRET_KEY=change-me-in-production
+      - PAGERDUTY_KEY=your-pagerduty-key
+      - SMTP_PASSWORD=your-smtp-password
+      - SLACK_WEBHOOK=your-slack-webhook
+
+patches:
+  - target:
+      kind: Deployment
+      name: prometheus-operator
+    patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value:
+          - name: GOGC
+            value: "50"
+  - target:
+      kind: StatefulSet
+      name: prometheus
+    patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value:
+          - name: GOGC
+            value: "50"
+
+labels:
+  - pairs:
+      environment: production
+      managed-by: kustomize
+      monitoring: prometheus
+    includeSelectors: true
+
+annotations:
+  - pairs:
+      compliance: coppa-ferpa-gdpr
+      security: enforced
+    includeSelectors: false

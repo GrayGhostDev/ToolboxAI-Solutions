@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Health Check</title>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .health-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status-healthy {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        .status-unhealthy {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        .metric {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .metric-label {
+            font-weight: 500;
+            color: #424242;
+        }
+        .metric-value {
+            color: #1976d2;
+            font-weight: bold;
+        }
+        .timestamp {
+            color: #757575;
+            font-size: 0.9em;
+        }
+        .checks-list {
+            margin-top: 20px;
+        }
+        .check-item {
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-left: 4px solid #2e7d32;
+            background: #f1f8e9;
+        }
+        .check-item.error {
+            border-left-color: #d32f2f;
+            background: #ffebee;
+        }
+    </style>
+</head>
+<body>
+    <div class="health-container">
+        <h1>ToolBoxAI Dashboard Health Status</h1>
+        <div id="health-content">Loading health status...</div>
+    </div>
+
+    <script>
+        function formatTimestamp(timestamp) {
+            return new Date(timestamp).toLocaleString();
+        }
+
+        function renderHealthStatus(data) {
+            const container = document.getElementById('health-content');
+
+            const healthClass = data.status === 'healthy' ? 'status-healthy' : 'status-unhealthy';
+
+            let html = `
+                <div class="metric">
+                    <span class="metric-label">Overall Status:</span>
+                    <span class="metric-value ${healthClass}">${data.status.toUpperCase()}</span>
+                </div>
+
+                <div class="metric">
+                    <span class="metric-label">Service:</span>
+                    <span class="metric-value">${data.service || 'dashboard-frontend'}</span>
+                </div>
+
+                <div class="metric">
+                    <span class="metric-label">Version:</span>
+                    <span class="metric-value">${data.version || '1.1.0'}</span>
+                </div>
+
+                <div class="metric">
+                    <span class="metric-label">Environment:</span>
+                    <span class="metric-value">${data.environment || 'development'}</span>
+                </div>
+
+                <div class="metric">
+                    <span class="metric-label">Uptime:</span>
+                    <span class="metric-value">${Math.round(data.uptime_seconds || 0)} seconds</span>
+                </div>
+
+                <div class="metric">
+                    <span class="metric-label">Last Updated:</span>
+                    <span class="timestamp">${formatTimestamp(data.timestamp)}</span>
+                </div>
+            `;
+
+            if (data.checks) {
+                html += '<div class="checks-list"><h3>System Checks</h3>';
+
+                Object.entries(data.checks).forEach(([checkName, checkData]) => {
+                    const checkClass = checkData.healthy ? 'check-item' : 'check-item error';
+                    const status = checkData.healthy ? '✓' : '✗';
+                    const details = checkData.details ? JSON.stringify(checkData.details, null, 2) : '';
+                    const error = checkData.error ? `Error: ${checkData.error}` : '';
+
+                    html += `
+                        <div class="${checkClass}">
+                            <strong>${status} ${checkName.replace(/_/g, ' ').toUpperCase()}</strong>
+                            ${details ? `<pre style="margin: 5px 0; font-size: 0.85em;">${details}</pre>` : ''}
+                            ${error ? `<div style="color: #d32f2f; font-size: 0.9em;">${error}</div>` : ''}
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Generate basic health data (since this is a static frontend)
+        function generateHealthData() {
+            const startTime = performance.timeOrigin;
+            const uptime = (Date.now() - startTime) / 1000;
+
+            return {
+                status: 'healthy',
+                timestamp: new Date().toISOString(),
+                service: 'dashboard-frontend',
+                version: '1.1.0',
+                environment: window.location.hostname === 'localhost' ? 'development' : 'production',
+                uptime_seconds: uptime,
+                checks: {
+                    frontend_loaded: {
+                        healthy: true,
+                        details: {
+                            user_agent: navigator.userAgent,
+                            viewport: `${window.innerWidth}x${window.innerHeight}`,
+                            online: navigator.onLine,
+                            language: navigator.language
+                        }
+                    },
+                    local_storage: {
+                        healthy: typeof Storage !== 'undefined',
+                        details: {
+                            available: typeof Storage !== 'undefined',
+                            quota_mb: 'unknown'
+                        }
+                    },
+                    api_connectivity: {
+                        healthy: true,
+                        details: {
+                            base_url: import.meta?.env?.VITE_API_BASE_URL || 'http://127.0.0.1:8009',
+                            websocket_url: import.meta?.env?.VITE_WS_URL || 'ws://127.0.0.1:8009'
+                        }
+                    }
+                }
+            };
+        }
+
+        // Test API connectivity
+        async function testApiConnectivity() {
+            try {
+                const apiUrl = import.meta?.env?.VITE_API_BASE_URL || 'http://127.0.0.1:8009';
+                const response = await fetch(`${apiUrl}/health`, {
+                    method: 'GET',
+                    timeout: 5000
+                });
+
+                return {
+                    healthy: response.ok,
+                    details: {
+                        status_code: response.status,
+                        response_time_ms: 'measured',
+                        backend_available: response.ok
+                    }
+                };
+            } catch (error) {
+                return {
+                    healthy: false,
+                    error: error.message,
+                    details: {
+                        backend_available: false
+                    }
+                };
+            }
+        }
+
+        // Enhanced health check with API test
+        async function loadHealthStatus() {
+            try {
+                const healthData = generateHealthData();
+
+                // Test API connectivity
+                const apiHealth = await testApiConnectivity();
+                healthData.checks.api_connectivity = apiHealth;
+
+                // Update overall status based on checks
+                const allHealthy = Object.values(healthData.checks).every(check => check.healthy);
+                healthData.status = allHealthy ? 'healthy' : 'unhealthy';
+
+                renderHealthStatus(healthData);
+            } catch (error) {
+                document.getElementById('health-content').innerHTML = `
+                    <div class="metric">
+                        <span class="status-unhealthy">Error loading health status: ${error.message}</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-refresh every 30 seconds
+        function startAutoRefresh() {
+            setInterval(loadHealthStatus, 30000);
+        }
+
+        // Load initial health status
+        loadHealthStatus();
+        startAutoRefresh();
+    </script>
+</body>
+</html>

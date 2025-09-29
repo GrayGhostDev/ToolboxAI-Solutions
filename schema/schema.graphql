@@ -1,0 +1,58 @@
+# ToolBoxAI Educational Platform GraphQL Schema
+# Main schema definition file that imports all type definitions
+
+# Import all type definitions
+#import "./types/*.graphql"
+#import "./queries/*.graphql"
+#import "./mutations/*.graphql"
+#import "./subscriptions/*.graphql"
+
+# Schema definition
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+# Custom directives for authorization and rate limiting
+directive @auth(
+  requires: Role = USER
+) on FIELD_DEFINITION
+
+directive @rateLimit(
+  max: Int!
+  window: String!
+) on FIELD_DEFINITION
+
+directive @deprecated(
+  reason: String
+) on FIELD_DEFINITION | ENUM_VALUE
+
+# Base Query type
+type Query {
+  """
+  Health check endpoint to verify GraphQL service is running
+  """
+  health: String!
+
+  """
+  Get the GraphQL schema version
+  """
+  version: String!
+}
+
+# Base Mutation type
+type Mutation {
+  """
+  Placeholder for mutations - will be extended in other files
+  """
+  _empty: String
+}
+
+# Base Subscription type
+type Subscription {
+  """
+  Placeholder for subscriptions - will be extended in other files
+  """
+  _empty: String
+}

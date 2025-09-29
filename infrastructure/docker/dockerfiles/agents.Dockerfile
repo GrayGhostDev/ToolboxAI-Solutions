@@ -1,0 +1,292 @@
+# syntax=docker/dockerfile:1.6
+# ============================================
+# TOOLBOXAI AGENT COORDINATOR DOCKERFILE
+# ============================================
+# Multi-stage build optimized for AI agent orchestration
+# Security-first approach with Python 3.12
+# Updated: 2025-09-25
+# ============================================
+
+# ============================================
+# BASE STAGE - Common dependencies
+# ============================================
+FROM python:3.12-slim AS base
+
+# Install security updates and common dependencies
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        netcat-traditional \
+        tini \
+        procps \
+        git && \
+    rm -rf /var/lib/apt/lists/* && \
+    # Create non-root user with specific UID/GID for agents
+    groupadd -r -g 1004 coordinator && \
+    useradd -r -u 1004 -g coordinator -d /app -s /sbin/nologin coordinator && \
+    mkdir -p /app /data/agents && \
+    chown -R coordinator:coordinator /app /data
+
+# Set working directory
+WORKDIR /app
+
+# Set Python environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONHASHSEED=random \
+    PYTHONPATH=/app \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_DEFAULT_TIMEOUT=100 \
+    PIP_ROOT_USER_ACTION=ignore
+
+# ============================================
+# BUILDER STAGE - Build dependencies
+# ============================================
+FROM base AS builder
+
+# Install build dependencies
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        gcc \
+        g++ \
+        make \
+        libffi-dev \
+        libssl-dev \
+        build-essential && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy requirements files
+COPY requirements.txt requirements-ai.txt* ./
+
+# Install Python dependencies with cache mount
+RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
+    python -m venv /opt/venv && \
+    . /opt/venv/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install --no-deps -r requirements.txt && \
+    if [ -f requirements-ai.txt ]; then \
+        pip install --no-deps -r requirements-ai.txt; \
+    fi && \
+    # Install agent-specific packages
+    pip install --no-deps \
+        openai==1.3.0 \
+        anthropic==0.7.0 \
+        langchain==0.0.350 \
+        langchain-openai==0.0.2 \
+        langchain-anthropic==0.0.1 \
+        celery==5.3.4 \
+        fastapi==0.104.1 \
+        uvicorn[standard]==0.24.0 \
+        pydantic==2.5.0 \
+        redis==5.0.1 \
+        psycopg[binary]==3.1.12 \
+        httpx==0.25.0 && \
+    # Clean up pip cache
+    find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
+    find /opt/venv -type f -name "*.pyc" -delete 2>/dev/null || true
+
+# ============================================
+# DEVELOPMENT STAGE - For local development
+# ============================================
+FROM base AS development
+
+# Install dev tools
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        gcc \
+        g++ \
+        make \
+        git \
+        vim \
+        procps \
+        htop \
+        jq \
+        tree && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install development dependencies
+RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
+    pip install --no-deps \
+        ipython \
+        ipdb \
+        pytest \
+        pytest-asyncio \
+        pytest-cov \
+        black \
+        isort \
+        mypy \
+        ruff \
+        debugpy
+
+# Copy application code (will be overridden by volume mount)
+COPY --chown=coordinator:coordinator . .
+
+# Switch to non-root user
+USER coordinator
+
+# Development command with hot reload
+CMD ["python", "-m", "core.agents.master_orchestrator", "--debug", "--reload"]
+
+# ============================================
+# PRODUCTION STAGE - Minimal production image
+# ============================================
+FROM base AS production
+
+# Copy virtual environment from builder
+COPY --from=builder --chown=coordinator:coordinator /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy application code
+COPY --chown=coordinator:coordinator core ./core
+COPY --chown=coordinator:coordinator database ./database
+COPY --chown=coordinator:coordinator toolboxai_settings ./toolboxai_settings
+COPY --chown=coordinator:coordinator toolboxai_utils ./toolboxai_utils
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/logs /data/agents /tmp/coordinator && \
+    chown -R coordinator:coordinator /app/logs /data/agents /tmp/coordinator && \
+    chmod 755 /app/logs /data/agents /tmp/coordinator
+
+# Agent Coordinator environment variables
+ENV COORDINATOR_PORT=8888 \
+    LOG_LEVEL=info \
+    MAX_CONCURRENT_AGENTS=10 \
+    TASK_TIMEOUT=300 \
+    AGENT_POOL_SIZE=5 \
+    QUEUE_MAX_SIZE=1000 \
+    HEARTBEAT_INTERVAL=30 \
+    CLEANUP_INTERVAL=3600 \
+    MEMORY_THRESHOLD=0.8 \
+    CPU_THRESHOLD=0.9
+
+# Create health check script
+RUN cat > /app/healthcheck.py << 'EOF'
+#!/usr/bin/env python3
+import json
+import sys
+import time
+import urllib.request
+from urllib.error import URLError, HTTPError
+
+def check_health():
+    """Check agent coordinator health via HTTP endpoint."""
+    try:
+        # Try to connect to the coordinator health endpoint
+        url = "http://localhost:8888/health"
+
+        with urllib.request.urlopen(url, timeout=5) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode())
+
+                # Check if response indicates healthy state
+                status = data.get("status", "unknown")
+                active_agents = data.get("active_agents", 0)
+                queue_size = data.get("queue_size", 0)
+
+                if status == "healthy":
+                    print(f"✅ Agent Coordinator is healthy")
+                    print(f"   - Active agents: {active_agents}")
+                    print(f"   - Queue size: {queue_size}")
+                    return True
+                else:
+                    print(f"❌ Agent Coordinator unhealthy: {status}")
+                    return False
+            else:
+                print(f"❌ Health check failed with status: {response.status}")
+                return False
+
+    except (URLError, HTTPError, json.JSONDecodeError, TimeoutError) as e:
+        print(f"❌ Health check failed: {e}")
+        return False
+
+if __name__ == "__main__":
+    result = check_health()
+    sys.exit(0 if result else 1)
+EOF
+
+RUN chmod +x /app/healthcheck.py
+
+# Create startup script with comprehensive logging
+RUN cat > /app/start-coordinator.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "🤖 Starting ToolBoxAI Agent Coordinator"
+echo "📊 Configuration:"
+echo "  - User: $(id)"
+echo "  - Working directory: $(pwd)"
+echo "  - Python version: $(python --version)"
+echo "  - Max concurrent agents: ${MAX_CONCURRENT_AGENTS}"
+echo "  - Task timeout: ${TASK_TIMEOUT}s"
+echo "  - Queue max size: ${QUEUE_MAX_SIZE}"
+
+# Check dependencies
+echo "🔍 Checking dependencies..."
+python -c "import core.agents.master_orchestrator; print('✅ Agent orchestrator module available')"
+python -c "import redis; print('✅ Redis client available')"
+python -c "import asyncio; print('✅ Asyncio available')"
+
+# Check environment variables
+if [ -z "$DATABASE_URL_FILE" ] && [ -z "$DATABASE_URL" ]; then
+    echo "⚠️  Warning: No database URL configured"
+fi
+
+if [ -z "$REDIS_URL_FILE" ] && [ -z "$REDIS_URL" ]; then
+    echo "⚠️  Warning: No Redis URL configured"
+fi
+
+# Start the coordinator
+echo "✅ Starting Agent Coordinator server..."
+exec python -m core.agents.master_orchestrator \
+    --host 0.0.0.0 \
+    --port 8888 \
+    --max-workers ${MAX_CONCURRENT_AGENTS} \
+    --task-timeout ${TASK_TIMEOUT} \
+    --log-level ${LOG_LEVEL}
+EOF
+
+RUN chmod +x /app/start-coordinator.sh
+
+# Add metadata labels
+LABEL org.opencontainers.image.title="ToolBoxAI Agent Coordinator" \
+      org.opencontainers.image.description="AI agent orchestration and coordination service" \
+      org.opencontainers.image.vendor="ToolBoxAI Solutions" \
+      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.created="2025-09-25" \
+      org.opencontainers.image.source="https://github.com/ToolBoxAI-Solutions/toolboxai" \
+      org.opencontainers.image.documentation="https://docs.toolboxai.solutions" \
+      org.opencontainers.image.licenses="MIT"
+
+# Security: Set filesystem to read-only (writable directories via tmpfs in compose)
+RUN chmod -R a-w /app && \
+    chmod -R u+w /app/logs /data/agents /tmp/coordinator && \
+    chmod +x /app/start-coordinator.sh /app/healthcheck.py
+
+# Switch to non-root user
+USER coordinator
+
+# Expose coordinator port
+EXPOSE 8888
+
+# Health check using custom script
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python /app/healthcheck.py || exit 1
+
+# Use tini for proper signal handling
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
+# Production command using startup script
+CMD ["/app/start-coordinator.sh"]

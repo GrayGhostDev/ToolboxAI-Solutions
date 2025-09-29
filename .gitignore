@@ -24,7 +24,6 @@ MANIFEST
 # Virtual environments (global)
 **/venv/
 **/.venv/
-**/venv_clean/
 **/env/
 **/ENV/
 **/pyvenv.cfg
@@ -48,6 +47,12 @@ yarn-error.log*
 
 # OS
 .DS_Store
+
+# Claude AI specific files
+CLAUDE.md
+claude.md
+WARP.md
+warp.md
 Thumbs.db
 
 # Environment variables
@@ -67,6 +72,10 @@ htmlcov/
 .coverage.*
 coverage.xml
 *.cover
+
+# Python type checking and testing caches
+.mypy_cache/
+.hypothesis/
 
 # Database
 *.db
@@ -104,6 +113,7 @@ scripts/pids/
 .env.*
 .envrc
 .secret*
+config/secrets/
 *.secrets
 *.pem
 *.crt
@@ -136,8 +146,16 @@ turbo/
 cypress/screenshots/
 cypress/videos/
 playwright-report/
-test-results/
 blob-report/
+# Include generic and app-specific test report directories
+# Root-level
+test-results/
+test-reports/
+# Dashboard app
+apps/dashboard/test-reports/
+apps/dashboard/test-report.md
+apps/dashboard/build-report.json
+apps/dashboard/test-results-final.json
 
 # Misc
 *.tgz
@@ -145,3 +163,185 @@ blob-report/
 
 # Generated security reports
 security_scan_report.json
+
+# Design files and assets (large binary files)
+design/
+**/design/
+design_files/
+**/design_files/
+*.fig
+*.sketch
+*.xd
+*.blend
+*.obj
+*.fbx
+*.dae
+*.3ds
+*.max
+*.ma
+*.mb
+
+# Design file parsing outputs (allow images folder)
+parsed_*.json
+**/parsed_*.json
+design_parsing_output/
+**/design_parsing_output/
+
+# Allow images folder and its contents
+!images/
+!**/images/
+!images/**/*
+!**/images/**/*
+
+# Large JSON files from image parsing (must come AFTER negations)
+images/obj/*.json
+images/sketch/*.json
+images/blend/*.json
+
+# Test outputs for design parsing
+test_design_files.py
+test_enhanced_parsing.py
+**/test_design_files.py
+**/test_enhanced_parsing.py
+
+# Design file conversion temporary files
+temp_sketch_*
+temp_fig_*
+temp_xd_*
+temp_blend_*
+
+# Additional generated test reports
+**/test_report.html
+test_execution.log
+COMPREHENSIVE_TEST_EXECUTION_REPORT.md
+COMPREHENSIVE_TEST_RESULTS.md
+COVERAGE_ACHIEVEMENT_REPORT.md
+coverage_analysis_report.md
+PYTEST_ENVIRONMENT_COMPLETE.md
+SYSTEMATIC_SUCCESS_REPORT.md
+TEST_EXECUTION_SUMMARY.md
+
+# Coverage files
+coverage.json
+coverage.xml
+htmlcov_*/
+
+# TypeScript build artifacts
+*.tsbuildinfo
+.tsbuildinfo
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Validation results
+*validation_results.txt
+phase*_validation_results.txt
+
+# Temporary backup files
+*.bak
+
+# Performance monitoring
+performance_monitoring_*.json
+monitoring_*.log
+
+# Generated test files (excluded from version control)
+tests/generated/
+**/tests/generated/
+
+# Large test result files
+test_report.json
+test_results.json
+test_report.html
+
+# Phase documentation (should be archived)
+PHASE*.md
+*PHASE*.md
+
+# Database update summaries
+DATABASE_PHASE*_UPDATES_SUMMARY.md
+
+# CRITICAL SECURITY: Enhanced Secret Protection
+# Any file containing these patterns should be excluded
+*secret*
+*SECRET*
+*credentials*
+*CREDENTIALS*
+*config.json
+*config.prod.json
+*config.staging.json
+*.keystore
+*.truststore
+*.p8
+*.mobileprovision
+*.provisionprofile
+
+# API Keys and Tokens (comprehensive patterns)
+*apikey*
+*api_key*
+*api-key*
+*token*
+*TOKEN*
+*auth*
+*AUTH*
+*oauth*
+*OAUTH*
+
+# Cloud Provider Credentials
+.boto
+.s3cfg
+gcloud-service-key.json
+service-account*.json
+*service-account*.json
+credentials.json
+*credentials*.json
+
+# Database and Cache Dumps
+*.sql
+*.dump
+*.rdb
+*.aof
+
+# Security Scan Results
+security-report*
+vulnerability-report*
+audit-log*
+*security-scan*
+
+# Backup files that might contain secrets
+*.backup
+*.bak
+*.orig
+*~
+
+
+# INFRASTRUCTURE SECURITY: Docker Secrets Directory
+infrastructure/docker/secrets/
+infrastructure/*/secrets/
+**/secrets/
+!/infrastructure/docker/secrets.example/
+
+# KUBERNETES SECURITY: Secret Files
+infrastructure/kubernetes/*/secret*.yaml
+infrastructure/kubernetes/secret*.yaml
+!/infrastructure/kubernetes/**/secret*.example.yaml
+
+# TERRAFORM SECURITY: State and Variable Files
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+terraform.tfvars
+.terraform/
+.terraform.lock.hcl
+
+# MONITORING SECURITY: Credentials and Config
+infrastructure/monitoring/*/admin.conf
+infrastructure/monitoring/*/htpasswd
+infrastructure/monitoring/*/.htpasswd
+
+node_modules.old.*
+
+# TeamCity local server (too large for git)
+TeamCity/

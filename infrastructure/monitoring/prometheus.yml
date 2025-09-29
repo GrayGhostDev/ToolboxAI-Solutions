@@ -1,0 +1,197 @@
+# Prometheus Configuration for ToolBoxAI Comprehensive Monitoring
+# =============================================================
+#
+# This configuration provides comprehensive monitoring for the ToolBoxAI platform
+# with service discovery, recording rules, and alert integration.
+
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'toolboxai-cluster'
+    environment: '${ENVIRONMENT:-development}'
+    datacenter: 'local'
+
+# Rule files for recording rules and alerts
+rule_files:
+  - "alert_rules.yml"
+  - "recording_rules/*.yml"
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+      timeout: 10s
+      path_prefix: /
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # ToolBoxAI Backend FastAPI Application
+  - job_name: 'toolboxai-backend'
+    static_configs:
+      - targets:
+          - 'fastapi-main:8009'
+          - 'backend:8009'
+          - 'host.docker.internal:8009'
+          - 'host.docker.internal:8008'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 8s
+    honor_labels: true
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'toolboxai-backend'
+      - source_labels: [__address__]
+        regex: '(.*):800[89]'
+        target_label: service
+        replacement: 'backend-api'
+
+  # ToolBoxAI Dashboard Frontend
+  - job_name: 'toolboxai-dashboard'
+    static_configs:
+      - targets:
+          - 'dashboard-frontend:5179'
+          - 'dashboard:5179'
+          - 'host.docker.internal:5179'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'toolboxai-dashboard'
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'frontend'
+
+  # MCP Server (Model Context Protocol)
+  - job_name: 'mcp-server'
+    static_configs:
+      - targets: ['mcp-server:9877']
+    metrics_path: '/metrics'
+    scrape_interval: 20s
+    relabel_configs:
+      - target_label: service
+        replacement: 'mcp'
+
+  # Agent Coordinator
+  - job_name: 'agent-coordinator'
+    static_configs:
+      - targets: ['agent-coordinator:8888']
+    metrics_path: '/metrics'
+    scrape_interval: 20s
+    relabel_configs:
+      - target_label: service
+        replacement: 'agents'
+
+  # Flask Bridge (Roblox Integration)
+  - job_name: 'flask-bridge'
+    static_configs:
+      - targets:
+          - 'flask-bridge:5001'
+          - 'host.docker.internal:5001'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'roblox-bridge'
+
+  # Ghost Backend
+  - job_name: 'ghost-backend'
+    static_configs:
+      - targets: ['ghost-backend:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'ghost'
+
+  # Node Exporter - System Metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+    relabel_configs:
+      - target_label: service
+        replacement: 'system'
+
+  # Redis Exporter
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 15s
+    relabel_configs:
+      - target_label: service
+        replacement: 'redis'
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 15s
+    relabel_configs:
+      - target_label: service
+        replacement: 'postgres'
+
+  # cAdvisor - Container Metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 20s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: service
+        replacement: 'containers'
+
+  # Grafana Self-Monitoring
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'grafana'
+
+  # AlertManager Self-Monitoring
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'alertmanager'
+
+  # Nginx (if used)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: '/nginx_status'
+    scrape_interval: 30s
+    relabel_configs:
+      - target_label: service
+        replacement: 'nginx'
+
+# Storage configuration with retention policies
+storage:
+  tsdb:
+    retention.time: 15d
+    retention.size: 10GB
+    wal-compression: true
+    min-block-duration: 2h
+    max-block-duration: 25h
+    no-lockfile: false

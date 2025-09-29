@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/stuudy-3d-icons_NjhhMjYzMmIyMzI4MmUwMDM5ZDY0Yzlj/PNG/LIGHT_BULB_3.png",
+  "file_name": "LIGHT_BULB_3.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 3000,
+      "height": 3000,
+      "total_pixels": 9000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 56034,
+      "most_common": [
+        [
+          2,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            207,
+            239,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            203,
+            239,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            192,
+            239,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            194,
+            238,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            202,
+            234,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            183,
+            234,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            188,
+            232,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            173,
+            229,
+            255,
+            1
+          ]
+        ],
+        [
+          1,
+          [
+            184,
+            228,
+            255,
+            5
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 12971
+      },
+      {
+        "color": [
+          249,
+          214,
+          58,
+          255
+        ],
+        "frequency": 18
+      },
+      {
+        "color": [
+          228,
+          172,
+          23,
+          255
+        ],
+        "frequency": 14
+      },
+      {
+        "color": [
+          249,
+          214,
+          59,
+          255
+        ],
+        "frequency": 12
+      },
+      {
+        "color": [
+          232,
+          179,
+          30,
+          255
+        ],
+        "frequency": 12
+      }
+    ]
+  }
+}

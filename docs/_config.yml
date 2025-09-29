@@ -1,0 +1,148 @@
+# ToolboxAI Solutions Documentation Configuration
+# 2025 Modern Documentation Standards
+
+title: ToolboxAI Solutions
+description: AI-powered educational platform for Roblox integration
+version: 2.0.0
+last_updated: 2025-01-15
+license: MIT
+status: production
+
+# Theme and styling
+theme: jekyll-theme-minimal
+baseurl: "/docs"
+url: "https://docs.toolboxai.com"
+
+# Plugins for modern documentation features
+plugins:
+  - jekyll-redirect-from
+  - jekyll-sitemap
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-scholar
+
+# Interactive features
+interactive_docs: true
+code_examples: true
+api_explorer: true
+search: true
+feedback: true
+
+# Analytics and monitoring
+analytics:
+  google_analytics: "G-XXXXXXXXXX"
+  page_views: true
+  user_engagement: true
+  search_queries: true
+  feedback_collection: true
+
+# Accessibility compliance
+accessibility:
+  wcag_version: "2.2"
+  level: "AA"
+  features:
+    - screen_reader_support
+    - keyboard_navigation
+    - high_contrast_mode
+    - text_scaling
+    - color_contrast
+
+# Internationalization
+i18n:
+  supported_languages:
+    - en
+    - es
+    - fr
+    - de
+  default_language: en
+
+# Navigation
+navigation:
+  main:
+    - title: "Getting Started"
+      url: "/getting-started/"
+    - title: "User Guides"
+      url: "/guides/"
+    - title: "API Reference"
+      url: "/api/"
+    - title: "Architecture"
+      url: "/architecture/"
+    - title: "Deployment"
+      url: "/deployment/"
+    - title: "Contributing"
+      url: "/contributing/"
+
+# Collections for organized content
+collections:
+  guides:
+    output: true
+    permalink: /guides/:name/
+  api:
+    output: true
+    permalink: /api/:name/
+  architecture:
+    output: true
+    permalink: /architecture/:name/
+
+# Default front matter
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
+      search: true
+      feedback: true
+  - scope:
+      path: ""
+      type: "guides"
+    values:
+      layout: "guide"
+      sidebar: "guides"
+  - scope:
+      path: ""
+      type: "api"
+    values:
+      layout: "api"
+      sidebar: "api"
+
+# Exclude files from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - README.md
+  - Archive/
+  - reports/
+  - security/
+
+# Include files
+include:
+  - _redirects
+  - CNAME
+  - robots.txt
+  - sitemap.xml
+
+# Markdown configuration
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: 'highlight'
+    span:
+      line_numbers: false
+    block:
+      line_numbers: true
+      start_line: 1
+
+# Sass configuration
+sass:
+  sass_dir: _sass
+  style: compressed
+
+# Build configuration
+destination: _site
+source: .

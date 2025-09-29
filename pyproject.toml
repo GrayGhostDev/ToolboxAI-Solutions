@@ -33,60 +33,150 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 ignore_missing_imports = true
-exclude = [
-    "venv/",
-    "venv_clean/",
-    "node_modules/",
-    "dist/",
-    "build/"
-]
+exclude = ["venv/", "venv_clean/", "node_modules/", "dist/", "build/"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q --strict-markers"
-testpaths = [
-    "tests/unit",
-    "tests/integration"
-]
+testpaths = ["tests/unit", "tests/integration"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
+# Fix asyncio event loop issues - 2025 best practice
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
 
-[tool.pyright]
-include = ["**/*.py"]
+# Register pytest markers to prevent collection errors
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "docker: Docker-related tests",
+    "makefile: Makefile command tests",
+    "celery: Celery task tests",
+    "performance: Performance tests",
+    "slow: Slow-running tests",
+    "skipif: Conditional skipping",
+    "e2e: End-to-end tests",
+    "asyncio: Async tests",
+]
+
+# Basedpyright Configuration - 2025 Production Ready
+[tool.basedpyright]
+# File inclusion and exclusion
+include = [
+    "**/*.py",
+    "roblox/**/*.py",
+    "apps/**/*.py",
+    "core/**/*.py",
+    "src/**/*.py",
+]
 exclude = [
     "**/node_modules",
     "**/__pycache__",
     "**/venv",
-    "**/venv_clean/lib",
-    "**/venv_clean/include",
     "**/.git",
     "**/.vscode",
     "**/.cursor",
+    "**/site-packages",
     "Archive/**",
-    "**/deprecated/**"
+    "Documentation/**",
+    "**/deprecated/**",
+    "**/test_*/**",
+    "**/tests/**",
+    "**/backups/**",
 ]
-venvPath = "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Roblox-Environment"
-venv = "venv_clean"
+
+# Python environment configuration
+venvPath = "."
+venv = "venv"
 pythonVersion = "3.11"
 pythonPlatform = "Darwin"
 typeCheckingMode = "standard"
+
+# Import and type checking settings
 reportMissingImports = false
 reportMissingTypeStubs = false
 reportUnusedVariable = "warning"
 reportUnusedImport = "warning"
 useLibraryCodeForTypes = true
 autoImportCompletions = true
-stubPath = "src/shared/types"
+
+# Stub path for type definitions (removed - directory doesn't exist)
+# stubPath = "src/shared/types"
+
+# Additional Python paths
 extraPaths = [
-    "./ToolboxAI-Roblox-Environment",
-    "./ToolboxAI-Roblox-Environment/server",
-    "./ToolboxAI-Roblox-Environment/agents",
-    "./ToolboxAI-Roblox-Environment/mcp",
-    "./ToolboxAI-Roblox-Environment/coordinators",
-    "./ToolboxAI-Roblox-Environment/swarm",
-    "./ToolboxAI-Roblox-Environment/sparc",
-    "./ToolboxAI-Roblox-Environment/toolboxai_utils",
-    "./src/shared/utils",
-    "./src/api/ghost-backend/src"
+    "roblox",
+    "roblox/API",
+    "roblox/Config",
+    "roblox/modules",
+    "roblox/plugins",
+    "roblox/scripts",
+    "roblox/src",
+    "roblox/tests",
+    "apps/backend",
+    "apps/backend/core",
+    "apps/backend/api",
+    "apps/backend/services",
+    "apps/backend/models",
+    "core",
+    "core/agents",
+    "core/database",
+    "core/mcp",
+    "core/sparc",
+    "core/swarm",
+    "src",
+    "src/shared",
+    "src/shared/utils",
 ]
+
+# Basedpyright-specific enhanced features
+# Enable baseline support for gradual adoption
+baselineFile = ".basedpyright/baseline.json"
+
+# Enhanced type checking rules (basedpyright defaults)
+reportOptionalMemberAccess = "warning"
+reportOptionalSubscript = "warning"
+reportPrivateImportUsage = "warning"
+reportUnknownArgumentType = "warning"
+reportUnknownMemberType = "warning"
+reportUnknownVariableType = "warning"
+reportUntypedFunctionDecorator = "warning"
+reportUntypedClassDecorator = "warning"
+reportUntypedBaseClass = "warning"
+reportUntypedNamedTuple = "warning"
+reportCallInDefaultInitializer = "warning"
+reportUnnecessaryIsInstance = "warning"
+reportUnnecessaryCast = "warning"
+reportUnnecessaryComparison = "warning"
+reportUnnecessaryContains = "warning"
+reportAssertAlwaysTrue = "warning"
+reportSelfClsParameterName = "warning"
+reportImplicitStringConcatenation = "warning"
+reportInvalidStringEscapeSequence = "warning"
+reportUnknownLambdaType = "warning"
+reportUnknownParameterType = "warning"
+reportUnusedCoroutine = "warning"
+reportUnusedCallResult = "warning"
+reportUnusedExpression = "warning"
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportImplicitOverride = "warning"
+reportShadowedImports = "warning"
+reportUninitializedInstanceVariable = "warning"
+reportInvalidTypeVarUse = "warning"
+
+# Basedpyright-specific enhanced rules
+reportIncompatibleMethodOverride = "warning"
+reportIncompatibleVariableOverride = "warning"
+reportInconsistentConstructor = "warning"
+reportOverlappingOverload = "warning"
+reportPossiblyUnboundVariable = "warning"
+
+# Pylance features available in basedpyright
+reportMissingSuperCall = "warning"
+reportUnusedClass = "warning"
+reportUnusedFunction = "warning"
+reportDuplicateImport = "warning"
+reportWildcardImportFromLibrary = "warning"
+reportAbstractUsage = "warning"
+reportUnsupportedDunderAll = "warning"

@@ -1,0 +1,149 @@
+{
+  "name": "ToolBoxAI-Educational-Platform",
+  "globIgnorePaths": [
+    "**/package-lock.json",
+    "**/yarn.lock",
+    "**/*.py",
+    "**/*.pyc",
+    "**/node_modules",
+    "**/.git",
+    "**/.DS_Store",
+    "**/Thumbs.db"
+  ],
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "$properties": {
+        "Tags": {
+          "ToolBoxAI": true,
+          "Educational": true,
+          "Version": "2.0.0"
+        }
+      },
+      "ToolBoxAI": {
+        "$path": "src/shared",
+        "Modules": {
+          "$path": "src/shared/modules"
+        },
+        "Libraries": {
+          "$path": "src/shared/libraries"
+        },
+        "RemoteEvents": {
+          "$className": "Folder",
+          "$properties": {
+            "Name": "RemoteEvents"
+          }
+        },
+        "RemoteFunctions": {
+          "$className": "Folder",
+          "$properties": {
+            "Name": "RemoteFunctions"
+          }
+        }
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "$properties": {
+        "LoadStringEnabled": false
+      },
+      "ToolBoxAI": {
+        "$path": "src/server",
+        "Services": {
+          "$path": "src/server/services"
+        },
+        "Modules": {
+          "$path": "src/server/modules"
+        },
+        "Security": {
+          "$path": "src/server/security"
+        }
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "ToolBoxAI": {
+        "$className": "Folder",
+        "Assets": {
+          "$path": "assets/server"
+        },
+        "Configurations": {
+          "$path": "config/server"
+        }
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "ToolBoxAI": {
+          "$path": "src/client",
+          "Controllers": {
+            "$path": "src/client/controllers"
+          },
+          "UI": {
+            "$path": "src/client/ui"
+          },
+          "Modules": {
+            "$path": "src/client/modules"
+          }
+        }
+      },
+      "StarterCharacterScripts": {
+        "$className": "StarterCharacterScripts"
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$properties": {
+        "ScreenOrientation": "LandscapeSensor",
+        "ShowDevelopmentGui": false
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "FilteringEnabled": true,
+        "StreamingEnabled": true,
+        "SignalBehavior": "Immediate"
+      },
+      "EducationalEnvironments": {
+        "$path": "src/workspace",
+        "Templates": {
+          "$path": "src/workspace/templates"
+        },
+        "Interactive": {
+          "$path": "src/workspace/interactive"
+        }
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "Future",
+        "GlobalShadows": true,
+        "Brightness": 1,
+        "ClockTime": 14
+      }
+    },
+    "SoundService": {
+      "$className": "SoundService",
+      "$properties": {
+        "RespectFilteringEnabled": true
+      }
+    },
+    "HttpService": {
+      "$className": "HttpService",
+      "$properties": {
+        "HttpEnabled": true
+      }
+    }
+  },
+  "servePlaceIds": {
+    "production": null,
+    "staging": null,
+    "development": null
+  },
+  "placeId": null
+}

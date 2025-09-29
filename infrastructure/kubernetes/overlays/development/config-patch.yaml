@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+data:
+  # Development-specific configurations
+  LOG_LEVEL: "debug"
+  LOG_FORMAT: "text"
+  DEBUG: "true"
+  WORKERS: "1"
+  TIMEOUT: "60"
+
+  # Database Configuration (smaller pool for dev)
+  DATABASE_POOL_SIZE: "5"
+  DATABASE_MAX_OVERFLOW: "10"
+  DATABASE_POOL_TIMEOUT: "10"
+
+  # Redis Configuration (smaller pool for dev)
+  REDIS_POOL_SIZE: "5"
+  REDIS_TIMEOUT: "2"
+
+  # Performance Configuration (relaxed for dev)
+  RATE_LIMIT_ENABLED: "false"
+  RATE_LIMIT_PER_MINUTE: "10000"
+  CACHE_TTL: "60"
+
+  # Feature Flags (enable all features for testing)
+  FEATURE_MCP_ENABLED: "true"
+  FEATURE_WEBSOCKETS_ENABLED: "true"
+  FEATURE_REAL_TIME_ENABLED: "true"
+  FEATURE_ANALYTICS_ENABLED: "false"
+  FEATURE_DEBUG_MODE: "true"
+
+  # Development Tools
+  RELOAD_ON_CHANGE: "true"
+  HOT_RELOAD: "true"
+  CORS_ALLOWED_ORIGINS: "*"
+  CORS_ALLOW_CREDENTIALS: "true"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+data:
+  # Development-specific PostgreSQL configuration
+  POSTGRES_DB: "toolboxai_dev"
+  POSTGRES_USER: "toolboxai_user"
+  POSTGRES_MULTIPLE_DATABASES: "educational_platform_dev,ghost_backend_dev,roblox_data_dev,mcp_memory_dev"
+
+  # Reduced performance settings for development
+  POSTGRES_MAX_CONNECTIONS: "50"
+  POSTGRES_SHARED_BUFFERS: "128MB"
+  POSTGRES_EFFECTIVE_CACHE_SIZE: "256MB"
+  POSTGRES_MAINTENANCE_WORK_MEM: "16MB"
+
+  # Development logging
+  POSTGRES_LOG_STATEMENT: "all"
+  POSTGRES_LOG_MIN_DURATION_STATEMENT: "0"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+data:
+  redis.conf: |
+    # Development Redis Configuration
+    bind 0.0.0.0
+    port 6379
+    timeout 0
+    tcp-keepalive 300
+
+    # Reduced memory for development
+    maxmemory 128mb
+    maxmemory-policy allkeys-lru
+
+    # More frequent saves for development
+    save 60 1
+    save 30 10
+    save 10 100
+
+    # Development logging
+    loglevel debug
+
+    # Development-friendly settings
+    databases 16
+    appendonly yes
+    appendfsync everysec

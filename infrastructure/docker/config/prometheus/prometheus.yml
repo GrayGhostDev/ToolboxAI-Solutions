@@ -1,0 +1,240 @@
+# ============================================
+# TOOLBOXAI PROMETHEUS CONFIGURATION
+# ============================================
+# Metrics collection and monitoring configuration
+# Updated: 2025-09-26
+# ============================================
+
+global:
+  # How frequently to scrape targets
+  scrape_interval: 30s
+
+  # How frequently to evaluate rules
+  evaluation_interval: 30s
+
+  # Attach these labels to any time series or alerts
+  external_labels:
+    environment: '${ENVIRONMENT:-development}'
+    project: 'toolboxai-solutions'
+    monitor: 'prometheus'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+      # Timeout for requests to Alertmanager
+      timeout: 10s
+      # Path prefix for Alertmanager API
+      api_version: v2
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - '/etc/prometheus/alert_rules.yml'
+  - '/etc/prometheus/recording_rules.yml'
+
+# Scrape configurations
+scrape_configs:
+  # ----------------------------------------
+  # Prometheus Self-Monitoring
+  # ----------------------------------------
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  # ----------------------------------------
+  # FastAPI Backend Metrics
+  # ----------------------------------------
+  - job_name: 'fastapi-backend'
+    static_configs:
+      - targets: ['fastapi-backend:8009']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    params:
+      module: [backend]
+
+  # ----------------------------------------
+  # Dashboard Frontend (Vite/React)
+  # ----------------------------------------
+  - job_name: 'dashboard-frontend'
+    static_configs:
+      - targets: ['dashboard-frontend:5179']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # ----------------------------------------
+  # PostgreSQL Database Metrics
+  # ----------------------------------------
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    params:
+      collect[]:
+        - pg_database
+        - pg_stat_database
+        - pg_stat_user_tables
+        - pg_stat_activity
+        - pg_replication
+
+  # ----------------------------------------
+  # Redis Cache Metrics
+  # ----------------------------------------
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # ----------------------------------------
+  # Celery Workers Metrics
+  # ----------------------------------------
+  - job_name: 'celery-workers'
+    static_configs:
+      - targets:
+          - 'celery-worker:9540'
+          - 'celery-beat:9541'
+    metrics_path: /metrics
+    scrape_interval: 30s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'celery_task_.*'
+        action: keep
+
+  # ----------------------------------------
+  # Flower (Celery Monitoring)
+  # ----------------------------------------
+  - job_name: 'flower'
+    static_configs:
+      - targets: ['flower:5555']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    basic_auth:
+      username: '${FLOWER_USER:-admin}'
+      password_file: /run/secrets/flower_password
+
+  # ----------------------------------------
+  # Node Exporter (Host Metrics)
+  # ----------------------------------------
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    metric_relabel_configs:
+      # Only keep important node metrics
+      - source_labels: [__name__]
+        regex: 'node_(cpu|memory|disk|network|filesystem).*'
+        action: keep
+
+  # ----------------------------------------
+  # cAdvisor (Container Metrics)
+  # ----------------------------------------
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    metric_relabel_configs:
+      # Filter out unnecessary container metrics
+      - source_labels: [name]
+        regex: '.*toolboxai.*'
+        action: keep
+
+  # ----------------------------------------
+  # Blackbox Exporter (Endpoint Monitoring)
+  # ----------------------------------------
+  - job_name: 'blackbox-http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - http://fastapi-backend:8009/health
+          - http://dashboard-frontend:5179/
+          - http://flower:5555/healthcheck
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # ----------------------------------------
+  # Grafana Metrics
+  # ----------------------------------------
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # ----------------------------------------
+  # Loki (Log Aggregation)
+  # ----------------------------------------
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # ----------------------------------------
+  # Jaeger (Tracing)
+  # ----------------------------------------
+  - job_name: 'jaeger'
+    static_configs:
+      - targets: ['jaeger:14269']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # ----------------------------------------
+  # Alertmanager
+  # ----------------------------------------
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # ----------------------------------------
+  # Roblox Sync Service (when running)
+  # ----------------------------------------
+  - job_name: 'roblox-sync'
+    static_configs:
+      - targets: ['roblox-sync:34872']
+    metrics_path: /metrics
+    scrape_interval: 60s
+    # Only scrape if service is running
+    scrape_timeout: 5s
+
+  # ----------------------------------------
+  # Pusher Metrics (Custom Endpoint)
+  # ----------------------------------------
+  - job_name: 'pusher-metrics'
+    static_configs:
+      - targets: ['fastapi-backend:8009']
+    metrics_path: /api/v1/metrics/pusher
+    scrape_interval: 60s
+
+# Remote storage configuration (optional)
+# remote_write:
+#   - url: "https://prometheus-remote-endpoint.example.com/write"
+#     basic_auth:
+#       username: 'username'
+#       password_file: '/run/secrets/remote_write_password'
+#     write_relabel_configs:
+#       - source_labels: [__name__]
+#         regex: 'up|.*_total|.*_seconds.*'
+#         action: keep
+
+# remote_read:
+#   - url: "https://prometheus-remote-endpoint.example.com/read"
+#     basic_auth:
+#       username: 'username'
+#       password_file: '/run/secrets/remote_read_password'

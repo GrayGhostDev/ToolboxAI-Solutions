@@ -1,0 +1,531 @@
+name: Agent Orchestration Pipeline
+
+on:
+  pull_request:
+    branches: [main, develop, production]
+  push:
+    branches: [main, develop, production]
+  workflow_dispatch:
+    inputs:
+      operation_type:
+        description: 'Operation type for agents'
+        required: true
+        default: 'full_scan'
+        type: choice
+        options:
+          - full_scan
+          - pre_commit
+          - pre_push
+          - health_check
+          - optimization
+          - deployment
+
+env:
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '20.12.0'
+
+jobs:
+  agent-analysis:
+    name: GitHub Agents Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      checks: write
+
+    outputs:
+      large_files_detected: ${{ steps.large-files.outputs.detected }}
+      security_issues: ${{ steps.security.outputs.issues }}
+      coverage_passed: ${{ steps.coverage.outputs.passed }}
+      build_optimized: ${{ steps.build.outputs.optimized }}
+      environment_valid: ${{ steps.environment.outputs.valid }}
+      deployment_ready: ${{ steps.deployment.outputs.ready }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install safety pip-audit bandit
+
+      - name: Large File Detection
+        id: large-files
+        run: |
+          python -c "
+          import asyncio
+          import json
+          import sys
+          import os
+          sys.path.insert(0, '.')
+
+          from core.agents.github_agents import LargeFileDetectionAgent
+
+          async def main():
+              agent = LargeFileDetectionAgent()
+              result = await agent.analyze()
+
+              # Write results to file
+              with open('large_files_report.json', 'w') as f:
+                  json.dump(result, f, indent=2)
+
+              # Set outputs
+              detected = 'true' if result.get('large_files', []) else 'false'
+              print(f'detected={detected}')
+
+              # Comment on PR if issues found
+              if result.get('large_files') and os.getenv('GITHUB_EVENT_NAME') == 'pull_request':
+                  print('::warning::Large files detected in repository')
+                  for file_info in result['large_files'][:5]:
+                      print(f\"::warning file={file_info['path']}::File size {file_info.get('size_formatted', 'Unknown')}\")
+
+              return 0 if not result.get('large_files') else 1
+
+          exit_code = asyncio.run(main())
+          sys.exit(exit_code)
+          " || true
+          exit_code=$?
+          echo "detected=$([[ $exit_code -eq 0 ]] && echo 'false' || echo 'true')" >> $GITHUB_OUTPUT
+
+      - name: Dependency Security Scan
+        id: security
+        run: |
+          python -c "
+          import asyncio
+          import json
+          import sys
+          import os
+          sys.path.insert(0, '.')
+
+          from core.agents.github_agents import DependencySecurityAgent
+
+          async def main():
+              agent = DependencySecurityAgent()
+              result = await agent.analyze(
+                  scan_python=True,
+                  scan_nodejs=True,
+                  check_licenses=True
+              )
+
+              # Write results to file
+              with open('security_report.json', 'w') as f:
+                  json.dump(result, f, indent=2)
+
+              # Set outputs
+              has_critical = any(
+                  v.get('severity') == 'critical'
+                  for v in result.get('vulnerabilities', [])
+              )
+              has_high = any(
+                  v.get('severity') == 'high'
+                  for v in result.get('vulnerabilities', [])
+              )
+
+              issues = 'critical' if has_critical else 'high' if has_high else 'none'
+              print(f'issues={issues}')
+
+              # Add annotations for vulnerabilities
+              if result.get('vulnerabilities'):
+                  for vuln in result['vulnerabilities'][:10]:
+                      severity = vuln.get('severity', 'unknown')
+                      package = vuln.get('package', 'unknown')
+                      print(f'::{severity}::{package}: {vuln.get(\"description\", \"Security vulnerability detected\")}')
+
+              return 0 if not (has_critical or has_high) else 1
+
+          exit_code = asyncio.run(main())
+          echo \"issues=$([[ $exit_code -eq 0 ]] && echo 'none' || echo 'found')\" >> $GITHUB_OUTPUT
+          " || true
+
+      - name: Test Coverage Analysis
+        id: coverage
+        if: hashFiles('coverage.xml') != '' || hashFiles('coverage-final.json') != ''
+        run: |
+          python -c "
+          import asyncio
+          import json
+          import sys
+          import os
+          sys.path.insert(0, '.')
+
+          from core.agents.github_agents import TestCoverageAgent
+
+          async def main():
+              agent = TestCoverageAgent()
+              result = await agent.analyze()
+
+              # Write results to file
+              with open('coverage_report.json', 'w') as f:
+                  json.dump(result, f, indent=2)
+
+              # Set outputs
+              passed = result.get('thresholds_met', False)
+              print(f'passed={str(passed).lower()}')
+
+              # Add coverage summary
+              if 'metrics' in result:
+                  metrics = result['metrics']
+                  print(f\"Coverage: Lines {metrics.get('lines', 0):.1f}%, Branches {metrics.get('branches', 0):.1f}%, Functions {metrics.get('functions', 0):.1f}%\")
+
+              return 0 if passed else 1
+
+          sys.exit(asyncio.run(main()))
+          "
+          EXIT_CODE=$?
+          echo "passed=$([[ $EXIT_CODE -eq 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+
+      - name: Build Optimization Analysis
+        id: build
+        run: |
+          python -c "
+          import asyncio
+          import json
+          import sys
+          sys.path.insert(0, '.')
+
+          from core.agents.github_agents import BuildOptimizationAgent
+
+          async def main():
+              agent = BuildOptimizationAgent()
+              result = await agent.analyze()
+
+              # Write results to file
+              with open('build_optimization_report.json', 'w') as f:
+                  json.dump(result, f, indent=2)
+
+              # Set outputs
+              has_optimizations = bool(result.get('optimizations', []))
+              print(f'optimized={str(not has_optimizations).lower()}')
+
+              # Add optimization suggestions
+              if result.get('optimizations'):
+                  print('Build optimization opportunities found:')
+                  for opt in result['optimizations'][:5]:
+                      print(f\"- {opt.get('recommendation', 'Optimization available')}\")
+
+              return 0
+
+          asyncio.run(main())
+          "
+          echo "optimized=true" >> $GITHUB_OUTPUT
+
+      - name: Environment Validation
+        id: environment
+        run: |
+          python -c "
+          import asyncio
+          import json
+          import sys
+          sys.path.insert(0, '.')
+
+          from core.agents.github_agents import EnvironmentValidationAgent
+
+          async def main():
+              agent = EnvironmentValidationAgent()
+
+              # Determine environment based on branch
+              branch = '${{ github.ref_name }}'
+              env = 'production' if branch == 'main' else 'staging' if branch == 'production' else 'development'
+
+              result = await agent.analyze(environment=env)
+
+              # Write results to file
+              with open('environment_validation_report.json', 'w') as f:
+                  json.dump(result, f, indent=2)
+
+              # Set outputs
+              valid = result.get('valid', False)
+              print(f'valid={str(valid).lower()}')
+
+              # Add validation warnings
+              if result.get('missing_vars'):
+                  print('Missing environment variables:')
+                  for var in result['missing_vars'][:10]:
+                      print(f\"::warning::Missing environment variable: {var}\")
+
+              return 0 if valid else 1
+
+          sys.exit(asyncio.run(main()))
+          "
+          EXIT_CODE=$?
+          echo "valid=$([[ $EXIT_CODE -eq 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+
+      - name: Deployment Readiness Check
+        id: deployment
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+        run: |
+          python -c "
+          import asyncio
+          import json
+          import sys
+          sys.path.insert(0, '.')
+
+          from core.agents.github_agents.orchestrator import GitHubAgentOrchestrator, OperationType
+
+          async def main():
+              orchestrator = GitHubAgentOrchestrator()
+              result = await orchestrator.run(OperationType.DEPLOYMENT)
+
+              # Write results to file
+              with open('deployment_readiness_report.json', 'w') as f:
+                  json.dump(result, f, indent=2)
+
+              # Set outputs
+              ready = result.get('success', False) and not result.get('summary', {}).get('blockers', 0)
+              print(f'ready={str(ready).lower()}')
+
+              # Add deployment readiness summary
+              summary = result.get('summary', {})
+              print(f\"Deployment Readiness: {'✅ Ready' if ready else '❌ Not Ready'}\")
+              if summary.get('recommendations'):
+                  print('Recommendations:')
+                  for rec in summary['recommendations'][:5]:
+                      print(f\"- {rec}\")
+
+              return 0 if ready else 1
+
+          sys.exit(asyncio.run(main()))
+          "
+          EXIT_CODE=$?
+          echo "ready=$([[ $EXIT_CODE -eq 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+
+      - name: Pipeline Monitoring
+        id: monitoring
+        if: always()
+        run: |
+          python -c "
+          import asyncio
+          import json
+          import sys
+          import os
+          sys.path.insert(0, '.')
+
+          from core.agents.github_agents import PipelineMonitoringAgent
+
+          async def main():
+              agent = PipelineMonitoringAgent()
+
+              # Use GitHub token if available
+              token = os.getenv('GITHUB_TOKEN', '')
+              if token:
+                  result = await agent.analyze(
+                      repo='${{ github.repository }}',
+                      token=token,
+                      days=7
+                  )
+              else:
+                  result = {'success': False, 'error': 'No GitHub token available'}
+
+              # Write results to file
+              with open('pipeline_monitoring_report.json', 'w') as f:
+                  json.dump(result, f, indent=2)
+
+              # Add pipeline health summary
+              if result.get('metrics'):
+                  metrics = result['metrics']
+                  print(f\"Pipeline Health Score: {metrics.get('health_score', 0):.1f}/100\")
+                  print(f\"Success Rate: {metrics.get('success_rate', 0):.1f}%\")
+                  print(f\"Average Build Time: {metrics.get('avg_duration_minutes', 0):.1f} minutes\")
+
+              return 0
+
+          asyncio.run(main())
+          " || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Comprehensive Report
+        if: always()
+        run: |
+          python -c "
+          import json
+          import os
+          from datetime import datetime
+
+          # Collect all reports
+          reports = {}
+          report_files = [
+              'large_files_report.json',
+              'security_report.json',
+              'coverage_report.json',
+              'build_optimization_report.json',
+              'environment_validation_report.json',
+              'deployment_readiness_report.json',
+              'pipeline_monitoring_report.json'
+          ]
+
+          for report_file in report_files:
+              if os.path.exists(report_file):
+                  with open(report_file, 'r') as f:
+                      report_name = report_file.replace('_report.json', '')
+                      reports[report_name] = json.load(f)
+
+          # Create comprehensive report
+          comprehensive_report = {
+              'timestamp': datetime.now().isoformat(),
+              'repository': '${{ github.repository }}',
+              'branch': '${{ github.ref_name }}',
+              'commit': '${{ github.sha }}',
+              'event': '${{ github.event_name }}',
+              'reports': reports,
+              'summary': {
+                  'large_files_detected': '${{ steps.large-files.outputs.detected }}' == 'true',
+                  'security_issues': '${{ steps.security.outputs.issues }}' != 'none',
+                  'coverage_passed': '${{ steps.coverage.outputs.passed }}' == 'true',
+                  'build_optimized': '${{ steps.build.outputs.optimized }}' == 'true',
+                  'environment_valid': '${{ steps.environment.outputs.valid }}' == 'true',
+                  'deployment_ready': '${{ steps.deployment.outputs.ready }}' == 'true'
+              }
+          }
+
+          with open('comprehensive_agent_report.json', 'w') as f:
+              json.dump(comprehensive_report, f, indent=2)
+
+          print('## 📊 Agent Orchestration Report')
+          print()
+          print('### Summary')
+          for key, value in comprehensive_report['summary'].items():
+              status = '✅' if value else '❌'
+              print(f'{status} {key.replace(\"_\", \" \").title()}: {value}')
+          "
+
+      - name: Upload Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-reports-${{ github.sha }}
+          path: |
+            *_report.json
+            comprehensive_agent_report.json
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let report = {};
+            try {
+              const reportContent = fs.readFileSync('comprehensive_agent_report.json', 'utf8');
+              report = JSON.parse(reportContent);
+            } catch (e) {
+              console.error('Failed to read comprehensive report:', e);
+              return;
+            }
+
+            const summary = report.summary || {};
+            const allPassed = Object.values(summary).every(v => v === true || v === false && ['security_issues', 'large_files_detected'].includes(Object.keys(summary).find(k => summary[k] === v)));
+
+            let comment = '## 🤖 GitHub Agents Analysis Report\n\n';
+            comment += `**Branch:** ${report.branch}\n`;
+            comment += `**Commit:** ${report.commit.substring(0, 8)}\n`;
+            comment += `**Timestamp:** ${new Date(report.timestamp).toLocaleString()}\n\n`;
+
+            comment += '### Analysis Summary\n\n';
+            comment += '| Check | Status | Details |\n';
+            comment += '|-------|--------|----------|\n';
+
+            const checks = [
+              { key: 'large_files_detected', name: 'Large Files', invert: true },
+              { key: 'security_issues', name: 'Security', invert: true },
+              { key: 'coverage_passed', name: 'Test Coverage', invert: false },
+              { key: 'build_optimized', name: 'Build Optimization', invert: false },
+              { key: 'environment_valid', name: 'Environment', invert: false },
+              { key: 'deployment_ready', name: 'Deployment Ready', invert: false }
+            ];
+
+            for (const check of checks) {
+              const value = summary[check.key];
+              const passed = check.invert ? !value : value;
+              const status = passed ? '✅' : '❌';
+              const details = passed ? 'Passed' : 'Needs Attention';
+              comment += `| ${check.name} | ${status} | ${details} |\n`;
+            }
+
+            comment += '\n';
+
+            if (allPassed) {
+              comment += '### ✅ All checks passed!\n';
+              comment += 'This PR is ready for review and deployment.\n';
+            } else {
+              comment += '### ⚠️ Some checks require attention\n';
+              comment += 'Please review the details above and address any issues before merging.\n';
+            }
+
+            comment += '\n---\n';
+            comment += '*Generated by GitHub Agents Orchestration Pipeline*';
+
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+  quality-gates:
+    name: Quality Gates
+    needs: agent-analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Check Quality Gates
+        run: |
+          echo "## Quality Gates Status"
+          echo
+
+          FAILED=false
+
+          if [ "${{ needs.agent-analysis.outputs.large_files_detected }}" == "true" ]; then
+            echo "❌ Large files detected - blocking merge"
+            FAILED=true
+          fi
+
+          if [ "${{ needs.agent-analysis.outputs.security_issues }}" == "critical" ] || [ "${{ needs.agent-analysis.outputs.security_issues }}" == "high" ]; then
+            echo "❌ Critical or high security vulnerabilities detected - blocking merge"
+            FAILED=true
+          fi
+
+          if [ "${{ needs.agent-analysis.outputs.coverage_passed }}" == "false" ]; then
+            echo "⚠️ Test coverage below threshold - review required"
+          fi
+
+          if [ "${{ needs.agent-analysis.outputs.environment_valid }}" == "false" ]; then
+            echo "❌ Environment validation failed - blocking merge"
+            FAILED=true
+          fi
+
+          if [ "$FAILED" == "true" ]; then
+            echo
+            echo "### ❌ Quality gates failed"
+            echo "Please address the issues above before merging."
+            exit 1
+          else
+            echo
+            echo "### ✅ All quality gates passed"
+            echo "This PR meets the quality standards."
+          fi

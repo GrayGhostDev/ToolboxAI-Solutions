@@ -9,7 +9,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
@@ -22,8 +22,8 @@ from sqlalchemy import text, pool, event
 from sqlalchemy.exc import DBAPIError, OperationalError, IntegrityError
 from sqlalchemy.pool import NullPool, QueuePool
 
-from database.models import Base
-from server.config import settings
+from database.models.models import Base
+from apps.backend.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +34,17 @@ class DatabaseManager:
     def __init__(self, database_url: Optional[str] = None):
         """
         Initialize database manager
-        
+
         Args:
             database_url: Database connection string (uses settings if not provided)
         """
-        self.database_url = database_url or settings.DATABASE_URL
+        # Ensure we use asyncpg driver for async operations
+        url = database_url or settings.DATABASE_URL
+        if url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        elif url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        self.database_url = url
         self._engine: Optional[AsyncEngine] = None
         self._sessionmaker: Optional[async_sessionmaker] = None
         self._initialized = False
@@ -93,7 +99,7 @@ class DatabaseManager:
                     logger.info("Database tables created/verified")
             
             self._initialized = True
-            self._last_health_check = datetime.utcnow()
+            self._last_health_check = datetime.now(timezone.utc)
             
         except Exception as e:
             logger.error(f"Failed to initialize database: {e}")
@@ -184,14 +190,14 @@ class DatabaseManager:
         """
         health_status = {
             "status": "unknown",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "details": {}
         }
         
         try:
             # Check if we need to perform health check
             if self._last_health_check:
-                time_since_check = datetime.utcnow() - self._last_health_check
+                time_since_check = datetime.now(timezone.utc) - self._last_health_check
                 if time_since_check.seconds < self._health_check_interval:
                     health_status["status"] = "healthy"
                     health_status["details"]["cached"] = True
@@ -230,7 +236,7 @@ class DatabaseManager:
                     }
                 }
                 
-                self._last_health_check = datetime.utcnow()
+                self._last_health_check = datetime.now(timezone.utc)
                 
         except Exception as e:
             health_status["status"] = "unhealthy"
@@ -302,7 +308,7 @@ class DatabaseManager:
             Optimization results
         """
         results = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "optimizations": []
         }
         
@@ -344,6 +350,20 @@ db_manager = DatabaseManager()
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     FastAPI dependency to get database session
+    
+    Yields:
+        Database session
+    """
+    async with db_manager.get_session() as session:
+        yield session
+
+
+async def get_async_session(database: str = "education") -> AsyncGenerator[AsyncSession, None]:
+    """
+    Get async database session
+    
+    Args:
+        database: Database name (default: "education")
     
     Yields:
         Database session
@@ -476,3 +496,47 @@ async def init_db():
 async def close_db():
     """Close database connection on shutdown"""
     await db_manager.close()
+
+
+# Redis connection management
+try:
+    import redis.asyncio as aioredis
+    REDIS_AVAILABLE = True
+except ImportError:
+    REDIS_AVAILABLE = False
+    aioredis = None
+
+
+async def get_redis_client():
+    """
+    Get Redis client for caching and session management
+
+    Returns:
+        Redis client instance
+    """
+    if not REDIS_AVAILABLE:
+        logger.warning("Redis not available - some features may not work")
+        return None
+
+    try:
+        redis_url = getattr(settings, 'REDIS_URL', 'redis://localhost:6379')
+        client = aioredis.from_url(redis_url, decode_responses=True)
+        return client
+    except Exception as e:
+        logger.error(f"Failed to create Redis client: {e}")
+        return None
+
+
+# Export all public functions and classes
+__all__ = [
+    "DatabaseManager",
+    "db_manager",
+    "get_db",
+    "get_async_session",
+    "get_redis_client",
+    "create_or_update",
+    "bulk_insert",
+    "paginate_query",
+    "init_db",
+    "close_db",
+]

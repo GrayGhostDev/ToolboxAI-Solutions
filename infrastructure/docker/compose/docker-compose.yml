@@ -1,0 +1,968 @@
+# ============================================
+# TOOLBOXAI DOCKER COMPOSE - BASE CONFIGURATION
+# ============================================
+# Docker Engine 25.x optimized configuration
+# Security-first approach with modern best practices
+# Updated: 2025-09-24
+# ============================================
+
+# Docker Compose (v2 specification)
+
+# ============================================
+# SHARED CONFIGURATIONS (YAML Anchors)
+# ============================================
+x-common-variables: &common-variables
+  TZ: UTC
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  NODE_ENV: ${NODE_ENV:-production}
+  PYTHONUNBUFFERED: 1
+  PYTHONDONTWRITEBYTECODE: 1
+
+x-security-opts: &security-opts
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  read_only: true
+  tmpfs:
+    - /tmp
+    - /var/run
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+    tag: "{{.Name}}/{{.ID}}"
+
+x-restart-policy: &restart-policy
+  restart: unless-stopped
+
+x-resource-limits: &resource-limits
+  deploy:
+    resources:
+      limits:
+        cpus: '2.0'
+        memory: 2G
+      reservations:
+        cpus: '0.5'
+        memory: 512M
+
+# ============================================
+# SERVICES
+# ============================================
+services:
+  # ----------------------------------------
+  # PostgreSQL Database (Primary)
+  # ----------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: toolboxai-postgres
+    <<: *restart-policy
+    environment:
+      <<: *common-variables
+      POSTGRES_DB: ${POSTGRES_DB:-toolboxai}
+      POSTGRES_USER: ${POSTGRES_USER:-toolboxai}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --data-checksums --auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      # Performance tuning
+      POSTGRES_MAX_CONNECTIONS: 200
+      POSTGRES_SHARED_BUFFERS: 256MB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 1GB
+      POSTGRES_WORK_MEM: 4MB
+    secrets:
+      - db_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data:Z
+      - ./config/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres_backup:/backup
+    networks:
+      database:
+        aliases:
+          - db
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # ----------------------------------------
+  # Redis Cache & Queue
+  # ----------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: toolboxai-redis
+    <<: [*restart-policy, *security-opts]
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --requirepass-file /run/secrets/redis_password
+      --bind 0.0.0.0
+      --protected-mode yes
+      --tcp-backlog 511
+      --tcp-keepalive 300
+      --timeout 0
+    secrets:
+      - redis_password
+    volumes:
+      - redis_data:/data:Z
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      cache:
+        aliases:
+          - cache
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "$$(cat /run/secrets/redis_password)", "ping"]
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # ----------------------------------------
+  # FastAPI Backend
+  # ----------------------------------------
+  backend:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/backend.Dockerfile
+      # Local cache only (no registry)
+      cache_from:
+        - type=local,src=/tmp/docker-cache
+      cache_to:
+        - type=local,dest=/tmp/docker-cache,mode=max
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    image: toolboxai/backend:${DOCKER_TAG:-latest}
+    container_name: toolboxai-backend
+    <<: *restart-policy
+    environment:
+      <<: *common-variables
+      HOST: 0.0.0.0
+      PORT: 8009
+      WORKERS: ${WORKERS:-4}
+      DATABASE_URL_FILE: /run/secrets/database_url
+      REDIS_URL_FILE: /run/secrets/redis_url
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret
+      # API Keys from secrets
+      OPENAI_API_KEY_FILE: /run/secrets/openai_api_key
+      ANTHROPIC_API_KEY_FILE: /run/secrets/anthropic_api_key
+      # Feature flags
+      RATE_LIMIT_ENABLED: true
+      RATE_LIMIT_PER_MINUTE: 60
+    secrets:
+      - database_url
+      - redis_url
+      - jwt_secret
+      - openai_api_key
+      - anthropic_api_key
+    volumes:
+      - backend_logs:/app/logs:Z
+      - agent_data:/app/agent_data:Z
+    networks:
+      - backend
+      - database
+      - cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    read_only: true
+    user: "1001:1001"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ----------------------------------------
+  # React Dashboard
+  # ----------------------------------------
+  dashboard:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/dashboard-2025.Dockerfile
+      args:
+        VITE_API_BASE_URL: "${VITE_API_BASE_URL:-http://backend:8009}"
+        VITE_PUSHER_KEY: "${VITE_PUSHER_KEY:-dummy-key-for-development}"
+        VITE_PUSHER_CLUSTER: "${VITE_PUSHER_CLUSTER:-us2}"
+        VITE_PUSHER_AUTH_ENDPOINT: "${VITE_PUSHER_AUTH_ENDPOINT:-/api/pusher/auth}"
+        VITE_PUSHER_SSL: "${VITE_PUSHER_SSL:-true}"
+        VITE_CLERK_PUBLISHABLE_KEY: "${VITE_CLERK_PUBLISHABLE_KEY}"
+        VITE_ENABLE_WEBSOCKET: "false"
+        VITE_ENABLE_PUSHER: "true"
+        VITE_ENABLE_GAMIFICATION: "true"
+        VITE_ENABLE_ANALYTICS: "true"
+        VITE_ENABLE_MCP: "true"
+        VITE_ENABLE_AGENTS: "true"
+        VITE_ENABLE_ROBLOX: "true"
+        VITE_ENABLE_GHOST: "true"
+    image: toolboxai/dashboard:${DOCKER_TAG:-latest}
+    container_name: toolboxai-dashboard
+    <<: *restart-policy
+    ports:
+      - "5180:80"
+    environment:
+      <<: *common-variables
+      NODE_ENV: production
+      NGINX_ENVSUBST_TEMPLATE_DIR: /etc/nginx/templates
+      NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx/conf.d
+      # Runtime Pusher configuration
+      VITE_PUSHER_KEY: "${VITE_PUSHER_KEY}"
+      VITE_PUSHER_CLUSTER: "${VITE_PUSHER_CLUSTER:-us2}"
+      VITE_API_BASE_URL: "${VITE_API_BASE_URL:-http://backend:8009}"
+    volumes:
+      - nginx_logs:/var/log/nginx:Z
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - CHOWN
+    read_only: true
+    user: "101:101"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ----------------------------------------
+  # MCP Server
+  # ----------------------------------------
+  mcp-server:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/mcp.Dockerfile
+      # Local cache only (no registry)
+      cache_from:
+        - type=local,src=/tmp/docker-cache
+      cache_to:
+        - type=local,dest=/tmp/docker-cache,mode=max
+    image: toolboxai/mcp:${DOCKER_TAG:-latest}
+    container_name: toolboxai-mcp
+    <<: [*restart-policy, *security-opts]
+    environment:
+      <<: *common-variables
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 9877
+      DATABASE_URL_FILE: /run/secrets/database_url
+      REDIS_URL_FILE: /run/secrets/redis_url
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret
+      MAX_TOKENS: ${MAX_TOKENS:-8192}
+      AGENT_DISCOVERY_ENABLED: true
+    secrets:
+      - database_url
+      - redis_url
+      - jwt_secret
+    volumes:
+      - mcp_contexts:/data/contexts:Z
+      - agent_data:/data/agents:Z
+    networks:
+      - mcp
+      - database
+      - cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:9877/health"]
+    logging: *default-logging
+    user: "1002:1002"
+
+  # ----------------------------------------
+  # Agent Coordinator
+  # ----------------------------------------
+  agent-coordinator:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/agents.Dockerfile
+      # Local cache only (no registry)
+      cache_from:
+        - type=local,src=/tmp/docker-cache
+      cache_to:
+        - type=local,dest=/tmp/docker-cache,mode=max
+    image: toolboxai/agents:${DOCKER_TAG:-latest}
+    container_name: toolboxai-agents
+    <<: [*restart-policy, *security-opts]
+    environment:
+      <<: *common-variables
+      COORDINATOR_PORT: 8888
+      MCP_SERVER_URL: ws://mcp-server:9877
+      DATABASE_URL_FILE: /run/secrets/database_url
+      REDIS_URL_FILE: /run/secrets/redis_url
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret
+      OPENAI_API_KEY_FILE: /run/secrets/openai_api_key
+      MAX_CONCURRENT_AGENTS: ${MAX_CONCURRENT_AGENTS:-10}
+      TASK_TIMEOUT: ${TASK_TIMEOUT:-300}
+    secrets:
+      - database_url
+      - redis_url
+      - jwt_secret
+      - openai_api_key
+    volumes:
+      - agent_data:/data/agents:Z
+      - agent_logs:/app/logs:Z
+    networks:
+      - mcp
+      - database
+      - cache
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
+    logging: *default-logging
+    user: "1003:1003"
+
+  # ----------------------------------------
+  # Celery Worker (Background Tasks)
+  # ----------------------------------------
+  celery-worker:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/celery-worker.Dockerfile
+      # Local cache only (no registry)
+      cache_from:
+        - type=local,src=/tmp/docker-cache
+      cache_to:
+        - type=local,dest=/tmp/docker-cache,mode=max
+      target: production
+    image: toolboxai/celery-worker:${DOCKER_TAG:-latest}
+    # container_name removed to support replicas
+    <<: *restart-policy
+    environment:
+      <<: *common-variables
+      CELERY_BROKER_URL_FILE: /run/secrets/redis_url
+      CELERY_RESULT_BACKEND_FILE: /run/secrets/redis_url
+      DATABASE_URL_FILE: /run/secrets/database_url
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret
+      OPENAI_API_KEY_FILE: /run/secrets/openai_api_key
+      # Celery configuration
+      CELERY_WORKER_CONCURRENCY: ${CELERY_WORKER_CONCURRENCY:-4}
+      CELERY_WORKER_MAX_TASKS_PER_CHILD: 1000
+      CELERY_TASK_TIME_LIMIT: 300
+      CELERY_TASK_SOFT_TIME_LIMIT: 270
+      CELERY_LOG_LEVEL: ${CELERY_LOG_LEVEL:-INFO}
+    secrets:
+      - database_url
+      - redis_url
+      - jwt_secret
+      - openai_api_key
+    volumes:
+      - celery_logs:/app/logs:Z
+      - celery_data:/app/data:Z
+    networks:
+      - backend
+      - database
+      - cache
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      # Using Celery 5.4 inspect ping command for health check
+      test: ["CMD-SHELL", "celery -A apps.backend.celery_app inspect ping -d celery@$$HOSTNAME || exit 1"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    user: "1005:1005"
+    deploy:
+      replicas: 2  # Run multiple workers
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ----------------------------------------
+  # Celery Beat (Task Scheduler)
+  # ----------------------------------------
+  celery-beat:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/celery-beat.Dockerfile
+      # Local cache only (no registry)
+      cache_from:
+        - type=local,src=/tmp/docker-cache
+      cache_to:
+        - type=local,dest=/tmp/docker-cache,mode=max
+      target: production
+    image: toolboxai/celery-beat:${DOCKER_TAG:-latest}
+    # container_name removed to support deploy section
+    <<: *restart-policy
+    environment:
+      <<: *common-variables
+      CELERY_BROKER_URL_FILE: /run/secrets/redis_url
+      CELERY_RESULT_BACKEND_FILE: /run/secrets/redis_url
+      DATABASE_URL_FILE: /run/secrets/database_url
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret
+      # Beat configuration
+      CELERY_BEAT_LOG_LEVEL: ${CELERY_BEAT_LOG_LEVEL:-INFO}
+      CELERY_BEAT_MAX_LOOP_INTERVAL: 60
+      TZ: ${TZ:-UTC}
+    secrets:
+      - database_url
+      - redis_url
+      - jwt_secret
+    volumes:
+      - celerybeat_schedule:/app/celerybeat-schedule:Z
+      - celery_logs:/app/logs:Z
+    networks:
+      - backend
+      - database
+      - cache
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      celery-worker:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      # Beat process check - Celery Beat doesn't have inspect command
+      test: ["CMD-SHELL", "pgrep -f 'celery.*beat' || exit 1"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    user: "1006:1006"
+    deploy:
+      replicas: 1  # Only one beat instance should run
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ----------------------------------------
+  # Celery Flower - Monitoring Dashboard
+  # ----------------------------------------
+  celery-flower:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/celery-flower.Dockerfile
+      # Local cache only (no registry)
+      cache_from:
+        - type=local,src=/tmp/docker-cache
+      cache_to:
+        - type=local,dest=/tmp/docker-cache,mode=max
+      target: production
+    image: toolboxai/celery-flower:${DOCKER_TAG:-latest}
+    <<: *restart-policy
+    environment:
+      <<: *common-variables
+      CELERY_BROKER_URL: ${REDIS_URL:-redis://redis:6379/0}
+      FLOWER_PORT: 5555
+      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH:-admin:admin}  # Change in production
+      FLOWER_URL_PREFIX: /flower
+    volumes:
+      - flower-data:/data:rw
+    ports:
+      - "${FLOWER_PORT:-5555}:5555"
+    networks:
+      - backend
+    depends_on:
+      redis:
+        condition: service_healthy
+      celery-worker:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:5555/api/workers"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100M
+    user: "1007:1007"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+  # ----------------------------------------
+  # Roblox Sync Service (Rojo Server)
+  # ----------------------------------------
+  roblox-sync:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/roblox-sync.Dockerfile
+      # Local cache only (no registry)
+      cache_from:
+        - type=local,src=/tmp/docker-cache
+      cache_to:
+        - type=local,dest=/tmp/docker-cache,mode=max
+      target: production
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    image: toolboxai/roblox-sync:${DOCKER_TAG:-latest}
+    container_name: toolboxai-roblox-sync
+    <<: *restart-policy
+    environment:
+      <<: *common-variables
+      ROJO_SERVER_HOST: 0.0.0.0
+      ROJO_SERVER_PORT: 34872
+      ROJO_PROJECT_PATH: /app/default.project.json
+      ROJO_LIVE_RELOAD: ${ROJO_LIVE_RELOAD:-false}
+      ROJO_DEV_MODE: ${ROJO_DEV_MODE:-false}
+      ROJO_LOG_LEVEL: ${ROJO_LOG_LEVEL:-info}
+      RUST_LOG: ${RUST_LOG:-warn}
+      # Roblox API configuration
+      ROBLOX_UNIVERSE_ID: ${ROBLOX_UNIVERSE_ID}
+      ROBLOX_CLIENT_ID: ${ROBLOX_CLIENT_ID}
+      ROBLOX_API_KEY_FILE: /run/secrets/roblox_api_key
+      ROBLOX_CLIENT_SECRET_FILE: /run/secrets/roblox_client_secret
+      # Deployment configuration
+      ROBLOX_DEPLOYMENT_ENABLED: ${ROBLOX_DEPLOYMENT_ENABLED:-false}
+      ROBLOX_AUTO_DEPLOY: ${ROBLOX_AUTO_DEPLOY:-false}
+      ROBLOX_DEPLOY_BRANCH: ${ROBLOX_DEPLOY_BRANCH:-main}
+    secrets:
+      - roblox_api_key
+      - roblox_client_secret
+    volumes:
+      - ../../../roblox/src:/app/src:ro
+      - ../../../roblox/plugins:/app/plugins:ro
+      - ../../../roblox/assets:/app/assets:ro
+      - ../../config/rojo/default.project.json:/app/default.project.json:ro
+      - roblox_builds:/app/builds:Z
+      - roblox_logs:/app/logs:Z
+    networks:
+      - backend
+      - roblox
+    ports:
+      - "34872:34872"  # Rojo server port for Studio connection
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:34872/api/rojo/health"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    read_only: true
+    user: "1007:1007"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ----------------------------------------
+  # Redis Cloud Connector (Week 2)
+  # ----------------------------------------
+  redis-cloud-connector:
+    image: redis:7-alpine
+    container_name: toolboxai-redis-cloud
+    <<: *restart-policy
+    environment:
+      <<: *common-variables
+      REDIS_CLOUD_URL: ${REDIS_CLOUD_URL:-}
+      REDIS_CLOUD_CA_CERT_PATH: /certs/redis-cloud-ca.pem
+      LANGCACHE_ENABLED: ${LANGCACHE_ENABLED:-false}
+      LANGCACHE_API_KEY_FILE: /run/secrets/langcache_api_key
+      LANGCACHE_CACHE_ID: ${LANGCACHE_CACHE_ID:-}
+      LANGCACHE_SERVER_URL: ${LANGCACHE_SERVER_URL:-https://gcp-us-east4.langcache.redis.io}
+      LANGCACHE_SIMILARITY_THRESHOLD: ${LANGCACHE_SIMILARITY_THRESHOLD:-0.95}
+    volumes:
+      - ../../config/certificates:/certs:ro
+      - langcache_data:/data:Z
+    networks:
+      - cache
+      - backend
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD-SHELL", "test -f /certs/redis-cloud-ca.pem && echo 'OK' || exit 1"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    profiles:
+      - week2
+      - production
+
+  # ----------------------------------------
+  # Backup Coordinator (Week 2)
+  # ----------------------------------------
+  backup-coordinator:
+    image: toolboxai/backend:${DOCKER_TAG:-latest}
+    container_name: toolboxai-backup
+    <<: *restart-policy
+    command: ["python", "-m", "infrastructure.backups.scripts.backup_manager"]
+    environment:
+      <<: *common-variables
+      BACKUP_ENABLED: ${BACKUP_ENABLED:-true}
+      BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-0 2 * * *}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+      BACKUP_ENCRYPTION_ENABLED: ${BACKUP_ENCRYPTION_ENABLED:-true}
+      BACKUP_ENCRYPTION_KEY_FILE: /run/secrets/backup_encryption_key
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-}
+      BACKUP_S3_REGION: ${BACKUP_S3_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID_FILE: /run/secrets/aws_access_key
+      AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/aws_secret_key
+    secrets:
+      - backup_encryption_key
+      - aws_access_key
+      - aws_secret_key
+    volumes:
+      - postgres_backup:/backup/postgres:Z
+      - redis_backup:/backup/redis:Z
+      - app_backup:/backup/application:Z
+      - backup_logs:/app/logs:Z
+    networks:
+      - database
+      - cache
+    depends_on:
+      - postgres
+      - redis
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "python", "-c", "import sys; from infrastructure.backups.scripts.backup_manager import BackupManager; sys.exit(0 if BackupManager.health_check() else 1)"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - DAC_OVERRIDE  # For backup file operations
+    user: "1008:1008"
+    profiles:
+      - week2
+      - production
+
+  # ----------------------------------------
+  # Migration Runner (Week 2)
+  # ----------------------------------------
+  migration-runner:
+    image: toolboxai/backend:${DOCKER_TAG:-latest}
+    container_name: toolboxai-migration
+    command: ["python", "-m", "apps.backend.services.supabase_migration_manager"]
+    environment:
+      <<: *common-variables
+      MIGRATION_AUTO_RUN: ${MIGRATION_AUTO_RUN:-false}
+      MIGRATION_STRATEGY: ${MIGRATION_STRATEGY:-blue-green}
+      MIGRATION_TIMEOUT: ${MIGRATION_TIMEOUT:-300}
+      MIGRATION_ROLLBACK_ON_ERROR: ${MIGRATION_ROLLBACK_ON_ERROR:-true}
+      MIGRATION_HEALTH_CHECK_TIMEOUT: ${MIGRATION_HEALTH_CHECK_TIMEOUT:-60}
+      MIGRATION_MAX_RETRIES: ${MIGRATION_MAX_RETRIES:-3}
+      DATABASE_URL_FILE: /run/secrets/database_url
+      REDIS_URL_FILE: /run/secrets/redis_url
+    secrets:
+      - database_url
+      - redis_url
+    volumes:
+      - migration_logs:/app/logs:Z
+      - ../../../infrastructure/migrations:/app/migrations:ro
+    networks:
+      - database
+      - cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "python", "-c", "import sys; from apps.backend.services.supabase_migration_manager import MigrationManager; sys.exit(0 if MigrationManager.health_check() else 1)"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    user: "1009:1009"
+    profiles:
+      - week2
+      - migration
+
+  # ----------------------------------------
+  # Prometheus Monitoring (Basic)
+  # ----------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: toolboxai-prometheus
+    <<: *restart-policy
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--storage.tsdb.retention.time=15d'
+    volumes:
+      - ../../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../../monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - prometheus_data:/prometheus:Z
+    networks:
+      - monitoring
+      - backend
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    labels:
+      - "com.toolboxai.service=prometheus"
+      - "com.toolboxai.component=monitoring"
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  toolboxai-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-toolboxai
+
+  frontend:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-frontend
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+  backend:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-backend
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+
+  database:
+    driver: bridge
+    internal: true  # No external access
+    driver_opts:
+      com.docker.network.bridge.name: br-database
+    ipam:
+      config:
+        - subnet: 172.22.0.0/24
+
+  cache:
+    driver: bridge
+    internal: true  # No external access
+    driver_opts:
+      com.docker.network.bridge.name: br-cache
+    ipam:
+      config:
+        - subnet: 172.23.0.0/24
+
+  mcp:
+    driver: bridge
+    internal: true  # No external access
+    driver_opts:
+      com.docker.network.bridge.name: br-mcp
+    ipam:
+      config:
+        - subnet: 172.24.0.0/24
+
+  monitoring:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-monitoring
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24
+
+  roblox:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-roblox
+    ipam:
+      config:
+        - subnet: 172.26.0.0/24
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-./data}/postgres
+
+  postgres_backup:
+    driver: local
+
+  redis_data:
+    driver: local
+
+  flower-data:
+    driver: local
+
+  backend_logs:
+    driver: local
+
+  nginx_logs:
+    driver: local
+
+  agent_data:
+    driver: local
+
+  agent_logs:
+    driver: local
+
+  mcp_contexts:
+    driver: local
+
+  prometheus_data:
+    driver: local
+
+  celery_logs:
+    driver: local
+
+  celery_data:
+    driver: local
+
+  celerybeat_schedule:
+    driver: local
+
+  roblox_builds:
+    driver: local
+
+  roblox_logs:
+    driver: local
+
+  # Week 2 Volumes
+  redis_backup:
+    driver: local
+
+  app_backup:
+    driver: local
+
+  langcache_data:
+    driver: local
+
+  backup_logs:
+    driver: local
+
+  migration_logs:
+    driver: local
+
+# ============================================
+# SECRETS (External - must be created separately)
+# ============================================
+secrets:
+  db_password:
+    external: true
+  redis_password:
+    external: true
+  database_url:
+    external: true
+  redis_url:
+    external: true
+  jwt_secret:
+    external: true
+  openai_api_key:
+    external: true
+  anthropic_api_key:
+    external: true
+  roblox_api_key:
+    external: true
+  roblox_client_secret:
+    external: true
+  # Week 2 Secrets
+  langcache_api_key:
+    external: true
+  backup_encryption_key:
+    external: true
+  aws_access_key:
+    external: true
+  aws_secret_key:
+    external: true

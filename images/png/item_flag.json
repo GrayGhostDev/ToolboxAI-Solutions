@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Item/flag.png",
+  "file_name": "flag.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 6561,
+      "most_common": [
+        [
+          204,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          288,
+          [
+            0,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          12,
+          [
+            170,
+            170,
+            255,
+            3
+          ]
+        ],
+        [
+          92,
+          [
+            85,
+            170,
+            255,
+            3
+          ]
+        ],
+        [
+          32,
+          [
+            102,
+            153,
+            255,
+            5
+          ]
+        ],
+        [
+          512,
+          [
+            0,
+            0,
+            255,
+            1
+          ]
+        ],
+        [
+          4,
+          [
+            127,
+            169,
+            253,
+            7
+          ]
+        ],
+        [
+          4,
+          [
+            90,
+            168,
+            252,
+            3
+          ]
+        ],
+        [
+          16,
+          [
+            112,
+            128,
+            207,
+            48
+          ]
+        ],
+        [
+          4,
+          [
+            213,
+            225,
+            247,
+            1
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 18579
+      },
+      {
+        "color": [
+          44,
+          49,
+          148,
+          255
+        ],
+        "frequency": 39
+      },
+      {
+        "color": [
+          45,
+          50,
+          150,
+          255
+        ],
+        "frequency": 27
+      },
+      {
+        "color": [
+          46,
+          51,
+          152,
+          255
+        ],
+        "frequency": 25
+      },
+      {
+        "color": [
+          43,
+          47,
+          143,
+          255
+        ],
+        "frequency": 24
+      }
+    ]
+  }
+}

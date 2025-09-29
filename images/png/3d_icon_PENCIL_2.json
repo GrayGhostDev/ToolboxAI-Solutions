@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/stuudy-3d-icons_NjhhMjYzMmIyMzI4MmUwMDM5ZDY0Yzlj/PNG/PENCIL_2.png",
+  "file_name": "PENCIL_2.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 3000,
+      "height": 3000,
+      "total_pixels": 9000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 47384,
+      "most_common": [
+        [
+          178,
+          [
+            255,
+            255,
+            255,
+            255
+          ]
+        ],
+        [
+          1,
+          [
+            0,
+            0,
+            1,
+            96
+          ]
+        ],
+        [
+          1,
+          [
+            0,
+            1,
+            1,
+            112
+          ]
+        ],
+        [
+          1,
+          [
+            0,
+            0,
+            4,
+            16
+          ]
+        ],
+        [
+          1,
+          [
+            236,
+            72,
+            81,
+            194
+          ]
+        ],
+        [
+          5,
+          [
+            255,
+            255,
+            254,
+            255
+          ]
+        ],
+        [
+          46,
+          [
+            254,
+            255,
+            254,
+            255
+          ]
+        ],
+        [
+          2,
+          [
+            255,
+            254,
+            254,
+            255
+          ]
+        ],
+        [
+          563,
+          [
+            254,
+            254,
+            254,
+            255
+          ]
+        ],
+        [
+          1,
+          [
+            60,
+            61,
+            59,
+            128
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 18160
+      },
+      {
+        "color": [
+          255,
+          190,
+          79,
+          255
+        ],
+        "frequency": 16
+      },
+      {
+        "color": [
+          255,
+          211,
+          110,
+          255
+        ],
+        "frequency": 15
+      },
+      {
+        "color": [
+          255,
+          192,
+          74,
+          255
+        ],
+        "frequency": 14
+      },
+      {
+        "color": [
+          255,
+          191,
+          73,
+          255
+        ],
+        "frequency": 14
+      }
+    ]
+  }
+}

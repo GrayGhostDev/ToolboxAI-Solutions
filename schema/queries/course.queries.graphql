@@ -1,0 +1,302 @@
+# Course and educational content queries
+
+extend type Query {
+  """
+  Get a specific course by ID
+  """
+  course(id: UUID!): Course @auth
+
+  """
+  Get a course by code
+  """
+  courseByCode(code: String!): Course @auth
+
+  """
+  List all courses with filtering and pagination
+  """
+  courses(
+    filter: CourseFilter
+    sort: CourseSort
+    pagination: PaginationInput
+  ): CourseConnection! @auth
+
+  """
+  Get courses taught by a specific teacher
+  """
+  coursesByTeacher(
+    teacherId: UUID!
+    includeArchived: Boolean = false
+    pagination: PaginationInput
+  ): CourseConnection! @auth
+
+  """
+  Get courses enrolled by a student
+  """
+  enrolledCourses(
+    studentId: UUID
+    status: EnrollmentStatus
+    pagination: PaginationInput
+  ): CourseConnection! @auth
+
+  """
+  Search courses by title or description
+  """
+  searchCourses(
+    query: String!
+    subject: Subject
+    difficulty: DifficultyLevel
+    limit: Int = 10
+  ): [Course!]! @auth
+
+  """
+  Get recommended courses for a user
+  """
+  recommendedCourses(
+    userId: UUID
+    limit: Int = 5
+  ): [Course!]! @auth
+
+  """
+  Get trending courses
+  """
+  trendingCourses(
+    timeRange: TimeRange = WEEK
+    limit: Int = 10
+  ): [Course!]!
+
+  """
+  Get a specific lesson by ID
+  """
+  lesson(id: UUID!): Lesson @auth
+
+  """
+  Get lessons for a course
+  """
+  courseLessons(
+    courseId: UUID!
+    includeHidden: Boolean = false
+  ): [Lesson!]! @auth
+
+  """
+  Get next lesson for a student in a course
+  """
+  nextLesson(
+    courseId: UUID!
+    studentId: UUID
+  ): Lesson @auth
+
+  """
+  Get course analytics (teacher/admin only)
+  """
+  courseAnalytics(
+    courseId: UUID!
+    startDate: DateTime
+    endDate: DateTime
+  ): CourseAnalytics! @auth(requires: TEACHER)
+
+  """
+  Get enrollment details
+  """
+  enrollment(
+    studentId: UUID!
+    courseId: UUID!
+  ): Enrollment @auth
+
+  """
+  Check enrollment status
+  """
+  isEnrolled(
+    studentId: UUID
+    courseId: UUID!
+  ): Boolean! @auth
+
+  """
+  Get course completion certificate
+  """
+  courseCertificate(
+    studentId: UUID!
+    courseId: UUID!
+  ): Certificate @auth
+
+  """
+  Get available course templates
+  """
+  courseTemplates(
+    subject: Subject
+    gradeLevel: String
+    isPublic: Boolean = true
+  ): [CourseTemplate!]! @auth(requires: TEACHER)
+}
+
+# Course filter input
+input CourseFilter {
+  """
+  Filter by subject
+  """
+  subject: Subject
+
+  """
+  Filter by difficulty
+  """
+  difficulty: DifficultyLevel
+
+  """
+  Filter by status
+  """
+  status: CourseStatus
+
+  """
+  Filter by teacher ID
+  """
+  teacherId: UUID
+
+  """
+  Filter by date range
+  """
+  startAfter: DateTime
+  startBefore: DateTime
+
+  """
+  Filter by enrollment availability
+  """
+  hasAvailableSlots: Boolean
+
+  """
+  Filter by tags
+  """
+  tags: [String!]
+}
+
+# Course sort input
+input CourseSort {
+  """
+  Field to sort by
+  """
+  field: CourseSortField!
+
+  """
+  Sort direction
+  """
+  direction: SortDirection!
+}
+
+# Course sort fields
+enum CourseSortField {
+  TITLE
+  CODE
+  CREATED_AT
+  START_DATE
+  ENROLLMENT_COUNT
+  POPULARITY
+}
+
+# Time range enum
+enum TimeRange {
+  DAY
+  WEEK
+  MONTH
+  QUARTER
+  YEAR
+  ALL_TIME
+}
+
+# Certificate type
+type Certificate {
+  """
+  Certificate ID
+  """
+  id: UUID!
+
+  """
+  Student who earned it
+  """
+  student: User!
+
+  """
+  Course completed
+  """
+  course: Course!
+
+  """
+  Issue date
+  """
+  issuedAt: DateTime!
+
+  """
+  Certificate URL
+  """
+  url: URL!
+
+  """
+  Verification code
+  """
+  verificationCode: String!
+
+  """
+  Grade achieved
+  """
+  grade: Grade!
+
+  """
+  Completion percentage
+  """
+  completionPercentage: Float!
+}
+
+# Course template type
+type CourseTemplate {
+  """
+  Template ID
+  """
+  id: UUID!
+
+  """
+  Template name
+  """
+  name: String!
+
+  """
+  Template description
+  """
+  description: String!
+
+  """
+  Subject area
+  """
+  subject: Subject!
+
+  """
+  Grade level
+  """
+  gradeLevel: String!
+
+  """
+  Template structure
+  """
+  structure: JSON!
+
+  """
+  Creator
+  """
+  creator: User!
+
+  """
+  Is public
+  """
+  isPublic: Boolean!
+
+  """
+  Usage count
+  """
+  usageCount: Int!
+
+  """
+  Template tags
+  """
+  tags: [String!]!
+
+  """
+  Timestamp information
+  """
+  timestamps: Timestamps!
+}

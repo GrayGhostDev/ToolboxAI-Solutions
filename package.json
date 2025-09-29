@@ -1,31 +1,36 @@
 {
   "name": "toolboxai-solutions-workspace",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "description": "ToolBoxAI Solutions - Educational Technology Platform",
   "workspaces": [
-    "src/dashboard"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
-    "dashboard:dev": "npm -w src/dashboard run dev",
-    "dashboard:build": "npm -w src/dashboard run build",
-    "dashboard:test": "npm -w src/dashboard test",
-    "dashboard:lint": "npm -w src/dashboard run lint",
-    "verify:dashboard": "npm -w src/dashboard run test --silent && npm -w src/dashboard run build",
-    "docs:format": "prettier --log-level warn --write \"Documentation/**/*.md\"",
-    "docs:lint": "markdownlint-cli2 \"Documentation/**/*.md\"",
-    "docs:redact": "python3 Documentation/.tools/redact_secrets.py",
-    "docs:fences": "python3 Documentation/.tools/fence_langs.py",
-    "docs:openapi": "node Documentation/.tools/json_to_yaml.js Documentation/03-api/openapi-spec.json Documentation/03-api/openapi-spec.yaml"
+    "dashboard:dev": "npm -w apps/dashboard run dev",
+    "dashboard:build": "npm -w apps/dashboard run build",
+    "dashboard:test": "npm -w apps/dashboard test",
+    "dashboard:lint": "npm -w apps/dashboard run lint",
+    "verify:dashboard": "npm -w apps/dashboard run test --silent && npm -w apps/dashboard run build",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:install": "playwright install",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
+  "packageManager": "npm@11.5.2",
   "engines": {
-    "node": ">=20 <23",
-    "npm": ">=9"
+    "node": ">=22",
+    "npm": ">=10"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/ToolboxAI-Solutions.git"
+    "url": "https://github.com/GrayGhostDev/ToolboxAI-Solutions.git"
   },
   "keywords": [
     "education",
@@ -38,15 +43,30 @@
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.35.0",
+    "@playwright/test": "^1.55.0",
+    "@testing-library/dom": "^10.4.1",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",
+    "esbuild": "0.24.2",
     "eslint": "^9.35.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
+    "glob": "^11.0.3",
     "globals": "^16.3.0",
-    "js-yaml": "^4.1.0",
-    "markdownlint-cli2": "^0.18.1",
+    "msw": "^2.11.2",
     "prettier": "^3.6.2",
     "typescript-eslint": "^8.42.0"
+  },
+  "dependencies": {
+    "@esbuild/darwin-arm64": "^0.24.2",
+    "@mantine/core": "^8.3.2",
+    "dayjs": "^1.11.18",
+    "fdir": "^6.5.0",
+    "playwright-core": "^1.55.1",
+    "prismjs": "^1.30.0",
+    "react-syntax-highlighter": "^15.6.6",
+    "refractor": "^4.9.0",
+    "three": "^0.180.0",
+    "typescript": "^5.5.4"
   }
 }

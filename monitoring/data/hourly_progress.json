@@ -1,0 +1,70 @@
+{
+  "snapshot": {
+    "timestamp": "2025-09-21 07:30:00.253141",
+    "elapsed_hours": 12.000000001388889,
+    "test_pass_rate": 0.0,
+    "security_score": 0,
+    "bundle_size_kb": 14315.5244140625,
+    "overall_completion": 1.1642372423531044,
+    "active_alerts": 0,
+    "critical_alerts": 0,
+    "blockers": [
+      "Critical test failures blocking development",
+      "Bundle size significantly exceeds target",
+      "Severe API performance degradation"
+    ],
+    "progress_rate_per_hour": 0.0970197701848629,
+    "estimated_completion_hours": 1018.7177579304072,
+    "risk_level": "CRITICAL"
+  },
+  "trends": [
+    {
+      "metric_name": "test_pass_rate",
+      "current_value": 0.0,
+      "hourly_change": 0,
+      "daily_change": 0,
+      "trend_direction": "stable",
+      "velocity": 0,
+      "projected_24h": 0.0
+    },
+    {
+      "metric_name": "security_score",
+      "current_value": 0,
+      "hourly_change": 0,
+      "daily_change": 0,
+      "trend_direction": "stable",
+      "velocity": 0,
+      "projected_24h": 0
+    },
+    {
+      "metric_name": "bundle_size_kb",
+      "current_value": 14315.5244140625,
+      "hourly_change": 0,
+      "daily_change": 0,
+      "trend_direction": "stable",
+      "velocity": 0,
+      "projected_24h": 14315.5244140625
+    },
+    {
+      "metric_name": "overall_completion",
+      "current_value": 1.1642372423531044,
+      "hourly_change": 0,
+      "daily_change": 0,
+      "trend_direction": "stable",
+      "velocity": 0,
+      "projected_24h": 1.1642372423531044
+    }
+  ],
+  "targets": {
+    "test_pass_rate": 95.0,
+    "security_score": 95.0,
+    "bundle_size_kb": 500.0,
+    "overall_completion": 100.0
+  },
+  "timeline": {
+    "target_hours": 48.0,
+    "elapsed_hours": 12.000000001388889,
+    "remaining_hours": 35.99999999861111,
+    "on_track": false
+  }
+}

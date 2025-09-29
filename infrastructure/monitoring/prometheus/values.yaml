@@ -1,0 +1,300 @@
+# Prometheus Stack Configuration for ToolBoxAI
+grafana:
+  enabled: true
+  adminPassword: "${GRAFANA_ADMIN_PASSWORD}"
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - grafana.toolboxai.solutions
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - grafana.toolboxai.solutions
+
+  persistence:
+    enabled: true
+    storageClassName: gp3-encrypted
+    accessModes:
+      - ReadWriteOnce
+    size: 20Gi
+
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          url: http://prometheus-server:9090
+          access: proxy
+          isDefault: true
+        - name: CloudWatch
+          type: cloudwatch
+          jsonData:
+            authType: keys
+            defaultRegion: us-east-1
+          secureJsonData:
+            accessKey: "${AWS_ACCESS_KEY_ID}"
+            secretKey: "${AWS_SECRET_ACCESS_KEY}"
+
+prometheus:
+  prometheusSpec:
+    retention: 30d
+    retentionSize: 50GB
+
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3-encrypted
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 100Gi
+
+    resources:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+    additionalScrapeConfigs:
+      # MCP Server metrics
+      - job_name: 'mcp-server'
+        kubernetes_sd_configs:
+        - role: pod
+          namespaces:
+            names:
+            - mcp
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+          action: keep
+          regex: true
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+          action: replace
+          target_label: __metrics_path__
+          regex: (.+)
+        - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+          action: replace
+          regex: ([^:]+)(?::\d+)?;(\d+)
+          replacement: $1:$2
+          target_label: __address__
+        - action: labelmap
+          regex: __meta_kubernetes_pod_label_(.+)
+        - source_labels: [__meta_kubernetes_namespace]
+          action: replace
+          target_label: kubernetes_namespace
+        - source_labels: [__meta_kubernetes_pod_name]
+          action: replace
+          target_label: kubernetes_pod_name
+
+      # MCP Agents metrics
+      - job_name: 'mcp-agents'
+        kubernetes_sd_configs:
+        - role: pod
+          namespaces:
+            names:
+            - mcp-agents
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+          action: keep
+          regex: true
+        - source_labels: [__meta_kubernetes_pod_label_app]
+          action: keep
+          regex: mcp-agent
+
+      # Backend API metrics
+      - job_name: 'backend-api'
+        kubernetes_sd_configs:
+        - role: pod
+          namespaces:
+            names:
+            - toolboxai
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_label_app]
+          action: keep
+          regex: backend
+
+      # AWS CloudWatch Exporter
+      - job_name: 'cloudwatch'
+        static_configs:
+        - targets: ['cloudwatch-exporter:9106']
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3-encrypted
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+  config:
+    global:
+      slack_api_url: "${SLACK_WEBHOOK_URL}"
+
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: 'default-receiver'
+      routes:
+      - match:
+          severity: critical
+        receiver: 'critical-receiver'
+      - match:
+          severity: warning
+        receiver: 'warning-receiver'
+
+    receivers:
+    - name: 'default-receiver'
+      slack_configs:
+      - channel: '#alerts'
+        title: 'ToolBoxAI Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+    - name: 'critical-receiver'
+      slack_configs:
+      - channel: '#alerts-critical'
+        title: '🚨 CRITICAL: ToolBoxAI Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+      pagerduty_configs:
+      - service_key: "${PAGERDUTY_SERVICE_KEY}"
+
+    - name: 'warning-receiver'
+      slack_configs:
+      - channel: '#alerts-warning'
+        title: '⚠️ WARNING: ToolBoxAI Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+# Custom Prometheus Rules
+additionalPrometheusRules:
+  - name: toolboxai-mcp-rules
+    groups:
+      - name: mcp
+        interval: 30s
+        rules:
+          - alert: MCPServerDown
+            expr: up{job="mcp-server"} == 0
+            for: 5m
+            labels:
+              severity: critical
+              component: mcp
+            annotations:
+              summary: "MCP Server is down"
+              description: "MCP Server {{ $labels.instance }} has been down for more than 5 minutes"
+
+          - alert: MCPHighMemoryUsage
+            expr: container_memory_usage_bytes{pod=~"mcp-.*"} / container_spec_memory_limit_bytes > 0.9
+            for: 10m
+            labels:
+              severity: warning
+              component: mcp
+            annotations:
+              summary: "MCP high memory usage"
+              description: "MCP pod {{ $labels.pod }} memory usage is above 90%"
+
+          - alert: MCPContextOverflow
+            expr: mcp_context_tokens_total / mcp_context_max_tokens > 0.95
+            for: 5m
+            labels:
+              severity: warning
+              component: mcp
+            annotations:
+              summary: "MCP context near token limit"
+              description: "MCP context for {{ $labels.session }} is using {{ $value }}% of token limit"
+
+      - name: agents
+        interval: 30s
+        rules:
+          - alert: AgentNotResponding
+            expr: mcp_agent_last_heartbeat > 300
+            for: 5m
+            labels:
+              severity: warning
+              component: agents
+            annotations:
+              summary: "MCP Agent not responding"
+              description: "Agent {{ $labels.agent_type }} has not sent heartbeat for {{ $value }} seconds"
+
+          - alert: AgentTaskFailureRate
+            expr: rate(mcp_agent_task_failures_total[5m]) > 0.1
+            for: 10m
+            labels:
+              severity: warning
+              component: agents
+            annotations:
+              summary: "High agent task failure rate"
+              description: "Agent {{ $labels.agent_type }} has failure rate of {{ $value | humanizePercentage }}"
+
+      - name: api
+        interval: 30s
+        rules:
+          - alert: APIHighLatency
+            expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+            for: 10m
+            labels:
+              severity: warning
+              component: api
+            annotations:
+              summary: "API high latency"
+              description: "95th percentile latency is {{ $value }}s for {{ $labels.method }} {{ $labels.endpoint }}"
+
+          - alert: APIHighErrorRate
+            expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+            for: 5m
+            labels:
+              severity: critical
+              component: api
+            annotations:
+              summary: "API high error rate"
+              description: "API error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}"
+
+# Node Exporter for hardware metrics
+nodeExporter:
+  enabled: true
+
+# Kube State Metrics for Kubernetes object metrics
+kubeStateMetrics:
+  enabled: true
+
+# Grafana Dashboards
+grafana:
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+
+  dashboards:
+    default:
+      mcp-overview:
+        json: |
+          ${file("${path.module}/../grafana/dashboards/mcp-overview.json")}
+      agent-performance:
+        json: |
+          ${file("${path.module}/../grafana/dashboards/agent-performance.json")}
+      api-metrics:
+        json: |
+          ${file("${path.module}/../grafana/dashboards/api-metrics.json")}
+      kubernetes-cluster:
+        json: |
+          ${file("${path.module}/../grafana/dashboards/kubernetes-cluster.json")}

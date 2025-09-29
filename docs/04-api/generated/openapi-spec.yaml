@@ -1,0 +1,1065 @@
+openapi: 3.0.3
+info:
+  title: ToolBoxAI Educational Platform API
+  description: |
+    Comprehensive API for the ToolBoxAI educational platform, providing AI-powered content generation,
+    Roblox integration, learning analytics, and educational management tools.
+
+    ## Features
+    - 🤖 AI-powered educational content generation with SPARC framework
+    - 🎮 Advanced Roblox integration with OAuth2 and Open Cloud APIs
+    - 📊 Real-time analytics and progress tracking
+    - 🎯 Role-based access control (Admin, Teacher, Student, Parent)
+    - 🔄 Real-time communication via WebSockets and Pusher Channels
+    - 🎨 Gamification and achievement systems
+    - 🏫 Multi-school and classroom management
+    - 💳 Integrated payment processing with Stripe
+
+    ## Authentication
+    All endpoints (except auth and webhooks) require JWT authentication:
+    ```
+    Authorization: Bearer <jwt_token>
+    ```
+
+    ## Rate Limiting
+    - Unauthenticated: 100 requests/minute per IP
+    - Student: 1,000 requests/minute
+    - Teacher: 5,000 requests/minute
+    - Admin: 10,000 requests/minute
+
+  version: 1.0.0
+  contact:
+    name: ToolBoxAI API Support
+    url: https://toolboxai.com/support
+    email: api-support@toolboxai.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.toolboxai.com
+    description: Production server
+  - url: https://staging-api.toolboxai.com
+    description: Staging server
+  - url: http://localhost:8009
+    description: Development server
+
+security:
+  - BearerAuth: []
+
+paths:
+  # Authentication Endpoints
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User Login
+      description: Authenticate user and return JWT access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-ratelimit: "10 requests per minute per IP"
+
+  /api/v1/auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh Token
+      description: Refresh an existing JWT token
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User Logout
+      description: Logout and invalidate token
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  # Content Generation Endpoints
+  /api/v1/content/generate:
+    post:
+      tags:
+        - Content Generation
+      summary: Generate Educational Content
+      description: |
+        Generate comprehensive educational content using AI agents with SPARC framework integration.
+        Supports real-time progress tracking via WebSocket connections.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentGenerationRequest'
+      responses:
+        '201':
+          description: Content generation started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentGenerationResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions (Teacher or Admin required)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-ratelimit: "50 requests per hour per user"
+
+  /api/v1/content/generation/{session_id}/status:
+    get:
+      tags:
+        - Content Generation
+      summary: Get Generation Status
+      description: Get real-time status and progress of content generation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Content generation session ID
+      responses:
+        '200':
+          description: Generation status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationStatusResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Class Management Endpoints
+  /api/v1/classes:
+    get:
+      tags:
+        - Classes
+      summary: Get Classes
+      description: Get classes based on user role and filters
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of classes to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Pagination offset
+        - name: subject
+          in: query
+          schema:
+            type: string
+          description: Filter by subject
+        - name: grade_level
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+          description: Filter by grade level
+      responses:
+        '200':
+          description: Classes retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassListResponse'
+
+    post:
+      tags:
+        - Classes
+      summary: Create Class
+      description: Create a new class (Teacher or Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassCreateRequest'
+      responses:
+        '201':
+          description: Class created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassCreateResponse'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-ratelimit: "50 requests per hour"
+
+  # Roblox Integration Endpoints
+  /api/v1/roblox/auth/initiate:
+    post:
+      tags:
+        - Roblox Integration
+      summary: Initiate Roblox OAuth
+      description: Start Roblox OAuth2 authentication flow
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RobloxAuthRequest'
+      responses:
+        '200':
+          description: OAuth initiation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RobloxAuthResponse'
+      x-ratelimit: "10 requests per minute"
+
+  /api/v1/roblox/oauth/callback:
+    get:
+      tags:
+        - Roblox Integration
+      summary: Roblox OAuth Callback
+      description: Handle Roblox OAuth2 callback
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Authorization code from Roblox
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+          description: State parameter for CSRF protection
+      responses:
+        '200':
+          description: OAuth callback processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RobloxCallbackResponse'
+
+  # AI Chat Endpoints
+  /api/v1/ai-chat/conversation/start:
+    post:
+      tags:
+        - AI Chat
+      summary: Start AI Conversation
+      description: Start a new AI conversation session
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversationStartRequest'
+      responses:
+        '201':
+          description: Conversation started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationResponse'
+      x-ratelimit: "100 requests per hour"
+
+  # Analytics Endpoints
+  /api/v1/analytics/dashboard:
+    get:
+      tags:
+        - Analytics
+      summary: Get Dashboard Analytics
+      description: Get comprehensive dashboard analytics based on user role
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: time_range
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, 1y]
+            default: 30d
+          description: Time range for analytics data
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [student, teacher, admin]
+          description: Filter by user role (admin only)
+      responses:
+        '200':
+          description: Analytics data retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+
+  # Pusher Authentication
+  /api/v1/pusher/auth:
+    post:
+      tags:
+        - Real-time
+      summary: Pusher Channel Authentication
+      description: Authenticate Pusher channel subscription for real-time features
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                socket_id:
+                  type: string
+                  description: Pusher socket ID
+                channel_name:
+                  type: string
+                  description: Channel name to authenticate
+              required:
+                - socket_id
+                - channel_name
+      responses:
+        '200':
+          description: Channel authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PusherAuthResponse'
+      x-ratelimit: "1000 requests per minute"
+
+  # Stripe Payments
+  /api/v1/stripe/checkout/session:
+    post:
+      tags:
+        - Payments
+      summary: Create Checkout Session
+      description: Create Stripe checkout session for subscription
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutSessionRequest'
+      responses:
+        '201':
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutSessionResponse'
+        '403':
+          description: Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-ratelimit: "50 requests per hour"
+
+  /api/v1/payments/stripe/webhook:
+    post:
+      tags:
+        - Payments
+      summary: Stripe Webhook
+      description: Handle Stripe webhook events
+      security: []
+      parameters:
+        - name: Stripe-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Stripe webhook signature
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Stripe event object
+      responses:
+        '200':
+          description: Webhook processed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+                    example: true
+      x-ratelimit: "1000 requests per minute"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Authentication Schemas
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "teacher@school.edu"
+        username:
+          type: string
+          example: "jane_smith"
+        password:
+          type: string
+          format: password
+          example: "Teacher123!"
+      required:
+        - password
+      anyOf:
+        - required: [email]
+        - required: [username]
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        token_type:
+          type: string
+          example: "bearer"
+        expires_in:
+          type: integer
+          example: 1800
+        role:
+          type: string
+          enum: [admin, teacher, student, parent]
+          example: "teacher"
+        user:
+          $ref: '#/components/schemas/User'
+
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: "bearer"
+        expires_in:
+          type: integer
+          example: 1800
+        role:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "123"
+        username:
+          type: string
+          example: "jane_smith"
+        email:
+          type: string
+          format: email
+          example: "teacher@school.edu"
+        displayName:
+          type: string
+          example: "Jane Smith"
+        role:
+          type: string
+          enum: [admin, teacher, student, parent]
+          example: "teacher"
+
+    # Content Generation Schemas
+    ContentGenerationRequest:
+      type: object
+      properties:
+        subject:
+          type: string
+          example: "Science"
+        grade_level:
+          type: string
+          example: "6-8"
+        content_type:
+          type: string
+          example: "interactive_lesson"
+        learning_objectives:
+          type: array
+          items:
+            type: string
+          example: ["Understand the solar system", "Learn about planetary orbits"]
+        environment_theme:
+          type: string
+          example: "space_station"
+        difficulty:
+          type: string
+          enum: [easy, medium, hard, expert]
+          example: "medium"
+        duration_minutes:
+          type: integer
+          minimum: 5
+          maximum: 120
+          example: 45
+        include_quiz:
+          type: boolean
+          default: true
+        personalization:
+          type: object
+          properties:
+            learning_style:
+              type: string
+              enum: [visual, auditory, kinesthetic, reading]
+            previous_knowledge:
+              type: string
+      required:
+        - subject
+        - grade_level
+        - content_type
+        - learning_objectives
+
+    ContentGenerationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            session_id:
+              type: string
+              example: "gen_abc123"
+            content_id:
+              type: string
+              example: "content_456"
+            status:
+              type: string
+              enum: [generating, completed, failed]
+              example: "generating"
+            progress:
+              $ref: '#/components/schemas/GenerationProgress'
+            websocket_url:
+              type: string
+              example: "ws://localhost:8009/ws/content/gen_abc123"
+        message:
+          type: string
+          example: "Content generation started"
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    GenerationProgress:
+      type: object
+      properties:
+        stage:
+          type: string
+          example: "content_analysis"
+        progress_percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 20
+        estimated_completion:
+          type: string
+          format: date-time
+          example: "2025-01-21T10:05:00Z"
+
+    GenerationStatusResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            session_id:
+              type: string
+            status:
+              type: string
+              enum: [generating, completed, failed]
+            progress:
+              $ref: '#/components/schemas/GenerationProgress'
+            generated_content:
+              type: object
+              nullable: true
+              properties:
+                content_id:
+                  type: string
+                lesson_data:
+                  type: object
+                quiz_data:
+                  type: object
+                environment_data:
+                  type: object
+
+    # Class Management Schemas
+    ClassCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "8th Grade Physics"
+        subject:
+          type: string
+          example: "Science"
+        grade_level:
+          type: integer
+          minimum: 1
+          maximum: 12
+          example: 8
+        description:
+          type: string
+          example: "Introduction to physics concepts"
+        schedule:
+          type: object
+          properties:
+            days:
+              type: array
+              items:
+                type: string
+                enum: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+            time:
+              type: string
+              format: time
+              example: "10:00"
+            duration_minutes:
+              type: integer
+              example: 50
+        capacity:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 30
+        settings:
+          type: object
+          properties:
+            allow_self_enrollment:
+              type: boolean
+              default: false
+            require_parent_approval:
+              type: boolean
+              default: true
+            enable_notifications:
+              type: boolean
+              default: true
+      required:
+        - name
+        - subject
+        - grade_level
+
+    ClassCreateResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            class_id:
+              type: string
+              example: "class_789"
+            name:
+              type: string
+              example: "8th Grade Physics"
+            join_code:
+              type: string
+              example: "PHYS8G"
+            created_at:
+              type: string
+              format: date-time
+
+    ClassListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClassSummary'
+        total:
+          type: integer
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    ClassSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        subject:
+          type: string
+        grade_level:
+          type: integer
+        teacher:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            email:
+              type: string
+        student_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, archived, draft]
+        recent_activity:
+          type: object
+
+    # Roblox Integration Schemas
+    RobloxAuthRequest:
+      type: object
+      properties:
+        additional_scopes:
+          type: array
+          items:
+            type: string
+          example: ["universe-messaging-service:publish"]
+
+    RobloxAuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        authorization_url:
+          type: string
+          format: uri
+        state:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+
+    RobloxCallbackResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            user_id:
+              type: string
+            username:
+              type: string
+            access_token:
+              type: string
+            token_type:
+              type: string
+            scope:
+              type: array
+              items:
+                type: string
+
+    # AI Chat Schemas
+    ConversationStartRequest:
+      type: object
+      properties:
+        initial_message:
+          type: string
+          example: "Help me create a lesson plan about marine biology"
+        context:
+          type: object
+          properties:
+            subject:
+              type: string
+            grade_level:
+              type: string
+            lesson_duration:
+              type: integer
+        agent_type:
+          type: string
+          example: "educational_assistant"
+
+    ConversationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            conversation_id:
+              type: string
+            response:
+              type: string
+            suggestions:
+              type: array
+              items:
+                type: string
+            metadata:
+              type: object
+
+    # Analytics Schemas
+    AnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            overview:
+              type: object
+            engagement:
+              type: object
+            content_metrics:
+              type: object
+            performance:
+              type: object
+
+    # Real-time Schemas
+    PusherAuthResponse:
+      type: object
+      properties:
+        auth:
+          type: string
+          example: "app_key:signature"
+        channel_data:
+          type: string
+          nullable: true
+          example: '{"user_id":"123","user_info":{"name":"Jane"}}'
+
+    # Payment Schemas
+    CheckoutSessionRequest:
+      type: object
+      properties:
+        price_id:
+          type: string
+          example: "price_premium_monthly"
+        quantity:
+          type: integer
+          minimum: 1
+          example: 1
+        success_url:
+          type: string
+          format: uri
+        cancel_url:
+          type: string
+          format: uri
+        metadata:
+          type: object
+      required:
+        - price_id
+        - success_url
+        - cancel_url
+
+    CheckoutSessionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            session_id:
+              type: string
+            checkout_url:
+              type: string
+              format: uri
+
+    # Common Schemas
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              example: "Invalid request parameters"
+            details:
+              type: object
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    MessageResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResponseMetadata'
+
+    ResponseMetadata:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-01-21T10:00:00Z"
+        request_id:
+          type: string
+          example: "req_abc123"
+        version:
+          type: string
+          example: "1.0.0"
+
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        per_page:
+          type: integer
+          example: 20
+        total_pages:
+          type: integer
+          example: 5
+        has_next:
+          type: boolean
+          example: true
+        has_previous:
+          type: boolean
+          example: false
+
+  responses:
+    UnauthorizedError:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ForbiddenError:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    RateLimitError:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+      headers:
+        X-RateLimit-Limit:
+          description: Request limit per time window
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          description: Remaining requests in current window
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          description: Time when rate limit resets
+          schema:
+            type: integer
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Content Generation
+    description: AI-powered educational content generation
+  - name: Classes
+    description: Classroom and group management
+  - name: Roblox Integration
+    description: Roblox platform integration and OAuth
+  - name: AI Chat
+    description: Conversational AI assistant
+  - name: Analytics
+    description: Learning analytics and reporting
+  - name: Real-time
+    description: Real-time communication and updates
+  - name: Payments
+    description: Subscription and payment processing

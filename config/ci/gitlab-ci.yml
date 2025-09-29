@@ -1,0 +1,817 @@
+# ============================================
+# TOOLBOXAI GITLAB CI/CD PIPELINE
+# ============================================
+# Comprehensive GitLab CI/CD pipeline for ToolBoxAI-Solutions
+# Features: Build, Test, Security Scan, Deploy with Rollback
+# Updated: 2025-09-25
+# ============================================
+
+image: docker:28-cli
+
+variables:
+  # Docker configuration
+  DOCKER_DRIVER: overlay2
+  DOCKER_BUILDKIT: "1"
+  BUILDKIT_PROGRESS: plain
+  DOCKER_TLS_CERTDIR: "/certs"
+
+  # Registry configuration
+  REGISTRY: "registry.gitlab.com"
+  IMAGE_BASE: "$CI_REGISTRY_IMAGE"
+
+  # Application configuration
+  APP_NAME: "toolboxai-solutions"
+  POSTGRES_DB: "test_db"
+  POSTGRES_USER: "test_user"
+  POSTGRES_PASSWORD: "test_pass"
+  REDIS_URL: "redis://redis:6379/0"
+
+  # Security
+  TRIVY_VERSION: "0.48.3"
+  HADOLINT_VERSION: "2.12.0"
+
+# ============================================
+# WORKFLOW RULES & CONDITIONS
+# ============================================
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_MERGE_REQUEST_IID
+    - if: $CI_COMMIT_TAG
+
+# ============================================
+# PIPELINE STAGES
+# ============================================
+stages:
+  - 🔧 setup
+  - 🔍 quality
+  - 🔨 build
+  - 🧪 test
+  - 🔐 security
+  - ⚡ performance
+  - 🚀 deploy
+  - ✅ verify
+  - 🧹 cleanup
+
+# ============================================
+# SERVICE DEPENDENCIES
+# ============================================
+services:
+  - docker:28-dind
+  - postgres:15-alpine
+  - redis:7-alpine
+
+# ============================================
+# GLOBAL BEFORE SCRIPT
+# ============================================
+before_script:
+  - |
+    # Setup Docker and authentication
+    docker info
+    echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+
+    # Install additional tools
+    apk add --no-cache curl jq git bash python3 py3-pip nodejs npm
+
+# ============================================
+# SETUP STAGE
+# ============================================
+📋 setup-environment:
+  stage: 🔧 setup
+  script:
+    - |
+      echo "Setting up environment variables and cache keys..."
+
+      # Determine version
+      if [[ "$CI_COMMIT_TAG" ]]; then
+        VERSION="$CI_COMMIT_TAG"
+      else
+        VERSION="${CI_COMMIT_SHA:0:8}"
+      fi
+      echo "VERSION=$VERSION" > build.env
+
+      # Determine environment
+      case "$CI_COMMIT_REF_NAME" in
+        "main") ENVIRONMENT="production" ;;
+        "staging") ENVIRONMENT="staging" ;;
+        *) ENVIRONMENT="development" ;;
+      esac
+      echo "ENVIRONMENT=$ENVIRONMENT" >> build.env
+
+      # Generate cache keys
+      CACHE_KEY="toolboxai-$(sha256sum infrastructure/docker/docker-compose.dev.yml package.json requirements.txt | sha256sum | cut -d' ' -f1)"
+      echo "CACHE_KEY=$CACHE_KEY" >> build.env
+
+      echo "Build environment prepared:"
+      cat build.env
+  artifacts:
+    reports:
+      dotenv: build.env
+    expire_in: 1 hour
+  rules:
+    - when: always
+
+# ============================================
+# QUALITY STAGE
+# ============================================
+🔍 code-quality:
+  stage: 🔍 quality
+  needs: ["📋 setup-environment"]
+  parallel:
+    matrix:
+      - CHECK_TYPE: [python-lint, javascript-lint, dockerfile-lint]
+  script:
+    - |
+      case "$CHECK_TYPE" in
+        "python-lint")
+          echo "Running Python code quality checks..."
+          pip install black ruff mypy
+          black --check . --diff || exit 1
+          ruff check . --format=gitlab || exit 1
+          mypy apps/backend --ignore-missing-imports --junit-xml=mypy-report.xml || true
+          ;;
+        "javascript-lint")
+          echo "Running JavaScript/TypeScript quality checks..."
+          npm install
+          npm run dashboard:lint
+          ;;
+        "dockerfile-lint")
+          echo "Running Dockerfile linting..."
+          wget -O hadolint "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-x86_64"
+          chmod +x hadolint
+          find infrastructure/docker -name "*.Dockerfile" -o -name "Dockerfile*" | xargs ./hadolint
+          ;;
+      esac
+  artifacts:
+    reports:
+      junit:
+        - mypy-report.xml
+    when: always
+    expire_in: 1 week
+  rules:
+    - changes:
+      - "**/*.py"
+      - "**/*.js"
+      - "**/*.ts"
+      - "**/*.tsx"
+      - "**/Dockerfile*"
+      - "infrastructure/docker/**/*"
+    - if: $CI_MERGE_REQUEST_IID
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "staging"
+
+# ============================================
+# BUILD STAGE
+# ============================================
+🔨 build-images:
+  stage: 🔨 build
+  needs: ["📋 setup-environment", "🔍 code-quality"]
+  parallel:
+    matrix:
+      - SERVICE: [fastapi-main, dashboard-frontend, mcp-server, agent-coordinator, flask-bridge]
+  variables:
+    IMAGE_TAG: "${IMAGE_BASE}/${SERVICE}:${CI_COMMIT_SHA}"
+    DOCKERFILE_MAP: |
+      fastapi-main=infrastructure/docker/Dockerfile.backend
+      dashboard-frontend=infrastructure/docker/dashboard.Dockerfile
+      mcp-server=infrastructure/docker/mcp-server.Dockerfile
+      agent-coordinator=infrastructure/docker/agent-coordinator.Dockerfile
+      flask-bridge=infrastructure/docker/flask-bridge.Dockerfile
+  script:
+    - |
+      echo "Building Docker image for $SERVICE..."
+
+      # Get dockerfile path
+      DOCKERFILE=$(echo "$DOCKERFILE_MAP" | grep "^$SERVICE=" | cut -d'=' -f2)
+
+      # Build with BuildKit and multi-platform support
+      docker buildx create --use --driver docker-container
+      docker buildx build \
+        --platform linux/amd64,linux/arm64 \
+        --file "$DOCKERFILE" \
+        --tag "${IMAGE_TAG}" \
+        --tag "${IMAGE_BASE}/${SERVICE}:latest" \
+        --build-arg VERSION="$VERSION" \
+        --build-arg BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+        --build-arg VCS_REF="$CI_COMMIT_SHA" \
+        --cache-from type=registry,ref="${IMAGE_BASE}/${SERVICE}:cache" \
+        --cache-to type=registry,ref="${IMAGE_BASE}/${SERVICE}:cache",mode=max \
+        --push \
+        .
+
+      # Export image info
+      echo "IMAGE_TAG=${IMAGE_TAG}" > ${SERVICE}-image.env
+
+      # Get image size and security info
+      docker manifest inspect "${IMAGE_TAG}" | jq '.config.size' > "${SERVICE}-size.txt"
+
+      echo "Successfully built and pushed $SERVICE image"
+  artifacts:
+    reports:
+      dotenv: ${SERVICE}-image.env
+    paths:
+      - "${SERVICE}-size.txt"
+    expire_in: 1 hour
+  rules:
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_MERGE_REQUEST_IID
+    - if: $CI_COMMIT_TAG
+
+# ============================================
+# TEST STAGE
+# ============================================
+🧪 unit-tests:
+  stage: 🧪 test
+  needs: ["📋 setup-environment"]
+  image: python:3.12-slim
+  services:
+    - postgres:15-alpine
+    - redis:7-alpine
+  variables:
+    DATABASE_URL: "postgresql://test_user:test_pass@postgres:5432/test_db"
+    REDIS_URL: "redis://redis:6379/0"
+    POSTGRES_DB: "test_db"
+    POSTGRES_USER: "test_user"
+    POSTGRES_PASSWORD: "test_pass"
+  before_script:
+    - apt-get update -qy
+    - apt-get install -y curl git build-essential
+    - pip install -r requirements.txt
+    - pip install pytest pytest-cov pytest-xvfb
+  script:
+    - |
+      echo "Running comprehensive test suite..."
+
+      # Backend tests
+      python -m pytest tests/ \
+        --verbose \
+        --tb=short \
+        --maxfail=10 \
+        --durations=20 \
+        --cov=apps/backend \
+        --cov=core \
+        --cov=database \
+        --cov-report=xml \
+        --cov-report=term-missing \
+        --cov-report=html \
+        --junit-xml=pytest-report.xml
+
+      # Generate coverage summary
+      python -c "
+      import xml.etree.ElementTree as ET
+      tree = ET.parse('coverage.xml')
+      root = tree.getroot()
+      coverage = root.get('line-rate')
+      print(f'Coverage: {float(coverage)*100:.2f}%')
+      "
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    reports:
+      junit: pytest-report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    paths:
+      - htmlcov/
+    when: always
+    expire_in: 1 week
+  rules:
+    - changes:
+      - "**/*.py"
+      - "tests/**/*"
+      - "requirements.txt"
+    - if: $CI_MERGE_REQUEST_IID
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "staging"
+
+🧪 integration-tests:
+  stage: 🧪 test
+  needs: ["🔨 build-images"]
+  services:
+    - docker:28-dind
+    - postgres:15-alpine
+    - redis:7-alpine
+  variables:
+    DATABASE_URL: "postgresql://test_user:test_pass@postgres:5432/test_db"
+    REDIS_URL: "redis://redis:6379/0"
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: /certs/client
+  script:
+    - |
+      echo "Setting up integration test environment..."
+
+      # Create test environment file
+      cat << EOF > .env.test
+      DATABASE_URL=postgresql://test_user:test_pass@postgres:5432/test_db
+      REDIS_URL=redis://redis:6379/0
+      JWT_SECRET_KEY=test_secret_key_for_ci_integration
+      ENVIRONMENT=test
+      DEBUG=false
+      LOG_LEVEL=WARNING
+      PUSHER_ENABLED=false
+      OPENAI_API_KEY=test_key
+      IMAGE_TAG=${CI_COMMIT_SHA}
+      EOF
+
+      # Start test stack using built images
+      docker compose -f infrastructure/docker/docker-compose.dev.yml \
+        --env-file .env.test \
+        up -d --wait --timeout 300
+
+      # Wait for services to be ready
+      timeout 600 bash -c '
+        while ! curl -f http://docker:8009/health; do
+          echo "Waiting for FastAPI service..."
+          sleep 10
+        done
+      '
+
+      # Run integration tests
+      docker exec $(docker ps -qf "name=toolboxai-fastapi") \
+        python -m pytest tests/integration/ \
+        --verbose \
+        --tb=short \
+        --maxfail=5 \
+        --junit-xml=/tmp/integration-report.xml
+
+      # Copy test results
+      docker cp $(docker ps -qf "name=toolboxai-fastapi"):/tmp/integration-report.xml ./
+
+      # Test service communication
+      curl -f http://docker:8009/api/v1/health || exit 1
+      curl -f http://docker:5179/ || exit 1
+
+      echo "Integration tests completed successfully"
+  after_script:
+    - |
+      # Collect logs on failure
+      if [ $CI_JOB_STATUS == "failed" ]; then
+        mkdir -p logs
+        docker compose -f infrastructure/docker/docker-compose.dev.yml logs --no-color > logs/docker-compose.log
+        docker ps -a > logs/containers.log
+      fi
+      docker compose -f infrastructure/docker/docker-compose.dev.yml down -v
+  artifacts:
+    reports:
+      junit: integration-report.xml
+    paths:
+      - logs/
+    when: always
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "staging"
+    - if: $CI_MERGE_REQUEST_IID
+
+# ============================================
+# SECURITY STAGE
+# ============================================
+🔐 security-scan:
+  stage: 🔐 security
+  needs: ["🔨 build-images"]
+  parallel:
+    matrix:
+      - SERVICE: [fastapi-main, dashboard-frontend, mcp-server, agent-coordinator, flask-bridge]
+  image: aquasecurity/trivy:$TRIVY_VERSION
+  script:
+    - |
+      echo "Running security scan for $SERVICE..."
+
+      # Run Trivy security scan
+      trivy image \
+        --format template \
+        --template '@/contrib/gitlab.tpl' \
+        --output gl-security-${SERVICE}.json \
+        --severity HIGH,CRITICAL \
+        --exit-code 0 \
+        "${IMAGE_BASE}/${SERVICE}:${CI_COMMIT_SHA}"
+
+      # Generate summary
+      trivy image \
+        --format json \
+        --output trivy-${SERVICE}.json \
+        "${IMAGE_BASE}/${SERVICE}:${CI_COMMIT_SHA}"
+
+      # Count vulnerabilities
+      HIGH=$(jq '.Results[]?.Vulnerabilities[]? | select(.Severity=="HIGH") | .VulnerabilityID' trivy-${SERVICE}.json 2>/dev/null | wc -l || echo "0")
+      CRITICAL=$(jq '.Results[]?.Vulnerabilities[]? | select(.Severity=="CRITICAL") | .VulnerabilityID' trivy-${SERVICE}.json 2>/dev/null | wc -l || echo "0")
+
+      echo "Security scan results for $SERVICE:"
+      echo "HIGH: $HIGH vulnerabilities"
+      echo "CRITICAL: $CRITICAL vulnerabilities"
+
+      # Fail if too many critical vulnerabilities
+      if [ "$CRITICAL" -gt 5 ]; then
+        echo "ERROR: Too many critical vulnerabilities ($CRITICAL) in $SERVICE"
+        exit 1
+      fi
+
+      # Create badge
+      if [ "$CRITICAL" -eq 0 ] && [ "$HIGH" -lt 5 ]; then
+        BADGE_COLOR="brightgreen"
+        BADGE_STATUS="secure"
+      else
+        BADGE_COLOR="yellow"
+        BADGE_STATUS="$HIGH high, $CRITICAL critical"
+      fi
+
+      echo "{\"color\": \"$BADGE_COLOR\", \"message\": \"$BADGE_STATUS\"}" > security-badge-${SERVICE}.json
+  artifacts:
+    reports:
+      sast: gl-security-*.json
+    paths:
+      - trivy-*.json
+      - security-badge-*.json
+    expire_in: 1 week
+  allow_failure:
+    exit_codes: [1]
+  rules:
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_MERGE_REQUEST_IID
+    - if: $CI_COMMIT_TAG
+
+🔐 secrets-detection:
+  stage: 🔐 security
+  image: trufflesecurity/trufflehog:latest
+  script:
+    - |
+      echo "Running secrets detection..."
+      trufflehog git file://. \
+        --json \
+        --exclude-paths=.truffleexclude \
+        > secrets-report.json || true
+
+      # Check if any secrets were found
+      if [ -s secrets-report.json ] && [ "$(cat secrets-report.json | wc -l)" -gt 0 ]; then
+        echo "⚠️  Potential secrets detected:"
+        cat secrets-report.json
+        exit 1
+      else
+        echo "✅ No secrets detected"
+      fi
+  artifacts:
+    paths:
+      - secrets-report.json
+    when: always
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_MERGE_REQUEST_IID
+
+# ============================================
+# PERFORMANCE STAGE
+# ============================================
+⚡ performance-tests:
+  stage: ⚡ performance
+  needs: ["🧪 integration-tests"]
+  image: grafana/k6:latest
+  services:
+    - docker:28-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: /certs/client
+  before_script:
+    - apk add --no-cache docker-compose curl
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+  script:
+    - |
+      echo "Starting performance testing environment..."
+
+      # Start services for performance testing
+      export IMAGE_TAG=${CI_COMMIT_SHA}
+      docker compose -f infrastructure/docker/docker-compose.dev.yml up -d --wait --timeout 300
+
+      # Wait for services
+      timeout 300 bash -c '
+        while ! curl -f http://docker:8009/health; do
+          echo "Waiting for services to be ready..."
+          sleep 10
+        done
+      '
+
+      # Create k6 performance test
+      cat << 'EOF' > performance-test.js
+      import http from 'k6/http';
+      import { check, sleep } from 'k6';
+
+      export const options = {
+        stages: [
+          { duration: '1m', target: 10 },
+          { duration: '3m', target: 10 },
+          { duration: '1m', target: 30 },
+          { duration: '3m', target: 30 },
+          { duration: '1m', target: 0 },
+        ],
+        thresholds: {
+          http_req_duration: ['p(95)<1000'],
+          http_req_failed: ['rate<0.05'],
+        },
+      };
+
+      export default function() {
+        const responses = http.batch([
+          ['GET', 'http://docker:8009/health'],
+          ['GET', 'http://docker:5179/'],
+          ['GET', 'http://docker:8009/api/v1/health'],
+        ]);
+
+        responses.forEach((res) => {
+          check(res, {
+            'status is 200': (r) => r.status === 200,
+            'response time < 1000ms': (r) => r.timings.duration < 1000,
+          });
+        });
+
+        sleep(1);
+      }
+      EOF
+
+      # Run performance tests
+      k6 run --out json=performance-results.json performance-test.js
+
+      echo "Performance testing completed"
+  after_script:
+    - docker compose -f infrastructure/docker/docker-compose.dev.yml down -v || true
+  artifacts:
+    paths:
+      - performance-results.json
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "staging"
+    - when: manual
+
+# ============================================
+# DEPLOY STAGE
+# ============================================
+🚀 deploy-staging:
+  stage: 🚀 deploy
+  needs: ["🧪 integration-tests", "🔐 security-scan"]
+  environment:
+    name: staging
+    url: https://staging.toolboxai.solutions
+    deployment_tier: staging
+  variables:
+    DEPLOY_ENV: "staging"
+  before_script:
+    - |
+      # Install SSH and deployment tools
+      apk add --no-cache openssh-client curl
+      eval $(ssh-agent -s)
+      echo "$STAGING_SSH_KEY" | tr -d '\r' | ssh-add -
+      mkdir -p ~/.ssh
+      chmod 700 ~/.ssh
+      ssh-keyscan -H "$STAGING_HOST" >> ~/.ssh/known_hosts
+  script:
+    - |
+      echo "Deploying to staging environment..."
+
+      ssh $STAGING_USER@$STAGING_HOST << EOF
+        set -e
+        cd /opt/toolboxai-staging
+
+        # Backup current deployment
+        docker compose -f infrastructure/docker/docker-compose.staging.yml down || true
+        docker tag toolboxai/fastapi-main:latest toolboxai/fastapi-main:backup-\$(date +%Y%m%d-%H%M%S) || true
+
+        # Update to new version
+        export IMAGE_TAG=${CI_COMMIT_SHA}
+
+        # Pull new images
+        docker compose -f infrastructure/docker/docker-compose.staging.yml pull
+
+        # Deploy new version
+        docker compose -f infrastructure/docker/docker-compose.staging.yml up -d --wait --timeout 600
+
+        # Health check
+        timeout 300 bash -c '
+          while ! curl -f https://staging.toolboxai.solutions/health; do
+            echo "Waiting for staging deployment..."
+            sleep 10
+          done
+        '
+
+        echo "Staging deployment successful!"
+      EOF
+
+      # Verify deployment
+      sleep 30
+      curl -f https://staging.toolboxai.solutions/health
+
+      echo "Staging deployment verified successfully"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "staging"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - when: manual
+
+🚀 deploy-production:
+  stage: 🚀 deploy
+  needs: ["🧪 integration-tests", "🔐 security-scan", "⚡ performance-tests"]
+  environment:
+    name: production
+    url: https://toolboxai.solutions
+    deployment_tier: production
+  variables:
+    DEPLOY_ENV: "production"
+  before_script:
+    - |
+      # Install SSH and deployment tools
+      apk add --no-cache openssh-client curl jq
+      eval $(ssh-agent -s)
+      echo "$PRODUCTION_SSH_KEY" | tr -d '\r' | ssh-add -
+      mkdir -p ~/.ssh
+      chmod 700 ~/.ssh
+      ssh-keyscan -H "$PRODUCTION_HOST" >> ~/.ssh/known_hosts
+  script:
+    - |
+      echo "Deploying to production environment (Blue-Green)..."
+
+      ssh $PRODUCTION_USER@$PRODUCTION_HOST << EOF
+        set -e
+        cd /opt/toolboxai-production
+
+        # Determine current environment
+        CURRENT_ENV=\$(cat current_env.txt 2>/dev/null || echo "blue")
+        if [ "\$CURRENT_ENV" = "blue" ]; then
+          NEW_ENV="green"
+        else
+          NEW_ENV="blue"
+        fi
+
+        echo "Deploying to \$NEW_ENV environment..."
+
+        # Deploy to new environment
+        export DEPLOY_ENV=\$NEW_ENV
+        export IMAGE_TAG=${CI_COMMIT_SHA}
+
+        # Pull new images
+        docker compose -f infrastructure/docker/docker-compose.prod-\${NEW_ENV}.yml pull
+
+        # Start new environment
+        docker compose -f infrastructure/docker/docker-compose.prod-\${NEW_ENV}.yml up -d --wait --timeout 600
+
+        # Health check new environment
+        PORT=\$([ "\$NEW_ENV" = "blue" ] && echo "8080" || echo "8081")
+        timeout 300 bash -c "
+          while ! curl -f http://localhost:\$PORT/health; do
+            echo 'Waiting for \$NEW_ENV environment...'
+            sleep 10
+          done
+        "
+
+        # Switch traffic (update load balancer)
+        ./scripts/switch-traffic.sh \$NEW_ENV
+
+        # Wait and verify
+        sleep 60
+        curl -f https://toolboxai.solutions/health
+
+        # Mark new environment as current
+        echo "\$NEW_ENV" > current_env.txt
+
+        # Stop old environment
+        OLD_ENV=\$CURRENT_ENV
+        docker compose -f infrastructure/docker/docker-compose.prod-\${OLD_ENV}.yml down
+
+        echo "Production deployment successful! Active environment: \$NEW_ENV"
+      EOF
+
+      # Final verification
+      sleep 30
+      curl -f https://toolboxai.solutions/health
+
+      echo "Production deployment verified successfully"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG
+    - when: manual
+
+# ============================================
+# VERIFICATION STAGE
+# ============================================
+✅ post-deploy-verify:
+  stage: ✅ verify
+  needs: ["🚀 deploy-staging", "🚀 deploy-production"]
+  when: always
+  script:
+    - |
+      echo "Running post-deployment verification..."
+
+      # Verify staging if deployed
+      if [ "$CI_JOB_STATUS" = "success" ] && curl -f https://staging.toolboxai.solutions/health >/dev/null 2>&1; then
+        echo "✅ Staging environment is healthy"
+
+        # Run smoke tests on staging
+        curl -f https://staging.toolboxai.solutions/api/v1/health
+        echo "✅ Staging API endpoints are responding"
+      fi
+
+      # Verify production if deployed
+      if [ "$CI_JOB_STATUS" = "success" ] && curl -f https://toolboxai.solutions/health >/dev/null 2>&1; then
+        echo "✅ Production environment is healthy"
+
+        # Run smoke tests on production
+        curl -f https://toolboxai.solutions/api/v1/health
+        echo "✅ Production API endpoints are responding"
+      fi
+
+      echo "Post-deployment verification completed"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "staging"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG
+
+# ============================================
+# CLEANUP STAGE
+# ============================================
+🧹 cleanup:
+  stage: 🧹 cleanup
+  when: always
+  script:
+    - |
+      echo "Performing cleanup tasks..."
+
+      # Clean up Docker build cache
+      docker builder prune -f --filter "until=24h" || true
+      docker image prune -f --filter "until=24h" || true
+
+      # Clean up old images in registry (keep last 10)
+      echo "Registry cleanup would be performed here (manual process)"
+
+      # Generate pipeline summary
+      echo "## 🚀 Pipeline Summary" > pipeline-summary.md
+      echo "- **Commit**: $CI_COMMIT_SHA" >> pipeline-summary.md
+      echo "- **Branch**: $CI_COMMIT_BRANCH" >> pipeline-summary.md
+      echo "- **Environment**: $ENVIRONMENT" >> pipeline-summary.md
+      echo "- **Pipeline ID**: $CI_PIPELINE_ID" >> pipeline-summary.md
+      echo "- **Build Duration**: $CI_JOB_STARTED_AT to $(date)" >> pipeline-summary.md
+
+      echo "Cleanup completed successfully"
+  artifacts:
+    paths:
+      - pipeline-summary.md
+    expire_in: 1 month
+  rules:
+    - when: always
+
+# ============================================
+# MANUAL ROLLBACK JOB
+# ============================================
+🔄 rollback-production:
+  stage: 🚀 deploy
+  when: manual
+  allow_failure: false
+  environment:
+    name: production
+    url: https://toolboxai.solutions
+    action: rollback
+  before_script:
+    - |
+      apk add --no-cache openssh-client curl
+      eval $(ssh-agent -s)
+      echo "$PRODUCTION_SSH_KEY" | tr -d '\r' | ssh-add -
+      mkdir -p ~/.ssh
+      chmod 700 ~/.ssh
+      ssh-keyscan -H "$PRODUCTION_HOST" >> ~/.ssh/known_hosts
+  script:
+    - |
+      echo "Initiating production rollback..."
+
+      ssh $PRODUCTION_USER@$PRODUCTION_HOST << EOF
+        set -e
+        cd /opt/toolboxai-production
+
+        # Get current environment
+        CURRENT_ENV=\$(cat current_env.txt 2>/dev/null || echo "blue")
+
+        # Switch to previous environment
+        PREVIOUS_ENV=\$([ "\$CURRENT_ENV" = "blue" ] && echo "green" || echo "blue")
+
+        echo "Rolling back from \$CURRENT_ENV to \$PREVIOUS_ENV..."
+
+        # Ensure previous environment is running
+        docker compose -f infrastructure/docker/docker-compose.prod-\${PREVIOUS_ENV}.yml up -d --wait
+
+        # Switch traffic
+        ./scripts/switch-traffic.sh \$PREVIOUS_ENV
+
+        # Update current environment marker
+        echo "\$PREVIOUS_ENV" > current_env.txt
+
+        # Stop failed environment
+        docker compose -f infrastructure/docker/docker-compose.prod-\${CURRENT_ENV}.yml down
+
+        echo "Rollback completed successfully to \$PREVIOUS_ENV"
+      EOF
+
+      # Verify rollback
+      sleep 30
+      curl -f https://toolboxai.solutions/health
+
+      echo "Production rollback verified successfully"
+  rules:
+    - when: manual

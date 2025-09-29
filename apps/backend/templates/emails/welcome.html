@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to {{ app_name }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 150px;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 28px;
+        }
+        .welcome-message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .features {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        .feature-list li:before {
+            content: "✓ ";
+            color: #4CAF50;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .cta-button:hover {
+            background-color: #45a049;
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .footer {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .footer a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        .social-links {
+            margin: 20px 0;
+        }
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #666;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ app_name }}</h1>
+            <p style="color: #666; margin: 5px 0;">Educational AI Platform</p>
+        </div>
+
+        <div class="welcome-message">
+            <h2 style="margin: 0;">Welcome, {{ user_name }}! 🎉</h2>
+            <p style="margin: 10px 0 0 0;">Your account has been successfully created</p>
+        </div>
+
+        <p>Dear {{ user_name }},</p>
+
+        <p>Thank you for joining <strong>{{ app_name }}</strong>! We're thrilled to have you as part of our growing community of educators and learners leveraging AI to enhance education.</p>
+
+        {% if verification_url %}
+        <div class="button-container">
+            <p><strong>Please verify your email address to activate your account:</strong></p>
+            <a href="{{ verification_url }}" class="cta-button">Verify Email Address</a>
+            <p style="font-size: 12px; color: #666;">
+                Or copy and paste this link into your browser:<br>
+                <span style="word-break: break-all;">{{ verification_url }}</span>
+            </p>
+        </div>
+        {% endif %}
+
+        <div class="features">
+            <h3 style="margin-top: 0;">🚀 What you can do with {{ app_name }}:</h3>
+            <ul class="feature-list">
+                {% for feature in features %}
+                <li>{{ feature }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div style="background-color: #fff9c4; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #f57c00;">🎁 Special Offer</h3>
+            <p>As a new member, you get a <strong>14-day free trial</strong> of our Professional plan. No credit card required!</p>
+        </div>
+
+        <div class="button-container">
+            <a href="{{ app_url }}/dashboard" class="cta-button" style="background-color: #667eea;">
+                Go to Dashboard
+            </a>
+        </div>
+
+        <div style="margin: 30px 0;">
+            <h3>📚 Getting Started Resources:</h3>
+            <ul style="line-height: 2;">
+                <li><a href="{{ app_url }}/docs/getting-started" style="color: #4CAF50;">Getting Started Guide</a></li>
+                <li><a href="{{ app_url }}/docs/tutorials" style="color: #4CAF50;">Video Tutorials</a></li>
+                <li><a href="{{ app_url }}/community" style="color: #4CAF50;">Community Forum</a></li>
+                <li><a href="{{ app_url }}/support" style="color: #4CAF50;">Support Center</a></li>
+            </ul>
+        </div>
+
+        <div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0;"><strong>Need help?</strong> Our support team is here for you!</p>
+            <p style="margin: 5px 0;">Email us at <a href="mailto:{{ support_email }}" style="color: #2196f3;">{{ support_email }}</a></p>
+        </div>
+
+        <div class="footer">
+            <div class="social-links">
+                <a href="#">Twitter</a> |
+                <a href="#">LinkedIn</a> |
+                <a href="#">Facebook</a> |
+                <a href="#">YouTube</a>
+            </div>
+
+            <p>
+                © {{ current_year }} {{ app_name }}. All rights reserved.<br>
+                <a href="{{ app_url }}/privacy">Privacy Policy</a> |
+                <a href="{{ app_url }}/terms">Terms of Service</a>
+            </p>
+
+            <p style="margin-top: 20px;">
+                You received this email because you signed up for {{ app_name }}.<br>
+                <a href="{{ unsubscribe_url }}">Unsubscribe</a> from our emails.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

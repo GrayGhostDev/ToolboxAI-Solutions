@@ -1,0 +1,52 @@
+{
+  "organization": "toolboxai",
+  "repositories": [
+    {
+      "name": "dashboard",
+      "description": "ToolboxAI Dashboard Frontend - React 18 + Mantine v8 + Pusher",
+      "full_description": "# ToolboxAI Dashboard Frontend\n\nModern educational platform dashboard built with:\n\n## Features\n- **React 18** with TypeScript\n- **Mantine v8.3.1** UI components\n- **Pusher** real-time communication\n- **Nginx** production server\n- **Multi-service integration**\n\n## Quick Start\n```bash\ndocker run -p 5180:80 \\\n  -e VITE_PUSHER_KEY=your_key \\\n  -e VITE_API_BASE_URL=http://backend:8009 \\\n  toolboxai/dashboard:latest\n```\n\n## Environment Variables\n- `VITE_PUSHER_KEY`: Pusher application key (required)\n- `VITE_PUSHER_CLUSTER`: Pusher cluster (default: us2)\n- `VITE_API_BASE_URL`: Backend API URL\n- `VITE_ENABLE_PUSHER`: Enable real-time features (default: true)\n\n## Documentation\n- [Setup Guide](https://docs.toolboxai.solutions/setup)\n- [API Documentation](https://docs.toolboxai.solutions/api)\n- [Integration Guide](https://docs.toolboxai.solutions/integrations)\n\n## Support\n- GitHub: https://github.com/ToolBoxAI-Solutions/toolboxai\n- Issues: https://github.com/ToolBoxAI-Solutions/toolboxai/issues\n- Docs: https://docs.toolboxai.solutions",
+      "is_private": false,
+      "tags": ["react", "typescript", "mantine", "pusher", "education", "ai", "dashboard", "nginx"]
+    },
+    {
+      "name": "backend",
+      "description": "ToolboxAI Backend API - FastAPI + Pusher + AI Services Integration",
+      "full_description": "# ToolboxAI Backend API\n\nComprehensive backend service for educational AI platform:\n\n## Features\n- **FastAPI** with Python 3.12\n- **Pusher** server integration\n- **PostgreSQL** database\n- **Redis** caching\n- **JWT** authentication\n- **AI service coordination**\n- **Educational content API**\n\n## Quick Start\n```bash\ndocker run -p 8009:8009 \\\n  -e DATABASE_URL=postgresql://user:pass@db:5432/toolboxai \\\n  -e REDIS_URL=redis://redis:6379 \\\n  -e PUSHER_KEY=your_pusher_key \\\n  toolboxai/backend:latest\n```\n\n## Environment Variables\n- `DATABASE_URL`: PostgreSQL connection string\n- `REDIS_URL`: Redis connection string\n- `PUSHER_KEY`: Pusher application key\n- `PUSHER_SECRET`: Pusher application secret\n- `JWT_SECRET`: JWT signing secret\n\n## API Documentation\nInteractive API docs available at `/docs` endpoint when running.\n\n## Health Checks\n- Health endpoint: `/health`\n- Database status: `/health/db`\n- Redis status: `/health/redis`",
+      "is_private": false,
+      "tags": ["fastapi", "python", "pusher", "postgresql", "redis", "ai", "education", "api"]
+    },
+    {
+      "name": "mcp-server",
+      "description": "ToolboxAI MCP Server - Model Context Protocol for AI coordination",
+      "full_description": "# ToolboxAI MCP Server\n\nModel Context Protocol server for AI model coordination:\n\n## Features\n- **MCP Protocol** implementation\n- **Multi-model** support\n- **Context management**\n- **Performance monitoring**\n- **Real-time updates**\n\n## Quick Start\n```bash\ndocker run -p 9877:9877 \\\n  -e DATABASE_URL=postgresql://user:pass@db:5432/toolboxai \\\n  toolboxai/mcp-server:latest\n```\n\n## Integration\nDesigned to work with ToolboxAI dashboard and agent coordinator for seamless AI model management.",
+      "is_private": false,
+      "tags": ["mcp", "ai", "python", "model-context-protocol", "coordination"]
+    },
+    {
+      "name": "agent-coordinator",
+      "description": "ToolboxAI Agent Coordinator - AI agent orchestration and task management",
+      "full_description": "# ToolboxAI Agent Coordinator\n\nAI agent orchestration service:\n\n## Features\n- **Agent management**\n- **Task distribution**\n- **Real-time monitoring**\n- **Result aggregation**\n- **Performance tracking**\n\n## Quick Start\n```bash\ndocker run -p 8888:8888 \\\n  -e MCP_SERVER_URL=http://mcp-server:9877 \\\n  -e DATABASE_URL=postgresql://user:pass@db:5432/toolboxai \\\n  toolboxai/agent-coordinator:latest\n```",
+      "is_private": false,
+      "tags": ["ai", "agents", "orchestration", "python", "langchain"]
+    },
+    {
+      "name": "roblox-bridge",
+      "description": "ToolboxAI Roblox Bridge - Educational game integration service",
+      "full_description": "# ToolboxAI Roblox Bridge\n\nRoblox integration for educational gaming:\n\n## Features\n- **Roblox Studio** integration\n- **Student progress** tracking\n- **Educational content** sync\n- **Real-time events**\n- **Game session** management\n\n## Quick Start\n```bash\ndocker run -p 5001:5001 \\\n  -e DATABASE_URL=postgresql://user:pass@db:5432/toolboxai \\\n  toolboxai/roblox-bridge:latest\n```",
+      "is_private": false,
+      "tags": ["roblox", "education", "gaming", "flask", "integration"]
+    }
+  ],
+  "build_settings": {
+    "auto_build": true,
+    "build_on_push": true,
+    "dockerfile_location": "infrastructure/docker/dockerfiles/",
+    "build_context": ".",
+    "cache_enabled": true
+  },
+  "security_settings": {
+    "vulnerability_scanning": true,
+    "image_signing": true,
+    "access_control": "public"
+  }
+}

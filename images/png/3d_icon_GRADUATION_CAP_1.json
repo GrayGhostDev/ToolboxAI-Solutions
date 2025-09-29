@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/stuudy-3d-icons_NjhhMjYzMmIyMzI4MmUwMDM5ZDY0Yzlj/PNG/GRADUATION_CAP_1.png",
+  "file_name": "GRADUATION_CAP_1.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 3000,
+      "height": 3000,
+      "total_pixels": 9000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 28773,
+      "most_common": [
+        [
+          1,
+          [
+            36,
+            36,
+            36,
+            134
+          ]
+        ],
+        [
+          1,
+          [
+            124,
+            124,
+            123,
+            213
+          ]
+        ],
+        [
+          1,
+          [
+            108,
+            108,
+            108,
+            246
+          ]
+        ],
+        [
+          1,
+          [
+            97,
+            97,
+            98,
+            211
+          ]
+        ],
+        [
+          1,
+          [
+            98,
+            98,
+            98,
+            147
+          ]
+        ],
+        [
+          1,
+          [
+            59,
+            59,
+            59,
+            208
+          ]
+        ],
+        [
+          1,
+          [
+            59,
+            57,
+            59,
+            64
+          ]
+        ],
+        [
+          1,
+          [
+            58,
+            56,
+            57,
+            132
+          ]
+        ],
+        [
+          1,
+          [
+            57,
+            56,
+            57,
+            164
+          ]
+        ],
+        [
+          1,
+          [
+            88,
+            88,
+            88,
+            185
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 17628
+      },
+      {
+        "color": [
+          106,
+          106,
+          106,
+          255
+        ],
+        "frequency": 82
+      },
+      {
+        "color": [
+          123,
+          123,
+          123,
+          255
+        ],
+        "frequency": 80
+      },
+      {
+        "color": [
+          124,
+          124,
+          124,
+          255
+        ],
+        "frequency": 76
+      },
+      {
+        "color": [
+          107,
+          107,
+          107,
+          255
+        ],
+        "frequency": 74
+      }
+    ]
+  }
+}

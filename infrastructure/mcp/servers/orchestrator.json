@@ -1,0 +1,189 @@
+{
+  "name": "ToolboxAI-Orchestrator-Server",
+  "type": "orchestrator",
+  "version": "1.0.0",
+  "description": "Main orchestrator server for coordinating MCP agents and task distribution",
+  "configuration": {
+    "host": "0.0.0.0",
+    "port": 9877,
+    "protocol": "websocket",
+    "authentication": {
+      "enabled": true,
+      "type": "jwt",
+      "algorithm": "HS256",
+      "expiry": 86400
+    },
+    "redis": {
+      "host": "${REDIS_HOST}",
+      "port": 6379,
+      "password": "${REDIS_PASSWORD}",
+      "db": 0,
+      "keyPrefix": "mcp:orchestrator:"
+    },
+    "taskQueue": {
+      "maxRetries": 3,
+      "retryDelay": 5000,
+      "taskTimeout": 300000,
+      "priorityLevels": ["critical", "high", "normal", "low"],
+      "defaultPriority": "normal"
+    },
+    "agents": {
+      "discovery": {
+        "enabled": true,
+        "interval": 30000,
+        "timeout": 5000
+      },
+      "healthCheck": {
+        "enabled": true,
+        "interval": 60000,
+        "timeout": 10000,
+        "unhealthyThreshold": 3
+      },
+      "loadBalancing": {
+        "strategy": "round-robin",
+        "stickySession": false,
+        "sessionTimeout": 3600
+      }
+    },
+    "capabilities": {
+      "taskTypes": [
+        "content-generation",
+        "quiz-creation",
+        "terrain-generation",
+        "script-generation",
+        "content-review",
+        "orchestration"
+      ],
+      "maxConcurrentTasks": 50,
+      "taskQueueSize": 1000
+    },
+    "monitoring": {
+      "metrics": {
+        "enabled": true,
+        "port": 9090,
+        "path": "/metrics"
+      },
+      "logging": {
+        "level": "${LOG_LEVEL:-info}",
+        "format": "json",
+        "destination": "stdout"
+      },
+      "tracing": {
+        "enabled": true,
+        "service": "mcp-orchestrator",
+        "endpoint": "${JAEGER_ENDPOINT}"
+      }
+    },
+    "scaling": {
+      "autoScale": true,
+      "minReplicas": 1,
+      "maxReplicas": 5,
+      "targetCPU": 70,
+      "targetMemory": 80,
+      "scaleUpCooldown": 60,
+      "scaleDownCooldown": 300
+    }
+  },
+  "resources": [
+    {
+      "name": "task-registry",
+      "type": "database",
+      "uri": "dynamodb://mcp-production-tasks"
+    },
+    {
+      "name": "agent-registry",
+      "type": "database",
+      "uri": "dynamodb://mcp-production-agents"
+    },
+    {
+      "name": "workflow-definitions",
+      "type": "storage",
+      "uri": "s3://mcp-production-workflows"
+    }
+  ],
+  "tools": [
+    {
+      "name": "create_task",
+      "description": "Create a new task for agent processing",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string" },
+          "payload": { "type": "object" },
+          "priority": { "type": "string" },
+          "timeout": { "type": "number" }
+        },
+        "required": ["type", "payload"]
+      }
+    },
+    {
+      "name": "get_task_status",
+      "description": "Get the status of a task",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "taskId": { "type": "string" }
+        },
+        "required": ["taskId"]
+      }
+    },
+    {
+      "name": "cancel_task",
+      "description": "Cancel a running or pending task",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "taskId": { "type": "string" },
+          "reason": { "type": "string" }
+        },
+        "required": ["taskId"]
+      }
+    },
+    {
+      "name": "list_agents",
+      "description": "List all registered agents and their status",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "filter": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "get_metrics",
+      "description": "Get orchestrator metrics and statistics",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "period": { "type": "string" },
+          "metrics": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  ],
+  "prompts": [
+    {
+      "name": "task_distribution",
+      "description": "Analyze task and determine optimal agent assignment",
+      "arguments": [
+        {
+          "name": "task",
+          "description": "Task details to analyze",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "workflow_optimization",
+      "description": "Optimize workflow execution plan",
+      "arguments": [
+        {
+          "name": "workflow",
+          "description": "Workflow definition to optimize",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

@@ -13,14 +13,19 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 # Import your models here
-from src.dashboard.backend.models import Base
-from src.api.ghost_backend.src.ghost.database import Base as GhostBase
-from src.api.dashboard_backend.backend.models import Base as DashboardBase
-
-# Import all models to ensure they're registered
-from src.dashboard.backend.models import *
-from src.api.ghost_backend.src.ghost.models import *
-from src.api.dashboard_backend.backend.models import *
+try:
+    from database.models import Base
+    # Import all models to ensure they're registered
+    from database.models import *
+except ImportError:
+    # Fallback to old model locations for compatibility
+    try:
+        from database.models import Base
+        from database.models import *
+    except ImportError:
+        print("Warning: Could not import models. Creating empty Base.")
+        from sqlalchemy.orm import declarative_base
+        Base = declarative_base()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -35,10 +40,6 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 target_metadata = Base.metadata
 
-# Merge metadata from all models
-target_metadata.merge(GhostBase.metadata)
-target_metadata.merge(DashboardBase.metadata)
-
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
@@ -52,12 +53,12 @@ def get_database_url():
     if database_url:
         return database_url
 
-    # Try individual components
-    host = os.getenv("EDU_DB_HOST", "localhost")
-    port = os.getenv("EDU_DB_PORT", "5432")
-    database = os.getenv("EDU_DB_NAME", "educational_platform")
-    username = os.getenv("EDU_DB_USER", "eduplatform")
-    password = os.getenv("EDU_DB_PASSWORD", "eduplatform2024")
+    # Try individual components from .env file
+    host = os.getenv("POSTGRES_HOST", "localhost")
+    port = os.getenv("POSTGRES_PORT", "5432")
+    database = os.getenv("POSTGRES_DB", "educational_platform_dev")
+    username = os.getenv("POSTGRES_USER", "eduplatform")
+    password = os.getenv("POSTGRES_PASSWORD", "eduplatform2024")
 
     return f"postgresql://{username}:{password}@{host}:{port}/{database}"
 

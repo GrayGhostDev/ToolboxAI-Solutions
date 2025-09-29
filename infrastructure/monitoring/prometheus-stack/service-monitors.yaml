@@ -1,0 +1,289 @@
+# Service Monitors for ToolBoxAI Applications
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: toolboxai-backend
+  namespace: monitoring
+  labels:
+    monitoring: prometheus
+    app: backend
+spec:
+  namespaceSelector:
+    matchNames:
+      - toolboxai-prod
+  selector:
+    matchLabels:
+      app: backend
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+      scheme: http
+      relabelings:
+        - sourceLabels: [__address__]
+          targetLabel: instance
+          replacement: backend
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          targetLabel: node
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+      metricRelabelings:
+        - sourceLabels: [__name__]
+          regex: 'go_.*'
+          action: drop
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: toolboxai-dashboard
+  namespace: monitoring
+  labels:
+    monitoring: prometheus
+    app: dashboard
+spec:
+  namespaceSelector:
+    matchNames:
+      - toolboxai-prod
+  selector:
+    matchLabels:
+      app: dashboard
+  endpoints:
+    - port: http
+      interval: 30s
+      path: /api/metrics
+      scheme: http
+      relabelings:
+        - sourceLabels: [__address__]
+          targetLabel: instance
+          replacement: dashboard
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgresql
+  namespace: monitoring
+  labels:
+    monitoring: prometheus
+    app: postgresql
+spec:
+  namespaceSelector:
+    matchNames:
+      - database
+  selector:
+    matchLabels:
+      app: postgresql
+  endpoints:
+    - port: metrics
+      interval: 60s
+      path: /metrics
+      scheme: http
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_label_role]
+          targetLabel: role
+        - sourceLabels: [__meta_kubernetes_pod_label_cluster]
+          targetLabel: cluster
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: redis
+  namespace: monitoring
+  labels:
+    monitoring: prometheus
+    app: redis
+spec:
+  namespaceSelector:
+    matchNames:
+      - cache
+  selector:
+    matchLabels:
+      app: redis
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+      scheme: http
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: nginx-ingress
+  namespace: monitoring
+  labels:
+    monitoring: prometheus
+    app: nginx-ingress
+spec:
+  namespaceSelector:
+    matchNames:
+      - ingress-nginx
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ingress-nginx
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+      scheme: http
+---
+# Pod Monitor for Jobs and CronJobs
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: toolboxai-jobs
+  namespace: monitoring
+  labels:
+    monitoring: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - toolboxai-prod
+  selector:
+    matchLabels:
+      monitoring: enabled
+  podMetricsEndpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+---
+# Probe for External Endpoints
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: toolboxai-external
+  namespace: monitoring
+  labels:
+    monitoring: prometheus
+spec:
+  interval: 60s
+  module: http_2xx
+  prober:
+    url: blackbox-exporter:9115
+  targets:
+    staticConfig:
+      static:
+        - https://app.toolboxai.solutions
+        - https://api.toolboxai.solutions
+        - https://cdn.toolboxai.solutions
+      labels:
+        environment: production
+        type: external
+---
+# Custom Metrics for AI/ML Operations
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-metrics-config
+  namespace: monitoring
+data:
+  metrics.yaml: |
+    # AI Model Metrics
+    - name: model_inference_duration
+      help: "Duration of model inference in seconds"
+      type: histogram
+      labels:
+        - model_name
+        - model_version
+        - environment
+
+    - name: model_accuracy
+      help: "Model accuracy score"
+      type: gauge
+      labels:
+        - model_name
+        - model_version
+        - dataset
+
+    - name: content_generation_requests
+      help: "Number of content generation requests"
+      type: counter
+      labels:
+        - content_type
+        - user_tier
+        - status
+
+    - name: token_usage
+      help: "Token usage for LLM operations"
+      type: counter
+      labels:
+        - model
+        - operation
+        - user_id
+
+    # Compliance Metrics
+    - name: data_processing_compliance
+      help: "Data processing compliance status"
+      type: gauge
+      labels:
+        - regulation
+        - data_type
+        - status
+
+    - name: user_consent_status
+      help: "User consent tracking"
+      type: gauge
+      labels:
+        - consent_type
+        - user_category
+        - granted
+
+    - name: audit_events
+      help: "Audit events counter"
+      type: counter
+      labels:
+        - event_type
+        - severity
+        - compliance_requirement
+
+    # Educational Platform Metrics
+    - name: student_engagement
+      help: "Student engagement metrics"
+      type: gauge
+      labels:
+        - activity_type
+        - grade_level
+        - subject
+
+    - name: lesson_completion_rate
+      help: "Lesson completion rate"
+      type: gauge
+      labels:
+        - lesson_id
+        - difficulty
+        - subject
+
+    - name: assessment_scores
+      help: "Assessment score distribution"
+      type: histogram
+      labels:
+        - assessment_type
+        - grade_level
+        - subject
+---
+# ServiceMonitor for Custom Exporter
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: toolboxai-custom-metrics
+  namespace: monitoring
+  labels:
+    monitoring: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - toolboxai-prod
+  selector:
+    matchLabels:
+      app: custom-metrics-exporter
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+      scheme: http
+      honorLabels: true
+      metricRelabelings:
+        # Keep only specific custom metrics
+        - sourceLabels: [__name__]
+          regex: '(model_.*|content_.*|token_.*|data_processing_.*|user_consent_.*|audit_.*|student_.*|lesson_.*|assessment_.*)'
+          action: keep

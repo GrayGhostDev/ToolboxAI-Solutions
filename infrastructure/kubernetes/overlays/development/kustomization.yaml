@@ -1,0 +1,144 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: toolboxai-development
+  annotations:
+    config.kubernetes.io/local-config: "true"
+
+# Base
+resources:
+- ../../base
+
+# Namespace override
+namespace: toolboxai-dev
+
+# Name Prefix
+namePrefix: dev-
+
+# Common Labels
+labels:
+- pairs:
+    environment: development
+    tier: dev
+
+# Common Annotations
+commonAnnotations:
+  environment: development
+  managed-by: kustomize
+  contact: devops@toolboxai.solutions
+
+# Image Tags for Development
+images:
+- name: ghcr.io/toolboxai-solutions/backend
+  newTag: dev-latest
+- name: postgres
+  newTag: 15-alpine
+- name: redis
+  newTag: 7-alpine
+
+# Resource Adjustments for Development
+replicas:
+- name: backend
+  count: 1
+- name: redis
+  count: 1
+
+# Patches for Development
+patches:
+- path: config-patch.yaml
+- path: resource-patch.yaml
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: backend
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/cpu
+      value: "100m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: "256Mi"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/cpu
+      value: "500m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: "512Mi"
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: redis
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/cpu
+      value: "50m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: "64Mi"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/cpu
+      value: "200m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: "128Mi"
+- target:
+    group: apps
+    version: v1
+    kind: StatefulSet
+    name: postgres
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/cpu
+      value: "200m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: "512Mi"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/cpu
+      value: "1000m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: "1Gi"
+- target:
+    group: ""
+    version: v1
+    kind: PersistentVolumeClaim
+    name: agent-data
+  patch: |-
+    - op: replace
+      path: /spec/resources/requests/storage
+      value: "5Gi"
+- target:
+    group: ""
+    version: v1
+    kind: PersistentVolumeClaim
+    name: redis-data
+  patch: |-
+    - op: replace
+      path: /spec/resources/requests/storage
+      value: "2Gi"
+
+# ConfigMap Generators for Development
+configMapGenerator:
+- name: dev-config
+  literals:
+  - ENVIRONMENT=development
+  - LOG_LEVEL=debug
+  - DEBUG=true
+  - CACHE_TTL=60
+  - RATE_LIMIT_PER_MINUTE=1000
+  - DATABASE_POOL_SIZE=5
+  - REDIS_POOL_SIZE=5
+
+# Secret Generators for Development (with dummy values)
+secretGenerator:
+- name: dev-secrets
+  literals:
+  - DATABASE_PASSWORD=dev_password_123
+  - REDIS_PASSWORD=dev_redis_123
+  - JWT_SECRET_KEY=dev_jwt_secret_key_for_development_only
+  - OPENAI_API_KEY=sk-dev-key-for-development
+  type: Opaque

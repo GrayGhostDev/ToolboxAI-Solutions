@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/stuudy-3d-icons_NjhhMjYzMmIyMzI4MmUwMDM5ZDY0Yzlj/PNG/BASKETBALL_2.png",
+  "file_name": "BASKETBALL_2.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 3000,
+      "height": 3000,
+      "total_pixels": 9000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 89982,
+      "most_common": [
+        [
+          1,
+          [
+            240,
+            163,
+            125,
+            147
+          ]
+        ],
+        [
+          1,
+          [
+            239,
+            159,
+            118,
+            48
+          ]
+        ],
+        [
+          1,
+          [
+            241,
+            160,
+            119,
+            192
+          ]
+        ],
+        [
+          1,
+          [
+            240,
+            158,
+            119,
+            176
+          ]
+        ],
+        [
+          1,
+          [
+            243,
+            161,
+            118,
+            112
+          ]
+        ],
+        [
+          1,
+          [
+            190,
+            104,
+            119,
+            176
+          ]
+        ],
+        [
+          1,
+          [
+            243,
+            161,
+            123,
+            245
+          ]
+        ],
+        [
+          1,
+          [
+            242,
+            162,
+            123,
+            5
+          ]
+        ],
+        [
+          1,
+          [
+            241,
+            162,
+            123,
+            213
+          ]
+        ],
+        [
+          1,
+          [
+            237,
+            144,
+            100,
+            240
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 7668
+      },
+      {
+        "color": [
+          248,
+          182,
+          133,
+          255
+        ],
+        "frequency": 73
+      },
+      {
+        "color": [
+          250,
+          191,
+          141,
+          255
+        ],
+        "frequency": 70
+      },
+      {
+        "color": [
+          248,
+          181,
+          132,
+          255
+        ],
+        "frequency": 70
+      },
+      {
+        "color": [
+          250,
+          191,
+          140,
+          255
+        ],
+        "frequency": 62
+      }
+    ]
+  }
+}

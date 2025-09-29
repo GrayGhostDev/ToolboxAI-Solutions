@@ -45,7 +45,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       
@@ -55,7 +55,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       
       - name: Cache Python dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
@@ -63,7 +63,7 @@ jobs:
             ${{ runner.os }}-pip-
       
       - name: Cache Node dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -84,8 +84,8 @@ jobs:
       - name: Run Python linting
         run: |
           pip install black flake8 mypy
-          black --check ToolboxAI-Roblox-Environment/
-          flake8 ToolboxAI-Roblox-Environment/ --max-line-length=120
+          black --check apps/backend/ core/ roblox/
+          flake8 apps/backend/ core/ roblox/ --max-line-length=120
       
       - name: Run Python tests
         env:
@@ -94,8 +94,8 @@ jobs:
           JWT_SECRET_KEY: test_secret_key
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          cd ToolboxAI-Roblox-Environment
-          pytest tests/ -v --cov=server --cov=agents --cov=mcp --cov-report=xml
+          cd .
+          pytest tests/ -v --cov=apps.backend --cov=core --cov-report=xml
       
       - name: Run JavaScript tests
         run: |
@@ -103,9 +103,9 @@ jobs:
           npm run test:ci
       
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
-          files: ./ToolboxAI-Roblox-Environment/coverage.xml
+          files: ./coverage.xml
           flags: backend
           name: backend-coverage
       
@@ -136,8 +136,8 @@ jobs:
       - name: Build and push API image
         uses: docker/build-push-action@v5
         with:
-          context: ./ToolboxAI-Roblox-Environment
-          file: ./ToolboxAI-Roblox-Environment/Dockerfile
+          context: .
+          file: ./infrastructure/docker/dockerfiles/backend-simple.Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/toolboxai-api:latest
@@ -236,10 +236,11 @@ jobs:
       
       - name: Notify Slack
         uses: 8398a7/action-slack@v3
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
         with:
           status: ${{ job.status }}
           text: 'Production deployment completed for version ${{ github.event.release.tag_name }}'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
         if: always()
 
   rollback:
@@ -270,7 +271,8 @@ jobs:
       
       - name: Notify Slack about rollback
         uses: 8398a7/action-slack@v3
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
         with:
           status: 'failure'
           text: 'Deployment failed and was rolled back!'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}

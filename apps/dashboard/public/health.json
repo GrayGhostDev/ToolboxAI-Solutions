@@ -1,0 +1,33 @@
+{
+  "status": "healthy",
+  "timestamp": "2025-09-21T08:00:00.000Z",
+  "service": "dashboard-frontend",
+  "version": "1.1.0",
+  "environment": "development",
+  "uptime_seconds": 0,
+  "dependencies": {
+    "backend_api": "unknown",
+    "websocket": "unknown"
+  },
+  "build_info": {
+    "build_time": "2025-09-21T08:00:00.000Z",
+    "node_version": "22.x",
+    "vite_version": "5.x"
+  },
+  "checks": {
+    "frontend_bundle": {
+      "healthy": true,
+      "details": {
+        "bundle_loaded": true,
+        "dependencies_resolved": true
+      }
+    },
+    "environment_config": {
+      "healthy": true,
+      "details": {
+        "api_url_configured": true,
+        "websocket_url_configured": true
+      }
+    }
+  }
+}

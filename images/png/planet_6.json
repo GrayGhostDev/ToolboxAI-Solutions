@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Planet/6.png",
+  "file_name": "6.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 33454,
+      "most_common": [
+        [
+          1008,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          16,
+          [
+            248,
+            207,
+            119,
+            208
+          ]
+        ],
+        [
+          16,
+          [
+            255,
+            255,
+            182,
+            35
+          ]
+        ],
+        [
+          12,
+          [
+            254,
+            242,
+            159,
+            193
+          ]
+        ],
+        [
+          16,
+          [
+            255,
+            240,
+            159,
+            241
+          ]
+        ],
+        [
+          12,
+          [
+            253,
+            247,
+            172,
+            160
+          ]
+        ],
+        [
+          12,
+          [
+            253,
+            246,
+            172,
+            240
+          ]
+        ],
+        [
+          16,
+          [
+            255,
+            255,
+            181,
+            83
+          ]
+        ],
+        [
+          16,
+          [
+            255,
+            254,
+            179,
+            179
+          ]
+        ],
+        [
+          16,
+          [
+            255,
+            249,
+            178,
+            83
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 12600
+      },
+      {
+        "color": [
+          255,
+          229,
+          144,
+          255
+        ],
+        "frequency": 14
+      },
+      {
+        "color": [
+          255,
+          220,
+          132,
+          255
+        ],
+        "frequency": 13
+      },
+      {
+        "color": [
+          255,
+          220,
+          130,
+          255
+        ],
+        "frequency": 12
+      },
+      {
+        "color": [
+          255,
+          225,
+          138,
+          255
+        ],
+        "frequency": 10
+      }
+    ]
+  }
+}

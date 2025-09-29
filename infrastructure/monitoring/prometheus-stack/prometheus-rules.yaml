@@ -1,0 +1,289 @@
+# Prometheus Alert Rules for ToolBoxAI Solutions
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: toolboxai-alerts
+  namespace: monitoring
+  labels:
+    monitoring: prometheus
+    app: toolboxai
+spec:
+  groups:
+    # Infrastructure Alerts
+    - name: infrastructure
+      interval: 30s
+      rules:
+        - alert: NodeHighCPU
+          expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+          for: 10m
+          labels:
+            severity: warning
+            category: infrastructure
+          annotations:
+            summary: "High CPU usage on node {{ $labels.instance }}"
+            description: "CPU usage is above 80% (current value: {{ $value }}%)"
+
+        - alert: NodeHighMemory
+          expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+          for: 10m
+          labels:
+            severity: warning
+            category: infrastructure
+          annotations:
+            summary: "High memory usage on node {{ $labels.instance }}"
+            description: "Memory usage is above 85% (current value: {{ $value }}%)"
+
+        - alert: DiskSpaceLow
+          expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+          for: 5m
+          labels:
+            severity: critical
+            category: infrastructure
+          annotations:
+            summary: "Low disk space on {{ $labels.instance }}"
+            description: "Disk space is below 15% (current value: {{ $value }}%)"
+
+        - alert: PodCrashLooping
+          expr: rate(kube_pod_container_status_restarts_total[1h]) > 0
+          for: 5m
+          labels:
+            severity: warning
+            category: infrastructure
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping"
+            description: "Pod has restarted {{ $value }} times in the last hour"
+
+    # Application Alerts
+    - name: application
+      interval: 30s
+      rules:
+        - alert: BackendHighLatency
+          expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{service="backend"}[5m])) > 1
+          for: 10m
+          labels:
+            severity: warning
+            category: performance
+          annotations:
+            summary: "Backend API high latency"
+            description: "95th percentile latency is {{ $value }}s"
+
+        - alert: BackendHighErrorRate
+          expr: rate(http_requests_total{service="backend",status=~"5.."}[5m]) > 0.01
+          for: 5m
+          labels:
+            severity: critical
+            category: availability
+          annotations:
+            summary: "Backend API high error rate"
+            description: "Error rate is {{ $value | humanizePercentage }}"
+
+        - alert: DashboardDown
+          expr: up{job="dashboard"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            category: availability
+          annotations:
+            summary: "Dashboard is down"
+            description: "Dashboard has been down for more than 2 minutes"
+
+        - alert: DatabaseConnectionPoolExhausted
+          expr: pg_stat_database_numbackends{datname="toolboxai"} / pg_settings_max_connections > 0.8
+          for: 5m
+          labels:
+            severity: warning
+            category: database
+          annotations:
+            summary: "Database connection pool nearly exhausted"
+            description: "{{ $value | humanizePercentage }} of connections are in use"
+
+    # Security Alerts
+    - name: security
+      interval: 30s
+      rules:
+        - alert: UnauthorizedAPIAccess
+          expr: increase(http_requests_total{status="401"}[5m]) > 10
+          for: 2m
+          labels:
+            severity: warning
+            category: security
+            compliance: required
+          annotations:
+            summary: "High number of unauthorized API access attempts"
+            description: "{{ $value }} unauthorized requests in the last 5 minutes"
+
+        - alert: SuspiciousTrafficPattern
+          expr: rate(http_requests_total[1m]) > 1000
+          for: 2m
+          labels:
+            severity: critical
+            category: security
+          annotations:
+            summary: "Suspicious traffic pattern detected"
+            description: "Request rate is {{ $value }} req/s"
+
+        - alert: SSLCertificateExpiringSoon
+          expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 30
+          for: 1h
+          labels:
+            severity: warning
+            category: security
+          annotations:
+            summary: "SSL certificate expiring soon"
+            description: "Certificate expires in {{ $value | humanizeDuration }}"
+
+        - alert: PodSecurityPolicyViolation
+          expr: increase(pod_security_policy_violations_total[5m]) > 0
+          for: 1m
+          labels:
+            severity: critical
+            category: security
+            compliance: required
+          annotations:
+            summary: "Pod Security Policy violation detected"
+            description: "{{ $value }} violations in the last 5 minutes"
+
+    # Compliance Alerts
+    - name: compliance
+      interval: 60s
+      rules:
+        - alert: DataRetentionPolicyViolation
+          expr: data_retention_days > 2555
+          for: 1h
+          labels:
+            severity: critical
+            category: compliance
+            compliance: gdpr
+          annotations:
+            summary: "Data retention policy violation (GDPR)"
+            description: "Data retained for {{ $value }} days, exceeds GDPR limit"
+
+        - alert: MinorUserDataAccess
+          expr: user_age_verification_failed > 0
+          for: 1m
+          labels:
+            severity: critical
+            category: compliance
+            compliance: coppa
+          annotations:
+            summary: "COPPA violation - Minor user data access"
+            description: "Attempted access to data for users under 13"
+
+        - alert: EducationalRecordUnencrypted
+          expr: educational_records_encrypted == 0
+          for: 5m
+          labels:
+            severity: critical
+            category: compliance
+            compliance: ferpa
+          annotations:
+            summary: "FERPA violation - Unencrypted educational records"
+            description: "Educational records found without encryption"
+
+        - alert: AuditLogGapDetected
+          expr: increase(audit_log_gaps_total[1h]) > 0
+          for: 5m
+          labels:
+            severity: critical
+            category: compliance
+            compliance: required
+          annotations:
+            summary: "Audit log gap detected"
+            description: "{{ $value }} gaps detected in audit logs"
+
+    # Resource Alerts
+    - name: resources
+      interval: 30s
+      rules:
+        - alert: PVCNearlyFull
+          expr: (kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes) > 0.85
+          for: 10m
+          labels:
+            severity: warning
+            category: storage
+          annotations:
+            summary: "PVC {{ $labels.persistentvolumeclaim }} nearly full"
+            description: "PVC is {{ $value | humanizePercentage }} full"
+
+        - alert: MemoryPressure
+          expr: kube_node_status_condition{condition="MemoryPressure",status="true"} == 1
+          for: 5m
+          labels:
+            severity: critical
+            category: infrastructure
+          annotations:
+            summary: "Memory pressure on node {{ $labels.node }}"
+            description: "Node is experiencing memory pressure"
+
+        - alert: CPUThrottlingHigh
+          expr: rate(container_cpu_cfs_throttled_seconds_total[5m]) > 0.1
+          for: 10m
+          labels:
+            severity: warning
+            category: performance
+          annotations:
+            summary: "High CPU throttling for {{ $labels.container }}"
+            description: "Container CPU is being throttled {{ $value | humanizePercentage }} of the time"
+
+    # Business Logic Alerts
+    - name: business
+      interval: 60s
+      rules:
+        - alert: ContentGenerationSlow
+          expr: histogram_quantile(0.95, rate(content_generation_duration_seconds_bucket[5m])) > 30
+          for: 15m
+          labels:
+            severity: warning
+            category: performance
+          annotations:
+            summary: "Content generation is slow"
+            description: "95th percentile generation time is {{ $value }}s"
+
+        - alert: UserRegistrationFailed
+          expr: increase(user_registration_failures_total[1h]) > 5
+          for: 5m
+          labels:
+            severity: warning
+            category: business
+          annotations:
+            summary: "High user registration failure rate"
+            description: "{{ $value }} registration failures in the last hour"
+
+        - alert: PaymentProcessingError
+          expr: increase(payment_processing_errors_total[5m]) > 0
+          for: 1m
+          labels:
+            severity: critical
+            category: business
+          annotations:
+            summary: "Payment processing error"
+            description: "{{ $value }} payment errors in the last 5 minutes"
+
+    # SLO Alerts
+    - name: slo
+      interval: 30s
+      rules:
+        - alert: SLOBurnRateHigh
+          expr: |
+            (
+              rate(http_requests_total{status=~"5.."}[5m])
+              /
+              rate(http_requests_total[5m])
+            ) > 0.001
+          for: 5m
+          labels:
+            severity: warning
+            category: slo
+          annotations:
+            summary: "SLO burn rate is high"
+            description: "Error rate is {{ $value | humanizePercentage }}, burning error budget"
+
+        - alert: AvailabilitySLOBreach
+          expr: avg_over_time(up[1h]) < 0.999
+          for: 5m
+          labels:
+            severity: critical
+            category: slo
+          annotations:
+            summary: "Availability SLO breach"
+            description: "Availability is {{ $value | humanizePercentage }}, below 99.9% SLO"

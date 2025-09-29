@@ -1,0 +1,453 @@
+# ============================================
+# TOOLBOXAI DOCKER COMPOSE - CELERY SERVICES
+# ============================================
+# Self-hosted Celery infrastructure with Redis broker
+# No AWS dependencies (SQS, Lambda, CloudWatch)
+# Updated: 2025-01-27
+# ============================================
+#
+# Services:
+# - Celery Worker: Background task processing
+# - Celery Beat: Periodic task scheduling
+# - Flower: Real-time monitoring dashboard
+#
+# Security Features:
+# - Non-root containers (UID 1005-1007)
+# - Resource limits and health checks
+# - No cloud provider lock-in
+# ============================================
+
+# ============================================
+# SHARED CONFIGURATIONS (YAML Anchors)
+# ============================================
+x-celery-common: &celery-common
+  image: toolboxai/celery:latest
+  restart: unless-stopped
+  networks:
+    - toolboxai-network
+  environment:
+    # Celery configuration
+    CELERY_BROKER_URL: ${REDIS_URL:-redis://redis:6379/0}
+    CELERY_RESULT_BACKEND: ${REDIS_URL:-redis://redis:6379/1}
+    CELERY_LOG_LEVEL: ${CELERY_LOG_LEVEL:-INFO}
+    # Application settings
+    DATABASE_URL: ${DATABASE_URL}
+    OPENAI_API_KEY: ${OPENAI_API_KEY}
+    JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    # Python settings
+    PYTHONPATH: /app
+    PYTHONUNBUFFERED: 1
+    PYTHONDONTWRITEBYTECODE: 1
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+x-celery-security: &celery-security
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  cap_add:
+    - CHOWN
+    - DAC_OVERRIDE
+
+services:
+  # ----------------------------------------
+  # Celery Worker - Background Tasks
+  # ----------------------------------------
+  celery-worker:
+    <<: *celery-common
+    <<: *celery-security
+    container_name: toolboxai-celery-worker
+    hostname: celery-worker-${HOSTNAME:-local}
+    user: "1005:1005"  # Non-root user
+
+    environment:
+      CELERY_WORKER_CONCURRENCY: ${CELERY_WORKER_CONCURRENCY:-4}
+      CELERY_WORKER_POOL: ${CELERY_WORKER_POOL:-prefork}
+      PROMETHEUS_ENABLED: "true"
+      PROMETHEUS_PORT: 9540
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    volumes:
+      - celery-data:/var/lib/celery:rw
+      - type: tmpfs
+        target: /tmp
+
+    healthcheck:
+      test: ["CMD", "celery", "-A", "apps.backend.workers.celery_app", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: >
+      celery -A apps.backend.workers.celery_app worker
+      --loglevel=${CELERY_LOG_LEVEL:-INFO}
+      --concurrency=${CELERY_WORKER_CONCURRENCY:-4}
+      --pool=${CELERY_WORKER_POOL:-prefork}
+      --queues=default,high_priority,low_priority,email,analytics,ai_generation,roblox,tenant_operations
+      --hostname=worker@%h
+      --pidfile=/tmp/celery-worker.pid
+      --logfile=/var/log/celery/worker.log
+      --without-gossip
+      --without-mingle
+      --without-heartbeat
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "celery", "-A", "apps.backend.workers.celery_app", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Dependencies
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+    # Networks
+    networks:
+      - toolboxai_internal
+      - toolboxai_monitoring
+
+  # ========================================
+  # CELERY BEAT - Periodic Task Scheduler
+  # ========================================
+  celery-beat:
+    build:
+      context: ../../../
+      dockerfile: infrastructure/docker/Dockerfile.celery
+      target: beat
+    container_name: toolboxai-celery-beat
+    hostname: celery-beat-${HOSTNAME:-local}
+    restart: unless-stopped
+
+    # Security context
+    user: "1003:1003"
+    read_only: false   # Beat needs write access for schedule database
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+
+    # Environment configuration
+    environment:
+      # Celery configuration
+      CELERY_BROKER_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${REDIS_URL:-redis://redis:6379/1}
+      CELERY_LOG_LEVEL: ${CELERY_LOG_LEVEL:-INFO}
+
+      # Application settings
+      DATABASE_URL: ${DATABASE_URL}
+      ENV_NAME: ${ENV_NAME:-production}
+
+      # Python settings
+      PYTHONPATH: /app
+      PYTHONUNBUFFERED: 1
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+    # Volume mounts
+    volumes:
+      - celery_logs:/var/log/celery:rw
+      - celery_beats:/app/celerybeat-schedule:rw
+      - celery_tmp:/tmp:rw
+      # Mount source code in development
+      - ${PWD}/apps/backend:/app/apps/backend:ro
+      - ${PWD}/toolboxai_settings:/app/toolboxai_settings:ro
+
+    # Command to start Celery beat
+    command: >
+      celery -A apps.backend.workers.celery_app beat
+      --loglevel=${CELERY_LOG_LEVEL:-INFO}
+      --schedule=/app/celerybeat-schedule/celerybeat-schedule.db
+      --pidfile=/tmp/celery-beat.pid
+      --logfile=/var/log/celery/beat.log
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "celery.*beat"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    # Dependencies
+    depends_on:
+      redis:
+        condition: service_healthy
+      celery-worker:
+        condition: service_healthy
+
+    # Networks
+    networks:
+      - toolboxai_internal
+
+  # ========================================
+  # FLOWER - Celery Monitoring Dashboard
+  # ========================================
+  flower:
+    build:
+      context: ../../../
+      dockerfile: infrastructure/docker/Dockerfile.celery
+      target: flower
+    container_name: toolboxai-flower
+    hostname: flower-${HOSTNAME:-local}
+    restart: unless-stopped
+
+    # Security context
+    user: "1004:1004"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+    # Port mapping
+    ports:
+      - "${FLOWER_PORT:-5555}:5555"
+
+    # Environment configuration
+    environment:
+      # Celery configuration
+      CELERY_BROKER_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${REDIS_URL:-redis://redis:6379/1}
+
+      # Flower configuration
+      FLOWER_PORT: 5555
+      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH:-admin:password}
+      FLOWER_URL_PREFIX: ${FLOWER_URL_PREFIX:-}
+      FLOWER_PERSISTENT: true
+      FLOWER_DB: /tmp/flower.db
+
+      # Python settings
+      PYTHONPATH: /app
+      PYTHONUNBUFFERED: 1
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+    # Volume mounts
+    volumes:
+      - flower_data:/tmp:rw
+      # Mount source code in development
+      - ${PWD}/apps/backend:/app/apps/backend:ro
+      - ${PWD}/toolboxai_settings:/app/toolboxai_settings:ro
+
+    # Command to start Flower
+    command: >
+      celery -A apps.backend.workers.celery_app flower
+      --port=5555
+      --basic_auth=${FLOWER_BASIC_AUTH:-admin:password}
+      --url_prefix=${FLOWER_URL_PREFIX:-}
+      --persistent=True
+      --db=/tmp/flower.db
+      --max_tasks=10000
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5555/api/workers"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    # Dependencies
+    depends_on:
+      redis:
+        condition: service_healthy
+      celery-worker:
+        condition: service_healthy
+
+    # Networks
+    networks:
+      - toolboxai_internal
+      - toolboxai_monitoring
+
+    # Labels for monitoring
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.flower.rule=Host(`flower.${DOMAIN:-localhost}`)"
+      - "traefik.http.services.flower.loadbalancer.server.port=5555"
+
+  # ========================================
+  # CELERY MONITORING - Custom Metrics Exporter
+  # ========================================
+  celery-exporter:
+    build:
+      context: ../../../
+      dockerfile: infrastructure/docker/Dockerfile.celery
+      target: exporter
+    container_name: toolboxai-celery-exporter
+    hostname: celery-exporter-${HOSTNAME:-local}
+    restart: unless-stopped
+
+    # Security context
+    user: "1005:1005"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+    # Port mapping for metrics
+    ports:
+      - "${CELERY_METRICS_PORT:-9540}:9540"
+
+    # Environment configuration
+    environment:
+      # Celery configuration
+      CELERY_BROKER_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${REDIS_URL:-redis://redis:6379/1}
+
+      # Metrics configuration
+      METRICS_PORT: 9540
+      METRICS_PATH: /metrics
+      METRICS_UPDATE_INTERVAL: 15
+
+      # Python settings
+      PYTHONPATH: /app
+      PYTHONUNBUFFERED: 1
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 32M
+
+    # Volume mounts
+    volumes:
+      - ${PWD}/apps/backend:/app/apps/backend:ro
+      - ${PWD}/toolboxai_settings:/app/toolboxai_settings:ro
+
+    # Command to start metrics exporter
+    command: >
+      python -m apps.backend.workers.monitoring.celery_exporter
+      --port=9540
+      --interval=15
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9540/metrics"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+    # Dependencies
+    depends_on:
+      redis:
+        condition: service_healthy
+      celery-worker:
+        condition: service_healthy
+
+    # Networks
+    networks:
+      - toolboxai_internal
+      - toolboxai_monitoring
+
+# ========================================
+# VOLUMES
+# ========================================
+volumes:
+  celery_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/data/celery/logs
+
+  celery_beats:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/data/celery/beats
+
+  celery_tmp:
+    driver: local
+
+  flower_data:
+    driver: local
+
+# ========================================
+# NETWORKS
+# ========================================
+networks:
+  toolboxai_internal:
+    external: true
+
+  toolboxai_monitoring:
+    external: true
+
+# ========================================
+# DEVELOPMENT OVERRIDES
+# ========================================
+# Override for development with hot-reload
+services:
+  celery-worker:
+    profiles:
+      - development
+    volumes:
+      - ${PWD}:/app:rw  # Full source mount for development
+    environment:
+      - DEBUG=true
+      - CELERY_WORKER_CONCURRENCY=2  # Reduced for development
+    command: >
+      celery -A apps.backend.workers.celery_app worker
+      --loglevel=DEBUG
+      --concurrency=2
+      --pool=solo  # Single process for debugging
+      --queues=default,high_priority,email
+      --hostname=dev-worker@%h
+      --pidfile=/tmp/celery-worker.pid
+
+  celery-beat:
+    profiles:
+      - development
+    volumes:
+      - ${PWD}:/app:rw
+    environment:
+      - DEBUG=true
+
+  flower:
+    profiles:
+      - development
+    volumes:
+      - ${PWD}:/app:rw
+    environment:
+      - DEBUG=true

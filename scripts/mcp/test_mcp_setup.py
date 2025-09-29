@@ -1,3 +1,4 @@
+import pytest_asyncio
 #!/usr/bin/env python3
 """
 Test script to verify MCP setup
@@ -12,7 +13,7 @@ from pathlib import Path
 
 # Add project paths (repo root is three levels up: scripts/mcp/ -> project root)
 project_root = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(project_root / "ToolboxAI-Roblox-Environment"))
+sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "src" / "shared"))
 
 
@@ -21,7 +22,7 @@ def test_imports():
     print("🔍 Testing imports...")
 
     try:
-        from mcp.server import MCPServer
+        from core.mcp.server import MCPServer
 
         print("✅ MCP Server imported successfully")
     except ImportError as e:
@@ -29,7 +30,7 @@ def test_imports():
         return False
 
     try:
-        from agents.orchestrator import Orchestrator
+        from core.agents.orchestrator import Orchestrator
 
         print("✅ Agent Orchestrator imported successfully")
     except ImportError as e:
@@ -37,7 +38,7 @@ def test_imports():
         return False
 
     try:
-        from sparc.state_manager import StateManager
+        from core.sparc.state_manager import StateManager
 
         print("✅ SPARC Manager imported successfully")
     except ImportError as e:
@@ -47,12 +48,13 @@ def test_imports():
     return True
 
 
+@pytest.mark.asyncio
 async def test_mcp_server():
     """Test MCP server functionality"""
     print("🔍 Testing MCP server...")
 
     try:
-        from mcp.server import MCPServer
+        from core.mcp.server import MCPServer
 
         server = MCPServer(port=9877, max_tokens=1000)  # Use different port for testing
         print("✅ MCP Server created successfully")

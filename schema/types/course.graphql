@@ -1,0 +1,689 @@
+# Course and educational content type definitions
+
+# Course type
+type Course {
+  """
+  Unique course identifier
+  """
+  id: UUID!
+
+  """
+  Course title
+  """
+  title: String!
+
+  """
+  Course code (e.g., MATH101)
+  """
+  code: String!
+
+  """
+  Course description
+  """
+  description: String!
+
+  """
+  Subject area
+  """
+  subject: Subject!
+
+  """
+  Difficulty level
+  """
+  difficulty: DifficultyLevel!
+
+  """
+  Course thumbnail image
+  """
+  thumbnail: URL
+
+  """
+  Course teacher/instructor
+  """
+  teacher: User!
+
+  """
+  Assistant teachers
+  """
+  assistants: [User!]!
+
+  """
+  Enrolled students
+  """
+  students(
+    filter: UserFilter
+    pagination: PaginationInput
+  ): UserConnection!
+
+  """
+  Course modules/lessons
+  """
+  lessons: [Lesson!]!
+
+  """
+  Course quizzes and assessments
+  """
+  quizzes: [Quiz!]!
+
+  """
+  Course assignments
+  """
+  assignments: [Assignment!]!
+
+  """
+  Associated Roblox environment
+  """
+  robloxEnvironment: RobloxEnvironment
+
+  """
+  Course analytics (teacher only)
+  """
+  analytics: CourseAnalytics! @auth(requires: TEACHER)
+
+  """
+  Course settings
+  """
+  settings: CourseSettings!
+
+  """
+  Course status
+  """
+  status: CourseStatus!
+
+  """
+  Start date
+  """
+  startDate: DateTime
+
+  """
+  End date
+  """
+  endDate: DateTime
+
+  """
+  Maximum number of students
+  """
+  maxStudents: Int
+
+  """
+  Current enrollment count
+  """
+  enrollmentCount: Int!
+
+  """
+  Course tags for categorization
+  """
+  tags: [String!]!
+
+  """
+  Timestamp information
+  """
+  timestamps: Timestamps!
+}
+
+# Course status enum
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+# Lesson/Module type
+type Lesson {
+  """
+  Unique lesson identifier
+  """
+  id: UUID!
+
+  """
+  Lesson title
+  """
+  title: String!
+
+  """
+  Lesson description
+  """
+  description: String!
+
+  """
+  Parent course
+  """
+  course: Course!
+
+  """
+  Order in the course
+  """
+  order: Int!
+
+  """
+  Lesson content blocks
+  """
+  content: [ContentBlock!]!
+
+  """
+  Estimated duration in minutes
+  """
+  duration: Int!
+
+  """
+  Learning objectives
+  """
+  objectives: [String!]!
+
+  """
+  Required resources
+  """
+  resources: [Resource!]!
+
+  """
+  Associated quiz
+  """
+  quiz: Quiz
+
+  """
+  Roblox interactive elements
+  """
+  robloxElements: [RobloxElement!]!
+
+  """
+  Lesson status
+  """
+  status: LessonStatus!
+
+  """
+  Prerequisite lessons
+  """
+  prerequisites: [Lesson!]!
+
+  """
+  Timestamp information
+  """
+  timestamps: Timestamps!
+}
+
+# Lesson status enum
+enum LessonStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+}
+
+# Content block - flexible content structure
+type ContentBlock {
+  """
+  Block identifier
+  """
+  id: UUID!
+
+  """
+  Block type
+  """
+  type: ContentBlockType!
+
+  """
+  Block content (format depends on type)
+  """
+  content: JSON!
+
+  """
+  Order in the lesson
+  """
+  order: Int!
+
+  """
+  Optional title
+  """
+  title: String
+
+  """
+  Optional metadata
+  """
+  metadata: JSON
+}
+
+# Content block types
+enum ContentBlockType {
+  TEXT
+  VIDEO
+  IMAGE
+  AUDIO
+  CODE
+  QUIZ
+  INTERACTIVE
+  ROBLOX
+  FILE
+  EMBED
+}
+
+# Educational resource
+type Resource {
+  """
+  Resource identifier
+  """
+  id: UUID!
+
+  """
+  Resource title
+  """
+  title: String!
+
+  """
+  Resource description
+  """
+  description: String
+
+  """
+  Resource type
+  """
+  type: ResourceType!
+
+  """
+  Resource URL or file
+  """
+  url: URL!
+
+  """
+  File information if applicable
+  """
+  file: File
+
+  """
+  Resource tags
+  """
+  tags: [String!]!
+
+  """
+  Timestamp information
+  """
+  timestamps: Timestamps!
+}
+
+# Resource types
+enum ResourceType {
+  DOCUMENT
+  VIDEO
+  AUDIO
+  IMAGE
+  PRESENTATION
+  SPREADSHEET
+  CODE
+  LINK
+  ROBLOX_ASSET
+}
+
+# Course enrollment
+type Enrollment {
+  """
+  Enrollment ID
+  """
+  id: UUID!
+
+  """
+  Enrolled student
+  """
+  student: User!
+
+  """
+  Course
+  """
+  course: Course!
+
+  """
+  Enrollment date
+  """
+  enrolledAt: DateTime!
+
+  """
+  Completion date
+  """
+  completedAt: DateTime
+
+  """
+  Current progress percentage
+  """
+  progress: Float!
+
+  """
+  Current grade
+  """
+  grade: Grade
+
+  """
+  Enrollment status
+  """
+  status: EnrollmentStatus!
+
+  """
+  Student's progress details
+  """
+  progressDetails: StudentProgress!
+}
+
+# Enrollment status
+enum EnrollmentStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  DROPPED
+  SUSPENDED
+}
+
+# Student progress tracking
+type StudentProgress {
+  """
+  Progress ID
+  """
+  id: UUID!
+
+  """
+  Student
+  """
+  student: User!
+
+  """
+  Course
+  """
+  course: Course!
+
+  """
+  Completed lessons
+  """
+  completedLessons: [Lesson!]!
+
+  """
+  Current lesson
+  """
+  currentLesson: Lesson
+
+  """
+  Quiz scores
+  """
+  quizScores: [QuizScore!]!
+
+  """
+  Assignment submissions
+  """
+  assignments: [AssignmentSubmission!]!
+
+  """
+  Total points earned
+  """
+  pointsEarned: Int!
+
+  """
+  Total possible points
+  """
+  pointsPossible: Int!
+
+  """
+  Time spent in minutes
+  """
+  timeSpent: Int!
+
+  """
+  Last activity timestamp
+  """
+  lastActivityAt: DateTime!
+
+  """
+  Achievements earned in this course
+  """
+  achievements: [UserAchievement!]!
+}
+
+# Grade information
+type Grade {
+  """
+  Numeric score (0-100)
+  """
+  score: Float!
+
+  """
+  Letter grade
+  """
+  letter: String!
+
+  """
+  Grade points
+  """
+  points: Float!
+
+  """
+  Teacher comments
+  """
+  comments: String
+}
+
+# Assignment type
+type Assignment {
+  """
+  Assignment ID
+  """
+  id: UUID!
+
+  """
+  Assignment title
+  """
+  title: String!
+
+  """
+  Assignment description/instructions
+  """
+  description: String!
+
+  """
+  Parent course
+  """
+  course: Course!
+
+  """
+  Associated lesson
+  """
+  lesson: Lesson
+
+  """
+  Assignment type
+  """
+  type: AssignmentType!
+
+  """
+  Due date
+  """
+  dueDate: DateTime!
+
+  """
+  Points possible
+  """
+  points: Int!
+
+  """
+  Submission requirements
+  """
+  requirements: JSON!
+
+  """
+  Rubric for grading
+  """
+  rubric: JSON
+
+  """
+  Timestamp information
+  """
+  timestamps: Timestamps!
+}
+
+# Assignment types
+enum AssignmentType {
+  ESSAY
+  PROJECT
+  PRESENTATION
+  CODE
+  QUIZ
+  DISCUSSION
+  PEER_REVIEW
+  ROBLOX_PROJECT
+}
+
+# Assignment submission
+type AssignmentSubmission {
+  """
+  Submission ID
+  """
+  id: UUID!
+
+  """
+  Assignment
+  """
+  assignment: Assignment!
+
+  """
+  Student who submitted
+  """
+  student: User!
+
+  """
+  Submission content
+  """
+  content: JSON!
+
+  """
+  Attached files
+  """
+  files: [File!]!
+
+  """
+  Submission timestamp
+  """
+  submittedAt: DateTime!
+
+  """
+  Grade if graded
+  """
+  grade: Grade
+
+  """
+  Teacher feedback
+  """
+  feedback: String
+
+  """
+  Submission status
+  """
+  status: SubmissionStatus!
+}
+
+# Submission status
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  LATE
+  GRADED
+  RETURNED
+  RESUBMITTED
+}
+
+# Course analytics
+type CourseAnalytics {
+  """
+  Average course progress
+  """
+  averageProgress: Float!
+
+  """
+  Average grade
+  """
+  averageGrade: Float!
+
+  """
+  Completion rate
+  """
+  completionRate: Float!
+
+  """
+  Student engagement score
+  """
+  engagementScore: Float!
+
+  """
+  Most challenging topics
+  """
+  challengingTopics: [String!]!
+
+  """
+  Student performance distribution
+  """
+  gradeDistribution: JSON!
+
+  """
+  Activity heatmap
+  """
+  activityHeatmap: JSON!
+
+  """
+  Quiz performance analytics
+  """
+  quizAnalytics: JSON!
+}
+
+# Course settings
+type CourseSettings {
+  """
+  Allow late submissions
+  """
+  allowLateSubmissions: Boolean!
+
+  """
+  Late submission penalty percentage
+  """
+  latePenalty: Float
+
+  """
+  Allow retakes for quizzes
+  """
+  allowQuizRetakes: Boolean!
+
+  """
+  Maximum quiz attempts
+  """
+  maxQuizAttempts: Int
+
+  """
+  Show correct answers after submission
+  """
+  showCorrectAnswers: Boolean!
+
+  """
+  Enable peer review
+  """
+  enablePeerReview: Boolean!
+
+  """
+  Enable discussion forum
+  """
+  enableDiscussions: Boolean!
+
+  """
+  Custom settings
+  """
+  custom: JSON
+}
+
+# Course connection for pagination
+type CourseConnection {
+  """
+  List of courses
+  """
+  nodes: [Course!]!
+
+  """
+  Pagination information
+  """
+  pageInfo: PageInfo!
+
+  """
+  Total count
+  """
+  totalCount: Int!
+}

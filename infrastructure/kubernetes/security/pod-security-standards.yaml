@@ -1,0 +1,464 @@
+# Pod Security Standards for ToolBoxAI Solutions
+# Implements restricted security policies for educational platform
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: toolboxai-prod
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+    environment: production
+    compliance: coppa-ferpa-gdpr
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: toolboxai-staging
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+    environment: staging
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: toolboxai-dev
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+    environment: development
+---
+# Security Context Constraints for OpenShift compatibility
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: toolboxai-restricted
+spec:
+  allowHostDirVolumePlugin: false
+  allowHostIPC: false
+  allowHostNetwork: false
+  allowHostPID: false
+  allowHostPorts: false
+  allowPrivilegedContainer: false
+  allowPrivilegeEscalation: false
+  defaultAddCapabilities: null
+  fsGroup:
+    type: MustRunAs
+    ranges:
+      - min: 1000
+        max: 65535
+  priority: null
+  readOnlyRootFilesystem: true
+  requiredDropCapabilities:
+    - ALL
+  runAsUser:
+    type: MustRunAsNonRoot
+  seLinuxContext:
+    type: MustRunAs
+  supplementalGroups:
+    type: RunAsAny
+  volumes:
+    - configMap
+    - downwardAPI
+    - emptyDir
+    - persistentVolumeClaim
+    - projected
+    - secret
+  allowedCapabilities: null
+  seccompProfiles:
+    - runtime/default
+---
+# Pod Security Policy (for older clusters)
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: toolboxai-restricted
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: 'runtime/default'
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: 'runtime/default'
+    apparmor.security.beta.kubernetes.io/defaultProfileName:  'runtime/default'
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  runAsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1000
+        max: 65535
+  seLinux:
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1000
+        max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1000
+        max: 65535
+  readOnlyRootFilesystem: true
+---
+# ClusterRole for using the PSP
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: toolboxai-restricted-psp-user
+rules:
+  - apiGroups: ['policy']
+    resources: ['podsecuritypolicies']
+    verbs: ['use']
+    resourceNames:
+      - toolboxai-restricted
+---
+# Bind PSP to service accounts
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: toolboxai-restricted-psp-all-serviceaccounts
+roleRef:
+  kind: ClusterRole
+  name: toolboxai-restricted-psp-user
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: Group
+    name: system:serviceaccounts:toolboxai-prod
+    apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: system:serviceaccounts:toolboxai-staging
+    apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: system:serviceaccounts:toolboxai-dev
+    apiGroup: rbac.authorization.k8s.io
+---
+# Network Policy for namespace isolation
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: toolboxai-prod
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Allow internal namespace communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-same-namespace
+  namespace: toolboxai-prod
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector: {}
+  egress:
+    - to:
+        - podSelector: {}
+---
+# Allow DNS resolution
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-access
+  namespace: toolboxai-prod
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+# Allow ingress from load balancer
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-from-lb
+  namespace: toolboxai-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: dashboard
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 3000
+---
+# Allow backend to database
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-to-database
+  namespace: toolboxai-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: database
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+---
+# Resource Quota for namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: toolboxai-prod-quota
+  namespace: toolboxai-prod
+spec:
+  hard:
+    requests.cpu: "100"
+    requests.memory: 200Gi
+    requests.storage: 1Ti
+    persistentvolumeclaims: "50"
+    pods: "100"
+    services.loadbalancers: "5"
+    services.nodeports: "0"  # Disable NodePort services for security
+---
+# LimitRange for pod resources
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: toolboxai-prod-limits
+  namespace: toolboxai-prod
+spec:
+  limits:
+    - max:
+        cpu: "4"
+        memory: 8Gi
+      min:
+        cpu: 100m
+        memory: 128Mi
+      default:
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest:
+        cpu: 200m
+        memory: 256Mi
+      type: Container
+    - max:
+        cpu: "8"
+        memory: 16Gi
+      min:
+        cpu: 100m
+        memory: 128Mi
+      type: Pod
+    - max:
+        storage: 100Gi
+      min:
+        storage: 1Gi
+      type: PersistentVolumeClaim
+---
+# ValidatingAdmissionWebhook Configuration
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: toolboxai-security-webhook
+webhooks:
+  - name: pod-security.toolboxai.solutions
+    admissionReviewVersions: ["v1", "v1beta1"]
+    clientConfig:
+      service:
+        name: security-webhook
+        namespace: toolboxai-system
+        path: "/validate"
+      caBundle: LS0tLS1CRUdJTi... # Base64 encoded CA certificate
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+    namespaceSelector:
+      matchLabels:
+        environment: production
+    failurePolicy: Fail
+    sideEffects: None
+    timeoutSeconds: 10
+---
+# MutatingAdmissionWebhook for security defaults
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: toolboxai-security-defaults
+webhooks:
+  - name: security-defaults.toolboxai.solutions
+    admissionReviewVersions: ["v1", "v1beta1"]
+    clientConfig:
+      service:
+        name: security-webhook
+        namespace: toolboxai-system
+        path: "/mutate"
+      caBundle: LS0tLS1CRUdJTi... # Base64 encoded CA certificate
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+    namespaceSelector:
+      matchLabels:
+        apply-security-defaults: "true"
+    failurePolicy: Fail
+    sideEffects: None
+    timeoutSeconds: 10
+---
+# OPA Gatekeeper ConstraintTemplate for additional validation
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredsecuritycontext
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredSecurityContext
+      validation:
+        openAPIV3Schema:
+          type: object
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredsecuritycontext
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not container.securityContext.runAsNonRoot
+          msg := sprintf("Container %v must run as non-root user", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not container.securityContext.readOnlyRootFilesystem
+          msg := sprintf("Container %v must have read-only root filesystem", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not container.securityContext.allowPrivilegeEscalation == false
+          msg := sprintf("Container %v must not allow privilege escalation", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          container.securityContext.capabilities.add[_]
+          msg := sprintf("Container %v must not add capabilities", [container.name])
+        }
+---
+# Apply the constraint
+apiVersion: k8srequiredsecuritycontext.constraints.gatekeeper.sh/v1beta1
+kind: K8sRequiredSecurityContext
+metadata:
+  name: must-have-security-context
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    namespaces:
+      - "toolboxai-prod"
+      - "toolboxai-staging"
+---
+# Falco Rules for runtime security monitoring
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: falco-rules
+  namespace: toolboxai-system
+data:
+  custom_rules.yaml: |
+    - rule: Unauthorized Process in Container
+      desc: Detect unauthorized process execution in containers
+      condition: >
+        container and proc.name != in (allowed_processes) and
+        not proc.pname in (shell_binaries)
+      output: >
+        Unauthorized process started in container
+        (user=%user.name container_id=%container.id command=%proc.cmdline)
+      priority: WARNING
+      tags: [container, process, compliance]
+
+    - list: allowed_processes
+      items: [node, python, uvicorn, npm, nginx]
+
+    - rule: Sensitive File Access
+      desc: Detect access to sensitive files
+      condition: >
+        open_read and
+        (fd.name startswith "/etc/shadow" or
+         fd.name startswith "/etc/passwd" or
+         fd.name contains "private_key" or
+         fd.name contains ".env")
+      output: >
+        Sensitive file opened for reading
+        (user=%user.name command=%proc.cmdline file=%fd.name)
+      priority: WARNING
+      tags: [filesystem, compliance, security]
+
+    - rule: Container Escape Attempt
+      desc: Detect potential container escape attempts
+      condition: >
+        container and
+        (proc.name in (shell_binaries) and
+         (proc.args contains "nsenter" or
+          proc.args contains "--privileged" or
+          proc.args contains "/host"))
+      output: >
+        Potential container escape attempt
+        (user=%user.name container_id=%container.id command=%proc.cmdline)
+      priority: CRITICAL
+      tags: [container, escape, security]

@@ -1,0 +1,60 @@
+name: Workspace CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '22'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  node-workspace:
+    name: Dashboard Lint, Test, Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install workspace dependencies
+        run: npm ci
+
+      - name: Lint dashboard package
+        run: npm run dashboard:lint
+
+      - name: Run dashboard unit tests
+        run: npm run dashboard:test
+
+      - name: Build dashboard package
+        run: npm run dashboard:build
+
+  python-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install backend dependencies
+        working-directory: apps/backend
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; elif [ -f ../../requirements.txt ]; then pip install -r ../../requirements.txt; fi
+
+      - name: Run backend tests
+        working-directory: apps/backend
+        run: |
+          if [ -d tests ]; then pytest; else echo "No backend tests directory found"; fi

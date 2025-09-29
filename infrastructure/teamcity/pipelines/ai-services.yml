@@ -1,0 +1,320 @@
+# ============================================
+# TEAMCITY PIPELINE - AI SERVICES
+# ============================================
+# Build pipeline for AI/ML Services:
+# - MCP Server (Model Context Protocol)
+# - Agent Coordinator
+# - LangChain/LangGraph Integration
+# ============================================
+
+version: 2025.03
+name: AI-Services-Build-Pipeline
+
+# Pipeline triggers
+triggers:
+  - vcs:
+      branches:
+        include:
+          - main
+          - develop
+          - feature/ai-*
+      paths:
+        include:
+          - core/mcp/**
+          - core/agents/**
+          - ToolboxAI-Roblox-Environment/coordinators/**
+          - requirements.txt
+
+# Environment variables
+environment:
+  PYTHON_VERSION: "3.12"
+  OPENAI_API_KEY: "${env.OPENAI_API_KEY}"
+  ANTHROPIC_API_KEY: "${env.ANTHROPIC_API_KEY}"
+  LANGCHAIN_API_KEY: "${env.LANGCHAIN_API_KEY}"
+  LANGCHAIN_PROJECT: "ToolboxAI-Solutions"
+  LANGCHAIN_TRACING_V2: "true"
+  DOCKER_REGISTRY_MCP: "docker.io/thegrayghost23/toolboxai-mcp"
+  DOCKER_REGISTRY_AGENT: "docker.io/thegrayghost23/toolboxai-agent-coordinator"
+
+# Pipeline stages
+stages:
+  # ----------------------------------------
+  # Stage 1: MCP Server Build
+  # ----------------------------------------
+  - name: MCP-Server
+    agent: Backend-Builder-01
+    steps:
+      - name: Checkout
+        type: vcs-checkout
+
+      - name: Setup Python
+        type: python
+        params:
+          version: 3.12
+
+      - name: Install MCP Dependencies
+        type: script
+        params:
+          script: |
+            python -m venv .venv-mcp
+            source .venv-mcp/bin/activate
+            pip install --upgrade pip
+            pip install fastapi uvicorn websockets pydantic
+            pip install langchain langchain-openai langchain-anthropic
+            echo "✅ MCP dependencies installed"
+
+      - name: Test MCP Server
+        type: script
+        params:
+          script: |
+            source .venv-mcp/bin/activate
+            # Run MCP tests
+            python -m pytest core/mcp/tests -v
+            echo "✅ MCP tests passed"
+
+      - name: Build MCP Docker Image
+        type: docker
+        params:
+          dockerfile: infrastructure/docker/dockerfiles/mcp-server.Dockerfile
+          context: .
+          tags:
+            - "${DOCKER_REGISTRY_MCP}:${BUILD_NUMBER}"
+            - "${DOCKER_REGISTRY_MCP}:latest"
+          buildArgs:
+            - PYTHON_VERSION=3.12
+          cache: true
+
+      - name: Push MCP Image
+        type: docker
+        params:
+          action: push
+          tags:
+            - "${DOCKER_REGISTRY_MCP}:${BUILD_NUMBER}"
+            - "${DOCKER_REGISTRY_MCP}:latest"
+
+  # ----------------------------------------
+  # Stage 2: Agent Coordinator Build
+  # ----------------------------------------
+  - name: Agent-Coordinator
+    agent: Backend-Builder-01
+    steps:
+      - name: Setup Agent Environment
+        type: script
+        params:
+          script: |
+            python -m venv .venv-agent
+            source .venv-agent/bin/activate
+            pip install --upgrade pip
+            pip install langchain langchain-openai langchain-anthropic
+            pip install langgraph langsmith
+            pip install redis asyncio websockets
+            echo "✅ Agent dependencies installed"
+
+      - name: Test Agent Coordinator
+        type: script
+        params:
+          script: |
+            source .venv-agent/bin/activate
+            # Test agent initialization
+            python -c "from core.agents.coordinator import MainCoordinator; print('✅ Coordinator imports OK')"
+            # Run agent tests
+            python -m pytest core/agents/tests -v
+            echo "✅ Agent tests passed"
+
+      - name: LangSmith Integration Test
+        type: script
+        params:
+          script: |
+            source .venv-agent/bin/activate
+            # Test LangSmith connection
+            python -c "
+            import os
+            from langsmith import Client
+            client = Client(api_key='${LANGCHAIN_API_KEY}')
+            print('✅ LangSmith connected')
+            "
+
+      - name: Build Coordinator Docker Image
+        type: docker
+        params:
+          dockerfile: infrastructure/docker/dockerfiles/agent-coordinator.Dockerfile
+          context: .
+          tags:
+            - "${DOCKER_REGISTRY_AGENT}:${BUILD_NUMBER}"
+            - "${DOCKER_REGISTRY_AGENT}:latest"
+          buildArgs:
+            - PYTHON_VERSION=3.12
+          cache: true
+
+      - name: Push Coordinator Image
+        type: docker
+        params:
+          action: push
+          tags:
+            - "${DOCKER_REGISTRY_AGENT}:${BUILD_NUMBER}"
+            - "${DOCKER_REGISTRY_AGENT}:latest"
+
+  # ----------------------------------------
+  # Stage 3: Integration Testing
+  # ----------------------------------------
+  - name: Integration
+    agent: Integration-Builder-01
+    steps:
+      - name: Start AI Services Stack
+        type: docker-compose
+        params:
+          file: infrastructure/docker/compose/docker-compose.ai-services.yml
+          action: up
+          detached: true
+          services:
+            - mcp-server
+            - agent-coordinator
+            - redis
+            - postgres
+
+      - name: Test MCP-Agent Communication
+        type: script
+        params:
+          script: |
+            # Wait for services to be ready
+            sleep 30
+
+            # Test MCP server health
+            curl -f http://localhost:9877/health || exit 1
+            echo "✅ MCP server healthy"
+
+            # Test coordinator health
+            curl -f http://localhost:8888/health || exit 1
+            echo "✅ Agent coordinator healthy"
+
+            # Test WebSocket connection
+            python tests/integration/test_mcp_websocket.py
+            echo "✅ WebSocket communication OK"
+
+      - name: Test LangChain Pipeline
+        type: script
+        params:
+          script: |
+            source .venv-agent/bin/activate
+            # Run end-to-end LangChain test
+            python tests/integration/test_langchain_pipeline.py
+            echo "✅ LangChain pipeline working"
+
+      - name: Test Content Generation
+        type: script
+        params:
+          script: |
+            # Test educational content generation
+            curl -X POST http://localhost:8888/api/v1/generate \
+              -H "Content-Type: application/json" \
+              -d '{"subject": "Math", "grade_level": 5, "topic": "Fractions"}' \
+              | jq .
+            echo "✅ Content generation working"
+
+      - name: Performance Benchmarks
+        type: script
+        params:
+          script: |
+            # Run performance benchmarks
+            python tests/performance/benchmark_agents.py
+            echo "✅ Performance benchmarks complete"
+
+      - name: Stop AI Services
+        type: docker-compose
+        params:
+          file: infrastructure/docker/compose/docker-compose.ai-services.yml
+          action: down
+          volumes: true
+
+  # ----------------------------------------
+  # Stage 4: LangSmith Monitoring Setup
+  # ----------------------------------------
+  - name: Monitoring
+    agent: Integration-Builder-01
+    steps:
+      - name: Configure LangSmith Project
+        type: script
+        params:
+          script: |
+            source .venv-agent/bin/activate
+            python -c "
+            from langsmith import Client
+            client = Client(api_key='${LANGCHAIN_API_KEY}')
+
+            # Create or update project
+            project = client.create_project(
+                name='ToolboxAI-CI-Build-${BUILD_NUMBER}',
+                description='CI Build ${BUILD_NUMBER} from TeamCity'
+            )
+            print(f'✅ LangSmith project created: {project.id}')
+            "
+
+      - name: Run Traced Operations
+        type: script
+        params:
+          script: |
+            source .venv-agent/bin/activate
+            # Run operations with tracing enabled
+            LANGCHAIN_PROJECT="ToolboxAI-CI-Build-${BUILD_NUMBER}" \
+            python tests/integration/traced_operations.py
+            echo "✅ Traced operations complete"
+
+      - name: Generate LangSmith Report
+        type: script
+        params:
+          script: |
+            source .venv-agent/bin/activate
+            # Generate performance report from LangSmith
+            python scripts/generate_langsmith_report.py \
+              --project "ToolboxAI-CI-Build-${BUILD_NUMBER}" \
+              --output reports/langsmith-${BUILD_NUMBER}.html
+            echo "✅ LangSmith report generated"
+
+# Artifacts to collect
+artifacts:
+  - path: reports/langsmith-*.html
+    name: langsmith-reports
+  - path: tests/results/**
+    name: test-results
+  - path: benchmarks/**
+    name: performance-benchmarks
+
+# Build chain dependencies
+dependencies:
+  - build: Backend-Build-Pipeline
+    artifacts:
+      - database-migrations
+  - build: Infrastructure-Pipeline
+    artifacts:
+      - docker-compose-configs
+
+# Notifications
+notifications:
+  - type: pusher
+    events:
+      - success
+      - failure
+    channel: ai-services-notifications
+    params:
+      app_id: "${env.PUSHER_APP_ID}"
+      key: "${env.PUSHER_KEY}"
+      secret: "${env.PUSHER_SECRET}"
+      cluster: "${env.PUSHER_CLUSTER}"
+      message: "AI Services build ${BUILD_NUMBER} ${BUILD_STATUS}"
+
+  - type: langsmith
+    events:
+      - success
+    params:
+      api_key: "${LANGCHAIN_API_KEY}"
+      project: "ToolboxAI-Solutions"
+      build_url: "${TEAMCITY_SERVER_URL}/viewLog.html?buildId=${BUILD_ID}"
+
+# Failure conditions
+failure_conditions:
+  - type: test_failure
+    enabled: true
+  - type: build_duration
+    max_duration: 60m
+  - type: memory_limit
+    max_memory: 8G

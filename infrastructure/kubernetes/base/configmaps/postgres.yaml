@@ -1,0 +1,123 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: toolboxai-platform
+    app.kubernetes.io/managed-by: kustomize
+data:
+  # Database Configuration
+  POSTGRES_DB: "toolboxai_prod"
+  POSTGRES_USER: "toolboxai_user"
+  POSTGRES_MULTIPLE_DATABASES: "educational_platform,ghost_backend,roblox_data,mcp_memory"
+
+  # Performance Configuration
+  POSTGRES_MAX_CONNECTIONS: "200"
+  POSTGRES_SHARED_BUFFERS: "256MB"
+  POSTGRES_EFFECTIVE_CACHE_SIZE: "1GB"
+  POSTGRES_MAINTENANCE_WORK_MEM: "64MB"
+  POSTGRES_CHECKPOINT_COMPLETION_TARGET: "0.7"
+  POSTGRES_WAL_BUFFERS: "16MB"
+  POSTGRES_DEFAULT_STATISTICS_TARGET: "100"
+  POSTGRES_RANDOM_PAGE_COST: "1.1"
+  POSTGRES_EFFECTIVE_IO_CONCURRENCY: "200"
+
+  # Security Configuration
+  POSTGRES_SSL_MODE: "require"
+  POSTGRES_LOG_STATEMENT: "mod"
+  POSTGRES_LOG_MIN_DURATION_STATEMENT: "1000"
+
+  # Backup Configuration
+  POSTGRES_ARCHIVE_MODE: "on"
+  POSTGRES_ARCHIVE_COMMAND: "test ! -f /var/lib/postgresql/archive/%f && cp %p /var/lib/postgresql/archive/%f"
+  POSTGRES_WAL_LEVEL: "replica"
+  POSTGRES_MAX_WAL_SENDERS: "3"
+  POSTGRES_WAL_KEEP_SEGMENTS: "16"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-scripts
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: toolboxai-platform
+    app.kubernetes.io/managed-by: kustomize
+data:
+  01-init-databases.sh: |
+    #!/bin/bash
+    set -e
+
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        -- Create additional databases
+        CREATE DATABASE IF NOT EXISTS educational_platform;
+        CREATE DATABASE IF NOT EXISTS ghost_backend;
+        CREATE DATABASE IF NOT EXISTS roblox_data;
+        CREATE DATABASE IF NOT EXISTS mcp_memory;
+
+        -- Grant privileges
+        GRANT ALL PRIVILEGES ON DATABASE educational_platform TO $POSTGRES_USER;
+        GRANT ALL PRIVILEGES ON DATABASE ghost_backend TO $POSTGRES_USER;
+        GRANT ALL PRIVILEGES ON DATABASE roblox_data TO $POSTGRES_USER;
+        GRANT ALL PRIVILEGES ON DATABASE mcp_memory TO $POSTGRES_USER;
+
+        -- Create extensions
+        \c educational_platform;
+        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+        CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+        CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
+
+        \c ghost_backend;
+        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+        CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+        \c roblox_data;
+        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+        CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+        \c mcp_memory;
+        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+        CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+        CREATE EXTENSION IF NOT EXISTS "vector";
+    EOSQL
+
+  02-performance-tuning.sh: |
+    #!/bin/bash
+    set -e
+
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        -- Performance configurations
+        ALTER SYSTEM SET shared_preload_libraries = 'pg_stat_statements';
+        ALTER SYSTEM SET log_min_duration_statement = 1000;
+        ALTER SYSTEM SET log_checkpoints = on;
+        ALTER SYSTEM SET log_connections = on;
+        ALTER SYSTEM SET log_disconnections = on;
+        ALTER SYSTEM SET log_lock_waits = on;
+        ALTER SYSTEM SET log_temp_files = 0;
+
+        -- Reload configuration
+        SELECT pg_reload_conf();
+    EOSQL
+
+  03-monitoring-setup.sh: |
+    #!/bin/bash
+    set -e
+
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        -- Create monitoring user for postgres_exporter
+        CREATE USER IF NOT EXISTS postgres_exporter WITH PASSWORD 'monitoring_password';
+        ALTER USER postgres_exporter SET SEARCH_PATH TO postgres_exporter,pg_catalog;
+
+        -- Grant necessary permissions
+        GRANT CONNECT ON DATABASE postgres TO postgres_exporter;
+        GRANT pg_monitor TO postgres_exporter;
+
+        -- Create monitoring schema
+        CREATE SCHEMA IF NOT EXISTS postgres_exporter;
+        GRANT USAGE ON SCHEMA postgres_exporter TO postgres_exporter;
+        GRANT CREATE ON SCHEMA postgres_exporter TO postgres_exporter;
+    EOSQL

@@ -1,0 +1,234 @@
+{
+  "projectName": "ToolBoxAI-Solutions",
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "filesystem",
+    "ide",
+    "git",
+    "github",
+    "docker",
+    "postgres",
+    "memory",
+    "toolboxai-orchestrator"
+  ],
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "description": "Log user prompts for audit trail",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"$(date '+%Y-%m-%d %H:%M:%S'): User prompt submitted\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/audit.log\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash\\(python.*\\.py\\)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"Python script execution: ${CLAUDE_TOOL_PARAMS}\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/python_exec.log\"",
+            "description": "Log Python script executions"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash\\(npm.*\\)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"NPM command: ${CLAUDE_TOOL_PARAMS}\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/npm_exec.log\"",
+            "description": "Log NPM commands"
+          }
+        ]
+      },
+      {
+        "matcher": "Write\\(.*\\.env.*\\)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/scripts/security/check_env_write.py\" \"${CLAUDE_TOOL_PARAMS}\" || exit 1",
+            "description": "Validate .env file modifications for security"
+          }
+        ]
+      },
+      {
+        "matcher": "Write\\(.*\\.json\\)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/scripts/security/check_json_secrets.py\" \"${CLAUDE_TOOL_PARAMS}\" || true",
+            "description": "Check JSON files for exposed secrets"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash\\(git commit.*\\)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git log -1 --pretty=format:\"%h - %an, %ar : %s\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/git_commits.log",
+            "description": "Track git commits"
+          }
+        ]
+      },
+      {
+        "matcher": "MultiEdit\\(.*\\)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"$(date '+%Y-%m-%d %H:%M:%S'): Files modified via MultiEdit\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/file_changes.log",
+            "description": "Log multi-edit operations"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p ${CLAUDE_PROJECT_DIR}/.claude/logs && echo \"Session started at $(date)\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/sessions.log",
+            "description": "Initialize session logging"
+          },
+          {
+            "type": "command",
+            "command": "source ${CLAUDE_PROJECT_DIR}/venv/bin/activate 2>/dev/null || true",
+            "description": "Activate Python virtual environment"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"Session ended at $(date)\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/sessions.log",
+            "description": "Log session end"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"Context compaction at $(date) - Current tokens: ${CLAUDE_TOKEN_COUNT}\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/compaction.log",
+            "description": "Log context compaction events"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "error",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"ERROR: ${CLAUDE_NOTIFICATION_MESSAGE}\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/errors.log",
+            "description": "Log error notifications"
+          }
+        ]
+      },
+      {
+        "matcher": "warning",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"WARNING: ${CLAUDE_NOTIFICATION_MESSAGE}\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/warnings.log",
+            "description": "Log warning notifications"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Read(//Volumes/**)",
+      "Bash(./monitor.sh)",
+      "Bash(./sync.sh:*)",
+      "Bash(curl:*)",
+      "Read(//private/tmp/**)",
+      "Bash(/dev/null)",
+      "Bash(python test_*.py)",
+      "Bash(kill:*)",
+      "Bash(cd:*)",
+      "Bash(source:*)",
+      "Bash(uvicorn:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(psql:*)",
+      "Bash(python:*)",
+      "Bash(find:*)",
+      "Bash(chmod:*)",
+      "Bash(lsof:*)",
+      "Bash(ps:*)",
+      "Bash(redis-cli:*)",
+      "Bash(git:*)",
+      "Bash(grep:*)",
+      "Bash(tree:*)",
+      "Bash(tar:*)",
+      "Bash(ln:*)",
+      "Bash(echo:*)",
+      "Bash(cat:*)",
+      "Bash(nc:*)",
+      "Bash(jobs:*)",
+      "Bash(bash:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "Bash(rm:*)",
+      "Bash(touch:*)",
+      "Bash(tee:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(pytest:*)",
+      "WebFetch(domain:create.roblox.com)",
+      "WebFetch(domain:docs.pytest.org)",
+      "WebFetch(domain:vitest.dev)",
+      "WebFetch(domain:python.langchain.com)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebSearch"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(sudo:*)",
+      "Write(${HOME}/.ssh/**)",
+      "Write(${HOME}/Library/Keychains/**)",
+      "Read(${HOME}/.aws/credentials)",
+      "Read(${HOME}/.config/*/secrets/**)"
+    ],
+    "ask": [
+      "Bash(rm -rf:*)",
+      "Write(**/.env)",
+      "Write(**/.env.local)",
+      "Write(**/.env.production)",
+      "Bash(git push --force:*)"
+    ]
+  },
+  "environment": {
+    "CLAUDE_PROJECT_DIR": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
+    "CLAUDE_PYTHON_PATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/venv/bin/python",
+    "CLAUDE_NODE_PATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/node_modules/.bin"
+  },
+  "features": {
+    "autoActivateVenv": true,
+    "trackGitChanges": true,
+    "logToolUsage": true,
+    "enableContextCompaction": true,
+    "maxTokensBeforeCompact": 100000
+  },
+  "customCommands": {
+    "test": "cd ${CLAUDE_PROJECT_DIR} && make test",
+    "dev": "cd ${CLAUDE_PROJECT_DIR} && make dev",
+    "backend": "cd ${CLAUDE_PROJECT_DIR} && make backend",
+    "dashboard": "cd ${CLAUDE_PROJECT_DIR} && make dashboard",
+    "typecheck": "cd ${CLAUDE_PROJECT_DIR} && npm -w apps/dashboard run typecheck"
+  }
+}

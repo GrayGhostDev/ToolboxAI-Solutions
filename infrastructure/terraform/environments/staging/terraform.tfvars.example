@@ -1,0 +1,150 @@
+# ToolBoxAI Solutions - Staging Environment Configuration
+# Copy this file to terraform.tfvars and update with your values
+
+# Basic Configuration
+aws_region   = "us-east-1"
+owner_email  = "your-email@company.com"
+alert_email  = "staging-alerts@company.com"
+
+# Security Configuration
+allowed_ssh_ips = [
+  "YOUR_OFFICE_IP/32",     # Replace with your office IP
+  "10.0.0.0/8"            # VPC internal access
+]
+
+# API Keys (Set these as environment variables instead for security)
+# openai_api_key    = "sk-..."        # Set via TF_VAR_openai_api_key
+# anthropic_api_key = "sk-ant-..."    # Set via TF_VAR_anthropic_api_key
+# pusher_app_id     = "123456"        # Set via TF_VAR_pusher_app_id
+# pusher_key        = "abc..."        # Set via TF_VAR_pusher_key
+# pusher_secret     = "def..."        # Set via TF_VAR_pusher_secret
+
+# Load Testing Configuration
+enable_load_testing         = true
+load_test_schedule          = "0 2 * * MON-FRI"  # 2 AM weekdays
+load_test_duration_minutes  = 30
+load_test_concurrent_users  = 100
+
+# Blue-Green Deployment
+enable_blue_green = true
+route53_zone_id   = "Z1234567890ABC"  # Replace with your Route53 zone ID
+deployment_strategy = "blue-green"
+
+# Synthetic Monitoring
+enable_synthetic_monitoring    = true
+synthetic_monitoring_frequency = "rate(5 minutes)"
+synthetic_monitoring_endpoints = [
+  "/health",
+  "/api/v1/status",
+  "/api/v1/agents",
+  "/api/v1/contexts"
+]
+
+# Performance Testing
+enable_performance_testing = true
+performance_test_scenarios = {
+  api_load = {
+    endpoint          = "/api/v1/agents"
+    method           = "GET"
+    concurrent_users = 50
+    duration_minutes = 10
+    target_rps       = 100
+  }
+  websocket_load = {
+    endpoint          = "/ws"
+    method           = "WS"
+    concurrent_users = 20
+    duration_minutes = 5
+    target_rps       = 50
+  }
+  database_load = {
+    endpoint          = "/api/v1/contexts"
+    method           = "POST"
+    concurrent_users = 25
+    duration_minutes = 15
+    target_rps       = 75
+  }
+}
+
+# Security Testing
+enable_security_testing = true
+security_test_schedule   = "0 3 * * MON"  # 3 AM Monday
+security_test_types = [
+  "vulnerability_scan",
+  "dependency_check",
+  "secrets_scan",
+  "compliance_check"
+]
+
+# Data Seeding
+enable_data_seeding = true
+active_data_scenario = "standard"
+data_seed_scenarios = {
+  minimal = {
+    agent_count     = 5
+    context_count   = 100
+    session_count   = 50
+    historical_days = 7
+  }
+  standard = {
+    agent_count     = 20
+    context_count   = 1000
+    session_count   = 500
+    historical_days = 30
+  }
+  stress = {
+    agent_count     = 50
+    context_count   = 10000
+    session_count   = 5000
+    historical_days = 90
+  }
+}
+
+# Environment Management
+staging_refresh_schedule = "0 1 * * SUN"  # 1 AM Sunday
+enable_auto_refresh      = false
+preserve_test_data       = true
+
+# Monitoring and Alerting
+staging_alert_thresholds = {
+  cpu_utilization_threshold     = 85
+  memory_utilization_threshold  = 90
+  response_time_threshold       = 2
+  error_rate_threshold          = 5
+}
+
+enable_slack_notifications = true
+# slack_webhook_url = "https://hooks.slack.com/..."  # Set via TF_VAR_slack_webhook_url
+
+# Cost Management
+staging_budget_limit      = 500
+enable_cost_optimization  = true
+spot_instance_percentage  = 70
+
+# Database Management
+enable_database_cloning = false  # Set to true if you want to clone from production
+database_clone_schedule = "0 2 * * SUN"  # 2 AM Sunday
+sanitize_cloned_data    = true
+
+# Feature Flags for Staging
+staging_feature_flags = {
+  enable_experimental_features = true
+  enable_debug_endpoints      = true
+  enable_performance_profiling = true
+  enable_chaos_engineering    = false
+  enable_feature_toggles      = true
+}
+
+# Compliance and Governance
+enable_compliance_testing = true
+compliance_frameworks     = ["SOC2", "GDPR"]
+
+# Integration Testing
+enable_integration_testing = true
+integration_test_suites = [
+  "api_integration",
+  "database_integration",
+  "external_service_integration",
+  "websocket_integration"
+]
+integration_test_schedule = "0 */4 * * *"  # Every 4 hours

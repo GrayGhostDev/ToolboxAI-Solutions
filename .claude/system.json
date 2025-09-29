@@ -1,0 +1,426 @@
+{
+  "project": "ToolboxAI-Solutions Roblox Educational Platform",
+  "version": "2.0.0",
+  "updated": "2025-09-15",
+  "description": "Comprehensive Roblox development environment for educational content generation and interactive learning experiences",
+
+  "configuration": {
+    "roblox_universe_id": "8505376973",
+    "backend_url": "http://127.0.0.1:8008",
+    "plugin_port": "64989",
+    "websocket_url": "ws://127.0.0.1:8008/ws",
+    "pusher_enabled": true,
+    "development_mode": true
+  },
+
+  "official_documentation": {
+    "roblox": {
+      "lua_manual": "https://www.lua.org/manual/5.4/",
+      "devforum": "https://devforum.roblox.com/c/updates/announcements/36",
+      "create_docs": "https://create.roblox.com/docs/en-us/",
+      "content_maturity": "https://create.roblox.com/docs/en-us/production/promotion/content-maturity",
+      "gdpr_ccpa": "https://create.roblox.com/docs/en-us/production/publishing/about-GDPR-and-CCPA",
+      "dmca_guidelines": "https://create.roblox.com/docs/en-us/production/publishing/dmca-guidelines",
+      "youtube_learning": "https://www.youtube.com/@RobloxLearn"
+    },
+    "anthropic": {
+      "claude_code_docs": "https://docs.anthropic.com/en/docs/claude-code/",
+      "api_reference": "https://docs.anthropic.com/en/api/",
+      "best_practices": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering"
+    }
+  },
+
+  "architecture": {
+    "components": {
+      "roblox_studio_plugin": {
+        "location": "roblox/plugins/AIContentGenerator.lua",
+        "purpose": "Main Studio interface for content generation",
+        "features": [
+          "OAuth2 authentication",
+          "Template selection",
+          "Real-time content generation",
+          "Asset deployment",
+          "Progress tracking"
+        ]
+      },
+      "game_server": {
+        "location": "roblox/scripts/ServerScripts/Main.server.lua",
+        "purpose": "Core game server logic",
+        "responsibilities": [
+          "Player authentication",
+          "Session management",
+          "Content loading",
+          "Progress tracking",
+          "Analytics collection"
+        ]
+      },
+      "backend_integration": {
+        "location": "apps/backend/roblox_server.py",
+        "purpose": "Python backend for Roblox communication",
+        "protocols": ["WebSocket", "HTTP REST", "Pusher Channels"]
+      },
+      "dashboard": {
+        "location": "apps/dashboard/src/components/roblox/",
+        "purpose": "React dashboard for teacher management",
+        "components": [
+          "RobloxEnvironmentPreview",
+          "RobloxSessionManager",
+          "TeacherRobloxDashboard"
+        ]
+      }
+    }
+  },
+
+  "development_guidelines": {
+    "lua_standards": {
+      "style": "Roblox Lua Style Guide",
+      "naming": {
+        "modules": "PascalCase",
+        "functions": "camelCase",
+        "constants": "UPPER_SNAKE_CASE",
+        "private": "_prefixUnderscore"
+      },
+      "structure": {
+        "services": "Get all services at module top",
+        "configuration": "Define constants after services",
+        "initialization": "Use init functions for setup",
+        "cleanup": "Implement proper cleanup methods"
+      }
+    },
+    "security": {
+      "authentication": "OAuth2 with JWT tokens",
+      "validation": "Server-side validation for all inputs",
+      "sanitization": "Remove dangerous Lua patterns",
+      "rate_limiting": "100 requests per minute per user",
+      "encryption": "TLS for all communications"
+    },
+    "testing": {
+      "unit_tests": "TestEZ framework for Lua",
+      "integration": "End-to-end workflow tests",
+      "performance": "Monitor memory and network usage",
+      "security": "Regular penetration testing"
+    }
+  },
+
+  "implementation_roadmap": {
+    "phase1_core_systems": {
+      "status": "in_progress",
+      "tasks": [
+        "Main server initialization",
+        "Player management system",
+        "Session tracking",
+        "Basic authentication"
+      ]
+    },
+    "phase2_educational_features": {
+      "status": "pending",
+      "tasks": [
+        "Quiz system implementation",
+        "Interactive lessons",
+        "Progress tracking",
+        "Achievement system"
+      ]
+    },
+    "phase3_content_generation": {
+      "status": "pending",
+      "tasks": [
+        "AI content integration",
+        "Template system",
+        "Dynamic terrain generation",
+        "Asset management"
+      ]
+    },
+    "phase4_gamification": {
+      "status": "pending",
+      "tasks": [
+        "XP and leveling",
+        "Leaderboards",
+        "Badges and rewards",
+        "Social features"
+      ]
+    },
+    "phase5_analytics": {
+      "status": "pending",
+      "tasks": [
+        "Performance monitoring",
+        "Engagement tracking",
+        "Learning analytics",
+        "Teacher dashboards"
+      ]
+    }
+  },
+
+  "api_endpoints": {
+    "roblox": {
+      "base": "/api/v1/roblox",
+      "endpoints": [
+        {
+          "path": "/auth/login",
+          "method": "GET",
+          "purpose": "Initiate OAuth login"
+        },
+        {
+          "path": "/auth/callback",
+          "method": "GET",
+          "purpose": "Handle OAuth callback"
+        },
+        {
+          "path": "/push/{content_id}",
+          "method": "POST",
+          "purpose": "Push content to Roblox"
+        },
+        {
+          "path": "/sessions",
+          "method": "GET",
+          "purpose": "Get active sessions"
+        },
+        {
+          "path": "/templates",
+          "method": "GET",
+          "purpose": "Get available templates"
+        },
+        {
+          "path": "/analytics/{world_id}",
+          "method": "GET",
+          "purpose": "Get world analytics"
+        },
+        {
+          "path": "/sync/{world_id}",
+          "method": "POST",
+          "purpose": "Sync world data"
+        }
+      ]
+    },
+    "websocket": {
+      "base": "ws://localhost:8008",
+      "endpoints": [
+        "/ws/roblox",
+        "/ws/content",
+        "/ws/agent/{agent_id}"
+      ]
+    }
+  },
+
+  "file_structure": {
+    "roblox": {
+      "src": {
+        "Main.server.lua": "Entry point for game server",
+        "Modules": {
+          "integration.lua": "Backend integration module",
+          "AuthManager.lua": "Authentication handling",
+          "ContentSync.lua": "Content synchronization"
+        }
+      },
+      "scripts": {
+        "ServerScripts": {
+          "Main.server.lua": "Main server logic",
+          "GameManager.lua": "Game state management",
+          "DataStore.lua": "Data persistence",
+          "AuthenticationHandler.lua": "Player authentication",
+          "ContentLoader.lua": "Dynamic content loading"
+        },
+        "ModuleScripts": {
+          "QuizSystem.lua": "Quiz functionality",
+          "GamificationHub.lua": "XP and achievements",
+          "TerrainGenerator.lua": "Dynamic terrain",
+          "NavigationMenu.lua": "UI navigation",
+          "NetworkManager.lua": "Network communication",
+          "ValidationModule.lua": "Input validation",
+          "AnimationController.lua": "Animation management",
+          "LocalizationModule.lua": "Multi-language support",
+          "PerformanceMonitor.lua": "Performance tracking",
+          "SecurityValidator.lua": "Security checks",
+          "TerminalBridge.lua": "Terminal integration",
+          "ContentDeployer.lua": "Content deployment",
+          "ObjectPlacer.lua": "Object placement system",
+          "QuizUI.lua": "Quiz interface",
+          "ScriptInjector.lua": "Dynamic script loading"
+        },
+        "ClientScripts": {
+          "UI.client.lua": "User interface",
+          "Input.client.lua": "Input handling",
+          "CameraController.client.lua": "Camera management",
+          "SoundManager.client.lua": "Audio management"
+        }
+      },
+      "plugins": {
+        "AIContentGenerator.lua": "Main Studio plugin",
+        "WebSocketFallback.lua": "WebSocket fallback",
+        "PluginConfig.lua": "Plugin configuration"
+      },
+      "API": {
+        "Dashboard": {
+          "dashboardApi.lua": "Dashboard API client"
+        },
+        "GhostBackend": {
+          "ghostApi.lua": "Ghost backend client"
+        }
+      },
+      "Config": {
+        "settings.lua": "Game configuration"
+      },
+      "tests": {
+        "IntegrationTests.lua": "Integration test suite"
+      }
+    }
+  },
+
+  "features": {
+    "educational": {
+      "quiz_system": {
+        "multiple_choice": true,
+        "true_false": true,
+        "fill_blank": true,
+        "drag_drop": true,
+        "timed_mode": true,
+        "instant_feedback": true,
+        "explanations": true
+      },
+      "lesson_types": {
+        "interactive": "Hands-on learning experiences",
+        "tutorial": "Guided step-by-step lessons",
+        "exploration": "Open-ended discovery learning",
+        "collaborative": "Multi-player learning activities"
+      },
+      "progress_tracking": {
+        "checkpoints": true,
+        "save_states": true,
+        "analytics": true,
+        "reports": true
+      }
+    },
+    "gamification": {
+      "xp_system": {
+        "sources": ["quiz_completion", "lesson_progress", "achievements", "daily_login"],
+        "leveling": "exponential",
+        "max_level": 100
+      },
+      "achievements": {
+        "categories": ["academic", "social", "exploration", "mastery"],
+        "rarities": ["common", "rare", "epic", "legendary"],
+        "display": "badge_showcase"
+      },
+      "leaderboards": {
+        "types": ["weekly", "monthly", "all_time"],
+        "categories": ["xp", "achievements", "quiz_scores"],
+        "privacy": "opt_in"
+      }
+    },
+    "content_generation": {
+      "ai_powered": true,
+      "templates": 12,
+      "customization": "full",
+      "real_time": true,
+      "collaborative": true
+    }
+  },
+
+  "testing": {
+    "lua_tests": {
+      "framework": "TestEZ",
+      "location": "roblox/tests/",
+      "coverage_target": "80%"
+    },
+    "integration_tests": {
+      "tools": ["pytest", "jest", "vitest"],
+      "scenarios": [
+        "user_registration",
+        "content_generation",
+        "quiz_completion",
+        "progress_sync",
+        "multiplayer_session"
+      ]
+    },
+    "performance_benchmarks": {
+      "metrics": [
+        "frame_rate",
+        "memory_usage",
+        "network_latency",
+        "load_times"
+      ],
+      "targets": {
+        "fps": 60,
+        "memory_mb": 500,
+        "latency_ms": 100,
+        "load_seconds": 3
+      }
+    }
+  },
+
+  "deployment": {
+    "environments": {
+      "development": {
+        "backend": "http://localhost:8008",
+        "dashboard": "http://localhost:5179",
+        "roblox": "studio_test"
+      },
+      "staging": {
+        "backend": "https://staging-api.toolboxai.com",
+        "dashboard": "https://staging.toolboxai.com",
+        "roblox": "staging_universe"
+      },
+      "production": {
+        "backend": "https://api.toolboxai.com",
+        "dashboard": "https://toolboxai.com",
+        "roblox": "production_universe"
+      }
+    },
+    "ci_cd": {
+      "github_actions": true,
+      "rojo_build": true,
+      "automated_tests": true,
+      "deployment_gates": ["tests_pass", "security_scan", "performance_check"]
+    }
+  },
+
+  "compliance": {
+    "standards": ["COPPA", "FERPA", "GDPR", "CCPA"],
+    "age_rating": "9+",
+    "content_moderation": "automated_and_manual",
+    "data_retention": "90_days",
+    "parental_controls": true
+  },
+
+  "monitoring": {
+    "metrics": {
+      "application": ["errors", "performance", "usage"],
+      "business": ["engagement", "retention", "learning_outcomes"],
+      "infrastructure": ["uptime", "latency", "throughput"]
+    },
+    "tools": {
+      "error_tracking": "Sentry",
+      "analytics": "Custom + Google Analytics",
+      "monitoring": "DataDog",
+      "logging": "CloudWatch"
+    }
+  },
+
+  "support": {
+    "documentation": "https://docs.toolboxai.com",
+    "discord": "https://discord.gg/toolboxai",
+    "email": "support@toolboxai.com",
+    "forum": "https://forum.toolboxai.com"
+  },
+
+  "team_notes": {
+    "priorities": [
+      "Complete core Lua implementation",
+      "Ensure security compliance",
+      "Optimize performance",
+      "Enhance user experience",
+      "Scale infrastructure"
+    ],
+    "known_issues": [
+      "WebSocket fallback needed for some networks",
+      "Plugin installation requires manual approval",
+      "Rate limiting needs fine-tuning"
+    ],
+    "future_enhancements": [
+      "VR support",
+      "Mobile app",
+      "AI tutoring",
+      "Parent portal",
+      "Curriculum alignment"
+    ]
+  }
+}

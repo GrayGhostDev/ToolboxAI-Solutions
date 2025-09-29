@@ -1,0 +1,236 @@
+# Common types and scalars used across the GraphQL schema
+
+# Custom scalar types
+scalar DateTime
+scalar UUID
+scalar JSON
+scalar URL
+scalar Email
+
+# Pagination types following Relay specification
+type PageInfo {
+  """
+  When paginating forwards, are there more items?
+  """
+  hasNextPage: Boolean!
+
+  """
+  When paginating backwards, are there more items?
+  """
+  hasPreviousPage: Boolean!
+
+  """
+  When paginating backwards, the cursor to continue.
+  """
+  startCursor: String
+
+  """
+  When paginating forwards, the cursor to continue.
+  """
+  endCursor: String
+}
+
+# Input type for pagination
+input PaginationInput {
+  """
+  Returns the first n elements from the list
+  """
+  first: Int
+
+  """
+  Returns the elements in the list that come after the specified cursor
+  """
+  after: String
+
+  """
+  Returns the last n elements from the list
+  """
+  last: Int
+
+  """
+  Returns the elements in the list that come before the specified cursor
+  """
+  before: String
+}
+
+# Sort direction enum
+enum SortDirection {
+  ASC
+  DESC
+}
+
+# Common error type
+type Error {
+  """
+  Machine-readable error code
+  """
+  code: String!
+
+  """
+  Human-readable error message
+  """
+  message: String!
+
+  """
+  Field that caused the error, if applicable
+  """
+  field: String
+
+  """
+  Additional details about the error
+  """
+  details: JSON
+}
+
+# Generic result type for mutations
+interface MutationResult {
+  """
+  Whether the mutation was successful
+  """
+  success: Boolean!
+
+  """
+  List of errors, if any
+  """
+  errors: [Error!]
+
+  """
+  Human-readable message
+  """
+  message: String
+}
+
+# File upload type
+type File {
+  """
+  Unique file identifier
+  """
+  id: UUID!
+
+  """
+  Original filename
+  """
+  filename: String!
+
+  """
+  MIME type of the file
+  """
+  mimetype: String!
+
+  """
+  File size in bytes
+  """
+  size: Int!
+
+  """
+  URL to access the file
+  """
+  url: URL!
+
+  """
+  When the file was uploaded
+  """
+  uploadedAt: DateTime!
+}
+
+# Address type for location information
+type Address {
+  """
+  Street address line 1
+  """
+  street1: String
+
+  """
+  Street address line 2
+  """
+  street2: String
+
+  """
+  City
+  """
+  city: String
+
+  """
+  State or province
+  """
+  state: String
+
+  """
+  Postal code
+  """
+  postalCode: String
+
+  """
+  Country
+  """
+  country: String
+
+  """
+  Latitude for mapping
+  """
+  latitude: Float
+
+  """
+  Longitude for mapping
+  """
+  longitude: Float
+}
+
+# Timestamp information
+type Timestamps {
+  """
+  When the entity was created
+  """
+  createdAt: DateTime!
+
+  """
+  When the entity was last updated
+  """
+  updatedAt: DateTime!
+
+  """
+  When the entity was deleted (soft delete)
+  """
+  deletedAt: DateTime
+}
+
+# Status enum for various entities
+enum Status {
+  DRAFT
+  PENDING
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+  DELETED
+}
+
+# Difficulty levels for educational content
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+# Subject areas
+enum Subject {
+  MATHEMATICS
+  SCIENCE
+  HISTORY
+  ENGLISH
+  ART
+  GEOGRAPHY
+  COMPUTER_SCIENCE
+  PHYSICS
+  CHEMISTRY
+  BIOLOGY
+}
+
+# Achievement types for gamification
+enum AchievementType {
+  MILESTONE
+  STREAK
+  COMPLETION
+  MASTERY
+  SPECIAL
+}

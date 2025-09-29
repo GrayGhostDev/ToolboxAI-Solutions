@@ -1,0 +1,291 @@
+# Admission Webhook Deployment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: toolboxai-system
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: security-webhook
+  namespace: toolboxai-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: security-webhook
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingwebhookconfigurations", "mutatingwebhookconfigurations"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: security-webhook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: security-webhook
+subjects:
+  - kind: ServiceAccount
+    name: security-webhook
+    namespace: toolboxai-system
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: webhook-tls
+  namespace: toolboxai-system
+type: kubernetes.io/tls
+data:
+  # Generate with: ./scripts/generate-webhook-certs.sh
+  tls.crt: LS0tLS1CRUdJTi... # Base64 encoded certificate
+  tls.key: LS0tLS1CRUdJTi... # Base64 encoded private key
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: security-webhook
+  namespace: toolboxai-system
+  labels:
+    app: security-webhook
+    version: v1
+    compliance: required
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: security-webhook
+  template:
+    metadata:
+      labels:
+        app: security-webhook
+        version: v1
+        compliance: required
+        data-classification: restricted
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: security-webhook
+      automountServiceAccountToken: true
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: webhook
+          image: toolboxai.azurecr.io/security-webhook:v1.0.0
+          imagePullPolicy: Always
+          ports:
+            - name: webhook
+              containerPort: 443
+              protocol: TCP
+            - name: metrics
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: TLS_CERT_FILE
+              value: /tls/cert.pem
+            - name: TLS_KEY_FILE
+              value: /tls/key.pem
+            - name: LOG_LEVEL
+              value: INFO
+            - name: ENVIRONMENT
+              value: production
+          volumeMounts:
+            - name: webhook-tls
+              mountPath: /tls
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 443
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 443
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+      volumes:
+        - name: webhook-tls
+          secret:
+            secretName: webhook-tls
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - security-webhook
+                topologyKey: kubernetes.io/hostname
+      tolerations:
+        - key: "node-role.kubernetes.io/master"
+          operator: "Exists"
+          effect: "NoSchedule"
+      priorityClassName: system-cluster-critical
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: security-webhook
+  namespace: toolboxai-system
+  labels:
+    app: security-webhook
+spec:
+  type: ClusterIP
+  ports:
+    - name: webhook
+      port: 443
+      targetPort: 443
+      protocol: TCP
+    - name: metrics
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: security-webhook
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: security-webhook
+  namespace: toolboxai-system
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: security-webhook
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: security-webhook
+  namespace: toolboxai-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: security-webhook
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+# ServiceMonitor for Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: security-webhook
+  namespace: toolboxai-system
+  labels:
+    app: security-webhook
+spec:
+  selector:
+    matchLabels:
+      app: security-webhook
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+---
+# PrometheusRule for alerting
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: security-webhook-alerts
+  namespace: toolboxai-system
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+    - name: security-webhook.rules
+      interval: 30s
+      rules:
+        - alert: SecurityWebhookDown
+          expr: up{job="security-webhook"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            component: security
+          annotations:
+            summary: "Security webhook is down"
+            description: "Security admission webhook {{ $labels.instance }} has been down for more than 5 minutes."
+
+        - alert: SecurityWebhookHighLatency
+          expr: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job="security-webhook"}[5m])) > 1
+          for: 10m
+          labels:
+            severity: warning
+            component: security
+          annotations:
+            summary: "Security webhook high latency"
+            description: "Security webhook 99th percentile latency is {{ $value }}s."
+
+        - alert: SecurityWebhookHighRejectionRate
+          expr: rate(webhook_rejection_total[5m]) > 0.1
+          for: 15m
+          labels:
+            severity: warning
+            component: security
+          annotations:
+            summary: "High pod rejection rate"
+            description: "Security webhook is rejecting {{ $value | humanizePercentage }} of pods."

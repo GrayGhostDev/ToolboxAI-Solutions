@@ -1,0 +1,37 @@
+[
+  {
+    "state_id": "state_1758164785.334763_5142",
+    "timestamp": "2025-09-17T23:06:25.334884",
+    "state_type": "quiz_session",
+    "data": {
+      "agent": "QuizAgent",
+      "task": "Handle quiz aspects of: Create an educational game about basic geometry for middle school students with a quiz",
+      "subject": "mathematics",
+      "topic": "basic_geometry",
+      "grade_level": "middle_school"
+    },
+    "metadata": {
+      "observation_keys": [
+        "agent",
+        "task",
+        "subject",
+        "topic",
+        "grade_level"
+      ],
+      "data_size": 229,
+      "source": "unknown"
+    },
+    "confidence": 0.5,
+    "completeness": 0.3333333333333333,
+    "freshness": 1.0,
+    "subject_area": null,
+    "grade_level": "middle_school",
+    "learning_objective": null,
+    "student_id": null,
+    "game_state": null,
+    "player_positions": null,
+    "active_tools": null,
+    "quality": "fair",
+    "age_seconds": 0.001506
+  }
+]

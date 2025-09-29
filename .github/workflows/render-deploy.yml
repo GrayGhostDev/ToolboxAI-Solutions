@@ -1,0 +1,635 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches:
+      - main
+      - production
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '20.12.0'
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  # Run GitHub Agents for pre-deployment checks
+  agent-checks:
+    name: Agent Pre-Deployment Checks
+    runs-on: ubuntu-latest
+    outputs:
+      deployment_ready: ${{ steps.orchestrator.outputs.ready }}
+      environment_valid: ${{ steps.environment.outputs.valid }}
+      security_passed: ${{ steps.security.outputs.passed }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Deployment Orchestrator
+        id: orchestrator
+        run: |
+          python -c "
+          import asyncio
+          import json
+          import sys
+          sys.path.insert(0, '.')
+
+          from core.agents.github_agents.orchestrator import GitHubAgentOrchestrator, OperationType
+
+          async def main():
+              orchestrator = GitHubAgentOrchestrator()
+              result = await orchestrator.run(OperationType.DEPLOYMENT, auto_fix=False)
+
+              with open('deployment_check.json', 'w') as f:
+                  json.dump(result, f, indent=2)
+
+              ready = result.get('success', False) and not result.get('summary', {}).get('blockers', 0)
+              print(f'Deployment ready: {ready}')
+
+              if not ready:
+                  print('\\n❌ Deployment blocked due to:')
+                  if result.get('summary', {}).get('errors'):
+                      for error in result['summary']['errors']:
+                          print(f'  - {error}')
+
+              return 0 if ready else 1
+
+          exit_code = asyncio.run(main())
+          echo \"ready=$([[ $exit_code -eq 0 ]] && echo 'true' || echo 'false')\" >> $GITHUB_OUTPUT
+          " || true
+
+      - name: Environment Validation
+        id: environment
+        run: |
+          python -c "
+          import asyncio
+          import json
+          import sys
+          sys.path.insert(0, '.')
+
+          from core.agents.github_agents import EnvironmentValidationAgent
+
+          async def main():
+              agent = EnvironmentValidationAgent()
+              env = 'production' if '${{ github.ref }}' == 'refs/heads/production' else 'staging'
+              result = await agent.analyze(environment=env)
+
+              valid = result.get('valid', False)
+              print(f'Environment {env} valid: {valid}')
+
+              if not valid and result.get('missing_vars'):
+                  print('\\n⚠️ Missing environment variables:')
+                  for var in result['missing_vars'][:10]:
+                      print(f'  - {var}')
+
+              return 0 if valid else 1
+
+          exit_code = asyncio.run(main())
+          echo \"valid=$([[ $exit_code -eq 0 ]] && echo 'true' || echo 'false')\" >> $GITHUB_OUTPUT
+          " || true
+
+      - name: Security Check
+        id: security
+        run: |
+          python -c "
+          import asyncio
+          import json
+          import sys
+          sys.path.insert(0, '.')
+
+          from core.agents.github_agents import DependencySecurityAgent
+
+          async def main():
+              agent = DependencySecurityAgent()
+              result = await agent.analyze(scan_python=True, scan_nodejs=True)
+
+              has_critical = any(
+                  v.get('severity') == 'critical'
+                  for v in result.get('vulnerabilities', [])
+              )
+
+              passed = not has_critical
+              print(f'Security check passed: {passed}')
+
+              if has_critical:
+                  print('\\n🚨 Critical vulnerabilities found:')
+                  for v in result['vulnerabilities']:
+                      if v.get('severity') == 'critical':
+                          print(f\"  - {v.get('package')}: {v.get('vulnerability_id')}\")
+
+              return 0 if passed else 1
+
+          exit_code = asyncio.run(main())
+          echo \"passed=$([[ $exit_code -eq 0 ]] && echo 'true' || echo 'false')\" >> $GITHUB_OUTPUT
+          " || true
+
+      - name: Upload Agent Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-deployment-reports
+          path: |
+            deployment_check.json
+
+  validate:
+    name: Validate Configuration
+    runs-on: ubuntu-latest
+    needs: agent-checks
+    if: needs.agent-checks.outputs.deployment_ready == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: apps/dashboard/package-lock.json
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Node dependencies
+        working-directory: apps/dashboard
+        run: npm ci
+
+      - name: Run validation script
+        run: |
+          chmod +x scripts/validate-render.sh
+          ./scripts/validate-render.sh
+
+      - name: Check Python syntax
+        run: |
+          python -m py_compile apps/backend/main.py
+          python -m py_compile apps/backend/api/health.py || true
+
+      - name: Validate YAML configuration
+        run: |
+          pip install pyyaml
+          python -c "import yaml; yaml.safe_load(open('render.yaml'))"
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: validate
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: eduplatform
+          POSTGRES_PASSWORD: eduplatform2024
+          POSTGRES_DB: educational_platform_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: apps/dashboard/package-lock.json
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Node dependencies
+        working-directory: apps/dashboard
+        run: npm ci
+
+      - name: Run Python tests
+        env:
+          DATABASE_URL: postgresql://eduplatform:eduplatform2024@localhost/educational_platform_test
+          REDIS_URL: redis://localhost:6379
+          SECRET_KEY: test-secret-key
+          JWT_SECRET_KEY: test-jwt-key
+          ENVIRONMENT: test
+        run: |
+          pytest tests/ -v --tb=short --maxfail=5 || true
+
+      - name: Run frontend tests
+        working-directory: apps/dashboard
+        run: npm test -- --run || true
+
+      - name: Check frontend build
+        working-directory: apps/dashboard
+        run: npm run build
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: validate
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Check for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  deploy:
+    name: Deploy to Render
+    runs-on: ubuntu-latest
+    needs: [validate, test, security-scan]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/production'
+
+    environment:
+      name: ${{ github.ref == 'refs/heads/production' && 'production' || 'staging' }}
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set deployment environment
+        id: set-env
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/production" ]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "render_service_id=${{ secrets.RENDER_SERVICE_ID_PROD }}" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "render_service_id=${{ secrets.RENDER_SERVICE_ID_STAGING }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to Render
+        id: deploy
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: ${{ steps.set-env.outputs.render_service_id }}
+        run: |
+          # Trigger deployment via Render API
+          response=$(curl -X POST \
+            "https://api.render.com/v1/services/${SERVICE_ID}/deploys" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": false}')
+
+          deploy_id=$(echo $response | jq -r '.id')
+          echo "deploy_id=${deploy_id}" >> $GITHUB_OUTPUT
+
+          # Get service URL
+          service_info=$(curl -X GET \
+            "https://api.render.com/v1/services/${SERVICE_ID}" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}")
+
+          url=$(echo $service_info | jq -r '.serviceDetails.url')
+          echo "url=https://${url}" >> $GITHUB_OUTPUT
+
+      - name: Wait for deployment
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: ${{ steps.set-env.outputs.render_service_id }}
+          DEPLOY_ID: ${{ steps.deploy.outputs.deploy_id }}
+        run: |
+          # Poll deployment status
+          for i in {1..60}; do
+            status=$(curl -X GET \
+              "https://api.render.com/v1/services/${SERVICE_ID}/deploys/${DEPLOY_ID}" \
+              -H "Authorization: Bearer ${RENDER_API_KEY}" \
+              | jq -r '.status')
+
+            echo "Deployment status: ${status}"
+
+            if [ "$status" == "live" ]; then
+              echo "✅ Deployment successful!"
+              exit 0
+            elif [ "$status" == "build_failed" ] || [ "$status" == "update_failed" ]; then
+              echo "❌ Deployment failed!"
+              exit 1
+            fi
+
+            sleep 10
+          done
+
+          echo "⏱️ Deployment timeout!"
+          exit 1
+
+      - name: Verify deployment
+        run: |
+          url="${{ steps.deploy.outputs.url }}"
+          echo "Checking health endpoint at ${url}/health"
+
+          for i in {1..10}; do
+            if curl -f "${url}/health" > /dev/null 2>&1; then
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+            echo "Waiting for service to be ready..."
+            sleep 10
+          done
+
+          echo "❌ Health check failed!"
+          exit 1
+
+      - name: Create deployment annotation
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: '${{ steps.set-env.outputs.environment }}',
+              description: 'Deployed to Render',
+              auto_merge: false,
+              required_contexts: [],
+              production_environment: ${{ github.ref == 'refs/heads/production' }}
+            });
+
+      - name: Notify deployment status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ job.status }}' === 'success' ? '✅' : '❌';
+            const environment = '${{ steps.set-env.outputs.environment }}';
+            const url = '${{ steps.deploy.outputs.url }}';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `${status} Deployment to **${environment}** ${status === '✅' ? 'succeeded' : 'failed'}!\n\nURL: ${url}`
+            });
+
+  rollback:
+    name: Rollback if Failed
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: failure()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Execute Rollback with Agent
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID_STAGING }}
+        run: |
+          python -c "
+          import asyncio
+          import json
+          import sys
+          import os
+          sys.path.insert(0, '.')
+
+          from core.agents.github_agents import RollbackManagementAgent
+
+          async def main():
+              agent = RollbackManagementAgent()
+
+              # Detect deployment failure
+              failure_result = await agent.detect_deployment_failure(
+                  metrics={
+                      'error_rate': 100,  # Deployment failed
+                      'response_time_ms': 0,
+                      'availability': 0,
+                      'deployment_status': 'failed'
+                  }
+              )
+
+              if failure_result['needs_rollback']:
+                  print('🔄 Initiating automated rollback...')
+
+                  # Get rollback candidates
+                  candidates = await agent.get_rollback_candidates()
+
+                  if candidates['candidates']:
+                      best_candidate = candidates['candidates'][0]
+                      print(f\"Rolling back to: {best_candidate['version']}\")
+
+                      # Execute rollback
+                      rollback_result = await agent.execute_rollback(
+                          target_version=best_candidate['version'],
+                          strategy='immediate',
+                          reason='Deployment failure detected',
+                          service='render',
+                          service_id=os.getenv('SERVICE_ID')
+                      )
+
+                      if rollback_result['success']:
+                          print('✅ Rollback successful!')
+
+                          # Send notifications
+                          await agent.send_rollback_notifications(
+                              channels=['github'],
+                              severity='high',
+                              message=f\"Deployment rollback executed for {os.getenv('GITHUB_REPOSITORY')}\",
+                              details=rollback_result
+                          )
+                      else:
+                          print('❌ Rollback failed!')
+                          return 1
+                  else:
+                      print('❌ No suitable rollback candidates found')
+                      return 1
+              else:
+                  print('ℹ️ No rollback needed based on metrics')
+
+              return 0
+
+          exit_code = asyncio.run(main())
+          sys.exit(exit_code)
+          " || true
+
+      - name: Manual Rollback Fallback
+        if: failure()
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID_STAGING }}
+        run: |
+          echo "🔄 Executing manual rollback fallback..."
+
+          # Get previous successful deploy
+          deploys=$(curl -X GET \
+            "https://api.render.com/v1/services/${SERVICE_ID}/deploys?limit=10" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}")
+
+          # Find last successful deploy
+          last_success=$(echo $deploys | jq -r '.[] | select(.status == "live") | .id' | head -n 2 | tail -n 1)
+
+          if [ -n "$last_success" ]; then
+            # Trigger rollback
+            curl -X POST \
+              "https://api.render.com/v1/services/${SERVICE_ID}/deploys/${last_success}/rollback" \
+              -H "Authorization: Bearer ${RENDER_API_KEY}"
+
+            echo "✅ Manual rollback initiated to deploy ${last_success}"
+          else
+            echo "❌ No previous successful deployment found"
+          fi
+
+  post-deployment-monitoring:
+    name: Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: success()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Monitor Deployment Health
+        run: |
+          python -c "
+          import asyncio
+          import json
+          import sys
+          import time
+          sys.path.insert(0, '.')
+
+          from core.agents.github_agents import PipelineMonitoringAgent
+
+          async def main():
+              agent = PipelineMonitoringAgent()
+
+              # Monitor for 5 minutes post-deployment
+              print('📊 Starting post-deployment monitoring...')
+
+              for i in range(5):
+                  print(f'\\nCheck {i+1}/5')
+
+                  # Collect metrics (this would normally integrate with monitoring systems)
+                  result = await agent.analyze(
+                      repo='${{ github.repository }}',
+                      days=1
+                  )
+
+                  if result.get('metrics'):
+                      metrics = result['metrics']
+                      health_score = metrics.get('health_score', 0)
+                      success_rate = metrics.get('success_rate', 0)
+
+                      print(f'Health Score: {health_score}/100')
+                      print(f'Success Rate: {success_rate}%')
+
+                      if health_score < 50:
+                          print('⚠️ Low health score detected!')
+                          return 1
+
+                  # Wait before next check
+                  if i < 4:
+                      await asyncio.sleep(60)
+
+              print('\\n✅ Post-deployment monitoring complete')
+              return 0
+
+          exit_code = asyncio.run(main())
+          sys.exit(exit_code)
+          " || true

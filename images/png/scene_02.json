@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Scene/02.png",
+  "file_name": "02.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 3200,
+      "height": 2400,
+      "total_pixels": 7680000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 362176,
+      "most_common": [
+        [
+          3,
+          [
+            255,
+            255,
+            254,
+            255
+          ]
+        ],
+        [
+          3,
+          [
+            255,
+            255,
+            253,
+            255
+          ]
+        ],
+        [
+          1,
+          [
+            255,
+            254,
+            253,
+            255
+          ]
+        ],
+        [
+          8,
+          [
+            255,
+            254,
+            252,
+            255
+          ]
+        ],
+        [
+          1,
+          [
+            254,
+            254,
+            252,
+            255
+          ]
+        ],
+        [
+          1,
+          [
+            255,
+            253,
+            252,
+            255
+          ]
+        ],
+        [
+          2,
+          [
+            254,
+            253,
+            252,
+            255
+          ]
+        ],
+        [
+          81,
+          [
+            255,
+            255,
+            251,
+            255
+          ]
+        ],
+        [
+          75,
+          [
+            255,
+            254,
+            251,
+            255
+          ]
+        ],
+        [
+          1,
+          [
+            255,
+            253,
+            251,
+            255
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          42,
+          45,
+          127,
+          255
+        ],
+        "frequency": 922
+      },
+      {
+        "color": [
+          43,
+          45,
+          128,
+          255
+        ],
+        "frequency": 304
+      },
+      {
+        "color": [
+          89,
+          82,
+          177,
+          255
+        ],
+        "frequency": 183
+      },
+      {
+        "color": [
+          91,
+          84,
+          179,
+          255
+        ],
+        "frequency": 179
+      },
+      {
+        "color": [
+          188,
+          119,
+          87,
+          255
+        ],
+        "frequency": 170
+      }
+    ]
+  }
+}

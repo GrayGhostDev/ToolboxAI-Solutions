@@ -1,0 +1,161 @@
+{
+  "success": true,
+  "file_path": "design_files/characters/PNG/Item/sword.png",
+  "file_name": "sword.png",
+  "file_type": ".png",
+  "parsed_data": {
+    "format": "image",
+    "file_format": "PNG",
+    "mode": "RGBA",
+    "size": {
+      "width": 2000,
+      "height": 2000,
+      "total_pixels": 4000000
+    },
+    "has_transparency": true,
+    "color_channels": 4,
+    "exif_data": {},
+    "color_histogram": {
+      "unique_colors": 10579,
+      "most_common": [
+        [
+          16,
+          [
+            255,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          26784,
+          [
+            0,
+            255,
+            255,
+            1
+          ]
+        ],
+        [
+          848,
+          [
+            191,
+            246,
+            255,
+            255
+          ]
+        ],
+        [
+          1344,
+          [
+            190,
+            246,
+            255,
+            255
+          ]
+        ],
+        [
+          576,
+          [
+            189,
+            246,
+            255,
+            255
+          ]
+        ],
+        [
+          192,
+          [
+            188,
+            246,
+            255,
+            255
+          ]
+        ],
+        [
+          64,
+          [
+            187,
+            246,
+            255,
+            255
+          ]
+        ],
+        [
+          224,
+          [
+            191,
+            245,
+            255,
+            255
+          ]
+        ],
+        [
+          3120,
+          [
+            190,
+            245,
+            255,
+            255
+          ]
+        ],
+        [
+          12336,
+          [
+            189,
+            245,
+            255,
+            255
+          ]
+        ]
+      ]
+    },
+    "dominant_colors": [
+      {
+        "color": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "frequency": 17136
+      },
+      {
+        "color": [
+          0,
+          0,
+          255,
+          1
+        ],
+        "frequency": 201
+      },
+      {
+        "color": [
+          0,
+          127,
+          255,
+          2
+        ],
+        "frequency": 157
+      },
+      {
+        "color": [
+          0,
+          255,
+          255,
+          1
+        ],
+        "frequency": 148
+      },
+      {
+        "color": [
+          0,
+          170,
+          255,
+          3
+        ],
+        "frequency": 130
+      }
+    ]
+  }
+}

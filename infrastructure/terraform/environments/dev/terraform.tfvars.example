@@ -1,0 +1,64 @@
+# ToolBoxAI Solutions - Development Environment Configuration
+# Copy this file to terraform.tfvars and update with your values
+
+# Basic Configuration
+aws_region   = "us-east-1"
+owner_email  = "your-email@company.com"
+alert_email  = "dev-alerts@company.com"
+
+# Security Configuration
+allowed_ssh_ips = [
+  "YOUR_IP_ADDRESS/32",  # Replace with your actual IP
+  "10.0.0.0/8"          # VPC internal access
+]
+
+# Development Access
+developer_workstation_ips = [
+  "YOUR_OFFICE_IP/32",   # Replace with your office IP
+  "YOUR_HOME_IP/32"      # Replace with your home IP
+]
+
+# API Keys (Set these as environment variables instead for security)
+# openai_api_key    = "sk-..."        # Set via TF_VAR_openai_api_key
+# anthropic_api_key = "sk-ant-..."    # Set via TF_VAR_anthropic_api_key
+# pusher_app_id     = "123456"        # Set via TF_VAR_pusher_app_id
+# pusher_key        = "abc..."        # Set via TF_VAR_pusher_key
+# pusher_secret     = "def..."        # Set via TF_VAR_pusher_secret
+
+# Development Features
+enable_bastion           = true
+bastion_key_name         = "dev-toolboxai-key"  # Create this key pair first
+enable_auto_shutdown     = true
+enable_cost_alerts       = true
+monthly_budget_limit     = 200
+
+# Development Settings
+enable_debug_logging         = true
+enable_experimental_features = true
+mock_external_services       = false
+local_development_mode       = false
+enable_hot_reload           = true
+
+# Cleanup and Retention
+cleanup_retention_days = 7
+
+# Auto Shutdown/Startup Schedule
+auto_shutdown_schedule = "0 22 * * MON-FRI"  # 10 PM weekdays
+auto_startup_schedule  = "0 8 * * MON-FRI"   # 8 AM weekdays
+
+# Developer Access Hours
+developer_access_hours = {
+  start_hour = 8
+  end_hour   = 22
+  timezone   = "America/New_York"
+}
+
+# Additional Resource Tags
+resource_tags = {
+  Environment     = "development"
+  Team           = "engineering"
+  Purpose        = "feature-development"
+  AutoShutdown   = "enabled"
+  CostOptimized  = "true"
+  DeleteAfter    = "30-days"
+}

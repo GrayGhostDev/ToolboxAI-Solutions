@@ -1,0 +1,5 @@
+Flask==3.0.0
+jsonpatch==1.33
+requests==2.31.0
+cryptography==41.0.7
+gunicorn==21.2.0
