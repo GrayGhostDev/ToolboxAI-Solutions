@@ -342,3 +342,6 @@ infrastructure/monitoring/*/htpasswd
 infrastructure/monitoring/*/.htpasswd
 
 node_modules.old.*
+
+# TeamCity local server (too large for git)
+TeamCity/
