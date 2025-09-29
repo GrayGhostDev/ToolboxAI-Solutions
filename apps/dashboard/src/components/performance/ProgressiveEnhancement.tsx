@@ -1,5 +1,5 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import React, { useState, useEffect, useCallback } from 'react';
-import Box from '@mui/material/Box';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import { PerformanceSkeleton } from '../atomic/atoms/PerformanceSkeleton';
 
@@ -136,7 +136,7 @@ export const ProgressiveEnhancement = ({
   // Progressive rendering based on intersection and conditions
   if (!shouldRender) {
     return (
-      <Box ref={ref} sx={{ minHeight: 200 }}>
+      <Box ref={ref} style={{ minHeight: 200 }}>
         {fallback || <PerformanceSkeleton variant={skeletonVariant} />}
       </Box>
     );

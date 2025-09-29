@@ -1,9 +1,9 @@
 import React from 'react';
 import type { Preview } from '@storybook/react';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { Box, Button, Text, Container, Paper, Stack, Group, Card, TextInput, Select, Alert, Modal, Table, Tabs, Menu, Tooltip, Checkbox, Radio, Switch, Slider, Badge, Chip, Avatar, Divider, Progress, Skeleton, ActionIcon, Title, Anchor, Notification, ScrollArea, Grid, Space, Center, Flex, SimpleGrid, Loader, RingProgress, Timeline } from '@mantine/core';
+import { Box, Button, Text, Container, Paper, Stack, Group, Card, TextInput, Select, Alert, Modal, Table, Tabs, Menu, Tooltip, Checkbox, Radio, Switch, Slider, Badge, Chip, Avatar, Divider, Progress, Skeleton, ActionIcon, Title, Anchor, Notification, ScrollArea, Grid, Space, Center, Flex, SimpleGrid, Loader, RingProgress, Timeline } from '@mantine/core';
+import { DatePicker, DateTimePicker } from '@mantine/dates';
+import { DatePicker, DateTimePicker } from '@mantine/dates';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { BrowserRouter } from 'react-router-dom';

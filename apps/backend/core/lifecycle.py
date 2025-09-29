@@ -238,6 +238,11 @@ async def _shutdown_database(app: FastAPI) -> None:
 async def _cleanup_monitoring(app: FastAPI) -> None:
     """Cleanup monitoring and metrics resources"""
     try:
+        # Shutdown OpenTelemetry instrumentation
+        from apps.backend.core.telemetry import telemetry_manager
+        telemetry_manager.shutdown()
+        logger.info("OpenTelemetry telemetry shutdown complete")
+
         # Log successful shutdown
         logger.info(
             "Application shutdown completed",

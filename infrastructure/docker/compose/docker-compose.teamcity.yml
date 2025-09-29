@@ -47,6 +47,7 @@ services:
   # ----------------------------------------
   teamcity-server:
     image: jetbrains/teamcity-server:2025.03
+    platform: linux/amd64
     container_name: teamcity-server
     user: "1000:1000" # Non-root user as per 2025 security standards
     environment:
@@ -60,7 +61,7 @@ services:
       TEAMCITY_HTTPS_PORT: 8111
 
       # External URL for webhooks and agents
-      TEAMCITY_SERVER_URL: ${TEAMCITY_SERVER_URL:-https://grayghost-toolboxai.teamcity.com}
+      TEAMCITY_SERVER_URL: ${TEAMCITY_SERVER_URL:-https://ci.toolboxaisolutions.com}
 
       # Pipeline token for API access
       TEAMCITY_PIPELINE_ACCESS_TOKEN: ${TEAMCITY_PIPELINE_ACCESS_TOKEN}
@@ -83,7 +84,7 @@ services:
       - ../../../.teamcity:/data/teamcity_server/datadir/config/projects/ToolBoxAI/.teamcity:ro
     networks:
       - teamcity
-      - toolboxai # Connect to main network for service integration
+      # - toolboxai # Connect to main network for service integration
     depends_on:
       teamcity-db:
         condition: service_healthy
@@ -105,6 +106,7 @@ services:
   # ----------------------------------------
   teamcity-agent-1:
     image: jetbrains/teamcity-agent:2025.03-linux-sudo
+    platform: linux/amd64
     container_name: teamcity-agent-frontend
     user: "1000:1000"
     privileged: true # Required for Docker-in-Docker
@@ -133,7 +135,7 @@ services:
       - ../../../:/workspace/source:cached
     networks:
       - teamcity
-      - toolboxai
+      # - toolboxai
     depends_on:
       - teamcity-server
     deploy:
@@ -148,6 +150,7 @@ services:
   # ----------------------------------------
   teamcity-agent-2:
     image: jetbrains/teamcity-agent:2025.03-linux-sudo
+    platform: linux/amd64
     container_name: teamcity-agent-backend
     user: "1000:1000"
     privileged: true
@@ -177,7 +180,7 @@ services:
       - ../../../:/workspace/source:cached
     networks:
       - teamcity
-      - toolboxai
+      # - toolboxai
     depends_on:
       - teamcity-server
     deploy:
@@ -192,6 +195,7 @@ services:
   # ----------------------------------------
   teamcity-agent-3:
     image: jetbrains/teamcity-agent:2025.03-linux-sudo
+    platform: linux/amd64
     container_name: teamcity-agent-integration
     user: "1000:1000"
     privileged: true
@@ -225,7 +229,7 @@ services:
       - ../../../:/workspace/source:cached
     networks:
       - teamcity
-      - toolboxai
+      # - toolboxai
     depends_on:
       - teamcity-server
     deploy:
@@ -236,27 +240,28 @@ services:
           memory: 2G
 
   # ----------------------------------------
-  # Docker Registry Cache (Optional)
+  # Docker Registry Cache (Optional - Disabled for ARM64 compatibility)
   # ----------------------------------------
-  registry-cache:
-    image: registry:2
-    container_name: teamcity-registry-cache
-    environment:
-      REGISTRY_PROXY_REMOTEURL: https://registry-1.docker.io
-      REGISTRY_STORAGE_CACHE_BLOBDESCRIPTOR: inmemory
-      REGISTRY_HTTP_ADDR: 0.0.0.0:5000
-    ports:
-      - "5000:5000"
-    volumes:
-      - registry_data:/var/lib/registry
-    networks:
-      - teamcity
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
+  # registry-cache:
+  #   image: registry:2
+  #   container_name: teamcity-registry-cache
+  #   platform: linux/amd64
+  #   environment:
+  #     REGISTRY_PROXY_REMOTEURL: https://registry-1.docker.io
+  #     REGISTRY_STORAGE_CACHE_BLOBDESCRIPTOR: inmemory
+  #     REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+  #   ports:
+  #     - "5000:5000"
+  #   volumes:
+  #     - registry_data:/var/lib/registry
+  #   networks:
+  #     - teamcity
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 512M
+  #       reservations:
+  #         memory: 256M
 
 # ============================================
 # VOLUMES

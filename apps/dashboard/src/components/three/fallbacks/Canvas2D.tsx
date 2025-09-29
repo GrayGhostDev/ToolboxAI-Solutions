@@ -1,5 +1,5 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../../utils/mui-imports';
 import React, { useEffect, useRef } from 'react';
-import Box from '@mui/material/Box';
 
 interface Canvas2DProps {
   width?: number;
@@ -145,7 +145,7 @@ export const Canvas2D: React.FunctionComponent<Canvas2DProps> = ({
 
   return (
     <Box
-      sx={{
+      style={{
         position: 'fixed',
         top: 0,
         left: 0,

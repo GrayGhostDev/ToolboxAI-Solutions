@@ -1,310 +1,300 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Grid from '@mui/material/Grid';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import LinearProgress from '@mui/material/LinearProgress';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
+IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../IconutilsIcon/IconmuiIcon-Iconimports';
+IconimportIcon IconReactIcon, { IconuseEffectIcon, IconuseStateIcon, IconuseCallbackIcon } IconfromIcon 'Iconreact';
 
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ArrowBack,
-  Edit,
-  Delete,
-  School,
-  Schedule,
-  People,
-  Assignment,
-  RocketLaunch,
-} from '@mui/icons-material';
-import { useAppDispatch } from '@/store';
-import { getClass } from '@/services/api';
-import { addNotification } from '@/store/slices/uiSlice';
-import type { ClassDetails as ApiClassDetails } from '@/types/api';
+IconimportIcon { IconuseParamsIcon, IconuseNavigateIcon } IconfromIcon 'IconreactIcon-IconrouterIcon-Icondom';
+IconimportIcon {
+  IconIconArrowLeftIcon,
+  IconIconEditIcon,
+  IconIconTrashIcon,
+  IconIconSchoolIcon,
+  IconIconClockIcon,
+  IconIconUsersIcon,
+  IconIconClipboardIcon,
+  IconIconRocketLaunchIcon,
+} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
+IconimportIcon { IconuseAppDispatchIcon } IconfromIcon '@/Iconstore';
+IconimportIcon { IcongetClassIcon } IconfromIcon '@/IconservicesIcon/Iconapi';
+IconimportIcon { IconaddNotificationIcon } IconfromIcon '@/IconstoreIcon/IconslicesIcon/IconuiSlice';
+IconimportIcon IcontypeIcon { IconClassDetailsIcon IconasIcon IconApiClassDetailsIcon } IconfromIcon '@/IcontypesIcon/Iconapi';
+IconimportIcon { IconIconIcon, IconIconArrowLeftIcon, IconIconClipboardIcon, IconIconClockIcon, IconIconEditIcon, IconIconRocketLaunchIcon, IconIconSchoolIcon, IconIconTrashIcon, IconIconUsersIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
 
-interface ClassDetailsData {
-  id: string | number; // allow both to match API (string) and local expectations
-  name: string;
-  subject?: string; // make optional since API doesn't provide subject
-  grade_level?: number;
-  teacher_name?: string;
-  room?: string;
-  schedule?: string;
-  description?: string;
-  student_count?: number;
-  status?: string;
-  created_at?: string;
-  syllabus_url?: string;
-  resources?: Array<{ name: string; url: string }>;
+IconinterfaceIcon IconClassDetailsDataIcon {
+  IconidIcon: IconstringIcon | IconnumberIcon; // IconallowIcon IconbothIcon IcontoIcon IconmatchIcon IconAPIIcon (IconstringIcon) IconandIcon IconlocalIcon IconexpectationsIcon
+  IconnameIcon: IconstringIcon;
+  IconsubjectIcon?: IconstringIcon; // IconmakeIcon IconoptionalIcon IconsinceIcon IconAPIIcon Icondoesn'IcontIcon IconprovideIcon IconsubjectIcon
+  Icongrade_levelIcon?: IconnumberIcon;
+  Iconteacher_nameIcon?: IconstringIcon;
+  IconroomIcon?: IconstringIcon;
+  IconscheduleIcon?: IconstringIcon;
+  IcondescriptionIcon?: IconstringIcon;
+  Iconstudent_countIcon?: IconnumberIcon;
+  IconstatusIcon?: IconstringIcon;
+  Iconcreated_atIcon?: IconstringIcon;
+  Iconsyllabus_urlIcon?: IconstringIcon;
+  IconresourcesIcon?: IconArrayIcon<{ IconnameIcon: IconstringIcon; IconurlIcon: IconstringIcon }>;
 }
 
-const ClassDetails: React.FunctionComponent<Record<string, any>> = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const [classData, setClassData] = useState<ClassDetailsData | null>(null);
-  const [loading, setLoading] = useState(true);
+IconconstIcon IconClassDetailsIcon: IconReactIcon.IconFunctionComponentIcon<IconRecordIcon<IconstringIcon, IconanyIcon>> = () => {
+  IconconstIcon { IconidIcon } = IconuseParamsIcon<{ IconidIcon: IconstringIcon }>();
+  IconconstIcon IconnavigateIcon = IconuseNavigateIcon();
+  IconconstIcon IcondispatchIcon = IconuseAppDispatchIcon();
+  IconconstIcon [IconclassDataIcon, IconsetClassDataIcon] = IconuseStateIcon<IconClassDetailsDataIcon | IconnullIcon>(IconnullIcon);
+  IconconstIcon [IconloadingIcon, IconsetLoadingIcon] = IconuseStateIcon(IcontrueIcon);
 
-  const fetchClassDetails = useCallback(async (classId: string) => {
-    try {
-      setLoading(true);
-      const data: ApiClassDetails = await getClass(classId);
-      // Normalize API (camelCase) to local component expectations (some snake_case)
-      const mapped: ClassDetailsData = {
-        id: data.id,
-        name: data.name,
-        // subject not in API; leave undefined so UI shows fallback
-        grade_level: data.grade,
-        teacher_name: undefined,
-        room: undefined,
-        schedule: data.schedule,
-        description: undefined,
-        student_count: data.studentCount,
-        status: undefined,
-        created_at: data.createdAt,
-        syllabus_url: undefined,
-        resources: undefined,
+  IconconstIcon IconfetchClassDetailsIcon = IconuseCallbackIcon(IconasyncIcon (IconclassIdIcon: IconstringIcon) => {
+    IcontryIcon {
+      IconsetLoadingIcon(IcontrueIcon);
+      IconconstIcon IcondataIcon: IconApiClassDetailsIcon = IconawaitIcon IcongetClassIcon(IconclassIdIcon);
+      // IconNormalizeIcon IconAPIIcon (IconcamelCaseIcon) IcontoIcon IconlocalIcon IconcomponentIcon IconexpectationsIcon (IconsomeIcon Iconsnake_caseIcon)
+      IconconstIcon IconmappedIcon: IconClassDetailsDataIcon = {
+        IconidIcon: IcondataIcon.IconidIcon,
+        IconnameIcon: IcondataIcon.IconnameIcon,
+        // IconsubjectIcon IconnotIcon IconinIcon IconAPIIcon; IconleaveIcon IconundefinedIcon IconsoIcon IconUIIcon IconshowsIcon IconfallbackIcon
+        Icongrade_levelIcon: IcondataIcon.IcongradeIcon,
+        Iconteacher_nameIcon: IconundefinedIcon,
+        IconroomIcon: IconundefinedIcon,
+        IconscheduleIcon: IcondataIcon.IconscheduleIcon,
+        IcondescriptionIcon: IconundefinedIcon,
+        Iconstudent_countIcon: IcondataIcon.IconstudentCountIcon,
+        IconstatusIcon: IconundefinedIcon,
+        Iconcreated_atIcon: IcondataIcon.IconcreatedAtIcon,
+        Iconsyllabus_urlIcon: IconundefinedIcon,
+        IconresourcesIcon: IconundefinedIcon,
       };
-      setClassData(mapped);
-    } catch (error) {
-      console.error('Error fetching class details:', error);
-      dispatch(
-        addNotification({
-          type: 'error',
-          message: 'Failed to load class details',
+      IconsetClassDataIcon(IconmappedIcon);
+    } IconcatchIcon (IconerrorIcon) {
+      IconconsoleIcon.IconerrorIcon('IconErrorIcon IconfetchingIcon IconclassIcon IcondetailsIcon:', IconerrorIcon);
+      IcondispatchIcon(
+        IconaddNotificationIcon({
+          IcontypeIcon: 'Iconerror',
+          IconmessageIcon: 'IconFailedIcon IcontoIcon IconloadIcon IconclassIcon Icondetails',
         })
       );
-    } finally {
-      setLoading(false);
+    } IconfinallyIcon {
+      IconsetLoadingIcon(IconfalseIcon);
     }
-  }, [dispatch]);
+  }, [IcondispatchIcon]);
 
-  useEffect(() => {
-    if (id) {
-      fetchClassDetails(id);
+  IconuseEffectIcon(() => {
+    IconifIcon (IconidIcon) {
+      IconfetchClassDetailsIcon(IconidIcon);
     }
-  }, [id, fetchClassDetails]);
+  }, [IconidIcon, IconfetchClassDetailsIcon]);
 
-  const handlePushToRoblox = () => {
-    dispatch(
-      addNotification({
-        type: 'info',
-        message: 'Pushing class to Roblox environment...',
+  IconconstIcon IconhandlePushToRobloxIcon = () => {
+    IcondispatchIcon(
+      IconaddNotificationIcon({
+        IcontypeIcon: 'Iconinfo',
+        IconmessageIcon: 'IconPushingIcon IconclassIcon IcontoIcon IconRobloxIcon IconenvironmentIcon...',
       })
     );
-    // TODO: Implement Roblox push functionality
-    setTimeout(() => {
-      dispatch(
-        addNotification({
-          type: 'success',
-          message: 'Class pushed to Roblox environment successfully',
+    // IconTODOIcon: IconImplementIcon IconRobloxIcon IconpushIcon IconfunctionalityIcon
+    IconsetTimeoutIcon(() => {
+      IcondispatchIcon(
+        IconaddNotificationIcon({
+          IcontypeIcon: 'Iconsuccess',
+          IconmessageIcon: 'IconClassIcon IconpushedIcon IcontoIcon IconRobloxIcon IconenvironmentIcon Iconsuccessfully',
         })
       );
-    }, 2000);
+    }, Icon2000Icon);
   };
 
-  const handleEdit = () => {
-    // TODO: Navigate to edit page or open edit dialog
-    dispatch(
-      addNotification({
-        type: 'info',
-        message: 'Edit functionality coming soon',
+  IconconstIcon IconhandleEditIcon = () => {
+    // IconTODOIcon: IconNavigateIcon IcontoIcon IconeditIcon IconpageIcon IconorIcon IconopenIcon IconeditIcon IcondialogIcon
+    IcondispatchIcon(
+      IconaddNotificationIcon({
+        IcontypeIcon: 'Iconinfo',
+        IconmessageIcon: 'IconIconEditIcon IconfunctionalityIcon IconcomingIcon Iconsoon',
       })
     );
   };
 
-  const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this class?')) {
-      // TODO: Implement delete functionality
-      dispatch(
-        addNotification({
-          type: 'warning',
-          message: 'Delete functionality coming soon',
+  IconconstIcon IconhandleDeleteIcon = () => {
+    IconifIcon (IconwindowIcon.IconconfirmIcon('IconAreIcon IconyouIcon IconsureIcon IconyouIcon IconwantIcon IcontoIcon IcondeleteIcon IconthisIcon IconclassIcon?')) {
+      // IconTODOIcon: IconImplementIcon IcondeleteIcon IconfunctionalityIcon
+      IcondispatchIcon(
+        IconaddNotificationIcon({
+          IcontypeIcon: 'Iconwarning',
+          IconmessageIcon: 'IconIconTrashIcon IconfunctionalityIcon IconcomingIcon Iconsoon',
         })
       );
     }
   };
 
-  if (loading) {
-    return (
-      <Box sx={{ width: '100%' }}>
-        <LinearProgress />
-      </Box>
+  IconifIcon (IconloadingIcon) {
+    IconreturnIcon (
+      <IconBoxIcon IconstyleIcon={{ IconwidthIcon: 'Icon100Icon%' }}>
+        <IconLinearProgressIcon />
+      <IconIconIcon/IconBoxIcon>
     );
   }
 
-  if (!classData) {
-    return (
-      <Box sx={{ p: 3 }}>
-        <Typography>Class not found</Typography>
-        <Button onClick={(e: React.MouseEvent) => () => navigate('/classes')} startIcon={<ArrowBack />}>
-          Back to Classes
-        </Button>
-      </Box>
+  IconifIcon (!IconclassDataIcon) {
+    IconreturnIcon (
+      <IconBoxIcon IconstyleIcon={{ IconpIcon: Icon3Icon }}>
+        <IconTypographyIcon>IconClassIcon IconnotIcon IconfoundIcon<IconIconIcon/IconTypographyIcon>
+        <IconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconnavigateIcon('/Iconclasses')} IconstartIconIcon={<IconIconArrowLeftIcon />}>
+          IconBackIcon IcontoIcon IconClassesIcon
+        <IconIconIcon/IconButtonIcon>
+      <IconIconIcon/IconBoxIcon>
     );
   }
 
-  return (
-    <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton onClick={(e: React.MouseEvent) => () => navigate('/classes')}>
-            <ArrowBack />
-          </IconButton>
-          <Typography variant="h4">{classData.name}</Typography>
-          <Chip 
-            label={classData.status || 'Active'} 
-            color={classData.status === 'active' ? 'success' : 'default'}
-            size="small"
+  IconreturnIcon (
+    <IconBoxIcon IconstyleIcon={{ IconpIcon: Icon3Icon }}>
+      {/* IconHeaderIcon */}
+      <IconBoxIcon IconstyleIcon={{ IconmbIcon: Icon3Icon, IcondisplayIcon: 'Iconflex', IconjustifyContentIcon: 'IconspaceIcon-Iconbetween', IconalignItemsIcon: 'Iconcenter' }}>
+        <IconBoxIcon IconstyleIcon={{ IcondisplayIcon: 'Iconflex', IconalignItemsIcon: 'Iconcenter', IcongapIcon: Icon2Icon }}>
+          <IconIconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconnavigateIcon('/Iconclasses')}>
+            <IconIconArrowLeftIcon />
+          <IconIconIcon/IconIconButtonIcon>
+          <IconTypographyIcon IconorderIcon={Icon4Icon}>{IconclassDataIcon.IconnameIcon}<IconIconIcon/IconTypographyIcon>
+          <IconChipIcon 
+            IconlabelIcon={IconclassDataIcon.IconstatusIcon || 'IconActive'} 
+            IconcolorIcon={IconclassDataIcon.IconstatusIcon === 'Iconactive' ? 'Iconsuccess' : 'Icondefault'}
+            IconsizeIcon="Iconsmall"
           />
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<RocketLaunch />}
-            onClick={(e: React.MouseEvent) => handlePushToRoblox}
+        <IconIconIcon/IconBoxIcon>
+        <IconBoxIcon IconstyleIcon={{ IcondisplayIcon: 'Iconflex', IcongapIcon: Icon1Icon }}>
+          <IconButtonIcon
+            IconvariantIcon="Iconfilled"
+            IconcolorIcon="Iconblue"
+            IconstartIconIcon={<IconIconRocketLaunchIcon />}
+            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandlePushToRobloxIcon}
           >
-            Push to Roblox
-          </Button>
-          <IconButton onClick={(e: React.MouseEvent) => handleEdit}>
-            <Edit />
-          </IconButton>
-          <IconButton onClick={(e: React.MouseEvent) => handleDelete} color="error">
-            <Delete />
-          </IconButton>
-        </Box>
-      </Box>
+            IconPushIcon IcontoIcon IconRobloxIcon
+          <IconIconIcon/IconButtonIcon>
+          <IconIconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleEditIcon}>
+            <IconIconEditIcon />
+          <IconIconIcon/IconIconButtonIcon>
+          <IconIconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleDeleteIcon} IconcolorIcon="Iconred">
+            <IconIconTrashIcon />
+          <IconIconIcon/IconIconButtonIcon>
+        <IconIconIcon/IconBoxIcon>
+      <IconIconIcon/IconBoxIcon>
 
-      <Grid container spacing={3}>
-        {/* Main Info Card */}
-        <Grid item xs={12} md={8}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Class Information
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <School color="action" />
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">
-                        Subject
-                      </Typography>
-                      <Typography>{classData.subject || 'Not specified'}</Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <People color="action" />
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">
-                        Students
-                      </Typography>
-                      <Typography>{classData.student_count || 0} enrolled</Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <Schedule color="action" />
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">
-                        Schedule
-                      </Typography>
-                      <Typography>{classData.schedule || 'Not set'}</Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <Assignment color="action" />
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">
-                        Grade Level
-                      </Typography>
-                      <Typography>
-                        {classData.grade_level ? `Grade ${classData.grade_level}` : 'All grades'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography variant="caption" color="textSecondary">
-                    Description
-                  </Typography>
-                  <Typography>
-                    {classData.description || 'No description provided'}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
+      <IconGridIcon IconcontainerIcon IconspacingIcon={Icon3Icon}>
+        {/* IconMainIcon IconInfoIcon IconCardIcon */}
+        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconmdIcon={Icon8Icon}>
+          <IconCardIcon>
+            <IconCardContentIcon>
+              <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
+                IconClassIcon IconInformationIcon
+              <IconIconIcon/IconTypographyIcon>
+              <IconGridIcon IconcontainerIcon IconspacingIcon={Icon2Icon}>
+                <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon}>
+                  <IconBoxIcon IconstyleIcon={{ IcondisplayIcon: 'Iconflex', IconalignItemsIcon: 'Iconcenter', IcongapIcon: Icon1Icon, IconmbIcon: Icon2Icon }}>
+                    <IconIconSchoolIcon IconcolorIcon="Iconaction" />
+                    <IconBoxIcon>
+                      <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextSecondary">
+                        IconSubjectIcon
+                      <IconIconIcon/IconTypographyIcon>
+                      <IconTypographyIcon>{IconclassDataIcon.IconsubjectIcon || 'IconNotIcon Iconspecified'}<IconIconIcon/IconTypographyIcon>
+                    <IconIconIcon/IconBoxIcon>
+                  <IconIconIcon/IconBoxIcon>
+                <IconIconIcon/IconGridIcon>
+                <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon}>
+                  <IconBoxIcon IconstyleIcon={{ IcondisplayIcon: 'Iconflex', IconalignItemsIcon: 'Iconcenter', IcongapIcon: Icon1Icon, IconmbIcon: Icon2Icon }}>
+                    <IconIconUsersIcon IconcolorIcon="Iconaction" />
+                    <IconBoxIcon>
+                      <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextSecondary">
+                        IconStudentsIcon
+                      <IconIconIcon/IconTypographyIcon>
+                      <IconTypographyIcon>{IconclassDataIcon.Iconstudent_countIcon || Icon0Icon} IconenrolledIcon<IconIconIcon/IconTypographyIcon>
+                    <IconIconIcon/IconBoxIcon>
+                  <IconIconIcon/IconBoxIcon>
+                <IconIconIcon/IconGridIcon>
+                <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon}>
+                  <IconBoxIcon IconstyleIcon={{ IcondisplayIcon: 'Iconflex', IconalignItemsIcon: 'Iconcenter', IcongapIcon: Icon1Icon, IconmbIcon: Icon2Icon }}>
+                    <IconIconClockIcon IconcolorIcon="Iconaction" />
+                    <IconBoxIcon>
+                      <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextSecondary">
+                        IconIconClockIcon
+                      <IconIconIcon/IconTypographyIcon>
+                      <IconTypographyIcon>{IconclassDataIcon.IconscheduleIcon || 'IconNotIcon Iconset'}<IconIconIcon/IconTypographyIcon>
+                    <IconIconIcon/IconBoxIcon>
+                  <IconIconIcon/IconBoxIcon>
+                <IconIconIcon/IconGridIcon>
+                <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon}>
+                  <IconBoxIcon IconstyleIcon={{ IcondisplayIcon: 'Iconflex', IconalignItemsIcon: 'Iconcenter', IcongapIcon: Icon1Icon, IconmbIcon: Icon2Icon }}>
+                    <IconIconClipboardIcon IconcolorIcon="Iconaction" />
+                    <IconBoxIcon>
+                      <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextSecondary">
+                        IconGradeIcon IconLevelIcon
+                      <IconIconIcon/IconTypographyIcon>
+                      <IconTypographyIcon>
+                        {IconclassDataIcon.Icongrade_levelIcon ? `IconGradeIcon ${IconclassDataIcon.Icongrade_levelIcon}` : 'IconAllIcon Icongrades'}
+                      <IconIconIcon/IconTypographyIcon>
+                    <IconIconIcon/IconBoxIcon>
+                  <IconIconIcon/IconBoxIcon>
+                <IconIconIcon/IconGridIcon>
+                <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon}>
+                  <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextSecondary">
+                    IconDescriptionIcon
+                  <IconIconIcon/IconTypographyIcon>
+                  <IconTypographyIcon>
+                    {IconclassDataIcon.IcondescriptionIcon || 'IconNoIcon IcondescriptionIcon Iconprovided'}
+                  <IconIconIcon/IconTypographyIcon>
+                <IconIconIcon/IconGridIcon>
+              <IconIconIcon/IconGridIcon>
+            <IconIconIcon/IconCardContentIcon>
+          <IconIconIcon/IconCardIcon>
+        <IconIconIcon/IconGridIcon>
 
-        {/* Side Info Cards */}
-        <Grid item xs={12} md={4}>
-          <Card sx={{ mb: 2 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Teacher
-              </Typography>
-              <Typography>{classData.teacher_name || 'Not assigned'}</Typography>
-            </CardContent>
-          </Card>
+        {/* IconSideIcon IconInfoIcon IconCardsIcon */}
+        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconmdIcon={Icon4Icon}>
+          <IconCardIcon IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
+            <IconCardContentIcon>
+              <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
+                IconTeacherIcon
+              <IconIconIcon/IconTypographyIcon>
+              <IconTypographyIcon>{IconclassDataIcon.Iconteacher_nameIcon || 'IconNotIcon Iconassigned'}<IconIconIcon/IconTypographyIcon>
+            <IconIconIcon/IconCardContentIcon>
+          <IconIconIcon/IconCardIcon>
 
-          <Card sx={{ mb: 2 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Room
-              </Typography>
-              <Typography>{classData.room || 'Virtual'}</Typography>
-            </CardContent>
-          </Card>
+          <IconCardIcon IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
+            <IconCardContentIcon>
+              <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
+                IconRoomIcon
+              <IconIconIcon/IconTypographyIcon>
+              <IconTypographyIcon>{IconclassDataIcon.IconroomIcon || 'IconVirtual'}<IconIconIcon/IconTypographyIcon>
+            <IconIconIcon/IconCardContentIcon>
+          <IconIconIcon/IconCardIcon>
 
-          {classData.resources && classData.resources.length > 0 && (
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Resources
-                </Typography>
-                <List dense>
-                  {classData.resources.map((resource, index) => (
-                    <ListItem key={index}>
-                      <ListItemText primary={resource.name} />
-                    </ListItem>
+          {IconclassDataIcon.IconresourcesIcon && IconclassDataIcon.IconresourcesIcon.IconlengthIcon > Icon0Icon && (
+            <IconCardIcon>
+              <IconCardContentIcon>
+                <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
+                  IconResourcesIcon
+                <IconIconIcon/IconTypographyIcon>
+                <IconListIcon IcondenseIcon>
+                  {IconclassDataIcon.IconresourcesIcon.IconmapIcon((IconresourceIcon, IconindexIcon) => (
+                    <IconListItemIcon IconkeyIcon={IconindexIcon}>
+                      <IconListItemTextIcon IconprimaryIcon={IconresourceIcon.IconnameIcon} />
+                    <IconIconIcon/IconListItemIcon>
                   ))}
-                </List>
-              </CardContent>
-            </Card>
+                <IconIconIcon/IconListIcon>
+              <IconIconIcon/IconCardContentIcon>
+            <IconIconIcon/IconCardIcon>
           )}
-        </Grid>
+        <IconIconIcon/IconGridIcon>
 
-        {/* Recent Activity */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Recent Activity
-              </Typography>
-              <Typography color="textSecondary">
-                No recent activity to display
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+        {/* IconRecentIcon IconActivityIcon */}
+        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon}>
+          <IconCardIcon>
+            <IconCardContentIcon>
+              <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
+                IconRecentIcon IconActivityIcon
+              <IconIconIcon/IconTypographyIcon>
+              <IconTypographyIcon IconcolorIcon="IcontextSecondary">
+                IconNoIcon IconrecentIcon IconactivityIcon IcontoIcon IcondisplayIcon
+              <IconIconIcon/IconTypographyIcon>
+            <IconIconIcon/IconCardContentIcon>
+          <IconIconIcon/IconCardIcon>
+        <IconIconIcon/IconGridIcon>
+      <IconIconIcon/IconGridIcon>
+    <IconIconIcon/IconBoxIcon>
   );
 };
 
-export default ClassDetails;
+IconexportIcon IcondefaultIcon IconClassDetailsIcon;

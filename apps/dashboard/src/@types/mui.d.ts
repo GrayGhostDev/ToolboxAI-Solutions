@@ -1,79 +1,15 @@
 // MUI Type Shims
 declare module '@/utils/mui-imports' {
-  export * from '@mui/material';
-  export * from '@mui/material/styles';
+  export * from '@mantine/core';
+  export * from '@mantine/core';
 }
 
-declare module '@mui/material' {
-  export const Box: any;
-  export const Button: any;
-  export const Typography: any;
-  export const Paper: any;
-  export const Stack: any;
-  export const Grid: any;
-  export const Container: any;
-  export const IconButton: any;
-  export const Avatar: any;
-  export const Card: any;
-  export const CardContent: any;
-  export const CardActions: any;
-  export const CardMedia: any;
-  export const CardHeader: any;
-  export const List: any;
-  export const ListItem: any;
-  export const ListItemText: any;
-  export const ListItemAvatar: any;
-  export const ListItemIcon: any;
-  export const ListItemButton: any;
-  export const Divider: any;
-  export const TextField: any;
-  export const Select: any;
-  export const MenuItem: any;
-  export const FormControl: any;
-  export const InputLabel: any;
-  export const InputAdornment: any;
-  export const Chip: any;
-  export const Badge: any;
-  export const Alert: any;
-  export const AlertTitle: any;
-  export const CircularProgress: any;
-  export const LinearProgress: any;
-  export const Skeleton: any;
-  export const Dialog: any;
-  export const DialogTitle: any;
-  export const DialogContent: any;
-  export const DialogActions: any;
-  export const DialogContentText: any;
-  export const Drawer: any;
-  export const AppBar: any;
-  export const Toolbar: any;
-  export const Table: any;
-  export const TableBody: any;
-  export const TableCell: any;
-  export const TableContainer: any;
-  export const TableHead: any;
-  export const TableRow: any;
-  export const TablePagination: any;
-  export const Tabs: any;
-  export const Tab: any;
-  export const Menu: any;
-  export const Tooltip: any;
-  export const Checkbox: any;
-  export const Radio: any;
-  export const RadioGroup: any;
-  export const FormControlLabel: any;
-  export const Switch: any;
-  export const Slider: any;
-  export const Rating: any;
-  export const Autocomplete: any;
-  export const ToggleButton: any;
-  export const ToggleButtonGroup: any;
+declare module '@mantine/core' {
+  export * from '@mantine/core';
 }
 
-declare module '@mui/material/styles' {
-  export const useTheme: any;
-  export const alpha: any;
-  export const styled: any;
-  export const ThemeProvider: any;
-  export const createTheme: any;
+declare module '@mantine/core' {
+  export const createStyles: any;
+  export const MantineProvider: any;
+  export const useMantineTheme: any;
 }

@@ -1,10 +1,17 @@
 """
 Configuration wrapper for backend app using centralized config
+Enhanced with HashiCorp Vault integration for secure secret management
 """
 
 import sys
 import os
+import logging
 from pathlib import Path
+from functools import lru_cache
+from typing import Any, Optional
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # Load environment variables from .env file
 try:
@@ -29,12 +36,60 @@ from toolboxai_settings import settings
 # Get the centralized configuration
 _env_config = settings
 
+# Initialize Vault integration if enabled
+_vault_manager = None
+VAULT_ENABLED = os.getenv("VAULT_ENABLED", "false").lower() in ("true", "1", "yes")
+
+if VAULT_ENABLED:
+    try:
+        from apps.backend.services.vault_manager import get_vault_manager
+        _vault_manager = get_vault_manager()
+        logger.info("HashiCorp Vault integration enabled")
+    except Exception as e:
+        logger.warning(f"Vault integration failed, falling back to environment variables: {e}")
+        _vault_manager = None
+
 
 class Settings:
-    """Settings wrapper for backward compatibility"""
+    """Settings wrapper for backward compatibility with Vault integration"""
 
     def __init__(self):
         self._config = _env_config
+        self._vault = _vault_manager
+        self._secret_cache = {}  # Cache secrets to reduce Vault calls
+
+    @lru_cache(maxsize=128)
+    def _get_secret(self, key: str, vault_path: Optional[str] = None, fallback: Any = None) -> Any:
+        """
+        Get secret from Vault if available, otherwise from environment
+
+        Args:
+            key: Environment variable key
+            vault_path: Optional Vault path (defaults to apps/backend/secrets/{key})
+            fallback: Fallback value if not found
+
+        Returns:
+            Secret value
+        """
+        # Try Vault first if enabled
+        if self._vault and vault_path:
+            try:
+                return self._vault.get_secret(vault_path)
+            except Exception as e:
+                logger.debug(f"Vault lookup failed for {vault_path}, using fallback: {e}")
+
+        # Fall back to environment variable
+        env_value = os.getenv(key, fallback)
+
+        # If still no value and Vault is available, try default path
+        if not env_value and self._vault:
+            try:
+                default_path = f"apps/backend/secrets/{key.lower()}"
+                return self._vault.get_secret(default_path)
+            except Exception:
+                pass
+
+        return env_value
 
     # Application Info
     @property
@@ -75,7 +130,12 @@ class Settings:
     # AI/ML Configuration
     @property
     def OPENAI_API_KEY(self):
-        return self._config.get_api_key("openai")
+        # Prioritize Vault for API keys
+        return self._get_secret(
+            "OPENAI_API_KEY",
+            vault_path="apps/backend/api_keys/openai",
+            fallback=self._config.get_api_key("openai")
+        )
 
     @property
     def OPENAI_MODEL(self):
@@ -92,16 +152,36 @@ class Settings:
     # Database Configuration
     @property
     def DATABASE_URL(self):
+        # Use dynamic database credentials from Vault if available
+        if self._vault:
+            try:
+                creds = self._vault.get_dynamic_database_credentials("toolboxai", ttl="24h")
+                # Build DATABASE_URL from dynamic credentials
+                db_host = os.getenv("DB_HOST", "localhost")
+                db_name = os.getenv("DB_NAME", "toolboxai")
+                return f"postgresql://{creds['username']}:{creds['password']}@{db_host}/{db_name}"
+            except Exception as e:
+                logger.debug(f"Dynamic DB credentials unavailable: {e}")
         return self._config.DATABASE_URL
 
     @property
     def REDIS_URL(self):
-        return self._config.get_redis_url()
+        # Redis credentials from Vault
+        return self._get_secret(
+            "REDIS_URL",
+            vault_path="apps/backend/cache/redis",
+            fallback=self._config.get_redis_url()
+        )
 
     # Authentication
     @property
     def JWT_SECRET_KEY(self):
-        return self._config.JWT_SECRET_KEY
+        # JWT secrets should always come from Vault in production
+        return self._get_secret(
+            "JWT_SECRET_KEY",
+            vault_path="apps/backend/auth/jwt_secret",
+            fallback=self._config.JWT_SECRET_KEY
+        )
 
     @property
     def COOKIE_SECURE(self):
@@ -162,7 +242,10 @@ class Settings:
 
     @property
     def SCHOOLOGY_SECRET(self):
-        return os.getenv("SCHOOLOGY_SECRET")
+        return self._get_secret(
+            "SCHOOLOGY_SECRET",
+            vault_path="apps/backend/integrations/schoology/secret"
+        )
 
     @property
     def CANVAS_TOKEN(self):
@@ -209,7 +292,10 @@ class Settings:
 
     @property
     def PUSHER_SECRET(self):
-        return os.getenv("PUSHER_SECRET")
+        return self._get_secret(
+            "PUSHER_SECRET",
+            vault_path="apps/backend/integrations/pusher/secret"
+        )
 
     @property
     def PUSHER_CLUSTER(self):

@@ -6,8 +6,6 @@
 # Updated: 2025-09-24
 # ============================================
 
-version: '3.9'
-
 services:
   # ----------------------------------------
   # PostgreSQL Database (Development)
@@ -107,12 +105,22 @@ services:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/dashboard-fixed.Dockerfile
       args:
-        NODE_ENV: production
+        NODE_ENV: development
+        # Clerk Authentication Build Args
+        VITE_ENABLE_CLERK_AUTH: "${VITE_ENABLE_CLERK_AUTH:-true}"
+        VITE_CLERK_PUBLISHABLE_KEY: "${VITE_CLERK_PUBLISHABLE_KEY}"
+        VITE_CLERK_SIGN_IN_URL: "${VITE_CLERK_SIGN_IN_URL:-/sign-in}"
+        VITE_CLERK_SIGN_UP_URL: "${VITE_CLERK_SIGN_UP_URL:-/sign-up}"
+        VITE_CLERK_AFTER_SIGN_IN_URL: "${VITE_CLERK_AFTER_SIGN_IN_URL:-/dashboard}"
+        VITE_CLERK_AFTER_SIGN_UP_URL: "${VITE_CLERK_AFTER_SIGN_UP_URL:-/dashboard}"
+        VITE_CLERK_FRONTEND_API_URL: "${VITE_CLERK_FRONTEND_API_URL}"
         # Updated build args for Pusher migration
         VITE_ENABLE_WEBSOCKET: "false"
         VITE_ENABLE_PUSHER: "true"
-        VITE_PUSHER_KEY: "${VITE_PUSHER_KEY:-dummy-key-for-development}"
+        VITE_PUSHER_KEY: "${VITE_PUSHER_KEY}"
         VITE_PUSHER_CLUSTER: "${VITE_PUSHER_CLUSTER:-us2}"
+        # API Configuration
+        VITE_API_BASE_URL: "${VITE_API_BASE_URL:-http://127.0.0.1:8009}"
     ports:
       - "5180:80"  # Changed port to avoid conflict, using production port
       - "9229:9229"  # Node debugger port

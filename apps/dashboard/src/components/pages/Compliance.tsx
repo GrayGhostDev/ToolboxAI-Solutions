@@ -1,57 +1,7 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import * as React from "react";
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
-import LinearProgress from '@mui/material/LinearProgress';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import IconButton from '@mui/material/IconButton';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import TextField from '@mui/material/TextField';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Box from '@mui/material/Box';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
-import Paper from '@mui/material/Paper';
-import Skeleton from '@mui/material/Skeleton';
-import CircularProgress from '@mui/material/CircularProgress';
 
 import { useEffect } from "react";
-import Grid2 from "@mui/material/Unstable_Grid2";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import WarningIcon from "@mui/icons-material/Warning";
-import ErrorIcon from "@mui/icons-material/Error";
-import InfoIcon from "@mui/icons-material/Info";
-import SecurityIcon from "@mui/icons-material/Security";
-import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
-import PolicyIcon from "@mui/icons-material/Policy";
-import GavelIcon from "@mui/icons-material/Gavel";
-import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import SettingsIcon from "@mui/icons-material/Settings";
-import PersonIcon from "@mui/icons-material/Person";
-import SchoolIcon from "@mui/icons-material/School";
-import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import { useAppSelector, useAppDispatch } from "../../store";
 import {
   fetchComplianceStatus,
@@ -80,7 +30,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`compliance-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+      {value === index && <Box style={{ py: 3 }}>{children}</Box>}
     </div>
   );
 }
@@ -174,13 +124,13 @@ export default function Compliance() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "compliant":
-        return <CheckCircleIcon color="success" />;
+        return <IconCircleCheck color="green" />;
       case "warning":
-        return <WarningIcon color="warning" />;
+        return <IconAlertTriangle color="yellow" />;
       case "violation":
-        return <ErrorIcon color="error" />;
+        return <IconCircleX color="red" />;
       default:
-        return <InfoIcon color="info" />;
+        return <IconInfoCircle color="cyan" />;
     }
   };
 
@@ -216,20 +166,20 @@ export default function Compliance() {
               gap={2}
             >
               <Stack direction="row" alignItems="center" spacing={2}>
-                <SecurityIcon sx={{ fontSize: 32, color: "primary.main" }} />
+                <SecurityIcon style={{ fontSize: 32, color: "primary.main" }} />
                 <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                  <Typography order={5} style={{ fontWeight: 600 }}>
                     Compliance Dashboard
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography size="sm" color="text.secondary">
                     Last checked: {lastChecked ? new Date(lastChecked).toLocaleString() : "Never"}
                   </Typography>
                 </Box>
               </Stack>
               <Stack direction="row" spacing={2}>
                 <Button
-                  variant="outlined"
-                  startIcon={<RefreshIcon />}
+                  variant="outline"
+                  startIcon={<IconRefresh />}
                   onClick={(e: React.MouseEvent) => handleRefresh}
                   disabled={loading}
                 >
@@ -238,15 +188,15 @@ export default function Compliance() {
                 {role === "admin" && (
                   <>
                     <Button
-                      variant="outlined"
+                      variant="outline"
                       startIcon={<AssignmentTurnedInIcon />}
                       onClick={(e: React.MouseEvent) => () => setAuditDialogOpen(true)}
                     >
                       Run Audit
                     </Button>
                     <Button
-                      variant="contained"
-                      startIcon={<FileDownloadIcon />}
+                      variant="filled"
+                      startIcon={<FileIconDownload />}
                       onClick={(e: React.MouseEvent) => () => handleExportReport("pdf")}
                     >
                       Export Report
@@ -264,7 +214,7 @@ export default function Compliance() {
         <Card>
           <CardContent>
             <Stack alignItems="center" spacing={2}>
-              <Typography variant="h6" color="text.secondary">
+              <Typography order={6} color="text.secondary">
                 Overall Compliance Score
               </Typography>
               <Box position="relative" display="inline-flex">
@@ -273,7 +223,7 @@ export default function Compliance() {
                   value={overallScore}
                   size={120}
                   thickness={4}
-                  sx={{ color: getScoreColor(overallScore) }}
+                  style={{ color: getScoreColor(overallScore) }}
                 />
                 <Box
                   top={0}
@@ -285,7 +235,7 @@ export default function Compliance() {
                   alignItems="center"
                   justifyContent="center"
                 >
-                  <Typography variant="h3" component="div" color="text.primary">
+                  <Typography order={3} component="div" color="text.primary">
                     {overallScore}%
                   </Typography>
                 </Box>
@@ -304,13 +254,13 @@ export default function Compliance() {
         <Card>
           <CardContent>
             <Stack spacing={2}>
-              <Typography variant="h6" color="text.secondary">
+              <Typography order={6} color="text.secondary">
                 Pending Actions
               </Typography>
               <List dense>
                 <ListItem>
                   <ListItemIcon>
-                    <FamilyRestroomIcon color="warning" />
+                    <FamilyRestroomIcon color="yellow" />
                   </ListItemIcon>
                   <ListItemText
                     primary="Parent Consents"
@@ -324,7 +274,7 @@ export default function Compliance() {
                 </ListItem>
                 <ListItem>
                   <ListItemIcon>
-                    <PolicyIcon color="info" />
+                    <PolicyIcon color="cyan" />
                   </ListItemIcon>
                   <ListItemText
                     primary="Policy Updates"
@@ -333,7 +283,7 @@ export default function Compliance() {
                 </ListItem>
                 <ListItem>
                   <ListItemIcon>
-                    <WarningIcon color="error" />
+                    <IconAlertTriangle color="red" />
                   </ListItemIcon>
                   <ListItemText
                     primary="Compliance Issues"
@@ -351,30 +301,30 @@ export default function Compliance() {
         <Card>
           <CardContent>
             <Stack spacing={2}>
-              <Typography variant="h6" color="text.secondary">
+              <Typography order={6} color="text.secondary">
                 Quick Actions
               </Typography>
               <Stack spacing={1}>
                 <Button
                   fullWidth
-                  variant="outlined"
-                  startIcon={<PersonIcon />}
+                  variant="outline"
+                  startIcon={<IconUser />}
                   onClick={(e: React.MouseEvent) => () => setConsentDialogOpen(true)}
                 >
                   Record Consent
                 </Button>
                 <Button
                   fullWidth
-                  variant="outlined"
-                  startIcon={<FileDownloadIcon />}
+                  variant="outline"
+                  startIcon={<FileIconDownload />}
                   onClick={(e: React.MouseEvent) => () => handleExportReport("csv")}
                 >
                   Download Data
                 </Button>
                 <Button
                   fullWidth
-                  variant="outlined"
-                  startIcon={<SettingsIcon />}
+                  variant="outline"
+                  startIcon={<IconSettings />}
                   onClick={(e: React.MouseEvent) => () => setActiveTab(3)}
                 >
                   Settings
@@ -389,7 +339,7 @@ export default function Compliance() {
       <Grid2 xs={12}>
         <Card>
           <CardContent>
-            <Typography variant="h6" sx={{ mb: 2 }}>
+            <Typography order={6} style={{ mb: 2 }}>
               Regulatory Compliance
             </Typography>
             <Grid2 container spacing={2}>
@@ -397,11 +347,11 @@ export default function Compliance() {
                 .filter(([key]) => ['coppa', 'ferpa', 'gdpr'].includes(key))
                 .map(([regulation, data]) => (
                 <Grid2 key={regulation} xs={12} sm={6} md={3}>
-                  <Card variant="outlined">
+                  <Card variant="outline">
                     <CardContent>
                       <Stack spacing={1}>
                         <Stack direction="row" justifyContent="space-between" alignItems="center">
-                          <Typography variant="h6">
+                          <Typography order={6}>
                             {regulation.toUpperCase()}
                           </Typography>
                           {getStatusIcon(data.status)}
@@ -410,10 +360,10 @@ export default function Compliance() {
                           variant="determinate"
                           value={data.score}
                           color={getStatusColor(data.status) as any}
-                          sx={{ height: 8, borderRadius: 1 }}
+                          style={{ height: 8, borderRadius: 1 }}
                         />
                         <Stack direction="row" justifyContent="space-between">
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography size="sm" color="text.secondary">
                             Score: {data.score}%
                           </Typography>
                           <Chip
@@ -423,8 +373,8 @@ export default function Compliance() {
                           />
                         </Stack>
                         {data.issues.length > 0 && (
-                          <Alert severity="warning" sx={{ py: 0.5 }}>
-                            <AlertTitle sx={{ fontSize: "0.875rem", mb: 0 }}>
+                          <Alert severity="warning" style={{ py: 0.5 }}>
+                            <AlertTitle style={{ fontSize: "0.875rem", mb: 0 }}>
                               {data.issues.length} Issues
                             </AlertTitle>
                           </Alert>
@@ -453,7 +403,7 @@ export default function Compliance() {
       <Grid2 xs={12}>
         <Card>
           <CardContent>
-            <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Box style={{ borderBottom: 1, borderColor: "divider" }}>
               <Tabs value={activeTab} onChange={handleTabChange}>
                 <Tab label="Audit Logs" />
                 <Tab label="Consent Records" />
@@ -463,7 +413,7 @@ export default function Compliance() {
             </Box>
 
             <TabPanel value={activeTab} index={0}>
-              <TableContainer component={Paper} variant="outlined">
+              <TableContainer component={Paper} variant="outline">
                 <Table size="small">
                   <TableHead>
                     <TableRow>
@@ -507,7 +457,7 @@ export default function Compliance() {
             </TabPanel>
 
             <TabPanel value={activeTab} index={1}>
-              <TableContainer component={Paper} variant="outlined">
+              <TableContainer component={Paper} variant="outline">
                 <Table size="small">
                   <TableHead>
                     <TableRow>
@@ -553,7 +503,7 @@ export default function Compliance() {
                               size="small"
                               onClick={(e: React.MouseEvent) => () => handleRevokeConsent(consent.id)}
                             >
-                              <ErrorIcon fontSize="small" />
+                              <IconCircleX fontSize="small" />
                             </IconButton>
                           )}
                         </TableCell>
@@ -578,7 +528,7 @@ export default function Compliance() {
                   All student data is retained according to regulatory requirements.
                   Data is automatically purged after the retention period expires.
                 </Alert>
-                <TableContainer component={Paper} variant="outlined">
+                <TableContainer component={Paper} variant="outline">
                   <Table size="small">
                     <TableHead>
                       <TableRow>
@@ -594,7 +544,7 @@ export default function Compliance() {
                         <TableCell>5 years</TableCell>
                         <TableCell>2029-01-01</TableCell>
                         <TableCell>
-                          <Chip label="Active" size="small" color="success" />
+                          <Chip label="Active" size="small" color="green" />
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -602,7 +552,7 @@ export default function Compliance() {
                         <TableCell>3 years</TableCell>
                         <TableCell>2027-01-01</TableCell>
                         <TableCell>
-                          <Chip label="Active" size="small" color="success" />
+                          <Chip label="Active" size="small" color="green" />
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -610,7 +560,7 @@ export default function Compliance() {
                         <TableCell>1 year</TableCell>
                         <TableCell>2025-01-01</TableCell>
                         <TableCell>
-                          <Chip label="Active" size="small" color="success" />
+                          <Chip label="Active" size="small" color="green" />
                         </TableCell>
                       </TableRow>
                     </TableBody>
@@ -643,10 +593,10 @@ export default function Compliance() {
                   </Select>
                 </FormControl>
                 <Stack direction="row" spacing={2}>
-                  <Button variant="contained" disabled>
+                  <Button variant="filled" disabled>
                     Save Settings
                   </Button>
-                  <Button variant="outlined">Cancel</Button>
+                  <Button variant="outline">Cancel</Button>
                 </Stack>
               </Stack>
             </TabPanel>
@@ -658,7 +608,7 @@ export default function Compliance() {
       <Dialog open={consentDialogOpen} onClose={() => setConsentDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Record Parent Consent</DialogTitle>
         <DialogContent>
-          <Stack spacing={2} sx={{ mt: 2 }}>
+          <Stack spacing={2} style={{ mt: 2 }}>
             <TextField
               fullWidth
               label="Student ID"
@@ -694,7 +644,7 @@ export default function Compliance() {
         </DialogContent>
         <DialogActions>
           <Button onClick={(e: React.MouseEvent) => () => setConsentDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={(e: React.MouseEvent) => handleRecordConsent}>
+          <Button variant="filled" onClick={(e: React.MouseEvent) => handleRecordConsent}>
             Record Consent
           </Button>
         </DialogActions>
@@ -704,7 +654,7 @@ export default function Compliance() {
       <Dialog open={auditDialogOpen} onClose={() => setAuditDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Run Compliance Audit</DialogTitle>
         <DialogContent>
-          <Stack spacing={2} sx={{ mt: 2 }}>
+          <Stack spacing={2} style={{ mt: 2 }}>
             <Alert severity="info">
               Running an audit will check all compliance requirements and update the status.
             </Alert>
@@ -725,7 +675,7 @@ export default function Compliance() {
         </DialogContent>
         <DialogActions>
           <Button onClick={(e: React.MouseEvent) => () => setAuditDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={(e: React.MouseEvent) => handleRunAudit} startIcon={<AssignmentTurnedInIcon />}>
+          <Button variant="filled" onClick={(e: React.MouseEvent) => handleRunAudit} startIcon={<AssignmentTurnedInIcon />}>
             Run Audit
           </Button>
         </DialogActions>

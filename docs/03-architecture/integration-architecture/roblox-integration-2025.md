@@ -1,15 +1,15 @@
 ---
 title: Roblox Integration Architecture 2025
-description: Comprehensive Roblox Studio integration with 2025 Open Cloud API standards
-version: 2.0.0
-last_updated: 2025-09-14
+description: Comprehensive Roblox Studio integration with 2025 Open Cloud API standards and Pusher real-time communication
+version: 2.1.0
+last_updated: 2025-09-28
 ---
 
 # 🎮 Roblox Integration Architecture 2025
 
 ## Executive Summary
 
-This document outlines the comprehensive Roblox Studio integration for the ToolboxAI educational platform, implementing 2025 Open Cloud API standards, OAuth2 authentication, and modern security practices.
+This document outlines the comprehensive Roblox Studio integration for the ToolboxAI educational platform, implementing 2025 Open Cloud API standards, OAuth2 authentication with PKCE, AES-256 credential encryption, and Pusher channels for real-time communication.
 
 ## 🏗️ Architecture Overview
 
@@ -23,15 +23,20 @@ graph TB
     end
 
     subgraph "Backend Services"
-        F[FastAPI Server :8008] --> G[Authentication Service]
+        F[FastAPI Server :8009] --> G[OAuth2 + PKCE Auth]
         F --> H[Content Generation API]
         F --> I[Open Cloud API Proxy]
+        F --> Z[Credential Manager]
 
-        J[Flask Bridge :5001] --> K[WebSocket Server]
-        J --> L[Plugin Communication]
+        J[Pusher Service] --> K[Private Channels]
+        J --> L[Presence Channels]
+        J --> Y[Event Broadcasting]
 
         M[MCP Server :9876] --> N[AI Agent Orchestration]
         M --> O[Content Processing]
+
+        AA[Encryption Service] --> AB[AES-256 Fernet]
+        AA --> AC[Key Rotation]
     end
 
     subgraph "Roblox Game Environment"
@@ -54,7 +59,49 @@ graph TB
 
 ## 🔐 Authentication & Security (2025 Standards)
 
-### OAuth2 Implementation
+### Credential Encryption Architecture
+
+The system uses AES-256 encryption via Fernet cipher for all sensitive credentials:
+
+```python
+# Encryption Service Architecture
+class CredentialEncryption:
+    """
+    - Fernet symmetric encryption (AES-256)
+    - Base64-encoded 44-byte keys
+    - Automatic key rotation support
+    - Secure credential storage
+    """
+
+    def encrypt_credential(self, credential: str) -> Tuple[str, str]:
+        """Encrypts credential and returns (encrypted_value, hash)"""
+
+    def decrypt_credential(self, encrypted: str) -> str:
+        """Decrypts credential with automatic fallback"""
+```
+
+### Credential Management
+
+```python
+# Secure Credential Manager with Audit Logging
+class SecureCredentialManager:
+    """
+    - Encrypted credential access
+    - Audit logging for compliance
+    - IP whitelisting support
+    - Automatic credential rotation
+    """
+
+    features = {
+        "encryption": "AES-256 via Fernet",
+        "audit_logging": True,
+        "ip_whitelist": ["127.0.0.1", "::1"],
+        "cache_ttl": 300,  # 5 minutes
+        "rate_limit": 100   # requests per minute
+    }
+```
+
+### OAuth2 Implementation with PKCE
 
 ```lua
 -- OAuth2 Authentication Manager
@@ -105,6 +152,131 @@ end
    - All sensitive data encrypted in transit
    - Local data encryption at rest
    - Secure key management
+
+## 📡 Pusher Real-time Architecture
+
+### Channel Structure
+
+The system uses Pusher channels for all real-time communication:
+
+```typescript
+// Channel Types and Purposes
+const CHANNEL_TYPES = {
+  // Private channels (authenticated)
+  "private-roblox-conversation-{session_id}": "8-stage conversation flow",
+  "private-roblox-generation-{session_id}": "Content generation progress",
+  "private-roblox-sync-{project_id}": "Rojo sync status",
+  "private-roblox-auth-{user_id}": "Authentication events",
+  "private-roblox-studio-{studio_id}": "Studio plugin events",
+
+  // Presence channels (who's online)
+  "presence-roblox-workspace-{workspace_id}": "Collaborative editing"
+};
+```
+
+### Event Flow Architecture
+
+```mermaid
+sequenceDiagram
+    participant Studio as Roblox Studio
+    participant Backend as FastAPI Backend
+    participant Pusher as Pusher Service
+    participant Dashboard as React Dashboard
+
+    Studio->>Backend: POST /api/v1/roblox/conversation/start
+    Backend->>Pusher: Create private channel
+    Backend-->>Studio: Return session_id + channel
+
+    Studio->>Pusher: Subscribe to channel
+    Dashboard->>Pusher: Subscribe to channel
+
+    loop Content Generation
+        Backend->>Pusher: Trigger progress event
+        Pusher-->>Studio: Broadcast progress
+        Pusher-->>Dashboard: Broadcast progress
+    end
+
+    Backend->>Pusher: Trigger completion event
+    Pusher-->>Studio: Generation complete
+    Pusher-->>Dashboard: Generation complete
+```
+
+### Event Types and Payloads
+
+```python
+# Pusher Event Types (from RobloxEventType enum)
+class RobloxEventType(str, Enum):
+    # Conversation flow events
+    STAGE_CHANGED = "stage-changed"
+    INPUT_PROCESSED = "input-processed"
+    GENERATION_STARTED = "generation-started"
+    GENERATION_PROGRESS = "generation-progress"
+    GENERATION_COMPLETE = "generation-complete"
+
+    # Rojo sync events
+    ROJO_CONNECTED = "rojo-connected"
+    ROJO_DISCONNECTED = "rojo-disconnected"
+    ROJO_SYNC_UPDATE = "rojo-sync-update"
+    ROJO_BUILD_COMPLETE = "rojo-build-complete"
+
+    # Authentication events
+    AUTH_SUCCESS = "auth-success"
+    AUTH_FAILED = "auth-failed"
+    TOKEN_REFRESHED = "token-refreshed"
+    TOKEN_REVOKED = "token-revoked"
+
+    # Studio plugin events
+    PLUGIN_CONNECTED = "plugin-connected"
+    PLUGIN_DISCONNECTED = "plugin-disconnected"
+    CONTENT_DEPLOYED = "content-deployed"
+    ASSET_UPLOADED = "asset-uploaded"
+
+    # Error events
+    ERROR_OCCURRED = "error-occurred"
+```
+
+### Pusher Service Implementation
+
+```python
+# Roblox Pusher Service
+class RobloxPusherService:
+    """Real-time communication service for Roblox integration"""
+
+    def __init__(self):
+        self.client = pusher.Pusher(
+            app_id=os.getenv("PUSHER_APP_ID"),
+            key=os.getenv("PUSHER_KEY"),
+            secret=os.getenv("PUSHER_SECRET"),
+            cluster="us2",
+            ssl=True
+        )
+
+    def authenticate_channel(
+        self,
+        channel_name: str,
+        socket_id: str,
+        user_data: Optional[Dict] = None
+    ) -> Dict[str, str]:
+        """Authenticate private/presence channels"""
+
+    def notify_conversation_stage_change(
+        self,
+        session_id: str,
+        stage: str,
+        progress: float,
+        message: str
+    ) -> bool:
+        """Send stage change notification"""
+
+    def notify_generation_progress(
+        self,
+        session_id: str,
+        progress: float,
+        status: str,
+        details: Optional[Dict] = None
+    ) -> bool:
+        """Send generation progress update"""
+```
 
 ## 🌐 Open Cloud API Integration
 

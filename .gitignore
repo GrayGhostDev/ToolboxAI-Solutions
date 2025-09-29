@@ -339,3 +339,4 @@ infrastructure/monitoring/*/admin.conf
 infrastructure/monitoring/*/htpasswd
 infrastructure/monitoring/*/.htpasswd
 
+node_modules.old.*

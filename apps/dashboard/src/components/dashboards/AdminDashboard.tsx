@@ -1,551 +1,533 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
-import Avatar from '@mui/material/Avatar';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import Chip from '@mui/material/Chip';
-import LinearProgress from '@mui/material/LinearProgress';
-import Alert from '@mui/material/Alert';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Paper from '@mui/material/Paper';
-import Divider from '@mui/material/Divider';
+IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../IconutilsIcon/IconmuiIcon-Iconimports';
+IconimportIcon IconReactIcon, { IconuseStateIcon, IconuseEffectIcon, IconuseCallbackIcon } IconfromIcon 'Iconreact';
 
-import {
-  Dashboard as DashboardIcon,
-  People as PeopleIcon,
-  School as SchoolIcon,
-  Assessment as AssessmentIcon,
-  Settings as SettingsIcon,
-  Security as SecurityIcon,
-  Storage as StorageIcon,
-  Speed as SpeedIcon,
-  Warning as WarningIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  Refresh as RefreshIcon,
-  Download as DownloadIcon,
-  Upload as UploadIcon,
-} from '@mui/icons-material';
-import { useAppDispatch, useAppSelector } from '@/hooks/redux';
-import { MetricCard } from '@/components/metrics/MetricCard';
-import { ActivityFeed } from '@/components/activity/ActivityFeed';
-import { SystemHealthMonitor } from '@/components/monitoring/SystemHealthMonitor';
-import { UserManagementPanel } from '@/components/admin/UserManagementPanel';
-import { ContentModerationPanel } from '@/components/admin/ContentModerationPanel';
-import { SystemSettingsPanel } from '@/components/admin/SystemSettingsPanel';
-import { api } from '@/services/api';
-import { pusherService } from '@/services/pusher';
-import { formatDistanceToNow } from 'date-fns';
+IconimportIcon {
+  IconDashboardIcon IconasIcon IconIconDashboardIcon,
+  IconPeopleIcon IconasIcon IconIconUsersIcon,
+  IconSchoolIcon IconasIcon IconIconSchoolIcon,
+  IconAssessmentIcon IconasIcon IconIconReportAnalyticsIcon,
+  IconSettingsIcon IconasIcon IconIconSettingsIcon,
+  IconSecurityIcon IconasIcon IconIconSecurityIcon,
+  IconStorageIcon IconasIcon IconIconStorageIcon,
+  IconSpeedIcon IconasIcon IconIconSpeedIcon,
+  IconWarningIcon IconasIcon IconIconAlertTriangleIcon,
+  IconCheckCircleIcon IconasIcon IconIconCircleCheckIcon,
+  IconErrorIcon IconasIcon IconIconCircleXIcon,
+  IconRefreshIcon IconasIcon IconIconRefreshIcon,
+  IconDownloadIcon IconasIcon IconIconDownloadIcon,
+  IconUploadIcon IconasIcon IconIconUploadIcon,
+} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
+IconimportIcon { IconuseAppDispatchIcon, IconuseAppSelectorIcon } IconfromIcon '@/IconhooksIcon/Iconredux';
+IconimportIcon { IconMetricCardIcon } IconfromIcon '@/IconcomponentsIcon/IconmetricsIcon/IconMetricCard';
+IconimportIcon { IconActivityFeedIcon } IconfromIcon '@/IconcomponentsIcon/IconactivityIcon/IconActivityFeed';
+IconimportIcon { IconSystemHealthMonitorIcon } IconfromIcon '@/IconcomponentsIcon/IconmonitoringIcon/IconSystemHealthMonitor';
+IconimportIcon { IconUserManagementPanelIcon } IconfromIcon '@/IconcomponentsIcon/IconadminIcon/IconUserManagementPanel';
+IconimportIcon { IconContentModerationPanelIcon } IconfromIcon '@/IconcomponentsIcon/IconadminIcon/IconContentModerationPanel';
+IconimportIcon { IconSystemSettingsPanelIcon } IconfromIcon '@/IconcomponentsIcon/IconadminIcon/IconSystemSettingsPanel';
+IconimportIcon { IconapiIcon } IconfromIcon '@/IconservicesIcon/Iconapi';
+IconimportIcon { IconpusherServiceIcon } IconfromIcon '@/IconservicesIcon/Iconpusher';
+IconimportIcon { IconformatDistanceToNowIcon } IconfromIcon 'IcondateIcon-Iconfns';
+IconimportIcon { IconIconIcon, IconIconAlertTriangleIcon, IconIconCircleCheckIcon, IconIconCircleXIcon, IconIconDashboardIcon, IconIconDownloadIcon, IconIconRefreshIcon, IconIconReportAnalyticsIcon, IconIconSchoolIcon, IconIconSecurityIcon, IconIconSettingsIcon, IconIconSpeedIcon, IconIconStorageIcon, IconIconUploadIcon, IconIconUsersIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
 
-interface AdminDashboardProps {
-  section?: string;
+IconinterfaceIcon IconAdminDashboardPropsIcon {
+  IconsectionIcon?: IconstringIcon;
 }
 
-interface SystemMetrics {
-  totalUsers: number;
-  activeUsers: number;
-  totalCourses: number;
-  activeSessions: number;
-  contentGenerated: number;
-  systemHealth: number;
-  cpuUsage: number;
-  memoryUsage: number;
-  storageUsage: number;
-  apiLatency: number;
+IconinterfaceIcon IconSystemMetricsIcon {
+  IcontotalUsersIcon: IconnumberIcon;
+  IconactiveUsersIcon: IconnumberIcon;
+  IcontotalCoursesIcon: IconnumberIcon;
+  IconactiveSessionsIcon: IconnumberIcon;
+  IconcontentGeneratedIcon: IconnumberIcon;
+  IconsystemHealthIcon: IconnumberIcon;
+  IconcpuUsageIcon: IconnumberIcon;
+  IconmemoryUsageIcon: IconnumberIcon;
+  IconstorageUsageIcon: IconnumberIcon;
+  IconapiLatencyIcon: IconnumberIcon;
 }
 
-interface SystemAlert {
-  id: string;
-  severity: 'error' | 'warning' | 'info' | 'success';
-  message: string;
-  timestamp: Date;
-  resolved: boolean;
+IconinterfaceIcon IconSystemAlertIcon {
+  IconidIcon: IconstringIcon;
+  IconseverityIcon: 'Iconerror' | 'Iconwarning' | 'Iconinfo' | 'Iconsuccess';
+  IconmessageIcon: IconstringIcon;
+  IcontimestampIcon: IconDateIcon;
+  IconresolvedIcon: IconbooleanIcon;
 }
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
+IconinterfaceIcon IconTabPanelPropsIcon {
+  IconchildrenIcon?: IconReactIcon.IconReactNodeIcon;
+  IconindexIcon: IconnumberIcon;
+  IconvalueIcon: IconnumberIcon;
 }
 
-const TabPanel: React.FunctionComponent<TabPanelProps> = ({ children, value, index, ...other }) => {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`admin-tabpanel-${index}`}
-      aria-labelledby={`admin-tab-${index}`}
-      {...other}
+IconconstIcon IconTabPanelIcon: IconReactIcon.IconFunctionComponentIcon<IconTabPanelPropsIcon> = ({ IconchildrenIcon, IconvalueIcon, IconindexIcon, ...IconotherIcon }) => {
+  IconreturnIcon (
+    <IcondivIcon
+      IconroleIcon="Icontabpanel"
+      IconhiddenIcon={IconvalueIcon !== IconindexIcon}
+      IconidIcon={`IconadminIcon-IcontabpanelIcon-${IconindexIcon}`}
+      IconariaIcon-IconlabelledbyIcon={`IconadminIcon-IcontabIcon-${IconindexIcon}`}
+      {...IconotherIcon}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
+      {IconvalueIcon === IconindexIcon && <IconBoxIcon IconstyleIcon={{ IconpIcon: Icon3Icon }}>{IconchildrenIcon}<IconIconIcon/IconBoxIcon>}
+    <IconIconIcon/IcondivIcon>
   );
 };
 
-export default function AdminDashboard({ section = 'overview' }: AdminDashboardProps) {
-  const dispatch = useAppDispatch();
-  const { isAuthenticated, ...user } = useAppSelector((state) => state.user);
-  const [activeTab, setActiveTab] = useState(0);
-  const [metrics, setMetrics] = useState<SystemMetrics>({
-    totalUsers: 0,
-    activeUsers: 0,
-    totalCourses: 0,
-    activeSessions: 0,
-    contentGenerated: 0,
-    systemHealth: 95,
-    cpuUsage: 45,
-    memoryUsage: 62,
-    storageUsage: 38,
-    apiLatency: 120,
+IconexportIcon IcondefaultIcon IconfunctionIcon IconAdminDashboardIcon({ IconsectionIcon = 'Iconoverview' }: IconAdminDashboardPropsIcon) {
+  IconconstIcon IcondispatchIcon = IconuseAppDispatchIcon();
+  IconconstIcon { IconisAuthenticatedIcon, ...IconuserIcon } = IconuseAppSelectorIcon((IconstateIcon) => IconstateIcon.IconuserIcon);
+  IconconstIcon [IconactiveTabIcon, IconsetActiveTabIcon] = IconuseStateIcon(Icon0Icon);
+  IconconstIcon [IconmetricsIcon, IconsetMetricsIcon] = IconuseStateIcon<IconSystemMetricsIcon>({
+    IcontotalUsersIcon: Icon0Icon,
+    IconactiveUsersIcon: Icon0Icon,
+    IcontotalCoursesIcon: Icon0Icon,
+    IconactiveSessionsIcon: Icon0Icon,
+    IconcontentGeneratedIcon: Icon0Icon,
+    IconsystemHealthIcon: Icon95Icon,
+    IconcpuUsageIcon: Icon45Icon,
+    IconmemoryUsageIcon: Icon62Icon,
+    IconstorageUsageIcon: Icon38Icon,
+    IconapiLatencyIcon: Icon120Icon,
   });
-  const [alerts, setAlerts] = useState<SystemAlert[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  IconconstIcon [IconalertsIcon, IconsetAlertsIcon] = IconuseStateIcon<IconSystemAlertIcon[]>([]);
+  IconconstIcon [IconloadingIcon, IconsetLoadingIcon] = IconuseStateIcon(IcontrueIcon);
+  IconconstIcon [IconrefreshingIcon, IconsetRefreshingIcon] = IconuseStateIcon(IconfalseIcon);
 
-  // Fetch system metrics
-  const fetchMetrics = useCallback(async () => {
-    try {
-      setRefreshing(true);
-      const response = await api.get('/api/v1/admin/metrics');
-      setMetrics(response.data);
-    } catch (error) {
-      console.error('Failed to fetch metrics:', error);
-      // Use mock data for development
-      setMetrics({
-        totalUsers: 1247,
-        activeUsers: 342,
-        totalCourses: 89,
-        activeSessions: 156,
-        contentGenerated: 3421,
-        systemHealth: 95,
-        cpuUsage: 45,
-        memoryUsage: 62,
-        storageUsage: 38,
-        apiLatency: 120,
+  // IconFetchIcon IconsystemIcon IconmetricsIcon
+  IconconstIcon IconfetchMetricsIcon = IconuseCallbackIcon(IconasyncIcon () => {
+    IcontryIcon {
+      IconsetRefreshingIcon(IcontrueIcon);
+      IconconstIcon IconresponseIcon = IconawaitIcon IconapiIcon.IcongetIcon('/IconapiIcon/Iconv1Icon/IconadminIcon/Iconmetrics');
+      IconsetMetricsIcon(IconresponseIcon.IcondataIcon);
+    } IconcatchIcon (IconerrorIcon) {
+      IconconsoleIcon.IconerrorIcon('IconFailedIcon IcontoIcon IconfetchIcon IconmetricsIcon:', IconerrorIcon);
+      // IconUseIcon IconmockIcon IcondataIcon IconforIcon IcondevelopmentIcon
+      IconsetMetricsIcon({
+        IcontotalUsersIcon: Icon1247Icon,
+        IconactiveUsersIcon: Icon342Icon,
+        IcontotalCoursesIcon: Icon89Icon,
+        IconactiveSessionsIcon: Icon156Icon,
+        IconcontentGeneratedIcon: Icon3421Icon,
+        IconsystemHealthIcon: Icon95Icon,
+        IconcpuUsageIcon: Icon45Icon,
+        IconmemoryUsageIcon: Icon62Icon,
+        IconstorageUsageIcon: Icon38Icon,
+        IconapiLatencyIcon: Icon120Icon,
       });
-    } finally {
-      setRefreshing(false);
-      setLoading(false);
+    } IconfinallyIcon {
+      IconsetRefreshingIcon(IconfalseIcon);
+      IconsetLoadingIcon(IconfalseIcon);
     }
   }, []);
 
-  // Fetch system alerts
-  const fetchAlerts = useCallback(async () => {
-    try {
-      const response = await api.get('/api/v1/admin/alerts');
-      setAlerts(response.data);
-    } catch (error) {
-      console.error('Failed to fetch alerts:', error);
-      // Use mock data for development
-      setAlerts([
+  // IconFetchIcon IconsystemIcon IconalertsIcon
+  IconconstIcon IconfetchAlertsIcon = IconuseCallbackIcon(IconasyncIcon () => {
+    IcontryIcon {
+      IconconstIcon IconresponseIcon = IconawaitIcon IconapiIcon.IcongetIcon('/IconapiIcon/Iconv1Icon/IconadminIcon/Iconalerts');
+      IconsetAlertsIcon(IconresponseIcon.IcondataIcon);
+    } IconcatchIcon (IconerrorIcon) {
+      IconconsoleIcon.IconerrorIcon('IconFailedIcon IcontoIcon IconfetchIcon IconalertsIcon:', IconerrorIcon);
+      // IconUseIcon IconmockIcon IcondataIcon IconforIcon IcondevelopmentIcon
+      IconsetAlertsIcon([
         {
-          id: '1',
-          severity: 'warning',
-          message: 'High memory usage detected on worker node 3',
-          timestamp: new Date(Date.now() - 3600000),
-          resolved: false,
+          IconidIcon: 'Icon1',
+          IconseverityIcon: 'Iconwarning',
+          IconmessageIcon: 'IconHighIcon IconmemoryIcon IconusageIcon IcondetectedIcon IcononIcon IconworkerIcon IconnodeIcon Icon3',
+          IcontimestampIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon3600000Icon),
+          IconresolvedIcon: IconfalseIcon,
         },
         {
-          id: '2',
-          severity: 'info',
-          message: 'Scheduled maintenance window starts in 24 hours',
-          timestamp: new Date(Date.now() - 7200000),
-          resolved: false,
+          IconidIcon: 'Icon2',
+          IconseverityIcon: 'Iconinfo',
+          IconmessageIcon: 'IconScheduledIcon IconmaintenanceIcon IconwindowIcon IconstartsIcon IconinIcon Icon24Icon Iconhours',
+          IcontimestampIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon7200000Icon),
+          IconresolvedIcon: IconfalseIcon,
         },
         {
-          id: '3',
-          severity: 'success',
-          message: 'Database backup completed successfully',
-          timestamp: new Date(Date.now() - 14400000),
-          resolved: true,
+          IconidIcon: 'Icon3',
+          IconseverityIcon: 'Iconsuccess',
+          IconmessageIcon: 'IconDatabaseIcon IconbackupIcon IconcompletedIcon Iconsuccessfully',
+          IcontimestampIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon14400000Icon),
+          IconresolvedIcon: IcontrueIcon,
         },
       ]);
     }
   }, []);
 
-  // Subscribe to real-time updates
-  useEffect(() => {
-    fetchMetrics();
-    fetchAlerts();
+  // IconSubscribeIcon IcontoIcon IconrealIcon-IcontimeIcon IconupdatesIcon
+  IconuseEffectIcon(() => {
+    IconfetchMetricsIcon();
+    IconfetchAlertsIcon();
 
-    // Subscribe to Pusher channels for real-time updates
-    const subscriptionId = pusherService.subscribe('admin-updates', (message) => {
-      if (message.type === 'metrics-update') {
-        setMetrics(message.payload);
-      } else if (message.type === 'alert-new') {
-        setAlerts((prev) => [message.payload, ...prev]);
+    // IconSubscribeIcon IcontoIcon IconPusherIcon IconchannelsIcon IconforIcon IconrealIcon-IcontimeIcon IconupdatesIcon
+    IconconstIcon IconsubscriptionIdIcon = IconpusherServiceIcon.IconsubscribeIcon('IconadminIcon-Iconupdates', (IconmessageIcon) => {
+      IconifIcon (IconmessageIcon.IcontypeIcon === 'IconmetricsIcon-Iconupdate') {
+        IconsetMetricsIcon(IconmessageIcon.IconpayloadIcon);
+      } IconelseIcon IconifIcon (IconmessageIcon.IcontypeIcon === 'IconalertIcon-Iconnew') {
+        IconsetAlertsIcon((IconprevIcon) => [IconmessageIcon.IconpayloadIcon, ...IconprevIcon]);
       }
     });
 
-    // Refresh metrics every 30 seconds
-    const interval = setInterval(fetchMetrics, 30000);
+    // IconRefreshIcon IconmetricsIcon IconeveryIcon Icon30Icon IconsecondsIcon
+    IconconstIcon IconintervalIcon = IconsetIntervalIcon(IconfetchMetricsIcon, Icon30000Icon);
 
-    return () => {
-      pusherService.unsubscribe(subscriptionId);
-      clearInterval(interval);
+    IconreturnIcon () => {
+      IconpusherServiceIcon.IconunsubscribeIcon(IconsubscriptionIdIcon);
+      IconclearIntervalIcon(IconintervalIcon);
     };
-  }, [fetchMetrics, fetchAlerts]);
+  }, [IconfetchMetricsIcon, IconfetchAlertsIcon]);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
+  IconconstIcon IconhandleTabChangeIcon = (IconeventIcon: IconReactIcon.IconSyntheticEventIcon, IconnewValueIcon: IconnumberIcon) => {
+    IconsetActiveTabIcon(IconnewValueIcon);
   };
 
-  const handleRefresh = () => {
-    fetchMetrics();
-    fetchAlerts();
+  IconconstIcon IconhandleRefreshIcon = () => {
+    IconfetchMetricsIcon();
+    IconfetchAlertsIcon();
   };
 
-  const handleResolveAlert = async (alertId: string) => {
-    try {
-      await api.patch(`/api/v1/admin/alerts/${alertId}/resolve`);
-      setAlerts((prev) =>
-        prev.map((alert) =>
-          alert.id === alertId ? { ...alert, resolved: true } : alert
+  IconconstIcon IconhandleResolveAlertIcon = IconasyncIcon (IconalertIdIcon: IconstringIcon) => {
+    IcontryIcon {
+      IconawaitIcon IconapiIcon.IconpatchIcon(`/IconapiIcon/Iconv1Icon/IconadminIcon/IconalertsIcon/${IconalertIdIcon}/IconresolveIcon`);
+      IconsetAlertsIcon((IconprevIcon) =>
+        IconprevIcon.IconmapIcon((IconalertIcon) =>
+          IconalertIcon.IconidIcon === IconalertIdIcon ? { ...IconalertIcon, IconresolvedIcon: IcontrueIcon } : IconalertIcon
         )
       );
-    } catch (error) {
-      console.error('Failed to resolve alert:', error);
+    } IconcatchIcon (IconerrorIcon) {
+      IconconsoleIcon.IconerrorIcon('IconFailedIcon IcontoIcon IconresolveIcon IconalertIcon:', IconerrorIcon);
     }
   };
 
-  const getHealthColor = (health: number): 'success' | 'warning' | 'error' => {
-    if (health >= 90) return 'success';
-    if (health >= 70) return 'warning';
-    return 'error';
+  IconconstIcon IcongetHealthColorIcon = (IconhealthIcon: IconnumberIcon): 'Iconsuccess' | 'Iconwarning' | 'Iconerror' => {
+    IconifIcon (IconhealthIcon >= Icon90Icon) IconreturnIcon 'Iconsuccess';
+    IconifIcon (IconhealthIcon >= Icon70Icon) IconreturnIcon 'Iconwarning';
+    IconreturnIcon 'Iconerror';
   };
 
-  const getHealthIcon = (health: number) => {
-    if (health >= 90) return <CheckCircleIcon color="success" />;
-    if (health >= 70) return <WarningIcon color="warning" />;
-    return <ErrorIcon color="error" />;
+  IconconstIcon IcongetHealthIconIcon = (IconhealthIcon: IconnumberIcon) => {
+    IconifIcon (IconhealthIcon >= Icon90Icon) IconreturnIcon <IconIconCircleCheckIcon IconcolorIcon="Icongreen" />;
+    IconifIcon (IconhealthIcon >= Icon70Icon) IconreturnIcon <IconIconAlertTriangleIcon IconcolorIcon="Iconyellow" />;
+    IconreturnIcon <IconIconCircleXIcon IconcolorIcon="Iconred" />;
   };
 
-  if (loading) {
-    return (
-      <Box sx={{ width: '100%', mt: 4 }}>
-        <LinearProgress />
-      </Box>
+  IconifIcon (IconloadingIcon) {
+    IconreturnIcon (
+      <IconBoxIcon IconstyleIcon={{ IconwidthIcon: 'Icon100Icon%', IconmtIcon: Icon4Icon }}>
+        <IconLinearProgressIcon />
+      <IconIconIcon/IconBoxIcon>
     );
   }
 
-  return (
-    <Box sx={{ flexGrow: 1 }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Admin Dashboard
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          System overview and management tools
-        </Typography>
-      </Box>
+  IconreturnIcon (
+    <IconBoxIcon IconstyleIcon={{ IconflexGrowIcon: Icon1Icon }}>
+      {/* IconHeaderIcon */}
+      <IconBoxIcon IconstyleIcon={{ IconmbIcon: Icon4Icon }}>
+        <IconTypographyIcon IconorderIcon={Icon4Icon} IconcomponentIcon="Iconh1" IcongutterBottomIcon>
+          IconAdminIcon IconDashboardIcon
+        <IconIconIcon/IconTypographyIcon>
+        <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
+          IconSystemIcon IconoverviewIcon IconandIcon IconmanagementIcon IcontoolsIcon
+        <IconIconIcon/IconTypographyIcon>
+      <IconIconIcon/IconBoxIcon>
 
-      {/* System Health Alert */}
-      {metrics.systemHealth < 70 && (
-        <Alert severity="warning" sx={{ mb: 3 }}>
-          System health is below optimal levels. Please review system metrics and alerts.
-        </Alert>
+      {/* IconSystemIcon IconHealthIcon IconAlertIcon */}
+      {IconmetricsIcon.IconsystemHealthIcon <IconIconIcon Icon70Icon && (
+        <IconAlertIcon IconseverityIcon="Iconwarning" IconstyleIcon={{ IconmbIcon: Icon3Icon }}>
+          IconSystemIcon IconhealthIcon IconisIcon IconbelowIcon IconoptimalIcon IconlevelsIcon. IconPleaseIcon IconreviewIcon IconsystemIcon IconmetricsIcon IconandIcon IconalertsIcon.
+        <IconIconIcon/IconAlertIcon>
       )}
 
-      {/* Quick Metrics */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Total Users
-              </Typography>
-              <Typography variant="h4">{metrics.totalUsers}</Typography>
-              <Typography variant="body2" color="success.main">
-                +12% from last month
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Active Sessions
-              </Typography>
-              <Typography variant="h4">{metrics.activeSessions}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                -5% from yesterday
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Content Generated
-              </Typography>
-              <Typography variant="h4">{metrics.contentGenerated}</Typography>
-              <Typography variant="body2" color="success.main">
-                +23% this week
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Typography variant="subtitle2" color="text.secondary" sx={{ flexGrow: 1 }}>
-                  System Health
-                </Typography>
-                {getHealthIcon(metrics.systemHealth)}
-              </Box>
-              <Typography variant="h4" component="div" gutterBottom>
-                {metrics.systemHealth}%
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={metrics.systemHealth}
-                color={getHealthColor(metrics.systemHealth)}
-                sx={{ height: 8, borderRadius: 4 }}
+      {/* IconQuickIcon IconMetricsIcon */}
+      <IconGridIcon IconcontainerIcon IconspacingIcon={Icon3Icon} IconstyleIcon={{ IconmbIcon: Icon4Icon }}>
+        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
+          <IconCardIcon>
+            <IconCardContentIcon>
+              <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconcolorIcon="IcontextIcon.Iconsecondary" IcongutterBottomIcon>
+                IconTotalIcon IconUsersIcon
+              <IconIconIcon/IconTypographyIcon>
+              <IconTypographyIcon IconorderIcon={Icon4Icon}>{IconmetricsIcon.IcontotalUsersIcon}<IconIconIcon/IconTypographyIcon>
+              <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IconsuccessIcon.Iconmain">
+                +Icon12Icon% IconfromIcon IconlastIcon IconmonthIcon
+              <IconIconIcon/IconTypographyIcon>
+            <IconIconIcon/IconCardContentIcon>
+          <IconIconIcon/IconCardIcon>
+        <IconIconIcon/IconGridIcon>
+        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
+          <IconCardIcon>
+            <IconCardContentIcon>
+              <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconcolorIcon="IcontextIcon.Iconsecondary" IcongutterBottomIcon>
+                IconActiveIcon IconSessionsIcon
+              <IconIconIcon/IconTypographyIcon>
+              <IconTypographyIcon IconorderIcon={Icon4Icon}>{IconmetricsIcon.IconactiveSessionsIcon}<IconIconIcon/IconTypographyIcon>
+              <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
+                -Icon5Icon% IconfromIcon IconyesterdayIcon
+              <IconIconIcon/IconTypographyIcon>
+            <IconIconIcon/IconCardContentIcon>
+          <IconIconIcon/IconCardIcon>
+        <IconIconIcon/IconGridIcon>
+        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
+          <IconCardIcon>
+            <IconCardContentIcon>
+              <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconcolorIcon="IcontextIcon.Iconsecondary" IcongutterBottomIcon>
+                IconContentIcon IconGeneratedIcon
+              <IconIconIcon/IconTypographyIcon>
+              <IconTypographyIcon IconorderIcon={Icon4Icon}>{IconmetricsIcon.IconcontentGeneratedIcon}<IconIconIcon/IconTypographyIcon>
+              <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IconsuccessIcon.Iconmain">
+                +Icon23Icon% IconthisIcon IconweekIcon
+              <IconIconIcon/IconTypographyIcon>
+            <IconIconIcon/IconCardContentIcon>
+          <IconIconIcon/IconCardIcon>
+        <IconIconIcon/IconGridIcon>
+        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
+          <IconCardIcon>
+            <IconCardContentIcon>
+              <IconBoxIcon IconstyleIcon={{ IcondisplayIcon: 'Iconflex', IconalignItemsIcon: 'Iconcenter', IconmbIcon: Icon2Icon }}>
+                <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconcolorIcon="IcontextIcon.Iconsecondary" IconstyleIcon={{ IconflexGrowIcon: Icon1Icon }}>
+                  IconSystemIcon IconHealthIcon
+                <IconIconIcon/IconTypographyIcon>
+                {IcongetHealthIconIcon(IconmetricsIcon.IconsystemHealthIcon)}
+              <IconIconIcon/IconBoxIcon>
+              <IconTypographyIcon IconorderIcon={Icon4Icon} IconcomponentIcon="Icondiv" IcongutterBottomIcon>
+                {IconmetricsIcon.IconsystemHealthIcon}%
+              <IconIconIcon/IconTypographyIcon>
+              <IconLinearProgressIcon
+                IconvariantIcon="Icondeterminate"
+                IconvalueIcon={IconmetricsIcon.IconsystemHealthIcon}
+                IconcolorIcon={IcongetHealthColorIcon(IconmetricsIcon.IconsystemHealthIcon)}
+                IconstyleIcon={{ IconheightIcon: Icon8Icon, IconborderRadiusIcon: Icon4Icon }}
               />
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+            <IconIconIcon/IconCardContentIcon>
+          <IconIconIcon/IconCardIcon>
+        <IconIconIcon/IconGridIcon>
+      <IconIconIcon/IconGridIcon>
 
-      {/* Main Content Tabs */}
-      <Paper sx={{ width: '100%', mb: 4 }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', position: 'relative' }}>
-          <Tabs value={activeTab} onChange={handleTabChange} aria-label="admin tabs">
-            <Tab icon={<DashboardIcon />} label="Overview" />
-            <Tab icon={<PeopleIcon />} label="Users" />
-            <Tab icon={<SchoolIcon />} label="Content" />
-            <Tab icon={<SecurityIcon />} label="Security" />
-            <Tab icon={<SettingsIcon />} label="Settings" />
-          </Tabs>
-          <Box sx={{ position: 'absolute', right: 16, top: 8 }}>
-            <Tooltip title="Refresh">
-              <IconButton onClick={handleRefresh} disabled={refreshing}>
-                <RefreshIcon />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </Box>
+      {/* IconMainIcon IconContentIcon IconTabsIcon */}
+      <IconPaperIcon IconstyleIcon={{ IconwidthIcon: 'Icon100Icon%', IconmbIcon: Icon4Icon }}>
+        <IconBoxIcon IconstyleIcon={{ IconborderBottomIcon: Icon1Icon, IconborderColorIcon: 'Icondivider', IconpositionIcon: 'Iconrelative' }}>
+          <IconTabsIcon IconvalueIcon={IconactiveTabIcon} IcononChangeIcon={IconhandleTabChangeIcon} IconariaIcon-IconlabelIcon="IconadminIcon Icontabs">
+            <IconTabIcon IconiconIcon={<IconIconDashboardIcon />} IconlabelIcon="IconOverview" />
+            <IconTabIcon IconiconIcon={<IconIconUsersIcon />} IconlabelIcon="IconUsers" />
+            <IconTabIcon IconiconIcon={<IconIconSchoolIcon />} IconlabelIcon="IconContent" />
+            <IconTabIcon IconiconIcon={<IconIconSecurityIcon />} IconlabelIcon="IconSecurity" />
+            <IconTabIcon IconiconIcon={<IconIconSettingsIcon />} IconlabelIcon="IconSettings" />
+          <IconIconIcon/IconTabsIcon>
+          <IconBoxIcon IconstyleIcon={{ IconpositionIcon: 'Iconabsolute', IconrightIcon: Icon16Icon, IcontopIcon: Icon8Icon }}>
+            <IconTooltipIcon IcontitleIcon="IconRefresh">
+              <IconIconButtonIcon IcononClickIcon={IconhandleRefreshIcon} IcondisabledIcon={IconrefreshingIcon}>
+                <IconIconRefreshIcon />
+              <IconIconIcon/IconIconButtonIcon>
+            <IconIconIcon/IconTooltipIcon>
+          <IconIconIcon/IconBoxIcon>
+        <IconIconIcon/IconBoxIcon>
 
-        <TabPanel value={activeTab} index={0}>
-          {/* Overview Tab */}
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
-              {/* System Performance */}
-              <Card sx={{ mb: 3 }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    System Performance
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body2">CPU Usage</Typography>
-                          <Typography variant="body2">{metrics.cpuUsage}%</Typography>
-                        </Box>
-                        <LinearProgress
-                          variant="determinate"
-                          value={metrics.cpuUsage}
-                          color={metrics.cpuUsage > 80 ? 'error' : 'primary'}
+        <IconTabPanelIcon IconvalueIcon={IconactiveTabIcon} IconindexIcon={Icon0Icon}>
+          {/* IconOverviewIcon IconTabIcon */}
+          <IconGridIcon IconcontainerIcon IconspacingIcon={Icon3Icon}>
+            <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconmdIcon={Icon8Icon}>
+              {/* IconSystemIcon IconPerformanceIcon */}
+              <IconCardIcon IconstyleIcon={{ IconmbIcon: Icon3Icon }}>
+                <IconCardContentIcon>
+                  <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
+                    IconSystemIcon IconPerformanceIcon
+                  <IconIconIcon/IconTypographyIcon>
+                  <IconGridIcon IconcontainerIcon IconspacingIcon={Icon2Icon}>
+                    <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon}>
+                      <IconBoxIcon IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
+                        <IconBoxIcon IconstyleIcon={{ IcondisplayIcon: 'Iconflex', IconjustifyContentIcon: 'IconspaceIcon-Iconbetween', IconmbIcon: Icon1Icon }}>
+                          <IconTypographyIcon IconsizeIcon="Iconsm">IconCPUIcon IconUsageIcon<IconIconIcon/IconTypographyIcon>
+                          <IconTypographyIcon IconsizeIcon="Iconsm">{IconmetricsIcon.IconcpuUsageIcon}%<IconIconIcon/IconTypographyIcon>
+                        <IconIconIcon/IconBoxIcon>
+                        <IconLinearProgressIcon
+                          IconvariantIcon="Icondeterminate"
+                          IconvalueIcon={IconmetricsIcon.IconcpuUsageIcon}
+                          IconcolorIcon={IconmetricsIcon.IconcpuUsageIcon > Icon80Icon ? 'Iconerror' : 'Iconprimary'}
                         />
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body2">Memory Usage</Typography>
-                          <Typography variant="body2">{metrics.memoryUsage}%</Typography>
-                        </Box>
-                        <LinearProgress
-                          variant="determinate"
-                          value={metrics.memoryUsage}
-                          color={metrics.memoryUsage > 80 ? 'error' : 'primary'}
+                      <IconIconIcon/IconBoxIcon>
+                    <IconIconIcon/IconGridIcon>
+                    <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon}>
+                      <IconBoxIcon IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
+                        <IconBoxIcon IconstyleIcon={{ IcondisplayIcon: 'Iconflex', IconjustifyContentIcon: 'IconspaceIcon-Iconbetween', IconmbIcon: Icon1Icon }}>
+                          <IconTypographyIcon IconsizeIcon="Iconsm">IconMemoryIcon IconUsageIcon<IconIconIcon/IconTypographyIcon>
+                          <IconTypographyIcon IconsizeIcon="Iconsm">{IconmetricsIcon.IconmemoryUsageIcon}%<IconIconIcon/IconTypographyIcon>
+                        <IconIconIcon/IconBoxIcon>
+                        <IconLinearProgressIcon
+                          IconvariantIcon="Icondeterminate"
+                          IconvalueIcon={IconmetricsIcon.IconmemoryUsageIcon}
+                          IconcolorIcon={IconmetricsIcon.IconmemoryUsageIcon > Icon80Icon ? 'Iconerror' : 'Iconprimary'}
                         />
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body2">Storage Usage</Typography>
-                          <Typography variant="body2">{metrics.storageUsage}%</Typography>
-                        </Box>
-                        <LinearProgress
-                          variant="determinate"
-                          value={metrics.storageUsage}
-                          color={metrics.storageUsage > 90 ? 'error' : 'primary'}
+                      <IconIconIcon/IconBoxIcon>
+                    <IconIconIcon/IconGridIcon>
+                    <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon}>
+                      <IconBoxIcon IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
+                        <IconBoxIcon IconstyleIcon={{ IcondisplayIcon: 'Iconflex', IconjustifyContentIcon: 'IconspaceIcon-Iconbetween', IconmbIcon: Icon1Icon }}>
+                          <IconTypographyIcon IconsizeIcon="Iconsm">IconStorageIcon IconUsageIcon<IconIconIcon/IconTypographyIcon>
+                          <IconTypographyIcon IconsizeIcon="Iconsm">{IconmetricsIcon.IconstorageUsageIcon}%<IconIconIcon/IconTypographyIcon>
+                        <IconIconIcon/IconBoxIcon>
+                        <IconLinearProgressIcon
+                          IconvariantIcon="Icondeterminate"
+                          IconvalueIcon={IconmetricsIcon.IconstorageUsageIcon}
+                          IconcolorIcon={IconmetricsIcon.IconstorageUsageIcon > Icon90Icon ? 'Iconerror' : 'Iconprimary'}
                         />
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body2">API Latency</Typography>
-                          <Typography variant="body2">{metrics.apiLatency}ms</Typography>
-                        </Box>
-                        <LinearProgress
-                          variant="determinate"
-                          value={Math.min((metrics.apiLatency / 1000) * 100, 100)}
-                          color={metrics.apiLatency > 500 ? 'error' : 'primary'}
+                      <IconIconIcon/IconBoxIcon>
+                    <IconIconIcon/IconGridIcon>
+                    <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon}>
+                      <IconBoxIcon IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
+                        <IconBoxIcon IconstyleIcon={{ IcondisplayIcon: 'Iconflex', IconjustifyContentIcon: 'IconspaceIcon-Iconbetween', IconmbIcon: Icon1Icon }}>
+                          <IconTypographyIcon IconsizeIcon="Iconsm">IconAPIIcon IconLatencyIcon<IconIconIcon/IconTypographyIcon>
+                          <IconTypographyIcon IconsizeIcon="Iconsm">{IconmetricsIcon.IconapiLatencyIcon}IconmsIcon<IconIconIcon/IconTypographyIcon>
+                        <IconIconIcon/IconBoxIcon>
+                        <IconLinearProgressIcon
+                          IconvariantIcon="Icondeterminate"
+                          IconvalueIcon={IconMathIcon.IconminIcon((IconmetricsIcon.IconapiLatencyIcon / Icon1000Icon) * Icon100Icon, Icon100Icon)}
+                          IconcolorIcon={IconmetricsIcon.IconapiLatencyIcon > Icon500Icon ? 'Iconerror' : 'Iconprimary'}
                         />
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
+                      <IconIconIcon/IconBoxIcon>
+                    <IconIconIcon/IconGridIcon>
+                  <IconIconIcon/IconGridIcon>
+                <IconIconIcon/IconCardContentIcon>
+              <IconIconIcon/IconCardIcon>
 
-              {/* Recent Activity Placeholder */}
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Recent Activity
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Activity feed will be displayed here
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
+              {/* IconRecentIcon IconActivityIcon IconPlaceholderIcon */}
+              <IconCardIcon>
+                <IconCardContentIcon>
+                  <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
+                    IconRecentIcon IconActivityIcon
+                  <IconIconIcon/IconTypographyIcon>
+                  <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
+                    IconActivityIcon IconfeedIcon IconwillIcon IconbeIcon IcondisplayedIcon IconhereIcon
+                  <IconIconIcon/IconTypographyIcon>
+                <IconIconIcon/IconCardContentIcon>
+              <IconIconIcon/IconCardIcon>
+            <IconIconIcon/IconGridIcon>
 
-            <Grid item xs={12} md={4}>
-              {/* System Alerts */}
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    System Alerts
-                  </Typography>
-                  <List>
-                    {alerts.slice(0, 5).map((alert) => (
-                      <ListItem
-                        key={alert.id}
-                        secondaryAction={
-                          !alert.resolved && (
-                            <IconButton
-                              edge="end"
-                              aria-label="resolve"
-                              onClick={() => handleResolveAlert(alert.id)}
+            <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconmdIcon={Icon4Icon}>
+              {/* IconSystemIcon IconAlertsIcon */}
+              <IconCardIcon>
+                <IconCardContentIcon>
+                  <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
+                    IconSystemIcon IconAlertsIcon
+                  <IconIconIcon/IconTypographyIcon>
+                  <IconListIcon>
+                    {IconalertsIcon.IconsliceIcon(Icon0Icon, Icon5Icon).IconmapIcon((IconalertIcon) => (
+                      <IconListItemIcon
+                        IconkeyIcon={IconalertIcon.IconidIcon}
+                        IconsecondaryActionIcon={
+                          !IconalertIcon.IconresolvedIcon && (
+                            <IconIconButtonIcon
+                              IconedgeIcon="Iconend"
+                              IconariaIcon-IconlabelIcon="Iconresolve"
+                              IcononClickIcon={() => IconhandleResolveAlertIcon(IconalertIcon.IconidIcon)}
                             >
-                              <CheckCircleIcon />
-                            </IconButton>
+                              <IconIconCircleCheckIcon />
+                            <IconIconIcon/IconIconButtonIcon>
                           )
                         }
                       >
-                        <ListItemAvatar>
-                          <Avatar
-                            sx={{
-                              bgcolor:
-                                alert.severity === 'error'
-                                  ? 'error.main'
-                                  : alert.severity === 'warning'
-                                  ? 'warning.main'
-                                  : 'info.main',
+                        <IconListItemAvatarIcon>
+                          <IconAvatarIcon
+                            IconstyleIcon={{
+                              IconbgcolorIcon:
+                                IconalertIcon.IconseverityIcon === 'Iconerror'
+                                  ? 'IconerrorIcon.Iconmain'
+                                  : IconalertIcon.IconseverityIcon === 'Iconwarning'
+                                  ? 'IconwarningIcon.Iconmain'
+                                  : 'IconinfoIcon.Iconmain',
                             }}
                           >
-                            {alert.severity === 'error' ? (
-                              <ErrorIcon />
-                            ) : alert.severity === 'warning' ? (
-                              <WarningIcon />
+                            {IconalertIcon.IconseverityIcon === 'Iconerror' ? (
+                              <IconIconCircleXIcon />
+                            ) : IconalertIcon.IconseverityIcon === 'Iconwarning' ? (
+                              <IconIconAlertTriangleIcon />
                             ) : (
-                              <CheckCircleIcon />
+                              <IconIconCircleCheckIcon />
                             )}
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={alert.message}
-                          secondary={formatDistanceToNow(new Date(alert.timestamp), {
-                            addSuffix: true,
+                          <IconIconIcon/IconAvatarIcon>
+                        <IconIconIcon/IconListItemAvatarIcon>
+                        <IconListItemTextIcon
+                          IconprimaryIcon={IconalertIcon.IconmessageIcon}
+                          IconsecondaryIcon={IconformatDistanceToNowIcon(IconnewIcon IconDateIcon(IconalertIcon.IcontimestampIcon), {
+                            IconaddSuffixIcon: IcontrueIcon,
                           })}
-                          sx={{
-                            textDecoration: alert.resolved ? 'line-through' : 'none',
-                            opacity: alert.resolved ? 0.6 : 1,
+                          IconstyleIcon={{
+                            IcontextDecorationIcon: IconalertIcon.IconresolvedIcon ? 'IconlineIcon-Iconthrough' : 'Iconnone',
+                            IconopacityIcon: IconalertIcon.IconresolvedIcon ? Icon0Icon.Icon6Icon : Icon1Icon,
                           }}
                         />
-                      </ListItem>
+                      <IconIconIcon/IconListItemIcon>
                     ))}
-                  </List>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </TabPanel>
+                  <IconIconIcon/IconListIcon>
+                <IconIconIcon/IconCardContentIcon>
+              <IconIconIcon/IconCardIcon>
+            <IconIconIcon/IconGridIcon>
+          <IconIconIcon/IconGridIcon>
+        <IconIconIcon/IconTabPanelIcon>
 
-        <TabPanel value={activeTab} index={1}>
-          {/* Users Tab */}
-          <Typography variant="h6">User Management</Typography>
-          <Typography variant="body2" color="text.secondary">
-            User management panel will be implemented here
-          </Typography>
-        </TabPanel>
+        <IconTabPanelIcon IconvalueIcon={IconactiveTabIcon} IconindexIcon={Icon1Icon}>
+          {/* IconUsersIcon IconTabIcon */}
+          <IconTypographyIcon IconorderIcon={Icon6Icon}>IconUserIcon IconManagementIcon<IconIconIcon/IconTypographyIcon>
+          <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
+            IconUserIcon IconmanagementIcon IconpanelIcon IconwillIcon IconbeIcon IconimplementedIcon IconhereIcon
+          <IconIconIcon/IconTypographyIcon>
+        <IconIconIcon/IconTabPanelIcon>
 
-        <TabPanel value={activeTab} index={2}>
-          {/* Content Tab */}
-          <Typography variant="h6">Content Moderation</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Content moderation panel will be implemented here
-          </Typography>
-        </TabPanel>
+        <IconTabPanelIcon IconvalueIcon={IconactiveTabIcon} IconindexIcon={Icon2Icon}>
+          {/* IconContentIcon IconTabIcon */}
+          <IconTypographyIcon IconorderIcon={Icon6Icon}>IconContentIcon IconModerationIcon<IconIconIcon/IconTypographyIcon>
+          <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
+            IconContentIcon IconmoderationIcon IconpanelIcon IconwillIcon IconbeIcon IconimplementedIcon IconhereIcon
+          <IconIconIcon/IconTypographyIcon>
+        <IconIconIcon/IconTabPanelIcon>
 
-        <TabPanel value={activeTab} index={3}>
-          {/* Security Tab */}
-          <Typography variant="h6">Security Settings</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Security monitoring panel will be implemented here
-          </Typography>
-        </TabPanel>
+        <IconTabPanelIcon IconvalueIcon={IconactiveTabIcon} IconindexIcon={Icon3Icon}>
+          {/* IconSecurityIcon IconTabIcon */}
+          <IconTypographyIcon IconorderIcon={Icon6Icon}>IconSecurityIcon IconSettingsIcon<IconIconIcon/IconTypographyIcon>
+          <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
+            IconSecurityIcon IconmonitoringIcon IconpanelIcon IconwillIcon IconbeIcon IconimplementedIcon IconhereIcon
+          <IconIconIcon/IconTypographyIcon>
+        <IconIconIcon/IconTabPanelIcon>
 
-        <TabPanel value={activeTab} index={4}>
-          {/* Settings Tab */}
-          <Typography variant="h6">System Settings</Typography>
-          <Typography variant="body2" color="text.secondary">
-            System settings panel will be implemented here
-          </Typography>
-        </TabPanel>
-      </Paper>
+        <IconTabPanelIcon IconvalueIcon={IconactiveTabIcon} IconindexIcon={Icon4Icon}>
+          {/* IconSettingsIcon IconTabIcon */}
+          <IconTypographyIcon IconorderIcon={Icon6Icon}>IconSystemIcon IconSettingsIcon<IconIconIcon/IconTypographyIcon>
+          <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
+            IconSystemIcon IconsettingsIcon IconpanelIcon IconwillIcon IconbeIcon IconimplementedIcon IconhereIcon
+          <IconIconIcon/IconTypographyIcon>
+        <IconIconIcon/IconTabPanelIcon>
+      <IconIconIcon/IconPaperIcon>
 
-      {/* Quick Actions */}
-      <Grid container spacing={2}>
-        <Grid item>
-          <Button
-            variant="contained"
-            startIcon={<DownloadIcon />}
-            onClick={() => console.log('Export logs')}
+      {/* IconQuickIcon IconActionsIcon */}
+      <IconGridIcon IconcontainerIcon IconspacingIcon={Icon2Icon}>
+        <IconGridIcon IconitemIcon>
+          <IconButtonIcon
+            IconvariantIcon="Iconfilled"
+            IconstartIconIcon={<IconIconDownloadIcon />}
+            IcononClickIcon={() => IconconsoleIcon.IconlogIcon('IconExportIcon Iconlogs')}
           >
-            Export Logs
-          </Button>
-        </Grid>
-        <Grid item>
-          <Button
-            variant="outlined"
-            startIcon={<UploadIcon />}
-            onClick={() => console.log('Backup system')}
+            IconExportIcon IconLogsIcon
+          <IconIconIcon/IconButtonIcon>
+        <IconIconIcon/IconGridIcon>
+        <IconGridIcon IconitemIcon>
+          <IconButtonIcon
+            IconvariantIcon="Iconoutline"
+            IconstartIconIcon={<IconIconUploadIcon />}
+            IcononClickIcon={() => IconconsoleIcon.IconlogIcon('IconBackupIcon Iconsystem')}
           >
-            Backup System
-          </Button>
-        </Grid>
-        <Grid item>
-          <Button
-            variant="outlined"
-            color="error"
-            startIcon={<WarningIcon />}
-            onClick={() => console.log('Clear cache')}
+            IconBackupIcon IconSystemIcon
+          <IconIconIcon/IconButtonIcon>
+        <IconIconIcon/IconGridIcon>
+        <IconGridIcon IconitemIcon>
+          <IconButtonIcon
+            IconvariantIcon="Iconoutline"
+            IconcolorIcon="Iconred"
+            IconstartIconIcon={<IconIconAlertTriangleIcon />}
+            IcononClickIcon={() => IconconsoleIcon.IconlogIcon('IconClearIcon Iconcache')}
           >
-            Clear Cache
-          </Button>
-        </Grid>
-      </Grid>
-    </Box>
+            IconClearIcon IconCacheIcon
+          <IconIconIcon/IconButtonIcon>
+        <IconIconIcon/IconGridIcon>
+      <IconIconIcon/IconGridIcon>
+    <IconIconIcon/IconBoxIcon>
   );
 }

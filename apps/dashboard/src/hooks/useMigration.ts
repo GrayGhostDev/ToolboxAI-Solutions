@@ -22,7 +22,7 @@ export interface MigrationComponent {
   name: string;
   priority: keyof typeof MIGRATION_PRIORITY;
   phase: MigrationPhase;
-  muiPath?: string;
+  sourcePath?: string;
   mantinePath?: string;
   notes?: string;
   testCoverage?: number;
@@ -36,7 +36,7 @@ export const DEFAULT_MIGRATION_PLAN: MigrationComponent[] = [
     name: 'Button',
     priority: 'HIGH',
     phase: 'development',
-    muiPath: '@mui/material/Button',
+    sourcePath: 'legacy/Button',
     mantinePath: '@mantine/core/Button',
     notes: 'Start with basic button migration',
   },
@@ -45,7 +45,7 @@ export const DEFAULT_MIGRATION_PLAN: MigrationComponent[] = [
     name: 'TextInput',
     priority: 'HIGH',
     phase: 'planning',
-    muiPath: '@mui/material/TextField',
+    sourcePath: 'legacy/TextField',
     mantinePath: '@mantine/core/TextInput',
     notes: 'Handle validation and error states',
   },
@@ -54,7 +54,7 @@ export const DEFAULT_MIGRATION_PLAN: MigrationComponent[] = [
     name: 'Card',
     priority: 'HIGH',
     phase: 'planning',
-    muiPath: '@mui/material/Card',
+    sourcePath: 'legacy/Card',
     mantinePath: '@mantine/core/Card',
     notes: 'Migrate card layouts and content structure',
   },
@@ -63,7 +63,7 @@ export const DEFAULT_MIGRATION_PLAN: MigrationComponent[] = [
     name: 'Alert',
     priority: 'HIGH',
     phase: 'planning',
-    muiPath: '@mui/material/Alert',
+    sourcePath: 'legacy/Alert',
     mantinePath: '@mantine/core/Alert',
     notes: 'Maintain severity levels and icons',
   },
@@ -72,7 +72,7 @@ export const DEFAULT_MIGRATION_PLAN: MigrationComponent[] = [
     name: 'Badge',
     priority: 'HIGH',
     phase: 'planning',
-    muiPath: '@mui/material/Badge',
+    sourcePath: 'legacy/Badge',
     mantinePath: '@mantine/core/Badge',
     notes: 'Handle different badge variants',
   },
@@ -81,7 +81,7 @@ export const DEFAULT_MIGRATION_PLAN: MigrationComponent[] = [
     name: 'Modal',
     priority: 'MEDIUM',
     phase: 'planning',
-    muiPath: '@mui/material/Modal',
+    sourcePath: 'legacy/Modal',
     mantinePath: '@mantine/core/Modal',
     notes: 'Focus trap and accessibility',
   },
@@ -90,7 +90,7 @@ export const DEFAULT_MIGRATION_PLAN: MigrationComponent[] = [
     name: 'Tabs',
     priority: 'MEDIUM',
     phase: 'planning',
-    muiPath: '@mui/material/Tabs',
+    sourcePath: 'legacy/Tabs',
     mantinePath: '@mantine/core/Tabs',
     notes: 'Tab navigation and panels',
   },

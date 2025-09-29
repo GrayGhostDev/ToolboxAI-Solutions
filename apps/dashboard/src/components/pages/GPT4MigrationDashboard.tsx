@@ -1,3 +1,4 @@
+import { Box, Button, Text, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 /**
  * GPT-4.1 Migration Monitoring Dashboard
  *
@@ -8,50 +9,33 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Box,
-  Card,
-  CardContent,
-  CircularProgress,
-  Grid,
-  Typography,
-  Alert,
-  AlertTitle,
-  Chip,
-  LinearProgress,
-  IconButton,
-  Fab,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Tooltip,
-  useTheme
-} from '@mui/material';
-import {
-  Refresh as RefreshIcon,
-  Settings as SettingsIcon,
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
-  Warning as WarningIcon,
-  Error as ErrorIcon,
-  CheckCircle as CheckCircleIcon,
-  Info as InfoIcon,
-  Assignment as AssignmentIcon,
-  AttachMoney as AttachMoneyIcon,
-  Speed as SpeedIcon,
-  Timeline as TimelineIcon
-} from '@mui/icons-material';
+  IconHome, IconUser, IconSettings, IconLogout, IconChevronDown,
+  IconChevronUp, IconChevronLeft, IconChevronRight, IconMenu,
+  IconX, IconCheck, IconPlus, IconMinus, IconEdit, IconTrash,
+  IconSearch, IconFilter, IconDownload, IconUpload, IconEye,
+  IconEyeOff, IconBell, IconMessage, IconStar, IconHeart,
+  IconShare, IconRefresh, IconLogin, IconSchool, IconBook,
+  IconChartBar, IconPalette, IconMoon, IconSun, IconPlayerPlay,
+  IconPlayerPause, IconPlayerStop, IconVolume, IconVolumeOff,
+  IconInfoCircle, IconAlertTriangle, IconCircleX, IconCircleCheck,
+  IconArrowLeft, IconArrowRight, IconSend, IconDeviceFloppy,
+  IconPrinter, IconHelp, IconHelpCircle, IconLock, IconLockOpen,
+  IconMail, IconPhone, IconMapPin, IconMap, IconCalendar, IconClock,
+  IconWifi, IconWifiOff, IconBluetooth, IconBattery, IconCamera,
+  IconMicrophone, IconMicrophoneOff, IconVideo, IconVideoOff,
+  IconPhoto, IconPaperclip, IconCloud, IconCloudUpload,
+  IconCloudDownload, IconFolder, IconFolderOpen, IconFolderPlus,
+  IconFile, IconFileText, IconClipboard, IconBan, IconFlag,
+  IconBookmark, IconShoppingCart, IconUserCircle, IconMoodSmile,
+  IconMoodSad, IconThumbUp, IconThumbDown, IconMessages,
+  IconMessageQuestion, IconSpeakerphone, IconBellRinging,
+  IconBellOff, IconCalendarEvent, IconCalendarStats, IconAlarm,
+  IconAlarmOff, IconHistory, IconRefreshOff, IconRefreshAlert,
+  IconDashboard, IconUsers, IconDotsVertical, IconDots,
+  IconReportAnalytics
+} from '@tabler/icons-react';
 import { Line, Doughnut, Bar } from 'react-chartjs-2';
+import { IconAlertTriangle, IconAttachMoney, IconCircleCheck, IconCircleX, IconClipboard, IconInfoCircle, IconRefresh, IconSettings, IconSpeed, IconTimeline, IconTrendingDown, IconTrendingUp } from '@tabler/icons-react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -217,11 +201,11 @@ const GPT4MigrationDashboard= () => {
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
-      case 'emergency': return <ErrorIcon />;
-      case 'critical': return <ErrorIcon />;
-      case 'warning': return <WarningIcon />;
-      case 'info': return <InfoIcon />;
-      default: return <CheckCircleIcon />;
+      case 'emergency': return <IconCircleX />;
+      case 'critical': return <IconCircleX />;
+      case 'warning': return <IconAlertTriangle />;
+      case 'info': return <IconInfoCircle />;
+      default: return <IconCircleCheck />;
     }
   };
 
@@ -235,9 +219,9 @@ const GPT4MigrationDashboard= () => {
     return (
       <Card>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
+          <Text order={6} gutterBottom>
             Migration Progress
-          </Typography>
+          </Text>
           <Box display="flex" alignItems="center" mb={2}>
             <Box position="relative" display="inline-flex">
               <CircularProgress
@@ -257,18 +241,18 @@ const GPT4MigrationDashboard= () => {
                 alignItems="center"
                 justifyContent="center"
               >
-                <Typography variant="h6" component="div" color="text.secondary">
+                <Text order={6} component="div" color="text.secondary">
                   {formatPercentage(progress.progress_percentage)}
-                </Typography>
+                </Text>
               </Box>
             </Box>
             <Box ml={2}>
-              <Typography variant="body2" color="text.secondary">
+              <Text size="sm" color="text.secondary">
                 Phase: {progress.current_phase}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
+              </Text>
+              <Text size="sm" color="text.secondary">
                 Days remaining: {progress.days_remaining}
-              </Typography>
+              </Text>
               <Chip
                 label={progress.urgency_level}
                 color={progress.urgency_level === 'low' ? 'success' : 'warning'}
@@ -276,9 +260,9 @@ const GPT4MigrationDashboard= () => {
               />
             </Box>
           </Box>
-          <Typography variant="body2" color="text.secondary">
+          <Text size="sm" color="text.secondary">
             Deadline: {new Date(progress.deadline).toLocaleDateString()}
-          </Typography>
+          </Text>
         </CardContent>
       </Card>
     );
@@ -294,59 +278,59 @@ const GPT4MigrationDashboard= () => {
     return (
       <Card>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
+          <Text order={6} gutterBottom>
             Cost Summary
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <Typography variant="h4" color="primary">
+          </Text>
+          <SimpleGrid spacing={2}>
+            <Box xs={6}>
+              <Text order={4} color="blue">
                 {formatCurrency(cost.current_monthly_cost)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
+              </Text>
+              <Text size="sm" color="text.secondary">
                 Current Month
-              </Typography>
-            </Grid>
-            <Grid item xs={6}>
-              <Typography variant="h4" color="secondary">
+              </Text>
+            </SimpleGrid>
+            <Box xs={6}>
+              <Text order={4} color="gray">
                 {formatCurrency(cost.projected_monthly_total)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
+              </Text>
+              <Text size="sm" color="text.secondary">
                 Projected Total
-              </Typography>
-            </Grid>
-            <Grid item xs={12}>
+              </Text>
+            </SimpleGrid>
+            <Box xs={12}>
               <Box display="flex" alignItems="center" mt={1}>
-                <Typography variant="body2" color="text.secondary" mr={1}>
+                <Text size="sm" color="text.secondary" mr={1}>
                   Budget utilization:
-                </Typography>
+                </Text>
                 <LinearProgress
                   variant="determinate"
                   value={Math.min(cost.budget_utilization, 100)}
                   color={cost.budget_utilization > 80 ? 'warning' : 'primary'}
-                  sx={{ flexGrow: 1, mr: 1 }}
+                  style={{ flexGrow: 1, mr: 1 }}
                 />
-                <Typography variant="body2">
+                <Text size="sm">
                   {formatPercentage(cost.budget_utilization)}
-                </Typography>
+                </Text>
               </Box>
-            </Grid>
-            <Grid item xs={12}>
+            </SimpleGrid>
+            <Box xs={12}>
               <Box display="flex" alignItems="center">
                 {cost.trend_percentage > 0 ? (
-                  <TrendingUpIcon color="error" />
+                  <IconTrendingUp color="red" />
                 ) : (
-                  <TrendingDownIcon color="success" />
+                  <IconTrendingDown color="green" />
                 )}
-                <Typography
-                  variant="body2"
+                <Text
+                  size="sm"
                   color={cost.trend_percentage > 0 ? 'error' : 'success'}
                   ml={0.5}
                 >
                   {cost.trend_percentage > 0 ? '+' : ''}{formatPercentage(cost.trend_percentage)} vs last week
-                </Typography>
+                </Text>
               </Box>
-            </Grid>
-          </Grid>
+            </SimpleGrid>
+          </SimpleGrid>
         </CardContent>
       </Card>
     );
@@ -368,9 +352,9 @@ const GPT4MigrationDashboard= () => {
     return (
       <Card>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
+          <Text order={6} gutterBottom>
             Performance Score
-          </Typography>
+          </Text>
           <Box display="flex" alignItems="center" mb={2}>
             <Box position="relative" display="inline-flex">
               <CircularProgress
@@ -390,29 +374,29 @@ const GPT4MigrationDashboard= () => {
                 alignItems="center"
                 justifyContent="center"
               >
-                <Typography variant="h6" component="div" color="text.secondary">
+                <Text order={6} component="div" color="text.secondary">
                   {performance.score.toFixed(0)}
-                </Typography>
+                </Text>
               </Box>
             </Box>
             <Box ml={2}>
-              <Typography variant="body1" fontWeight="bold">
+              <Text size="md" fontWeight="bold">
                 {performance.status.toUpperCase()}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
+              </Text>
+              <Text size="sm" color="text.secondary">
                 {performance.anomaly_count} anomalies detected
-              </Typography>
+              </Text>
             </Box>
           </Box>
-          <Grid container spacing={1}>
+          <SimpleGrid spacing={1}>
             {Object.entries(performance.metrics).map(([key, value]) => (
-              <Grid item xs={6} key={key}>
-                <Typography variant="body2" color="text.secondary">
+              <Box xs={6} key={key}>
+                <Text size="sm" color="text.secondary">
                   {key.replace('_', ' ')}: {typeof value === 'number' ? value.toFixed(2) : value}
-                </Typography>
-              </Grid>
+                </Text>
+              </SimpleGrid>
             ))}
-          </Grid>
+          </SimpleGrid>
         </CardContent>
       </Card>
     );
@@ -428,15 +412,15 @@ const GPT4MigrationDashboard= () => {
     return (
       <Card>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
+          <Text order={6} gutterBottom>
             Active Alerts
-          </Typography>
+          </Text>
           {alerts.length === 0 ? (
             <Box display="flex" alignItems="center" py={2}>
-              <CheckCircleIcon color="success" sx={{ mr: 1 }} />
-              <Typography variant="body2" color="text.secondary">
+              <IconCircleCheck color="green" style={{ mr: 1 }} />
+              <Text size="sm" color="text.secondary">
                 No active alerts
-              </Typography>
+              </Text>
             </Box>
           ) : (
             <Box maxHeight={300} overflow="auto">
@@ -445,19 +429,19 @@ const GPT4MigrationDashboard= () => {
                   key={alert.id}
                   severity={getSeverityColor(alert.severity) as any}
                   icon={getSeverityIcon(alert.severity)}
-                  sx={{ mb: 1 }}
+                  style={{ mb: 1 }}
                 >
                   <AlertTitle>{alert.title}</AlertTitle>
-                  <Typography variant="body2">{alert.message}</Typography>
+                  <Text size="sm">{alert.message}</Text>
                   <Box display="flex" alignItems="center" mt={1}>
                     <Chip
                       label={alert.category}
                       size="small"
-                      sx={{ mr: 1 }}
+                      style={{ mr: 1 }}
                     />
-                    <Typography variant="caption" color="text.secondary">
+                    <Text variant="caption" color="text.secondary">
                       {new Date(alert.timestamp).toLocaleString()}
-                    </Typography>
+                    </Text>
                   </Box>
                 </Alert>
               ))}
@@ -523,9 +507,9 @@ const GPT4MigrationDashboard= () => {
     return (
       <Card>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
+          <Text order={6} gutterBottom>
             Cost Projection
-          </Typography>
+          </Text>
           <Box height={300}>
             <Line data={chartData} options={options} />
           </Box>
@@ -552,9 +536,9 @@ const GPT4MigrationDashboard= () => {
           <MenuItem value="cost">Cost Management</MenuItem>
         </TextField>
         <Box mt={2}>
-          <Typography variant="subtitle2" gutterBottom>
+          <Text variant="subtitle2" gutterBottom>
             Auto Refresh
-          </Typography>
+          </Text>
           <Box display="flex" alignItems="center">
             <Button
               variant={autoRefresh ? "contained" : "outlined"}
@@ -588,10 +572,10 @@ const GPT4MigrationDashboard= () => {
           {error}
         </Alert>
         <Button
-          variant="contained"
+          variant="filled"
           onClick={() => fetchDashboardData()}
-          sx={{ mt: 2 }}
-          startIcon={<RefreshIcon />}
+          style={{ mt: 2 }}
+          startIcon={<IconRefresh />}
         >
           Retry
         </Button>
@@ -604,12 +588,12 @@ const GPT4MigrationDashboard= () => {
       {/* Header */}
       <Box display="flex" justifyContent="between" alignItems="center" mb={3}>
         <Box>
-          <Typography variant="h4" gutterBottom>
+          <Text order={4} gutterBottom>
             GPT-4.1 Migration Dashboard
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+          </Text>
+          <Text size="sm" color="text.secondary">
             {dashboardData?.layout.description} • Last updated: {lastUpdated?.toLocaleTimeString()}
-          </Typography>
+          </Text>
         </Box>
         <Box>
           <Tooltip title="Refresh Dashboard">
@@ -617,49 +601,49 @@ const GPT4MigrationDashboard= () => {
               onClick={() => fetchDashboardData(true)}
               disabled={loading}
             >
-              <RefreshIcon />
+              <IconRefresh />
             </IconButton>
           </Tooltip>
           <Tooltip title="Settings">
             <IconButton onClick={() => setSettingsOpen(true)}>
-              <SettingsIcon />
+              <IconSettings />
             </IconButton>
           </Tooltip>
         </Box>
       </Box>
 
       {/* Dashboard Grid */}
-      <Grid container spacing={3}>
+      <SimpleGrid spacing={3}>
         {/* First Row - Key Metrics */}
-        <Grid item xs={12} md={4}>
+        <Box xs={12} md={4}>
           {renderMigrationProgress()}
-        </Grid>
-        <Grid item xs={12} md={4}>
+        </SimpleGrid>
+        <Box xs={12} md={4}>
           {renderCostSummary()}
-        </Grid>
-        <Grid item xs={12} md={4}>
+        </SimpleGrid>
+        <Box xs={12} md={4}>
           {renderPerformanceScore()}
-        </Grid>
+        </SimpleGrid>
 
         {/* Second Row - Charts and Alerts */}
-        <Grid item xs={12} md={8}>
+        <Box xs={12} md={8}>
           {renderCostTrends()}
-        </Grid>
-        <Grid item xs={12} md={4}>
+        </SimpleGrid>
+        <Box xs={12} md={4}>
           {renderActiveAlerts()}
-        </Grid>
-      </Grid>
+        </SimpleGrid>
+      </SimpleGrid>
 
       {/* Settings Dialog */}
       {renderSettingsDialog()}
 
       {/* Floating Action Button for quick actions */}
       <Fab
-        color="primary"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        color="blue"
+        style={{ position: 'fixed', bottom: 16, right: 16 }}
         onClick={() => fetchDashboardData(true)}
       >
-        <RefreshIcon />
+        <IconRefresh />
       </Fab>
     </Box>
   );

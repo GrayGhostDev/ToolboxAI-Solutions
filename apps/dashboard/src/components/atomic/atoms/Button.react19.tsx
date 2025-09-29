@@ -1,3 +1,4 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../../utils/mui-imports';
 /**
  * Atomic Button Component - React 19 Version
  *
@@ -8,11 +9,6 @@
  */
 
 import React from 'react';
-import Button as MuiButton from '@mui/material/Button';
-import type { ButtonProps as MuiButtonProps } from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import { styled } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
 import { designTokens } from '../../../theme/designTokens';
 import { useAction } from '../../../config/react19.ts';
 
@@ -211,7 +207,7 @@ export const Button = ({
         <>
           <CircularProgress
             size={16}
-            sx={{
+            style={{
               color: 'inherit',
               marginRight: loadingText ? 1 : 0,
             }}

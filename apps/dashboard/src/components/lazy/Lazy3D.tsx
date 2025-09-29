@@ -1,9 +1,5 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import React, { Suspense, lazy } from 'react';
-import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
-import Typography from '@mui/material/Typography';
-import Alert from '@mui/material/Alert';
-import Skeleton from '@mui/material/Skeleton';
 
 // Lazy load 3D components only when needed
 const Scene3D = lazy(() => import('../three/Scene3D').then(module => ({ default: module.Scene3D })));
@@ -24,7 +20,7 @@ const WebGL3DFallback = ({
   message = "3D content not available"
 }: { height: number; message?: string }) => (
   <Box
-    sx={{
+    style={{
       height,
       display: 'flex',
       flexDirection: 'column',
@@ -35,7 +31,7 @@ const WebGL3DFallback = ({
       color: 'text.secondary'
     }}
   >
-    <Typography variant="body2" sx={{ mb: 1 }}>
+    <Typography size="sm" style={{ mb: 1 }}>
       {message}
     </Typography>
     <Typography variant="caption" color="text.disabled">
@@ -47,7 +43,7 @@ const WebGL3DFallback = ({
 // Enhanced loading skeleton for 3D content
 const ThreeDSkeleton = ({ height }: { height: number }) => (
   <Box
-    sx={{
+    style={{
       height,
       background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
       borderRadius: 1,
@@ -57,9 +53,9 @@ const ThreeDSkeleton = ({ height }: { height: number }) => (
       position: 'relative'
     }}
   >
-    <Box sx={{ textAlign: 'center' }}>
-      <CircularProgress size={40} sx={{ mb: 2 }} />
-      <Typography variant="body2" color="text.secondary">
+    <Box style={{ textAlign: 'center' }}>
+      <CircularProgress size={40} style={{ mb: 2 }} />
+      <Typography size="sm" color="text.secondary">
         Loading 3D content...
       </Typography>
     </Box>
@@ -67,7 +63,7 @@ const ThreeDSkeleton = ({ height }: { height: number }) => (
       variant="rectangular"
       width="100%"
       height="100%"
-      sx={{
+      style={{
         position: 'absolute',
         top: 0,
         left: 0,
@@ -128,7 +124,7 @@ export const Lazy3D = ({
   const errorFallback = (
     <Alert
       severity="info"
-      sx={{
+      style={{
         height: fallbackHeight,
         display: 'flex',
         alignItems: 'center',
@@ -179,7 +175,7 @@ export const Lazy3D = ({
         <ThreeProvider>
           <Box
             className={className}
-            sx={{
+            style={{
               height: fallbackHeight,
               ...style
             }}

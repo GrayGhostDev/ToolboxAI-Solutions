@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Paper, Typography } from '@mui/material';
+import { Box, Container, Paper, Title, Code } from '@mantine/core';
 
 export const HealthCheck: React.FC = () => {
   const healthData = {
@@ -22,23 +22,22 @@ export const HealthCheck: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Paper elevation={1} sx={{ p: 3 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+    <Container size="md" style={{ padding: 'var(--mantine-spacing-xl)' }}>
+      <Paper shadow="sm" p="lg">
+        <Title order={1} mb="md">
           Health Check
-        </Typography>
+        </Title>
 
-        <Box component="pre" sx={{
-          bgcolor: 'grey.50',
-          p: 2,
-          borderRadius: 1,
+        <Code block style={{
+          backgroundColor: 'var(--mantine-color-gray-0)',
+          padding: 'var(--mantine-spacing-md)',
+          borderRadius: 'var(--mantine-radius-sm)',
           overflow: 'auto',
-          fontFamily: 'monospace',
           fontSize: '0.875rem',
           whiteSpace: 'pre-wrap'
         }}>
           {JSON.stringify(healthData, null, 2)}
-        </Box>
+        </Code>
       </Paper>
     </Container>
   );

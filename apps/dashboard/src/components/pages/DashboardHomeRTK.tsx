@@ -1,3 +1,4 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 /**
  * Enhanced DashboardHome component using RTK Query
  *
@@ -11,20 +12,6 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Grid2 from "@mui/material/Unstable_Grid2";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Typography from "@mui/material/Typography";
-import LinearProgress from "@mui/material/LinearProgress";
-import Avatar from "@mui/material/Avatar";
-import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
-import CircularProgress from "@mui/material/CircularProgress";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import Alert from "@mui/material/Alert";
-import Fade from "@mui/material/Fade";
 import { UserRole } from "../../types";
 import { ProgressCharts } from "../widgets/ProgressCharts";
 import { useAppSelector } from "../../store";
@@ -45,10 +32,6 @@ import {
   selectActiveClasses,
 } from "../../store/api/selectors";
 import { useDashboardMigration, useMigrationProgress } from "../../store/api/migration";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import SchoolIcon from "@mui/icons-material/School";
 import { ROUTES } from "../../config/routes";
 import CreateLessonDialog from "../dialogs/CreateLessonDialog";
 import RealTimeAnalytics from "../widgets/RealTimeAnalytics";
@@ -59,10 +42,6 @@ import RobloxCharacterAvatar from "../roblox/RobloxCharacterAvatar";
 import { Roblox3DButton } from "../roblox/Roblox3DButton";
 import { Real3DIcon } from "../roblox/Real3DIcon";
 import { robloxColors } from "../../theme/robloxTheme";
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import Zoom from '@mui/material/Zoom';
-import Slide from '@mui/material/Slide';
 
 interface DashboardHomeRTKProps {
   role?: UserRole;
@@ -221,11 +200,11 @@ export function DashboardHomeRTK({
     return (
       <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress size={60} thickness={4} />
-        <Typography variant="h6" sx={{ mt: 2, opacity: 0.7 }}>
+        <Typography order={6} style={{ mt: 2, opacity: 0.7 }}>
           Loading your dashboard...
         </Typography>
         {enableOptimizations && (
-          <Typography variant="caption" sx={{ mt: 1, opacity: 0.5 }}>
+          <Typography variant="caption" style={{ mt: 1, opacity: 0.5 }}>
             Cache hit ratio: {cachePerformance.cacheHitRatio.toFixed(1)}%
           </Typography>
         )}
@@ -237,23 +216,23 @@ export function DashboardHomeRTK({
   if (hasError && !dashboardData) {
     return (
       <Box p={3}>
-        <Alert severity="error" sx={{ mb: 2 }}>
-          <Typography variant="h6">Dashboard Error</Typography>
-          <Typography variant="body2">{getErrorMessage()}</Typography>
+        <Alert severity="error" style={{ mb: 2 }}>
+          <Typography order={6}>Dashboard Error</Typography>
+          <Typography size="sm">{getErrorMessage()}</Typography>
         </Alert>
 
         <Stack direction="row" spacing={2} flexWrap="wrap">
           <Button
             onClick={(e: React.MouseEvent) => handleRefresh}
-            variant="contained"
+            variant="filled"
             disabled={isFetching}
-            startIcon={isFetching ? <CircularProgress size={16} /> : <RefreshIcon />}
+            startIcon={isFetching ? <CircularProgress size={16} /> : <IconRefresh />}
           >
             {isFetching ? 'Retrying...' : 'Retry'}
           </Button>
           <Button
             onClick={(e: React.MouseEvent) => () => window.location.reload()}
-            variant="outlined"
+            variant="outline"
           >
             Refresh Page
           </Button>
@@ -269,19 +248,19 @@ export function DashboardHomeRTK({
         </Stack>
 
         {showCacheStats && (
-          <Card sx={{ mt: 2, bgcolor: 'background.default' }}>
+          <Card style={{ mt: 2, bgcolor: 'background.default' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Debug Information</Typography>
-              <Typography variant="body2">
+              <Typography order={6} gutterBottom>Debug Information</Typography>
+              <Typography size="sm">
                 Migration Status: {migrationProgress.migrationComplete ? 'Complete' : 'In Progress'}
               </Typography>
-              <Typography variant="body2">
+              <Typography size="sm">
                 Cache Efficiency: {migrationProgress.cacheEfficiency}
               </Typography>
-              <Typography variant="body2">
+              <Typography size="sm">
                 RTK Queries: {migrationProgress.rtkQueries}
               </Typography>
-              <Typography variant="body2">
+              <Typography size="sm">
                 Legacy Slices: {migrationProgress.legacySlicesActive}
               </Typography>
             </CardContent>
@@ -298,13 +277,13 @@ export function DashboardHomeRTK({
         <Grid2 xs={12}>
           <Alert
             severity={migrationProgress.migrationComplete ? "success" : "info"}
-            sx={{ mb: 2 }}
+            style={{ mb: 2 }}
           >
-            <Typography variant="body2">
+            <Typography size="sm">
               <strong>RTK Query Status:</strong> {migrationProgress.migrationComplete ? 'Fully Migrated' : 'Migration in Progress'} |
               Cache Hit Ratio: {cachePerformance.cacheHitRatio.toFixed(1)}% |
               Efficiency: {migrationProgress.cacheEfficiency}
-              {isFetching && <CircularProgress size={16} sx={{ ml: 1 }} />}
+              {isFetching && <CircularProgress size={16} style={{ ml: 1 }} />}
             </Typography>
           </Alert>
         </Grid2>
@@ -314,7 +293,7 @@ export function DashboardHomeRTK({
         {/* Enhanced Welcome Banner with Real-time Data */}
         <Grid2 xs={12}>
           <Card
-            sx={{
+            style={{
               background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
               color: "white",
               position: 'relative',
@@ -333,18 +312,18 @@ export function DashboardHomeRTK({
               }
             }}
           >
-            <CardContent sx={{ position: 'relative', zIndex: 1 }}>
+            <CardContent style={{ position: 'relative', zIndex: 1 }}>
               <Stack
                 direction={{ xs: "column", md: "row" }}
                 justifyContent="space-between"
                 alignItems={{ xs: "flex-start", md: "center" }}
                 gap={2}
               >
-                <Stack sx={{ flex: 1 }}>
+                <Stack style={{ flex: 1 }}>
                   <Fade in={true} timeout={1000}>
                     <Typography
-                      variant="h4"
-                      sx={{
+                      order={4}
+                      style={{
                         fontWeight: 800,
                         mb: 1,
                         background: 'linear-gradient(135deg, #fff, #e0e0e0)',
@@ -363,7 +342,7 @@ export function DashboardHomeRTK({
                           glowColor={robloxColors.neon.electricBlue}
                         />
                         <span>Welcome to Mission Control!</span>
-                        <Box sx={{ display: 'inline-flex', animation: 'neon-pulse 2s ease-in-out infinite' }}>
+                        <Box style={{ display: 'inline-flex', animation: 'neon-pulse 2s ease-in-out infinite' }}>
                           <Real3DIcon
                             iconName="STAR"
                             size="small"
@@ -377,7 +356,7 @@ export function DashboardHomeRTK({
                   </Fade>
 
                   <Slide in={true} direction="up" timeout={1500}>
-                    <Typography variant="body1" sx={{ opacity: 0.9, mb: 2 }}>
+                    <Typography size="md" style={{ opacity: 0.9, mb: 2 }}>
                       {effectiveRole === "teacher" && `Managing ${activeClasses.length} active classes with real-time sync`}
                       {effectiveRole === "admin" && `Monitoring ${dashboardSummary?.totalClasses || 0} classes across the platform`}
                       {effectiveRole === "student" && `Ready for your next adventure? You've earned ${userXP} XP!`}
@@ -386,7 +365,7 @@ export function DashboardHomeRTK({
                   </Slide>
 
                   {/* Enhanced Character with Real-time Data */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <Box style={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                     <RobloxCharacterAvatar
                       character={{
                         name: "Mission Commander",
@@ -403,16 +382,16 @@ export function DashboardHomeRTK({
                       animated={true}
                     />
                     <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      <Typography order={6} style={{ fontWeight: 600 }}>
                         Level {userLevel} Commander
                       </Typography>
-                      <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                      <Typography size="sm" style={{ opacity: 0.8 }}>
                         {userXP.toLocaleString()} XP • {streakDays} day streak
                         {unreadCount > 0 && (
                           <Chip
                             label={`${unreadCount} new messages`}
                             size="small"
-                            sx={{ ml: 1, bgcolor: 'rgba(255,255,255,0.2)' }}
+                            style={{ ml: 1, bgcolor: 'rgba(255,255,255,0.2)' }}
                           />
                         )}
                       </Typography>
@@ -471,15 +450,15 @@ export function DashboardHomeRTK({
               <Card role="region" aria-label="Active classes">
                 <CardContent>
                   <Stack direction="row" alignItems="center" spacing={2}>
-                    <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48 }}>
-                      <SchoolIcon />
+                    <Avatar style={{ bgcolor: "primary.main", width: 48, height: 48 }}>
+                      <IconSchool />
                     </Avatar>
-                    <Stack sx={{ flex: 1 }}>
+                    <Stack style={{ flex: 1 }}>
                       <Typography variant="caption" color="text.secondary" gutterBottom>
                         Active Classes
                       </Typography>
                       <Box display="flex" alignItems="center" gap={1}>
-                        <Typography variant="h5" fontWeight={700}>
+                        <Typography order={5} fontWeight={700}>
                           {dashboardSummary?.activeClasses || activeClasses.length || 0}
                         </Typography>
                         {isClassesLoading && <CircularProgress size={16} />}
@@ -497,15 +476,15 @@ export function DashboardHomeRTK({
               <Card role="region" aria-label="Messages">
                 <CardContent>
                   <Stack direction="row" alignItems="center" spacing={2}>
-                    <Avatar sx={{ bgcolor: "info.main", width: 48, height: 48 }}>
+                    <Avatar style={{ bgcolor: "info.main", width: 48, height: 48 }}>
                       📧
                     </Avatar>
-                    <Stack sx={{ flex: 1 }}>
+                    <Stack style={{ flex: 1 }}>
                       <Typography variant="caption" color="text.secondary" gutterBottom>
                         Unread Messages
                       </Typography>
                       <Box display="flex" alignItems="center" gap={1}>
-                        <Typography variant="h5" fontWeight={700}>
+                        <Typography order={5} fontWeight={700}>
                           {unreadCount}
                         </Typography>
                         {isMessagesLoading && <CircularProgress size={16} />}
@@ -523,14 +502,14 @@ export function DashboardHomeRTK({
               <Card role="region" aria-label="System performance">
                 <CardContent>
                   <Stack direction="row" alignItems="center" spacing={2}>
-                    <Avatar sx={{ bgcolor: "secondary.main", width: 48, height: 48 }}>
+                    <Avatar style={{ bgcolor: "secondary.main", width: 48, height: 48 }}>
                       <TrendingUpIcon />
                     </Avatar>
-                    <Stack sx={{ flex: 1 }}>
+                    <Stack style={{ flex: 1 }}>
                       <Typography variant="caption" color="text.secondary" gutterBottom>
                         Cache Efficiency
                       </Typography>
-                      <Typography variant="h5" fontWeight={700}>
+                      <Typography order={5} fontWeight={700}>
                         {cachePerformance.cacheHitRatio.toFixed(1)}%
                       </Typography>
                       <Chip
@@ -538,7 +517,7 @@ export function DashboardHomeRTK({
                         size="small"
                         color={migrationProgress.cacheEfficiency === 'excellent' ? "success" :
                                migrationProgress.cacheEfficiency === 'good' ? "warning" : "error"}
-                        sx={{ mt: 0.5 }}
+                        style={{ mt: 0.5 }}
                       />
                     </Stack>
                   </Stack>
@@ -550,14 +529,14 @@ export function DashboardHomeRTK({
               <Card role="region" aria-label="Data freshness">
                 <CardContent>
                   <Stack direction="row" alignItems="center" spacing={2}>
-                    <Avatar sx={{ bgcolor: "success.main", width: 48, height: 48 }}>
-                      <CheckCircleIcon />
+                    <Avatar style={{ bgcolor: "success.main", width: 48, height: 48 }}>
+                      <IconCircleCheck />
                     </Avatar>
-                    <Stack sx={{ flex: 1 }}>
+                    <Stack style={{ flex: 1 }}>
                       <Typography variant="caption" color="text.secondary" gutterBottom>
                         Real-time Sync
                       </Typography>
-                      <Typography variant="h5" fontWeight={700}>
+                      <Typography order={5} fontWeight={700}>
                         {isFetching ? 'Syncing' : 'Live'}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
@@ -579,16 +558,16 @@ export function DashboardHomeRTK({
                 <Card
                   role="region"
                   aria-label="XP overview"
-                  sx={{
+                  style={{
                     background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.primary.main, 0.05)})`,
                     border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
                     borderRadius: 3,
                   }}
                 >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <CardContent style={{ p: 3 }}>
+                    <Box style={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                       <Avatar
-                        sx={{
+                        style={{
                           width: 50,
                           height: 50,
                           background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
@@ -597,12 +576,12 @@ export function DashboardHomeRTK({
                       >
                         🏆
                       </Avatar>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
+                      <Box style={{ flex: 1 }}>
+                        <Typography order={6} style={{ fontWeight: 700, color: theme.palette.primary.main }}>
                           Experience Points
                         </Typography>
                         <Box display="flex" alignItems="center" gap={1}>
-                          <Typography variant="h4" sx={{ fontWeight: 800, color: theme.palette.text.primary }}>
+                          <Typography order={4} style={{ fontWeight: 800, color: theme.palette.text.primary }}>
                             {userXP.toLocaleString()}
                           </Typography>
                           {isXPLoading && <CircularProgress size={20} />}
@@ -610,14 +589,14 @@ export function DashboardHomeRTK({
                       </Box>
                     </Box>
 
-                    <Box sx={{ mb: 1 }}>
-                      <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
+                    <Box style={{ mb: 1 }}>
+                      <Typography size="sm" style={{ color: theme.palette.text.secondary, mb: 1 }}>
                         Level Progress: {userXP % 100}%
                       </Typography>
                       <LinearProgress
                         variant="determinate"
                         value={userXP % 100}
-                        sx={{
+                        style={{
                           height: 8,
                           borderRadius: 4,
                           backgroundColor: alpha(theme.palette.primary.main, 0.2),
@@ -638,25 +617,25 @@ export function DashboardHomeRTK({
                 <Card
                   role="region"
                   aria-label="Achievements"
-                  sx={{
+                  style={{
                     background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.secondary.main, 0.05)})`,
                     border: `2px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
                     borderRadius: 3,
                   }}
                 >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.secondary.main }}>
+                  <CardContent style={{ p: 3 }}>
+                    <Box style={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                      <Typography order={6} style={{ fontWeight: 700, color: theme.palette.secondary.main }}>
                         Achievements
                       </Typography>
                       {isBadgesLoading && <CircularProgress size={20} />}
                     </Box>
 
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Box style={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                       {(badgesData || []).slice(0, 4).map((badge, index) => (
                         <Zoom in={true} timeout={1000 + index * 200} key={badge.id}>
                           <Box
-                            sx={{
+                            style={{
                               display: 'flex',
                               flexDirection: 'column',
                               alignItems: 'center',
@@ -678,7 +657,7 @@ export function DashboardHomeRTK({
                               animated={true}
                               description={badge.name}
                             />
-                            <Typography variant="caption" sx={{ textAlign: 'center', fontWeight: 600, fontSize: '0.6rem', mt: 0.5 }}>
+                            <Typography variant="caption" style={{ textAlign: 'center', fontWeight: 600, fontSize: '0.6rem', mt: 0.5 }}>
                               {badge.name}
                             </Typography>
                           </Box>
@@ -695,16 +674,16 @@ export function DashboardHomeRTK({
                 <Card
                   role="region"
                   aria-label="Leaderboard position"
-                  sx={{
+                  style={{
                     background: `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.warning.main, 0.05)})`,
                     border: `2px solid ${alpha(theme.palette.warning.main, 0.2)}`,
                     borderRadius: 3,
                   }}
                 >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <CardContent style={{ p: 3 }}>
+                    <Box style={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                       <Avatar
-                        sx={{
+                        style={{
                           width: 50,
                           height: 50,
                           background: `linear-gradient(135deg, ${theme.palette.warning.main}, ${theme.palette.error.main})`,
@@ -713,12 +692,12 @@ export function DashboardHomeRTK({
                       >
                         🥇
                       </Avatar>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.warning.main }}>
+                      <Box style={{ flex: 1 }}>
+                        <Typography order={6} style={{ fontWeight: 700, color: theme.palette.warning.main }}>
                           Leaderboard
                         </Typography>
                         <Box display="flex" alignItems="center" gap={1}>
-                          <Typography variant="h4" sx={{ fontWeight: 800, color: theme.palette.text.primary }}>
+                          <Typography order={4} style={{ fontWeight: 800, color: theme.palette.text.primary }}>
                             #{leaderboardData?.find(entry => entry.userId === 'current-user')?.rank || '?'}
                           </Typography>
                           {isLeaderboardLoading && <CircularProgress size={20} />}
@@ -726,7 +705,7 @@ export function DashboardHomeRTK({
                       </Box>
                     </Box>
 
-                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                    <Typography size="sm" style={{ color: theme.palette.text.secondary }}>
                       Weekly ranking among peers
                     </Typography>
                   </CardContent>
@@ -739,10 +718,10 @@ export function DashboardHomeRTK({
         {/* Real-Time Analytics with Enhanced Data */}
         {(effectiveRole === "admin" || effectiveRole === "teacher") && (
           <Grid2 xs={12}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" style={{ mb: 2 }}>
+              <Typography order={6} style={{ fontWeight: 600 }}>
                 Real-Time Analytics
-                {isFetching && <CircularProgress size={20} sx={{ ml: 1 }} />}
+                {isFetching && <CircularProgress size={20} style={{ ml: 1 }} />}
               </Typography>
               <Stack direction="row" spacing={2} alignItems="center">
                 <ConnectionStatus showLabel={true} />
@@ -757,9 +736,9 @@ export function DashboardHomeRTK({
 
         {/* Enhanced Charts with RTK Query Data */}
         <Grid2 xs={12}>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+          <Typography order={6} style={{ mb: 2, fontWeight: 600 }}>
             Analytics & Progress
-            {(isXPLoading || isLeaderboardLoading) && <CircularProgress size={20} sx={{ ml: 1 }} />}
+            {(isXPLoading || isLeaderboardLoading) && <CircularProgress size={20} style={{ ml: 1 }} />}
           </Typography>
           <ProgressCharts
             role={(effectiveRole ?? 'student') as UserRole}
@@ -773,15 +752,15 @@ export function DashboardHomeRTK({
         <Grid2 xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+              <Typography order={6} gutterBottom style={{ fontWeight: 600 }}>
                 Recent Activity
-                {isFetching && <CircularProgress size={16} sx={{ ml: 1 }} />}
+                {isFetching && <CircularProgress size={16} style={{ ml: 1 }} />}
               </Typography>
               <Stack spacing={2}>
                 {recentActivity.slice(0, 5).map((activity, index) => (
                   <Box
                     key={activity.id}
-                    sx={{
+                    style={{
                       display: "flex",
                       alignItems: "center",
                       gap: 2,
@@ -794,14 +773,14 @@ export function DashboardHomeRTK({
                       }
                     }}
                   >
-                    <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.main", fontSize: "1rem" }}>
+                    <Avatar style={{ width: 32, height: 32, bgcolor: "primary.main", fontSize: "1rem" }}>
                       {activity.type === "message" && "📧"}
                       {activity.type === "assessment" && "📝"}
                       {activity.type === "lesson" && "📚"}
                       {activity.type === "achievement" && "🏆"}
                     </Avatar>
-                    <Stack sx={{ flex: 1 }}>
-                      <Typography variant="body2">{activity.title}</Typography>
+                    <Stack style={{ flex: 1 }}>
+                      <Typography size="sm">{activity.title}</Typography>
                       <Typography variant="caption" color="text.secondary">
                         {activity.description}
                       </Typography>
@@ -810,7 +789,7 @@ export function DashboardHomeRTK({
                       </Typography>
                     </Stack>
                     {activity.priority === 'high' && (
-                      <Chip label="Priority" size="small" color="error" />
+                      <Chip label="Priority" size="small" color="red" />
                     )}
                   </Box>
                 ))}
@@ -823,7 +802,7 @@ export function DashboardHomeRTK({
         <Grid2 xs={12} md={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+              <Typography order={6} gutterBottom style={{ fontWeight: 600 }}>
                 Upcoming Events
               </Typography>
               <Stack spacing={2}>
@@ -834,7 +813,7 @@ export function DashboardHomeRTK({
                 ]).map((event: any, index) => (
                   <Box
                     key={index}
-                    sx={{
+                    style={{
                       display: "flex",
                       alignItems: "center",
                       gap: 2,
@@ -848,7 +827,7 @@ export function DashboardHomeRTK({
                     }}
                   >
                     <Avatar
-                      sx={{
+                      style={{
                         width: 32,
                         height: 32,
                         bgcolor: event.type === "assessment" ? "warning.main" :
@@ -861,8 +840,8 @@ export function DashboardHomeRTK({
                       {event.type === "lesson" && "📚"}
                       {event.type === "meeting" && "👥"}
                     </Avatar>
-                    <Stack sx={{ flex: 1 }}>
-                      <Typography variant="body2">{event.event}</Typography>
+                    <Stack style={{ flex: 1 }}>
+                      <Typography size="sm">{event.event}</Typography>
                       <Typography variant="caption" color="text.secondary">
                         {event.date}
                       </Typography>

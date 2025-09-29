@@ -1,852 +1,819 @@
-import React, { useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardHeader from '@mui/material/CardHeader';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import TablePagination from '@mui/material/TablePagination';
-import Paper from '@mui/material/Paper';
-import IconButton from '@mui/material/IconButton';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import Avatar from '@mui/material/Avatar';
-import TextField from '@mui/material/TextField';
-import InputAdornment from '@mui/material/InputAdornment';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
-import Tooltip from '@mui/material/Tooltip';
-import Alert from '@mui/material/Alert';
-import CircularProgress from '@mui/material/CircularProgress';
-import Switch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Grid from '@mui/material/Grid';
+IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../../IconutilsIcon/IconmuiIcon-Iconimports';
+IconimportIcon IconReactIcon, { IconuseStateIcon, IconuseEffectIcon } IconfromIcon 'Iconreact';
 
-import {
-  Search,
-  Add,
-  Edit,
-  Delete,
-  MoreVert,
-  FilterList,
-  Download,
-  Upload,
-  Lock,
-  LockOpen,
-  Email,
-  CheckCircle,
-  Cancel,
-  PersonAdd,
-  Person,
-  Group,
-  School,
-  AdminPanelSettings,
-} from '@mui/icons-material';
-import { apiClient } from '../../../services/api';
-import { useAppDispatch } from '../../../store';
-import { addNotification } from '../../../store/slices/uiSlice';
+IconimportIcon {
+  IconIconSearchIcon,
+  IconIconPlusIcon,
+  IconIconEditIcon,
+  IconIconTrashIcon,
+  IconIconDotsVerticalIcon,
+  IconIconFilterIcon,
+  IconIconDownloadIcon,
+  IconIconUploadIcon,
+  IconIconLockIcon,
+  IconIconLockOpenIcon,
+  IconIconMailIcon,
+  IconIconCircleCheckIcon,
+  IconIconXIcon,
+  IconIconPersonAddIcon,
+  IconIconUserIcon,
+  IconIconUsersIcon,
+  IconIconSchoolIcon,
+  IconIconAdminPanelSettingsIcon,
+} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
+IconimportIcon { IconapiClientIcon } IconfromIcon '../../../IconservicesIcon/Iconapi';
+IconimportIcon { IconuseAppDispatchIcon } IconfromIcon '../../../Iconstore';
+IconimportIcon { IconaddNotificationIcon } IconfromIcon '../../../IconstoreIcon/IconslicesIcon/IconuiSlice';
+IconimportIcon { IconIconIcon, IconIconAdminPanelSettingsIcon, IconIconCircleCheckIcon, IconIconDotsVerticalIcon, IconIconDownloadIcon, IconIconEditIcon, IconIconFilterIcon, IconIconLockIcon, IconIconLockOpenIcon, IconIconMailIcon, IconIconPersonAddIcon, IconIconPlusIcon, IconIconSchoolIcon, IconIconSearchIcon, IconIconTrashIcon, IconIconUploadIcon, IconIconUserIcon, IconIconUsersIcon, IconIconXIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
 
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: 'admin' | 'teacher' | 'student' | 'parent';
-  status: 'active' | 'inactive' | 'suspended';
-  createdAt: string;
-  lastActive: string;
-  school?: string;
-  grade?: number;
-  avatar?: string;
-  verified: boolean;
+IconinterfaceIcon IconUserIcon {
+  IconidIcon: IconstringIcon;
+  IconusernameIcon: IconstringIcon;
+  IconemailIcon: IconstringIcon;
+  IconroleIcon: 'Iconadmin' | 'Iconteacher' | 'Iconstudent' | 'Iconparent';
+  IconstatusIcon: 'Iconactive' | 'Iconinactive' | 'Iconsuspended';
+  IconcreatedAtIcon: IconstringIcon;
+  IconlastActiveIcon: IconstringIcon;
+  IconschoolIcon?: IconstringIcon;
+  IcongradeIcon?: IconnumberIcon;
+  IconavatarIcon?: IconstringIcon;
+  IconverifiedIcon: IconbooleanIcon;
 }
 
-interface EditUserDialogProps {
-  open: boolean;
-  user: User | null;
-  onClose: () => void;
-  onSave: (user: User) => void;
+IconinterfaceIcon IconEditUserDialogPropsIcon {
+  IconopenIcon: IconbooleanIcon;
+  IconuserIcon: IconUserIcon | IconnullIcon;
+  IcononCloseIcon: () => IconvoidIcon;
+  IcononSaveIcon: (IconuserIcon: IconUserIcon) => IconvoidIcon;
 }
 
-const EditUserDialog: React.FunctionComponent<EditUserDialogProps> = ({ open, user, onClose, onSave }) => {
-  const [formData, setFormData] = useState<Partial<User>>({
-    username: '',
-    email: '',
-    role: 'student',
-    status: 'active',
-    school: '',
-    grade: undefined,
+IconconstIcon IconEditUserDialogIcon: IconReactIcon.IconFunctionComponentIcon<IconEditUserDialogPropsIcon> = ({ IconopenIcon, IconuserIcon, IcononCloseIcon, IcononSaveIcon }) => {
+  IconconstIcon [IconformDataIcon, IconsetFormDataIcon] = IconuseStateIcon<IconPartialIcon<IconUserIcon>>({
+    IconusernameIcon: '',
+    IconemailIcon: '',
+    IconroleIcon: 'Iconstudent',
+    IconstatusIcon: 'Iconactive',
+    IconschoolIcon: '',
+    IcongradeIcon: IconundefinedIcon,
   });
 
-  useEffect(() => {
-    if (user) {
-      setFormData(user);
-    } else {
-      setFormData({
-        username: '',
-        email: '',
-        role: 'student',
-        status: 'active',
-        school: '',
-        grade: undefined,
+  IconuseEffectIcon(() => {
+    IconifIcon (IconuserIcon) {
+      IconsetFormDataIcon(IconuserIcon);
+    } IconelseIcon {
+      IconsetFormDataIcon({
+        IconusernameIcon: '',
+        IconemailIcon: '',
+        IconroleIcon: 'Iconstudent',
+        IconstatusIcon: 'Iconactive',
+        IconschoolIcon: '',
+        IcongradeIcon: IconundefinedIcon,
       });
     }
-  }, [user]);
+  }, [IconuserIcon]);
 
-  const handleSubmit = () => {
-    onSave(formData as User);
-    onClose();
+  IconconstIcon IconhandleSubmitIcon = () => {
+    IcononSaveIcon(IconformDataIcon IconasIcon IconUserIcon);
+    IcononCloseIcon();
   };
 
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{user ? 'Edit User' : 'Add New User'}</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ mt: 2 }}>
-          <TextField
-            label="Username"
-            value={formData.username}
-            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-            fullWidth
-            required
+  IconreturnIcon (
+    <IconDialogIcon IconopenIcon={IconopenIcon} IcononCloseIcon={IcononCloseIcon} IconmaxWidthIcon="Iconsm" IconfullWidthIcon>
+      <IconDialogTitleIcon>{IconuserIcon ? 'IconIconEditIcon IconUser' : 'IconIconPlusIcon IconNewIcon IconUser'}<IconIconIcon/IconDialogTitleIcon>
+      <IconDialogContentIcon>
+        <IconStackIcon IconspacingIcon={Icon2Icon} IconstyleIcon={{ IconmtIcon: Icon2Icon }}>
+          <IconTextFieldIcon
+            IconlabelIcon="IconUsername"
+            IconvalueIcon={IconformDataIcon.IconusernameIcon}
+            IcononChangeIcon={(IconeIcon) => IconsetFormDataIcon({ ...IconformDataIcon, IconusernameIcon: IconeIcon.IcontargetIcon.IconvalueIcon })}
+            IconfullWidthIcon
+            IconrequiredIcon
           />
-          <TextField
-            label="Email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            fullWidth
-            required
+          <IconTextFieldIcon
+            IconlabelIcon="IconEmail"
+            IcontypeIcon="Iconemail"
+            IconvalueIcon={IconformDataIcon.IconemailIcon}
+            IcononChangeIcon={(IconeIcon) => IconsetFormDataIcon({ ...IconformDataIcon, IconemailIcon: IconeIcon.IcontargetIcon.IconvalueIcon })}
+            IconfullWidthIcon
+            IconrequiredIcon
           />
-          <FormControl fullWidth>
-            <InputLabel>Role</InputLabel>
-            <Select
-              value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-              label="Role"
+          <IconFormControlIcon IconfullWidthIcon>
+            <IconInputLabelIcon>IconRoleIcon<IconIconIcon/IconInputLabelIcon>
+            <IconSelectIcon
+              IconvalueIcon={IconformDataIcon.IconroleIcon}
+              IcononChangeIcon={(IconeIcon) => IconsetFormDataIcon({ ...IconformDataIcon, IconroleIcon: IconeIcon.IcontargetIcon.IconvalueIcon IconasIcon IconanyIcon })}
+              IconlabelIcon="IconRole"
             >
-              <MenuItem value="admin">Admin</MenuItem>
-              <MenuItem value="teacher">Teacher</MenuItem>
-              <MenuItem value="student">Student</MenuItem>
-              <MenuItem value="parent">Parent</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl fullWidth>
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-              label="Status"
+              <IconMenuItemIcon IconvalueIcon="Iconadmin">IconAdminIcon<IconIconIcon/IconMenuItemIcon>
+              <IconMenuItemIcon IconvalueIcon="Iconteacher">IconTeacherIcon<IconIconIcon/IconMenuItemIcon>
+              <IconMenuItemIcon IconvalueIcon="Iconstudent">IconStudentIcon<IconIconIcon/IconMenuItemIcon>
+              <IconMenuItemIcon IconvalueIcon="Iconparent">IconParentIcon<IconIconIcon/IconMenuItemIcon>
+            <IconIconIcon/IconSelectIcon>
+          <IconIconIcon/IconFormControlIcon>
+          <IconFormControlIcon IconfullWidthIcon>
+            <IconInputLabelIcon>IconStatusIcon<IconIconIcon/IconInputLabelIcon>
+            <IconSelectIcon
+              IconvalueIcon={IconformDataIcon.IconstatusIcon}
+              IcononChangeIcon={(IconeIcon) => IconsetFormDataIcon({ ...IconformDataIcon, IconstatusIcon: IconeIcon.IcontargetIcon.IconvalueIcon IconasIcon IconanyIcon })}
+              IconlabelIcon="IconStatus"
             >
-              <MenuItem value="active">Active</MenuItem>
-              <MenuItem value="inactive">Inactive</MenuItem>
-              <MenuItem value="suspended">Suspended</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            label="School"
-            value={formData.school}
-            onChange={(e) => setFormData({ ...formData, school: e.target.value })}
-            fullWidth
+              <IconMenuItemIcon IconvalueIcon="Iconactive">IconActiveIcon<IconIconIcon/IconMenuItemIcon>
+              <IconMenuItemIcon IconvalueIcon="Iconinactive">IconInactiveIcon<IconIconIcon/IconMenuItemIcon>
+              <IconMenuItemIcon IconvalueIcon="Iconsuspended">IconSuspendedIcon<IconIconIcon/IconMenuItemIcon>
+            <IconIconIcon/IconSelectIcon>
+          <IconIconIcon/IconFormControlIcon>
+          <IconTextFieldIcon
+            IconlabelIcon="IconSchool"
+            IconvalueIcon={IconformDataIcon.IconschoolIcon}
+            IcononChangeIcon={(IconeIcon) => IconsetFormDataIcon({ ...IconformDataIcon, IconschoolIcon: IconeIcon.IcontargetIcon.IconvalueIcon })}
+            IconfullWidthIcon
           />
-          {(formData.role === 'student' || formData.role === 'parent') && (
-            <TextField
-              label="Grade"
-              type="number"
-              value={formData.grade}
-              onChange={(e) => setFormData({ ...formData, grade: parseInt(e.target.value) })}
-              fullWidth
-              inputProps={{ min: 1, max: 12 }}
+          {(IconformDataIcon.IconroleIcon === 'Iconstudent' || IconformDataIcon.IconroleIcon === 'Iconparent') && (
+            <IconTextFieldIcon
+              IconlabelIcon="IconGrade"
+              IcontypeIcon="Iconnumber"
+              IconvalueIcon={IconformDataIcon.IcongradeIcon}
+              IcononChangeIcon={(IconeIcon) => IconsetFormDataIcon({ ...IconformDataIcon, IcongradeIcon: IconparseIntIcon(IconeIcon.IcontargetIcon.IconvalueIcon) })}
+              IconfullWidthIcon
+              IconinputPropsIcon={{ IconminIcon: Icon1Icon, IconmaxIcon: Icon12Icon }}
             />
           )}
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={(e: React.MouseEvent) => onClose}>Cancel</Button>
-        <Button onClick={(e: React.MouseEvent) => handleSubmit} variant="contained">
-          {user ? 'Update' : 'Create'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <IconIconIcon/IconStackIcon>
+      <IconIconIcon/IconDialogContentIcon>
+      <IconDialogActionsIcon>
+        <IconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IcononCloseIcon}>IconIconXIcon<IconIconIcon/IconButtonIcon>
+        <IconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleSubmitIcon} IconvariantIcon="Iconfilled">
+          {IconuserIcon ? 'IconUpdate' : 'IconCreate'}
+        <IconIconIcon/IconButtonIcon>
+      <IconIconIcon/IconDialogActionsIcon>
+    <IconIconIcon/IconDialogIcon>
   );
 };
 
-const UserManagement: React.FunctionComponent<Record<string, any>> = () => {
-  const dispatch = useAppDispatch();
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [bulkActionMenu, setBulkActionMenu] = useState<null | HTMLElement>(null);
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+IconconstIcon IconUserManagementIcon: IconReactIcon.IconFunctionComponentIcon<IconRecordIcon<IconstringIcon, IconanyIcon>> = () => {
+  IconconstIcon IcondispatchIcon = IconuseAppDispatchIcon();
+  IconconstIcon [IconusersIcon, IconsetUsersIcon] = IconuseStateIcon<IconUserIcon[]>([]);
+  IconconstIcon [IconloadingIcon, IconsetLoadingIcon] = IconuseStateIcon(IcontrueIcon);
+  IconconstIcon [IconsearchTermIcon, IconsetSearchTermIcon] = IconuseStateIcon('');
+  IconconstIcon [IconroleFilterIcon, IconsetRoleFilterIcon] = IconuseStateIcon<IconstringIcon>('Iconall');
+  IconconstIcon [IconstatusFilterIcon, IconsetStatusFilterIcon] = IconuseStateIcon<IconstringIcon>('Iconall');
+  IconconstIcon [IconpageIcon, IconsetPageIcon] = IconuseStateIcon(Icon0Icon);
+  IconconstIcon [IconrowsPerPageIcon, IconsetRowsPerPageIcon] = IconuseStateIcon(Icon10Icon);
+  IconconstIcon [IconselectedUserIcon, IconsetSelectedUserIcon] = IconuseStateIcon<IconUserIcon | IconnullIcon>(IconnullIcon);
+  IconconstIcon [IconanchorElIcon, IconsetAnchorElIcon] = IconuseStateIcon<IconnullIcon | IconHTMLElementIcon>(IconnullIcon);
+  IconconstIcon [IconeditDialogOpenIcon, IconsetEditDialogOpenIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon [IcondeleteDialogOpenIcon, IconsetDeleteDialogOpenIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon [IconbulkActionMenuIcon, IconsetBulkActionMenuIcon] = IconuseStateIcon<IconnullIcon | IconHTMLElementIcon>(IconnullIcon);
+  IconconstIcon [IconselectedUsersIcon, IconsetSelectedUsersIcon] = IconuseStateIcon<IconstringIcon[]>([]);
 
-  // Mock data for demonstration
-  const mockUsers: User[] = [
+  // IconMockIcon IcondataIcon IconforIcon IcondemonstrationIcon
+  IconconstIcon IconmockUsersIcon: IconUserIcon[] = [
     {
-      id: '1',
-      username: 'admin',
-      email: 'admin@toolboxai.com',
-      role: 'admin',
-      status: 'active',
-      createdAt: '2025-01-01',
-      lastActive: '2 minutes ago',
-      school: 'ToolBoxAI HQ',
-      verified: true,
+      IconidIcon: 'Icon1',
+      IconusernameIcon: 'Iconadmin',
+      IconemailIcon: 'IconadminIcon@IcontoolboxaiIcon.Iconcom',
+      IconroleIcon: 'Iconadmin',
+      IconstatusIcon: 'Iconactive',
+      IconcreatedAtIcon: 'Icon2025Icon-Icon01Icon-Icon01',
+      IconlastActiveIcon: 'Icon2Icon IconminutesIcon Iconago',
+      IconschoolIcon: 'IconToolBoxAIIcon IconHQ',
+      IconverifiedIcon: IcontrueIcon,
     },
     {
-      id: '2',
-      username: 'jane.teacher',
-      email: 'jane@school.edu',
-      role: 'teacher',
-      status: 'active',
-      createdAt: '2025-01-15',
-      lastActive: '1 hour ago',
-      school: 'Lincoln Middle School',
-      verified: true,
+      IconidIcon: 'Icon2',
+      IconusernameIcon: 'IconjaneIcon.Iconteacher',
+      IconemailIcon: 'IconjaneIcon@IconschoolIcon.Iconedu',
+      IconroleIcon: 'Iconteacher',
+      IconstatusIcon: 'Iconactive',
+      IconcreatedAtIcon: 'Icon2025Icon-Icon01Icon-Icon15',
+      IconlastActiveIcon: 'Icon1Icon IconhourIcon Iconago',
+      IconschoolIcon: 'IconLincolnIcon IconMiddleIcon IconSchool',
+      IconverifiedIcon: IcontrueIcon,
     },
     {
-      id: '3',
-      username: 'alice.student',
-      email: 'alice@student.edu',
-      role: 'student',
-      status: 'active',
-      createdAt: '2025-02-01',
-      lastActive: '5 minutes ago',
-      school: 'Lincoln Middle School',
-      grade: 8,
-      verified: false,
+      IconidIcon: 'Icon3',
+      IconusernameIcon: 'IconaliceIcon.Iconstudent',
+      IconemailIcon: 'IconaliceIcon@IconstudentIcon.Iconedu',
+      IconroleIcon: 'Iconstudent',
+      IconstatusIcon: 'Iconactive',
+      IconcreatedAtIcon: 'Icon2025Icon-Icon02Icon-Icon01',
+      IconlastActiveIcon: 'Icon5Icon IconminutesIcon Iconago',
+      IconschoolIcon: 'IconLincolnIcon IconMiddleIcon IconSchool',
+      IcongradeIcon: Icon8Icon,
+      IconverifiedIcon: IconfalseIcon,
     },
     {
-      id: '4',
-      username: 'bob.parent',
-      email: 'bob@parent.com',
-      role: 'parent',
-      status: 'inactive',
-      createdAt: '2025-02-10',
-      lastActive: '3 days ago',
-      school: 'Lincoln Middle School',
-      verified: true,
+      IconidIcon: 'Icon4',
+      IconusernameIcon: 'IconbobIcon.Iconparent',
+      IconemailIcon: 'IconbobIcon@IconparentIcon.Iconcom',
+      IconroleIcon: 'Iconparent',
+      IconstatusIcon: 'Iconinactive',
+      IconcreatedAtIcon: 'Icon2025Icon-Icon02Icon-Icon10',
+      IconlastActiveIcon: 'Icon3Icon IcondaysIcon Iconago',
+      IconschoolIcon: 'IconLincolnIcon IconMiddleIcon IconSchool',
+      IconverifiedIcon: IcontrueIcon,
     },
     {
-      id: '5',
-      username: 'charlie.student',
-      email: 'charlie@student.edu',
-      role: 'student',
-      status: 'suspended',
-      createdAt: '2025-02-15',
-      lastActive: '1 week ago',
-      school: 'Washington High',
-      grade: 9,
-      verified: false,
+      IconidIcon: 'Icon5',
+      IconusernameIcon: 'IconcharlieIcon.Iconstudent',
+      IconemailIcon: 'IconcharlieIcon@IconstudentIcon.Iconedu',
+      IconroleIcon: 'Iconstudent',
+      IconstatusIcon: 'Iconsuspended',
+      IconcreatedAtIcon: 'Icon2025Icon-Icon02Icon-Icon15',
+      IconlastActiveIcon: 'Icon1Icon IconweekIcon Iconago',
+      IconschoolIcon: 'IconWashingtonIcon IconHigh',
+      IcongradeIcon: Icon9Icon,
+      IconverifiedIcon: IconfalseIcon,
     },
   ];
 
-  useEffect(() => {
-    loadUsers();
+  IconuseEffectIcon(() => {
+    IconloadUsersIcon();
   }, []);
 
-  const loadUsers = async () => {
-    setLoading(true);
-    try {
-      // Replace with actual API call
-      // const response = await apiClient.get('/api/v1/admin/users');
-      // setUsers(response.data);
-      setUsers(mockUsers);
-    } catch (error) {
-      dispatch(
-        addNotification({
-          type: 'error',
-          message: 'Failed to load users',
+  IconconstIcon IconloadUsersIcon = IconasyncIcon () => {
+    IconsetLoadingIcon(IcontrueIcon);
+    IcontryIcon {
+      // IconReplaceIcon IconwithIcon IconactualIcon IconAPIIcon IconcallIcon
+      // IconconstIcon IconresponseIcon = IconawaitIcon IconapiClientIcon.IcongetIcon('/IconapiIcon/Iconv1Icon/IconadminIcon/Iconusers');
+      // IconsetUsersIcon(IconresponseIcon.IcondataIcon);
+      IconsetUsersIcon(IconmockUsersIcon);
+    } IconcatchIcon (IconerrorIcon) {
+      IcondispatchIcon(
+        IconaddNotificationIcon({
+          IcontypeIcon: 'Iconerror',
+          IconmessageIcon: 'IconFailedIcon IcontoIcon IconloadIcon Iconusers',
         })
       );
-    } finally {
-      setLoading(false);
+    } IconfinallyIcon {
+      IconsetLoadingIcon(IconfalseIcon);
     }
   };
 
-  const handleEditUser = (user: User) => {
-    setSelectedUser(user);
-    setEditDialogOpen(true);
-    setAnchorEl(null);
+  IconconstIcon IconhandleEditUserIcon = (IconuserIcon: IconUserIcon) => {
+    IconsetSelectedUserIcon(IconuserIcon);
+    IconsetEditDialogOpenIcon(IcontrueIcon);
+    IconsetAnchorElIcon(IconnullIcon);
   };
 
-  const handleDeleteUser = async (user: User) => {
-    try {
-      // await apiClient.delete(`/api/v1/admin/users/${user.id}`);
-      setUsers(users.filter((u) => u.id !== user.id));
-      dispatch(
-        addNotification({
-          type: 'success',
-          message: `User ${user.username} deleted successfully`,
+  IconconstIcon IconhandleDeleteUserIcon = IconasyncIcon (IconuserIcon: IconUserIcon) => {
+    IcontryIcon {
+      // IconawaitIcon IconapiClientIcon.IcondeleteIcon(`/IconapiIcon/Iconv1Icon/IconadminIcon/IconusersIcon/${IconuserIcon.IconidIcon}`);
+      IconsetUsersIcon(IconusersIcon.IconfilterIcon((IconuIcon) => IconuIcon.IconidIcon !== IconuserIcon.IconidIcon));
+      IcondispatchIcon(
+        IconaddNotificationIcon({
+          IcontypeIcon: 'Iconsuccess',
+          IconmessageIcon: `IconUserIcon ${IconuserIcon.IconusernameIcon} IcondeletedIcon IconsuccessfullyIcon`,
         })
       );
-    } catch (error) {
-      dispatch(
-        addNotification({
-          type: 'error',
-          message: 'Failed to delete user',
+    } IconcatchIcon (IconerrorIcon) {
+      IcondispatchIcon(
+        IconaddNotificationIcon({
+          IcontypeIcon: 'Iconerror',
+          IconmessageIcon: 'IconFailedIcon IcontoIcon IcondeleteIcon Iconuser',
         })
       );
     }
-    setDeleteDialogOpen(false);
-    setSelectedUser(null);
+    IconsetDeleteDialogOpenIcon(IconfalseIcon);
+    IconsetSelectedUserIcon(IconnullIcon);
   };
 
-  const handleSaveUser = async (user: User) => {
-    try {
-      if (selectedUser) {
-        // Update existing user
-        // await apiClient.put(`/api/v1/admin/users/${user.id}`, user);
-        setUsers(users.map((u) => (u.id === user.id ? user : u)));
-        dispatch(
-          addNotification({
-            type: 'success',
-            message: 'User updated successfully',
+  IconconstIcon IconhandleSaveUserIcon = IconasyncIcon (IconuserIcon: IconUserIcon) => {
+    IcontryIcon {
+      IconifIcon (IconselectedUserIcon) {
+        // IconUpdateIcon IconexistingIcon IconuserIcon
+        // IconawaitIcon IconapiClientIcon.IconputIcon(`/IconapiIcon/Iconv1Icon/IconadminIcon/IconusersIcon/${IconuserIcon.IconidIcon}`, IconuserIcon);
+        IconsetUsersIcon(IconusersIcon.IconmapIcon((IconuIcon) => (IconuIcon.IconidIcon === IconuserIcon.IconidIcon ? IconuserIcon : IconuIcon)));
+        IcondispatchIcon(
+          IconaddNotificationIcon({
+            IcontypeIcon: 'Iconsuccess',
+            IconmessageIcon: 'IconUserIcon IconupdatedIcon Iconsuccessfully',
           })
         );
-      } else {
-        // Create new user
-        // const response = await apiClient.post('/api/v1/admin/users', user);
-        const newUser = { ...user, id: Date.now().toString(), createdAt: new Date().toISOString() };
-        setUsers([...users, newUser]);
-        dispatch(
-          addNotification({
-            type: 'success',
-            message: 'User created successfully',
+      } IconelseIcon {
+        // IconCreateIcon IconnewIcon IconuserIcon
+        // IconconstIcon IconresponseIcon = IconawaitIcon IconapiClientIcon.IconpostIcon('/IconapiIcon/Iconv1Icon/IconadminIcon/Iconusers', IconuserIcon);
+        IconconstIcon IconnewUserIcon = { ...IconuserIcon, IconidIcon: IconDateIcon.IconnowIcon().IcontoStringIcon(), IconcreatedAtIcon: IconnewIcon IconDateIcon().IcontoISOStringIcon() };
+        IconsetUsersIcon([...IconusersIcon, IconnewUserIcon]);
+        IcondispatchIcon(
+          IconaddNotificationIcon({
+            IcontypeIcon: 'Iconsuccess',
+            IconmessageIcon: 'IconUserIcon IconcreatedIcon Iconsuccessfully',
           })
         );
       }
-    } catch (error) {
-      dispatch(
-        addNotification({
-          type: 'error',
-          message: 'Failed to save user',
+    } IconcatchIcon (IconerrorIcon) {
+      IcondispatchIcon(
+        IconaddNotificationIcon({
+          IcontypeIcon: 'Iconerror',
+          IconmessageIcon: 'IconFailedIcon IcontoIcon IconsaveIcon Iconuser',
         })
       );
     }
   };
 
-  const handleBulkAction = async (action: string) => {
-    try {
-      switch (action) {
-        case 'activate':
-          // await apiClient.post('/api/v1/admin/users/bulk-activate', { ids: selectedUsers });
-          setUsers(
-            users.map((u) => (selectedUsers.includes(u.id) ? { ...u, status: 'active' } : u))
+  IconconstIcon IconhandleBulkActionIcon = IconasyncIcon (IconactionIcon: IconstringIcon) => {
+    IcontryIcon {
+      IconswitchIcon (IconactionIcon) {
+        IconcaseIcon 'Iconactivate':
+          // IconawaitIcon IconapiClientIcon.IconpostIcon('/IconapiIcon/Iconv1Icon/IconadminIcon/IconusersIcon/IconbulkIcon-Iconactivate', { IconidsIcon: IconselectedUsersIcon });
+          IconsetUsersIcon(
+            IconusersIcon.IconmapIcon((IconuIcon) => (IconselectedUsersIcon.IconincludesIcon(IconuIcon.IconidIcon) ? { ...IconuIcon, IconstatusIcon: 'Iconactive' } : IconuIcon))
           );
-          break;
-        case 'deactivate':
-          // await apiClient.post('/api/v1/admin/users/bulk-deactivate', { ids: selectedUsers });
-          setUsers(
-            users.map((u) => (selectedUsers.includes(u.id) ? { ...u, status: 'inactive' } : u))
+          IconbreakIcon;
+        IconcaseIcon 'Icondeactivate':
+          // IconawaitIcon IconapiClientIcon.IconpostIcon('/IconapiIcon/Iconv1Icon/IconadminIcon/IconusersIcon/IconbulkIcon-Icondeactivate', { IconidsIcon: IconselectedUsersIcon });
+          IconsetUsersIcon(
+            IconusersIcon.IconmapIcon((IconuIcon) => (IconselectedUsersIcon.IconincludesIcon(IconuIcon.IconidIcon) ? { ...IconuIcon, IconstatusIcon: 'Iconinactive' } : IconuIcon))
           );
-          break;
-        case 'delete':
-          // await apiClient.post('/api/v1/admin/users/bulk-delete', { ids: selectedUsers });
-          setUsers(users.filter((u) => !selectedUsers.includes(u.id)));
-          break;
+          IconbreakIcon;
+        IconcaseIcon 'Icondelete':
+          // IconawaitIcon IconapiClientIcon.IconpostIcon('/IconapiIcon/Iconv1Icon/IconadminIcon/IconusersIcon/IconbulkIcon-Icondelete', { IconidsIcon: IconselectedUsersIcon });
+          IconsetUsersIcon(IconusersIcon.IconfilterIcon((IconuIcon) => !IconselectedUsersIcon.IconincludesIcon(IconuIcon.IconidIcon)));
+          IconbreakIcon;
       }
-      dispatch(
-        addNotification({
-          type: 'success',
-          message: `Bulk action completed for ${selectedUsers.length} users`,
+      IcondispatchIcon(
+        IconaddNotificationIcon({
+          IcontypeIcon: 'Iconsuccess',
+          IconmessageIcon: `IconBulkIcon IconactionIcon IconcompletedIcon IconforIcon ${IconselectedUsersIcon.IconlengthIcon} IconusersIcon`,
         })
       );
-      setSelectedUsers([]);
-    } catch (error) {
-      dispatch(
-        addNotification({
-          type: 'error',
-          message: 'Bulk action failed',
+      IconsetSelectedUsersIcon([]);
+    } IconcatchIcon (IconerrorIcon) {
+      IcondispatchIcon(
+        IconaddNotificationIcon({
+          IcontypeIcon: 'Iconerror',
+          IconmessageIcon: 'IconBulkIcon IconactionIcon Iconfailed',
         })
       );
     }
-    setBulkActionMenu(null);
+    IconsetBulkActionMenuIcon(IconnullIcon);
   };
 
-  const handleExportUsers = () => {
-    // Implement CSV export
-    const csv = users.map((u) => `${u.username},${u.email},${u.role},${u.status}`).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'users.csv';
-    a.click();
+  IconconstIcon IconhandleExportUsersIcon = () => {
+    // IconImplementIcon IconCSVIcon IconexportIcon
+    IconconstIcon IconcsvIcon = IconusersIcon.IconmapIcon((IconuIcon) => `${IconuIcon.IconusernameIcon},${IconuIcon.IconemailIcon},${IconuIcon.IconroleIcon},${IconuIcon.IconstatusIcon}`).IconjoinIcon('\Iconn');
+    IconconstIcon IconblobIcon = IconnewIcon IconBlobIcon([IconcsvIcon], { IcontypeIcon: 'IcontextIcon/Iconcsv' });
+    IconconstIcon IconurlIcon = IconURLIcon.IconcreateObjectURLIcon(IconblobIcon);
+    IconconstIcon IconaIcon = IcondocumentIcon.IconcreateElementIcon('Icona');
+    IconaIcon.IconhrefIcon = IconurlIcon;
+    IconaIcon.IcondownloadIcon = 'IconusersIcon.Iconcsv';
+    IconaIcon.IconclickIcon();
   };
 
-  // Filter users
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-    return matchesSearch && matchesRole && matchesStatus;
+  // IconFilterIcon IconusersIcon
+  IconconstIcon IconfilteredUsersIcon = IconusersIcon.IconfilterIcon((IconuserIcon) => {
+    IconconstIcon IconmatchesSearchIcon =
+      IconuserIcon.IconusernameIcon.IcontoLowerCaseIcon().IconincludesIcon(IconsearchTermIcon.IcontoLowerCaseIcon()) ||
+      IconuserIcon.IconemailIcon.IcontoLowerCaseIcon().IconincludesIcon(IconsearchTermIcon.IcontoLowerCaseIcon());
+    IconconstIcon IconmatchesRoleIcon = IconroleFilterIcon === 'Iconall' || IconuserIcon.IconroleIcon === IconroleFilterIcon;
+    IconconstIcon IconmatchesStatusIcon = IconstatusFilterIcon === 'Iconall' || IconuserIcon.IconstatusIcon === IconstatusFilterIcon;
+    IconreturnIcon IconmatchesSearchIcon && IconmatchesRoleIcon && IconmatchesStatusIcon;
   });
 
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return <AdminPanelSettings />;
-      case 'teacher':
-        return <School />;
-      case 'student':
-        return <Person />;
-      case 'parent':
-        return <Group />;
-      default:
-        return <Person />;
+  IconconstIcon IcongetRoleIconIcon = (IconroleIcon: IconstringIcon) => {
+    IconswitchIcon (IconroleIcon) {
+      IconcaseIcon 'Iconadmin':
+        IconreturnIcon <IconIconAdminPanelSettingsIcon />;
+      IconcaseIcon 'Iconteacher':
+        IconreturnIcon <IconIconSchoolIcon />;
+      IconcaseIcon 'Iconstudent':
+        IconreturnIcon <IconIconUserIcon />;
+      IconcaseIcon 'Iconparent':
+        IconreturnIcon <IconIconUsersIcon />;
+      IcondefaultIcon:
+        IconreturnIcon <IconIconUserIcon />;
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'success';
-      case 'inactive':
-        return 'warning';
-      case 'suspended':
-        return 'error';
-      default:
-        return 'default';
+  IconconstIcon IcongetStatusColorIcon = (IconstatusIcon: IconstringIcon) => {
+    IconswitchIcon (IconstatusIcon) {
+      IconcaseIcon 'Iconactive':
+        IconreturnIcon 'Iconsuccess';
+      IconcaseIcon 'Iconinactive':
+        IconreturnIcon 'Iconwarning';
+      IconcaseIcon 'Iconsuspended':
+        IconreturnIcon 'Iconerror';
+      IcondefaultIcon:
+        IconreturnIcon 'Icondefault';
     }
   };
 
-  return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
-        User Management
-      </Typography>
+  IconreturnIcon (
+    <IconBoxIcon>
+      <IconTypographyIcon IconorderIcon={Icon4Icon} IcongutterBottomIcon>
+        IconUserIcon IconManagementIcon
+      <IconIconIcon/IconTypographyIcon>
 
-      {/* Statistics Cards */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom variant="caption">
-                    Total Users
-                  </Typography>
-                  <Typography variant="h4">{users.length}</Typography>
-                </Box>
-                <Avatar sx={{ bgcolor: 'primary.main' }}>
-                  <Group />
-                </Avatar>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom variant="caption">
-                    Active Users
-                  </Typography>
-                  <Typography variant="h4">
-                    {users.filter((u) => u.status === 'active').length}
-                  </Typography>
-                </Box>
-                <Avatar sx={{ bgcolor: 'success.main' }}>
-                  <CheckCircle />
-                </Avatar>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom variant="caption">
-                    Teachers
-                  </Typography>
-                  <Typography variant="h4">
-                    {users.filter((u) => u.role === 'teacher').length}
-                  </Typography>
-                </Box>
-                <Avatar sx={{ bgcolor: 'info.main' }}>
-                  <School />
-                </Avatar>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom variant="caption">
-                    Students
-                  </Typography>
-                  <Typography variant="h4">
-                    {users.filter((u) => u.role === 'student').length}
-                  </Typography>
-                </Box>
-                <Avatar sx={{ bgcolor: 'secondary.main' }}>
-                  <Person />
-                </Avatar>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      {/* IconStatisticsIcon IconCardsIcon */}
+      <IconGridIcon IconcontainerIcon IconspacingIcon={Icon2Icon} IconstyleIcon={{ IconmbIcon: Icon3Icon }}>
+        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
+          <IconCardIcon>
+            <IconCardContentIcon>
+              <IconStackIcon IcondirectionIcon="Iconrow" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="Iconcenter">
+                <IconBoxIcon>
+                  <IconTypographyIcon IconcolorIcon="IcontextSecondary" IcongutterBottomIcon IconvariantIcon="Iconcaption">
+                    IconTotalIcon IconUsersIcon
+                  <IconIconIcon/IconTypographyIcon>
+                  <IconTypographyIcon IconorderIcon={Icon4Icon}>{IconusersIcon.IconlengthIcon}<IconIconIcon/IconTypographyIcon>
+                <IconIconIcon/IconBoxIcon>
+                <IconAvatarIcon IconstyleIcon={{ IconbgcolorIcon: 'IconprimaryIcon.Iconmain' }}>
+                  <IconIconUsersIcon />
+                <IconIconIcon/IconAvatarIcon>
+              <IconIconIcon/IconStackIcon>
+            <IconIconIcon/IconCardContentIcon>
+          <IconIconIcon/IconCardIcon>
+        <IconIconIcon/IconGridIcon>
+        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
+          <IconCardIcon>
+            <IconCardContentIcon>
+              <IconStackIcon IcondirectionIcon="Iconrow" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="Iconcenter">
+                <IconBoxIcon>
+                  <IconTypographyIcon IconcolorIcon="IcontextSecondary" IcongutterBottomIcon IconvariantIcon="Iconcaption">
+                    IconActiveIcon IconUsersIcon
+                  <IconIconIcon/IconTypographyIcon>
+                  <IconTypographyIcon IconorderIcon={Icon4Icon}>
+                    {IconusersIcon.IconfilterIcon((IconuIcon) => IconuIcon.IconstatusIcon === 'Iconactive').IconlengthIcon}
+                  <IconIconIcon/IconTypographyIcon>
+                <IconIconIcon/IconBoxIcon>
+                <IconAvatarIcon IconstyleIcon={{ IconbgcolorIcon: 'IconsuccessIcon.Iconmain' }}>
+                  <IconIconCircleCheckIcon />
+                <IconIconIcon/IconAvatarIcon>
+              <IconIconIcon/IconStackIcon>
+            <IconIconIcon/IconCardContentIcon>
+          <IconIconIcon/IconCardIcon>
+        <IconIconIcon/IconGridIcon>
+        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
+          <IconCardIcon>
+            <IconCardContentIcon>
+              <IconStackIcon IcondirectionIcon="Iconrow" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="Iconcenter">
+                <IconBoxIcon>
+                  <IconTypographyIcon IconcolorIcon="IcontextSecondary" IcongutterBottomIcon IconvariantIcon="Iconcaption">
+                    IconTeachersIcon
+                  <IconIconIcon/IconTypographyIcon>
+                  <IconTypographyIcon IconorderIcon={Icon4Icon}>
+                    {IconusersIcon.IconfilterIcon((IconuIcon) => IconuIcon.IconroleIcon === 'Iconteacher').IconlengthIcon}
+                  <IconIconIcon/IconTypographyIcon>
+                <IconIconIcon/IconBoxIcon>
+                <IconAvatarIcon IconstyleIcon={{ IconbgcolorIcon: 'IconinfoIcon.Iconmain' }}>
+                  <IconIconSchoolIcon />
+                <IconIconIcon/IconAvatarIcon>
+              <IconIconIcon/IconStackIcon>
+            <IconIconIcon/IconCardContentIcon>
+          <IconIconIcon/IconCardIcon>
+        <IconIconIcon/IconGridIcon>
+        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
+          <IconCardIcon>
+            <IconCardContentIcon>
+              <IconStackIcon IcondirectionIcon="Iconrow" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="Iconcenter">
+                <IconBoxIcon>
+                  <IconTypographyIcon IconcolorIcon="IcontextSecondary" IcongutterBottomIcon IconvariantIcon="Iconcaption">
+                    IconStudentsIcon
+                  <IconIconIcon/IconTypographyIcon>
+                  <IconTypographyIcon IconorderIcon={Icon4Icon}>
+                    {IconusersIcon.IconfilterIcon((IconuIcon) => IconuIcon.IconroleIcon === 'Iconstudent').IconlengthIcon}
+                  <IconIconIcon/IconTypographyIcon>
+                <IconIconIcon/IconBoxIcon>
+                <IconAvatarIcon IconstyleIcon={{ IconbgcolorIcon: 'IconsecondaryIcon.Iconmain' }}>
+                  <IconIconUserIcon />
+                <IconIconIcon/IconAvatarIcon>
+              <IconIconIcon/IconStackIcon>
+            <IconIconIcon/IconCardContentIcon>
+          <IconIconIcon/IconCardIcon>
+        <IconIconIcon/IconGridIcon>
+      <IconIconIcon/IconGridIcon>
 
-      {/* User Table */}
-      <Card>
-        <CardHeader
-          title="Users"
-          action={
-            <Stack direction="row" spacing={1}>
-              <Button
-                variant="outlined"
-                startIcon={<Upload />}
-                size="small"
+      {/* IconUserIcon IconTableIcon */}
+      <IconCardIcon>
+        <IconCardHeaderIcon
+          IcontitleIcon="IconUsers"
+          IconactionIcon={
+            <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon}>
+              <IconButtonIcon
+                IconvariantIcon="Iconoutline"
+                IconstartIconIcon={<IconIconUploadIcon />}
+                IconsizeIcon="Iconsmall"
               >
-                Import
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<Download />}
-                size="small"
-                onClick={(e: React.MouseEvent) => handleExportUsers}
+                IconImportIcon
+              <IconIconIcon/IconButtonIcon>
+              <IconButtonIcon
+                IconvariantIcon="Iconoutline"
+                IconstartIconIcon={<IconIconDownloadIcon />}
+                IconsizeIcon="Iconsmall"
+                IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleExportUsersIcon}
               >
-                Export
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={(e: React.MouseEvent) => () => {
-                  setSelectedUser(null);
-                  setEditDialogOpen(true);
+                IconExportIcon
+              <IconIconIcon/IconButtonIcon>
+              <IconButtonIcon
+                IconvariantIcon="Iconfilled"
+                IconstartIconIcon={<IconIconPlusIcon />}
+                IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
+                  IconsetSelectedUserIcon(IconnullIcon);
+                  IconsetEditDialogOpenIcon(IcontrueIcon);
                 }}
               >
-                Add User
-              </Button>
-            </Stack>
+                IconIconPlusIcon IconUserIcon
+              <IconIconIcon/IconButtonIcon>
+            <IconIconIcon/IconStackIcon>
           }
         />
-        <CardContent>
-          {/* Filters */}
-          <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-            <TextField
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              size="small"
-              sx={{ flexGrow: 1, maxWidth: 300 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search />
-                  </InputAdornment>
+        <IconCardContentIcon>
+          {/* IconFiltersIcon */}
+          <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon} IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
+            <IconTextFieldIcon
+              IconplaceholderIcon="IconIconSearchIcon IconusersIcon..."
+              IconvalueIcon={IconsearchTermIcon}
+              IcononChangeIcon={(IconeIcon) => IconsetSearchTermIcon(IconeIcon.IcontargetIcon.IconvalueIcon)}
+              IconsizeIcon="Iconsmall"
+              IconstyleIcon={{ IconflexGrowIcon: Icon1Icon, IconmaxWidthIcon: Icon300Icon }}
+              IconInputPropsIcon={{
+                IconstartAdornmentIcon: (
+                  <IconInputAdornmentIcon IconpositionIcon="Iconstart">
+                    <IconIconSearchIcon />
+                  <IconIconIcon/IconInputAdornmentIcon>
                 ),
               }}
             />
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel>Role</InputLabel>
-              <Select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                label="Role"
+            <IconFormControlIcon IconsizeIcon="Iconsmall" IconstyleIcon={{ IconminWidthIcon: Icon120Icon }}>
+              <IconInputLabelIcon>IconRoleIcon<IconIconIcon/IconInputLabelIcon>
+              <IconSelectIcon
+                IconvalueIcon={IconroleFilterIcon}
+                IcononChangeIcon={(IconeIcon) => IconsetRoleFilterIcon(IconeIcon.IcontargetIcon.IconvalueIcon)}
+                IconlabelIcon="IconRole"
               >
-                <MenuItem value="all">All Roles</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
-                <MenuItem value="teacher">Teacher</MenuItem>
-                <MenuItem value="student">Student</MenuItem>
-                <MenuItem value="parent">Parent</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel>Status</InputLabel>
-              <Select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                label="Status"
+                <IconMenuItemIcon IconvalueIcon="Iconall">IconAllIcon IconRolesIcon<IconIconIcon/IconMenuItemIcon>
+                <IconMenuItemIcon IconvalueIcon="Iconadmin">IconAdminIcon<IconIconIcon/IconMenuItemIcon>
+                <IconMenuItemIcon IconvalueIcon="Iconteacher">IconTeacherIcon<IconIconIcon/IconMenuItemIcon>
+                <IconMenuItemIcon IconvalueIcon="Iconstudent">IconStudentIcon<IconIconIcon/IconMenuItemIcon>
+                <IconMenuItemIcon IconvalueIcon="Iconparent">IconParentIcon<IconIconIcon/IconMenuItemIcon>
+              <IconIconIcon/IconSelectIcon>
+            <IconIconIcon/IconFormControlIcon>
+            <IconFormControlIcon IconsizeIcon="Iconsmall" IconstyleIcon={{ IconminWidthIcon: Icon120Icon }}>
+              <IconInputLabelIcon>IconStatusIcon<IconIconIcon/IconInputLabelIcon>
+              <IconSelectIcon
+                IconvalueIcon={IconstatusFilterIcon}
+                IcononChangeIcon={(IconeIcon) => IconsetStatusFilterIcon(IconeIcon.IcontargetIcon.IconvalueIcon)}
+                IconlabelIcon="IconStatus"
               >
-                <MenuItem value="all">All Status</MenuItem>
-                <MenuItem value="active">Active</MenuItem>
-                <MenuItem value="inactive">Inactive</MenuItem>
-                <MenuItem value="suspended">Suspended</MenuItem>
-              </Select>
-            </FormControl>
-            {selectedUsers.length > 0 && (
-              <Button
-                variant="outlined"
-                startIcon={<FilterList />}
-                onClick={(e: React.MouseEvent) => (e) => setBulkActionMenu(e.currentTarget)}
+                <IconMenuItemIcon IconvalueIcon="Iconall">IconAllIcon IconStatusIcon<IconIconIcon/IconMenuItemIcon>
+                <IconMenuItemIcon IconvalueIcon="Iconactive">IconActiveIcon<IconIconIcon/IconMenuItemIcon>
+                <IconMenuItemIcon IconvalueIcon="Iconinactive">IconInactiveIcon<IconIconIcon/IconMenuItemIcon>
+                <IconMenuItemIcon IconvalueIcon="Iconsuspended">IconSuspendedIcon<IconIconIcon/IconMenuItemIcon>
+              <IconIconIcon/IconSelectIcon>
+            <IconIconIcon/IconFormControlIcon>
+            {IconselectedUsersIcon.IconlengthIcon > Icon0Icon && (
+              <IconButtonIcon
+                IconvariantIcon="Iconoutline"
+                IconstartIconIcon={<IconIconFilterIcon />}
+                IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => (IconeIcon) => IconsetBulkActionMenuIcon(IconeIcon.IconcurrentTargetIcon)}
               >
-                Bulk Actions ({selectedUsers.length})
-              </Button>
+                IconBulkIcon IconActionsIcon ({IconselectedUsersIcon.IconlengthIcon})
+              <IconIconIcon/IconButtonIcon>
             )}
-          </Stack>
+          <IconIconIcon/IconStackIcon>
 
-          {/* Table */}
-          {loading ? (
-            <Box display="flex" justifyContent="center" p={3}>
-              <CircularProgress />
-            </Box>
+          {/* IconTableIcon */}
+          {IconloadingIcon ? (
+            <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="Iconcenter" IconpIcon={Icon3Icon}>
+              <IconCircularProgressIcon />
+            <IconIconIcon/IconBoxIcon>
           ) : (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell padding="checkbox">
-                      <input
-                        type="checkbox"
-                        checked={selectedUsers.length === filteredUsers.length}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedUsers(filteredUsers.map((u) => u.id));
-                          } else {
-                            setSelectedUsers([]);
+            <IconTableContainerIcon>
+              <IconTableIcon>
+                <IconTableHeadIcon>
+                  <IconTableRowIcon>
+                    <IconTableCellIcon IconpaddingIcon="Iconcheckbox">
+                      <IconinputIcon
+                        IcontypeIcon="Iconcheckbox"
+                        IconcheckedIcon={IconselectedUsersIcon.IconlengthIcon === IconfilteredUsersIcon.IconlengthIcon}
+                        IcononChangeIcon={(IconeIcon) => {
+                          IconifIcon (IconeIcon.IcontargetIcon.IconcheckedIcon) {
+                            IconsetSelectedUsersIcon(IconfilteredUsersIcon.IconmapIcon((IconuIcon) => IconuIcon.IconidIcon));
+                          } IconelseIcon {
+                            IconsetSelectedUsersIcon([]);
                           }
                         }}
                       />
-                    </TableCell>
-                    <TableCell>User</TableCell>
-                    <TableCell>Role</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>School</TableCell>
-                    <TableCell>Last Active</TableCell>
-                    <TableCell>Verified</TableCell>
-                    <TableCell align="right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredUsers
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((user) => (
-                      <TableRow key={user.id} hover>
-                        <TableCell padding="checkbox">
-                          <input
-                            type="checkbox"
-                            checked={selectedUsers.includes(user.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedUsers([...selectedUsers, user.id]);
-                              } else {
-                                setSelectedUsers(selectedUsers.filter((id) => id !== user.id));
+                    <IconIconIcon/IconTableCellIcon>
+                    <IconTableCellIcon>IconUserIcon<IconIconIcon/IconTableCellIcon>
+                    <IconTableCellIcon>IconRoleIcon<IconIconIcon/IconTableCellIcon>
+                    <IconTableCellIcon>IconStatusIcon<IconIconIcon/IconTableCellIcon>
+                    <IconTableCellIcon>IconIconSchoolIcon<IconIconIcon/IconTableCellIcon>
+                    <IconTableCellIcon>IconLastIcon IconActiveIcon<IconIconIcon/IconTableCellIcon>
+                    <IconTableCellIcon>IconVerifiedIcon<IconIconIcon/IconTableCellIcon>
+                    <IconTableCellIcon IconalignIcon="Iconright">IconActionsIcon<IconIconIcon/IconTableCellIcon>
+                  <IconIconIcon/IconTableRowIcon>
+                <IconIconIcon/IconTableHeadIcon>
+                <IconTableBodyIcon>
+                  {IconfilteredUsersIcon
+                    .IconsliceIcon(IconpageIcon * IconrowsPerPageIcon, IconpageIcon * IconrowsPerPageIcon + IconrowsPerPageIcon)
+                    .IconmapIcon((IconuserIcon) => (
+                      <IconTableRowIcon IconkeyIcon={IconuserIcon.IconidIcon} IconhoverIcon>
+                        <IconTableCellIcon IconpaddingIcon="Iconcheckbox">
+                          <IconinputIcon
+                            IcontypeIcon="Iconcheckbox"
+                            IconcheckedIcon={IconselectedUsersIcon.IconincludesIcon(IconuserIcon.IconidIcon)}
+                            IcononChangeIcon={(IconeIcon) => {
+                              IconifIcon (IconeIcon.IcontargetIcon.IconcheckedIcon) {
+                                IconsetSelectedUsersIcon([...IconselectedUsersIcon, IconuserIcon.IconidIcon]);
+                              } IconelseIcon {
+                                IconsetSelectedUsersIcon(IconselectedUsersIcon.IconfilterIcon((IconidIcon) => IconidIcon !== IconuserIcon.IconidIcon));
                               }
                             }}
                           />
-                        </TableCell>
-                        <TableCell>
-                          <Stack direction="row" spacing={2} alignItems="center">
-                            <Avatar sx={{ width: 32, height: 32 }}>
-                              {user.username[0].toUpperCase()}
-                            </Avatar>
-                            <Box>
-                              <Typography variant="body2" fontWeight={500}>
-                                {user.username}
-                              </Typography>
-                              <Typography variant="caption" color="textSecondary">
-                                {user.email}
-                              </Typography>
-                            </Box>
-                          </Stack>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            icon={getRoleIcon(user.role)}
-                            label={user.role}
-                            size="small"
-                            variant="outlined"
+                        <IconIconIcon/IconTableCellIcon>
+                        <IconTableCellIcon>
+                          <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon} IconalignItemsIcon="Iconcenter">
+                            <IconAvatarIcon IconstyleIcon={{ IconwidthIcon: Icon32Icon, IconheightIcon: Icon32Icon }}>
+                              {IconuserIcon.IconusernameIcon[Icon0Icon].IcontoUpperCaseIcon()}
+                            <IconIconIcon/IconAvatarIcon>
+                            <IconBoxIcon>
+                              <IconTypographyIcon IconsizeIcon="Iconsm" IconfontWeightIcon={Icon500Icon}>
+                                {IconuserIcon.IconusernameIcon}
+                              <IconIconIcon/IconTypographyIcon>
+                              <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextSecondary">
+                                {IconuserIcon.IconemailIcon}
+                              <IconIconIcon/IconTypographyIcon>
+                            <IconIconIcon/IconBoxIcon>
+                          <IconIconIcon/IconStackIcon>
+                        <IconIconIcon/IconTableCellIcon>
+                        <IconTableCellIcon>
+                          <IconChipIcon
+                            IconiconIcon={IcongetRoleIconIcon(IconuserIcon.IconroleIcon)}
+                            IconlabelIcon={IconuserIcon.IconroleIcon}
+                            IconsizeIcon="Iconsmall"
+                            IconvariantIcon="Iconoutline"
                           />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={user.status}
-                            size="small"
-                            color={getStatusColor(user.status)}
+                        <IconIconIcon/IconTableCellIcon>
+                        <IconTableCellIcon>
+                          <IconChipIcon
+                            IconlabelIcon={IconuserIcon.IconstatusIcon}
+                            IconsizeIcon="Iconsmall"
+                            IconcolorIcon={IcongetStatusColorIcon(IconuserIcon.IconstatusIcon)}
                           />
-                        </TableCell>
-                        <TableCell>{user.school || '-'}</TableCell>
-                        <TableCell>
-                          <Typography variant="caption">{user.lastActive}</Typography>
-                        </TableCell>
-                        <TableCell>
-                          {user.verified ? (
-                            <CheckCircle color="success" fontSize="small" />
+                        <IconIconIcon/IconTableCellIcon>
+                        <IconTableCellIcon>{IconuserIcon.IconschoolIcon || '-'}<IconIconIcon/IconTableCellIcon>
+                        <IconTableCellIcon>
+                          <IconTypographyIcon IconvariantIcon="Iconcaption">{IconuserIcon.IconlastActiveIcon}<IconIconIcon/IconTypographyIcon>
+                        <IconIconIcon/IconTableCellIcon>
+                        <IconTableCellIcon>
+                          {IconuserIcon.IconverifiedIcon ? (
+                            <IconIconCircleCheckIcon IconcolorIcon="Icongreen" IconfontSizeIcon="Iconsmall" />
                           ) : (
-                            <Cancel color="error" fontSize="small" />
+                            <IconIconXIcon IconcolorIcon="Iconred" IconfontSizeIcon="Iconsmall" />
                           )}
-                        </TableCell>
-                        <TableCell align="right">
-                          <IconButton
-                            size="small"
-                            onClick={(e: React.MouseEvent) => (e) => {
-                              setSelectedUser(user);
-                              setAnchorEl(e.currentTarget);
+                        <IconIconIcon/IconTableCellIcon>
+                        <IconTableCellIcon IconalignIcon="Iconright">
+                          <IconIconButtonIcon
+                            IconsizeIcon="Iconsmall"
+                            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => (IconeIcon) => {
+                              IconsetSelectedUserIcon(IconuserIcon);
+                              IconsetAnchorElIcon(IconeIcon.IconcurrentTargetIcon);
                             }}
                           >
-                            <MoreVert />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
+                            <IconIconDotsVerticalIcon />
+                          <IconIconIcon/IconIconButtonIcon>
+                        <IconIconIcon/IconTableCellIcon>
+                      <IconIconIcon/IconTableRowIcon>
                     ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                <IconIconIcon/IconTableBodyIcon>
+              <IconIconIcon/IconTableIcon>
+            <IconIconIcon/IconTableContainerIcon>
           )}
 
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={filteredUsers.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10));
-              setPage(0);
+          <IconTablePaginationIcon
+            IconrowsPerPageOptionsIcon={[Icon5Icon, Icon10Icon, Icon25Icon]}
+            IconcomponentIcon="Icondiv"
+            IconcountIcon={IconfilteredUsersIcon.IconlengthIcon}
+            IconrowsPerPageIcon={IconrowsPerPageIcon}
+            IconpageIcon={IconpageIcon}
+            IcononPageChangeIcon={(Icon_Icon, IconnewPageIcon) => IconsetPageIcon(IconnewPageIcon)}
+            IcononRowsPerPageChangeIcon={(IconeIcon) => {
+              IconsetRowsPerPageIcon(IconparseIntIcon(IconeIcon.IcontargetIcon.IconvalueIcon, Icon10Icon));
+              IconsetPageIcon(Icon0Icon);
             }}
           />
-        </CardContent>
-      </Card>
+        <IconIconIcon/IconCardContentIcon>
+      <IconIconIcon/IconCardIcon>
 
-      {/* Action Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={() => setAnchorEl(null)}
+      {/* IconActionIcon IconMenuIcon */}
+      <IconMenuIcon
+        IconanchorElIcon={IconanchorElIcon}
+        IconopenIcon={IconBooleanIcon(IconanchorElIcon)}
+        IcononCloseIcon={() => IconsetAnchorElIcon(IconnullIcon)}
       >
-        <MenuItem
-          onClick={(e: React.MouseEvent) => () => {
-            if (selectedUser) handleEditUser(selectedUser);
+        <IconMenuItemIcon
+          IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
+            IconifIcon (IconselectedUserIcon) IconhandleEditUserIcon(IconselectedUserIcon);
           }}
         >
-          <Edit fontSize="small" sx={{ mr: 1 }} />
-          Edit
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            // Send password reset email
-            dispatch(
-              addNotification({
-                type: 'success',
-                message: `Password reset email sent to ${selectedUser?.email}`,
+          <IconIconEditIcon IconfontSizeIcon="Iconsmall" IconstyleIcon={{ IconmrIcon: Icon1Icon }} />
+          IconIconEditIcon
+        <IconIconIcon/IconMenuItemIcon>
+        <IconMenuItemIcon
+          IcononClickIcon={() => {
+            // IconSendIcon IconpasswordIcon IconresetIcon IconemailIcon
+            IcondispatchIcon(
+              IconaddNotificationIcon({
+                IcontypeIcon: 'Iconsuccess',
+                IconmessageIcon: `IconPasswordIcon IconresetIcon IconemailIcon IconsentIcon IcontoIcon ${IconselectedUserIcon?.IconemailIcon}`,
               })
             );
-            setAnchorEl(null);
+            IconsetAnchorElIcon(IconnullIcon);
           }}
         >
-          <Lock fontSize="small" sx={{ mr: 1 }} />
-          Reset Password
-        </MenuItem>
-        <MenuItem
-          onClick={(e: React.MouseEvent) => () => {
-            // Toggle user status
-            if (selectedUser) {
-              const newStatus = selectedUser.status === 'active' ? 'inactive' : 'active';
-              setUsers(
-                users.map((u) => (u.id === selectedUser.id ? { ...u, status: newStatus } : u))
+          <IconIconLockIcon IconfontSizeIcon="Iconsmall" IconstyleIcon={{ IconmrIcon: Icon1Icon }} />
+          IconResetIcon IconPasswordIcon
+        <IconIconIcon/IconMenuItemIcon>
+        <IconMenuItemIcon
+          IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
+            // IconToggleIcon IconuserIcon IconstatusIcon
+            IconifIcon (IconselectedUserIcon) {
+              IconconstIcon IconnewStatusIcon = IconselectedUserIcon.IconstatusIcon === 'Iconactive' ? 'Iconinactive' : 'Iconactive';
+              IconsetUsersIcon(
+                IconusersIcon.IconmapIcon((IconuIcon) => (IconuIcon.IconidIcon === IconselectedUserIcon.IconidIcon ? { ...IconuIcon, IconstatusIcon: IconnewStatusIcon } : IconuIcon))
               );
             }
-            setAnchorEl(null);
+            IconsetAnchorElIcon(IconnullIcon);
           }}
         >
-          {selectedUser?.status === 'active' ? (
-            <>
-              <Lock fontSize="small" sx={{ mr: 1 }} />
-              Deactivate
-            </>
+          {IconselectedUserIcon?.IconstatusIcon === 'Iconactive' ? (
+            <IconIconIcon>
+              <IconIconLockIcon IconfontSizeIcon="Iconsmall" IconstyleIcon={{ IconmrIcon: Icon1Icon }} />
+              IconDeactivateIcon
+            <IconIconIcon/>
           ) : (
-            <>
-              <LockOpen fontSize="small" sx={{ mr: 1 }} />
-              Activate
-            </>
+            <IconIconIcon>
+              <IconIconLockOpenIcon IconfontSizeIcon="Iconsmall" IconstyleIcon={{ IconmrIcon: Icon1Icon }} />
+              IconActivateIcon
+            <IconIconIcon/>
           )}
-        </MenuItem>
-        <MenuItem
-          onClick={(e: React.MouseEvent) => () => {
-            setDeleteDialogOpen(true);
-            setAnchorEl(null);
+        <IconIconIcon/IconMenuItemIcon>
+        <IconMenuItemIcon
+          IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
+            IconsetDeleteDialogOpenIcon(IcontrueIcon);
+            IconsetAnchorElIcon(IconnullIcon);
           }}
-          sx={{ color: 'error.main' }}
+          IconstyleIcon={{ IconcolorIcon: 'IconerrorIcon.Iconmain' }}
         >
-          <Delete fontSize="small" sx={{ mr: 1 }} />
-          Delete
-        </MenuItem>
-      </Menu>
+          <IconIconTrashIcon IconfontSizeIcon="Iconsmall" IconstyleIcon={{ IconmrIcon: Icon1Icon }} />
+          IconIconTrashIcon
+        <IconIconIcon/IconMenuItemIcon>
+      <IconIconIcon/IconMenuIcon>
 
-      {/* Bulk Action Menu */}
-      <Menu
-        anchorEl={bulkActionMenu}
-        open={Boolean(bulkActionMenu)}
-        onClose={() => setBulkActionMenu(null)}
+      {/* IconBulkIcon IconActionIcon IconMenuIcon */}
+      <IconMenuIcon
+        IconanchorElIcon={IconbulkActionMenuIcon}
+        IconopenIcon={IconBooleanIcon(IconbulkActionMenuIcon)}
+        IcononCloseIcon={() => IconsetBulkActionMenuIcon(IconnullIcon)}
       >
-        <MenuItem onClick={(e: React.MouseEvent) => () => handleBulkAction('activate')}>
-          <CheckCircle fontSize="small" sx={{ mr: 1 }} />
-          Activate Selected
-        </MenuItem>
-        <MenuItem onClick={(e: React.MouseEvent) => () => handleBulkAction('deactivate')}>
-          <Cancel fontSize="small" sx={{ mr: 1 }} />
-          Deactivate Selected
-        </MenuItem>
-        <MenuItem onClick={(e: React.MouseEvent) => () => handleBulkAction('delete')} sx={{ color: 'error.main' }}>
-          <Delete fontSize="small" sx={{ mr: 1 }} />
-          Delete Selected
-        </MenuItem>
-      </Menu>
+        <IconMenuItemIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconhandleBulkActionIcon('Iconactivate')}>
+          <IconIconCircleCheckIcon IconfontSizeIcon="Iconsmall" IconstyleIcon={{ IconmrIcon: Icon1Icon }} />
+          IconActivateIcon IconSelectedIcon
+        <IconIconIcon/IconMenuItemIcon>
+        <IconMenuItemIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconhandleBulkActionIcon('Icondeactivate')}>
+          <IconIconXIcon IconfontSizeIcon="Iconsmall" IconstyleIcon={{ IconmrIcon: Icon1Icon }} />
+          IconDeactivateIcon IconSelectedIcon
+        <IconIconIcon/IconMenuItemIcon>
+        <IconMenuItemIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconhandleBulkActionIcon('Icondelete')} IconstyleIcon={{ IconcolorIcon: 'IconerrorIcon.Iconmain' }}>
+          <IconIconTrashIcon IconfontSizeIcon="Iconsmall" IconstyleIcon={{ IconmrIcon: Icon1Icon }} />
+          IconIconTrashIcon IconSelectedIcon
+        <IconIconIcon/IconMenuItemIcon>
+      <IconIconIcon/IconMenuIcon>
 
-      {/* Edit User Dialog */}
-      <EditUserDialog
-        open={editDialogOpen}
-        user={selectedUser}
-        onClose={() => {
-          setEditDialogOpen(false);
-          setSelectedUser(null);
+      {/* IconIconEditIcon IconUserIcon IconDialogIcon */}
+      <IconEditUserDialogIcon
+        IconopenIcon={IconeditDialogOpenIcon}
+        IconuserIcon={IconselectedUserIcon}
+        IcononCloseIcon={() => {
+          IconsetEditDialogOpenIcon(IconfalseIcon);
+          IconsetSelectedUserIcon(IconnullIcon);
         }}
-        onSave={handleSaveUser}
+        IcononSaveIcon={IconhandleSaveUserIcon}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete user <strong>{selectedUser?.username}</strong>? This
-            action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={(e: React.MouseEvent) => () => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button
-            onClick={(e: React.MouseEvent) => () => selectedUser && handleDeleteUser(selectedUser)}
-            color="error"
-            variant="contained"
+      {/* IconIconTrashIcon IconConfirmationIcon IconDialogIcon */}
+      <IconDialogIcon IconopenIcon={IcondeleteDialogOpenIcon} IcononCloseIcon={() => IconsetDeleteDialogOpenIcon(IconfalseIcon)}>
+        <IconDialogTitleIcon>IconConfirmIcon IconIconTrashIcon<IconIconIcon/IconDialogTitleIcon>
+        <IconDialogContentIcon>
+          <IconTypographyIcon>
+            IconAreIcon IconyouIcon IconsureIcon IconyouIcon IconwantIcon IcontoIcon IcondeleteIcon IconuserIcon <IconstrongIcon>{IconselectedUserIcon?.IconusernameIcon}<IconIconIcon/IconstrongIcon>? IconThisIcon
+            IconactionIcon IconcannotIcon IconbeIcon IconundoneIcon.
+          <IconIconIcon/IconTypographyIcon>
+        <IconIconIcon/IconDialogContentIcon>
+        <IconDialogActionsIcon>
+          <IconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconsetDeleteDialogOpenIcon(IconfalseIcon)}>IconIconXIcon<IconIconIcon/IconButtonIcon>
+          <IconButtonIcon
+            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconselectedUserIcon && IconhandleDeleteUserIcon(IconselectedUserIcon)}
+            IconcolorIcon="Iconred"
+            IconvariantIcon="Iconfilled"
           >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+            IconIconTrashIcon
+          <IconIconIcon/IconButtonIcon>
+        <IconIconIcon/IconDialogActionsIcon>
+      <IconIconIcon/IconDialogIcon>
+    <IconIconIcon/IconBoxIcon>
   );
 };
 
-export default UserManagement;
+IconexportIcon IcondefaultIcon IconUserManagementIcon;

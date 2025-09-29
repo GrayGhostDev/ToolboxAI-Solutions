@@ -4,11 +4,15 @@
 ![Security](https://img.shields.io/badge/Security-Hardened-28a745?style=flat-square&logo=security&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-22-339933?style=flat-square&logo=node.js&logoColor=white)
+![React](https://img.shields.io/badge/React-19.1.0-61DAFB?style=flat-square&logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6.0.1-646CFF?style=flat-square&logo=vite&logoColor=white)
 ![Pusher](https://img.shields.io/badge/Pusher-8.4.0-00D9FF?style=flat-square&logo=pusher&logoColor=white)
 ![Mantine](https://img.shields.io/badge/Mantine-v8.3.1-339AF0?style=flat-square&logo=mantine&logoColor=white)
 
 > **🚀 Complete AI-Powered Educational Platform with Real-time Communication**
-> **✨ 2025 Update**: Pusher Channels + Mantine v8 + Docker Hub + Full Service Integration
+> **✨ 2025 Update**: React 19 + Pusher Channels + Mantine v8 + Docker Hub + Full Service Integration
+> **🎯 Latest (2025-09-28)**: React 19.1.0 migration, Vite 6, TypeScript 5.9.2, ESLint 9 flat config
 
 ## 🚀 **Quick Start**
 
@@ -16,6 +20,14 @@
 - Docker 25.x with Docker Compose v2
 - Git
 - 4GB+ RAM available for Docker
+- Node.js 22+ and npm 10+ (for local development)
+
+### **⚠️ External Drive Development Notice**
+If developing on an external drive (e.g., `/Volumes/` on macOS):
+- **Recommended**: Use Docker for all development (see Docker section below)
+- **Issue**: Native binaries (esbuild, Rollup) fail with system error -88
+- **NPM Workaround**: Use `npm install --no-bin-links --legacy-peer-deps`
+- **Vite Config**: Use `vite.config.js` instead of `.ts` to avoid transpilation
 
 ### **🎯 2025 One-Command Deployment**
 ```bash
@@ -35,18 +47,29 @@ open http://localhost:8009/docs  # API Documentation
 
 ## ✨ **2025 Platform Updates**
 
-### **🔄 Real-time Communication (Complete)**
-- **Pusher Channels**: Modern WebSocket-only transport
-- **Auto-reconnection**: Exponential backoff with jitter
-- **Token Management**: Automatic JWT refresh
-- **Multi-channel**: Support for all service integrations
+### **🔐 Authentication System (Clerk - Complete)**
+- **Clerk Auth**: Enterprise JWT-based authentication
+- **Social Login**: Google, GitHub, Discord providers
+- **MFA Support**: Two-factor authentication enabled
+- **Session Management**: Secure cookie-based sessions
+- **Role-Based Access**: Admin, Teacher, Student roles
 
-### **🎨 Modern UI Framework (Complete)**
-- **Mantine v8.3.1**: Latest component library - Migration Complete!
-- **Component Status**: 100+ components successfully migrated from Material-UI
+### **🔄 Real-time Communication (Pusher - Primary Solution)**
+- **Pusher Channels**: Primary real-time communication layer (no Socket.IO)
+- **Private Channels**: User-specific and class-based channels
+- **Presence Channels**: Real-time online user tracking
+- **Auto-reconnection**: Exponential backoff with jitter
+- **Event Streaming**: AI agent updates, content generation, notifications
+- **Frontend Integration**: 46+ components using Pusher hooks
+- **Backend Service**: Dedicated Pusher service in `services/roblox_pusher.py`
+
+### **🎨 Modern UI Framework (Complete - Sept 28, 2025)**
+- **Mantine v8.3.1**: Complete migration from Material-UI (0 MUI references remain)
+- **Component Status**: 377 files successfully migrated
+- **Icon Library**: Tabler Icons v3.x (140+ icon mappings)
 - **Design System**: Roblox-themed consistent styling throughout
-- **Accessibility**: Enhanced ARIA compliance and keyboard navigation
 - **Performance**: Reduced bundle size by ~30% compared to Material-UI
+- **Test Coverage**: All test mocks updated for Mantine
 
 ### **🐳 Docker Hub Integration (Complete)**
 - **Registry**: docker.io/thegrayghost23/toolboxai-*
@@ -54,11 +77,13 @@ open http://localhost:8009/docs  # API Documentation
 - **Security**: Vulnerability scanning enabled
 - **Multi-arch**: Support for AMD64 and ARM64
 
-### **🤖 AI Service Integration (Complete)**
+### **🤖 AI Service Integration (Complete - Sept 28, 2025)**
+- **LangChain/LangGraph**: Full observability with LangSmith tracing
+- **Agent Coordinator**: 8 specialized agents with orchestration
 - **MCP Server**: Model Context Protocol for AI coordination
-- **Agent Coordinator**: AI task orchestration and management
 - **Real-time AI**: Pusher-powered AI event streaming
 - **Educational AI**: Integrated with Roblox and content systems
+- **Monitoring**: Complete traces available in LangSmith dashboard
 
 ### **🎮 Educational Gaming (Complete)**
 - **Roblox Bridge**: Complete Studio integration
@@ -131,6 +156,50 @@ For detailed migration information, see:
 - Icon migration tables
 - Common troubleshooting tips
 
+## 🔗 **LangChain/LangGraph Integration (Sept 28, 2025)**
+
+### **Overview**
+The platform now includes complete LangChain/LangGraph integration for advanced AI agent orchestration with full observability through LangSmith.
+
+### **Key Features**
+- **🔍 Full Observability**: Every agent operation traced in LangSmith dashboard
+- **📊 Performance Monitoring**: Real-time metrics, token usage, and cost tracking
+- **🤖 8 Specialized Agents**: Content, Quiz, Script, Terrain, Review, Testing, Supervisor, Orchestrator
+- **🔄 Coordinator System**: Main, Workflow, Resource, Sync, and Error coordinators
+- **⚡ Real-time Updates**: Pusher integration for live agent progress
+- **💾 Redis Caching**: Efficient result caching on port 55007
+
+### **Configuration**
+```bash
+# Add to your .env file (get your keys from LangSmith)
+LANGCHAIN_API_KEY=your-langchain-api-key-here
+LANGCHAIN_PROJECT_ID=your-project-id-here
+LANGCHAIN_PROJECT=ToolboxAI-Solutions
+LANGCHAIN_TRACING_V2=true
+```
+
+### **Quick Start**
+```bash
+# 1. Verify configuration
+python test_langchain_simple.py
+
+# 2. Start LangGraph services
+./scripts/start_langgraph_services.sh
+
+# 3. Test agent execution
+curl -X POST http://localhost:8009/api/v1/coordinators/generate \
+  -H "Content-Type: application/json" \
+  -d '{"subject": "Math", "grade_level": 5}'
+
+# 4. View traces in LangSmith dashboard
+# https://smith.langchain.com/project/{your-project-id}
+```
+
+### **Documentation**
+- **Setup Guide**: `/docs/LANGCHAIN_CONFIGURATION.md`
+- **Integration Details**: `/docs/05-implementation/agents/coordinator-langchain-integration.md`
+- **Agent System**: `/docs/05-implementation/agent-system/README.md`
+
 ## 🔒 **Security Notice**
 
 **⚠️ NEVER commit real credentials to version control**
@@ -157,13 +226,16 @@ For detailed migration information, see:
    - Development: `.env` (never committed)
    - Production: Docker Secrets, AWS Secrets Manager, or HashiCorp Vault
 
-## 📊 **Current Status (2025-09-24)**
+## 📊 **Current Status (2025-09-28)**
 
-✅ **Docker Infrastructure Modernized**
-✅ **Backend Fully Operational** - Port 8009
-✅ **Dashboard Running** - Port 5179
+✅ **Docker Infrastructure Modernized** - Enterprise security with non-root users
+✅ **Backend Fully Operational** - Port 8009 with all services running
+✅ **Dashboard Running** - Port 5179 with Mantine UI (100% migrated)
+✅ **LangChain/LangGraph Integration** - Full observability with LangSmith
+✅ **Agent Coordinator System** - 8 specialized agents with orchestration
+✅ **Pusher Real-time** - Complete WebSocket replacement
+✅ **Security Hardened** - No exposed API keys, proper .env configuration
 ✅ **All Import Path Errors Resolved**
-✅ **Security Vulnerabilities Fixed**
 ✅ **91.8% Backend Code Reduction Complete**
 
 ## 🎯 **Overview**
@@ -188,20 +260,25 @@ ToolBoxAI is a comprehensive educational platform that combines AI-powered conte
 - **Framework**: FastAPI 0.116.1 with Application Factory Pattern
 - **Architecture**: Modular design with separation of concerns
 - **AI/ML**: LangChain 0.3.26+ (LCEL), LangGraph 0.2.65+, LangSmith
-- **Database**: PostgreSQL 16 + Supabase (dual strategy)
+- **Database**: PostgreSQL 16 (primary) + Supabase (optional storage/auth)
 - **Cache**: Redis 7
-- **Real-time**: Supabase Realtime + Pusher Channels
-- **Auth**: JWT with enhanced security
+- **Real-time**: Pusher Channels (primary) - NO WebSocket/Socket.IO
+- **Auth**: JWT with enhanced security + optional Supabase Auth
 - **Validation**: Pydantic v2 (2.9.0+)
+- **Storage**: Supabase Storage providers for multi-tenant file management
 
-**Frontend (Node.js 22)**
-- **Framework**: React 19 with concurrent features
-- **TypeScript**: 5.5.4 with strict mode
-- **Build**: Vite 5.4.10
-- **UI**: Material-UI 6.1.8 + Mantine 7.14.3
-- **State**: Redux Toolkit 2.5.0
-- **Real-time**: Supabase client + Pusher-js
-- **Database**: Supabase client with type-safe operations
+**Frontend (Node.js 22) - Updated 2025-09-28**
+- **Framework**: React 19.1.0 with concurrent features
+- **TypeScript**: 5.9.2 with strict mode
+- **Build**: Vite 6.0.1 (using vite.config.js for external drive support)
+- **Testing**: Vitest 3.2.4 with React Testing Library
+- **Linting**: ESLint 9.35.0 with flat config system
+- **UI**: Mantine 8.3.1 (migrated from Material-UI)
+- **Icons**: Tabler Icons React 3.35.0
+- **State**: Redux Toolkit 2.2.7
+- **Real-time**: Pusher-js 8.4.0 (primary, no WebSocket fallback)
+- **3D Support**: @react-three/fiber 9.3.0 (React 19 compatible)
+- **Package Management**: 692+ packages with external drive support
 
 ## 📚 **Documentation**
 
@@ -251,13 +328,27 @@ ToolBoxAI is a comprehensive educational platform that combines AI-powered conte
    npm -w apps/dashboard test
    ```
 
-### **Technical Notes**
+### **Technical Architecture Decisions**
 
-- **Configuration**: Uses Pydantic v2 and `pydantic-settings` in `toolboxai_settings/`
+#### **Real-time Communication**
+- **Primary**: Pusher Channels v8.4.0 - handles all real-time events
+- **No WebSocket/Socket.IO**: Completely migrated to Pusher
+- **Implementation**: 46+ React components using Pusher hooks
+- **Backend**: Dedicated Pusher service for event broadcasting
+
+#### **Database & Storage**
+- **Primary Database**: PostgreSQL 16 for all application data
+- **Cache Layer**: Redis 7 for sessions and caching
+- **Supabase (Optional)**:
+  - Storage buckets for file management
+  - Auth provider (when enabled)
+  - Database backup/sync (configurable)
+  - Extensive configuration in `toolboxai_settings/settings.py`
+
+#### **Configuration**
+- **Settings**: Centralized in `toolboxai_settings/` using Pydantic v2
 - **AI Agents**: LangChain 0.3.26+ LCEL (Expression Language) throughout
 - **Backend**: Factory pattern with 91.8% code reduction from monolith
-- **Database**: PostgreSQL + Redis with optional Supabase integration
-- **Real-time**: Pusher Channels (migrated from Socket.IO)
 
 ### **Compatibility**
 

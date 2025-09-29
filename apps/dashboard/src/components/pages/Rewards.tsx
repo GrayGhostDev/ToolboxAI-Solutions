@@ -1,50 +1,7 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import * as React from "react";
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardActions from '@mui/material/CardActions';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import TextField from '@mui/material/TextField';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Box from '@mui/material/Box';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import Grid from '@mui/material/Grid';
-import Avatar from '@mui/material/Avatar';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
-import Badge from '@mui/material/Badge';
-import Paper from '@mui/material/Paper';
-import InputAdornment from '@mui/material/InputAdornment';
 
 import { useState } from "react";
-import Grid2 from "@mui/material/Unstable_Grid2";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import StarIcon from "@mui/icons-material/Star";
-import DiamondIcon from "@mui/icons-material/Diamond";
-import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import LockIcon from "@mui/icons-material/Lock";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
 import { useAppSelector, useAppDispatch } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
 
@@ -93,7 +50,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`rewards-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+      {value === index && <Box style={{ py: 3 }}>{children}</Box>}
     </div>
   );
 }
@@ -120,7 +77,7 @@ export default function Rewards() {
       description: "Show off your achievements with this exclusive golden frame",
       category: "avatar",
       cost: 500,
-      icon: <EmojiEventsIcon sx={{ color: "#FFD700" }} />,
+      icon: <EmojiEventsIcon style={{ color: "#FFD700" }} />,
       rarity: "epic",
       requirements: { level: 10 },
     },
@@ -130,7 +87,7 @@ export default function Rewards() {
       description: "Unlock the sleek dark mode theme for your dashboard",
       category: "theme",
       cost: 300,
-      icon: <StarIcon sx={{ color: "#9C27B0" }} />,
+      icon: <IconStar style={{ color: "#9C27B0" }} />,
       rarity: "rare",
     },
     {
@@ -139,7 +96,7 @@ export default function Rewards() {
       description: "Earn double XP for the next hour of learning",
       category: "powerup",
       cost: 200,
-      icon: <TrendingUpIcon sx={{ color: "#4CAF50" }} />,
+      icon: <TrendingUpIcon style={{ color: "#4CAF50" }} />,
       rarity: "common",
       stock: 10,
       maxRedeems: 3,
@@ -150,7 +107,7 @@ export default function Rewards() {
       description: "The ultimate badge for top performers",
       category: "avatar",
       cost: 1000,
-      icon: <DiamondIcon sx={{ color: "#00BCD4" }} />,
+      icon: <DiamondIcon style={{ color: "#00BCD4" }} />,
       rarity: "legendary",
       requirements: { level: 20, badges: ["gold_star", "perfect_score"] },
     },
@@ -160,7 +117,7 @@ export default function Rewards() {
       description: "Official certificate recognizing your outstanding performance",
       category: "certificate",
       cost: 750,
-      icon: <CardGiftcardIcon sx={{ color: "#FF9800" }} />,
+      icon: <CardGiftcardIcon style={{ color: "#FF9800" }} />,
       rarity: "epic",
       requirements: { level: 15 },
     },
@@ -170,7 +127,7 @@ export default function Rewards() {
       description: "Skip one homework assignment without penalty",
       category: "privilege",
       cost: 400,
-      icon: <LocalOfferIcon sx={{ color: "#E91E63" }} />,
+      icon: <LocalOfferIcon style={{ color: "#E91E63" }} />,
       rarity: "rare",
       stock: 5,
       maxRedeems: 1,
@@ -181,7 +138,7 @@ export default function Rewards() {
       description: "Choose a custom color for your username in leaderboards",
       category: "theme",
       cost: 250,
-      icon: <StarIcon sx={{ color: "#673AB7" }} />,
+      icon: <IconStar style={{ color: "#673AB7" }} />,
       rarity: "common",
     },
     {
@@ -190,7 +147,7 @@ export default function Rewards() {
       description: "Exclusive school-branded merchandise",
       category: "physical",
       cost: 1500,
-      icon: <CardGiftcardIcon sx={{ color: "#795548" }} />,
+      icon: <CardGiftcardIcon style={{ color: "#795548" }} />,
       rarity: "legendary",
       stock: 3,
       requirements: { level: 25 },
@@ -248,7 +205,7 @@ export default function Rewards() {
       case "avatar":
         return <EmojiEventsIcon />;
       case "theme":
-        return <StarIcon />;
+        return <IconStar />;
       case "powerup":
         return <TrendingUpIcon />;
       case "certificate":
@@ -258,7 +215,7 @@ export default function Rewards() {
       case "privilege":
         return <LocalOfferIcon />;
       default:
-        return <StarIcon />;
+        return <IconStar />;
     }
   };
 
@@ -343,26 +300,26 @@ export default function Rewards() {
               gap={2}
             >
               <Box>
-                <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+                <Typography order={5} style={{ fontWeight: 600, mb: 1 }}>
                   Rewards Store
                 </Typography>
                 <Stack direction="row" spacing={2} alignItems="center">
                   <Chip
-                    icon={<StarIcon />}
+                    icon={<IconStar />}
                     label={`${xp.toLocaleString()} XP Available`}
-                    color="primary"
+                    color="blue"
                     variant="filled"
                   />
                   <Chip
                     icon={<TrendingUpIcon />}
                     label={`Level ${level}`}
-                    color="secondary"
-                    variant="outlined"
+                    color="gray"
+                    variant="outline"
                   />
                   <Chip
                     icon={<EmojiEventsIcon />}
                     label={`${badges.length} Badges`}
-                    variant="outlined"
+                    variant="outline"
                   />
                 </Stack>
               </Box>
@@ -370,16 +327,16 @@ export default function Rewards() {
               <Stack direction="row" spacing={2}>
                 {role === "teacher" && (
                   <Button
-                    variant="outlined"
-                    startIcon={<AddIcon />}
+                    variant="outline"
+                    startIcon={<IconPlus />}
                     onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
                   >
                     Create Reward
                   </Button>
                 )}
-                <Badge badgeContent={cart.length} color="primary">
+                <Badge badgeContent={cart.length} color="blue">
                   <Button
-                    variant="contained"
+                    variant="filled"
                     startIcon={<ShoppingCartIcon />}
                     disabled={cart.length === 0}
                     onClick={(e: React.MouseEvent) => () => {
@@ -401,7 +358,7 @@ export default function Rewards() {
       <Grid2 xs={12}>
         <Card>
           <CardContent>
-            <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Box style={{ borderBottom: 1, borderColor: "divider" }}>
               <Tabs value={activeTab} onChange={handleTabChange}>
                 <Tab label="Available Rewards" />
                 <Tab label="My Rewards" />
@@ -413,22 +370,22 @@ export default function Rewards() {
             {/* Available Rewards Tab */}
             <TabPanel value={activeTab} index={0}>
               {/* Filters */}
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3 }}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} style={{ mb: 3 }}>
                 <TextField
                   size="small"
                   placeholder="Search rewards..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  sx={{ minWidth: 200 }}
+                  style={{ minWidth: 200 }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <SearchIcon />
+                        <IconSearch />
                       </InputAdornment>
                     ),
                   }}
                 />
-                <FormControl size="small" sx={{ minWidth: 150 }}>
+                <FormControl size="small" style={{ minWidth: 150 }}>
                   <InputLabel>Category</InputLabel>
                   <Select
                     value={selectedCategory}
@@ -451,7 +408,7 @@ export default function Rewards() {
                 {filteredRewards.map((reward) => (
                   <Grid item xs={12} sm={6} md={4} lg={3} key={reward.id}>
                     <Card
-                      sx={{
+                      style={{
                         height: "100%",
                         display: "flex",
                         flexDirection: "column",
@@ -464,7 +421,7 @@ export default function Rewards() {
                       <Chip
                         label={reward.rarity.toUpperCase()}
                         size="small"
-                        sx={{
+                        style={{
                           position: "absolute",
                           top: 8,
                           right: 8,
@@ -474,25 +431,25 @@ export default function Rewards() {
                         }}
                       />
                       
-                      <CardContent sx={{ flexGrow: 1 }}>
+                      <CardContent style={{ flexGrow: 1 }}>
                         <Stack alignItems="center" spacing={2}>
-                          <Box sx={{ fontSize: 48 }}>{reward.icon}</Box>
-                          <Typography variant="h6" textAlign="center">
+                          <Box style={{ fontSize: 48 }}>{reward.icon}</Box>
+                          <Typography order={6} textAlign="center">
                             {reward.name}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary" textAlign="center">
+                          <Typography size="sm" color="text.secondary" textAlign="center">
                             {reward.description}
                           </Typography>
                           
                           {/* Requirements */}
                           {reward.requirements && (
-                            <Stack spacing={0.5} sx={{ width: "100%" }}>
+                            <Stack spacing={0.5} style={{ width: "100%" }}>
                               {reward.requirements.level && (
                                 <Chip
                                   label={`Level ${reward.requirements.level} Required`}
                                   size="small"
                                   color={level >= reward.requirements.level ? "success" : "default"}
-                                  icon={level >= reward.requirements.level ? <CheckCircleIcon /> : <LockIcon />}
+                                  icon={level >= reward.requirements.level ? <IconCircleCheck /> : <LockIcon />}
                                 />
                               )}
                             </Stack>
@@ -509,11 +466,11 @@ export default function Rewards() {
                         </Stack>
                       </CardContent>
                       
-                      <CardActions sx={{ justifyContent: "space-between", p: 2 }}>
+                      <CardActions style={{ justifyContent: "space-between", p: 2 }}>
                         <Chip
-                          icon={<StarIcon />}
+                          icon={<IconStar />}
                           label={`${reward.cost} XP`}
-                          color="primary"
+                          color="blue"
                         />
                         <Stack direction="row" spacing={1}>
                           <IconButton
@@ -521,11 +478,11 @@ export default function Rewards() {
                             onClick={(e: React.MouseEvent) => () => addToCart(reward)}
                             disabled={!canRedeem(reward)}
                           >
-                            <AddIcon />
+                            <IconPlus />
                           </IconButton>
                           <Button
                             size="small"
-                            variant="contained"
+                            variant="filled"
                             disabled={!canRedeem(reward)}
                             onClick={(e: React.MouseEvent) => () => handleRedeem(reward)}
                           >
@@ -541,7 +498,7 @@ export default function Rewards() {
 
             {/* My Rewards Tab */}
             <TabPanel value={activeTab} index={1}>
-              <Alert severity="info" sx={{ mb: 2 }}>
+              <Alert severity="info" style={{ mb: 2 }}>
                 <AlertTitle>Your Redeemed Rewards</AlertTitle>
                 These are the rewards you've already redeemed. Some may still be active!
               </Alert>
@@ -559,19 +516,19 @@ export default function Rewards() {
                           <CardContent>
                             <Stack spacing={2}>
                               <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                <Box sx={{ fontSize: 32 }}>{reward.icon}</Box>
+                                <Box style={{ fontSize: 32 }}>{reward.icon}</Box>
                                 <Chip
                                   label={item.status}
                                   size="small"
                                   color={item.status === "delivered" ? "success" : "default"}
                                 />
                               </Stack>
-                              <Typography variant="h6">{reward.name}</Typography>
-                              <Typography variant="body2" color="text.secondary">
+                              <Typography order={6}>{reward.name}</Typography>
+                              <Typography size="sm" color="text.secondary">
                                 Redeemed: {new Date(item.redeemedAt).toLocaleDateString()}
                               </Typography>
                               {reward.category === "powerup" && (
-                                <Button variant="contained" size="small">
+                                <Button variant="filled" size="small">
                                   Activate
                                 </Button>
                               )}
@@ -617,34 +574,34 @@ export default function Rewards() {
             {/* Manage Tab (Teachers Only) */}
             {role === "teacher" && (
               <TabPanel value={activeTab} index={3}>
-                <Alert severity="info" sx={{ mb: 2 }}>
+                <Alert severity="info" style={{ mb: 2 }}>
                   <AlertTitle>Manage Rewards</AlertTitle>
                   Create custom rewards for your students and manage existing ones.
                 </Alert>
                 
                 <Stack spacing={2}>
                   <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
+                    variant="filled"
+                    startIcon={<IconPlus />}
                     onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
                   >
                     Create New Reward
                   </Button>
                   
-                  <Typography variant="h6" sx={{ mt: 2 }}>
+                  <Typography order={6} style={{ mt: 2 }}>
                     Active Rewards
                   </Typography>
                   
                   <Grid container spacing={2}>
                     {availableRewards.map((reward) => (
                       <Grid item xs={12} key={reward.id}>
-                        <Paper sx={{ p: 2 }}>
+                        <Paper style={{ p: 2 }}>
                           <Stack direction="row" justifyContent="space-between" alignItems="center">
                             <Stack direction="row" spacing={2} alignItems="center">
                               {reward.icon}
                               <Box>
                                 <Typography variant="subtitle1">{reward.name}</Typography>
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography size="sm" color="text.secondary">
                                   {reward.cost} XP • {reward.rarity} • {reward.stock ? `${reward.stock} in stock` : "Unlimited"}
                                 </Typography>
                               </Box>
@@ -661,7 +618,7 @@ export default function Rewards() {
                               </Button>
                           <Button 
                                 size="small" 
-                                color="error"
+                                color="red"
                                 onClick={(e: React.MouseEvent) => handleRemoveReward}
                               >
                                 Remove
@@ -691,7 +648,7 @@ export default function Rewards() {
               <Alert severity="info">
                 This will cost {selectedReward.cost} XP. You currently have {xp} XP.
               </Alert>
-              <Typography variant="body2" color="text.secondary">
+              <Typography size="sm" color="text.secondary">
                 After redemption: {xp - selectedReward.cost} XP remaining
               </Typography>
             </Stack>
@@ -699,7 +656,7 @@ export default function Rewards() {
         </DialogContent>
         <DialogActions>
           <Button onClick={(e: React.MouseEvent) => () => setConfirmDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={(e: React.MouseEvent) => confirmRedeem}>
+          <Button variant="filled" onClick={(e: React.MouseEvent) => confirmRedeem}>
             Confirm Redemption
           </Button>
         </DialogActions>
@@ -709,7 +666,7 @@ export default function Rewards() {
       <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Create New Reward</DialogTitle>
         <DialogContent>
-          <Stack spacing={2} sx={{ mt: 2 }}>
+          <Stack spacing={2} style={{ mt: 2 }}>
             <TextField fullWidth label="Reward Name" />
             <TextField fullWidth label="Description" multiline rows={3} />
             <FormControl fullWidth>
@@ -738,7 +695,7 @@ export default function Rewards() {
         </DialogContent>
         <DialogActions>
           <Button onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={() => {
+          <Button variant="filled" onClick={() => {
             dispatch(addNotification({
               type: "success",
               message: "Reward created successfully!",

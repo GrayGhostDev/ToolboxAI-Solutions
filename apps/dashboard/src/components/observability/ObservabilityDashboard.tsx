@@ -1,3 +1,4 @@
+import { Box, Button, Text, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 /**
  * Observability Dashboard Component
  *
@@ -6,61 +7,33 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  Grid,
-  Paper,
-  Typography,
-  Box,
-  Card,
-  CardContent,
-  Tabs,
-  Tab,
-  Alert,
-  AlertTitle,
-  Chip,
-  LinearProgress,
-  IconButton,
-  Tooltip,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Button,
-  Drawer,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
-  Badge,
-  Switch,
-  FormControlLabel
-} from '@mui/material';
 import { observabilityAPI } from '../../services/observability';
 import {
-  Timeline,
-  Speed,
-  Error,
-  Warning,
-  CheckCircle,
-  Refresh,
-  FilterList,
-  Search,
-  ExpandMore,
-  ExpandLess,
-  Storage,
-  Memory,
-  NetworkCheck,
-  CloudQueue,
-  BugReport,
-  TrendingUp,
-  TrendingDown,
-  Notifications,
-  Assessment,
-  Code,
-  Hub
-} from '@mui/icons-material';
+  IconHome, IconUser, IconSettings, IconLogout, IconChevronDown,
+  IconChevronUp, IconChevronLeft, IconChevronRight, IconMenu,
+  IconX, IconCheck, IconPlus, IconMinus, IconEdit, IconTrash,
+  IconSearch, IconFilter, IconDownload, IconUpload, IconEye,
+  IconEyeOff, IconBell, IconMessage, IconStar, IconHeart,
+  IconShare, IconRefresh, IconLogin, IconSchool, IconBook,
+  IconChartBar, IconPalette, IconMoon, IconSun, IconPlayerPlay,
+  IconPlayerPause, IconPlayerStop, IconVolume, IconVolumeOff,
+  IconInfoCircle, IconAlertTriangle, IconCircleX, IconCircleCheck,
+  IconArrowLeft, IconArrowRight, IconSend, IconDeviceFloppy,
+  IconPrinter, IconHelp, IconHelpCircle, IconLock, IconLockOpen,
+  IconMail, IconPhone, IconMapPin, IconMap, IconCalendar, IconClock,
+  IconWifi, IconWifiOff, IconBluetooth, IconBattery, IconCamera,
+  IconMicrophone, IconMicrophoneOff, IconVideo, IconVideoOff,
+  IconPhoto, IconPaperclip, IconCloud, IconCloudUpload,
+  IconCloudDownload, IconFolder, IconFolderOpen, IconFolderPlus,
+  IconFile, IconFileText, IconClipboard, IconBan, IconFlag,
+  IconBookmark, IconShoppingCart, IconUserCircle, IconMoodSmile,
+  IconMoodSad, IconThumbUp, IconThumbDown, IconMessages,
+  IconMessageQuestion, IconSpeakerphone, IconBellRinging,
+  IconBellOff, IconCalendarEvent, IconCalendarStats, IconAlarm,
+  IconAlarmOff, IconHistory, IconRefreshOff, IconRefreshAlert,
+  IconDashboard, IconUsers, IconDotsVertical, IconDots,
+  IconReportAnalytics
+} from '@tabler/icons-react';
 import {
   LineChart,
   Line,
@@ -86,6 +59,7 @@ import {
   Sankey
 } from 'recharts';
 import { format, subMinutes, isAfter } from 'date-fns';
+import { IconAlertTriangle, IconBell, IconBugReport, IconChevronDown, IconChevronUp, IconCircleCheck, IconCircleX, IconCloudQueue, IconCode, IconFilter, IconHub, IconMemory, IconNetworkCheck, IconRefresh, IconReportAnalytics, IconSearch, IconSpeed, IconStorage, IconTimeline, IconTrendingDown, IconTrendingUp } from '@tabler/icons-react';
 
 // Types
 interface MetricData {
@@ -145,7 +119,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
       aria-labelledby={`observability-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === index && <Box style={{ p: 3 }}>{children}</Box>}
     </div>
   );
 };
@@ -159,29 +133,29 @@ const MetricCard: React.FC<{
   icon?: React.ReactElement;
 }> = ({ title, value, unit, trend, color = 'primary', icon }) => {
   return (
-    <Card sx={{ height: '100%' }}>
+    <Card style={{ height: '100%' }}>
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box>
-            <Typography color="textSecondary" gutterBottom variant="body2">
+            <Text color="textSecondary" gutterBottom size="sm">
               {title}
-            </Typography>
-            <Typography variant="h4" component="div" color={color}>
+            </Text>
+            <Text order={4} component="div" color={color}>
               {value}
               {unit && (
-                <Typography component="span" variant="body1" color="textSecondary">
+                <Text component="span" size="md" color="textSecondary">
                   {' ' + unit}
-                </Typography>
+                </Text>
               )}
-            </Typography>
+            </Text>
           </Box>
           <Box display="flex" flexDirection="column" alignItems="center">
             {icon && <Box mb={1}>{icon}</Box>}
             {trend && (
               <Box>
-                {trend === 'up' && <TrendingUp color="success" />}
-                {trend === 'down' && <TrendingDown color="error" />}
-                {trend === 'stable' && <TrendingUp color="action" />}
+                {trend === 'up' && <IconTrendingUp color="green" />}
+                {trend === 'down' && <IconTrendingDown color="red" />}
+                {trend === 'stable' && <IconTrendingUp color="action" />}
               </Box>
             )}
           </Box>
@@ -208,29 +182,29 @@ const TraceTimeline: React.FC<{ traces: TraceData[] }> = ({ traces }) => {
 
   const renderTrace = (trace: TraceData, depth = 0) => (
     <Box key={trace.spanId} ml={depth * 4}>
-      <Paper sx={{ p: 2, mb: 1, backgroundColor: trace.status === 'ERROR' ? 'error.light' : 'background.paper' }}>
+      <Paper style={{ p: 2, mb: 1, backgroundColor: trace.status === 'ERROR' ? 'error.light' : 'background.paper' }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box display="flex" alignItems="center">
             {trace.children && trace.children.length > 0 && (
               <IconButton size="small" onClick={() => toggleExpand(trace.spanId)}>
-                {expanded.has(trace.spanId) ? <ExpandLess /> : <ExpandMore />}
+                {expanded.has(trace.spanId) ? <IconChevronUp /> : <IconChevronDown />}
               </IconButton>
             )}
-            <Typography variant="body2" fontFamily="monospace">
+            <Text size="sm" fontFamily="monospace">
               {trace.operationName}
-            </Typography>
+            </Text>
             <Chip
               label={trace.serviceName}
               size="small"
-              sx={{ ml: 1 }}
+              style={{ ml: 1 }}
               color={trace.status === 'ERROR' ? 'error' : 'primary'}
             />
           </Box>
           <Box display="flex" alignItems="center" gap={1}>
-            <Typography variant="caption" color="textSecondary">
+            <Text variant="caption" color="textSecondary">
               {trace.duration}ms
-            </Typography>
-            {trace.status === 'ERROR' && <Error color="error" fontSize="small" />}
+            </Text>
+            {trace.status === 'ERROR' && <IconCircleX color="red" fontSize="small" />}
           </Box>
         </Box>
         {expanded.has(trace.spanId) && trace.children && (
@@ -442,7 +416,7 @@ const ObservabilityDashboard: React.FC = () => {
 
     } catch (error: any) {
       console.error('Failed to start streaming:', error);
-      setStreamingError((error instanceof Error) ? (error as Error).message : 'Failed to start streaming');
+      setStreamingError((error instanceof IconCircleX) ? (error as IconCircleX).message : 'Failed to start streaming');
       setIsStreaming(false);
     }
   }, []);
@@ -507,14 +481,14 @@ const ObservabilityDashboard: React.FC = () => {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
+    <Box style={{ flexGrow: 1, p: 3 }}>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" component="h1">
+        <Text order={4} component="h1">
           Observability Dashboard
-        </Typography>
+        </Text>
         <Box display="flex" gap={2} alignItems="center">
-          <FormControl size="small" sx={{ minWidth: 120 }}>
+          <FormControl size="small" style={{ minWidth: 120 }}>
             <InputLabel>Time Range</InputLabel>
             <Select
               value={timeRange}
@@ -549,103 +523,103 @@ const ObservabilityDashboard: React.FC = () => {
                   }
                 }}
                 disabled={!autoRefresh}
-                color="secondary"
+                color="gray"
               />
             }
             label="Real-time Stream"
           />
           <IconButton onClick={fetchMetrics} disabled={loading}>
-            <Refresh />
+            <IconRefresh />
           </IconButton>
         </Box>
       </Box>
 
       {/* Loading indicator */}
-      {loading && <LinearProgress sx={{ mb: 2 }} />}
+      {loading && <LinearProgress style={{ mb: 2 }} />}
 
       {/* Streaming error alert */}
       {streamingError && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setStreamingError(null)}>
-          <AlertTitle>Streaming Error</AlertTitle>
+        <Alert severity="error" style={{ mb: 2 }} onClose={() => setStreamingError(null)}>
+          <AlertTitle>Streaming IconCircleX</AlertTitle>
           {streamingError}
         </Alert>
       )}
 
       {/* Alert banner for critical issues */}
       {summaryMetrics.activeAlerts > 0 && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" style={{ mb: 2 }}>
           <AlertTitle>Critical Alerts</AlertTitle>
           {summaryMetrics.activeAlerts} critical alerts require immediate attention
         </Alert>
       )}
 
       {/* Summary Cards */}
-      <Grid container spacing={3} mb={3}>
-        <Grid item xs={12} sm={6} md={2}>
+      <SimpleGrid spacing={3} mb={3}>
+        <Box xs={12} sm={6} md={2}>
           <MetricCard
             title="Avg Latency"
             value={summaryMetrics.avgLatency}
             unit="ms"
             trend={summaryMetrics.avgLatency > 200 ? 'up' : 'stable'}
             color={summaryMetrics.avgLatency > 500 ? 'error' : 'primary'}
-            icon={<Speed />}
+            icon={<IconSpeed />}
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={2}>
+        </SimpleGrid>
+        <Box xs={12} sm={6} md={2}>
           <MetricCard
             title="Throughput"
             value={summaryMetrics.totalRequests}
             unit="req/5m"
             trend="up"
-            color="success"
-            icon={<Timeline />}
+            color="green"
+            icon={<IconTimeline />}
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={2}>
+        </SimpleGrid>
+        <Box xs={12} sm={6} md={2}>
           <MetricCard
-            title="Error Rate"
+            title="IconCircleX Rate"
             value={summaryMetrics.errorRate}
             unit="%"
             trend={parseFloat(summaryMetrics.errorRate as string) > 1 ? 'up' : 'stable'}
             color={parseFloat(summaryMetrics.errorRate as string) > 5 ? 'error' : 'warning'}
-            icon={<Error />}
+            icon={<IconCircleX />}
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={2}>
+        </SimpleGrid>
+        <Box xs={12} sm={6} md={2}>
           <MetricCard
             title="Service Health"
             value={`${summaryMetrics.healthyServices}/${summaryMetrics.totalServices}`}
             trend="stable"
             color={summaryMetrics.healthyServices === summaryMetrics.totalServices ? 'success' : 'warning'}
-            icon={<CheckCircle />}
+            icon={<IconCircleCheck />}
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={2}>
+        </SimpleGrid>
+        <Box xs={12} sm={6} md={2}>
           <MetricCard
             title="Cache Hit Rate"
             value={cacheHitRate}
             unit="%"
             trend={cacheHitRate > 80 ? 'up' : 'down'}
             color={cacheHitRate > 80 ? 'success' : 'warning'}
-            icon={<Storage />}
+            icon={<IconStorage />}
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={2}>
+        </SimpleGrid>
+        <Box xs={12} sm={6} md={2}>
           <MetricCard
             title="Active Alerts"
             value={summaryMetrics.activeAlerts}
             trend={summaryMetrics.activeAlerts > 0 ? 'up' : 'stable'}
             color={summaryMetrics.activeAlerts > 0 ? 'error' : 'success'}
-            icon={<Notifications />}
+            icon={<IconBell />}
           />
-        </Grid>
-      </Grid>
+        </SimpleGrid>
+      </SimpleGrid>
 
       {/* Streaming Status Indicator */}
       {isStreaming && (
         <Box display="flex" alignItems="center" gap={1} mb={2}>
           <Box
-            sx={{
+            style={{
               width: 8,
               height: 8,
               borderRadius: '50%',
@@ -653,36 +627,36 @@ const ObservabilityDashboard: React.FC = () => {
               animation: 'pulse 2s infinite'
             }}
           />
-          <Typography variant="body2" color="success.main">
+          <Text size="sm" color="success.main">
             Real-time streaming active
-          </Typography>
+          </Text>
         </Box>
       )}
 
       {/* Main Content Tabs */}
-      <Paper sx={{ mb: 3 }}>
+      <Paper style={{ mb: 3 }}>
         <Tabs
           value={tabValue}
           onChange={(_, newValue) => setTabValue(newValue)}
           indicatorColor="primary"
           textColor="primary"
         >
-          <Tab label="Metrics" icon={<Assessment />} iconPosition="start" />
-          <Tab label="Traces" icon={<Timeline />} iconPosition="start" />
-          <Tab label="Load Balancing" icon={<Hub />} iconPosition="start" />
-          <Tab label="Anomalies" icon={<BugReport />} iconPosition="start" />
-          <Tab label="System Health" icon={<NetworkCheck />} iconPosition="start" />
+          <Tab label="Metrics" icon={<IconReportAnalytics />} iconPosition="start" />
+          <Tab label="Traces" icon={<IconTimeline />} iconPosition="start" />
+          <Tab label="Load Balancing" icon={<IconHub />} iconPosition="start" />
+          <Tab label="Anomalies" icon={<IconBugReport />} iconPosition="start" />
+          <Tab label="System Health" icon={<IconNetworkCheck />} iconPosition="start" />
         </Tabs>
 
         {/* Metrics Tab */}
         <TabPanel value={tabValue} index={0}>
-          <Grid container spacing={3}>
+          <SimpleGrid spacing={3}>
             {/* Latency Chart */}
-            <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
+            <Box xs={12} md={6}>
+              <Paper style={{ p: 2 }}>
+                <Text order={6} gutterBottom>
                   Response Latency
-                </Typography>
+                </Text>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={latencyData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -703,14 +677,14 @@ const ObservabilityDashboard: React.FC = () => {
                   </LineChart>
                 </ResponsiveContainer>
               </Paper>
-            </Grid>
+            </SimpleGrid>
 
             {/* Throughput Chart */}
-            <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
+            <Box xs={12} md={6}>
+              <Paper style={{ p: 2 }}>
+                <Text order={6} gutterBottom>
                   Request Throughput
-                </Typography>
+                </Text>
                 <ResponsiveContainer width="100%" height={300}>
                   <AreaChart data={throughputData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -731,14 +705,14 @@ const ObservabilityDashboard: React.FC = () => {
                   </AreaChart>
                 </ResponsiveContainer>
               </Paper>
-            </Grid>
+            </SimpleGrid>
 
-            {/* Error Rate Chart */}
-            <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  Error Rate
-                </Typography>
+            {/* IconCircleX Rate Chart */}
+            <Box xs={12} md={6}>
+              <Paper style={{ p: 2 }}>
+                <Text order={6} gutterBottom>
+                  IconCircleX Rate
+                </Text>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={errorRateData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -753,20 +727,20 @@ const ObservabilityDashboard: React.FC = () => {
                       type="monotone"
                       dataKey="value"
                       stroke="#ff7300"
-                      name="Error Rate (%)"
+                      name="IconCircleX Rate (%)"
                       strokeWidth={2}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </Paper>
-            </Grid>
+            </SimpleGrid>
 
             {/* System Metrics */}
-            <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
+            <Box xs={12} md={6}>
+              <Paper style={{ p: 2 }}>
+                <Text order={6} gutterBottom>
                   System Resources
-                </Typography>
+                </Text>
                 <ResponsiveContainer width="100%" height={300}>
                   <RadarChart data={[
                     { metric: 'CPU', value: systemMetrics.cpu?.[0]?.value || 0 },
@@ -788,36 +762,36 @@ const ObservabilityDashboard: React.FC = () => {
                   </RadarChart>
                 </ResponsiveContainer>
               </Paper>
-            </Grid>
-          </Grid>
+            </SimpleGrid>
+          </SimpleGrid>
         </TabPanel>
 
         {/* Traces Tab */}
         <TabPanel value={tabValue} index={1}>
           <Box>
-            <Typography variant="h6" gutterBottom>
+            <Text order={6} gutterBottom>
               Recent Traces
-            </Typography>
+            </Text>
             <TraceTimeline traces={traces} />
           </Box>
         </TabPanel>
 
         {/* Load Balancing Tab */}
         <TabPanel value={tabValue} index={2}>
-          <Grid container spacing={3}>
+          <SimpleGrid spacing={3}>
             {/* Circuit Breakers */}
-            <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
+            <Box xs={12} md={6}>
+              <Paper style={{ p: 2 }}>
+                <Text order={6} gutterBottom>
                   Circuit Breaker States
-                </Typography>
+                </Text>
                 <List>
                   {Object.entries(circuitBreakerStates).map(([name, state]) => (
                     <ListItem key={name}>
                       <ListItemIcon>
-                        {state === 'OPEN' && <Error color="error" />}
-                        {state === 'HALF_OPEN' && <Warning color="warning" />}
-                        {state === 'CLOSED' && <CheckCircle color="success" />}
+                        {state === 'OPEN' && <IconCircleX color="red" />}
+                        {state === 'HALF_OPEN' && <IconAlertTriangle color="yellow" />}
+                        {state === 'CLOSED' && <IconCircleCheck color="green" />}
                       </ListItemIcon>
                       <ListItemText
                         primary={name}
@@ -827,14 +801,14 @@ const ObservabilityDashboard: React.FC = () => {
                   ))}
                 </List>
               </Paper>
-            </Grid>
+            </SimpleGrid>
 
             {/* Rate Limiting */}
-            <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
+            <Box xs={12} md={6}>
+              <Paper style={{ p: 2 }}>
+                <Text order={6} gutterBottom>
                   Rate Limiting Metrics
-                </Typography>
+                </Text>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={Object.entries(rateLimitMetrics).map(([endpoint, count]) => ({
                     endpoint,
@@ -849,51 +823,51 @@ const ObservabilityDashboard: React.FC = () => {
                   </BarChart>
                 </ResponsiveContainer>
               </Paper>
-            </Grid>
+            </SimpleGrid>
 
             {/* Database Replicas */}
-            <Grid item xs={12}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
+            <Box xs={12}>
+              <Paper style={{ p: 2 }}>
+                <Text order={6} gutterBottom>
                   Database Replica Health
-                </Typography>
-                <Grid container spacing={2}>
+                </Text>
+                <SimpleGrid spacing={2}>
                   {Object.entries(replicaHealth).map(([replica, healthy]) => (
-                    <Grid item xs={12} sm={6} md={3} key={replica}>
-                      <Card sx={{ backgroundColor: healthy ? 'success.light' : 'error.light' }}>
+                    <Box xs={12} sm={6} md={3} key={replica}>
+                      <Card style={{ backgroundColor: healthy ? 'success.light' : 'error.light' }}>
                         <CardContent>
-                          <Typography variant="body2" color="textSecondary">
+                          <Text size="sm" color="textSecondary">
                             {replica}
-                          </Typography>
+                          </Text>
                           <Box display="flex" alignItems="center" gap={1}>
                             {healthy ? (
-                              <CheckCircle color="success" />
+                              <IconCircleCheck color="green" />
                             ) : (
-                              <Error color="error" />
+                              <IconCircleX color="red" />
                             )}
-                            <Typography variant="h6">
+                            <Text order={6}>
                               {healthy ? 'Healthy' : 'Unhealthy'}
-                            </Typography>
+                            </Text>
                           </Box>
                         </CardContent>
                       </Card>
-                    </Grid>
+                    </SimpleGrid>
                   ))}
-                </Grid>
+                </SimpleGrid>
               </Paper>
-            </Grid>
-          </Grid>
+            </SimpleGrid>
+          </SimpleGrid>
         </TabPanel>
 
         {/* Anomalies Tab */}
         <TabPanel value={tabValue} index={3}>
           <Box>
-            <Typography variant="h6" gutterBottom>
+            <Text order={6} gutterBottom>
               Detected Anomalies
-            </Typography>
-            <Grid container spacing={2}>
+            </Text>
+            <SimpleGrid spacing={2}>
               {anomalies.map((anomaly) => (
-                <Grid item xs={12} key={anomaly.id}>
+                <Box xs={12} key={anomaly.id}>
                   <Alert
                     severity={
                       anomaly.severity === 'critical' ? 'error' :
@@ -903,27 +877,27 @@ const ObservabilityDashboard: React.FC = () => {
                   >
                     <AlertTitle>{anomaly.metric}</AlertTitle>
                     {anomaly.message} - Value: {anomaly.value}, Expected: {anomaly.expected}
-                    <Typography variant="caption" display="block" mt={1}>
+                    <Text variant="caption" display="block" mt={1}>
                       {format(new Date(anomaly.timestamp), 'PPpp')}
-                    </Typography>
+                    </Text>
                   </Alert>
-                </Grid>
+                </SimpleGrid>
               ))}
-            </Grid>
+            </SimpleGrid>
           </Box>
         </TabPanel>
 
         {/* System Health Tab */}
         <TabPanel value={tabValue} index={4}>
-          <Grid container spacing={3}>
+          <SimpleGrid spacing={3}>
             {systemHealth.map((service) => (
-              <Grid item xs={12} sm={6} md={4} key={service.service}>
+              <Box xs={12} sm={6} md={4} key={service.service}>
                 <Card>
                   <CardContent>
                     <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                      <Typography variant="h6">
+                      <Text order={6}>
                         {service.service}
-                      </Typography>
+                      </Text>
                       <Chip
                         label={service.status}
                         color={
@@ -933,56 +907,56 @@ const ObservabilityDashboard: React.FC = () => {
                         }
                       />
                     </Box>
-                    <Grid container spacing={1}>
-                      <Grid item xs={6}>
-                        <Typography variant="body2" color="textSecondary">
+                    <SimpleGrid spacing={1}>
+                      <Box xs={6}>
+                        <Text size="sm" color="textSecondary">
                           CPU
-                        </Typography>
+                        </Text>
                         <LinearProgress
                           variant="determinate"
                           value={service.metrics.cpu}
                           color={service.metrics.cpu > 80 ? 'error' : 'primary'}
                         />
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Typography variant="body2" color="textSecondary">
-                          Memory
-                        </Typography>
+                      </SimpleGrid>
+                      <Box xs={6}>
+                        <Text size="sm" color="textSecondary">
+                          IconMemory
+                        </Text>
                         <LinearProgress
                           variant="determinate"
                           value={service.metrics.memory}
                           color={service.metrics.memory > 80 ? 'error' : 'primary'}
                         />
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Typography variant="body2" color="textSecondary">
+                      </SimpleGrid>
+                      <Box xs={6}>
+                        <Text size="sm" color="textSecondary">
                           Disk
-                        </Typography>
+                        </Text>
                         <LinearProgress
                           variant="determinate"
                           value={service.metrics.disk}
                           color={service.metrics.disk > 80 ? 'error' : 'primary'}
                         />
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Typography variant="body2" color="textSecondary">
+                      </SimpleGrid>
+                      <Box xs={6}>
+                        <Text size="sm" color="textSecondary">
                           Network
-                        </Typography>
+                        </Text>
                         <LinearProgress
                           variant="determinate"
                           value={service.metrics.network}
                           color={service.metrics.network > 80 ? 'error' : 'primary'}
                         />
-                      </Grid>
-                    </Grid>
-                    <Typography variant="caption" color="textSecondary" display="block" mt={2}>
+                      </SimpleGrid>
+                    </SimpleGrid>
+                    <Text variant="caption" color="textSecondary" display="block" mt={2}>
                       Uptime: {Math.floor(service.uptime / 3600)}h {Math.floor((service.uptime % 3600) / 60)}m
-                    </Typography>
+                    </Text>
                   </CardContent>
                 </Card>
-              </Grid>
+              </SimpleGrid>
             ))}
-          </Grid>
+          </SimpleGrid>
         </TabPanel>
       </Paper>
     </Box>

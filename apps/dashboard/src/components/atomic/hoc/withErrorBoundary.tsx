@@ -41,17 +41,17 @@ const DefaultErrorFallback: React.FunctionComponent<ErrorBoundaryFallbackProps> 
     borderColor="error.main"
     textAlign="center"
   >
-    <AtomicText variant="h5" color="error" weight="bold">
+    <AtomicText order={5} color="red" weight="bold">
       Something went wrong
     </AtomicText>
 
-    <AtomicText variant="body1" color="text.secondary" mt={2}>
+    <AtomicText size="md" color="text.secondary" mt={2}>
       An unexpected error occurred. Please try again.
     </AtomicText>
 
     {process.env.NODE_ENV === 'development' && (
       <AtomicBox mt={3} p={3} bg="rgba(0,0,0,0.05)" borderRadius="md">
-        <AtomicText variant="sm" color="error" weight="medium">
+        <AtomicText variant="sm" color="red" weight="medium">
           Error: {error.message}
         </AtomicText>
         {componentStack && (
@@ -63,8 +63,8 @@ const DefaultErrorFallback: React.FunctionComponent<ErrorBoundaryFallbackProps> 
     )}
 
     <AtomicButton
-      variant="outlined"
-      color="error"
+      variant="outline"
+      color="red"
       onClick={(e: React.MouseEvent) => resetError}
       mt={3}
     >

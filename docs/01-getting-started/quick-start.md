@@ -55,10 +55,26 @@ ToolBoxAI Solutions is an AI-powered educational platform that transforms tradit
 
 **Quick Start Path**:
 1. **Set Up Development Environment** - get the code running locally
-2. **Explore the API** - understand our endpoints and capabilities
-3. **Review Architecture** - understand system design
-4. **Run the Test Suite** - ensure everything works
-5. **Build Your First Integration**
+2. **Configure LangChain** - Set up your LangSmith API keys for tracing
+3. **Explore the API** - understand our endpoints and capabilities
+4. **Review Architecture** - understand system design
+5. **Run the Test Suite** - ensure everything works
+6. **Test Agent Orchestration** - Try the coordinator endpoints
+7. **Monitor in LangSmith** - View traces and performance metrics
+8. **Build Your First Integration**
+
+**LangChain Quick Setup**:
+```bash
+# Add to .env file
+LANGCHAIN_API_KEY=your-key-here
+LANGCHAIN_PROJECT_ID=your-project-id
+
+# Test configuration
+python test_langchain_simple.py
+
+# Start services
+./scripts/start_langgraph_services.sh
+```
 
 **Next Steps**: [Complete Developer Guide →](../07-development/README.md)
 
@@ -95,9 +111,11 @@ Features: Full system administration and analytics
 
 #### 🤖 AI Content Generator
 - Transform text lessons into 3D experiences
-- Powered by Claude and OpenAI GPT models
+- Powered by Claude and OpenAI GPT models with LangChain orchestration
+- Full observability via LangSmith dashboard (Sept 28, 2025)
+- 8 specialized agents: Content, Quiz, Script, Terrain, Review, Testing, Supervisor, Orchestrator
 - Curriculum-aligned content creation
-- Real-time streaming responses
+- Real-time streaming responses via Pusher channels
 
 #### 🎮 Roblox Integration
 - Immersive 3D learning environments

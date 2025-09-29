@@ -1,5 +1,5 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import React from 'react';
-import { Container, Typography, Tabs, Tab, Box } from '@mui/material';
 import { ButtonMigrationExample } from '../migration/examples/ButtonMigration';
 import { CardMigrationExample } from '../migration/examples/CardMigration';
 import { MantineMigrationGuide } from '../migration/MantineMigrationGuide';
@@ -22,7 +22,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`migration-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === index && <Box style={{ p: 3 }}>{children}</Box>}
     </div>
   );
 }
@@ -47,8 +47,8 @@ export default function MigrationDemo() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h3" component="h1" gutterBottom>
+    <Container maxWidth="lg" style={{ py: 4 }}>
+      <Typography order={3} component="h1" gutterBottom>
         Mantine Migration Demo
       </Typography>
 
@@ -57,7 +57,7 @@ export default function MigrationDemo() {
       </Typography>
 
       {/* Migration Progress Summary */}
-      <Box sx={{
+      <Box style={{
         mt: 3,
         p: 2,
         bgcolor: 'background.paper',
@@ -65,46 +65,46 @@ export default function MigrationDemo() {
         border: '1px solid',
         borderColor: 'divider'
       }}>
-        <Typography variant="h6" gutterBottom>
+        <Typography order={6} gutterBottom>
           Migration Progress
         </Typography>
-        <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        <Box style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           <Box>
-            <Typography variant="body2" color="text.secondary">
+            <Typography size="sm" color="text.secondary">
               Total Components
             </Typography>
-            <Typography variant="h4" color="primary.main">
+            <Typography order={4} color="primary.main">
               {progress.total}
             </Typography>
           </Box>
           <Box>
-            <Typography variant="body2" color="text.secondary">
+            <Typography size="sm" color="text.secondary">
               Completed
             </Typography>
-            <Typography variant="h4" color="success.main">
+            <Typography order={4} color="success.main">
               {progress.completed}
             </Typography>
           </Box>
           <Box>
-            <Typography variant="body2" color="text.secondary">
+            <Typography size="sm" color="text.secondary">
               In Progress
             </Typography>
-            <Typography variant="h4" color="warning.main">
+            <Typography order={4} color="warning.main">
               {progress.inProgress}
             </Typography>
           </Box>
           <Box>
-            <Typography variant="body2" color="text.secondary">
+            <Typography size="sm" color="text.secondary">
               Progress
             </Typography>
-            <Typography variant="h4" color="info.main">
+            <Typography order={4} color="info.main">
               {progress.completionPercentage.toFixed(1)}%
             </Typography>
           </Box>
         </Box>
       </Box>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 4 }}>
+      <Box style={{ borderBottom: 1, borderColor: 'divider', mt: 4 }}>
         <Tabs value={value} onChange={handleChange} aria-label="migration demo tabs">
           <Tab label="Component Examples" {...a11yProps(0)} />
           <Tab label="Migration Guide" {...a11yProps(1)} />
@@ -114,23 +114,23 @@ export default function MigrationDemo() {
       </Box>
 
       <TabPanel value={value} index={0}>
-        <Typography variant="h5" gutterBottom>
+        <Typography order={5} gutterBottom>
           Interactive Component Examples
         </Typography>
-        <Typography variant="body1" color="text.secondary" paragraph>
+        <Typography size="md" color="text.secondary" paragraph>
           See side-by-side comparisons of MUI and Mantine components. Use the Migration Control Panel
           (bottom right) to switch between versions or enable comparison mode.
         </Typography>
 
-        <Box sx={{ mt: 4 }}>
-          <Typography variant="h6" gutterBottom>
+        <Box style={{ mt: 4 }}>
+          <Typography order={6} gutterBottom>
             Button Migration
           </Typography>
           <ButtonMigrationExample />
         </Box>
 
-        <Box sx={{ mt: 4 }}>
-          <Typography variant="h6" gutterBottom>
+        <Box style={{ mt: 4 }}>
+          <Typography order={6} gutterBottom>
             Card Migration
           </Typography>
           <CardMigrationExample />
@@ -142,22 +142,22 @@ export default function MigrationDemo() {
       </TabPanel>
 
       <TabPanel value={value} index={2}>
-        <Typography variant="h5" gutterBottom>
+        <Typography order={5} gutterBottom>
           Migration Plan Overview
         </Typography>
-        <Typography variant="body1" color="text.secondary" paragraph>
+        <Typography size="md" color="text.secondary" paragraph>
           Comprehensive plan for migrating all components from MUI to Mantine.
         </Typography>
 
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="h6" gutterBottom>
+        <Box style={{ mt: 3 }}>
+          <Typography order={6} gutterBottom>
             Component Status
           </Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 2 }}>
+          <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 2 }}>
             {plan.map((component: any) => (
               <Box
                 key={component.id}
-                sx={{
+                style={{
                   p: 2,
                   border: '1px solid',
                   borderColor: 'divider',
@@ -170,11 +170,11 @@ export default function MigrationDemo() {
                 <Typography variant="subtitle1" fontWeight="bold">
                   {component.name}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography size="sm" color="text.secondary">
                   Phase: {component.phase} | Priority: {component.priority}
                 </Typography>
                 {component.notes && (
-                  <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                  <Typography variant="caption" display="block" style={{ mt: 1 }}>
                     {component.notes}
                   </Typography>
                 )}
@@ -185,18 +185,18 @@ export default function MigrationDemo() {
       </TabPanel>
 
       <TabPanel value={value} index={3}>
-        <Typography variant="h5" gutterBottom>
+        <Typography order={5} gutterBottom>
           Next Components to Migrate
         </Typography>
-        <Typography variant="body1" color="text.secondary" paragraph>
+        <Typography size="md" color="text.secondary" paragraph>
           These are the highest priority components ready for migration.
         </Typography>
 
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 2 }}>
+        <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 2 }}>
           {nextComponents.map((component: any) => (
             <Box
               key={component.id}
-              sx={{
+              style={{
                 p: 3,
                 border: '2px solid',
                 borderColor: 'primary.main',
@@ -205,14 +205,14 @@ export default function MigrationDemo() {
                 color: 'primary.contrastText'
               }}
             >
-              <Typography variant="h6" gutterBottom>
+              <Typography order={6} gutterBottom>
                 {component.name}
               </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+              <Typography size="sm" style={{ opacity: 0.9 }}>
                 Priority: {component.priority}
               </Typography>
               {component.notes && (
-                <Typography variant="body2" sx={{ mt: 1, opacity: 0.8 }}>
+                <Typography size="sm" style={{ mt: 1, opacity: 0.8 }}>
                   {component.notes}
                 </Typography>
               )}
@@ -221,27 +221,27 @@ export default function MigrationDemo() {
         </Box>
 
         {nextComponents.length === 0 && (
-          <Box sx={{
+          <Box style={{
             textAlign: 'center',
             py: 4,
             bgcolor: 'success.light',
             borderRadius: 2,
             color: 'success.contrastText'
           }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography order={6} gutterBottom>
               🎉 All Components Migrated!
             </Typography>
-            <Typography variant="body1">
+            <Typography size="md">
               Congratulations! You've successfully migrated all planned components to Mantine.
             </Typography>
           </Box>
         )}
 
-        <Box sx={{ mt: 4, p: 2, bgcolor: 'info.light', borderRadius: 2 }}>
-          <Typography variant="h6" gutterBottom>
+        <Box style={{ mt: 4, p: 2, bgcolor: 'info.light', borderRadius: 2 }}>
+          <Typography order={6} gutterBottom>
             Development Tools
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography size="sm" color="text.secondary">
             • Use the Migration Control Panel (bottom right) to test different versions
             • Set localStorage flag 'enableMantineMigration' to 'true' for global migration
             • Individual components can be controlled with 'migration-[component-id]' flags

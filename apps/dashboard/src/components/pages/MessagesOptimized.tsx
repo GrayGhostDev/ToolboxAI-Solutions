@@ -1,43 +1,7 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import * as React from "react";
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
-import Badge from '@mui/material/Badge';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import List from '@mui/material/List';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemButton from '@mui/material/ListItemButton';
-import TextField from '@mui/material/TextField';
-import InputAdornment from '@mui/material/InputAdornment';
-import Box from '@mui/material/Box';
-import Divider from '@mui/material/Divider';
-import Paper from '@mui/material/Paper';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Autocomplete from '@mui/material/Autocomplete';
 
 import { useEffect, useState, memo } from "react";
-import SendIcon from "@mui/icons-material/Send";
-import AttachFileIcon from "@mui/icons-material/AttachFile";
-import SearchIcon from "@mui/icons-material/Search";
-import StarIcon from "@mui/icons-material/Star";
-import DeleteIcon from "@mui/icons-material/Delete";
-import ReplyIcon from "@mui/icons-material/Reply";
-import ForwardIcon from "@mui/icons-material/Forward";
-import CreateIcon from "@mui/icons-material/Create";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import InboxIcon from "@mui/icons-material/Inbox";
-import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
-import DraftsIcon from "@mui/icons-material/Drafts";
 import { useAppDispatch } from "../../store";
 import VirtualizedList from "../common/VirtualizedList";
 import { useOptimizedMemo, useOptimizedCallback, useDebouncedCallback, useRenderPerformance } from "../../hooks/usePerformance";
@@ -94,7 +58,7 @@ const MessageItem = memo<{
   return (
     <Paper
       elevation={message.isRead ? 0 : 1}
-      sx={{
+      style={{
         margin: 1,
         height: 120, // Fixed height for virtual scrolling
         cursor: 'pointer',
@@ -108,7 +72,7 @@ const MessageItem = memo<{
       <Box p={2} height="100%" display="flex" alignItems="center">
         <Avatar
           src={message.senderAvatar}
-          sx={{ mr: 2, width: 40, height: 40 }}
+          style={{ mr: 2, width: 40, height: 40 }}
         >
           {message.sender.charAt(0).toUpperCase()}
         </Avatar>
@@ -130,15 +94,15 @@ const MessageItem = memo<{
                 onClick={(e: React.MouseEvent) => handleStarToggle}
                 color={message.isStarred ? 'warning' : 'default'}
               >
-                <StarIcon fontSize="small" />
+                <IconStar fontSize="small" />
               </IconButton>
               <IconButton size="small" onClick={(e: React.MouseEvent) => handleDelete}>
-                <DeleteIcon fontSize="small" />
+                <IconTrash fontSize="small" />
               </IconButton>
             </Box>
           </Box>
           <Typography
-            variant="body2"
+            size="sm"
             fontWeight={message.isRead ? 'normal' : 'bold'}
             noWrap
             mb={0.5}
@@ -147,10 +111,10 @@ const MessageItem = memo<{
           </Typography>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography
-              variant="body2"
+              size="sm"
               color="text.secondary"
               noWrap
-              sx={{ flexGrow: 1, mr: 1 }}
+              style={{ flexGrow: 1, mr: 1 }}
             >
               {message.preview}
             </Typography>
@@ -160,7 +124,7 @@ const MessageItem = memo<{
                   size="small"
                   label={message.priority}
                   color={priorityColor as any}
-                  variant="outlined"
+                  variant="outline"
                 />
               )}
               {message.hasAttachment && (
@@ -170,7 +134,7 @@ const MessageItem = memo<{
                 <Chip
                   size="small"
                   label={message.threadCount}
-                  variant="outlined"
+                  variant="outline"
                 />
               )}
             </Box>
@@ -197,7 +161,7 @@ const MessageFilters = memo<{
   const filterOptions = useOptimizedMemo(() => [
     { value: 'all', label: 'All Messages', icon: <InboxIcon /> },
     { value: 'unread', label: 'Unread', icon: <DraftsIcon /> },
-    { value: 'starred', label: 'Starred', icon: <StarIcon /> },
+    { value: 'starred', label: 'Starred', icon: <IconStar /> },
     { value: 'sent', label: 'Sent', icon: <SendOutlinedIcon /> },
   ], [], 'MessageFilters:filterOptions');
   return (
@@ -207,11 +171,11 @@ const MessageFilters = memo<{
         defaultValue={searchTerm}
         onChange={handleSearchChange}
         size="small"
-        sx={{ minWidth: 300, flexGrow: 1 }}
+        style={{ minWidth: 300, flexGrow: 1 }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <SearchIcon />
+              <IconSearch />
             </InputAdornment>
           ),
         }}
@@ -231,14 +195,14 @@ const MessageFilters = memo<{
       </Box>
       <Box display="flex" gap={1}>
         <Button
-          variant="contained"
+          variant="filled"
           startIcon={<CreateIcon />}
           onClick={(e: React.MouseEvent) => onCompose}
         >
           Compose
         </Button>
         <IconButton onClick={(e: React.MouseEvent) => onRefresh} disabled={loading}>
-          <RefreshIcon />
+          <IconRefresh />
         </IconButton>
       </Box>
     </Box>
@@ -345,7 +309,7 @@ export default function MessagesOptimized() {
   ), [handleMessageClick, handleStarToggle, handleDelete], 'MessagesOptimized:renderMessageItem');
   return (
     <Box>
-      <Typography variant="h4" component="h1" mb={3}>
+      <Typography order={4} component="h1" mb={3}>
         Messages
       </Typography>
       <MessageFilters
@@ -388,10 +352,10 @@ export default function MessagesOptimized() {
           <>
             <DialogTitle>
               <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="h6">{selectedMessage.subject}</Typography>
+                <Typography order={6}>{selectedMessage.subject}</Typography>
                 <Box>
                   <IconButton onClick={(e: React.MouseEvent) => () => handleStarToggle(selectedMessage.id)}>
-                    <StarIcon color={selectedMessage.isStarred ? "warning" : "inherit"} />
+                    <IconStar color={selectedMessage.isStarred ? "warning" : "inherit"} />
                   </IconButton>
                   <IconButton>
                     <ReplyIcon />
@@ -411,14 +375,14 @@ export default function MessagesOptimized() {
                   {selectedMessage.timestamp.toLocaleString()}
                 </Typography>
               </Box>
-              <Typography variant="body1">
+              <Typography size="md">
                 {selectedMessage.preview}
                 {/* In real app, would show full message content */}
               </Typography>
             </DialogContent>
             <DialogActions>
               <Button onClick={(e: React.MouseEvent) => () => setSelectedMessage(null)}>Close</Button>
-              <Button variant="contained" startIcon={<ReplyIcon />}>
+              <Button variant="filled" startIcon={<ReplyIcon />}>
                 Reply
               </Button>
             </DialogActions>
@@ -434,7 +398,7 @@ export default function MessagesOptimized() {
       >
         <DialogTitle>Compose Message</DialogTitle>
         <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
+          <Stack spacing={2} style={{ mt: 1 }}>
             <TextField
               label="To"
               fullWidth
@@ -456,7 +420,7 @@ export default function MessagesOptimized() {
         </DialogContent>
         <DialogActions>
           <Button onClick={(e: React.MouseEvent) => () => setComposeOpen(false)}>Cancel</Button>
-          <Button variant="contained" startIcon={<SendIcon />}>
+          <Button variant="filled" startIcon={<SendIcon />}>
             Send
           </Button>
         </DialogActions>

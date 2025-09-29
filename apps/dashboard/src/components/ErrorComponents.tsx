@@ -1,536 +1,518 @@
+IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../IconutilsIcon/IconmuiIcon-Iconimports';
 /**
- * Error UI Components
+ * IconErrorIcon IconUIIcon IconComponentsIcon
  *
- * Collection of user-friendly error components for different scenarios
+ * IconCollectionIcon IconofIcon IconuserIcon-IconfriendlyIcon IconerrorIcon IconcomponentsIcon IconforIcon IcondifferentIcon IconscenariosIcon
  */
 
-import React, { useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import CircularProgress from '@mui/material/CircularProgress';
-import LinearProgress from '@mui/material/LinearProgress';
-import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Collapse from '@mui/material/Collapse';
-import Paper from '@mui/material/Paper';
-import Skeleton from '@mui/material/Skeleton';
-import Fade from '@mui/material/Fade';
-import Zoom from '@mui/material/Zoom';
-import { useTheme } from '@mui/material/styles';
-import Container from '@mui/material/Container';
-import Link from '@mui/material/Link';
+IconimportIcon IconReactIcon, { IconuseStateIcon, IconuseEffectIcon } IconfromIcon 'Iconreact';
+IconimportIcon { IconIconIcon, IconIconAlertTriangleIcon, IconIconArrowLeftIcon, IconIconCircleCheckIcon, IconIconClockIcon, IconIconCloudOffIcon, IconIconErrorOutlineIcon, IconIconHomeIcon, IconIconInfoCircleIcon, IconIconRefreshIcon, IconIconSupportIcon, IconIconTrendingUpIcon, IconIconWifiOffIcon, IconIconXIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
 
-import {
-  WifiOff,
-  CloudOff,
-  ErrorOutline,
-  Refresh,
-  Close,
-  CheckCircle,
-  Info,
-  Warning,
-  ArrowBack,
-  Home,
-  Support,
-  Timer,
-  TrendingUp,
-} from '@mui/icons-material';
+IconimportIcon {
+  IconIconWifiOffIcon,
+  IconIconCloudOffIcon,
+  IconIconErrorOutlineIcon,
+  IconIconRefreshIcon,
+  IconIconXIcon,
+  IconIconCircleCheckIcon,
+  IconIconInfoCircleIcon,
+  IconIconAlertTriangleIcon,
+  IconIconArrowLeftIcon,
+  IconIconHomeIcon,
+  IconIconSupportIcon,
+  IconIconClockIcon,
+  IconIconTrendingUpIcon,
+} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
 
 /**
- * Network Error Component
- * Shows when there's no internet connection
+ * IconNetworkIcon IconErrorIcon IconComponentIcon
+ * IconShowsIcon IconwhenIcon Iconthere'IconsIcon IconnoIcon IconinternetIcon IconconnectionIcon
  */
-export function NetworkError({
-  onRetry,
-  message = "Unable to connect to the server",
+IconexportIcon IconfunctionIcon IconNetworkErrorIcon({
+  IcononRetryIcon,
+  IconmessageIcon = "IconUnableIcon IcontoIcon IconconnectIcon IcontoIcon IcontheIcon Iconserver",
 }: {
-  onRetry?: () => void;
-  message?: string;
+  IcononRetryIcon?: () => IconvoidIcon;
+  IconmessageIcon?: IconstringIcon;
 }) {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  IconconstIcon [IconisOnlineIcon, IconsetIsOnlineIcon] = IconuseStateIcon(IconnavigatorIcon.IcononLineIcon);
 
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+  IconuseEffectIcon(() => {
+    IconconstIcon IconhandleOnlineIcon = () => IconsetIsOnlineIcon(IcontrueIcon);
+    IconconstIcon IconhandleOfflineIcon = () => IconsetIsOnlineIcon(IconfalseIcon);
 
-    window.addEventListener("online", handleOnline as EventListener);
-    window.addEventListener("offline", handleOffline as EventListener);
+    IconwindowIcon.IconaddEventListenerIcon("Icononline", IconhandleOnlineIcon IconasIcon IconEventListenerIcon);
+    IconwindowIcon.IconaddEventListenerIcon("Iconoffline", IconhandleOfflineIcon IconasIcon IconEventListenerIcon);
 
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+    IconreturnIcon () => {
+      IconwindowIcon.IconremoveEventListenerIcon('Icononline', IconhandleOnlineIcon);
+      IconwindowIcon.IconremoveEventListenerIcon('Iconoffline', IconhandleOfflineIcon);
     };
   }, []);
 
-  return (
-    <Card sx={{ maxWidth: 400, mx: 'auto', my: 4 }}>
-      <CardContent sx={{ textAlign: 'center', py: 4 }}>
-        <WifiOff sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
-        <Typography variant="h5" gutterBottom>
-          Connection Problem
-        </Typography>
-        <Typography variant="body2" color="text.secondary" paragraph>
-          {message}
-        </Typography>
+  IconreturnIcon (
+    <IconCardIcon IconstyleIcon={{ IconmaxWidthIcon: Icon400Icon, IconmxIcon: 'Iconauto', IconmyIcon: Icon4Icon }}>
+      <IconCardContentIcon IconstyleIcon={{ IcontextAlignIcon: 'Iconcenter', IconpyIcon: Icon4Icon }}>
+        <IconIconWifiOffIcon IconstyleIcon={{ IconfontSizeIcon: Icon64Icon, IconcolorIcon: 'IconerrorIcon.Iconmain', IconmbIcon: Icon2Icon }} />
+        <IconTypographyIcon IconorderIcon={Icon5Icon} IcongutterBottomIcon>
+          IconConnectionIcon IconProblemIcon
+        <IconIconIcon/IconTypographyIcon>
+        <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary" IconparagraphIcon>
+          {IconmessageIcon}
+        <IconIconIcon/IconTypographyIcon>
 
-        {!isOnline && (
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            You appear to be offline. Please check your internet connection.
-          </Alert>
+        {!IconisOnlineIcon && (
+          <IconAlertIcon IconseverityIcon="Iconwarning" IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
+            IconYouIcon IconappearIcon IcontoIcon IconbeIcon IconofflineIcon. IconPleaseIcon IconcheckIcon IconyourIcon IconinternetIcon IconconnectionIcon.
+          <IconIconIcon/IconAlertIcon>
         )}
 
-        {isOnline && (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Your internet connection is restored. Try refreshing.
-          </Alert>
+        {IconisOnlineIcon && (
+          <IconAlertIcon IconseverityIcon="Iconinfo" IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
+            IconYourIcon IconinternetIcon IconconnectionIcon IconisIcon IconrestoredIcon. IconTryIcon IconrefreshingIcon.
+          <IconIconIcon/IconAlertIcon>
         )}
 
-        <Button
-          variant="contained"
-          startIcon={<Refresh />}
-          onClick={(e: React.MouseEvent) => onRetry}
-          disabled={!isOnline}
-          fullWidth
+        <IconButtonIcon
+          IconvariantIcon="Iconfilled"
+          IconstartIconIcon={<IconIconRefreshIcon />}
+          IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IcononRetryIcon}
+          IcondisabledIcon={!IconisOnlineIcon}
+          IconfullWidthIcon
         >
-          {isOnline ? 'Retry Connection' : 'Waiting for Connection...'}
-        </Button>
-      </CardContent>
-    </Card>
+          {IconisOnlineIcon ? 'IconRetryIcon IconConnection' : 'IconWaitingIcon IconforIcon IconConnectionIcon...'}
+        <IconIconIcon/IconButtonIcon>
+      <IconIconIcon/IconCardContentIcon>
+    <IconIconIcon/IconCardIcon>
   );
 }
 
 /**
- * API Error Component
- * Shows when an API call fails
+ * IconAPIIcon IconErrorIcon IconComponentIcon
+ * IconShowsIcon IconwhenIcon IconanIcon IconAPIIcon IconcallIcon IconfailsIcon
  */
-export function ApiError({
-  error,
-  onRetry,
-  retryCount = 0,
-  maxRetries = 3,
-  showDetails = false,
+IconexportIcon IconfunctionIcon IconApiErrorIcon({
+  IconerrorIcon,
+  IcononRetryIcon,
+  IconretryCountIcon = Icon0Icon,
+  IconmaxRetriesIcon = Icon3Icon,
+  IconshowDetailsIcon = IconfalseIcon,
 }: {
-  error: any;
-  onRetry?: () => void;
-  retryCount?: number;
-  maxRetries?: number;
-  showDetails?: boolean;
+  IconerrorIcon: IconanyIcon;
+  IcononRetryIcon?: () => IconvoidIcon;
+  IconretryCountIcon?: IconnumberIcon;
+  IconmaxRetriesIcon?: IconnumberIcon;
+  IconshowDetailsIcon?: IconbooleanIcon;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const theme = useTheme();
+  IconconstIcon [IconexpandedIcon, IconsetExpandedIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon IconthemeIcon = IconuseThemeIcon();
 
-  const getErrorMessage = () => {
-    if (error?.response?.status === 404) return "The requested resource was not found";
-    if (error?.response?.status === 403) return "You don't have permission to access this resource";
-    if (error?.response?.status === 401) return "Your session has expired. Please log in again";
-    if (error?.response?.status >= 500) return "Server error. Please try again later";
-    return error?.message || "An unexpected error occurred";
+  IconconstIcon IcongetErrorMessageIcon = () => {
+    IconifIcon (IconerrorIcon?.IconresponseIcon?.IconstatusIcon === Icon404Icon) IconreturnIcon "IconTheIcon IconrequestedIcon IconresourceIcon IconwasIcon IconnotIcon Iconfound";
+    IconifIcon (IconerrorIcon?.IconresponseIcon?.IconstatusIcon === Icon403Icon) IconreturnIcon "IconYouIcon Icondon'IcontIcon IconhaveIcon IconpermissionIcon IcontoIcon IconaccessIcon IconthisIcon Iconresource";
+    IconifIcon (IconerrorIcon?.IconresponseIcon?.IconstatusIcon === Icon401Icon) IconreturnIcon "IconYourIcon IconsessionIcon IconhasIcon IconexpiredIcon. IconPleaseIcon IconlogIcon IconinIcon Iconagain";
+    IconifIcon (IconerrorIcon?.IconresponseIcon?.IconstatusIcon >= Icon500Icon) IconreturnIcon "IconServerIcon IconerrorIcon. IconPleaseIcon IcontryIcon IconagainIcon Iconlater";
+    IconreturnIcon IconerrorIcon?.IconmessageIcon || "IconAnIcon IconunexpectedIcon IconerrorIcon Iconoccurred";
   };
 
-  const getErrorTitle = () => {
-    if (error?.response?.status === 404) return "Not Found";
-    if (error?.response?.status === 403) return "Access Denied";
-    if (error?.response?.status === 401) return "Authentication Required";
-    if (error?.response?.status >= 500) return "Server Error";
-    return "Error";
+  IconconstIcon IcongetErrorTitleIcon = () => {
+    IconifIcon (IconerrorIcon?.IconresponseIcon?.IconstatusIcon === Icon404Icon) IconreturnIcon "IconNotIcon IconFound";
+    IconifIcon (IconerrorIcon?.IconresponseIcon?.IconstatusIcon === Icon403Icon) IconreturnIcon "IconAccessIcon IconDenied";
+    IconifIcon (IconerrorIcon?.IconresponseIcon?.IconstatusIcon === Icon401Icon) IconreturnIcon "IconAuthenticationIcon IconRequired";
+    IconifIcon (IconerrorIcon?.IconresponseIcon?.IconstatusIcon >= Icon500Icon) IconreturnIcon "IconServerIcon IconError";
+    IconreturnIcon "IconError";
   };
 
-  return (
-    <Paper
-      elevation={2}
-      sx={{
-        p: 3,
-        borderLeft: 4,
-        borderColor: 'error.main',
-        bgcolor: theme.palette.mode === 'dark' ? 'error.dark' : 'error.lighter',
+  IconreturnIcon (
+    <IconPaperIcon
+      IconelevationIcon={Icon2Icon}
+      IconstyleIcon={{
+        IconpIcon: Icon3Icon,
+        IconborderLeftIcon: Icon4Icon,
+        IconborderColorIcon: 'IconerrorIcon.Iconmain',
+        IconbgcolorIcon: IconthemeIcon.IconpaletteIcon.IconmodeIcon === 'Icondark' ? 'IconerrorIcon.Icondark' : 'IconerrorIcon.Iconlighter',
       }}
     >
-      <Stack spacing={2}>
-        <Stack direction="row" alignItems="center" spacing={2}>
-          <ErrorOutline color="error" />
-          <Box flex={1}>
-            <Typography variant="h6" color="error">
-              {getErrorTitle()}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {getErrorMessage()}
-            </Typography>
-          </Box>
-        </Stack>
+      <IconStackIcon IconspacingIcon={Icon2Icon}>
+        <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconspacingIcon={Icon2Icon}>
+          <IconIconErrorOutlineIcon IconcolorIcon="Iconred" />
+          <IconBoxIcon IconflexIcon={Icon1Icon}>
+            <IconTypographyIcon IconorderIcon={Icon6Icon} IconcolorIcon="Iconred">
+              {IcongetErrorTitleIcon()}
+            <IconIconIcon/IconTypographyIcon>
+            <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
+              {IcongetErrorMessageIcon()}
+            <IconIconIcon/IconTypographyIcon>
+          <IconIconIcon/IconBoxIcon>
+        <IconIconIcon/IconStackIcon>
 
-        {retryCount > 0 && (
-          <LinearProgress
-            variant="determinate"
-            value={(retryCount / maxRetries) * 100}
-            sx={{ height: 6, borderRadius: 1 }}
+        {IconretryCountIcon > Icon0Icon && (
+          <IconLinearProgressIcon
+            IconvariantIcon="Icondeterminate"
+            IconvalueIcon={(IconretryCountIcon / IconmaxRetriesIcon) * Icon100Icon}
+            IconstyleIcon={{ IconheightIcon: Icon6Icon, IconborderRadiusIcon: Icon1Icon }}
           />
         )}
 
-        {retryCount > 0 && (
-          <Typography variant="caption" color="text.secondary">
-            Retry attempt {retryCount} of {maxRetries}
-          </Typography>
+        {IconretryCountIcon > Icon0Icon && (
+          <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
+            IconRetryIcon IconattemptIcon {IconretryCountIcon} IconofIcon {IconmaxRetriesIcon}
+          <IconIconIcon/IconTypographyIcon>
         )}
 
-        <Stack direction="row" spacing={2}>
-          {onRetry && retryCount < maxRetries && (
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<Refresh />}
-              onClick={(e: React.MouseEvent) => onRetry}
+        <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon}>
+          {IcononRetryIcon && IconretryCountIcon <IconIconIcon IconmaxRetriesIcon && (
+            <IconButtonIcon
+              IconvariantIcon="Iconfilled"
+              IconsizeIcon="Iconsmall"
+              IconstartIconIcon={<IconIconRefreshIcon />}
+              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IcononRetryIcon}
             >
-              Try Again
-            </Button>
+              IconTryIcon IconAgainIcon
+            <IconIconIcon/IconButtonIcon>
           )}
 
-          {showDetails && error?.response && (
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={(e: React.MouseEvent) => () => setExpanded(!expanded)}
+          {IconshowDetailsIcon && IconerrorIcon?.IconresponseIcon && (
+            <IconButtonIcon
+              IconvariantIcon="Iconoutline"
+              IconsizeIcon="Iconsmall"
+              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconsetExpandedIcon(!IconexpandedIcon)}
             >
-              {expanded ? 'Hide' : 'Show'} Details
-            </Button>
+              {IconexpandedIcon ? 'IconHide' : 'IconShow'} IconDetailsIcon
+            <IconIconIcon/IconButtonIcon>
           )}
-        </Stack>
+        <IconIconIcon/IconStackIcon>
 
-        <Collapse in={expanded}>
-          <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.paper' }}>
-            <Typography variant="caption" component="pre" sx={{ fontFamily: 'monospace' }}>
-              {JSON.stringify(error?.response?.data || error, null, 2)}
-            </Typography>
-          </Paper>
-        </Collapse>
-      </Stack>
-    </Paper>
+        <IconCollapseIcon IconinIcon={IconexpandedIcon}>
+          <IconPaperIcon IconvariantIcon="Iconoutline" IconstyleIcon={{ IconpIcon: Icon2Icon, IconbgcolorIcon: 'IconbackgroundIcon.Iconpaper' }}>
+            <IconTypographyIcon IconvariantIcon="Iconcaption" IconcomponentIcon="Iconpre" IconstyleIcon={{ IconfontFamilyIcon: 'Iconmonospace' }}>
+              {IconJSONIcon.IconstringifyIcon(IconerrorIcon?.IconresponseIcon?.IcondataIcon || IconerrorIcon, IconnullIcon, Icon2Icon)}
+            <IconIconIcon/IconTypographyIcon>
+          <IconIconIcon/IconPaperIcon>
+        <IconIconIcon/IconCollapseIcon>
+      <IconIconIcon/IconStackIcon>
+    <IconIconIcon/IconPaperIcon>
   );
 }
 
 /**
- * Loading Error Component
- * Shows when data fails to load with retry capability
+ * IconLoadingIcon IconErrorIcon IconComponentIcon
+ * IconShowsIcon IconwhenIcon IcondataIcon IconfailsIcon IcontoIcon IconloadIcon IconwithIcon IconretryIcon IconcapabilityIcon
  */
-export function LoadingError({
-  title = "Failed to Load",
-  message = "We couldn't load the data you requested",
-  onRetry,
-  onGoBack,
-  showBackButton = true,
+IconexportIcon IconfunctionIcon IconLoadingErrorIcon({
+  IcontitleIcon = "IconFailedIcon IcontoIcon IconLoad",
+  IconmessageIcon = "IconWeIcon Iconcouldn'IcontIcon IconloadIcon IcontheIcon IcondataIcon IconyouIcon Iconrequested",
+  IcononRetryIcon,
+  IcononGoBackIcon,
+  IconshowBackButtonIcon = IcontrueIcon,
 }: {
-  title?: string;
-  message?: string;
-  onRetry?: () => void;
-  onGoBack?: () => void;
-  showBackButton?: boolean;
+  IcontitleIcon?: IconstringIcon;
+  IconmessageIcon?: IconstringIcon;
+  IcononRetryIcon?: () => IconvoidIcon;
+  IcononGoBackIcon?: () => IconvoidIcon;
+  IconshowBackButtonIcon?: IconbooleanIcon;
 }) {
-  return (
-    <Container maxWidth="sm" sx={{ py: 4 }}>
-      <Stack spacing={3} alignItems="center" textAlign="center">
-        <CloudOff sx={{ fontSize: 80, color: 'text.secondary' }} />
+  IconreturnIcon (
+    <IconContainerIcon IconmaxWidthIcon="Iconsm" IconstyleIcon={{ IconpyIcon: Icon4Icon }}>
+      <IconStackIcon IconspacingIcon={Icon3Icon} IconalignItemsIcon="Iconcenter" IcontextAlignIcon="Iconcenter">
+        <IconIconCloudOffIcon IconstyleIcon={{ IconfontSizeIcon: Icon80Icon, IconcolorIcon: 'IcontextIcon.Iconsecondary' }} />
 
-        <Box>
-          <Typography variant="h5" gutterBottom>
-            {title}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {message}
-          </Typography>
-        </Box>
+        <IconBoxIcon>
+          <IconTypographyIcon IconorderIcon={Icon5Icon} IcongutterBottomIcon>
+            {IcontitleIcon}
+          <IconIconIcon/IconTypographyIcon>
+          <IconTypographyIcon IconsizeIcon="Iconmd" IconcolorIcon="IcontextIcon.Iconsecondary">
+            {IconmessageIcon}
+          <IconIconIcon/IconTypographyIcon>
+        <IconIconIcon/IconBoxIcon>
 
-        <Stack direction="row" spacing={2}>
-          {showBackButton && onGoBack && (
-            <Button
-              variant="outlined"
-              startIcon={<ArrowBack />}
-              onClick={(e: React.MouseEvent) => onGoBack}
+        <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon}>
+          {IconshowBackButtonIcon && IcononGoBackIcon && (
+            <IconButtonIcon
+              IconvariantIcon="Iconoutline"
+              IconstartIconIcon={<IconIconArrowLeftIcon />}
+              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IcononGoBackIcon}
             >
-              Go Back
-            </Button>
+              IconGoIcon IconBackIcon
+            <IconIconIcon/IconButtonIcon>
           )}
 
-          {onRetry && (
-            <Button
-              variant="contained"
-              startIcon={<Refresh />}
-              onClick={(e: React.MouseEvent) => onRetry}
+          {IcononRetryIcon && (
+            <IconButtonIcon
+              IconvariantIcon="Iconfilled"
+              IconstartIconIcon={<IconIconRefreshIcon />}
+              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IcononRetryIcon}
             >
-              Try Again
-            </Button>
+              IconTryIcon IconAgainIcon
+            <IconIconIcon/IconButtonIcon>
           )}
-        </Stack>
-      </Stack>
-    </Container>
+        <IconIconIcon/IconStackIcon>
+      <IconIconIcon/IconStackIcon>
+    <IconIconIcon/IconContainerIcon>
   );
 }
 
 /**
- * Inline Error Component
- * Small error message for form fields or inline content
+ * IconInlineIcon IconErrorIcon IconComponentIcon
+ * IconSmallIcon IconerrorIcon IconmessageIcon IconforIcon IconformIcon IconfieldsIcon IconorIcon IconinlineIcon IconcontentIcon
  */
-export function InlineError({
-  message,
-  onDismiss,
-  severity = 'error',
+IconexportIcon IconfunctionIcon IconInlineErrorIcon({
+  IconmessageIcon,
+  IcononDismissIcon,
+  IconseverityIcon = 'Iconerror',
 }: {
-  message: string;
-  onDismiss?: () => void;
-  severity?: 'error' | 'warning' | 'info';
+  IconmessageIcon: IconstringIcon;
+  IcononDismissIcon?: () => IconvoidIcon;
+  IconseverityIcon?: 'Iconerror' | 'Iconwarning' | 'Iconinfo';
 }) {
-  if (!message) return null;
+  IconifIcon (!IconmessageIcon) IconreturnIcon IconnullIcon;
 
-  return (
-    <Fade in>
-      <Alert
-        severity={severity}
-        action={
-          onDismiss && (
-            <IconButton
-              aria-label="close"
-              color="inherit"
-              size="small"
-              onClick={(e: React.MouseEvent) => onDismiss}
+  IconreturnIcon (
+    <IconFadeIcon IconinIcon>
+      <IconAlertIcon
+        IconseverityIcon={IconseverityIcon}
+        IconactionIcon={
+          IcononDismissIcon && (
+            <IconIconButtonIcon
+              IconariaIcon-IconlabelIcon="Iconclose"
+              IconcolorIcon="Iconinherit"
+              IconsizeIcon="Iconsmall"
+              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IcononDismissIcon}
             >
-              <Close fontSize="inherit" />
-            </IconButton>
+              <IconIconXIcon IconfontSizeIcon="Iconinherit" />
+            <IconIconIcon/IconIconButtonIcon>
           )
         }
-        sx={{ mt: 1 }}
+        IconstyleIcon={{ IconmtIcon: Icon1Icon }}
       >
-        {message}
-      </Alert>
-    </Fade>
+        {IconmessageIcon}
+      <IconIconIcon/IconAlertIcon>
+    <IconIconIcon/IconFadeIcon>
   );
 }
 
 /**
- * Retry Timer Component
- * Shows countdown until automatic retry
+ * IconRetryIcon IconIconClockIcon IconComponentIcon
+ * IconShowsIcon IconcountdownIcon IconuntilIcon IconautomaticIcon IconretryIcon
  */
-export function RetryTimer({
-  seconds,
-  onRetry,
-  onCancel,
-  message = "Retrying in",
+IconexportIcon IconfunctionIcon IconRetryTimerIcon({
+  IconsecondsIcon,
+  IcononRetryIcon,
+  IcononCancelIcon,
+  IconmessageIcon = "IconRetryingIcon Iconin",
 }: {
-  seconds: number;
-  onRetry: () => void;
-  onCancel?: () => void;
-  message?: string;
+  IconsecondsIcon: IconnumberIcon;
+  IcononRetryIcon: () => IconvoidIcon;
+  IcononCancelIcon?: () => IconvoidIcon;
+  IconmessageIcon?: IconstringIcon;
 }) {
-  const [timeLeft, setTimeLeft] = useState(seconds);
+  IconconstIcon [IcontimeLeftIcon, IconsetTimeLeftIcon] = IconuseStateIcon(IconsecondsIcon);
 
-  useEffect(() => {
-    if (timeLeft <= 0) {
-      onRetry();
-      return;
+  IconuseEffectIcon(() => {
+    IconifIcon (IcontimeLeftIcon <= Icon0Icon) {
+      IcononRetryIcon();
+      IconreturnIcon;
     }
 
-    const timer = setTimeout(() => {
-      setTimeLeft(timeLeft - 1);
-    }, 1000);
+    IconconstIcon IcontimerIcon = IconsetTimeoutIcon(() => {
+      IconsetTimeLeftIcon(IcontimeLeftIcon - Icon1Icon);
+    }, Icon1000Icon);
 
-    return () => clearTimeout(timer);
-  }, [timeLeft, onRetry]);
+    IconreturnIcon () => IconclearTimeoutIcon(IcontimerIcon);
+  }, [IcontimeLeftIcon, IcononRetryIcon]);
 
-  return (
-    <Paper sx={{ p: 2 }}>
-      <Stack direction="row" alignItems="center" spacing={2}>
-        <CircularProgress
-          variant="determinate"
-          value={(timeLeft / seconds) * 100}
-          size={40}
+  IconreturnIcon (
+    <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon2Icon }}>
+      <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconspacingIcon={Icon2Icon}>
+        <IconCircularProgressIcon
+          IconvariantIcon="Icondeterminate"
+          IconvalueIcon={(IcontimeLeftIcon / IconsecondsIcon) * Icon100Icon}
+          IconsizeIcon={Icon40Icon}
         />
-        <Box flex={1}>
-          <Typography variant="body2">
-            {message} {timeLeft} seconds...
-          </Typography>
-        </Box>
-        {onCancel && (
-          <Button size="small" onClick={(e: React.MouseEvent) => onCancel}>
-            Cancel
-          </Button>
+        <IconBoxIcon IconflexIcon={Icon1Icon}>
+          <IconTypographyIcon IconsizeIcon="Iconsm">
+            {IconmessageIcon} {IcontimeLeftIcon} IconsecondsIcon...
+          <IconIconIcon/IconTypographyIcon>
+        <IconIconIcon/IconBoxIcon>
+        {IcononCancelIcon && (
+          <IconButtonIcon IconsizeIcon="Iconsmall" IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IcononCancelIcon}>
+            IconCancelIcon
+          <IconIconIcon/IconButtonIcon>
         )}
-      </Stack>
-    </Paper>
+      <IconIconIcon/IconStackIcon>
+    <IconIconIcon/IconPaperIcon>
   );
 }
 
 /**
- * Empty State Error Component
- * Shows when no data is available
+ * IconEmptyIcon IconStateIcon IconErrorIcon IconComponentIcon
+ * IconShowsIcon IconwhenIcon IconnoIcon IcondataIcon IconisIcon IconavailableIcon
  */
-export function EmptyState({
-  title = "No Data Available",
-  message = "There's nothing to show here yet",
-  icon = <Info />,
-  action,
+IconexportIcon IconfunctionIcon IconEmptyStateIcon({
+  IcontitleIcon = "IconNoIcon IconDataIcon IconAvailable",
+  IconmessageIcon = "IconThere'IconsIcon IconnothingIcon IcontoIcon IconshowIcon IconhereIcon Iconyet",
+  IconiconIcon = <IconIconInfoCircleIcon />,
+  IconactionIcon,
 }: {
-  title?: string;
-  message?: string;
-  icon?: React.ReactNode;
-  action?: React.ReactNode;
+  IcontitleIcon?: IconstringIcon;
+  IconmessageIcon?: IconstringIcon;
+  IconiconIcon?: IconReactIcon.IconReactNodeIcon;
+  IconactionIcon?: IconReactIcon.IconReactNodeIcon;
 }) {
-  return (
-    <Box
-      sx={{
-        py: 8,
-        px: 3,
-        textAlign: 'center',
-        color: 'text.secondary',
+  IconreturnIcon (
+    <IconBoxIcon
+      IconstyleIcon={{
+        IconpyIcon: Icon8Icon,
+        IconpxIcon: Icon3Icon,
+        IcontextAlignIcon: 'Iconcenter',
+        IconcolorIcon: 'IcontextIcon.Iconsecondary',
       }}
     >
-      <Box sx={{ mb: 3, opacity: 0.5 }}>
-        {React./* TODO: React 19 - Review usage of cloneElement */ cloneElement(icon as React.ReactElement<any>, {
-          sx: { fontSize: 80 },
+      <IconBoxIcon IconstyleIcon={{ IconmbIcon: Icon3Icon, IconopacityIcon: Icon0Icon.Icon5Icon }}>
+        {IconReactIcon./* IconTODOIcon: IconReactIcon Icon19Icon - IconReviewIcon IconusageIcon IconofIcon IconcloneElementIcon */ IconcloneElementIcon(IconiconIcon IconasIcon IconReactIcon.IconReactElementIcon<IconanyIcon>, {
+          IconsxIcon: { IconfontSizeIcon: Icon80Icon },
         })}
-      </Box>
-      <Typography variant="h6" gutterBottom>
-        {title}
-      </Typography>
-      <Typography variant="body2" paragraph>
-        {message}
-      </Typography>
-      {action && <Box sx={{ mt: 3 }}>{action}</Box>}
-    </Box>
+      <IconIconIcon/IconBoxIcon>
+      <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
+        {IcontitleIcon}
+      <IconIconIcon/IconTypographyIcon>
+      <IconTypographyIcon IconsizeIcon="Iconsm" IconparagraphIcon>
+        {IconmessageIcon}
+      <IconIconIcon/IconTypographyIcon>
+      {IconactionIcon && <IconBoxIcon IconstyleIcon={{ IconmtIcon: Icon3Icon }}>{IconactionIcon}<IconIconIcon/IconBoxIcon>}
+    <IconIconIcon/IconBoxIcon>
   );
 }
 
 /**
- * Success Recovery Component
- * Shows when error is successfully recovered
+ * IconSuccessIcon IconRecoveryIcon IconComponentIcon
+ * IconShowsIcon IconwhenIcon IconerrorIcon IconisIcon IconsuccessfullyIcon IconrecoveredIcon
  */
-export function SuccessRecovery({
-  message = "Connection restored successfully",
-  onDismiss,
+IconexportIcon IconfunctionIcon IconSuccessRecoveryIcon({
+  IconmessageIcon = "IconConnectionIcon IconrestoredIcon Iconsuccessfully",
+  IcononDismissIcon,
 }: {
-  message?: string;
-  onDismiss?: () => void;
+  IconmessageIcon?: IconstringIcon;
+  IcononDismissIcon?: () => IconvoidIcon;
 }) {
-  useEffect(() => {
-    if (onDismiss) {
-      const timer = setTimeout(onDismiss, 3000);
-      return () => clearTimeout(timer);
+  IconuseEffectIcon(() => {
+    IconifIcon (IcononDismissIcon) {
+      IconconstIcon IcontimerIcon = IconsetTimeoutIcon(IcononDismissIcon, Icon3000Icon);
+      IconreturnIcon () => IconclearTimeoutIcon(IcontimerIcon);
     }
-    return undefined;
-  }, [onDismiss]);
+    IconreturnIcon IconundefinedIcon;
+  }, [IcononDismissIcon]);
 
-  return (
-    <Zoom in>
-      <Alert
-        severity="success"
-        icon={<CheckCircle />}
-        action={
-          onDismiss && (
-            <IconButton
-              aria-label="close"
-              color="inherit"
-              size="small"
-              onClick={(e: React.MouseEvent) => onDismiss}
+  IconreturnIcon (
+    <IconZoomIcon IconinIcon>
+      <IconAlertIcon
+        IconseverityIcon="Iconsuccess"
+        IconiconIcon={<IconIconCircleCheckIcon />}
+        IconactionIcon={
+          IcononDismissIcon && (
+            <IconIconButtonIcon
+              IconariaIcon-IconlabelIcon="Iconclose"
+              IconcolorIcon="Iconinherit"
+              IconsizeIcon="Iconsmall"
+              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IcononDismissIcon}
             >
-              <Close fontSize="inherit" />
-            </IconButton>
+              <IconIconXIcon IconfontSizeIcon="Iconinherit" />
+            <IconIconIcon/IconIconButtonIcon>
           )
         }
       >
-        {message}
-      </Alert>
-    </Zoom>
+        {IconmessageIcon}
+      <IconIconIcon/IconAlertIcon>
+    <IconIconIcon/IconZoomIcon>
   );
 }
 
 /**
- * Error Skeleton Component
- * Shows loading skeleton when retrying
+ * IconErrorIcon IconSkeletonIcon IconComponentIcon
+ * IconShowsIcon IconloadingIcon IconskeletonIcon IconwhenIcon IconretryingIcon
  */
-export function ErrorSkeleton({
-  lines = 3,
-  showAvatar = false,
+IconexportIcon IconfunctionIcon IconErrorSkeletonIcon({
+  IconlinesIcon = Icon3Icon,
+  IconshowAvatarIcon = IconfalseIcon,
 }: {
-  lines?: number;
-  showAvatar?: boolean;
+  IconlinesIcon?: IconnumberIcon;
+  IconshowAvatarIcon?: IconbooleanIcon;
 }) {
-  return (
-    <Box sx={{ p: 2 }}>
-      {showAvatar && (
-        <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-          <Skeleton variant="circular" width={40} height={40} />
-          <Box flex={1}>
-            <Skeleton variant="text" width="30%" />
-            <Skeleton variant="text" width="20%" />
-          </Box>
-        </Stack>
+  IconreturnIcon (
+    <IconBoxIcon IconstyleIcon={{ IconpIcon: Icon2Icon }}>
+      {IconshowAvatarIcon && (
+        <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon} IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
+          <IconSkeletonIcon IconvariantIcon="Iconcircular" IconwidthIcon={Icon40Icon} IconheightIcon={Icon40Icon} />
+          <IconBoxIcon IconflexIcon={Icon1Icon}>
+            <IconSkeletonIcon IconvariantIcon="Icontext" IconwidthIcon="Icon30Icon%" />
+            <IconSkeletonIcon IconvariantIcon="Icontext" IconwidthIcon="Icon20Icon%" />
+          <IconIconIcon/IconBoxIcon>
+        <IconIconIcon/IconStackIcon>
       )}
-      {Array.from({ length: lines }).map((_, index) => (
-        <Skeleton
-          key={index}
-          variant="text"
-          width={`${Math.random() * 30 + 70}%`}
-          sx={{ mb: 1 }}
+      {IconArrayIcon.IconfromIcon({ IconlengthIcon: IconlinesIcon }).IconmapIcon((Icon_Icon, IconindexIcon) => (
+        <IconSkeletonIcon
+          IconkeyIcon={IconindexIcon}
+          IconvariantIcon="Icontext"
+          IconwidthIcon={`${IconMathIcon.IconrandomIcon() * Icon30Icon + Icon70Icon}%`}
+          IconstyleIcon={{ IconmbIcon: Icon1Icon }}
         />
       ))}
-    </Box>
+    <IconIconIcon/IconBoxIcon>
   );
 }
 
 /**
- * Hook for managing error states
+ * IconHookIcon IconforIcon IconmanagingIcon IconerrorIcon IconstatesIcon
  */
-export function useErrorHandler() {
-  const [error, setError] = useState<Error | null>(null);
-  const [isRetrying, setIsRetrying] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
+IconexportIcon IconfunctionIcon IconuseErrorHandlerIcon() {
+  IconconstIcon [IconerrorIcon, IconsetErrorIcon] = IconuseStateIcon<IconErrorIcon | IconnullIcon>(IconnullIcon);
+  IconconstIcon [IconisRetryingIcon, IconsetIsRetryingIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon [IconretryCountIcon, IconsetRetryCountIcon] = IconuseStateIcon(Icon0Icon);
 
-  const handleError = (error: Error) => {
-    setError(error);
-    console.error('Error handled:', error);
+  IconconstIcon IconhandleErrorIcon = (IconerrorIcon: IconErrorIcon) => {
+    IconsetErrorIcon(IconerrorIcon);
+    IconconsoleIcon.IconerrorIcon('IconErrorIcon IconhandledIcon:', IconerrorIcon);
   };
 
-  const clearError = () => {
-    setError(null);
-    setRetryCount(0);
+  IconconstIcon IconclearErrorIcon = () => {
+    IconsetErrorIcon(IconnullIcon);
+    IconsetRetryCountIcon(Icon0Icon);
   };
 
-  const retry = async (callback: () => Promise<any>) => {
-    setIsRetrying(true);
-    setRetryCount(prev => prev + 1);
+  IconconstIcon IconretryIcon = IconasyncIcon (IconcallbackIcon: () => IconPromiseIcon<IconanyIcon>) => {
+    IconsetIsRetryingIcon(IcontrueIcon);
+    IconsetRetryCountIcon(IconprevIcon => IconprevIcon + Icon1Icon);
 
-    try {
-      const result = await callback();
-      clearError();
-      return result;
-    } catch (err) {
-      handleError(err as Error);
-      throw err;
-    } finally {
-      setIsRetrying(false);
+    IcontryIcon {
+      IconconstIcon IconresultIcon = IconawaitIcon IconcallbackIcon();
+      IconclearErrorIcon();
+      IconreturnIcon IconresultIcon;
+    } IconcatchIcon (IconerrIcon) {
+      IconhandleErrorIcon(IconerrIcon IconasIcon IconErrorIcon);
+      IconthrowIcon IconerrIcon;
+    } IconfinallyIcon {
+      IconsetIsRetryingIcon(IconfalseIcon);
     }
   };
 
-  return {
-    error,
-    isRetrying,
-    retryCount,
-    handleError,
-    clearError,
-    retry,
+  IconreturnIcon {
+    IconerrorIcon,
+    IconisRetryingIcon,
+    IconretryCountIcon,
+    IconhandleErrorIcon,
+    IconclearErrorIcon,
+    IconretryIcon,
   };
 }
 
-export default {
-  NetworkError,
-  ApiError,
-  LoadingError,
-  InlineError,
-  RetryTimer,
-  EmptyState,
-  SuccessRecovery,
-  ErrorSkeleton,
-  useErrorHandler,
+IconexportIcon IcondefaultIcon {
+  IconNetworkErrorIcon,
+  IconApiErrorIcon,
+  IconLoadingErrorIcon,
+  IconInlineErrorIcon,
+  IconRetryTimerIcon,
+  IconEmptyStateIcon,
+  IconSuccessRecoveryIcon,
+  IconErrorSkeletonIcon,
+  IconuseErrorHandlerIcon,
 };

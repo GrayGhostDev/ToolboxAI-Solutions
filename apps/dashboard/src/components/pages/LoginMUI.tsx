@@ -1,19 +1,11 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
+// TODO: DEPRECATED - This component uses Material UI
+// Use LoginMantine.tsx instead which provides the same functionality with Mantine
+// This file can be removed once all references are updated
+
 import * as React from "react";
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Alert from '@mui/material/Alert';
-import Stack from '@mui/material/Stack';
-import InputAdornment from '@mui/material/InputAdornment';
-import IconButton from '@mui/material/IconButton';
-import Divider from '@mui/material/Divider';
-import Paper from '@mui/material/Paper';
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Visibility, VisibilityOff, Email, Lock } from "@mui/icons-material";
 import { login } from "../../services/api";
 import { useAppDispatch } from "../../store";
 import { signInSuccess } from "../../store/slices/userSlice";
@@ -113,7 +105,7 @@ export default function LoginMUI() {
 
   return (
     <Box
-      sx={{
+      style={{
         minHeight: "100vh",
         display: "flex",
         alignItems: "center",
@@ -124,7 +116,7 @@ export default function LoginMUI() {
     >
       <Paper
         elevation={24}
-        sx={{
+        style={{
           width: "100%",
           maxWidth: 400,
           borderRadius: 3,
@@ -132,26 +124,26 @@ export default function LoginMUI() {
         }}
       >
         <Box
-          sx={{
+          style={{
             p: 3,
             background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             color: "white",
             textAlign: "center",
           }}
         >
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+          <Typography order={4} style={{ fontWeight: 700, mb: 1 }}>
             Welcome Back
           </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.9 }}>
+          <Typography size="sm" style={{ opacity: 0.9 }}>
             Sign in to ToolBoxAI Educational Platform
           </Typography>
         </Box>
 
-        <CardContent sx={{ p: 3 }}>
+        <CardContent style={{ p: 3 }}>
           <Box component="form" onSubmit={handleSubmit}>
             <Stack spacing={3}>
               {error && (
-                <Alert severity="error" sx={{ borderRadius: 2 }}>
+                <Alert severity="error" style={{ borderRadius: 2 }}>
                   {error}
                 </Alert>
               )}
@@ -178,7 +170,7 @@ export default function LoginMUI() {
                     </InputAdornment>
                   ),
                 }}
-                sx={{
+                style={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: 2,
                   },
@@ -218,7 +210,7 @@ export default function LoginMUI() {
                     </InputAdornment>
                   ),
                 }}
-                sx={{
+                style={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: 2,
                   },
@@ -228,11 +220,11 @@ export default function LoginMUI() {
               <Button
                 type="submit"
                 fullWidth
-                variant="contained"
+                variant="filled"
                 size="large"
                 disabled={loading}
                 data-testid="login-submit"
-                sx={{
+                style={{
                   borderRadius: 2,
                   py: 1.5,
                   textTransform: "none",
@@ -243,7 +235,7 @@ export default function LoginMUI() {
                 {loading ? "Signing In..." : "Sign In"}
               </Button>
 
-              <Box sx={{ textAlign: "center" }}>
+              <Box style={{ textAlign: "center" }}>
                 <Link
                   to="/password-reset"
                   style={{
@@ -256,7 +248,7 @@ export default function LoginMUI() {
                 </Link>
               </Box>
 
-              <Divider sx={{ my: 2 }}>
+              <Divider style={{ my: 2 }}>
                 <Typography variant="caption" color="text.secondary">
                   Demo Credentials
                 </Typography>
@@ -274,8 +266,8 @@ export default function LoginMUI() {
                 </Typography>
               </Stack>
 
-              <Box sx={{ textAlign: "center", mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
+              <Box style={{ textAlign: "center", mt: 2 }}>
+                <Typography size="sm" color="text.secondary">
                   Don't have an account?{" "}
                   <Link
                     to="/register"

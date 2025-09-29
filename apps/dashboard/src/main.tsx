@@ -14,18 +14,10 @@ import { logger } from "./utils/logger";
 // Conditionally import Clerk components only when enabled
 const isClerkEnabled = import.meta.env.VITE_ENABLE_CLERK_AUTH === 'true';
 
-// Lazy load auth components to avoid import errors
-const ClerkProviderWrapper = isClerkEnabled
-  ? React.lazy(() => import("./components/auth/ClerkProviderWrapper").then(m => ({ default: m.ClerkProviderWrapper })))
-  : null;
-const ClerkAuthProvider = isClerkEnabled
-  ? React.lazy(() => import("./contexts/ClerkAuthContext").then(m => ({ default: m.ClerkAuthProvider })))
-  : null;
-
-// Load legacy auth provider when Clerk is disabled
-const LegacyAuthProvider = !isClerkEnabled
-  ? React.lazy(() => import("./contexts/AuthContext").then(m => ({ default: m.AuthProvider })))
-  : null;
+// Import auth components - now they exist!
+import ClerkProviderWrapper from "./components/auth/ClerkProviderWrapper";
+import { ClerkAuthProvider } from "./contexts/ClerkAuthContext";
+import { AuthProvider as LegacyAuthProvider } from "./contexts/AuthContext";
 
 // Clerk configuration validation
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -46,32 +38,22 @@ const RootApp = () => {
   );
 
   // Wrap with Clerk providers only if enabled
-  if (isClerkEnabled && ClerkProviderWrapper && ClerkAuthProvider) {
+  if (isClerkEnabled) {
     return (
-      <React.Suspense fallback={<div>Loading authentication...</div>}>
-        <ClerkProviderWrapper publishableKey={clerkPubKey}>
-          <ClerkAuthProvider>
-            {appContent}
-          </ClerkAuthProvider>
-        </ClerkProviderWrapper>
-      </React.Suspense>
+      <ClerkProviderWrapper>
+        <ClerkAuthProvider>
+          {appContent}
+        </ClerkAuthProvider>
+      </ClerkProviderWrapper>
     );
   }
 
   // Wrap with legacy auth provider when Clerk is disabled
-  if (!isClerkEnabled && LegacyAuthProvider) {
-    return (
-      <React.Suspense fallback={<div>Loading authentication...</div>}>
-        <LegacyAuthProvider>
-          {appContent}
-        </LegacyAuthProvider>
-      </React.Suspense>
-    );
-  }
-
-  // Fallback - return app without any auth provider (should not happen)
-  console.warn('No auth provider available - this may cause authentication errors');
-  return appContent;
+  return (
+    <LegacyAuthProvider>
+      {appContent}
+    </LegacyAuthProvider>
+  );
 };
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

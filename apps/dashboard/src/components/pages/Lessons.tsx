@@ -1,30 +1,6 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
-import Grid2 from "@mui/material/Unstable_Grid2";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Stack from "@mui/material/Stack";
-import Table from "@mui/material/Table";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import TableCell from "@mui/material/TableCell";
-import TableBody from "@mui/material/TableBody";
-import Chip from "@mui/material/Chip";
-import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import TextField from "@mui/material/TextField";
-import InputAdornment from "@mui/material/InputAdornment";
-import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import { listLessons, deleteLesson } from "../../services/api";
 import { useAppDispatch } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
@@ -136,27 +112,27 @@ export default function Lessons() {
               alignItems={{ xs: "flex-start", md: "center" }}
               gap={2}
             >
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
+              <Typography order={5} style={{ fontWeight: 600 }}>
                 Lessons
               </Typography>
-              <Stack direction="row" gap={2} sx={{ width: { xs: "100%", md: "auto" } }}>
+              <Stack direction="row" gap={2} style={{ width: { xs: "100%", md: "auto" } }}>
                 <TextField
                   size="small"
                   placeholder="Search lessons..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  sx={{ minWidth: 250 }}
+                  style={{ minWidth: 250 }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <SearchIcon />
+                        <IconSearch />
                       </InputAdornment>
                     ),
                   }}
                 />
                 <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
+                  variant="filled"
+                  startIcon={<IconPlus />}
                   onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
                 >
                   New Lesson
@@ -168,7 +144,7 @@ export default function Lessons() {
       </Grid2>
       <Grid2 xs={12}>
         <Card>
-          <CardContent sx={{ p: 0 }}>
+          <CardContent style={{ p: 0 }}>
             <Table aria-label="lessons table">
               <TableHead>
                 <TableRow>
@@ -198,7 +174,7 @@ export default function Lessons() {
                     <TableRow key={lesson.id} hover>
                       <TableCell>
                         <Stack>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          <Typography size="sm" style={{ fontWeight: 500 }}>
                             {lesson.title}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
@@ -210,8 +186,8 @@ export default function Lessons() {
                         <Chip
                           label={lesson.subject}
                           size="small"
-                          color="primary"
-                          variant="outlined"
+                          color="blue"
+                          variant="outline"
                         />
                       </TableCell>
                       <TableCell>
@@ -227,7 +203,7 @@ export default function Lessons() {
                           <Chip
                             label="Connected"
                             size="small"
-                            color="success"
+                            color="green"
                             icon={<RocketLaunchIcon />}
                           />
                         ) : (
@@ -245,7 +221,7 @@ export default function Lessons() {
                           size="small"
                           onClick={(e: React.MouseEvent) => (e) => handleMenuOpen(e, lesson)}
                         >
-                          <MoreVertIcon />
+                          <IconDotsVertical />
                         </IconButton>
                       </TableCell>
                     </TableRow>
@@ -264,7 +240,7 @@ export default function Lessons() {
                 }
                 handleMenuClose();
               }}>
-                <VisibilityIcon fontSize="small" sx={{ mr: 1 }} />
+                <IconEye fontSize="small" style={{ mr: 1 }} />
                 View Details
               </MenuItem>
               <MenuItem onClick={() => {
@@ -276,7 +252,7 @@ export default function Lessons() {
                 );
                 handleMenuClose();
               }}>
-                <EditIcon fontSize="small" sx={{ mr: 1 }} />
+                <IconEdit fontSize="small" style={{ mr: 1 }} />
                 Edit
               </MenuItem>
               <MenuItem onClick={() => {
@@ -292,17 +268,17 @@ export default function Lessons() {
                 }
                 handleMenuClose();
               }}>
-                <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
+                <ContentCopyIcon fontSize="small" style={{ mr: 1 }} />
                 Duplicate
               </MenuItem>
               {selectedLesson && !selectedLesson.robloxWorldId && (
                 <MenuItem onClick={(e: React.MouseEvent) => () => selectedLesson && handlePushToRoblox(selectedLesson)}>
-                  <RocketLaunchIcon fontSize="small" sx={{ mr: 1 }} />
+                  <RocketLaunchIcon fontSize="small" style={{ mr: 1 }} />
                   Push to Roblox
                 </MenuItem>
               )}
               <MenuItem onClick={(e: React.MouseEvent) => () => selectedLesson && handleDelete(selectedLesson)}>
-                <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
+                <IconTrash fontSize="small" style={{ mr: 1 }} />
                 Delete
               </MenuItem>
             </Menu>

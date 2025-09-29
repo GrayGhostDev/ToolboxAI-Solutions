@@ -83,44 +83,44 @@ export const getClerkConfig = (): ClerkConfig => {
     ),
     allowedOrigins,
 
-    // Material-UI theme integration
+    // Mantine theme integration with Roblox branding
     appearance: {
       elements: {
         rootBox: {
-          fontFamily: '"Roboto","Helvetica","Arial",sans-serif',
+          fontFamily: 'var(--mantine-font-family)',
         },
         card: {
-          borderRadius: '8px',
-          boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e0e0e0',
+          borderRadius: 'var(--mantine-radius-md)',
+          boxShadow: 'var(--mantine-shadow-sm)',
+          border: '1px solid var(--mantine-color-gray-3)',
         },
         headerTitle: {
-          fontFamily: '"Roboto","Helvetica","Arial",sans-serif',
-          fontSize: '1.5rem',
-          fontWeight: 500,
+          fontFamily: 'var(--mantine-font-family)',
+          fontSize: 'var(--mantine-font-size-xl)',
+          fontWeight: 600,
         },
         headerSubtitle: {
-          fontFamily: '"Roboto","Helvetica","Arial",sans-serif',
-          fontSize: '0.875rem',
-          color: '#666',
+          fontFamily: 'var(--mantine-font-family)',
+          fontSize: 'var(--mantine-font-size-sm)',
+          color: 'var(--mantine-color-dimmed)',
         },
         formButtonPrimary: {
-          backgroundColor: '#1976d2',
+          backgroundColor: '#e60012', // Roblox red
           '&:hover': {
-            backgroundColor: '#1565c0',
+            backgroundColor: '#cc0010',
           },
         },
         formFieldInput: {
-          borderRadius: '4px',
-          border: '1px solid #c4c4c4',
+          borderRadius: 'var(--mantine-radius-sm)',
+          border: '1px solid var(--mantine-color-gray-4)',
           '&:focus': {
-            borderColor: '#1976d2',
+            borderColor: '#e60012', // Roblox red
             outline: 'none',
-            boxShadow: '0 0 0 2px rgba(25, 118, 210, 0.2)',
+            boxShadow: '0 0 0 2px rgba(230, 0, 18, 0.2)',
           },
         },
         footerActionLink: {
-          color: '#1976d2',
+          color: '#e60012', // Roblox red
           textDecoration: 'none',
           '&:hover': {
             textDecoration: 'underline',
@@ -128,20 +128,20 @@ export const getClerkConfig = (): ClerkConfig => {
         },
       },
       variables: {
-        colorPrimary: '#1976d2',
-        colorDanger: '#d32f2f',
-        colorSuccess: '#2e7d32',
-        colorWarning: '#ed6c02',
-        colorNeutral: '#666',
-        colorText: '#212121',
-        colorTextSecondary: '#666',
+        colorPrimary: '#e60012', // Roblox red
+        colorDanger: '#e60012',
+        colorSuccess: '#00a135', // Roblox green
+        colorWarning: '#ffb900',
+        colorNeutral: '#393b3d',
+        colorText: '#393b3d',
+        colorTextSecondary: '#6c757d',
         colorBackground: '#ffffff',
-        colorInputBackground: '#ffffff',
-        colorInputText: '#212121',
-        fontFamily: '"Roboto","Helvetica","Arial",sans-serif',
-        fontSize: '14px',
+        colorInputBackground: '#f8f9fa',
+        colorInputText: '#495057',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        fontSize: '16px',
         fontWeight: '400',
-        borderRadius: '4px',
+        borderRadius: '8px',
         spacingUnit: '8px',
       },
     },

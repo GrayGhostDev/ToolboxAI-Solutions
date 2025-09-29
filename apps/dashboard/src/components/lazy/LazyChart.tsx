@@ -1,8 +1,5 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import React, { Suspense, lazy } from 'react';
-import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
-import Skeleton from '@mui/material/Skeleton';
-import Alert from '@mui/material/Alert';
 
 // Lazy load chart components
 const UserActivityChart = lazy(() => import('../analytics/UserActivityChart'));
@@ -17,9 +14,9 @@ interface LazyChartProps {
 
 // Enhanced loading skeleton for charts
 const ChartSkeleton = ({ height }: { height: number }) => (
-  <Box sx={{ p: 2 }}>
-    <Skeleton variant="text" width={200} height={32} sx={{ mb: 2 }} />
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+  <Box style={{ p: 2 }}>
+    <Skeleton variant="text" width={200} height={32} style={{ mb: 2 }} />
+    <Box style={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
       <Skeleton variant="rectangular" width={120} height={40} />
       <Skeleton variant="rectangular" width={100} height={40} />
     </Box>
@@ -62,7 +59,7 @@ export const LazyChart = ({
   fallbackHeight = 350
 }: LazyChartProps) => {
   const errorFallback = (
-    <Alert severity="warning" sx={{ height: fallbackHeight, display: 'flex', alignItems: 'center' }}>
+    <Alert severity="warning" style={{ height: fallbackHeight, display: 'flex', alignItems: 'center' }}>
       Chart temporarily unavailable. Please refresh the page.
     </Alert>
   );

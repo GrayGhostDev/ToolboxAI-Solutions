@@ -1,8 +1,5 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import * as React from "react";
-import Alert from "@mui/material/Alert";
-import Link from "@mui/material/Link";
-import Snackbar from "@mui/material/Snackbar";
-import Button from "@mui/material/Button";
 
 export default function CookieBanner() {
   const [open, setOpen] = React.useState(false);

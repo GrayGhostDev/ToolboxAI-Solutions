@@ -1,31 +1,7 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import * as React from "react";
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
-import AvatarGroup from '@mui/material/AvatarGroup';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Box from '@mui/material/Box';
-import LinearProgress from '@mui/material/LinearProgress';
-import TextField from '@mui/material/TextField';
-import InputAdornment from '@mui/material/InputAdornment';
 
 import { useNavigate } from "react-router-dom";
-import Grid from "@mui/material/Grid";
-import AddIcon from "@mui/icons-material/Add";
-import SearchIcon from "@mui/icons-material/Search";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import PeopleIcon from "@mui/icons-material/People";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import ScheduleIcon from "@mui/icons-material/Schedule";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useAppDispatch, useAppSelector } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
 import { setClasses, removeClass, setClassOnlineStatus } from "../../store/slices/classesSlice";
@@ -69,7 +45,7 @@ const ClassCard = React.memo<{
   return (
     <Card
       onClick={(e: React.MouseEvent) => handleCardClick}
-      sx={{
+      style={{
         cursor: "pointer",
         transition: "all 0.2s ease-in-out",
         "&:hover": {
@@ -82,57 +58,57 @@ const ClassCard = React.memo<{
     >
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6" component="h2" noWrap>
+          <Typography order={6} component="h2" noWrap>
             {classData.name}
           </Typography>
           <IconButton size="small" onClick={(e: React.MouseEvent) => handleMenuClick}>
-            <MoreVertIcon />
+            <IconDotsVertical />
           </IconButton>
         </Box>
         <Stack spacing={2}>
           <Box display="flex" alignItems="center" gap={1}>
-            <PeopleIcon color="primary" />
-            <Typography variant="body2" color="text.secondary">
+            <PeopleIcon color="blue" />
+            <Typography size="sm" color="text.secondary">
               Grade {classData.grade} • {classData.studentCount} students
             </Typography>
           </Box>
           <Box display="flex" alignItems="center" gap={1}>
             <ScheduleIcon color="action" />
-            <Typography variant="body2" color="text.secondary" noWrap>
+            <Typography size="sm" color="text.secondary" noWrap>
               {classData.schedule}
             </Typography>
           </Box>
           <Box>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography size="sm" color="text.secondary">
                 Progress
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography size="sm" color="text.secondary">
                 {Math.round(classData.completionRate * 100)}%
               </Typography>
             </Box>
             <LinearProgress
               variant="determinate"
               value={classData.completionRate * 100}
-              sx={{ height: 6, borderRadius: 3 }}
+              style={{ height: 6, borderRadius: 3 }}
             />
           </Box>
           <Box display="flex" alignItems="center" gap={1}>
-            <TrendingUpIcon color="success" />
-            <Typography variant="body2" color="text.secondary">
+            <TrendingUpIcon color="green" />
+            <Typography size="sm" color="text.secondary">
               Avg XP: {classData.averageXP}
             </Typography>
             <Chip
               size="small"
               label={classData.isOnline ? "Online" : "Offline"}
               color={classData.isOnline ? "success" : "default"}
-              variant="outlined"
+              variant="outline"
             />
           </Box>
           {classData.studentAvatars.length > 0 && (
-            <AvatarGroup max={4} sx={{ justifyContent: "flex-start" }}>
+            <AvatarGroup max={4} style={{ justifyContent: "flex-start" }}>
               {classData.studentAvatars.map((avatar, index) => (
-                <Avatar key={index} src={avatar} sx={{ width: 24, height: 24 }} />
+                <Avatar key={index} src={avatar} style={{ width: 24, height: 24 }} />
               ))}
             </AvatarGroup>
           )}
@@ -158,20 +134,20 @@ const ClassFilters = React.memo<{
         value={searchTerm}
         onChange={handleSearchChange}
         size="small"
-        sx={{ minWidth: 300 }}
+        style={{ minWidth: 300 }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <SearchIcon />
+              <IconSearch />
             </InputAdornment>
           ),
         }}
       />
       <Button
-        variant="contained"
-        startIcon={<AddIcon />}
+        variant="filled"
+        startIcon={<IconPlus />}
         onClick={(e: React.MouseEvent) => onCreateClass}
-        sx={{ minWidth: 140 }}
+        style={{ minWidth: 140 }}
       >
         New Class
       </Button>
@@ -307,11 +283,11 @@ export default function ClassesOptimized() {
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" component="h1">
+        <Typography order={4} component="h1">
           Classes
         </Typography>
         <Button
-          variant="outlined"
+          variant="outline"
           onClick={(e: React.MouseEvent) => fetchClasses}
           disabled={loading}
         >
@@ -360,15 +336,15 @@ export default function ClassesOptimized() {
         onClose={handleMenuClose}
       >
         <MenuItem onClick={(e: React.MouseEvent) => () => selectedClass && handleCardClick(selectedClass)}>
-          <VisibilityIcon sx={{ mr: 1 }} />
+          <IconEye style={{ mr: 1 }} />
           View Details
         </MenuItem>
         <MenuItem onClick={(e: React.MouseEvent) => handleMenuClose}>
-          <EditIcon sx={{ mr: 1 }} />
+          <IconEdit style={{ mr: 1 }} />
           Edit Class
         </MenuItem>
         <MenuItem onClick={(e: React.MouseEvent) => handleDeleteClass}>
-          <DeleteIcon sx={{ mr: 1 }} />
+          <IconTrash style={{ mr: 1 }} />
           Delete Class
         </MenuItem>
       </Menu>

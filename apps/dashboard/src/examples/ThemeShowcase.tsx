@@ -1,3 +1,4 @@
+import { Box, Button, Text, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../utils/mui-imports';
 /**
  * Theme Showcase Component
  *
@@ -6,23 +7,33 @@
  */
 
 import React from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid';
-import Stack from '@mui/material/Stack';
-import Divider from '@mui/material/Divider';
-import Paper from '@mui/material/Paper';
-import Avatar from '@mui/material/Avatar';
-import Avatar from '@mui/material/Avatar';
+import { IconBell, IconEmojiEvents, IconSchool, IconSettings, IconSpeed, IconStar, IconVideogameAsset } from '@tabler/icons-react';
 import {
-  Star,
-  EmojiEvents,
-  Speed,
-  School,
-  VideogameAsset,
-  Notifications,
-  Settings
-} from '@mui/icons-material';
+  IconHome, IconUser, IconSettings, IconLogout, IconChevronDown,
+  IconChevronUp, IconChevronLeft, IconChevronRight, IconMenu,
+  IconX, IconCheck, IconPlus, IconMinus, IconEdit, IconTrash,
+  IconSearch, IconFilter, IconDownload, IconUpload, IconEye,
+  IconEyeOff, IconBell, IconMessage, IconStar, IconHeart,
+  IconShare, IconRefresh, IconLogin, IconSchool, IconBook,
+  IconChartBar, IconPalette, IconMoon, IconSun, IconPlayerPlay,
+  IconPlayerPause, IconPlayerStop, IconVolume, IconVolumeOff,
+  IconInfoCircle, IconAlertTriangle, IconCircleX, IconCircleCheck,
+  IconArrowLeft, IconArrowRight, IconSend, IconDeviceFloppy,
+  IconPrinter, IconHelp, IconHelpCircle, IconLock, IconLockOpen,
+  IconMail, IconPhone, IconMapPin, IconMap, IconCalendar, IconClock,
+  IconWifi, IconWifiOff, IconBluetooth, IconBattery, IconCamera,
+  IconMicrophone, IconMicrophoneOff, IconVideo, IconVideoOff,
+  IconPhoto, IconPaperclip, IconCloud, IconCloudUpload,
+  IconCloudDownload, IconFolder, IconFolderOpen, IconFolderPlus,
+  IconFile, IconFileText, IconClipboard, IconBan, IconFlag,
+  IconBookmark, IconShoppingCart, IconUserCircle, IconMoodSmile,
+  IconMoodSad, IconThumbUp, IconThumbDown, IconMessages,
+  IconMessageQuestion, IconSpeakerphone, IconBellRinging,
+  IconBellOff, IconCalendarEvent, IconCalendarStats, IconAlarm,
+  IconAlarmOff, IconHistory, IconRefreshOff, IconRefreshAlert,
+  IconDashboard, IconUsers, IconDotsVertical, IconDots,
+  IconReportAnalytics
+} from '@tabler/icons-react';
 import {
   RobloxCard,
   RobloxButton,
@@ -42,228 +53,228 @@ const ThemeShowcase: React.FunctionComponent<Record<string, any>> = () => {
   const { isDark, mode } = useThemeContext();
 
   return (
-    <Box sx={{ p: 4, maxWidth: 1200, mx: 'auto' }}>
+    <Box style={{ p: 4, maxWidth: 1200, mx: 'auto' }}>
       {/* Header */}
-      <Box sx={{ mb: 6, textAlign: 'center' }}>
-        <Typography variant="h2" component="h1" gutterBottom>
+      <Box style={{ mb: 6, textAlign: 'center' }}>
+        <Text order={2} component="h1" gutterBottom>
           Roblox Theme Showcase
-        </Typography>
-        <Typography variant="h6" color="text.secondary" gutterBottom>
+        </Text>
+        <Text order={6} color="text.secondary" gutterBottom>
           Current theme: {mode} mode ({isDark ? 'dark' : 'light'})
-        </Typography>
-        <Box sx={{ mt: 2 }}>
+        </Text>
+        <Box style={{ mt: 2 }}>
           <ThemeSwitcher variant="menu" showLabel />
         </Box>
       </Box>
 
-      <Grid container spacing={4}>
+      <SimpleGrid spacing={4}>
         {/* Buttons Section */}
-        <Grid item xs={12} md={6}>
+        <Box xs={12} md={6}>
           <RobloxCard>
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
+            <Box style={{ p: 3 }}>
+              <Text order={5} gutterBottom>
                 Buttons
-              </Typography>
-              <Stack spacing={2}>
-                <RobloxButton variant="contained" size="large">
+              </Text>
+              <Stack gap={2}>
+                <RobloxButton variant="filled" size="large">
                   Primary Button
                 </RobloxButton>
-                <RobloxButton variant="outlined">
+                <RobloxButton variant="outline">
                   Secondary Button
                 </RobloxButton>
-                <RobloxButton variant="text">
+                <RobloxButton variant="subtle">
                   Text Button
                 </RobloxButton>
-                <RobloxButton variant="contained" disabled>
+                <RobloxButton variant="filled" disabled>
                   Disabled Button
                 </RobloxButton>
               </Stack>
             </Box>
           </RobloxCard>
-        </Grid>
+        </SimpleGrid>
 
         {/* Chips Section */}
-        <Grid item xs={12} md={6}>
+        <Box xs={12} md={6}>
           <RobloxCard>
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
+            <Box style={{ p: 3 }}>
+              <Text order={5} gutterBottom>
                 Gamification Chips
-              </Typography>
+              </Text>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 <RobloxChip label="Common" rarity="common" />
                 <RobloxChip label="Rare" rarity="rare" />
                 <RobloxChip label="Epic" rarity="epic" />
                 <RobloxChip label="Legendary" rarity="legendary" />
               </Stack>
-              <Box sx={{ mt: 2 }}>
+              <Box style={{ mt: 2 }}>
                 <RobloxChip
                   label="Level 25"
-                  icon={<EmojiEvents />}
+                  icon={<IconEmojiEvents />}
                   variant="filled"
                 />
                 <RobloxChip
                   label="Pro Player"
-                  icon={<Star />}
-                  variant="outlined"
-                  sx={{ ml: 1 }}
+                  icon={<IconStar />}
+                  variant="outline"
+                  style={{ ml: 1 }}
                 />
               </Box>
             </Box>
           </RobloxCard>
-        </Grid>
+        </SimpleGrid>
 
         {/* Progress Bars */}
-        <Grid item xs={12}>
+        <Box xs={12}>
           <RobloxCard>
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
+            <Box style={{ p: 3 }}>
+              <Text order={5} gutterBottom>
                 XP Progress Bars
-              </Typography>
-              <Stack spacing={3}>
+              </Text>
+              <Stack gap={3}>
                 <Box>
-                  <Typography variant="body2" gutterBottom>
+                  <Text size="sm" gutterBottom>
                     Level 1 - Beginner (25% XP)
-                  </Typography>
+                  </Text>
                   <XPProgressBar value={25} level={1} />
                 </Box>
                 <Box>
-                  <Typography variant="body2" gutterBottom>
+                  <Text size="sm" gutterBottom>
                     Level 15 - Intermediate (65% XP)
-                  </Typography>
+                  </Text>
                   <XPProgressBar value={65} level={15} />
                 </Box>
                 <Box>
-                  <Typography variant="body2" gutterBottom>
+                  <Text size="sm" gutterBottom>
                     Level 50 - Expert (90% XP)
-                  </Typography>
+                  </Text>
                   <XPProgressBar value={90} level={50} />
                 </Box>
               </Stack>
             </Box>
           </RobloxCard>
-        </Grid>
+        </SimpleGrid>
 
         {/* Avatars Section */}
-        <Grid item xs={12} md={6}>
+        <Box xs={12} md={6}>
           <RobloxCard>
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
+            <Box style={{ p: 3 }}>
+              <Text order={5} gutterBottom>
                 Gaming Avatars
-              </Typography>
+              </Text>
               <Stack direction="row" spacing={3} alignItems="center">
                 <RobloxAvatar level={1} isOnline>
-                  <Avatar sx={{ width: 56, height: 56 }}>
-                    <VideogameAsset />
+                  <Avatar style={{ width: 56, height: 56 }}>
+                    <IconVideogameAsset />
                   </Avatar>
                 </RobloxAvatar>
                 <RobloxAvatar level={25} isOnline={false}>
-                  <Avatar sx={{ width: 56, height: 56 }}>
-                    <School />
+                  <Avatar style={{ width: 56, height: 56 }}>
+                    <IconSchool />
                   </Avatar>
                 </RobloxAvatar>
                 <AchievementBadge badgeContent="!" achievement="gold">
                   <RobloxAvatar level={100} isOnline>
-                    <Avatar sx={{ width: 56, height: 56 }}>
-                      <Star />
+                    <Avatar style={{ width: 56, height: 56 }}>
+                      <IconStar />
                     </Avatar>
                   </RobloxAvatar>
                 </AchievementBadge>
               </Stack>
             </Box>
           </RobloxCard>
-        </Grid>
+        </SimpleGrid>
 
-        {/* Notifications */}
-        <Grid item xs={12} md={6}>
-          <Stack spacing={2}>
+        {/* IconBell */}
+        <Box xs={12} md={6}>
+          <Stack gap={2}>
             <RobloxNotificationCard severity="success">
-              <Box sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
+              <Box style={{ p: 2 }}>
+                <Text order={6} gutterBottom>
                   Achievement Unlocked!
-                </Typography>
-                <Typography variant="body2">
+                </Text>
+                <Text size="sm">
                   You've completed your first lesson!
-                </Typography>
+                </Text>
               </Box>
             </RobloxNotificationCard>
             
             <RobloxNotificationCard severity="info">
-              <Box sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
+              <Box style={{ p: 2 }}>
+                <Text order={6} gutterBottom>
                   New Content Available
-                </Typography>
-                <Typography variant="body2">
+                </Text>
+                <Text size="sm">
                   Check out the latest math challenges.
-                </Typography>
+                </Text>
               </Box>
             </RobloxNotificationCard>
             
             <RobloxNotificationCard severity="warning">
-              <Box sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
+              <Box style={{ p: 2 }}>
+                <Text order={6} gutterBottom>
                   Assignment Due Soon
-                </Typography>
-                <Typography variant="body2">
+                </Text>
+                <Text size="sm">
                   You have 2 days left to submit.
-                </Typography>
+                </Text>
               </Box>
             </RobloxNotificationCard>
           </Stack>
-        </Grid>
+        </SimpleGrid>
 
         {/* Game Container */}
-        <Grid item xs={12}>
+        <Box xs={12}>
           <GameContainer>
-            <Typography variant="h4" component="h2" gutterBottom align="center">
+            <Text order={4} component="h2" gutterBottom align="center">
               Welcome to the Learning Arena!
-            </Typography>
-            <Typography variant="body1" align="center" sx={{ mb: 4 }}>
+            </Text>
+            <Text size="md" align="center" style={{ mb: 4 }}>
               Embark on your educational journey with gamified learning experiences.
-            </Typography>
+            </Text>
             
-            <Grid container spacing={3} justifyContent="center">
-              <Grid item>
-                <Box sx={{ textAlign: 'center' }}>
+            <SimpleGrid spacing={3} justifyContent="center">
+              <Box>
+                <Box style={{ textAlign: 'center' }}>
                   <RobloxFAB>
-                    <Speed />
+                    <IconSpeed />
                   </RobloxFAB>
-                  <Typography variant="body2" sx={{ mt: 1 }}>
+                  <Text size="sm" style={{ mt: 1 }}>
                     Quick Start
-                  </Typography>
+                  </Text>
                 </Box>
-              </Grid>
-              <Grid item>
-                <Box sx={{ textAlign: 'center' }}>
+              </SimpleGrid>
+              <Box>
+                <Box style={{ textAlign: 'center' }}>
                   <RobloxFAB>
-                    <EmojiEvents />
+                    <IconEmojiEvents />
                   </RobloxFAB>
-                  <Typography variant="body2" sx={{ mt: 1 }}>
+                  <Text size="sm" style={{ mt: 1 }}>
                     Achievements
-                  </Typography>
+                  </Text>
                 </Box>
-              </Grid>
-              <Grid item>
-                <Box sx={{ textAlign: 'center' }}>
+              </SimpleGrid>
+              <Box>
+                <Box style={{ textAlign: 'center' }}>
                   <RobloxFAB>
-                    <School />
+                    <IconSchool />
                   </RobloxFAB>
-                  <Typography variant="body2" sx={{ mt: 1 }}>
+                  <Text size="sm" style={{ mt: 1 }}>
                     Courses
-                  </Typography>
+                  </Text>
                 </Box>
-              </Grid>
-            </Grid>
+              </SimpleGrid>
+            </SimpleGrid>
           </GameContainer>
-        </Grid>
+        </SimpleGrid>
 
         {/* Loading States */}
-        <Grid item xs={12} md={6}>
+        <Box xs={12} md={6}>
           <RobloxCard>
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
+            <Box style={{ p: 3 }}>
+              <Text order={5} gutterBottom>
                 Loading States
-              </Typography>
-              <Stack spacing={2}>
+              </Text>
+              <Stack gap={2}>
                 <RobloxSkeleton width="60%" height={32} />
                 <RobloxSkeleton width="80%" height={24} />
                 <RobloxSkeleton width="40%" height={24} />
@@ -271,88 +282,88 @@ const ThemeShowcase: React.FunctionComponent<Record<string, any>> = () => {
               </Stack>
             </Box>
           </RobloxCard>
-        </Grid>
+        </SimpleGrid>
 
-        {/* Typography */}
-        <Grid item xs={12} md={6}>
+        {/* Text */}
+        <Box xs={12} md={6}>
           <RobloxCard>
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
-                Typography
-              </Typography>
-              <Stack spacing={1}>
-                <Typography variant="h1">Heading 1</Typography>
-                <Typography variant="h2">Heading 2</Typography>
-                <Typography variant="h3">Heading 3</Typography>
-                <Typography variant="h4">Heading 4</Typography>
-                <Typography variant="h5">Heading 5</Typography>
-                <Typography variant="h6">Heading 6</Typography>
-                <Typography variant="body1">
+            <Box style={{ p: 3 }}>
+              <Text order={5} gutterBottom>
+                Text
+              </Text>
+              <Stack gap={1}>
+                <Text order={1}>Heading 1</Text>
+                <Text order={2}>Heading 2</Text>
+                <Text order={3}>Heading 3</Text>
+                <Text order={4}>Heading 4</Text>
+                <Text order={5}>Heading 5</Text>
+                <Text order={6}>Heading 6</Text>
+                <Text size="md">
                   Body 1: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
+                </Text>
+                <Text size="sm" color="text.secondary">
                   Body 2: Secondary text with proper contrast.
-                </Typography>
+                </Text>
               </Stack>
             </Box>
           </RobloxCard>
-        </Grid>
+        </SimpleGrid>
 
         {/* Animation Classes */}
-        <Grid item xs={12}>
+        <Box xs={12}>
           <RobloxCard>
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
+            <Box style={{ p: 3 }}>
+              <Text order={5} gutterBottom>
                 Animation Classes
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
+              </Text>
+              <Text size="sm" color="text.secondary" gutterBottom>
                 Hover over elements to see animations in action.
-              </Typography>
-              <Grid container spacing={2} sx={{ mt: 2 }}>
-                <Grid item>
+              </Text>
+              <SimpleGrid spacing={2} style={{ mt: 2 }}>
+                <Box>
                   <Paper 
                     className="roblox-pulse"
-                    sx={{ p: 2, textAlign: 'center', minWidth: 100 }}
+                    style={{ p: 2, textAlign: 'center', minWidth: 100 }}
                   >
-                    <Typography variant="body2">Pulse</Typography>
+                    <Text size="sm">Pulse</Text>
                   </Paper>
-                </Grid>
-                <Grid item>
+                </SimpleGrid>
+                <Box>
                   <Paper 
                     className="roblox-float"
-                    sx={{ p: 2, textAlign: 'center', minWidth: 100 }}
+                    style={{ p: 2, textAlign: 'center', minWidth: 100 }}
                   >
-                    <Typography variant="body2">Float</Typography>
+                    <Text size="sm">Float</Text>
                   </Paper>
-                </Grid>
-                <Grid item>
+                </SimpleGrid>
+                <Box>
                   <Paper 
                     className="roblox-glow"
-                    sx={{ p: 2, textAlign: 'center', minWidth: 100 }}
+                    style={{ p: 2, textAlign: 'center', minWidth: 100 }}
                   >
-                    <Typography variant="body2">Glow</Typography>
+                    <Text size="sm">Glow</Text>
                   </Paper>
-                </Grid>
-                <Grid item>
+                </SimpleGrid>
+                <Box>
                   <Paper 
                     className="roblox-shimmer"
-                    sx={{ p: 2, textAlign: 'center', minWidth: 100 }}
+                    style={{ p: 2, textAlign: 'center', minWidth: 100 }}
                   >
-                    <Typography variant="body2">Shimmer</Typography>
+                    <Text size="sm">Shimmer</Text>
                   </Paper>
-                </Grid>
-              </Grid>
+                </SimpleGrid>
+              </SimpleGrid>
             </Box>
           </RobloxCard>
-        </Grid>
-      </Grid>
+        </SimpleGrid>
+      </SimpleGrid>
 
       {/* Footer */}
-      <Box sx={{ mt: 6, textAlign: 'center' }}>
-        <Divider sx={{ mb: 3 }} />
-        <Typography variant="body2" color="text.secondary">
+      <Box style={{ mt: 6, textAlign: 'center' }}>
+        <Divider style={{ mb: 3 }} />
+        <Text size="sm" color="text.secondary">
           Roblox-Inspired Design System for ToolBoxAI Educational Platform
-        </Typography>
+        </Text>
       </Box>
     </Box>
   );

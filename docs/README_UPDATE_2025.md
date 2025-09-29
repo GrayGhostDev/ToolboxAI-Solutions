@@ -7,6 +7,7 @@
 - **🔄 Modern UI Framework**: Migrating to Mantine v8.3.1 (8/149 files complete)
 - **✅ Docker Integration**: Complete containerization with Docker Hub
 - **✅ AI Service Integration**: MCP, Agent Coordinator, and educational services
+- **✅ LangChain/LangGraph Integration**: Full observability with LangSmith (Sept 28)
 - **✅ Enhanced Security**: 2025 Docker and web security standards
 
 ## 🏗 **Current Architecture**
@@ -25,6 +26,7 @@
 │ ├── FastAPI Backend (8009) - Main API + Pusher Auth        │
 │ ├── MCP Server (9877) - AI Model Context Protocol          │
 │ ├── Agent Coordinator (8888) - AI Agent Orchestration      │
+│ ├── LangGraph API (8123) - Agent Workflow Management       │
 │ ├── Roblox Bridge (5001) - Educational Game Integration    │
 │ └── Ghost CMS (8000) - Content Management                  │
 ├─────────────────────────────────────────────────────────────┤

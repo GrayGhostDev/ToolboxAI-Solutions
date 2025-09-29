@@ -12,7 +12,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider, createTheme } from '@mantine/core/styles';
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import Login from '../../../components/pages/Login';

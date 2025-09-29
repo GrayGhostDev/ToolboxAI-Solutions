@@ -1,3 +1,4 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../utils/mui-imports';
 /**
  * Pusher Usage Examples for ToolboxAI Dashboard
  *
@@ -6,21 +7,6 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Stack,
-  Alert,
-  TextField,
-  Chip,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-} from '@mui/material';
 
 // Import Pusher hooks and utilities
 import {
@@ -60,7 +46,7 @@ export const BasicConnectionExample: React.FC = () => {
   return (
     <Card>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
+        <Typography order={6} gutterBottom>
           Basic Connection Monitoring
         </Typography>
 
@@ -68,13 +54,13 @@ export const BasicConnectionExample: React.FC = () => {
           <PusherConnectionStatus size="medium" />
 
           <Box>
-            <Typography variant="body2" color="text.secondary">
+            <Typography size="sm" color="text.secondary">
               Status: {ConnectionStateUtils.getStatusMessage(state)}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography size="sm" color="text.secondary">
               Messages Sent: {stats.messagesSent}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography size="sm" color="text.secondary">
               Messages Received: {stats.messagesReceived}
             </Typography>
           </Box>
@@ -127,7 +113,7 @@ export const ChannelSubscriptionExample: React.FC = () => {
   return (
     <Card>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
+        <Typography order={6} gutterBottom>
           Channel Subscription Example
         </Typography>
 
@@ -148,7 +134,7 @@ export const ChannelSubscriptionExample: React.FC = () => {
             {subscriptionError && (
               <Chip
                 label="Error"
-                color="error"
+                color="red"
                 size="small"
                 title={subscriptionError.message}
               />
@@ -165,7 +151,7 @@ export const ChannelSubscriptionExample: React.FC = () => {
             Recent Messages ({messages.length}):
           </Typography>
 
-          <List dense sx={{ maxHeight: 200, overflow: 'auto' }}>
+          <List dense style={{ maxHeight: 200, overflow: 'auto' }}>
             {messages.slice(-10).map((message, index) => (
               <ListItem key={index}>
                 <ListItemText
@@ -223,7 +209,7 @@ export const MessageSendingExample: React.FC = () => {
   return (
     <Card>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
+        <Typography order={6} gutterBottom>
           Message Sending Example
         </Typography>
 
@@ -246,7 +232,7 @@ export const MessageSendingExample: React.FC = () => {
           />
 
           <Button
-            variant="contained"
+            variant="filled"
             onClick={handleSendMessage}
             disabled={isSending || !messageText.trim()}
           >
@@ -265,7 +251,7 @@ export const MessageSendingExample: React.FC = () => {
             Sent Messages:
           </Typography>
 
-          <List dense sx={{ maxHeight: 150, overflow: 'auto' }}>
+          <List dense style={{ maxHeight: 150, overflow: 'auto' }}>
             {sentMessages.slice(-5).map((message, index) => (
               <ListItem key={index}>
                 <ListItemText primary={message} />
@@ -327,13 +313,13 @@ export const ContentGenerationExample: React.FC = () => {
   return (
     <Card>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
+        <Typography order={6} gutterBottom>
           Content Generation Monitoring
         </Typography>
 
         <Stack spacing={2}>
           <Button
-            variant="contained"
+            variant="filled"
             onClick={startContentGeneration}
             disabled={isGenerating}
           >
@@ -344,7 +330,7 @@ export const ContentGenerationExample: React.FC = () => {
             Progress Updates:
           </Typography>
 
-          <List dense sx={{ maxHeight: 200, overflow: 'auto' }}>
+          <List dense style={{ maxHeight: 200, overflow: 'auto' }}>
             {progressData.map((progress, index) => (
               <ListItem key={index}>
                 <ListItemText
@@ -391,14 +377,14 @@ export const PresenceChannelExample: React.FC = () => {
   return (
     <Card>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
+        <Typography order={6} gutterBottom>
           Presence Channel Example
         </Typography>
 
         <Stack spacing={2}>
           <Box display="flex" gap={1}>
             <Button
-              variant="contained"
+              variant="filled"
               onClick={joinChannel}
               disabled={isJoined}
               size="small"
@@ -406,7 +392,7 @@ export const PresenceChannelExample: React.FC = () => {
               Join Channel
             </Button>
             <Button
-              variant="outlined"
+              variant="outline"
               onClick={leaveChannel}
               disabled={!isJoined}
               size="small"
@@ -480,11 +466,11 @@ export const EventListeningExample: React.FC = () => {
   return (
     <Card>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
+        <Typography order={6} gutterBottom>
           Event Listening Example
         </Typography>
 
-        <Typography variant="body2" color="text.secondary" gutterBottom>
+        <Typography size="sm" color="text.secondary" gutterBottom>
           Listening for: User Achievements, System Alerts
         </Typography>
 
@@ -492,7 +478,7 @@ export const EventListeningExample: React.FC = () => {
           Recent Events ({events.length}):
         </Typography>
 
-        <List dense sx={{ maxHeight: 200, overflow: 'auto' }}>
+        <List dense style={{ maxHeight: 200, overflow: 'auto' }}>
           {events.slice(-10).map((event, index) => (
             <ListItem key={index}>
               <ListItemText
@@ -517,12 +503,12 @@ export const EventListeningExample: React.FC = () => {
  */
 export const PusherUsageExamples: React.FC = () => {
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
+    <Box style={{ p: 3 }}>
+      <Typography order={4} gutterBottom>
         Pusher Usage Examples
       </Typography>
 
-      <Typography variant="body1" color="text.secondary" paragraph>
+      <Typography size="md" color="text.secondary" paragraph>
         This page demonstrates various ways to use the Pusher service in the ToolboxAI Dashboard.
       </Typography>
 

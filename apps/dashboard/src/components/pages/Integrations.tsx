@@ -1,47 +1,6 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import * as React from "react";
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
-import Switch from '@mui/material/Switch';
-import IconButton from '@mui/material/IconButton';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import TextField from '@mui/material/TextField';
-import Box from '@mui/material/Box';
-import LinearProgress from '@mui/material/LinearProgress';
-import FormGroup from '@mui/material/FormGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
 
-import Grid2 from "@mui/material/Unstable_Grid2";
-import IntegrationInstructionsIcon from "@mui/icons-material/IntegrationInstructions";
-import FileDownload from "@mui/icons-material/FileDownload";
-import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
-import CloudSyncIcon from "@mui/icons-material/CloudSync";
-import SchoolIcon from "@mui/icons-material/School";
-import StorageIcon from "@mui/icons-material/Storage";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ErrorIcon from "@mui/icons-material/Error";
-import SyncIcon from "@mui/icons-material/Sync";
-import SettingsIcon from "@mui/icons-material/Settings";
-import ApiIcon from "@mui/icons-material/Api";
-import CodeIcon from "@mui/icons-material/Code";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useAppSelector } from "../../store";
 
 interface Integration {
@@ -79,7 +38,7 @@ export default function Integrations() {
       id: "roblox",
       name: "Roblox Studio",
       type: "gaming",
-      icon: <SportsEsportsIcon sx={{ color: "#E74C3C" }} />,
+      icon: <SportsEsportsIcon style={{ color: "#E74C3C" }} />,
       status: "connected",
       description: "Direct integration with Roblox for educational experiences",
       lastSync: "2024-01-29 10:30:00",
@@ -90,7 +49,7 @@ export default function Integrations() {
       id: "google-classroom",
       name: "Google Classroom",
       type: "lms",
-      icon: <SchoolIcon sx={{ color: "#4285F4" }} />,
+      icon: <IconSchool style={{ color: "#4285F4" }} />,
       status: "connected",
       description: "Sync with Google Classroom for assignments and grades",
       lastSync: "2024-01-29 09:15:00",
@@ -101,7 +60,7 @@ export default function Integrations() {
       id: "canvas",
       name: "Canvas LMS",
       type: "lms",
-      icon: <SchoolIcon sx={{ color: "#E74C3C" }} />,
+      icon: <IconSchool style={{ color: "#E74C3C" }} />,
       status: "disconnected",
       description: "Integration with Canvas Learning Management System",
       features: ["Course Management", "Grade Book", "Assignment Submission", "Discussion Forums"],
@@ -111,7 +70,7 @@ export default function Integrations() {
       id: "microsoft-teams",
       name: "Microsoft Teams",
       type: "communication",
-      icon: <CloudSyncIcon sx={{ color: "#5059C9" }} />,
+      icon: <CloudSyncIcon style={{ color: "#5059C9" }} />,
       status: "syncing",
       description: "Collaborate through Microsoft Teams for Education",
       lastSync: "2024-01-29 11:00:00",
@@ -122,7 +81,7 @@ export default function Integrations() {
       id: "google-drive",
       name: "Google Drive",
       type: "cloud",
-      icon: <StorageIcon sx={{ color: "#0F9D58" }} />,
+      icon: <StorageIcon style={{ color: "#0F9D58" }} />,
       status: "connected",
       description: "Store and share educational content via Google Drive",
       lastSync: "2024-01-29 08:45:00",
@@ -133,7 +92,7 @@ export default function Integrations() {
       id: "kahoot",
       name: "Kahoot!",
       type: "gaming",
-      icon: <SportsEsportsIcon sx={{ color: "#46178F" }} />,
+      icon: <SportsEsportsIcon style={{ color: "#46178F" }} />,
       status: "error",
       description: "Create and play learning games with Kahoot!",
       features: ["Quiz Creation", "Live Games", "Reports", "Student Engagement"],
@@ -220,9 +179,9 @@ export default function Integrations() {
               gap={2}
             >
               <Stack direction="row" alignItems="center" gap={2}>
-                <IntegrationInstructionsIcon sx={{ fontSize: 32, color: "primary.main" }} />
+                <IntegrationInstructionsIcon style={{ fontSize: 32, color: "primary.main" }} />
                 <div>
-                  <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                  <Typography order={5} style={{ fontWeight: 600 }}>
                     Platform Integrations
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
@@ -231,10 +190,10 @@ export default function Integrations() {
                 </div>
               </Stack>
               <Stack direction="row" gap={2}>
-                <Button variant="outlined" startIcon={<ApiIcon />} onClick={(e: React.MouseEvent) => () => setApiDialogOpen(true)}>
+                <Button variant="outline" startIcon={<ApiIcon />} onClick={(e: React.MouseEvent) => () => setApiDialogOpen(true)}>
                   API Docs
                 </Button>
-                <Button variant="contained" startIcon={<AddIcon />}>
+                <Button variant="filled" startIcon={<IconPlus />}>
                   Add Integration
                 </Button>
               </Stack>
@@ -251,7 +210,7 @@ export default function Integrations() {
               <Typography variant="caption" color="text.secondary">
                 Active Integrations
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 700 }}>
+              <Typography order={4} style={{ fontWeight: 700 }}>
                 {integrations.filter(i => i.status === "connected").length}
               </Typography>
               <Typography variant="caption" color="success.main">
@@ -269,7 +228,7 @@ export default function Integrations() {
               <Typography variant="caption" color="text.secondary">
                 API Calls Today
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 700 }}>
+              <Typography order={4} style={{ fontWeight: 700 }}>
                 {apiEndpoints.reduce((sum, api) => sum + api.callCount, 0).toLocaleString()}
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -287,7 +246,7 @@ export default function Integrations() {
               <Typography variant="caption" color="text.secondary">
                 Data Synced
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 700 }}>
+              <Typography order={4} style={{ fontWeight: 700 }}>
                 245 GB
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -305,7 +264,7 @@ export default function Integrations() {
               <Typography variant="caption" color="text.secondary">
                 System Health
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: "success.main" }}>
+              <Typography order={4} style={{ fontWeight: 700, color: "success.main" }}>
                 98.5%
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -323,7 +282,7 @@ export default function Integrations() {
           Your educational experiences are syncing with Roblox. Last sync: 5 minutes ago. 
           <Button 
             size="small" 
-            sx={{ ml: 2 }}
+            style={{ ml: 2 }}
             onClick={(e: React.MouseEvent) => () => {
               const robloxIntegration = integrations.find(i => i.id === "roblox");
               if (robloxIntegration) {
@@ -339,13 +298,13 @@ export default function Integrations() {
 
       {/* Integration Cards */}
       <Grid2 xs={12}>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+        <Typography order={6} style={{ fontWeight: 600, mb: 2 }}>
           Available Integrations
         </Typography>
         <Grid2 container spacing={2}>
           {integrations.map((integration) => (
             <Grid2 key={integration.id} xs={12} md={6} lg={4}>
-              <Card sx={{
+              <Card style={{
                 height: "100%",
                 opacity: integration.status === "disconnected" ? 0.7 : 1,
                 transition: "all 0.3s",
@@ -361,7 +320,7 @@ export default function Integrations() {
                       <Stack direction="row" alignItems="center" gap={1}>
                         {integration.icon}
                         <div>
-                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                          <Typography order={6} style={{ fontWeight: 600 }}>
                             {integration.name}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
@@ -373,18 +332,18 @@ export default function Integrations() {
                     </Stack>
 
                     {/* Description */}
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography size="sm" color="text.secondary">
                       {integration.description}
                     </Typography>
 
                     {/* Features */}
                     <Box>
-                      <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+                      <Typography variant="caption" color="text.secondary" style={{ mb: 1 }}>
                         Features:
                       </Typography>
                       <Stack direction="row" flexWrap="wrap" gap={0.5}>
                         {integration.features.map((feature, idx) => (
-                          <Chip key={idx} label={feature} size="small" variant="outlined" />
+                          <Chip key={idx} label={feature} size="small" variant="outline" />
                         ))}
                       </Stack>
                     </Box>
@@ -396,7 +355,7 @@ export default function Integrations() {
                           Last sync: {new Date(integration.lastSync).toLocaleString()}
                         </Typography>
                         {integration.status === "syncing" && (
-                          <LinearProgress sx={{ width: 100, height: 4, borderRadius: 2 }} />
+                          <LinearProgress style={{ width: 100, height: 4, borderRadius: 2 }} />
                         )}
                       </Stack>
                     )}
@@ -405,7 +364,7 @@ export default function Integrations() {
                     <Stack direction="row" gap={1}>
                       {integration.status === "disconnected" ? (
                         <Button
-                          variant="contained"
+                          variant="filled"
                           fullWidth
                           onClick={(e: React.MouseEvent) => () => handleConnect(integration)}
                         >
@@ -414,16 +373,16 @@ export default function Integrations() {
                       ) : (
                         <>
                           <Button
-                            variant="outlined"
-                            startIcon={<SettingsIcon />}
-                            sx={{ flex: 1 }}
+                            variant="outline"
+                            startIcon={<IconSettings />}
+                            style={{ flex: 1 }}
                             onClick={(e: React.MouseEvent) => () => handleConnect(integration)}
                           >
                             Configure
                           </Button>
                           <Button
-                            variant="outlined"
-                            color="error"
+                            variant="outline"
+                            color="red"
                             onClick={(e: React.MouseEvent) => () => handleDisconnect(integration)}
                           >
                             Disconnect
@@ -444,10 +403,10 @@ export default function Integrations() {
         <Card>
           <CardContent>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              <Typography order={6} style={{ fontWeight: 600 }}>
                 API Endpoints
               </Typography>
-              <Button variant="outlined" startIcon={<CodeIcon />}>
+              <Button variant="outline" startIcon={<CodeIcon />}>
                 Generate API Key
               </Button>
             </Stack>
@@ -463,7 +422,7 @@ export default function Integrations() {
                         endpoint.method === "POST" ? "success" :
                         endpoint.method === "PUT" ? "warning" : "error"
                       }
-                      sx={{ minWidth: 60 }}
+                      style={{ minWidth: 60 }}
                     />
                   </ListItemIcon>
                   <ListItemText
@@ -471,7 +430,7 @@ export default function Integrations() {
                     secondaryTypographyProps={{ component: 'div' }}
                     primary={
                       <Stack direction="row" alignItems="center" gap={1}>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <Typography size="sm" style={{ fontWeight: 600 }}>
                           {endpoint.name}
                         </Typography>
                         {getStatusChip(endpoint.status)}
@@ -479,7 +438,7 @@ export default function Integrations() {
                     }
                     secondary={
                       <Stack>
-                        <Typography variant="caption" sx={{ fontFamily: "monospace" }}>
+                        <Typography variant="caption" style={{ fontFamily: "monospace" }}>
                           {endpoint.endpoint}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
@@ -491,7 +450,7 @@ export default function Integrations() {
                   />
                   <ListItemSecondaryAction>
                     <IconButton size="small">
-                      <VisibilityIcon />
+                      <IconEye />
                     </IconButton>
                   </ListItemSecondaryAction>
                 </ListItem>
@@ -507,7 +466,7 @@ export default function Integrations() {
           Configure {selectedIntegration?.name}
         </DialogTitle>
         <DialogContent>
-          <Stack spacing={3} sx={{ mt: 2 }}>
+          <Stack spacing={3} style={{ mt: 2 }}>
             <TextField
               fullWidth
               label="API Key"
@@ -522,7 +481,7 @@ export default function Integrations() {
               helperText="Optional: Webhook for real-time updates"
             />
             <Box>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              <Typography variant="subtitle2" style={{ mb: 1 }}>
                 Permissions
               </Typography>
               <FormGroup>
@@ -536,7 +495,7 @@ export default function Integrations() {
         </DialogContent>
         <DialogActions>
           <Button onClick={(e: React.MouseEvent) => () => setConfigDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={(e: React.MouseEvent) => () => setConfigDialogOpen(false)}>
+          <Button variant="filled" onClick={(e: React.MouseEvent) => () => setConfigDialogOpen(false)}>
             Save Configuration
           </Button>
         </DialogActions>
@@ -548,20 +507,20 @@ export default function Integrations() {
           API Documentation
         </DialogTitle>
         <DialogContent>
-          <Alert severity="info" sx={{ mb: 2 }}>
+          <Alert severity="info" style={{ mb: 2 }}>
             <AlertTitle>API Base URL</AlertTitle>
             https://api.educationalplatform.com/v1
           </Alert>
-          <Typography variant="body2" paragraph>
+          <Typography size="sm" paragraph>
             Use your API key in the Authorization header: Bearer YOUR_API_KEY
           </Typography>
-          <Typography variant="body2" paragraph>
+          <Typography size="sm" paragraph>
             Rate limit: 1000 requests per hour
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={(e: React.MouseEvent) => () => setApiDialogOpen(false)}>Close</Button>
-          <Button variant="contained" startIcon={<FileDownload />}>
+          <Button variant="filled" startIcon={<FileDownload />}>
             Download Full Documentation
           </Button>
         </DialogActions>

@@ -1,835 +1,793 @@
+IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../IconutilsIcon/IconmuiIcon-Iconimports';
 /**
- * SystemSettingsPanel Component
- * Comprehensive system configuration interface for administrators
+ * IconSystemSettingsPanelIcon IconComponentIcon
+ * IconComprehensiveIcon IconsystemIcon IconconfigurationIcon IconinterfaceIcon IconforIcon IconadministratorsIcon
  */
-import { memo, useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
-import Switch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import Button from '@mui/material/Button';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import Chip from '@mui/material/Chip';
-import Slider from '@mui/material/Slider';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import IconButton from '@mui/material/IconButton';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
-import Divider from '@mui/material/Divider';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
-import InputAdornment from '@mui/material/InputAdornment';
-import Tooltip from '@mui/material/Tooltip';
-import Badge from '@mui/material/Badge';
-import CircularProgress from '@mui/material/CircularProgress';
-import LinearProgress from '@mui/material/LinearProgress';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
+IconimportIcon { IconmemoIcon, IconuseStateIcon, IconuseEffectIcon } IconfromIcon 'Iconreact';
+IconimportIcon { IconIconIcon, IconIconAlertTriangleIcon, IconIconApiIcon, IconIconBackupIcon, IconIconBellRingingIcon, IconIconCheckIcon, IconIconChevronDownIcon, IconIconClockIcon, IconIconCloudUploadIcon, IconIconDeviceFloppyIcon, IconIconEditIcon, IconIconInfoCircleIcon, IconIconLanguageIcon, IconIconLockIcon, IconIconMailIcon, IconIconPaletteIcon, IconIconPlusIcon, IconIconRestartAltIcon, IconIconSchoolIcon, IconIconSecurityIcon, IconIconSettingsIcon, IconIconSpeedIcon, IconIconStorageIcon, IconIconTrashIcon, IconIconUpdateIcon, IconIconUsersIcon, IconIconXIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
 
-import {
-  ExpandMore as ExpandIcon,
-  Settings as SettingsIcon,
-  Security as SecurityIcon,
-  Email as EmailIcon,
-  Storage as StorageIcon,
-  Language as LanguageIcon,
-  Palette as ThemeIcon,
-  NotificationsActive as NotificationIcon,
-  Api as APIIcon,
-  Speed as PerformanceIcon,
-  Backup as BackupIcon,
-  Update as UpdateIcon,
-  Lock as LockIcon,
-  Save as SaveIcon,
-  RestartAlt as ResetIcon,
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Check as CheckIcon,
-  Close as CloseIcon,
-  Warning as WarningIcon,
-  Info as InfoIcon,
-  CloudUpload as CloudIcon,
-  Schedule as ScheduleIcon,
-  Group as UsersIcon,
-  School as EducationIcon,
-} from '@mui/icons-material';
-interface SystemSettings {
-  general: {
-    siteName: string;
-    siteUrl: string;
-    timezone: string;
-    language: string;
-    maintenanceMode: boolean;
-    maintenanceMessage: string;
+IconimportIcon {
+  IconExpandMoreIcon IconasIcon IconIconChevronDownIcon,
+  IconSettingsIcon IconasIcon IconIconSettingsIcon,
+  IconSecurityIcon IconasIcon IconIconSecurityIcon,
+  IconEmailIcon IconasIcon IconIconMailIcon,
+  IconStorageIcon IconasIcon IconIconStorageIcon,
+  IconLanguageIcon IconasIcon IconIconLanguageIcon,
+  IconPaletteIcon IconasIcon IconIconPaletteIcon,
+  IconNotificationsActiveIcon IconasIcon IconIconBellRingingIcon,
+  IconApiIcon IconasIcon IconIconApiIcon,
+  IconSpeedIcon IconasIcon IconIconSpeedIcon,
+  IconBackupIcon IconasIcon IconIconBackupIcon,
+  IconUpdateIcon IconasIcon IconIconUpdateIcon,
+  IconLockIcon IconasIcon IconIconLockIcon,
+  IconSaveIcon IconasIcon IconIconDeviceFloppyIcon,
+  IconRestartAltIcon IconasIcon IconIconRestartAltIcon,
+  IconAddIcon IconasIcon IconIconPlusIcon,
+  IconEditIcon IconasIcon IconIconEditIcon,
+  IconDeleteIcon IconasIcon IconIconTrashIcon,
+  IconCheckIcon IconasIcon IconIconCheckIcon,
+  IconCloseIcon IconasIcon IconIconXIcon,
+  IconWarningIcon IconasIcon IconIconAlertTriangleIcon,
+  IconInfoIcon IconasIcon IconIconInfoCircleIcon,
+  IconCloudUploadIcon IconasIcon IconIconCloudUploadIcon,
+  IconScheduleIcon IconasIcon IconIconClockIcon,
+  IconGroupIcon IconasIcon IconIconUsersIcon,
+  IconSchoolIcon IconasIcon IconIconSchoolIcon,
+} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
+IconinterfaceIcon IconSystemSettingsIcon {
+  IcongeneralIcon: {
+    IconsiteNameIcon: IconstringIcon;
+    IconsiteUrlIcon: IconstringIcon;
+    IcontimezoneIcon: IconstringIcon;
+    IconlanguageIcon: IconstringIcon;
+    IconmaintenanceModeIcon: IconbooleanIcon;
+    IconmaintenanceMessageIcon: IconstringIcon;
   };
-  security: {
-    passwordMinLength: number;
-    passwordRequireUppercase: boolean;
-    passwordRequireLowercase: boolean;
-    passwordRequireNumbers: boolean;
-    passwordRequireSpecial: boolean;
-    sessionTimeout: number;
-    maxLoginAttempts: number;
-    twoFactorEnabled: boolean;
-    ipWhitelist: string[];
-    ipBlacklist: string[];
+  IconsecurityIcon: {
+    IconpasswordMinLengthIcon: IconnumberIcon;
+    IconpasswordRequireUppercaseIcon: IconbooleanIcon;
+    IconpasswordRequireLowercaseIcon: IconbooleanIcon;
+    IconpasswordRequireNumbersIcon: IconbooleanIcon;
+    IconpasswordRequireSpecialIcon: IconbooleanIcon;
+    IconsessionTimeoutIcon: IconnumberIcon;
+    IconmaxLoginAttemptsIcon: IconnumberIcon;
+    IcontwoFactorEnabledIcon: IconbooleanIcon;
+    IconipWhitelistIcon: IconstringIcon[];
+    IconipBlacklistIcon: IconstringIcon[];
   };
-  email: {
-    provider: 'smtp' | 'sendgrid' | 'ses';
-    smtpHost?: string;
-    smtpPort?: number;
-    smtpUser?: string;
-    smtpSecure?: boolean;
-    fromEmail: string;
-    fromName: string;
-    replyToEmail: string;
+  IconemailIcon: {
+    IconproviderIcon: 'Iconsmtp' | 'Iconsendgrid' | 'Iconses';
+    IconsmtpHostIcon?: IconstringIcon;
+    IconsmtpPortIcon?: IconnumberIcon;
+    IconsmtpUserIcon?: IconstringIcon;
+    IconsmtpSecureIcon?: IconbooleanIcon;
+    IconfromEmailIcon: IconstringIcon;
+    IconfromNameIcon: IconstringIcon;
+    IconreplyToEmailIcon: IconstringIcon;
   };
-  storage: {
-    provider: 'local' | 's3' | 'gcs' | 'azure';
-    maxFileSize: number;
-    allowedFileTypes: string[];
-    storageLimit: number;
-    currentUsage: number;
-    s3Config?: {
-      bucket: string;
-      region: string;
-      accessKeyId: string;
+  IconstorageIcon: {
+    IconproviderIcon: 'Iconlocal' | 'Icons3' | 'Icongcs' | 'Iconazure';
+    IconmaxFileSizeIcon: IconnumberIcon;
+    IconallowedFileTypesIcon: IconstringIcon[];
+    IconstorageLimitIcon: IconnumberIcon;
+    IconcurrentUsageIcon: IconnumberIcon;
+    Icons3ConfigIcon?: {
+      IconbucketIcon: IconstringIcon;
+      IconregionIcon: IconstringIcon;
+      IconaccessKeyIdIcon: IconstringIcon;
     };
   };
-  notifications: {
-    emailEnabled: boolean;
-    pushEnabled: boolean;
-    smsEnabled: boolean;
-    defaultNotifications: {
-      newUser: boolean;
-      newContent: boolean;
-      systemAlerts: boolean;
-      userReports: boolean;
+  IconnotificationsIcon: {
+    IconemailEnabledIcon: IconbooleanIcon;
+    IconpushEnabledIcon: IconbooleanIcon;
+    IconsmsEnabledIcon: IconbooleanIcon;
+    IcondefaultNotificationsIcon: {
+      IconnewUserIcon: IconbooleanIcon;
+      IconnewContentIcon: IconbooleanIcon;
+      IconsystemAlertsIcon: IconbooleanIcon;
+      IconuserReportsIcon: IconbooleanIcon;
     };
   };
-  performance: {
-    cacheEnabled: boolean;
-    cacheDuration: number;
-    compressionEnabled: boolean;
-    lazyLoadingEnabled: boolean;
-    cdnEnabled: boolean;
-    cdnUrl?: string;
-    rateLimitEnabled: boolean;
-    rateLimitRequests: number;
-    rateLimitWindow: number;
+  IconperformanceIcon: {
+    IconcacheEnabledIcon: IconbooleanIcon;
+    IconcacheDurationIcon: IconnumberIcon;
+    IconcompressionEnabledIcon: IconbooleanIcon;
+    IconlazyLoadingEnabledIcon: IconbooleanIcon;
+    IconcdnEnabledIcon: IconbooleanIcon;
+    IconcdnUrlIcon?: IconstringIcon;
+    IconrateLimitEnabledIcon: IconbooleanIcon;
+    IconrateLimitRequestsIcon: IconnumberIcon;
+    IconrateLimitWindowIcon: IconnumberIcon;
   };
-  backup: {
-    autoBackupEnabled: boolean;
-    backupFrequency: 'daily' | 'weekly' | 'monthly';
-    backupTime: string;
-    backupRetention: number;
-    lastBackup?: string;
-    nextBackup?: string;
+  IconbackupIcon: {
+    IconautoBackupEnabledIcon: IconbooleanIcon;
+    IconbackupFrequencyIcon: 'Icondaily' | 'Iconweekly' | 'Iconmonthly';
+    IconbackupTimeIcon: IconstringIcon;
+    IconbackupRetentionIcon: IconnumberIcon;
+    IconlastBackupIcon?: IconstringIcon;
+    IconnextBackupIcon?: IconstringIcon;
   };
-  api: {
-    rateLimit: number;
-    timeout: number;
-    cors: {
-      enabled: boolean;
-      origins: string[];
+  IconapiIcon: {
+    IconrateLimitIcon: IconnumberIcon;
+    IcontimeoutIcon: IconnumberIcon;
+    IconcorsIcon: {
+      IconenabledIcon: IconbooleanIcon;
+      IconoriginsIcon: IconstringIcon[];
     };
-    webhooks: Array<{
-      id: string;
-      url: string;
-      events: string[];
-      active: boolean;
+    IconwebhooksIcon: IconArrayIcon<{
+      IconidIcon: IconstringIcon;
+      IconurlIcon: IconstringIcon;
+      IconeventsIcon: IconstringIcon[];
+      IconactiveIcon: IconbooleanIcon;
     }>;
   };
 }
-export interface SystemSettingsPanelProps {
-  onSettingsChange?: (settings: Partial<SystemSettings>) => void;
-  onSettingsSave?: (settings: SystemSettings) => void;
-  allowDangerousActions?: boolean;
-  readOnly?: boolean;
+IconexportIcon IconinterfaceIcon IconSystemSettingsPanelPropsIcon {
+  IcononSettingsChangeIcon?: (IconsettingsIcon: IconPartialIcon<IconSystemSettingsIcon>) => IconvoidIcon;
+  IcononSettingsSaveIcon?: (IconsettingsIcon: IconSystemSettingsIcon) => IconvoidIcon;
+  IconallowDangerousActionsIcon?: IconbooleanIcon;
+  IconreadOnlyIcon?: IconbooleanIcon;
 }
-export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
-  onSettingsChange,
-  onSettingsSave,
-  allowDangerousActions = false,
-  readOnly = false,
+IconexportIcon IconconstIcon IconSystemSettingsPanelIcon = IconmemoIcon<IconSystemSettingsPanelPropsIcon>(({
+  IcononSettingsChangeIcon,
+  IcononSettingsSaveIcon,
+  IconallowDangerousActionsIcon = IconfalseIcon,
+  IconreadOnlyIcon = IconfalseIcon,
 }) => {
-  const theme = useTheme();
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [tabValue, setTabValue] = useState(0);
-  const [expandedPanel, setExpandedPanel] = useState<string | false>('general');
-  // Settings state
-  const [settings, setSettings] = useState<SystemSettings>({
-    general: {
-      siteName: 'ToolboxAI Educational Platform',
-      siteUrl: 'https://toolboxai.com',
-      timezone: 'America/New_York',
-      language: 'en',
-      maintenanceMode: false,
-      maintenanceMessage: 'We are performing scheduled maintenance. We\'ll be back soon!',
+  IconconstIcon IconthemeIcon = IconuseThemeIcon();
+  IconconstIcon [IconloadingIcon, IconsetLoadingIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon [IconsavingIcon, IconsetSavingIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon [IconerrorIcon, IconsetErrorIcon] = IconuseStateIcon<IconstringIcon | IconnullIcon>(IconnullIcon);
+  IconconstIcon [IconsuccessIcon, IconsetSuccessIcon] = IconuseStateIcon<IconstringIcon | IconnullIcon>(IconnullIcon);
+  IconconstIcon [IcontabValueIcon, IconsetTabValueIcon] = IconuseStateIcon(Icon0Icon);
+  IconconstIcon [IconexpandedPanelIcon, IconsetExpandedPanelIcon] = IconuseStateIcon<IconstringIcon | IconfalseIcon>('Icongeneral');
+  // IconSettingsIcon IconstateIcon
+  IconconstIcon [IconsettingsIcon, IconsetSettingsIcon] = IconuseStateIcon<IconSystemSettingsIcon>({
+    IcongeneralIcon: {
+      IconsiteNameIcon: 'IconToolboxAIIcon IconEducationalIcon IconPlatform',
+      IconsiteUrlIcon: 'IconhttpsIcon://IcontoolboxaiIcon.Iconcom',
+      IcontimezoneIcon: 'IconAmericaIcon/IconNew_York',
+      IconlanguageIcon: 'Iconen',
+      IconmaintenanceModeIcon: IconfalseIcon,
+      IconmaintenanceMessageIcon: 'IconWeIcon IconareIcon IconperformingIcon IconscheduledIcon IconmaintenanceIcon. IconWeIcon\'IconllIcon IconbeIcon IconbackIcon IconsoonIcon!',
     },
-    security: {
-      passwordMinLength: 8,
-      passwordRequireUppercase: true,
-      passwordRequireLowercase: true,
-      passwordRequireNumbers: true,
-      passwordRequireSpecial: true,
-      sessionTimeout: 3600,
-      maxLoginAttempts: 5,
-      twoFactorEnabled: false,
-      ipWhitelist: [],
-      ipBlacklist: [],
+    IconsecurityIcon: {
+      IconpasswordMinLengthIcon: Icon8Icon,
+      IconpasswordRequireUppercaseIcon: IcontrueIcon,
+      IconpasswordRequireLowercaseIcon: IcontrueIcon,
+      IconpasswordRequireNumbersIcon: IcontrueIcon,
+      IconpasswordRequireSpecialIcon: IcontrueIcon,
+      IconsessionTimeoutIcon: Icon3600Icon,
+      IconmaxLoginAttemptsIcon: Icon5Icon,
+      IcontwoFactorEnabledIcon: IconfalseIcon,
+      IconipWhitelistIcon: [],
+      IconipBlacklistIcon: [],
     },
-    email: {
-      provider: 'smtp',
-      smtpHost: 'smtp.gmail.com',
-      smtpPort: 587,
-      smtpUser: 'noreply@toolboxai.com',
-      smtpSecure: true,
-      fromEmail: 'noreply@toolboxai.com',
-      fromName: 'ToolboxAI',
-      replyToEmail: 'support@toolboxai.com',
+    IconemailIcon: {
+      IconproviderIcon: 'Iconsmtp',
+      IconsmtpHostIcon: 'IconsmtpIcon.IcongmailIcon.Iconcom',
+      IconsmtpPortIcon: Icon587Icon,
+      IconsmtpUserIcon: 'IconnoreplyIcon@IcontoolboxaiIcon.Iconcom',
+      IconsmtpSecureIcon: IcontrueIcon,
+      IconfromEmailIcon: 'IconnoreplyIcon@IcontoolboxaiIcon.Iconcom',
+      IconfromNameIcon: 'IconToolboxAI',
+      IconreplyToEmailIcon: 'IconsupportIcon@IcontoolboxaiIcon.Iconcom',
     },
-    storage: {
-      provider: 'local',
-      maxFileSize: 100 * 1024 * 1024, // 100MB
-      allowedFileTypes: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'mp4', 'mp3'],
-      storageLimit: 10 * 1024 * 1024 * 1024, // 10GB
-      currentUsage: 2.5 * 1024 * 1024 * 1024, // 2.5GB
+    IconstorageIcon: {
+      IconproviderIcon: 'Iconlocal',
+      IconmaxFileSizeIcon: Icon100Icon * Icon1024Icon * Icon1024Icon, // Icon100MBIcon
+      IconallowedFileTypesIcon: ['Iconpdf', 'Icondoc', 'Icondocx', 'Iconjpg', 'Iconjpeg', 'Iconpng', 'Iconmp4', 'Iconmp3'],
+      IconstorageLimitIcon: Icon10Icon * Icon1024Icon * Icon1024Icon * Icon1024Icon, // Icon10GBIcon
+      IconcurrentUsageIcon: Icon2Icon.Icon5Icon * Icon1024Icon * Icon1024Icon * Icon1024Icon, // Icon2Icon.Icon5GBIcon
     },
-    notifications: {
-      emailEnabled: true,
-      pushEnabled: true,
-      smsEnabled: false,
-      defaultNotifications: {
-        newUser: true,
-        newContent: true,
-        systemAlerts: true,
-        userReports: false,
+    IconnotificationsIcon: {
+      IconemailEnabledIcon: IcontrueIcon,
+      IconpushEnabledIcon: IcontrueIcon,
+      IconsmsEnabledIcon: IconfalseIcon,
+      IcondefaultNotificationsIcon: {
+        IconnewUserIcon: IcontrueIcon,
+        IconnewContentIcon: IcontrueIcon,
+        IconsystemAlertsIcon: IcontrueIcon,
+        IconuserReportsIcon: IconfalseIcon,
       },
     },
-    performance: {
-      cacheEnabled: true,
-      cacheDuration: 3600,
-      compressionEnabled: true,
-      lazyLoadingEnabled: true,
-      cdnEnabled: false,
-      rateLimitEnabled: true,
-      rateLimitRequests: 100,
-      rateLimitWindow: 60,
+    IconperformanceIcon: {
+      IconcacheEnabledIcon: IcontrueIcon,
+      IconcacheDurationIcon: Icon3600Icon,
+      IconcompressionEnabledIcon: IcontrueIcon,
+      IconlazyLoadingEnabledIcon: IcontrueIcon,
+      IconcdnEnabledIcon: IconfalseIcon,
+      IconrateLimitEnabledIcon: IcontrueIcon,
+      IconrateLimitRequestsIcon: Icon100Icon,
+      IconrateLimitWindowIcon: Icon60Icon,
     },
-    backup: {
-      autoBackupEnabled: true,
-      backupFrequency: 'daily',
-      backupTime: '02:00',
-      backupRetention: 30,
-      lastBackup: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-      nextBackup: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+    IconbackupIcon: {
+      IconautoBackupEnabledIcon: IcontrueIcon,
+      IconbackupFrequencyIcon: 'Icondaily',
+      IconbackupTimeIcon: 'Icon02Icon:Icon00',
+      IconbackupRetentionIcon: Icon30Icon,
+      IconlastBackupIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon12Icon * Icon60Icon * Icon60Icon * Icon1000Icon).IcontoISOStringIcon(),
+      IconnextBackupIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() + Icon12Icon * Icon60Icon * Icon60Icon * Icon1000Icon).IcontoISOStringIcon(),
     },
-    api: {
-      rateLimit: 1000,
-      timeout: 30000,
-      cors: {
-        enabled: true,
-        origins: ['http://localhost:3000', 'https://toolboxai.com'],
+    IconapiIcon: {
+      IconrateLimitIcon: Icon1000Icon,
+      IcontimeoutIcon: Icon30000Icon,
+      IconcorsIcon: {
+        IconenabledIcon: IcontrueIcon,
+        IconoriginsIcon: ['IconhttpIcon://IconlocalhostIcon:Icon3000', 'IconhttpsIcon://IcontoolboxaiIcon.Iconcom'],
       },
-      webhooks: [],
+      IconwebhooksIcon: [],
     },
   });
-  // Dialog states
-  const [webhookDialogOpen, setWebhookDialogOpen] = useState(false);
-  const [ipDialogOpen, setIpDialogOpen] = useState(false);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<string>('');
-  // Fetch settings
-  useEffect(() => {
-    fetchSettings();
+  // IconDialogIcon IconstatesIcon
+  IconconstIcon [IconwebhookDialogOpenIcon, IconsetWebhookDialogOpenIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon [IconipDialogOpenIcon, IconsetIpDialogOpenIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon [IconconfirmDialogOpenIcon, IconsetConfirmDialogOpenIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon [IconconfirmActionIcon, IconsetConfirmActionIcon] = IconuseStateIcon<IconstringIcon>('');
+  // IconFetchIcon IconsettingsIcon
+  IconuseEffectIcon(() => {
+    IconfetchSettingsIcon();
   }, []);
-  const fetchSettings = async () => {
-    setLoading(true);
-    try {
-      // In a real app, fetch from API
-      // const response = await api.get('/admin/settings');
-      // setSettings(response.data);
-      setLoading(false);
-    } catch (err) {
-      setError('Failed to load settings');
-      setLoading(false);
+  IconconstIcon IconfetchSettingsIcon = IconasyncIcon () => {
+    IconsetLoadingIcon(IcontrueIcon);
+    IcontryIcon {
+      // IconInIcon IconaIcon IconrealIcon IconappIcon, IconfetchIcon IconfromIcon IconAPIIcon
+      // IconconstIcon IconresponseIcon = IconawaitIcon IconapiIcon.IcongetIcon('/IconadminIcon/Iconsettings');
+      // IconsetSettingsIcon(IconresponseIcon.IcondataIcon);
+      IconsetLoadingIcon(IconfalseIcon);
+    } IconcatchIcon (IconerrIcon) {
+      IconsetErrorIcon('IconFailedIcon IcontoIcon IconloadIcon Iconsettings');
+      IconsetLoadingIcon(IconfalseIcon);
     }
   };
-  const handleSettingChange = (category: keyof SystemSettings, field: string, value: any) => {
-    const newSettings = {
-      ...settings,
-      [category]: {
-        ...settings[category],
-        [field]: value,
+  IconconstIcon IconhandleSettingChangeIcon = (IconcategoryIcon: IconkeyofIcon IconSystemSettingsIcon, IconfieldIcon: IconstringIcon, IconvalueIcon: IconanyIcon) => {
+    IconconstIcon IconnewSettingsIcon = {
+      ...IconsettingsIcon,
+      [IconcategoryIcon]: {
+        ...IconsettingsIcon[IconcategoryIcon],
+        [IconfieldIcon]: IconvalueIcon,
       },
     };
-    setSettings(newSettings);
-    onSettingsChange?.({ [category]: { [field]: value } });
+    IconsetSettingsIcon(IconnewSettingsIcon);
+    IcononSettingsChangeIcon?.({ [IconcategoryIcon]: { [IconfieldIcon]: IconvalueIcon } });
   };
-  const handleSaveSettings = async () => {
-    setSaving(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      // In a real app, save to API
-      // await api.post('/admin/settings', settings);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setSuccess('Settings saved successfully');
-      onSettingsSave?.(settings);
-    } catch (err) {
-      setError('Failed to save settings');
-    } finally {
-      setSaving(false);
+  IconconstIcon IconhandleSaveSettingsIcon = IconasyncIcon () => {
+    IconsetSavingIcon(IcontrueIcon);
+    IconsetErrorIcon(IconnullIcon);
+    IconsetSuccessIcon(IconnullIcon);
+    IcontryIcon {
+      // IconInIcon IconaIcon IconrealIcon IconappIcon, IconsaveIcon IcontoIcon IconAPIIcon
+      // IconawaitIcon IconapiIcon.IconpostIcon('/IconadminIcon/Iconsettings', IconsettingsIcon);
+      // IconSimulateIcon IconAPIIcon IconcallIcon
+      IconawaitIcon IconnewIcon IconPromiseIcon(IconresolveIcon => IconsetTimeoutIcon(IconresolveIcon, Icon1000Icon));
+      IconsetSuccessIcon('IconSettingsIcon IconsavedIcon Iconsuccessfully');
+      IcononSettingsSaveIcon?.(IconsettingsIcon);
+    } IconcatchIcon (IconerrIcon) {
+      IconsetErrorIcon('IconFailedIcon IcontoIcon IconsaveIcon Iconsettings');
+    } IconfinallyIcon {
+      IconsetSavingIcon(IconfalseIcon);
     }
   };
-  const handleResetSettings = () => {
-    setConfirmAction('reset');
-    setConfirmDialogOpen(true);
+  IconconstIcon IconhandleResetSettingsIcon = () => {
+    IconsetConfirmActionIcon('Iconreset');
+    IconsetConfirmDialogOpenIcon(IcontrueIcon);
   };
-  const handleRunBackup = async () => {
-    setSaving(true);
-    try {
-      // Trigger manual backup
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setSuccess('Backup initiated successfully');
-    } catch (err) {
-      setError('Failed to initiate backup');
-    } finally {
-      setSaving(false);
+  IconconstIcon IconhandleRunBackupIcon = IconasyncIcon () => {
+    IconsetSavingIcon(IcontrueIcon);
+    IcontryIcon {
+      // IconTriggerIcon IconmanualIcon IconbackupIcon
+      IconawaitIcon IconnewIcon IconPromiseIcon(IconresolveIcon => IconsetTimeoutIcon(IconresolveIcon, Icon2000Icon));
+      IconsetSuccessIcon('IconBackupIcon IconinitiatedIcon Iconsuccessfully');
+    } IconcatchIcon (IconerrIcon) {
+      IconsetErrorIcon('IconFailedIcon IcontoIcon IconinitiateIcon Iconbackup');
+    } IconfinallyIcon {
+      IconsetSavingIcon(IconfalseIcon);
     }
   };
-  const formatBytes = (bytes: number) => {
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    if (bytes === 0) return '0 Bytes';
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  IconconstIcon IconformatBytesIcon = (IconbytesIcon: IconnumberIcon) => {
+    IconconstIcon IconsizesIcon = ['IconBytes', 'IconKB', 'IconMB', 'IconGB', 'IconTB'];
+    IconifIcon (IconbytesIcon === Icon0Icon) IconreturnIcon 'Icon0Icon IconBytes';
+    IconconstIcon IconiIcon = IconMathIcon.IconfloorIcon(IconMathIcon.IconlogIcon(IconbytesIcon) / IconMathIcon.IconlogIcon(Icon1024Icon));
+    IconreturnIcon IconMathIcon.IconroundIcon(IconbytesIcon / IconMathIcon.IconpowIcon(Icon1024Icon, IconiIcon) * Icon100Icon) / Icon100Icon + ' ' + IconsizesIcon[IconiIcon];
   };
-  const renderGeneralSettings = () => (
-    <Stack spacing={3}>
-      <TextField
-        label="Site Name"
-        value={settings.general.siteName}
-        onChange={(e) => handleSettingChange('general', 'siteName', e.target.value)}
-        fullWidth
-        disabled={readOnly}
+  IconconstIcon IconrenderGeneralSettingsIcon = () => (
+    <IconStackIcon IconspacingIcon={Icon3Icon}>
+      <IconTextFieldIcon
+        IconlabelIcon="IconSiteIcon IconName"
+        IconvalueIcon={IconsettingsIcon.IcongeneralIcon.IconsiteNameIcon}
+        IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Icongeneral', 'IconsiteName', IconeIcon.IcontargetIcon.IconvalueIcon)}
+        IconfullWidthIcon
+        IcondisabledIcon={IconreadOnlyIcon}
       />
-      <TextField
-        label="Site URL"
-        value={settings.general.siteUrl}
-        onChange={(e) => handleSettingChange('general', 'siteUrl', e.target.value)}
-        fullWidth
-        disabled={readOnly}
+      <IconTextFieldIcon
+        IconlabelIcon="IconSiteIcon IconURL"
+        IconvalueIcon={IconsettingsIcon.IcongeneralIcon.IconsiteUrlIcon}
+        IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Icongeneral', 'IconsiteUrl', IconeIcon.IcontargetIcon.IconvalueIcon)}
+        IconfullWidthIcon
+        IcondisabledIcon={IconreadOnlyIcon}
       />
-      <FormControl fullWidth disabled={readOnly}>
-        <InputLabel>Timezone</InputLabel>
-        <Select
-          value={settings.general.timezone}
-          label="Timezone"
-          onChange={(e) => handleSettingChange('general', 'timezone', e.target.value)}
+      <IconFormControlIcon IconfullWidthIcon IcondisabledIcon={IconreadOnlyIcon}>
+        <IconInputLabelIcon>IconTimezoneIcon<IconIconIcon/IconInputLabelIcon>
+        <IconSelectIcon
+          IconvalueIcon={IconsettingsIcon.IcongeneralIcon.IcontimezoneIcon}
+          IconlabelIcon="IconTimezone"
+          IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Icongeneral', 'Icontimezone', IconeIcon.IcontargetIcon.IconvalueIcon)}
         >
-          <MenuItem value="America/New_York">Eastern Time</MenuItem>
-          <MenuItem value="America/Chicago">Central Time</MenuItem>
-          <MenuItem value="America/Denver">Mountain Time</MenuItem>
-          <MenuItem value="America/Los_Angeles">Pacific Time</MenuItem>
-          <MenuItem value="UTC">UTC</MenuItem>
-        </Select>
-      </FormControl>
-      <FormControl fullWidth disabled={readOnly}>
-        <InputLabel>Language</InputLabel>
-        <Select
-          value={settings.general.language}
-          label="Language"
-          onChange={(e) => handleSettingChange('general', 'language', e.target.value)}
+          <IconMenuItemIcon IconvalueIcon="IconAmericaIcon/IconNew_York">IconEasternIcon IconTimeIcon<IconIconIcon/IconMenuItemIcon>
+          <IconMenuItemIcon IconvalueIcon="IconAmericaIcon/IconChicago">IconCentralIcon IconTimeIcon<IconIconIcon/IconMenuItemIcon>
+          <IconMenuItemIcon IconvalueIcon="IconAmericaIcon/IconDenver">IconMountainIcon IconTimeIcon<IconIconIcon/IconMenuItemIcon>
+          <IconMenuItemIcon IconvalueIcon="IconAmericaIcon/IconLos_Angeles">IconPacificIcon IconTimeIcon<IconIconIcon/IconMenuItemIcon>
+          <IconMenuItemIcon IconvalueIcon="IconUTC">IconUTCIcon<IconIconIcon/IconMenuItemIcon>
+        <IconIconIcon/IconSelectIcon>
+      <IconIconIcon/IconFormControlIcon>
+      <IconFormControlIcon IconfullWidthIcon IcondisabledIcon={IconreadOnlyIcon}>
+        <IconInputLabelIcon>IconLanguageIcon<IconIconIcon/IconInputLabelIcon>
+        <IconSelectIcon
+          IconvalueIcon={IconsettingsIcon.IcongeneralIcon.IconlanguageIcon}
+          IconlabelIcon="IconLanguage"
+          IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Icongeneral', 'Iconlanguage', IconeIcon.IcontargetIcon.IconvalueIcon)}
         >
-          <MenuItem value="en">English</MenuItem>
-          <MenuItem value="es">Spanish</MenuItem>
-          <MenuItem value="fr">French</MenuItem>
-          <MenuItem value="de">German</MenuItem>
-          <MenuItem value="zh">Chinese</MenuItem>
-        </Select>
-      </FormControl>
-      <Divider />
-      <Alert severity="warning">
-        <AlertTitle>Maintenance Mode</AlertTitle>
-        <Stack spacing={2}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={settings.general.maintenanceMode}
-                onChange={(e) => handleSettingChange('general', 'maintenanceMode', e.target.checked)}
-                disabled={readOnly}
+          <IconMenuItemIcon IconvalueIcon="Iconen">IconEnglishIcon<IconIconIcon/IconMenuItemIcon>
+          <IconMenuItemIcon IconvalueIcon="Icones">IconSpanishIcon<IconIconIcon/IconMenuItemIcon>
+          <IconMenuItemIcon IconvalueIcon="Iconfr">IconFrenchIcon<IconIconIcon/IconMenuItemIcon>
+          <IconMenuItemIcon IconvalueIcon="Iconde">IconGermanIcon<IconIconIcon/IconMenuItemIcon>
+          <IconMenuItemIcon IconvalueIcon="Iconzh">IconChineseIcon<IconIconIcon/IconMenuItemIcon>
+        <IconIconIcon/IconSelectIcon>
+      <IconIconIcon/IconFormControlIcon>
+      <IconDividerIcon />
+      <IconAlertIcon IconseverityIcon="Iconwarning">
+        <IconAlertTitleIcon>IconMaintenanceIcon IconModeIcon<IconIconIcon/IconAlertTitleIcon>
+        <IconStackIcon IconspacingIcon={Icon2Icon}>
+          <IconFormControlLabelIcon
+            IconcontrolIcon={
+              <IconSwitchIcon
+                IconcheckedIcon={IconsettingsIcon.IcongeneralIcon.IconmaintenanceModeIcon}
+                IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Icongeneral', 'IconmaintenanceMode', IconeIcon.IcontargetIcon.IconcheckedIcon)}
+                IcondisabledIcon={IconreadOnlyIcon}
               />
             }
-            label="Enable Maintenance Mode"
+            IconlabelIcon="IconEnableIcon IconMaintenanceIcon IconMode"
           />
-          {settings.general.maintenanceMode && (
-            <TextField
-              label="Maintenance Message"
-              value={settings.general.maintenanceMessage}
-              onChange={(e) => handleSettingChange('general', 'maintenanceMessage', e.target.value)}
-              multiline
-              rows={3}
-              fullWidth
-              disabled={readOnly}
+          {IconsettingsIcon.IcongeneralIcon.IconmaintenanceModeIcon && (
+            <IconTextFieldIcon
+              IconlabelIcon="IconMaintenanceIcon IconMessage"
+              IconvalueIcon={IconsettingsIcon.IcongeneralIcon.IconmaintenanceMessageIcon}
+              IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Icongeneral', 'IconmaintenanceMessage', IconeIcon.IcontargetIcon.IconvalueIcon)}
+              IconmultilineIcon
+              IconrowsIcon={Icon3Icon}
+              IconfullWidthIcon
+              IcondisabledIcon={IconreadOnlyIcon}
             />
           )}
-        </Stack>
-      </Alert>
-    </Stack>
+        <IconIconIcon/IconStackIcon>
+      <IconIconIcon/IconAlertIcon>
+    <IconIconIcon/IconStackIcon>
   );
-  const renderSecuritySettings = () => (
-    <Stack spacing={3}>
-      <Typography variant="subtitle1" fontWeight="bold">
-        Password Requirements
-      </Typography>
-      <Stack spacing={2}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Typography sx={{ width: 200 }}>Minimum Length</Typography>
-          <Slider
-            value={settings.security.passwordMinLength}
-            onChange={(_, value) => handleSettingChange('security', 'passwordMinLength', value)}
-            min={6}
-            max={20}
-            marks
-            valueLabelDisplay="on"
-            disabled={readOnly}
-            sx={{ flex: 1 }}
+  IconconstIcon IconrenderSecuritySettingsIcon = () => (
+    <IconStackIcon IconspacingIcon={Icon3Icon}>
+      <IconTypographyIcon IconvariantIcon="Iconsubtitle1" IconfontWeightIcon="Iconbold">
+        IconPasswordIcon IconRequirementsIcon
+      <IconIconIcon/IconTypographyIcon>
+      <IconStackIcon IconspacingIcon={Icon2Icon}>
+        <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon} IconalignItemsIcon="Iconcenter">
+          <IconTypographyIcon IconstyleIcon={{ IconwidthIcon: Icon200Icon }}>IconMinimumIcon IconLengthIcon<IconIconIcon/IconTypographyIcon>
+          <IconSliderIcon
+            IconvalueIcon={IconsettingsIcon.IconsecurityIcon.IconpasswordMinLengthIcon}
+            IcononChangeIcon={(Icon_Icon, IconvalueIcon) => IconhandleSettingChangeIcon('Iconsecurity', 'IconpasswordMinLength', IconvalueIcon)}
+            IconminIcon={Icon6Icon}
+            IconmaxIcon={Icon20Icon}
+            IconmarksIcon
+            IconvalueLabelDisplayIcon="Iconon"
+            IcondisabledIcon={IconreadOnlyIcon}
+            IconstyleIcon={{ IconflexIcon: Icon1Icon }}
           />
-        </Stack>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.security.passwordRequireUppercase}
-              onChange={(e) => handleSettingChange('security', 'passwordRequireUppercase', e.target.checked)}
-              disabled={readOnly}
+        <IconIconIcon/IconStackIcon>
+        <IconFormControlLabelIcon
+          IconcontrolIcon={
+            <IconSwitchIcon
+              IconcheckedIcon={IconsettingsIcon.IconsecurityIcon.IconpasswordRequireUppercaseIcon}
+              IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconsecurity', 'IconpasswordRequireUppercase', IconeIcon.IcontargetIcon.IconcheckedIcon)}
+              IcondisabledIcon={IconreadOnlyIcon}
             />
           }
-          label="Require uppercase letters"
+          IconlabelIcon="IconRequireIcon IconuppercaseIcon Iconletters"
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.security.passwordRequireLowercase}
-              onChange={(e) => handleSettingChange('security', 'passwordRequireLowercase', e.target.checked)}
-              disabled={readOnly}
+        <IconFormControlLabelIcon
+          IconcontrolIcon={
+            <IconSwitchIcon
+              IconcheckedIcon={IconsettingsIcon.IconsecurityIcon.IconpasswordRequireLowercaseIcon}
+              IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconsecurity', 'IconpasswordRequireLowercase', IconeIcon.IcontargetIcon.IconcheckedIcon)}
+              IcondisabledIcon={IconreadOnlyIcon}
             />
           }
-          label="Require lowercase letters"
+          IconlabelIcon="IconRequireIcon IconlowercaseIcon Iconletters"
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.security.passwordRequireNumbers}
-              onChange={(e) => handleSettingChange('security', 'passwordRequireNumbers', e.target.checked)}
-              disabled={readOnly}
+        <IconFormControlLabelIcon
+          IconcontrolIcon={
+            <IconSwitchIcon
+              IconcheckedIcon={IconsettingsIcon.IconsecurityIcon.IconpasswordRequireNumbersIcon}
+              IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconsecurity', 'IconpasswordRequireNumbers', IconeIcon.IcontargetIcon.IconcheckedIcon)}
+              IcondisabledIcon={IconreadOnlyIcon}
             />
           }
-          label="Require numbers"
+          IconlabelIcon="IconRequireIcon Iconnumbers"
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.security.passwordRequireSpecial}
-              onChange={(e) => handleSettingChange('security', 'passwordRequireSpecial', e.target.checked)}
-              disabled={readOnly}
+        <IconFormControlLabelIcon
+          IconcontrolIcon={
+            <IconSwitchIcon
+              IconcheckedIcon={IconsettingsIcon.IconsecurityIcon.IconpasswordRequireSpecialIcon}
+              IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconsecurity', 'IconpasswordRequireSpecial', IconeIcon.IcontargetIcon.IconcheckedIcon)}
+              IcondisabledIcon={IconreadOnlyIcon}
             />
           }
-          label="Require special characters"
+          IconlabelIcon="IconRequireIcon IconspecialIcon Iconcharacters"
         />
-      </Stack>
-      <Divider />
-      <Typography variant="subtitle1" fontWeight="bold">
-        Session & Login
-      </Typography>
-      <Stack spacing={2}>
-        <TextField
-          label="Session Timeout (seconds)"
-          type="number"
-          value={settings.security.sessionTimeout}
-          onChange={(e) => handleSettingChange('security', 'sessionTimeout', parseInt(e.target.value))}
-          fullWidth
-          disabled={readOnly}
+      <IconIconIcon/IconStackIcon>
+      <IconDividerIcon />
+      <IconTypographyIcon IconvariantIcon="Iconsubtitle1" IconfontWeightIcon="Iconbold">
+        IconSessionIcon & IconLoginIcon
+      <IconIconIcon/IconTypographyIcon>
+      <IconStackIcon IconspacingIcon={Icon2Icon}>
+        <IconTextFieldIcon
+          IconlabelIcon="IconSessionIcon IconTimeoutIcon (IconsecondsIcon)"
+          IcontypeIcon="Iconnumber"
+          IconvalueIcon={IconsettingsIcon.IconsecurityIcon.IconsessionTimeoutIcon}
+          IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconsecurity', 'IconsessionTimeout', IconparseIntIcon(IconeIcon.IcontargetIcon.IconvalueIcon))}
+          IconfullWidthIcon
+          IcondisabledIcon={IconreadOnlyIcon}
         />
-        <TextField
-          label="Max Login Attempts"
-          type="number"
-          value={settings.security.maxLoginAttempts}
-          onChange={(e) => handleSettingChange('security', 'maxLoginAttempts', parseInt(e.target.value))}
-          fullWidth
-          disabled={readOnly}
+        <IconTextFieldIcon
+          IconlabelIcon="IconMaxIcon IconLoginIcon IconAttempts"
+          IcontypeIcon="Iconnumber"
+          IconvalueIcon={IconsettingsIcon.IconsecurityIcon.IconmaxLoginAttemptsIcon}
+          IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconsecurity', 'IconmaxLoginAttempts', IconparseIntIcon(IconeIcon.IcontargetIcon.IconvalueIcon))}
+          IconfullWidthIcon
+          IcondisabledIcon={IconreadOnlyIcon}
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.security.twoFactorEnabled}
-              onChange={(e) => handleSettingChange('security', 'twoFactorEnabled', e.target.checked)}
-              disabled={readOnly}
+        <IconFormControlLabelIcon
+          IconcontrolIcon={
+            <IconSwitchIcon
+              IconcheckedIcon={IconsettingsIcon.IconsecurityIcon.IcontwoFactorEnabledIcon}
+              IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconsecurity', 'IcontwoFactorEnabled', IconeIcon.IcontargetIcon.IconcheckedIcon)}
+              IcondisabledIcon={IconreadOnlyIcon}
             />
           }
-          label="Enable Two-Factor Authentication"
+          IconlabelIcon="IconEnableIcon IconTwoIcon-IconFactorIcon IconAuthentication"
         />
-      </Stack>
-      <Divider />
-      <Typography variant="subtitle1" fontWeight="bold">
-        IP Access Control
-      </Typography>
-      <Stack spacing={2}>
-        <Button
-          variant="outlined"
-          startIcon={<AddIcon />}
-          onClick={(e: React.MouseEvent) => () => setIpDialogOpen(true)}
-          disabled={readOnly}
+      <IconIconIcon/IconStackIcon>
+      <IconDividerIcon />
+      <IconTypographyIcon IconvariantIcon="Iconsubtitle1" IconfontWeightIcon="Iconbold">
+        IconIPIcon IconAccessIcon IconControlIcon
+      <IconIconIcon/IconTypographyIcon>
+      <IconStackIcon IconspacingIcon={Icon2Icon}>
+        <IconButtonIcon
+          IconvariantIcon="Iconoutline"
+          IconstartIconIcon={<IconIconPlusIcon />}
+          IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconsetIpDialogOpenIcon(IcontrueIcon)}
+          IcondisabledIcon={IconreadOnlyIcon}
         >
-          Manage IP Whitelist/Blacklist
-        </Button>
-        <Stack direction="row" spacing={2}>
-          <Chip
-            label={`${settings.security.ipWhitelist.length} Whitelisted IPs`}
-            variant="outlined"
-            color="success"
+          IconManageIcon IconIPIcon IconWhitelistIcon/IconBlacklistIcon
+        <IconIconIcon/IconButtonIcon>
+        <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon}>
+          <IconChipIcon
+            IconlabelIcon={`${IconsettingsIcon.IconsecurityIcon.IconipWhitelistIcon.IconlengthIcon} IconWhitelistedIcon IconIPsIcon`}
+            IconvariantIcon="Iconoutline"
+            IconcolorIcon="Icongreen"
           />
-          <Chip
-            label={`${settings.security.ipBlacklist.length} Blacklisted IPs`}
-            variant="outlined"
-            color="error"
+          <IconChipIcon
+            IconlabelIcon={`${IconsettingsIcon.IconsecurityIcon.IconipBlacklistIcon.IconlengthIcon} IconBlacklistedIcon IconIPsIcon`}
+            IconvariantIcon="Iconoutline"
+            IconcolorIcon="Iconred"
           />
-        </Stack>
-      </Stack>
-    </Stack>
+        <IconIconIcon/IconStackIcon>
+      <IconIconIcon/IconStackIcon>
+    <IconIconIcon/IconStackIcon>
   );
-  const renderPerformanceSettings = () => (
-    <Stack spacing={3}>
-      <Typography variant="subtitle1" fontWeight="bold">
-        Caching
-      </Typography>
-      <Stack spacing={2}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.performance.cacheEnabled}
-              onChange={(e) => handleSettingChange('performance', 'cacheEnabled', e.target.checked)}
-              disabled={readOnly}
+  IconconstIcon IconrenderPerformanceSettingsIcon = () => (
+    <IconStackIcon IconspacingIcon={Icon3Icon}>
+      <IconTypographyIcon IconvariantIcon="Iconsubtitle1" IconfontWeightIcon="Iconbold">
+        IconCachingIcon
+      <IconIconIcon/IconTypographyIcon>
+      <IconStackIcon IconspacingIcon={Icon2Icon}>
+        <IconFormControlLabelIcon
+          IconcontrolIcon={
+            <IconSwitchIcon
+              IconcheckedIcon={IconsettingsIcon.IconperformanceIcon.IconcacheEnabledIcon}
+              IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconperformance', 'IconcacheEnabled', IconeIcon.IcontargetIcon.IconcheckedIcon)}
+              IcondisabledIcon={IconreadOnlyIcon}
             />
           }
-          label="Enable Caching"
+          IconlabelIcon="IconEnableIcon IconCaching"
         />
-        {settings.performance.cacheEnabled && (
-          <TextField
-            label="Cache Duration (seconds)"
-            type="number"
-            value={settings.performance.cacheDuration}
-            onChange={(e) => handleSettingChange('performance', 'cacheDuration', parseInt(e.target.value))}
-            fullWidth
-            disabled={readOnly}
+        {IconsettingsIcon.IconperformanceIcon.IconcacheEnabledIcon && (
+          <IconTextFieldIcon
+            IconlabelIcon="IconCacheIcon IconDurationIcon (IconsecondsIcon)"
+            IcontypeIcon="Iconnumber"
+            IconvalueIcon={IconsettingsIcon.IconperformanceIcon.IconcacheDurationIcon}
+            IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconperformance', 'IconcacheDuration', IconparseIntIcon(IconeIcon.IcontargetIcon.IconvalueIcon))}
+            IconfullWidthIcon
+            IcondisabledIcon={IconreadOnlyIcon}
           />
         )}
-      </Stack>
-      <Divider />
-      <Typography variant="subtitle1" fontWeight="bold">
-        Optimization
-      </Typography>
-      <Stack spacing={2}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.performance.compressionEnabled}
-              onChange={(e) => handleSettingChange('performance', 'compressionEnabled', e.target.checked)}
-              disabled={readOnly}
+      <IconIconIcon/IconStackIcon>
+      <IconDividerIcon />
+      <IconTypographyIcon IconvariantIcon="Iconsubtitle1" IconfontWeightIcon="Iconbold">
+        IconOptimizationIcon
+      <IconIconIcon/IconTypographyIcon>
+      <IconStackIcon IconspacingIcon={Icon2Icon}>
+        <IconFormControlLabelIcon
+          IconcontrolIcon={
+            <IconSwitchIcon
+              IconcheckedIcon={IconsettingsIcon.IconperformanceIcon.IconcompressionEnabledIcon}
+              IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconperformance', 'IconcompressionEnabled', IconeIcon.IcontargetIcon.IconcheckedIcon)}
+              IcondisabledIcon={IconreadOnlyIcon}
             />
           }
-          label="Enable Compression"
+          IconlabelIcon="IconEnableIcon IconCompression"
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.performance.lazyLoadingEnabled}
-              onChange={(e) => handleSettingChange('performance', 'lazyLoadingEnabled', e.target.checked)}
-              disabled={readOnly}
+        <IconFormControlLabelIcon
+          IconcontrolIcon={
+            <IconSwitchIcon
+              IconcheckedIcon={IconsettingsIcon.IconperformanceIcon.IconlazyLoadingEnabledIcon}
+              IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconperformance', 'IconlazyLoadingEnabled', IconeIcon.IcontargetIcon.IconcheckedIcon)}
+              IcondisabledIcon={IconreadOnlyIcon}
             />
           }
-          label="Enable Lazy Loading"
+          IconlabelIcon="IconEnableIcon IconLazyIcon IconLoading"
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.performance.cdnEnabled}
-              onChange={(e) => handleSettingChange('performance', 'cdnEnabled', e.target.checked)}
-              disabled={readOnly}
+        <IconFormControlLabelIcon
+          IconcontrolIcon={
+            <IconSwitchIcon
+              IconcheckedIcon={IconsettingsIcon.IconperformanceIcon.IconcdnEnabledIcon}
+              IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconperformance', 'IconcdnEnabled', IconeIcon.IcontargetIcon.IconcheckedIcon)}
+              IcondisabledIcon={IconreadOnlyIcon}
             />
           }
-          label="Enable CDN"
+          IconlabelIcon="IconEnableIcon IconCDN"
         />
-        {settings.performance.cdnEnabled && (
-          <TextField
-            label="CDN URL"
-            value={settings.performance.cdnUrl || ''}
-            onChange={(e) => handleSettingChange('performance', 'cdnUrl', e.target.value)}
-            fullWidth
-            disabled={readOnly}
+        {IconsettingsIcon.IconperformanceIcon.IconcdnEnabledIcon && (
+          <IconTextFieldIcon
+            IconlabelIcon="IconCDNIcon IconURL"
+            IconvalueIcon={IconsettingsIcon.IconperformanceIcon.IconcdnUrlIcon || ''}
+            IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconperformance', 'IconcdnUrl', IconeIcon.IcontargetIcon.IconvalueIcon)}
+            IconfullWidthIcon
+            IcondisabledIcon={IconreadOnlyIcon}
           />
         )}
-      </Stack>
-      <Divider />
-      <Typography variant="subtitle1" fontWeight="bold">
-        Rate Limiting
-      </Typography>
-      <Stack spacing={2}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.performance.rateLimitEnabled}
-              onChange={(e) => handleSettingChange('performance', 'rateLimitEnabled', e.target.checked)}
-              disabled={readOnly}
+      <IconIconIcon/IconStackIcon>
+      <IconDividerIcon />
+      <IconTypographyIcon IconvariantIcon="Iconsubtitle1" IconfontWeightIcon="Iconbold">
+        IconRateIcon IconLimitingIcon
+      <IconIconIcon/IconTypographyIcon>
+      <IconStackIcon IconspacingIcon={Icon2Icon}>
+        <IconFormControlLabelIcon
+          IconcontrolIcon={
+            <IconSwitchIcon
+              IconcheckedIcon={IconsettingsIcon.IconperformanceIcon.IconrateLimitEnabledIcon}
+              IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconperformance', 'IconrateLimitEnabled', IconeIcon.IcontargetIcon.IconcheckedIcon)}
+              IcondisabledIcon={IconreadOnlyIcon}
             />
           }
-          label="Enable Rate Limiting"
+          IconlabelIcon="IconEnableIcon IconRateIcon IconLimiting"
         />
-        {settings.performance.rateLimitEnabled && (
-          <>
-            <TextField
-              label="Requests per Window"
-              type="number"
-              value={settings.performance.rateLimitRequests}
-              onChange={(e) => handleSettingChange('performance', 'rateLimitRequests', parseInt(e.target.value))}
-              fullWidth
-              disabled={readOnly}
+        {IconsettingsIcon.IconperformanceIcon.IconrateLimitEnabledIcon && (
+          <IconIconIcon>
+            <IconTextFieldIcon
+              IconlabelIcon="IconRequestsIcon IconperIcon IconWindow"
+              IcontypeIcon="Iconnumber"
+              IconvalueIcon={IconsettingsIcon.IconperformanceIcon.IconrateLimitRequestsIcon}
+              IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconperformance', 'IconrateLimitRequests', IconparseIntIcon(IconeIcon.IcontargetIcon.IconvalueIcon))}
+              IconfullWidthIcon
+              IcondisabledIcon={IconreadOnlyIcon}
             />
-            <TextField
-              label="Window Duration (seconds)"
-              type="number"
-              value={settings.performance.rateLimitWindow}
-              onChange={(e) => handleSettingChange('performance', 'rateLimitWindow', parseInt(e.target.value))}
-              fullWidth
-              disabled={readOnly}
+            <IconTextFieldIcon
+              IconlabelIcon="IconWindowIcon IconDurationIcon (IconsecondsIcon)"
+              IcontypeIcon="Iconnumber"
+              IconvalueIcon={IconsettingsIcon.IconperformanceIcon.IconrateLimitWindowIcon}
+              IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconperformance', 'IconrateLimitWindow', IconparseIntIcon(IconeIcon.IcontargetIcon.IconvalueIcon))}
+              IconfullWidthIcon
+              IcondisabledIcon={IconreadOnlyIcon}
             />
-          </>
+          <IconIconIcon/>
         )}
-      </Stack>
-    </Stack>
+      <IconIconIcon/IconStackIcon>
+    <IconIconIcon/IconStackIcon>
   );
-  const renderBackupSettings = () => (
-    <Stack spacing={3}>
-      <Alert severity="info">
-        <AlertTitle>Backup Status</AlertTitle>
-        <Stack spacing={1}>
-          <Typography variant="body2">
-            Last backup: {settings.backup.lastBackup ? new Date(settings.backup.lastBackup).toLocaleString() : 'Never'}
-          </Typography>
-          <Typography variant="body2">
-            Next scheduled: {settings.backup.nextBackup ? new Date(settings.backup.nextBackup).toLocaleString() : 'Not scheduled'}
-          </Typography>
-        </Stack>
-      </Alert>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={settings.backup.autoBackupEnabled}
-            onChange={(e) => handleSettingChange('backup', 'autoBackupEnabled', e.target.checked)}
-            disabled={readOnly}
+  IconconstIcon IconrenderBackupSettingsIcon = () => (
+    <IconStackIcon IconspacingIcon={Icon3Icon}>
+      <IconAlertIcon IconseverityIcon="Iconinfo">
+        <IconAlertTitleIcon>IconBackupIcon IconStatusIcon<IconIconIcon/IconAlertTitleIcon>
+        <IconStackIcon IconspacingIcon={Icon1Icon}>
+          <IconTypographyIcon IconsizeIcon="Iconsm">
+            IconLastIcon IconbackupIcon: {IconsettingsIcon.IconbackupIcon.IconlastBackupIcon ? IconnewIcon IconDateIcon(IconsettingsIcon.IconbackupIcon.IconlastBackupIcon).IcontoLocaleStringIcon() : 'IconNever'}
+          <IconIconIcon/IconTypographyIcon>
+          <IconTypographyIcon IconsizeIcon="Iconsm">
+            IconNextIcon IconscheduledIcon: {IconsettingsIcon.IconbackupIcon.IconnextBackupIcon ? IconnewIcon IconDateIcon(IconsettingsIcon.IconbackupIcon.IconnextBackupIcon).IcontoLocaleStringIcon() : 'IconNotIcon Iconscheduled'}
+          <IconIconIcon/IconTypographyIcon>
+        <IconIconIcon/IconStackIcon>
+      <IconIconIcon/IconAlertIcon>
+      <IconFormControlLabelIcon
+        IconcontrolIcon={
+          <IconSwitchIcon
+            IconcheckedIcon={IconsettingsIcon.IconbackupIcon.IconautoBackupEnabledIcon}
+            IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconbackup', 'IconautoBackupEnabled', IconeIcon.IcontargetIcon.IconcheckedIcon)}
+            IcondisabledIcon={IconreadOnlyIcon}
           />
         }
-        label="Enable Automatic Backups"
+        IconlabelIcon="IconEnableIcon IconAutomaticIcon IconBackups"
       />
-      {settings.backup.autoBackupEnabled && (
-        <>
-          <FormControl fullWidth disabled={readOnly}>
-            <InputLabel>Backup Frequency</InputLabel>
-            <Select
-              value={settings.backup.backupFrequency}
-              label="Backup Frequency"
-              onChange={(e) => handleSettingChange('backup', 'backupFrequency', e.target.value)}
+      {IconsettingsIcon.IconbackupIcon.IconautoBackupEnabledIcon && (
+        <IconIconIcon>
+          <IconFormControlIcon IconfullWidthIcon IcondisabledIcon={IconreadOnlyIcon}>
+            <IconInputLabelIcon>IconBackupIcon IconFrequencyIcon<IconIconIcon/IconInputLabelIcon>
+            <IconSelectIcon
+              IconvalueIcon={IconsettingsIcon.IconbackupIcon.IconbackupFrequencyIcon}
+              IconlabelIcon="IconBackupIcon IconFrequency"
+              IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconbackup', 'IconbackupFrequency', IconeIcon.IcontargetIcon.IconvalueIcon)}
             >
-              <MenuItem value="daily">Daily</MenuItem>
-              <MenuItem value="weekly">Weekly</MenuItem>
-              <MenuItem value="monthly">Monthly</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            label="Backup Time"
-            type="time"
-            value={settings.backup.backupTime}
-            onChange={(e) => handleSettingChange('backup', 'backupTime', e.target.value)}
-            fullWidth
-            disabled={readOnly}
-            InputLabelProps={{ shrink: true }}
+              <IconMenuItemIcon IconvalueIcon="Icondaily">IconDailyIcon<IconIconIcon/IconMenuItemIcon>
+              <IconMenuItemIcon IconvalueIcon="Iconweekly">IconWeeklyIcon<IconIconIcon/IconMenuItemIcon>
+              <IconMenuItemIcon IconvalueIcon="Iconmonthly">IconMonthlyIcon<IconIconIcon/IconMenuItemIcon>
+            <IconIconIcon/IconSelectIcon>
+          <IconIconIcon/IconFormControlIcon>
+          <IconTextFieldIcon
+            IconlabelIcon="IconBackupIcon IconTime"
+            IcontypeIcon="Icontime"
+            IconvalueIcon={IconsettingsIcon.IconbackupIcon.IconbackupTimeIcon}
+            IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconbackup', 'IconbackupTime', IconeIcon.IcontargetIcon.IconvalueIcon)}
+            IconfullWidthIcon
+            IcondisabledIcon={IconreadOnlyIcon}
+            IconInputLabelPropsIcon={{ IconshrinkIcon: IcontrueIcon }}
           />
-          <TextField
-            label="Retention Period (days)"
-            type="number"
-            value={settings.backup.backupRetention}
-            onChange={(e) => handleSettingChange('backup', 'backupRetention', parseInt(e.target.value))}
-            fullWidth
-            disabled={readOnly}
+          <IconTextFieldIcon
+            IconlabelIcon="IconRetentionIcon IconPeriodIcon (IcondaysIcon)"
+            IcontypeIcon="Iconnumber"
+            IconvalueIcon={IconsettingsIcon.IconbackupIcon.IconbackupRetentionIcon}
+            IcononChangeIcon={(IconeIcon) => IconhandleSettingChangeIcon('Iconbackup', 'IconbackupRetention', IconparseIntIcon(IconeIcon.IcontargetIcon.IconvalueIcon))}
+            IconfullWidthIcon
+            IcondisabledIcon={IconreadOnlyIcon}
           />
-        </>
+        <IconIconIcon/>
       )}
-      <Button
-        variant="contained"
-        startIcon={<BackupIcon />}
-        onClick={(e: React.MouseEvent) => handleRunBackup}
-        disabled={readOnly || saving}
+      <IconButtonIcon
+        IconvariantIcon="Iconfilled"
+        IconstartIconIcon={<IconIconBackupIcon />}
+        IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleRunBackupIcon}
+        IcondisabledIcon={IconreadOnlyIcon || IconsavingIcon}
       >
-        Run Manual Backup Now
-      </Button>
-    </Stack>
+        IconRunIcon IconManualIcon IconBackupIcon IconNowIcon
+      <IconIconIcon/IconButtonIcon>
+    <IconIconIcon/IconStackIcon>
   );
-  return (
-    <Paper sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="h6" fontWeight="bold">
-            System Settings
-          </Typography>
-          <Stack direction="row" spacing={1}>
-            {allowDangerousActions && (
-              <Button
-                size="small"
-                color="error"
-                startIcon={<ResetIcon />}
-                onClick={(e: React.MouseEvent) => handleResetSettings}
-                disabled={readOnly}
+  IconreturnIcon (
+    <IconPaperIcon IconstyleIcon={{ IconheightIcon: 'Icon100Icon%', IcondisplayIcon: 'Iconflex', IconflexDirectionIcon: 'Iconcolumn' }}>
+      {/* IconHeaderIcon */}
+      <IconBoxIcon IconstyleIcon={{ IconpIcon: Icon2Icon, IconborderBottomIcon: Icon1Icon, IconborderColorIcon: 'Icondivider' }}>
+        <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
+          <IconTypographyIcon IconorderIcon={Icon6Icon} IconfontWeightIcon="Iconbold">
+            IconSystemIcon IconSettingsIcon
+          <IconIconIcon/IconTypographyIcon>
+          <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon}>
+            {IconallowDangerousActionsIcon && (
+              <IconButtonIcon
+                IconsizeIcon="Iconsmall"
+                IconcolorIcon="Iconred"
+                IconstartIconIcon={<IconIconRestartAltIcon />}
+                IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleResetSettingsIcon}
+                IcondisabledIcon={IconreadOnlyIcon}
               >
-                Reset to Defaults
-              </Button>
+                IconResetIcon IcontoIcon IconDefaultsIcon
+              <IconIconIcon/IconButtonIcon>
             )}
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<SaveIcon />}
-              onClick={(e: React.MouseEvent) => handleSaveSettings}
-              disabled={readOnly || saving}
+            <IconButtonIcon
+              IconvariantIcon="Iconfilled"
+              IconsizeIcon="Iconsmall"
+              IconstartIconIcon={<IconIconDeviceFloppyIcon />}
+              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleSaveSettingsIcon}
+              IcondisabledIcon={IconreadOnlyIcon || IconsavingIcon}
             >
-              Save Changes
-            </Button>
-          </Stack>
-        </Stack>
-      </Box>
-      {/* Loading */}
-      {loading && <LinearProgress />}
-      {/* Alerts */}
-      {error && (
-        <Alert severity="error" onClose={() => setError(null)} sx={{ m: 2 }}>
-          {error}
-        </Alert>
+              IconSaveIcon IconChangesIcon
+            <IconIconIcon/IconButtonIcon>
+          <IconIconIcon/IconStackIcon>
+        <IconIconIcon/IconStackIcon>
+      <IconIconIcon/IconBoxIcon>
+      {/* IconLoadingIcon */}
+      {IconloadingIcon && <IconLinearProgressIcon />}
+      {/* IconAlertsIcon */}
+      {IconerrorIcon && (
+        <IconAlertIcon IconseverityIcon="Iconerror" IcononCloseIcon={() => IconsetErrorIcon(IconnullIcon)} IconstyleIcon={{ IconmIcon: Icon2Icon }}>
+          {IconerrorIcon}
+        <IconIconIcon/IconAlertIcon>
       )}
-      {success && (
-        <Alert severity="success" onClose={() => setSuccess(null)} sx={{ m: 2 }}>
-          {success}
-        </Alert>
+      {IconsuccessIcon && (
+        <IconAlertIcon IconseverityIcon="Iconsuccess" IcononCloseIcon={() => IconsetSuccessIcon(IconnullIcon)} IconstyleIcon={{ IconmIcon: Icon2Icon }}>
+          {IconsuccessIcon}
+        <IconIconIcon/IconAlertIcon>
       )}
-      {/* Content */}
-      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-        {/* General Settings */}
-        <Accordion
-          expanded={expandedPanel === 'general'}
-          onChange={(_, isExpanded) => setExpandedPanel(isExpanded ? 'general' : false)}
+      {/* IconContentIcon */}
+      <IconBoxIcon IconstyleIcon={{ IconflexIcon: Icon1Icon, IconoverflowIcon: 'Iconauto', IconpIcon: Icon2Icon }}>
+        {/* IconGeneralIcon IconSettingsIcon */}
+        <IconAccordionIcon
+          IconexpandedIcon={IconexpandedPanelIcon === 'Icongeneral'}
+          IcononChangeIcon={(Icon_Icon, IconisExpandedIcon) => IconsetExpandedPanelIcon(IconisExpandedIcon ? 'Icongeneral' : IconfalseIcon)}
         >
-          <AccordionSummary expandIcon={<ExpandIcon />}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <SettingsIcon />
-              <Typography>General Settings</Typography>
-            </Stack>
-          </AccordionSummary>
-          <AccordionDetails>{renderGeneralSettings()}</AccordionDetails>
-        </Accordion>
-        {/* Security Settings */}
-        <Accordion
-          expanded={expandedPanel === 'security'}
-          onChange={(_, isExpanded) => setExpandedPanel(isExpanded ? 'security' : false)}
+          <IconAccordionSummaryIcon IconexpandIconIcon={<IconIconChevronDownIcon />}>
+            <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon} IconalignItemsIcon="Iconcenter">
+              <IconIconSettingsIcon />
+              <IconTypographyIcon>IconGeneralIcon IconSettingsIcon<IconIconIcon/IconTypographyIcon>
+            <IconIconIcon/IconStackIcon>
+          <IconIconIcon/IconAccordionSummaryIcon>
+          <IconAccordionDetailsIcon>{IconrenderGeneralSettingsIcon()}<IconIconIcon/IconAccordionDetailsIcon>
+        <IconIconIcon/IconAccordionIcon>
+        {/* IconSecurityIcon IconSettingsIcon */}
+        <IconAccordionIcon
+          IconexpandedIcon={IconexpandedPanelIcon === 'Iconsecurity'}
+          IcononChangeIcon={(Icon_Icon, IconisExpandedIcon) => IconsetExpandedPanelIcon(IconisExpandedIcon ? 'Iconsecurity' : IconfalseIcon)}
         >
-          <AccordionSummary expandIcon={<ExpandIcon />}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <SecurityIcon />
-              <Typography>Security Settings</Typography>
-            </Stack>
-          </AccordionSummary>
-          <AccordionDetails>{renderSecuritySettings()}</AccordionDetails>
-        </Accordion>
-        {/* Performance Settings */}
-        <Accordion
-          expanded={expandedPanel === 'performance'}
-          onChange={(_, isExpanded) => setExpandedPanel(isExpanded ? 'performance' : false)}
+          <IconAccordionSummaryIcon IconexpandIconIcon={<IconIconChevronDownIcon />}>
+            <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon} IconalignItemsIcon="Iconcenter">
+              <IconIconSecurityIcon />
+              <IconTypographyIcon>IconSecurityIcon IconSettingsIcon<IconIconIcon/IconTypographyIcon>
+            <IconIconIcon/IconStackIcon>
+          <IconIconIcon/IconAccordionSummaryIcon>
+          <IconAccordionDetailsIcon>{IconrenderSecuritySettingsIcon()}<IconIconIcon/IconAccordionDetailsIcon>
+        <IconIconIcon/IconAccordionIcon>
+        {/* IconPerformanceIcon IconSettingsIcon */}
+        <IconAccordionIcon
+          IconexpandedIcon={IconexpandedPanelIcon === 'Iconperformance'}
+          IcononChangeIcon={(Icon_Icon, IconisExpandedIcon) => IconsetExpandedPanelIcon(IconisExpandedIcon ? 'Iconperformance' : IconfalseIcon)}
         >
-          <AccordionSummary expandIcon={<ExpandIcon />}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <PerformanceIcon />
-              <Typography>Performance Settings</Typography>
-            </Stack>
-          </AccordionSummary>
-          <AccordionDetails>{renderPerformanceSettings()}</AccordionDetails>
-        </Accordion>
-        {/* Backup Settings */}
-        <Accordion
-          expanded={expandedPanel === 'backup'}
-          onChange={(_, isExpanded) => setExpandedPanel(isExpanded ? 'backup' : false)}
+          <IconAccordionSummaryIcon IconexpandIconIcon={<IconIconChevronDownIcon />}>
+            <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon} IconalignItemsIcon="Iconcenter">
+              <IconIconSpeedIcon />
+              <IconTypographyIcon>IconPerformanceIcon IconSettingsIcon<IconIconIcon/IconTypographyIcon>
+            <IconIconIcon/IconStackIcon>
+          <IconIconIcon/IconAccordionSummaryIcon>
+          <IconAccordionDetailsIcon>{IconrenderPerformanceSettingsIcon()}<IconIconIcon/IconAccordionDetailsIcon>
+        <IconIconIcon/IconAccordionIcon>
+        {/* IconBackupIcon IconSettingsIcon */}
+        <IconAccordionIcon
+          IconexpandedIcon={IconexpandedPanelIcon === 'Iconbackup'}
+          IcononChangeIcon={(Icon_Icon, IconisExpandedIcon) => IconsetExpandedPanelIcon(IconisExpandedIcon ? 'Iconbackup' : IconfalseIcon)}
         >
-          <AccordionSummary expandIcon={<ExpandIcon />}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <BackupIcon />
-              <Typography>Backup Settings</Typography>
-            </Stack>
-          </AccordionSummary>
-          <AccordionDetails>{renderBackupSettings()}</AccordionDetails>
-        </Accordion>
-      </Box>
-      {/* Confirmation Dialog */}
-      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
-        <DialogTitle>Confirm Action</DialogTitle>
-        <DialogContent>
-          <Typography>
-            {confirmAction === 'reset'
-              ? 'Are you sure you want to reset all settings to defaults? This action cannot be undone.'
-              : 'Are you sure you want to proceed with this action?'}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={(e: React.MouseEvent) => () => setConfirmDialogOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={(e: React.MouseEvent) => () => {
-              if (confirmAction === 'reset') {
-                // Reset settings to defaults
-                fetchSettings();
+          <IconAccordionSummaryIcon IconexpandIconIcon={<IconIconChevronDownIcon />}>
+            <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon} IconalignItemsIcon="Iconcenter">
+              <IconIconBackupIcon />
+              <IconTypographyIcon>IconBackupIcon IconSettingsIcon<IconIconIcon/IconTypographyIcon>
+            <IconIconIcon/IconStackIcon>
+          <IconIconIcon/IconAccordionSummaryIcon>
+          <IconAccordionDetailsIcon>{IconrenderBackupSettingsIcon()}<IconIconIcon/IconAccordionDetailsIcon>
+        <IconIconIcon/IconAccordionIcon>
+      <IconIconIcon/IconBoxIcon>
+      {/* IconConfirmationIcon IconDialogIcon */}
+      <IconDialogIcon IconopenIcon={IconconfirmDialogOpenIcon} IcononCloseIcon={() => IconsetConfirmDialogOpenIcon(IconfalseIcon)}>
+        <IconDialogTitleIcon>IconConfirmIcon IconActionIcon<IconIconIcon/IconDialogTitleIcon>
+        <IconDialogContentIcon>
+          <IconTypographyIcon>
+            {IconconfirmActionIcon === 'Iconreset'
+              ? 'IconAreIcon IconyouIcon IconsureIcon IconyouIcon IconwantIcon IcontoIcon IconresetIcon IconallIcon IconsettingsIcon IcontoIcon IcondefaultsIcon? IconThisIcon IconactionIcon IconcannotIcon IconbeIcon IconundoneIcon.'
+              : 'IconAreIcon IconyouIcon IconsureIcon IconyouIcon IconwantIcon IcontoIcon IconproceedIcon IconwithIcon IconthisIcon IconactionIcon?'}
+          <IconIconIcon/IconTypographyIcon>
+        <IconIconIcon/IconDialogContentIcon>
+        <IconDialogActionsIcon>
+          <IconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconsetConfirmDialogOpenIcon(IconfalseIcon)}>IconCancelIcon<IconIconIcon/IconButtonIcon>
+          <IconButtonIcon
+            IconvariantIcon="Iconfilled"
+            IconcolorIcon="Iconred"
+            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
+              IconifIcon (IconconfirmActionIcon === 'Iconreset') {
+                // IconResetIcon IconsettingsIcon IcontoIcon IcondefaultsIcon
+                IconfetchSettingsIcon();
               }
-              setConfirmDialogOpen(false);
+              IconsetConfirmDialogOpenIcon(IconfalseIcon);
             }}
           >
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Paper>
+            IconConfirmIcon
+          <IconIconIcon/IconButtonIcon>
+        <IconIconIcon/IconDialogActionsIcon>
+      <IconIconIcon/IconDialogIcon>
+    <IconIconIcon/IconPaperIcon>
   );
 });
-SystemSettingsPanel.displayName = 'SystemSettingsPanel';
-export default SystemSettingsPanel;
+IconSystemSettingsPanelIcon.IcondisplayNameIcon = 'IconSystemSettingsPanel';
+IconexportIcon IcondefaultIcon IconSystemSettingsPanelIcon;

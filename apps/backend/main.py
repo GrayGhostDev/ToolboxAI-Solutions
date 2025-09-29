@@ -36,11 +36,35 @@ from apps.backend.core.logging import logging_manager
 
 # Import FastAPI components for test endpoints
 from fastapi import HTTPException
+from fastapi.responses import Response
+
+# Import Prometheus metrics
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST, REGISTRY
 
 # Create the FastAPI application using the factory
 app = create_app(config_settings=settings)
 
 logger = logging_manager.get_logger(__name__)
+
+
+# =============================================================================
+# MONITORING ENDPOINTS
+# =============================================================================
+
+
+@app.get("/metrics")
+async def get_metrics():
+    """
+    Prometheus metrics endpoint
+
+    Returns application metrics in Prometheus format for scraping
+    """
+    metrics_data = generate_latest(REGISTRY)
+    return Response(
+        content=metrics_data,
+        media_type=CONTENT_TYPE_LATEST,
+        headers={"Content-Type": CONTENT_TYPE_LATEST}
+    )
 
 
 # =============================================================================

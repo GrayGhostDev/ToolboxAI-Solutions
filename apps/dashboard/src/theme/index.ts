@@ -66,8 +66,8 @@ export type {
 // Theme mode type
 export type ThemeMode = 'light' | 'dark' | 'system';
 
-// Re-export Material-UI theme types for convenience
-export type { Theme, Palette, PaletteMode } from '@mui/material/styles';
+// Re-export Mantine theme types for convenience
+export type { MantineTheme, MantineColorScheme } from '@mantine/core';
 
 /**
  * Quick start guide:

@@ -1,406 +1,394 @@
+IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../IconutilsIcon/IconmuiIcon-Iconimports';
 /**
- * Pusher Connection Status Component
+ * IconPusherIcon IconConnectionIcon IconStatusIcon IconComponentIcon
  *
- * Displays the current Pusher connection status with visual indicators,
- * reconnection controls, and detailed connection information.
+ * IconDisplaysIcon IcontheIcon IconcurrentIcon IconPusherIcon IconconnectionIcon IconstatusIcon IconwithIcon IconvisualIcon IconindicatorsIcon,
+ * IconreconnectionIcon IconcontrolsIcon, IconandIcon IcondetailedIcon IconconnectionIcon IconinformationIcon.
  */
 
-import React, { useState } from 'react';
-import {
-  Box,
-  Chip,
-  IconButton,
-  Popover,
-  Paper,
-  Typography,
-  Button,
-  Stack,
-  Divider,
-  Tooltip,
-  LinearProgress,
-  Alert,
-} from '@mui/material';
-import {
-  Wifi as WifiIcon,
-  WifiOff as WifiOffIcon,
-  Refresh as RefreshIcon,
-  Info as InfoIcon,
-  Warning as WarningIcon,
-  Error as ErrorIcon,
-  CheckCircle as CheckCircleIcon,
-} from '@mui/icons-material';
+IconimportIcon IconReactIcon, { IconuseStateIcon } IconfromIcon 'Iconreact';
+IconimportIcon {
+  IconWifiIcon IconasIcon IconIconWifiIcon,
+  IconWifiOffIcon IconasIcon IconIconWifiOffIcon,
+  IconRefreshIcon IconasIcon IconIconRefreshIcon,
+  IconInfoIcon IconasIcon IconIconInfoCircleIcon,
+  IconWarningIcon IconasIcon IconIconAlertTriangleIcon,
+  IconErrorIcon IconasIcon IconIconCircleXIcon,
+  IconCheckCircleIcon IconasIcon IconIconCircleCheckIcon,
+} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
 
-import { usePusherConnection } from '../hooks/usePusher';
-import { usePusherContext } from '../contexts/PusherContext';
-import { ConnectionStateUtils } from '../utils/pusher';
-import { PusherConnectionState } from '../types/pusher';
+IconimportIcon { IconusePusherConnectionIcon } IconfromIcon '../IconhooksIcon/IconusePusher';
+IconimportIcon { IconusePusherContextIcon } IconfromIcon '../IconcontextsIcon/IconPusherContext';
+IconimportIcon { IconConnectionStateUtilsIcon } IconfromIcon '../IconutilsIcon/Iconpusher';
+IconimportIcon { IconPusherConnectionStateIcon } IconfromIcon '../IcontypesIcon/Iconpusher';
+IconimportIcon { IconIconIcon, IconIconAlertTriangleIcon, IconIconCircleCheckIcon, IconIconCircleXIcon, IconIconInfoCircleIcon, IconIconRefreshIcon, IconIconWifiIcon, IconIconWifiOffIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
 
-interface PusherConnectionStatusProps {
+IconinterfaceIcon IconPusherConnectionStatusPropsIcon {
   /**
-   * Show detailed status in popover
+   * IconShowIcon IcondetailedIcon IconstatusIcon IconinIcon IconpopoverIcon
    */
-  showDetails?: boolean;
+  IconshowDetailsIcon?: IconbooleanIcon;
   /**
-   * Size of the status indicator
+   * IconSizeIcon IconofIcon IcontheIcon IconstatusIcon IconindicatorIcon
    */
-  size?: 'small' | 'medium' | 'large';
+  IconsizeIcon?: 'Iconsmall' | 'Iconmedium' | 'Iconlarge';
   /**
-   * Position of the component
+   * IconPositionIcon IconofIcon IcontheIcon IconcomponentIcon
    */
-  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'inline';
+  IconpositionIcon?: 'IcontopIcon-Iconright' | 'IcontopIcon-Iconleft' | 'IconbottomIcon-Iconright' | 'IconbottomIcon-Iconleft' | 'Iconinline';
   /**
-   * Custom styling
+   * IconCustomIcon IconstylingIcon
    */
-  sx?: any;
+  IconsxIcon?: IconanyIcon;
 }
 
 /**
- * Connection Status Component
+ * IconConnectionIcon IconStatusIcon IconComponentIcon
  */
-export const PusherConnectionStatus: React.FC<PusherConnectionStatusProps> = ({
-  showDetails = true,
-  size = 'medium',
-  position = 'inline',
-  sx = {},
+IconexportIcon IconconstIcon IconPusherConnectionStatusIcon: IconReactIcon.IconFCIcon<IconPusherConnectionStatusPropsIcon> = ({
+  IconshowDetailsIcon = IcontrueIcon,
+  IconsizeIcon = 'Iconmedium',
+  IconpositionIcon = 'Iconinline',
+  IconsxIcon = {},
 }) => {
-  const { isConnected, isConnecting, state, stats, lastError, reconnect } = usePusherConnection();
-  const { connectionState } = usePusherContext();
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [isReconnecting, setIsReconnecting] = useState(false);
+  IconconstIcon { IconisConnectedIcon, IconisConnectingIcon, IconstateIcon, IconstatsIcon, IconlastErrorIcon, IconreconnectIcon } = IconusePusherConnectionIcon();
+  IconconstIcon { IconconnectionStateIcon } = IconusePusherContextIcon();
+  IconconstIcon [IconanchorElIcon, IconsetAnchorElIcon] = IconuseStateIcon<IconHTMLElementIcon | IconnullIcon>(IconnullIcon);
+  IconconstIcon [IconisReconnectingIcon, IconsetIsReconnectingIcon] = IconuseStateIcon(IconfalseIcon);
 
-  const handleStatusClick = (event: React.MouseEvent<HTMLElement>) => {
-    if (showDetails) {
-      setAnchorEl(event.currentTarget);
+  IconconstIcon IconhandleStatusClickIcon = (IconeventIcon: IconReactIcon.IconMouseEventIcon<IconHTMLElementIcon>) => {
+    IconifIcon (IconshowDetailsIcon) {
+      IconsetAnchorElIcon(IconeventIcon.IconcurrentTargetIcon);
     }
   };
 
-  const handleClose = () => {
-    setAnchorEl(null);
+  IconconstIcon IconhandleCloseIcon = () => {
+    IconsetAnchorElIcon(IconnullIcon);
   };
 
-  const handleReconnect = async () => {
-    setIsReconnecting(true);
-    try {
-      await reconnect();
-    } catch (error) {
-      console.error('Reconnection failed:', error);
-    } finally {
-      setIsReconnecting(false);
-      handleClose();
+  IconconstIcon IconhandleReconnectIcon = IconasyncIcon () => {
+    IconsetIsReconnectingIcon(IcontrueIcon);
+    IcontryIcon {
+      IconawaitIcon IconreconnectIcon();
+    } IconcatchIcon (IconerrorIcon) {
+      IconconsoleIcon.IconerrorIcon('IconReconnectionIcon IconfailedIcon:', IconerrorIcon);
+    } IconfinallyIcon {
+      IconsetIsReconnectingIcon(IconfalseIcon);
+      IconhandleCloseIcon();
     }
   };
 
-  // Determine status properties
-  const getStatusProps = () => {
-    if (isConnecting || isReconnecting) {
-      return {
-        color: 'info' as const,
-        icon: <WifiIcon />,
-        label: 'Connecting...',
-        showProgress: true,
+  // IconDetermineIcon IconstatusIcon IconpropertiesIcon
+  IconconstIcon IcongetStatusPropsIcon = () => {
+    IconifIcon (IconisConnectingIcon || IconisReconnectingIcon) {
+      IconreturnIcon {
+        IconcolorIcon: 'Iconinfo' IconasIcon IconconstIcon,
+        IconiconIcon: <IconIconWifiIcon />,
+        IconlabelIcon: 'IconConnectingIcon...',
+        IconshowProgressIcon: IcontrueIcon,
       };
     }
 
-    if (isConnected) {
-      return {
-        color: 'success' as const,
-        icon: <CheckCircleIcon />,
-        label: 'Connected',
-        showProgress: false,
+    IconifIcon (IconisConnectedIcon) {
+      IconreturnIcon {
+        IconcolorIcon: 'Iconsuccess' IconasIcon IconconstIcon,
+        IconiconIcon: <IconIconCircleCheckIcon />,
+        IconlabelIcon: 'IconConnected',
+        IconshowProgressIcon: IconfalseIcon,
       };
     }
 
-    if (lastError) {
-      return {
-        color: 'error' as const,
-        icon: <ErrorIcon />,
-        label: 'Error',
-        showProgress: false,
+    IconifIcon (IconlastErrorIcon) {
+      IconreturnIcon {
+        IconcolorIcon: 'Iconerror' IconasIcon IconconstIcon,
+        IconiconIcon: <IconIconCircleXIcon />,
+        IconlabelIcon: 'IconError',
+        IconshowProgressIcon: IconfalseIcon,
       };
     }
 
-    return {
-      color: 'warning' as const,
-      icon: <WifiOffIcon />,
-      label: 'Disconnected',
-      showProgress: false,
+    IconreturnIcon {
+      IconcolorIcon: 'Iconwarning' IconasIcon IconconstIcon,
+      IconiconIcon: <IconIconWifiOffIcon />,
+      IconlabelIcon: 'IconDisconnected',
+      IconshowProgressIcon: IconfalseIcon,
     };
   };
 
-  const statusProps = getStatusProps();
-  const open = Boolean(anchorEl);
+  IconconstIcon IconstatusPropsIcon = IcongetStatusPropsIcon();
+  IconconstIcon IconopenIcon = IconBooleanIcon(IconanchorElIcon);
 
-  // Format uptime
-  const formatUptime = (connectedAt?: string) => {
-    if (!connectedAt) return 'N/A';
+  // IconFormatIcon IconuptimeIcon
+  IconconstIcon IconformatUptimeIcon = (IconconnectedAtIcon?: IconstringIcon) => {
+    IconifIcon (!IconconnectedAtIcon) IconreturnIcon 'IconNIcon/IconA';
     
-    const uptime = Date.now() - new Date(connectedAt).getTime();
-    const minutes = Math.floor(uptime / 60000);
-    const hours = Math.floor(minutes / 60);
+    IconconstIcon IconuptimeIcon = IconDateIcon.IconnowIcon() - IconnewIcon IconDateIcon(IconconnectedAtIcon).IcongetTimeIcon();
+    IconconstIcon IconminutesIcon = IconMathIcon.IconfloorIcon(IconuptimeIcon / Icon60000Icon);
+    IconconstIcon IconhoursIcon = IconMathIcon.IconfloorIcon(IconminutesIcon / Icon60Icon);
     
-    if (hours > 0) {
-      return `${hours}h ${minutes % 60}m`;
+    IconifIcon (IconhoursIcon > Icon0Icon) {
+      IconreturnIcon `${IconhoursIcon}IconhIcon ${IconminutesIcon % Icon60Icon}IconmIcon`;
     }
-    return `${minutes}m`;
+    IconreturnIcon `${IconminutesIcon}IconmIcon`;
   };
 
-  // Position styles
-  const getPositionStyles = () => {
-    if (position === 'inline') return {};
+  // IconPositionIcon IconstylesIcon
+  IconconstIcon IcongetPositionStylesIcon = () => {
+    IconifIcon (IconpositionIcon === 'Iconinline') IconreturnIcon {};
     
-    const baseStyles = {
-      position: 'fixed' as const,
-      zIndex: 1000,
+    IconconstIcon IconbaseStylesIcon = {
+      IconpositionIcon: 'Iconfixed' IconasIcon IconconstIcon,
+      IconzIndexIcon: Icon1000Icon,
     };
     
-    switch (position) {
-      case 'top-right':
-        return { ...baseStyles, top: 16, right: 16 };
-      case 'top-left':
-        return { ...baseStyles, top: 16, left: 16 };
-      case 'bottom-right':
-        return { ...baseStyles, bottom: 16, right: 16 };
-      case 'bottom-left':
-        return { ...baseStyles, bottom: 16, left: 16 };
-      default:
-        return baseStyles;
+    IconswitchIcon (IconpositionIcon) {
+      IconcaseIcon 'IcontopIcon-Iconright':
+        IconreturnIcon { ...IconbaseStylesIcon, IcontopIcon: Icon16Icon, IconrightIcon: Icon16Icon };
+      IconcaseIcon 'IcontopIcon-Iconleft':
+        IconreturnIcon { ...IconbaseStylesIcon, IcontopIcon: Icon16Icon, IconleftIcon: Icon16Icon };
+      IconcaseIcon 'IconbottomIcon-Iconright':
+        IconreturnIcon { ...IconbaseStylesIcon, IconbottomIcon: Icon16Icon, IconrightIcon: Icon16Icon };
+      IconcaseIcon 'IconbottomIcon-Iconleft':
+        IconreturnIcon { ...IconbaseStylesIcon, IconbottomIcon: Icon16Icon, IconleftIcon: Icon16Icon };
+      IcondefaultIcon:
+        IconreturnIcon IconbaseStylesIcon;
     }
   };
 
-  return (
-    <Box sx={{ ...getPositionStyles(), ...sx }}>
-      <Tooltip title={ConnectionStateUtils.getStatusMessage(connectionState)} arrow>
-        <Chip
-          icon={statusProps.icon}
-          label={statusProps.label}
-          color={statusProps.color}
-          size={size}
-          onClick={showDetails ? handleStatusClick : undefined}
-          sx={{
-            cursor: showDetails ? 'pointer' : 'default',
-            '& .MuiChip-icon': {
-              animation: (isConnecting || isReconnecting) ? 'pulse 1.5s infinite' : 'none',
+  IconreturnIcon (
+    <IconBoxIcon IconstyleIcon={{ ...IcongetPositionStylesIcon(), ...IconsxIcon }}>
+      <IconTooltipIcon IcontitleIcon={IconConnectionStateUtilsIcon.IcongetStatusMessageIcon(IconconnectionStateIcon)} IconarrowIcon>
+        <IconChipIcon
+          IconiconIcon={IconstatusPropsIcon.IconiconIcon}
+          IconlabelIcon={IconstatusPropsIcon.IconlabelIcon}
+          IconcolorIcon={IconstatusPropsIcon.IconcolorIcon}
+          IconsizeIcon={IconsizeIcon}
+          IcononClickIcon={IconshowDetailsIcon ? IconhandleStatusClickIcon : IconundefinedIcon}
+          IconstyleIcon={{
+            IconcursorIcon: IconshowDetailsIcon ? 'Iconpointer' : 'Icondefault',
+            '& .IconMuiChipIcon-Iconicon': {
+              IconanimationIcon: (IconisConnectingIcon || IconisReconnectingIcon) ? 'IconpulseIcon Icon1Icon.Icon5sIcon Iconinfinite' : 'Iconnone',
             },
-            '@keyframes pulse': {
-              '0%': { opacity: 1 },
-              '50%': { opacity: 0.5 },
-              '100%': { opacity: 1 },
+            '@IconkeyframesIcon Iconpulse': {
+              'Icon0Icon%': { IconopacityIcon: Icon1Icon },
+              'Icon50Icon%': { IconopacityIcon: Icon0Icon.Icon5Icon },
+              'Icon100Icon%': { IconopacityIcon: Icon1Icon },
             },
           }}
         />
-      </Tooltip>
+      <IconIconIcon/IconTooltipIcon>
 
-      {statusProps.showProgress && (
-        <LinearProgress
-          color={statusProps.color}
-          sx={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 2,
+      {IconstatusPropsIcon.IconshowProgressIcon && (
+        <IconLinearProgressIcon
+          IconcolorIcon={IconstatusPropsIcon.IconcolorIcon}
+          IconstyleIcon={{
+            IconpositionIcon: 'Iconabsolute',
+            IconbottomIcon: Icon0Icon,
+            IconleftIcon: Icon0Icon,
+            IconrightIcon: Icon0Icon,
+            IconheightIcon: Icon2Icon,
           }}
         />
       )}
 
-      {showDetails && (
-        <Popover
-          open={open}
-          anchorEl={anchorEl}
-          onClose={handleClose}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'center',
+      {IconshowDetailsIcon && (
+        <IconPopoverIcon
+          IconopenIcon={IconopenIcon}
+          IconanchorElIcon={IconanchorElIcon}
+          IcononCloseIcon={IconhandleCloseIcon}
+          IconanchorOriginIcon={{
+            IconverticalIcon: 'Iconbottom',
+            IconhorizontalIcon: 'Iconcenter',
           }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'center',
+          IcontransformOriginIcon={{
+            IconverticalIcon: 'Icontop',
+            IconhorizontalIcon: 'Iconcenter',
           }}
         >
-          <Paper sx={{ p: 2, minWidth: 300, maxWidth: 400 }}>
-            <Stack spacing={2}>
-              {/* Header */}
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Typography variant="h6" component="h3">
-                  Connection Status
-                </Typography>
-                <IconButton
-                  size="small"
-                  onClick={handleReconnect}
-                  disabled={isConnecting || isReconnecting}
-                  title="Reconnect"
+          <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon2Icon, IconminWidthIcon: Icon300Icon, IconmaxWidthIcon: Icon400Icon }}>
+            <IconStackIcon IconspacingIcon={Icon2Icon}>
+              {/* IconHeaderIcon */}
+              <IconBoxIcon IcondisplayIcon="Iconflex" IconalignItemsIcon="Iconcenter" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
+                <IconTypographyIcon IconorderIcon={Icon6Icon} IconcomponentIcon="Iconh3">
+                  IconConnectionIcon IconStatusIcon
+                <IconIconIcon/IconTypographyIcon>
+                <IconIconButtonIcon
+                  IconsizeIcon="Iconsmall"
+                  IcononClickIcon={IconhandleReconnectIcon}
+                  IcondisabledIcon={IconisConnectingIcon || IconisReconnectingIcon}
+                  IcontitleIcon="IconReconnect"
                 >
-                  <RefreshIcon />
-                </IconButton>
-              </Box>
+                  <IconIconRefreshIcon />
+                <IconIconIcon/IconIconButtonIcon>
+              <IconIconIcon/IconBoxIcon>
 
-              {/* Status Alert */}
-              {lastError ? (
-                <Alert severity="error" variant="outlined">
-                  <Typography variant="body2">
-                    {lastError.message}
-                  </Typography>
-                </Alert>
-              ) : isConnected ? (
-                <Alert severity="success" variant="outlined">
-                  <Typography variant="body2">
-                    Real-time connection is active
-                  </Typography>
-                </Alert>
+              {/* IconStatusIcon IconAlertIcon */}
+              {IconlastErrorIcon ? (
+                <IconAlertIcon IconseverityIcon="Iconerror" IconvariantIcon="Iconoutline">
+                  <IconTypographyIcon IconsizeIcon="Iconsm">
+                    {IconlastErrorIcon.IconmessageIcon}
+                  <IconIconIcon/IconTypographyIcon>
+                <IconIconIcon/IconAlertIcon>
+              ) : IconisConnectedIcon ? (
+                <IconAlertIcon IconseverityIcon="Iconsuccess" IconvariantIcon="Iconoutline">
+                  <IconTypographyIcon IconsizeIcon="Iconsm">
+                    IconRealIcon-IcontimeIcon IconconnectionIcon IconisIcon IconactiveIcon
+                  <IconIconIcon/IconTypographyIcon>
+                <IconIconIcon/IconAlertIcon>
               ) : (
-                <Alert severity="warning" variant="outlined">
-                  <Typography variant="body2">
-                    Real-time features are unavailable
-                  </Typography>
-                </Alert>
+                <IconAlertIcon IconseverityIcon="Iconwarning" IconvariantIcon="Iconoutline">
+                  <IconTypographyIcon IconsizeIcon="Iconsm">
+                    IconRealIcon-IcontimeIcon IconfeaturesIcon IconareIcon IconunavailableIcon
+                  <IconIconIcon/IconTypographyIcon>
+                <IconIconIcon/IconAlertIcon>
               )}
 
-              <Divider />
+              <IconDividerIcon />
 
-              {/* Connection Details */}
-              <Stack spacing={1}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Connection Details
-                </Typography>
+              {/* IconConnectionIcon IconDetailsIcon */}
+              <IconStackIcon IconspacingIcon={Icon1Icon}>
+                <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconcolorIcon="IcontextIcon.Iconsecondary">
+                  IconConnectionIcon IconDetailsIcon
+                <IconIconIcon/IconTypographyIcon>
 
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2">Status:</Typography>
-                  <Typography variant="body2" fontWeight="medium">
-                    {ConnectionStateUtils.getStatusMessage(connectionState)}
-                  </Typography>
-                </Box>
+                <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
+                  <IconTypographyIcon IconsizeIcon="Iconsm">IconStatusIcon:<IconIconIcon/IconTypographyIcon>
+                  <IconTypographyIcon IconsizeIcon="Iconsm" IconfontWeightIcon="Iconmedium">
+                    {IconConnectionStateUtilsIcon.IcongetStatusMessageIcon(IconconnectionStateIcon)}
+                  <IconIconIcon/IconTypographyIcon>
+                <IconIconIcon/IconBoxIcon>
 
-                {stats.connectedAt && (
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="body2">Uptime:</Typography>
-                    <Typography variant="body2" fontWeight="medium">
-                      {formatUptime(stats.connectedAt)}
-                    </Typography>
-                  </Box>
+                {IconstatsIcon.IconconnectedAtIcon && (
+                  <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
+                    <IconTypographyIcon IconsizeIcon="Iconsm">IconUptimeIcon:<IconIconIcon/IconTypographyIcon>
+                    <IconTypographyIcon IconsizeIcon="Iconsm" IconfontWeightIcon="Iconmedium">
+                      {IconformatUptimeIcon(IconstatsIcon.IconconnectedAtIcon)}
+                    <IconIconIcon/IconTypographyIcon>
+                  <IconIconIcon/IconBoxIcon>
                 )}
 
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2">Reconnect Attempts:</Typography>
-                  <Typography variant="body2" fontWeight="medium">
-                    {stats.reconnectAttempts}
-                  </Typography>
-                </Box>
+                <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
+                  <IconTypographyIcon IconsizeIcon="Iconsm">IconReconnectIcon IconAttemptsIcon:<IconIconIcon/IconTypographyIcon>
+                  <IconTypographyIcon IconsizeIcon="Iconsm" IconfontWeightIcon="Iconmedium">
+                    {IconstatsIcon.IconreconnectAttemptsIcon}
+                  <IconIconIcon/IconTypographyIcon>
+                <IconIconIcon/IconBoxIcon>
 
-                {stats.latency !== undefined && (
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="body2">Latency:</Typography>
-                    <Typography variant="body2" fontWeight="medium">
-                      {stats.latency}ms
-                    </Typography>
-                  </Box>
+                {IconstatsIcon.IconlatencyIcon !== IconundefinedIcon && (
+                  <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
+                    <IconTypographyIcon IconsizeIcon="Iconsm">IconLatencyIcon:<IconIconIcon/IconTypographyIcon>
+                    <IconTypographyIcon IconsizeIcon="Iconsm" IconfontWeightIcon="Iconmedium">
+                      {IconstatsIcon.IconlatencyIcon}IconmsIcon
+                    <IconIconIcon/IconTypographyIcon>
+                  <IconIconIcon/IconBoxIcon>
                 )}
-              </Stack>
+              <IconIconIcon/IconStackIcon>
 
-              <Divider />
+              <IconDividerIcon />
 
-              {/* Message Statistics */}
-              <Stack spacing={1}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Message Statistics
-                </Typography>
+              {/* IconMessageIcon IconStatisticsIcon */}
+              <IconStackIcon IconspacingIcon={Icon1Icon}>
+                <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconcolorIcon="IcontextIcon.Iconsecondary">
+                  IconMessageIcon IconStatisticsIcon
+                <IconIconIcon/IconTypographyIcon>
 
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2">Messages Sent:</Typography>
-                  <Typography variant="body2" fontWeight="medium">
-                    {stats.messagesSent.toLocaleString()}
-                  </Typography>
-                </Box>
+                <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
+                  <IconTypographyIcon IconsizeIcon="Iconsm">IconMessagesIcon IconSentIcon:<IconIconIcon/IconTypographyIcon>
+                  <IconTypographyIcon IconsizeIcon="Iconsm" IconfontWeightIcon="Iconmedium">
+                    {IconstatsIcon.IconmessagesSentIcon.IcontoLocaleStringIcon()}
+                  <IconIconIcon/IconTypographyIcon>
+                <IconIconIcon/IconBoxIcon>
 
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2">Messages Received:</Typography>
-                  <Typography variant="body2" fontWeight="medium">
-                    {stats.messagesReceived.toLocaleString()}
-                  </Typography>
-                </Box>
+                <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
+                  <IconTypographyIcon IconsizeIcon="Iconsm">IconMessagesIcon IconReceivedIcon:<IconIconIcon/IconTypographyIcon>
+                  <IconTypographyIcon IconsizeIcon="Iconsm" IconfontWeightIcon="Iconmedium">
+                    {IconstatsIcon.IconmessagesReceivedIcon.IcontoLocaleStringIcon()}
+                  <IconIconIcon/IconTypographyIcon>
+                <IconIconIcon/IconBoxIcon>
 
-                {stats.lastMessageAt && (
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="body2">Last Message:</Typography>
-                    <Typography variant="body2" fontWeight="medium">
-                      {new Date(stats.lastMessageAt).toLocaleTimeString()}
-                    </Typography>
-                  </Box>
+                {IconstatsIcon.IconlastMessageAtIcon && (
+                  <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
+                    <IconTypographyIcon IconsizeIcon="Iconsm">IconLastIcon IconMessageIcon:<IconIconIcon/IconTypographyIcon>
+                    <IconTypographyIcon IconsizeIcon="Iconsm" IconfontWeightIcon="Iconmedium">
+                      {IconnewIcon IconDateIcon(IconstatsIcon.IconlastMessageAtIcon).IcontoLocaleTimeStringIcon()}
+                    <IconIconIcon/IconTypographyIcon>
+                  <IconIconIcon/IconBoxIcon>
                 )}
-              </Stack>
+              <IconIconIcon/IconStackIcon>
 
-              {/* Actions */}
-              <Stack direction="row" spacing={1} justifyContent="flex-end">
-                {!isConnected && (
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={handleReconnect}
-                    disabled={isConnecting || isReconnecting}
-                    startIcon={<RefreshIcon />}
+              {/* IconActionsIcon */}
+              <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon} IconjustifyContentIcon="IconflexIcon-Iconend">
+                {!IconisConnectedIcon && (
+                  <IconButtonIcon
+                    IconvariantIcon="Iconfilled"
+                    IconsizeIcon="Iconsmall"
+                    IcononClickIcon={IconhandleReconnectIcon}
+                    IcondisabledIcon={IconisConnectingIcon || IconisReconnectingIcon}
+                    IconstartIconIcon={<IconIconRefreshIcon />}
                   >
-                    {isReconnecting ? 'Reconnecting...' : 'Reconnect'}
-                  </Button>
+                    {IconisReconnectingIcon ? 'IconReconnectingIcon...' : 'IconReconnect'}
+                  <IconIconIcon/IconButtonIcon>
                 )}
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={handleClose}
+                <IconButtonIcon
+                  IconvariantIcon="Iconoutline"
+                  IconsizeIcon="Iconsmall"
+                  IcononClickIcon={IconhandleCloseIcon}
                 >
-                  Close
-                </Button>
-              </Stack>
-            </Stack>
-          </Paper>
-        </Popover>
+                  IconCloseIcon
+                <IconIconIcon/IconButtonIcon>
+              <IconIconIcon/IconStackIcon>
+            <IconIconIcon/IconStackIcon>
+          <IconIconIcon/IconPaperIcon>
+        <IconIconIcon/IconPopoverIcon>
       )}
-    </Box>
+    <IconIconIcon/IconBoxIcon>
   );
 };
 
 /**
- * Minimal Connection Indicator
+ * IconMinimalIcon IconConnectionIcon IconIndicatorIcon
  */
-export const PusherConnectionIndicator: React.FC<{
-  size?: number;
-  showTooltip?: boolean;
-}> = ({ size = 12, showTooltip = true }) => {
-  const { isConnected, isConnecting } = usePusherConnection();
+IconexportIcon IconconstIcon IconPusherConnectionIndicatorIcon: IconReactIcon.IconFCIcon<{
+  IconsizeIcon?: IconnumberIcon;
+  IconshowTooltipIcon?: IconbooleanIcon;
+}> = ({ IconsizeIcon = Icon12Icon, IconshowTooltipIcon = IcontrueIcon }) => {
+  IconconstIcon { IconisConnectedIcon, IconisConnectingIcon } = IconusePusherConnectionIcon();
   
-  const getColor = () => {
-    if (isConnecting) return '#2196f3'; // blue
-    if (isConnected) return '#4caf50'; // green
-    return '#f44336'; // red
+  IconconstIcon IcongetColorIcon = () => {
+    IconifIcon (IconisConnectingIcon) IconreturnIcon '#Icon2196f3'; // IconblueIcon
+    IconifIcon (IconisConnectedIcon) IconreturnIcon '#Icon4caf50'; // IcongreenIcon
+    IconreturnIcon '#Iconf44336'; // IconredIcon
   };
   
-  const indicator = (
-    <Box
-      sx={{
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        backgroundColor: getColor(),
-        animation: isConnecting ? 'pulse 1.5s infinite' : 'none',
-        '@keyframes pulse': {
-          '0%': { opacity: 1 },
-          '50%': { opacity: 0.5 },
-          '100%': { opacity: 1 },
+  IconconstIcon IconindicatorIcon = (
+    <IconBoxIcon
+      IconstyleIcon={{
+        IconwidthIcon: IconsizeIcon,
+        IconheightIcon: IconsizeIcon,
+        IconborderRadiusIcon: 'Icon50Icon%',
+        IconbackgroundColorIcon: IcongetColorIcon(),
+        IconanimationIcon: IconisConnectingIcon ? 'IconpulseIcon Icon1Icon.Icon5sIcon Iconinfinite' : 'Iconnone',
+        '@IconkeyframesIcon Iconpulse': {
+          'Icon0Icon%': { IconopacityIcon: Icon1Icon },
+          'Icon50Icon%': { IconopacityIcon: Icon0Icon.Icon5Icon },
+          'Icon100Icon%': { IconopacityIcon: Icon1Icon },
         },
       }}
     />
   );
   
-  if (showTooltip) {
-    return (
-      <Tooltip
-        title={isConnected ? 'Connected' : isConnecting ? 'Connecting...' : 'Disconnected'}
-        arrow
+  IconifIcon (IconshowTooltipIcon) {
+    IconreturnIcon (
+      <IconTooltipIcon
+        IcontitleIcon={IconisConnectedIcon ? 'IconConnected' : IconisConnectingIcon ? 'IconConnectingIcon...' : 'IconDisconnected'}
+        IconarrowIcon
       >
-        {indicator}
-      </Tooltip>
+        {IconindicatorIcon}
+      <IconIconIcon/IconTooltipIcon>
     );
   }
   
-  return indicator;
+  IconreturnIcon IconindicatorIcon;
 };
 
-export default PusherConnectionStatus;
+IconexportIcon IcondefaultIcon IconPusherConnectionStatusIcon;

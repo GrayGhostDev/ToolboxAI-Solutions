@@ -1,3 +1,4 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../utils/mui-imports';
 /**
  * Dashboard Router Component
  * Routes users to appropriate dashboard based on their role
@@ -5,9 +6,6 @@
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types/roles';
 
@@ -161,7 +159,7 @@ const DashboardRouter: React.FunctionComponent<Record<string, any>> = () => {
 
       {/* Error pages */}
       <Route path="/unauthorized" element={
-        <Box sx={{
+        <Box style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',

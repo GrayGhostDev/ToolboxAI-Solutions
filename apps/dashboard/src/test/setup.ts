@@ -114,33 +114,33 @@ vi.mock('@clerk/clerk-react', () => {
 });
 
 // Mock specific MUI transitions that cause DOM issues in happy-dom
-vi.mock('@mui/material/Fade', () => ({
+vi.mock('@mantine/core', () => ({ Transition: ({ children }: any) => children, () => ({
   default: vi.fn(({ children, in: inProp, timeout, ...props }) => {
     // Return children immediately for testing, ignore transition
     return inProp ? React.createElement('div', { ...props }, children) : null;
   })
 }));
 
-vi.mock('@mui/material/Grow', () => ({
+vi.mock('@mantine/core', () => ({ Transition: ({ children }: any) => children, () => ({
   default: vi.fn(({ children, in: inProp, timeout, ...props }) => {
     return inProp ? React.createElement('div', { ...props }, children) : null;
   })
 }));
 
-vi.mock('@mui/material/Collapse', () => ({
+vi.mock('@mantine/core', () => ({ Collapse: ({ children }: any) => children, () => ({
   default: vi.fn(({ children, in: inProp, collapsedHeight, timeout, ...props }) => {
     return inProp ? React.createElement('div', { ...props }, children) : null;
   })
 }));
 
 // Mock MUI transitions and animations for stable testing
-vi.mock('@mui/material/Slide', () => ({
+vi.mock('@mantine/core', () => ({ Transition: ({ children }: any) => children, () => ({
   default: vi.fn(({ children, in: inProp, direction, ...props }) => {
     return inProp ? React.createElement('div', { ...props }, children) : null;
   })
 }));
 
-vi.mock('@mui/material/Zoom', () => ({
+vi.mock('@mantine/core', () => ({ Transition: ({ children }: any) => children, () => ({
   default: vi.fn(({ children, in: inProp, ...props }) => {
     return inProp ? React.createElement('div', { ...props }, children) : null;
   })

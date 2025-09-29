@@ -1,14 +1,5 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import * as React from "react";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
-import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Typography from "@mui/material/Typography";
-import Alert from "@mui/material/Alert";
-import Stack from "@mui/material/Stack";
 import { recordConsent } from "../../services/api";
 import { useAppSelector } from "../../store";
 
@@ -54,13 +45,13 @@ export function ConsentModal({ open, onClose }: Props) {
     >
       <DialogTitle id="consent-title">Parental Consent & Privacy Agreement</DialogTitle>
       <DialogContent>
-        <Alert severity="info" sx={{ mb: 3 }}>
+        <Alert severity="info" style={{ mb: 3 }}>
           To ensure the safety and privacy of students, we require parental consent in compliance
           with educational privacy laws.
         </Alert>
 
         <Stack spacing={2}>
-          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+          <Typography size="sm" style={{ fontWeight: 600 }}>
             Please review and accept the following:
           </Typography>
 
@@ -73,7 +64,7 @@ export function ConsentModal({ open, onClose }: Props) {
             }
             label={
               <Stack>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                <Typography size="sm" style={{ fontWeight: 500 }}>
                   COPPA Compliance (Children's Online Privacy Protection Act)
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -93,7 +84,7 @@ export function ConsentModal({ open, onClose }: Props) {
             }
             label={
               <Stack>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                <Typography size="sm" style={{ fontWeight: 500 }}>
                   FERPA Compliance (Family Educational Rights and Privacy Act)
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -110,7 +101,7 @@ export function ConsentModal({ open, onClose }: Props) {
             }
             label={
               <Stack>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                <Typography size="sm" style={{ fontWeight: 500 }}>
                   GDPR Compliance (General Data Protection Regulation)
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -122,7 +113,7 @@ export function ConsentModal({ open, onClose }: Props) {
           />
         </Stack>
 
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 3, display: "block" }}>
+        <Typography variant="caption" color="text.secondary" style={{ mt: 3, display: "block" }}>
           By accepting, you confirm that you have read and understood our
           <a href="/privacy.html" target="_blank" rel="noopener noreferrer"> Privacy Policy</a>
           &nbsp;and
@@ -134,7 +125,7 @@ export function ConsentModal({ open, onClose }: Props) {
         <Button onClick={(e: React.MouseEvent) => () => onClose(false)}>Cancel</Button>
         <Button
           disabled={!allChecked || loading}
-          variant="contained"
+          variant="filled"
           onClick={(e: React.MouseEvent) => handleAccept}
         >
           {loading ? "Processing..." : "Accept & Continue"}

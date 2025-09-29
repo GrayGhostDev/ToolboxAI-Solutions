@@ -6,32 +6,34 @@
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Paper from '@mui/material/Paper';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import Stack from '@mui/material/Stack';
-import Collapse from '@mui/material/Collapse';
-import IconButton from '@mui/material/IconButton';
-import Divider from '@mui/material/Divider';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import { useTheme } from '@mui/material/styles';
-import Link from '@mui/material/Link';
 import {
-  Error as ErrorIcon,
-  Refresh,
-  ExpandMore,
-  ExpandLess,
-  Home,
-  BugReport,
-  ContentCopy,
-  Check,
-} from '@mui/icons-material';
+  Box,
+  Container,
+  Text,
+  Title,
+  Button,
+  Paper,
+  Alert,
+  Stack,
+  Collapse,
+  ActionIcon,
+  Divider,
+  Group,
+  useMantineTheme,
+  ScrollArea,
+  Badge,
+  Center,
+} from '@mantine/core';
+import {
+  IconAlertCircle,
+  IconRefresh,
+  IconChevronDown,
+  IconChevronUp,
+  IconHome,
+  IconBug,
+  IconCopy,
+  IconCheck,
+} from '@tabler/icons-react';
 
 interface Props {
   children: ReactNode;
@@ -260,104 +262,116 @@ function ErrorFallback({
   isRecovering,
   errorCount,
 }: ErrorFallbackProps) {
-  const theme = useTheme();
+  const theme = useMantineTheme();
 
   // Different layouts based on error level
   if (level === 'page') {
     return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
+      <Container size="md" py="xl">
         <Paper
-          elevation={3}
-          sx={{
-            p: 4,
+          shadow="md"
+          p="xl"
+          radius="md"
+          style={{
             textAlign: 'center',
-            borderTop: 4,
-            borderColor: 'error.main',
+            borderTop: `4px solid ${theme.colors.red[6]}`,
           }}
         >
-          <ErrorIcon
-            sx={{
-              fontSize: 80,
-              color: 'error.main',
-              mb: 2,
-            }}
-          />
+          <Center mb="md">
+            <IconAlertCircle
+              size={80}
+              color={theme.colors.red[6]}
+            />
+          </Center>
 
-          <Typography variant="h4" gutterBottom>
+          <Title order={2} mb="md">
             Oops! Something went wrong
-          </Typography>
+          </Title>
 
-          <Typography variant="body1" color="text.secondary" paragraph>
+          <Text c="dimmed" mb="xl">
             We're sorry, but something unexpected happened. The error has been logged
             and we'll look into it.
-          </Typography>
+          </Text>
 
           {errorCount >= 3 && (
-            <Alert severity="warning" sx={{ mb: 3 }}>
+            <Alert
+              icon={<IconAlertCircle size={20} />}
+              color="yellow"
+              mb="lg"
+            >
               Multiple errors detected. The page may be unstable.
             </Alert>
           )}
 
-          <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 3 }}>
+          <Group justify="center" mb="lg">
             <Button
-              variant="contained"
-              startIcon={<Refresh />}
-              onClick={(e: React.MouseEvent) => onReset}
+              leftSection={<IconRefresh size={20} />}
+              onClick={onReset}
               disabled={isRecovering}
+              variant="filled"
             >
               {isRecovering ? 'Recovering...' : 'Try Again'}
             </Button>
 
             <Button
-              variant="outlined"
-              startIcon={<Home />}
-              onClick={(e: React.MouseEvent) => onGoHome}
+              leftSection={<IconHome size={20} />}
+              onClick={onGoHome}
+              variant="outline"
             >
               Go to Homepage
             </Button>
-          </Stack>
+          </Group>
 
           {showDetailsProp && (
             <>
               <Button
-                size="small"
-                onClick={(e: React.MouseEvent) => onToggleDetails}
-                endIcon={showDetails ? <ExpandLess /> : <ExpandMore />}
+                size="sm"
+                onClick={onToggleDetails}
+                rightSection={showDetails ? <IconChevronUp size={18} /> : <IconChevronDown size={18} />}
+                variant="subtle"
               >
                 {showDetails ? 'Hide' : 'Show'} Technical Details
               </Button>
 
               <Collapse in={showDetails}>
-                <Box sx={{ mt: 3, textAlign: 'left' }}>
-                  <Alert severity="error" sx={{ mb: 2 }}>
-                    <AlertTitle>Error Message</AlertTitle>
-                    <Typography variant="body2" fontFamily="monospace">
+                <Box mt="lg" style={{ textAlign: 'left' }}>
+                  <Alert
+                    icon={<IconAlertCircle size={20} />}
+                    title="Error Message"
+                    color="red"
+                    mb="md"
+                  >
+                    <Text size="sm" style={{ fontFamily: 'monospace' }}>
                       {error.message}
-                    </Typography>
+                    </Text>
                   </Alert>
 
                   {error.stack && (
-                    <Paper variant="outlined" sx={{ p: 2, bgcolor: 'grey.100' }}>
-                      <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Typography variant="subtitle2" gutterBottom>
+                    <Paper p="md" withBorder bg="gray.0">
+                      <Group justify="space-between" mb="sm">
+                        <Text size="sm" fw={500}>
                           Stack Trace
-                        </Typography>
-                        <IconButton size="small" onClick={(e: React.MouseEvent) => onCopy}>
-                          {copied ? <Check color="success" /> : <ContentCopy />}
-                        </IconButton>
-                      </Stack>
-                      <Typography
-                        variant="body2"
-                        component="pre"
-                        sx={{
-                          fontFamily: 'monospace',
-                          fontSize: '0.75rem',
-                          overflow: 'auto',
-                          maxHeight: 200,
-                        }}
-                      >
-                        {error.stack}
-                      </Typography>
+                        </Text>
+                        <ActionIcon
+                          size="sm"
+                          onClick={onCopy}
+                          variant="subtle"
+                        >
+                          {copied ? <IconCheck color="green" size={18} /> : <IconCopy size={18} />}
+                        </ActionIcon>
+                      </Group>
+                      <ScrollArea h={200}>
+                        <Text
+                          size="xs"
+                          component="pre"
+                          style={{
+                            fontFamily: 'monospace',
+                            overflow: 'auto',
+                          }}
+                        >
+                          {error.stack}
+                        </Text>
+                      </ScrollArea>
                     </Paper>
                   )}
                 </Box>
@@ -372,33 +386,32 @@ function ErrorFallback({
   // Inline error for sections and components
   return (
     <Box
-      sx={{
-        p: level === 'section' ? 3 : 2,
-        border: 1,
-        borderColor: 'error.main',
-        borderRadius: 1,
-        bgcolor: 'error.lighter',
+      p={level === 'section' ? 'lg' : 'md'}
+      style={{
+        border: `1px solid ${theme.colors.red[6]}`,
+        borderRadius: theme.radius.sm,
+        backgroundColor: theme.colors.red[0],
       }}
     >
-      <Stack direction="row" spacing={2} alignItems="center">
-        <ErrorIcon color="error" />
-        <Box flex={1}>
-          <Typography variant="subtitle1" color="error">
+      <Group>
+        <IconAlertCircle color={theme.colors.red[6]} size={24} />
+        <Box style={{ flex: 1 }}>
+          <Text c="red" fw={500}>
             {level === 'section' ? 'Section Error' : 'Component Error'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+          </Text>
+          <Text size="sm" c="dimmed">
             {error.message}
-          </Typography>
+          </Text>
         </Box>
         <Button
-          size="small"
-          variant="outlined"
-          onClick={(e: React.MouseEvent) => onReset}
+          size="xs"
+          variant="outline"
+          onClick={onReset}
           disabled={isRecovering}
         >
           Retry
         </Button>
-      </Stack>
+      </Group>
     </Box>
   );
 }

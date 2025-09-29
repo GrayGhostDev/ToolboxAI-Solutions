@@ -1,7 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import CircularProgress from '@mui/material/CircularProgress';
-import Box from '@mui/material/Box';
 import RoleGuard from "./components/common/RoleGuard";
 import { useAppSelector } from "./store";
 import ProgressiveEnhancement from "./components/performance/ProgressiveEnhancement";

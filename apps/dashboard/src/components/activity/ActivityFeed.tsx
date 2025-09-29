@@ -1,362 +1,344 @@
-// @ts-nocheck - Temporary fix for Phase 3
+IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../IconutilsIcon/IconmuiIcon-Iconimports';
+// @IcontsIcon-IconnocheckIcon - IconTemporaryIcon IconfixIcon IconforIcon IconPhaseIcon Icon3Icon
 /**
- * ActivityFeed Component
- * Displays recent system activities with real-time updates
+ * IconActivityFeedIcon IconComponentIcon
+ * IconDisplaysIcon IconrecentIcon IconsystemIcon IconactivitiesIcon IconwithIcon IconrealIcon-IcontimeIcon IconupdatesIcon
  */
-import React, { memo, useEffect, useState } from 'react';
-import Box from '@mui/material/Box';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import ListItemText from '@mui/material/ListItemText';
-import Avatar from '@mui/material/Avatar';
-import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Divider from '@mui/material/Divider';
-import Button from '@mui/material/Button';
-import Badge from '@mui/material/Badge';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
+IconimportIcon IconReactIcon, { IconmemoIcon, IconuseEffectIcon, IconuseStateIcon } IconfromIcon 'Iconreact';
 
-import {
-  Person as PersonIcon,
-  School as SchoolIcon,
-  Assessment as AssessmentIcon,
-  EmojiEvents as AchievementIcon,
-  Message as MessageIcon,
-  Warning as WarningIcon,
-  CheckCircle as SuccessIcon,
-  Error as ErrorIcon,
-  Info as InfoIcon,
-  MoreVert as MoreIcon,
-  Refresh as RefreshIcon,
-  FilterList as FilterIcon,
-} from '@mui/icons-material';
-import { formatDistanceToNow } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
-import { usePusher } from '@/hooks/usePusher';
-export interface Activity {
-  id: string;
-  type: 'user' | 'system' | 'education' | 'achievement' | 'message' | 'warning' | 'error';
-  action: string;
-  description: string;
-  user?: {
-    id: string;
-    name: string;
-    avatar?: string;
-    role?: string;
+IconimportIcon {
+  IconPersonIcon IconasIcon IconIconUserIcon,
+  IconSchoolIcon IconasIcon IconIconSchoolIcon,
+  IconAssessmentIcon IconasIcon IconIconReportAnalyticsIcon,
+  IconEmojiEventsIcon IconasIcon IconIconEmojiEventsIcon,
+  IconMessageIcon IconasIcon IconIconMessageCircleIcon,
+  IconWarningIcon IconasIcon IconIconAlertTriangleIcon,
+  IconCheckCircleIcon IconasIcon IconIconCircleCheckIcon,
+  IconErrorIcon IconasIcon IconIconCircleXIcon,
+  IconInfoIcon IconasIcon IconIconInfoCircleIcon,
+  IconMoreVertIcon IconasIcon IconIconDotsVerticalIcon,
+  IconRefreshIcon IconasIcon IconIconRefreshIcon,
+  IconFilterListIcon IconasIcon IconIconFilterIcon,
+} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
+IconimportIcon { IconformatDistanceToNowIcon } IconfromIcon 'IcondateIcon-Iconfns';
+IconimportIcon { IconmotionIcon, IconAnimatePresenceIcon } IconfromIcon 'IconframerIcon-Iconmotion';
+IconimportIcon { IconusePusherIcon } IconfromIcon '@/IconhooksIcon/IconusePusher';
+IconimportIcon { IconIconIcon, IconIconAlertTriangleIcon, IconIconCircleCheckIcon, IconIconCircleXIcon, IconIconDotsVerticalIcon, IconIconEmojiEventsIcon, IconIconFilterIcon, IconIconInfoCircleIcon, IconIconMessageCircleIcon, IconIconRefreshIcon, IconIconReportAnalyticsIcon, IconIconSchoolIcon, IconIconUserIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
+IconexportIcon IconinterfaceIcon IconActivityIcon {
+  IconidIcon: IconstringIcon;
+  IcontypeIcon: 'Iconuser' | 'Iconsystem' | 'Iconeducation' | 'Iconachievement' | 'Iconmessage' | 'Iconwarning' | 'Iconerror';
+  IconactionIcon: IconstringIcon;
+  IcondescriptionIcon: IconstringIcon;
+  IconuserIcon?: {
+    IconidIcon: IconstringIcon;
+    IconnameIcon: IconstringIcon;
+    IconavatarIcon?: IconstringIcon;
+    IconroleIcon?: IconstringIcon;
   };
-  metadata?: Record<string, any>;
-  timestamp: string;
-  importance: 'low' | 'medium' | 'high' | 'critical';
-  read?: boolean;
+  IconmetadataIcon?: IconRecordIcon<IconstringIcon, IconanyIcon>;
+  IcontimestampIcon: IconstringIcon;
+  IconimportanceIcon: 'Iconlow' | 'Iconmedium' | 'Iconhigh' | 'Iconcritical';
+  IconreadIcon?: IconbooleanIcon;
 }
-export interface ActivityFeedProps {
-  activities?: Activity[];
-  maxItems?: number;
-  showFilters?: boolean;
-  onActivityClick?: (activity: Activity) => void;
-  onRefresh?: () => Promise<void>;
-  loading?: boolean;
-  error?: string | null;
-  autoRefresh?: boolean;
-  refreshInterval?: number;
-  enableRealtime?: boolean;
+IconexportIcon IconinterfaceIcon IconActivityFeedPropsIcon {
+  IconactivitiesIcon?: IconActivityIcon[];
+  IconmaxItemsIcon?: IconnumberIcon;
+  IconshowFiltersIcon?: IconbooleanIcon;
+  IcononActivityClickIcon?: (IconactivityIcon: IconActivityIcon) => IconvoidIcon;
+  IcononRefreshIcon?: () => IconPromiseIcon<IconvoidIcon>;
+  IconloadingIcon?: IconbooleanIcon;
+  IconerrorIcon?: IconstringIcon | IconnullIcon;
+  IconautoRefreshIcon?: IconbooleanIcon;
+  IconrefreshIntervalIcon?: IconnumberIcon;
+  IconenableRealtimeIcon?: IconbooleanIcon;
 }
-const MotionListItem = motion(ListItem);
-export const ActivityFeed = memo<ActivityFeedProps>(({
-  activities: initialActivities = [],
-  maxItems = 20,
-  showFilters = true,
-  onActivityClick,
-  onRefresh,
-  loading = false,
-  error = null,
-  autoRefresh = true,
-  refreshInterval = 60000, // 1 minute
-  enableRealtime = true,
+IconconstIcon IconMotionListItemIcon = IconmotionIcon(IconListItemIcon);
+IconexportIcon IconconstIcon IconActivityFeedIcon = IconmemoIcon<IconActivityFeedPropsIcon>(({
+  IconactivitiesIcon: IconinitialActivitiesIcon = [],
+  IconmaxItemsIcon = Icon20Icon,
+  IconshowFiltersIcon = IcontrueIcon,
+  IcononActivityClickIcon,
+  IcononRefreshIcon,
+  IconloadingIcon = IconfalseIcon,
+  IconerrorIcon = IconnullIcon,
+  IconautoRefreshIcon = IcontrueIcon,
+  IconrefreshIntervalIcon = Icon60000Icon, // Icon1Icon IconminuteIcon
+  IconenableRealtimeIcon = IcontrueIcon,
 }) => {
-  const theme = useTheme();
-  const [activities, setActivities] = useState<Activity[]>(initialActivities);
-  const [filteredType, setFilteredType] = useState<string | null>(null);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-  // Setup Pusher for real-time updates
-  const { subscribe, unsubscribe } = usePusher();
-  useEffect(() => {
-    if (enableRealtime) {
-      const channel = 'admin-activities';
-      const handleNewActivity = (data: Activity) => {
-        setActivities(prev => [data, ...prev].slice(0, maxItems));
+  IconconstIcon IconthemeIcon = IconuseThemeIcon();
+  IconconstIcon [IconactivitiesIcon, IconsetActivitiesIcon] = IconuseStateIcon<IconActivityIcon[]>(IconinitialActivitiesIcon);
+  IconconstIcon [IconfilteredTypeIcon, IconsetFilteredTypeIcon] = IconuseStateIcon<IconstringIcon | IconnullIcon>(IconnullIcon);
+  IconconstIcon [IconanchorElIcon, IconsetAnchorElIcon] = IconuseStateIcon<IconnullIcon | IconHTMLElementIcon>(IconnullIcon);
+  IconconstIcon [IconselectedActivityIcon, IconsetSelectedActivityIcon] = IconuseStateIcon<IconActivityIcon | IconnullIcon>(IconnullIcon);
+  // IconSetupIcon IconPusherIcon IconforIcon IconrealIcon-IcontimeIcon IconupdatesIcon
+  IconconstIcon { IconsubscribeIcon, IconunsubscribeIcon } = IconusePusherIcon();
+  IconuseEffectIcon(() => {
+    IconifIcon (IconenableRealtimeIcon) {
+      IconconstIcon IconchannelIcon = 'IconadminIcon-Iconactivities';
+      IconconstIcon IconhandleNewActivityIcon = (IcondataIcon: IconActivityIcon) => {
+        IconsetActivitiesIcon(IconprevIcon => [IcondataIcon, ...IconprevIcon].IconsliceIcon(Icon0Icon, IconmaxItemsIcon));
       };
-      subscribe(channel, 'new-activity', handleNewActivity);
-      return () => {
-        unsubscribe(channel, 'new-activity', handleNewActivity);
+      IconsubscribeIcon(IconchannelIcon, 'IconnewIcon-Iconactivity', IconhandleNewActivityIcon);
+      IconreturnIcon () => {
+        IconunsubscribeIcon(IconchannelIcon, 'IconnewIcon-Iconactivity', IconhandleNewActivityIcon);
       };
     }
-  }, [enableRealtime, maxItems, subscribe, unsubscribe]);
-  // Auto-refresh
-  useEffect(() => {
-    if (autoRefresh && onRefresh) {
-      const interval = setInterval(() => {
-        onRefresh();
-      }, refreshInterval);
-      return () => clearInterval(interval);
+  }, [IconenableRealtimeIcon, IconmaxItemsIcon, IconsubscribeIcon, IconunsubscribeIcon]);
+  // IconAutoIcon-IconrefreshIcon
+  IconuseEffectIcon(() => {
+    IconifIcon (IconautoRefreshIcon && IcononRefreshIcon) {
+      IconconstIcon IconintervalIcon = IconsetIntervalIcon(() => {
+        IcononRefreshIcon();
+      }, IconrefreshIntervalIcon);
+      IconreturnIcon () => IconclearIntervalIcon(IconintervalIcon);
     }
-  }, [autoRefresh, refreshInterval, onRefresh]);
-  // Update activities when prop changes
-  useEffect(() => {
-    setActivities(initialActivities);
-  }, [initialActivities]);
-  const getActivityIcon = (type: Activity['type']) => {
-    switch (type) {
-      case 'user':
-        return <PersonIcon />;
-      case 'system':
-        return <InfoIcon />;
-      case 'education':
-        return <SchoolIcon />;
-      case 'achievement':
-        return <AchievementIcon />;
-      case 'message':
-        return <MessageIcon />;
-      case 'warning':
-        return <WarningIcon />;
-      case 'error':
-        return <ErrorIcon />;
-      default:
-        return <InfoIcon />;
-    }
-  };
-  const getActivityColor = (type: Activity['type'], importance: Activity['importance']) => {
-    if (importance === 'critical') return theme.palette.error.main;
-    if (importance === 'high') return theme.palette.warning.main;
-    switch (type) {
-      case 'error':
-        return theme.palette.error.main;
-      case 'warning':
-        return theme.palette.warning.main;
-      case 'achievement':
-        return theme.palette.success.main;
-      case 'education':
-        return theme.palette.info.main;
-      default:
-        return theme.palette.text.secondary;
+  }, [IconautoRefreshIcon, IconrefreshIntervalIcon, IcononRefreshIcon]);
+  // IconUpdateIcon IconactivitiesIcon IconwhenIcon IconpropIcon IconchangesIcon
+  IconuseEffectIcon(() => {
+    IconsetActivitiesIcon(IconinitialActivitiesIcon);
+  }, [IconinitialActivitiesIcon]);
+  IconconstIcon IcongetActivityIconIcon = (IcontypeIcon: IconActivityIcon['Icontype']) => {
+    IconswitchIcon (IcontypeIcon) {
+      IconcaseIcon 'Iconuser':
+        IconreturnIcon <IconIconUserIcon />;
+      IconcaseIcon 'Iconsystem':
+        IconreturnIcon <IconIconInfoCircleIcon />;
+      IconcaseIcon 'Iconeducation':
+        IconreturnIcon <IconIconSchoolIcon />;
+      IconcaseIcon 'Iconachievement':
+        IconreturnIcon <IconIconEmojiEventsIcon />;
+      IconcaseIcon 'Iconmessage':
+        IconreturnIcon <IconIconMessageCircleIcon />;
+      IconcaseIcon 'Iconwarning':
+        IconreturnIcon <IconIconAlertTriangleIcon />;
+      IconcaseIcon 'Iconerror':
+        IconreturnIcon <IconIconCircleXIcon />;
+      IcondefaultIcon:
+        IconreturnIcon <IconIconInfoCircleIcon />;
     }
   };
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, activity: Activity) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedActivity(activity);
+  IconconstIcon IcongetActivityColorIcon = (IcontypeIcon: IconActivityIcon['Icontype'], IconimportanceIcon: IconActivityIcon['Iconimportance']) => {
+    IconifIcon (IconimportanceIcon === 'Iconcritical') IconreturnIcon IconthemeIcon.IconpaletteIcon.IconerrorIcon.IconmainIcon;
+    IconifIcon (IconimportanceIcon === 'Iconhigh') IconreturnIcon IconthemeIcon.IconpaletteIcon.IconwarningIcon.IconmainIcon;
+    IconswitchIcon (IcontypeIcon) {
+      IconcaseIcon 'Iconerror':
+        IconreturnIcon IconthemeIcon.IconpaletteIcon.IconerrorIcon.IconmainIcon;
+      IconcaseIcon 'Iconwarning':
+        IconreturnIcon IconthemeIcon.IconpaletteIcon.IconwarningIcon.IconmainIcon;
+      IconcaseIcon 'Iconachievement':
+        IconreturnIcon IconthemeIcon.IconpaletteIcon.IconsuccessIcon.IconmainIcon;
+      IconcaseIcon 'Iconeducation':
+        IconreturnIcon IconthemeIcon.IconpaletteIcon.IconinfoIcon.IconmainIcon;
+      IcondefaultIcon:
+        IconreturnIcon IconthemeIcon.IconpaletteIcon.IcontextIcon.IconsecondaryIcon;
+    }
   };
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedActivity(null);
+  IconconstIcon IconhandleMenuOpenIcon = (IconeventIcon: IconReactIcon.IconMouseEventIcon<IconHTMLElementIcon>, IconactivityIcon: IconActivityIcon) => {
+    IconsetAnchorElIcon(IconeventIcon.IconcurrentTargetIcon);
+    IconsetSelectedActivityIcon(IconactivityIcon);
   };
-  const handleMarkAsRead = () => {
-    if (selectedActivity) {
-      setActivities(prev =>
-        prev.map(a => a.id === selectedActivity.id ? { ...a, read: true } : a)
+  IconconstIcon IconhandleMenuCloseIcon = () => {
+    IconsetAnchorElIcon(IconnullIcon);
+    IconsetSelectedActivityIcon(IconnullIcon);
+  };
+  IconconstIcon IconhandleMarkAsReadIcon = () => {
+    IconifIcon (IconselectedActivityIcon) {
+      IconsetActivitiesIcon(IconprevIcon =>
+        IconprevIcon.IconmapIcon(IconaIcon => IconaIcon.IconidIcon === IconselectedActivityIcon.IconidIcon ? { ...IconaIcon, IconreadIcon: IcontrueIcon } : IconaIcon)
       );
     }
-    handleMenuClose();
+    IconhandleMenuCloseIcon();
   };
-  const handleDelete = () => {
-    if (selectedActivity) {
-      setActivities(prev => prev.filter(a => a.id !== selectedActivity.id));
+  IconconstIcon IconhandleDeleteIcon = () => {
+    IconifIcon (IconselectedActivityIcon) {
+      IconsetActivitiesIcon(IconprevIcon => IconprevIcon.IconfilterIcon(IconaIcon => IconaIcon.IconidIcon !== IconselectedActivityIcon.IconidIcon));
     }
-    handleMenuClose();
+    IconhandleMenuCloseIcon();
   };
-  const filteredActivities = filteredType
-    ? activities.filter(a => a.type === filteredType)
-    : activities;
-  const unreadCount = activities.filter(a => !a.read).length;
-  if (loading) {
-    return (
-      <Paper sx={{ p: 3, display: 'flex', justifyContent: 'center' }}>
-        <CircularProgress />
-      </Paper>
+  IconconstIcon IconfilteredActivitiesIcon = IconfilteredTypeIcon
+    ? IconactivitiesIcon.IconfilterIcon(IconaIcon => IconaIcon.IcontypeIcon === IconfilteredTypeIcon)
+    : IconactivitiesIcon;
+  IconconstIcon IconunreadCountIcon = IconactivitiesIcon.IconfilterIcon(IconaIcon => !IconaIcon.IconreadIcon).IconlengthIcon;
+  IconifIcon (IconloadingIcon) {
+    IconreturnIcon (
+      <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon3Icon, IcondisplayIcon: 'Iconflex', IconjustifyContentIcon: 'Iconcenter' }}>
+        <IconCircularProgressIcon />
+      <IconIconIcon/IconPaperIcon>
     );
   }
-  if (error) {
-    return (
-      <Paper sx={{ p: 2 }}>
-        <Alert severity="error">{error}</Alert>
-      </Paper>
+  IconifIcon (IconerrorIcon) {
+    IconreturnIcon (
+      <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon2Icon }}>
+        <IconAlertIcon IconseverityIcon="Iconerror">{IconerrorIcon}<IconIconIcon/IconAlertIcon>
+      <IconIconIcon/IconPaperIcon>
     );
   }
-  return (
-    <Paper
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
+  IconreturnIcon (
+    <IconPaperIcon
+      IconstyleIcon={{
+        IconheightIcon: 'Icon100Icon%',
+        IcondisplayIcon: 'Iconflex',
+        IconflexDirectionIcon: 'Iconcolumn',
+        IconoverflowIcon: 'Iconhidden',
       }}
     >
-      {/* Header */}
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6" fontWeight="bold">
-              Recent Activity
-            </Typography>
-            {unreadCount > 0 && (
-              <Badge badgeContent={unreadCount} color="error">
-                <Box />
-              </Badge>
+      {/* IconHeaderIcon */}
+      <IconBoxIcon IconstyleIcon={{ IconpIcon: Icon2Icon, IconborderBottomIcon: Icon1Icon, IconborderColorIcon: 'Icondivider' }}>
+        <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
+          <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconspacingIcon={Icon2Icon}>
+            <IconTypographyIcon IconorderIcon={Icon6Icon} IconfontWeightIcon="Iconbold">
+              IconRecentIcon IconActivityIcon
+            <IconIconIcon/IconTypographyIcon>
+            {IconunreadCountIcon > Icon0Icon && (
+              <IconBadgeIcon IconbadgeContentIcon={IconunreadCountIcon} IconcolorIcon="Iconred">
+                <IconBoxIcon />
+              <IconIconIcon/IconBadgeIcon>
             )}
-          </Stack>
-          <Stack direction="row" spacing={1}>
-            {showFilters && (
-              <IconButton size="small" onClick={(e: React.MouseEvent) => (e) => setAnchorEl(e.currentTarget)}>
-                <FilterIcon />
-              </IconButton>
+          <IconIconIcon/IconStackIcon>
+          <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon}>
+            {IconshowFiltersIcon && (
+              <IconIconButtonIcon IconsizeIcon="Iconsmall" IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => (IconeIcon) => IconsetAnchorElIcon(IconeIcon.IconcurrentTargetIcon)}>
+                <IconIconFilterIcon />
+              <IconIconIcon/IconIconButtonIcon>
             )}
-            {onRefresh && (
-              <IconButton size="small" onClick={(e: React.MouseEvent) => () => onRefresh()}>
-                <RefreshIcon />
-              </IconButton>
+            {IcononRefreshIcon && (
+              <IconIconButtonIcon IconsizeIcon="Iconsmall" IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IcononRefreshIcon()}>
+                <IconIconRefreshIcon />
+              <IconIconIcon/IconIconButtonIcon>
             )}
-          </Stack>
-        </Stack>
-        {/* Filter chips */}
-        {showFilters && (
-          <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
-            <Chip
-              label="All"
-              size="small"
-              variant={!filteredType ? 'filled' : 'outlined'}
-              onClick={(e: React.MouseEvent) => () => setFilteredType(null)}
+          <IconIconIcon/IconStackIcon>
+        <IconIconIcon/IconStackIcon>
+        {/* IconFilterIcon IconchipsIcon */}
+        {IconshowFiltersIcon && (
+          <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon} IconstyleIcon={{ IconmtIcon: Icon1Icon, IconflexWrapIcon: 'Iconwrap', IcongapIcon: Icon1Icon }}>
+            <IconChipIcon
+              IconlabelIcon="IconAll"
+              IconsizeIcon="Iconsmall"
+              IconvariantIcon={!IconfilteredTypeIcon ? 'Iconfilled' : 'Iconoutlined'}
+              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconsetFilteredTypeIcon(IconnullIcon)}
             />
-            {['user', 'system', 'education', 'achievement'].map(type => (
-              <Chip
-                key={type}
-                label={type.charAt(0).toUpperCase() + type.slice(1)}
-                size="small"
-                variant={filteredType === type ? 'filled' : 'outlined'}
-                onClick={(e: React.MouseEvent) => () => setFilteredType(type)}
+            {['Iconuser', 'Iconsystem', 'Iconeducation', 'Iconachievement'].IconmapIcon(IcontypeIcon => (
+              <IconChipIcon
+                IconkeyIcon={IcontypeIcon}
+                IconlabelIcon={IcontypeIcon.IconcharAtIcon(Icon0Icon).IcontoUpperCaseIcon() + IcontypeIcon.IconsliceIcon(Icon1Icon)}
+                IconsizeIcon="Iconsmall"
+                IconvariantIcon={IconfilteredTypeIcon === IcontypeIcon ? 'Iconfilled' : 'Iconoutlined'}
+                IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconsetFilteredTypeIcon(IcontypeIcon)}
               />
             ))}
-          </Stack>
+          <IconIconIcon/IconStackIcon>
         )}
-      </Box>
-      {/* Activity list */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        <List sx={{ p: 0 }}>
-          <AnimatePresence>
-            {filteredActivities.length === 0 ? (
-              <Box sx={{ p: 4, textAlign: 'center' }}>
-                <Typography color="text.secondary">
-                  No activities to display
-                </Typography>
-              </Box>
+      <IconIconIcon/IconBoxIcon>
+      {/* IconActivityIcon IconlistIcon */}
+      <IconBoxIcon IconstyleIcon={{ IconflexIcon: Icon1Icon, IconoverflowIcon: 'Iconauto' }}>
+        <IconListIcon IconstyleIcon={{ IconpIcon: Icon0Icon }}>
+          <IconAnimatePresenceIcon>
+            {IconfilteredActivitiesIcon.IconlengthIcon === Icon0Icon ? (
+              <IconBoxIcon IconstyleIcon={{ IconpIcon: Icon4Icon, IcontextAlignIcon: 'Iconcenter' }}>
+                <IconTypographyIcon IconcolorIcon="IcontextIcon.Iconsecondary">
+                  IconNoIcon IconactivitiesIcon IcontoIcon IcondisplayIcon
+                <IconIconIcon/IconTypographyIcon>
+              <IconIconIcon/IconBoxIcon>
             ) : (
-              filteredActivities.map((activity, index) => (
-                <MotionListItem
-                  key={activity.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ delay: index * 0.05 }}
-                  button
-                  onClick={(e: React.MouseEvent) => () => onActivityClick?.(activity)}
-                  sx={{
-                    opacity: activity.read ? 0.7 : 1,
-                    backgroundColor: activity.read
-                      ? 'transparent'
-                      : alpha(theme.palette.primary.main, 0.05),
-                    '&:hover': {
-                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
+              IconfilteredActivitiesIcon.IconmapIcon((IconactivityIcon, IconindexIcon) => (
+                <IconMotionListItemIcon
+                  IconkeyIcon={IconactivityIcon.IconidIcon}
+                  IconinitialIcon={{ IconopacityIcon: Icon0Icon, IconxIcon: -Icon20Icon }}
+                  IconanimateIcon={{ IconopacityIcon: Icon1Icon, IconxIcon: Icon0Icon }}
+                  IconexitIcon={{ IconopacityIcon: Icon0Icon, IconxIcon: Icon20Icon }}
+                  IcontransitionIcon={{ IcondelayIcon: IconindexIcon * Icon0Icon.Icon05Icon }}
+                  IconbuttonIcon
+                  IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IcononActivityClickIcon?.(IconactivityIcon)}
+                  IconstyleIcon={{
+                    IconopacityIcon: IconactivityIcon.IconreadIcon ? Icon0Icon.Icon7Icon : Icon1Icon,
+                    IconbackgroundColorIcon: IconactivityIcon.IconreadIcon
+                      ? 'Icontransparent'
+                      : IconalphaIcon(IconthemeIcon.IconpaletteIcon.IconprimaryIcon.IconmainIcon, Icon0Icon.Icon05Icon),
+                    '&:Iconhover': {
+                      IconbackgroundColorIcon: IconalphaIcon(IconthemeIcon.IconpaletteIcon.IconprimaryIcon.IconmainIcon, Icon0Icon.Icon1Icon),
                     },
                   }}
                 >
-                  <ListItemAvatar>
-                    <Avatar
-                      sx={{
-                        backgroundColor: alpha(
-                          getActivityColor(activity.type, activity.importance),
-                          0.1
+                  <IconListItemAvatarIcon>
+                    <IconAvatarIcon
+                      IconstyleIcon={{
+                        IconbackgroundColorIcon: IconalphaIcon(
+                          IcongetActivityColorIcon(IconactivityIcon.IcontypeIcon, IconactivityIcon.IconimportanceIcon),
+                          Icon0Icon.Icon1Icon
                         ),
-                        color: getActivityColor(activity.type, activity.importance),
+                        IconcolorIcon: IcongetActivityColorIcon(IconactivityIcon.IcontypeIcon, IconactivityIcon.IconimportanceIcon),
                       }}
                     >
-                      {activity.user?.avatar ? (
-                        <img src={activity.user.avatar} alt={activity.user.name} />
+                      {IconactivityIcon.IconuserIcon?.IconavatarIcon ? (
+                        <IconimgIcon IconsrcIcon={IconactivityIcon.IconuserIcon.IconavatarIcon} IconaltIcon={IconactivityIcon.IconuserIcon.IconnameIcon} />
                       ) : (
-                        getActivityIcon(activity.type)
+                        IcongetActivityIconIcon(IconactivityIcon.IcontypeIcon)
                       )}
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <Typography variant="body2" fontWeight={500}>
-                          {activity.action}
-                        </Typography>
-                        {activity.importance === 'critical' && (
-                          <Chip label="Critical" size="small" color="error" />
+                    <IconIconIcon/IconAvatarIcon>
+                  <IconIconIcon/IconListItemAvatarIcon>
+                  <IconListItemTextIcon
+                    IconprimaryIcon={
+                      <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconspacingIcon={Icon1Icon}>
+                        <IconTypographyIcon IconsizeIcon="Iconsm" IconfontWeightIcon={Icon500Icon}>
+                          {IconactivityIcon.IconactionIcon}
+                        <IconIconIcon/IconTypographyIcon>
+                        {IconactivityIcon.IconimportanceIcon === 'Iconcritical' && (
+                          <IconChipIcon IconlabelIcon="IconCritical" IconsizeIcon="Iconsmall" IconcolorIcon="Iconred" />
                         )}
-                        {activity.importance === 'high' && (
-                          <Chip label="Important" size="small" color="warning" />
+                        {IconactivityIcon.IconimportanceIcon === 'Iconhigh' && (
+                          <IconChipIcon IconlabelIcon="IconImportant" IconsizeIcon="Iconsmall" IconcolorIcon="Iconyellow" />
                         )}
-                      </Stack>
+                      <IconIconIcon/IconStackIcon>
                     }
-                    secondary={
-                      <Stack spacing={0.5}>
-                        <Typography variant="body2" color="text.secondary">
-                          {activity.description}
-                        </Typography>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          {activity.user && (
-                            <Chip
-                              label={activity.user.name}
-                              size="small"
-                              variant="outlined"
-                              sx={{ height: 20 }}
+                    IconsecondaryIcon={
+                      <IconStackIcon IconspacingIcon={Icon0Icon.Icon5Icon}>
+                        <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
+                          {IconactivityIcon.IcondescriptionIcon}
+                        <IconIconIcon/IconTypographyIcon>
+                        <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon} IconalignItemsIcon="Iconcenter">
+                          {IconactivityIcon.IconuserIcon && (
+                            <IconChipIcon
+                              IconlabelIcon={IconactivityIcon.IconuserIcon.IconnameIcon}
+                              IconsizeIcon="Iconsmall"
+                              IconvariantIcon="Iconoutline"
+                              IconstyleIcon={{ IconheightIcon: Icon20Icon }}
                             />
                           )}
-                          <Typography variant="caption" color="text.secondary">
-                            {formatDistanceToNow(new Date(activity.timestamp), {
-                              addSuffix: true,
+                          <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
+                            {IconformatDistanceToNowIcon(IconnewIcon IconDateIcon(IconactivityIcon.IcontimestampIcon), {
+                              IconaddSuffixIcon: IcontrueIcon,
                             })}
-                          </Typography>
-                        </Stack>
-                      </Stack>
+                          <IconIconIcon/IconTypographyIcon>
+                        <IconIconIcon/IconStackIcon>
+                      <IconIconIcon/IconStackIcon>
                     }
                   />
-                  <IconButton
-                    size="small"
-                    onClick={(e: React.MouseEvent) => (e) => {
-                      e.stopPropagation();
-                      handleMenuOpen(e, activity);
+                  <IconIconButtonIcon
+                    IconsizeIcon="Iconsmall"
+                    IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => (IconeIcon) => {
+                      IconeIcon.IconstopPropagationIcon();
+                      IconhandleMenuOpenIcon(IconeIcon, IconactivityIcon);
                     }}
                   >
-                    <MoreIcon fontSize="small" />
-                  </IconButton>
-                </MotionListItem>
+                    <IconIconDotsVerticalIcon IconfontSizeIcon="Iconsmall" />
+                  <IconIconIcon/IconIconButtonIcon>
+                <IconIconIcon/IconMotionListItemIcon>
               ))
             )}
-          </AnimatePresence>
-        </List>
-      </Box>
-      {/* Context menu */}
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-        <MenuItem onClick={(e: React.MouseEvent) => handleMarkAsRead}>
-          {selectedActivity?.read ? 'Mark as unread' : 'Mark as read'}
-        </MenuItem>
-        <MenuItem onClick={(e: React.MouseEvent) => handleDelete}>Delete</MenuItem>
-        <Divider />
-        <MenuItem onClick={(e: React.MouseEvent) => handleMenuClose}>View details</MenuItem>
-      </Menu>
-    </Paper>
+          <IconIconIcon/IconAnimatePresenceIcon>
+        <IconIconIcon/IconListIcon>
+      <IconIconIcon/IconBoxIcon>
+      {/* IconContextIcon IconmenuIcon */}
+      <IconMenuIcon IconanchorElIcon={IconanchorElIcon} IconopenIcon={IconBooleanIcon(IconanchorElIcon)} IcononCloseIcon={IconhandleMenuCloseIcon}>
+        <IconMenuItemIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleMarkAsReadIcon}>
+          {IconselectedActivityIcon?.IconreadIcon ? 'IconMarkIcon IconasIcon Iconunread' : 'IconMarkIcon IconasIcon Iconread'}
+        <IconIconIcon/IconMenuItemIcon>
+        <IconMenuItemIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleDeleteIcon}>IconDeleteIcon<IconIconIcon/IconMenuItemIcon>
+        <IconDividerIcon />
+        <IconMenuItemIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleMenuCloseIcon}>IconViewIcon IcondetailsIcon<IconIconIcon/IconMenuItemIcon>
+      <IconIconIcon/IconMenuIcon>
+    <IconIconIcon/IconPaperIcon>
   );
 });
-ActivityFeed.displayName = 'ActivityFeed';
-export default ActivityFeed;
+IconActivityFeedIcon.IcondisplayNameIcon = 'IconActivityFeed';
+IconexportIcon IcondefaultIcon IconActivityFeedIcon;

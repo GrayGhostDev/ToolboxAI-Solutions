@@ -1,451 +1,426 @@
+IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../../IconutilsIcon/IconmuiIcon-Iconimports';
 /**
- * SystemHealthDashboard - Comprehensive System Health Monitoring Page
- * Combines all health monitoring components for administrators
+ * IconSystemHealthDashboardIcon - IconComprehensiveIcon IconSystemIcon IconHealthIcon IconMonitoringIcon IconPageIcon
+ * IconCombinesIcon IconallIcon IconhealthIcon IconmonitoringIcon IconcomponentsIcon IconforIcon IconadministratorsIcon
  */
-import { memo, useState, useEffect } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Grid,
-  Paper,
-  Tabs,
-  Tab,
-  Stack,
-  Alert,
-  AlertTitle,
-  Button,
-  IconButton,
-  Tooltip,
-  Chip,
-  Card,
-  CardContent,
-  CardHeader,
-  Divider,
-  Switch,
-  FormControlLabel,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+IconimportIcon { IconmemoIcon, IconuseStateIcon, IconuseEffectIcon } IconfromIcon 'Iconreact';
 
-import {
-  Dashboard as DashboardIcon,
-  Refresh as RefreshIcon,
-  Settings as SettingsIcon,
-  Download as ExportIcon,
-  Notifications as AlertsIcon,
-  Timeline as MetricsIcon,
-  Security as SecurityIcon,
-  Speed as PerformanceIcon,
-  Api as IntegrationIcon,
-  Storage as DatabaseIcon,
-  Games as RobloxIcon,
-  Hub as AgentIcon,
-  Stream as RealtimeIcon,
-  Warning as WarningIcon,
-  CheckCircle as HealthyIcon,
-  Error as ErrorIcon,
-} from '@mui/icons-material';
+IconimportIcon {
+  IconDashboardIcon IconasIcon IconIconDashboardIcon,
+  IconRefreshIcon IconasIcon IconIconRefreshIcon,
+  IconSettingsIcon IconasIcon IconIconSettingsIcon,
+  IconDownloadIcon IconasIcon IconIconDownloadIcon,
+  IconNotificationsIcon IconasIcon IconIconBellIcon,
+  IconTimelineIcon IconasIcon IconIconTimelineIcon,
+  IconSecurityIcon IconasIcon IconIconSecurityIcon,
+  IconSpeedIcon IconasIcon IconIconSpeedIcon,
+  IconApiIcon IconasIcon IconIconApiIcon,
+  IconStorageIcon IconasIcon IconIconStorageIcon,
+  IconGamesIcon IconasIcon IconIconGamesIcon,
+  IconHubIcon IconasIcon IconIconHubIcon,
+  IconStreamIcon IconasIcon IconIconStreamIcon,
+  IconWarningIcon IconasIcon IconIconAlertTriangleIcon,
+  IconCheckCircleIcon IconasIcon IconIconCircleCheckIcon,
+  IconErrorIcon IconasIcon IconIconCircleXIcon,
+} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
 
-import { motion } from 'framer-motion';
-import SystemHealthMonitor from '../monitoring/SystemHealthMonitor';
-import IntegrationHealthMonitor from '../monitoring/IntegrationHealthMonitor';
-import { api } from '@/services/api';
-import { usePusher } from '@/hooks/usePusher';
+IconimportIcon { IconmotionIcon } IconfromIcon 'IconframerIcon-Iconmotion';
+IconimportIcon IconSystemHealthMonitorIcon IconfromIcon '../IconmonitoringIcon/IconSystemHealthMonitor';
+IconimportIcon IconIntegrationHealthMonitorIcon IconfromIcon '../IconmonitoringIcon/IconIntegrationHealthMonitor';
+IconimportIcon { IconapiIcon } IconfromIcon '@/IconservicesIcon/Iconapi';
+IconimportIcon { IconusePusherIcon } IconfromIcon '@/IconhooksIcon/IconusePusher';
+IconimportIcon { IconIconIcon, IconIconAlertTriangleIcon, IconIconApiIcon, IconIconBellIcon, IconIconCircleCheckIcon, IconIconCircleXIcon, IconIconDashboardIcon, IconIconDownloadIcon, IconIconGamesIcon, IconIconHubIcon, IconIconRefreshIcon, IconIconSecurityIcon, IconIconSettingsIcon, IconIconSpeedIcon, IconIconStorageIcon, IconIconStreamIcon, IconIconTimelineIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
+IconinterfaceIcon IconTabPanelPropsIcon {
+  IconchildrenIcon?: IconReactIcon.IconReactNodeIcon;
+  IconindexIcon: IconnumberIcon;
+  IconvalueIcon: IconnumberIcon;
 }
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+IconfunctionIcon IconTabPanelIcon(IconpropsIcon: IconTabPanelPropsIcon) {
+  IconconstIcon { IconchildrenIcon, IconvalueIcon, IconindexIcon, ...IconotherIcon } = IconpropsIcon;
 
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`health-tabpanel-${index}`}
-      aria-labelledby={`health-tab-${index}`}
-      {...other}
+  IconreturnIcon (
+    <IcondivIcon
+      IconroleIcon="Icontabpanel"
+      IconhiddenIcon={IconvalueIcon !== IconindexIcon}
+      IconidIcon={`IconhealthIcon-IcontabpanelIcon-${IconindexIcon}`}
+      IconariaIcon-IconlabelledbyIcon={`IconhealthIcon-IcontabIcon-${IconindexIcon}`}
+      {...IconotherIcon}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
+      {IconvalueIcon === IconindexIcon && <IconBoxIcon IconstyleIcon={{ IconpIcon: Icon3Icon }}>{IconchildrenIcon}<IconIconIcon/IconBoxIcon>}
+    <IconIconIcon/IcondivIcon>
   );
 }
 
-export interface SystemHealthDashboardProps {
-  autoRefresh?: boolean;
-  refreshInterval?: number;
+IconexportIcon IconinterfaceIcon IconSystemHealthDashboardPropsIcon {
+  IconautoRefreshIcon?: IconbooleanIcon;
+  IconrefreshIntervalIcon?: IconnumberIcon;
 }
 
-const MotionContainer = motion(Container);
+IconconstIcon IconMotionContainerIcon = IconmotionIcon(IconContainerIcon);
 
-export const SystemHealthDashboard = memo<SystemHealthDashboardProps>(({
-  autoRefresh = true,
-  refreshInterval = 30000,
+IconexportIcon IconconstIcon IconSystemHealthDashboardIcon = IconmemoIcon<IconSystemHealthDashboardPropsIcon>(({
+  IconautoRefreshIcon = IcontrueIcon,
+  IconrefreshIntervalIcon = Icon30000Icon,
 }) => {
-  const theme = useTheme();
-  const [currentTab, setCurrentTab] = useState(0);
-  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(autoRefresh);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [exportOpen, setExportOpen] = useState(false);
-  const [alertsEnabled, setAlertsEnabled] = useState(true);
-  const [lastSystemRefresh, setLastSystemRefresh] = useState(new Date());
-  const [systemOverallHealth, setSystemOverallHealth] = useState<string>('unknown');
+  IconconstIcon IconthemeIcon = IconuseThemeIcon();
+  IconconstIcon [IconcurrentTabIcon, IconsetCurrentTabIcon] = IconuseStateIcon(Icon0Icon);
+  IconconstIcon [IconautoRefreshEnabledIcon, IconsetAutoRefreshEnabledIcon] = IconuseStateIcon(IconautoRefreshIcon);
+  IconconstIcon [IconsettingsOpenIcon, IconsetSettingsOpenIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon [IconexportOpenIcon, IconsetExportOpenIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon [IconalertsEnabledIcon, IconsetAlertsEnabledIcon] = IconuseStateIcon(IcontrueIcon);
+  IconconstIcon [IconlastSystemRefreshIcon, IconsetLastSystemRefreshIcon] = IconuseStateIcon(IconnewIcon IconDateIcon());
+  IconconstIcon [IconsystemOverallHealthIcon, IconsetSystemOverallHealthIcon] = IconuseStateIcon<IconstringIcon>('Iconunknown');
 
-  // Setup Pusher for system-wide health alerts
-  const { subscribe, unsubscribe } = usePusher();
+  // IconSetupIcon IconPusherIcon IconforIcon IconsystemIcon-IconwideIcon IconhealthIcon IconalertsIcon
+  IconconstIcon { IconsubscribeIcon, IconunsubscribeIcon } = IconusePusherIcon();
 
-  useEffect(() => {
-    const channel = 'system-health';
+  IconuseEffectIcon(() => {
+    IconconstIcon IconchannelIcon = 'IconsystemIcon-Iconhealth';
 
-    const handleSystemAlert = (data: { level: string; message: string; timestamp: string }) => {
-      if (alertsEnabled && data.level === 'critical') {
-        // You could trigger notifications here
-        console.warn('System Health Alert:', data);
+    IconconstIcon IconhandleSystemAlertIcon = (IcondataIcon: { IconlevelIcon: IconstringIcon; IconmessageIcon: IconstringIcon; IcontimestampIcon: IconstringIcon }) => {
+      IconifIcon (IconalertsEnabledIcon && IcondataIcon.IconlevelIcon === 'Iconcritical') {
+        // IconYouIcon IconcouldIcon IcontriggerIcon IconnotificationsIcon IconhereIcon
+        IconconsoleIcon.IconwarnIcon('IconSystemIcon IconHealthIcon IconAlertIcon:', IcondataIcon);
       }
     };
 
-    const handleOverallHealthUpdate = (data: { status: string; timestamp: string }) => {
-      setSystemOverallHealth(data.status);
-      setLastSystemRefresh(new Date(data.timestamp));
+    IconconstIcon IconhandleOverallHealthUpdateIcon = (IcondataIcon: { IconstatusIcon: IconstringIcon; IcontimestampIcon: IconstringIcon }) => {
+      IconsetSystemOverallHealthIcon(IcondataIcon.IconstatusIcon);
+      IconsetLastSystemRefreshIcon(IconnewIcon IconDateIcon(IcondataIcon.IcontimestampIcon));
     };
 
-    subscribe(channel, 'system-alert', handleSystemAlert);
-    subscribe(channel, 'overall-health', handleOverallHealthUpdate);
+    IconsubscribeIcon(IconchannelIcon, 'IconsystemIcon-Iconalert', IconhandleSystemAlertIcon);
+    IconsubscribeIcon(IconchannelIcon, 'IconoverallIcon-Iconhealth', IconhandleOverallHealthUpdateIcon);
 
-    return () => {
-      unsubscribe(channel, 'system-alert', handleSystemAlert);
-      unsubscribe(channel, 'overall-health', handleOverallHealthUpdate);
+    IconreturnIcon () => {
+      IconunsubscribeIcon(IconchannelIcon, 'IconsystemIcon-Iconalert', IconhandleSystemAlertIcon);
+      IconunsubscribeIcon(IconchannelIcon, 'IconoverallIcon-Iconhealth', IconhandleOverallHealthUpdateIcon);
     };
-  }, [subscribe, unsubscribe, alertsEnabled]);
+  }, [IconsubscribeIcon, IconunsubscribeIcon, IconalertsEnabledIcon]);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setCurrentTab(newValue);
+  IconconstIcon IconhandleTabChangeIcon = (IconeventIcon: IconReactIcon.IconSyntheticEventIcon, IconnewValueIcon: IconnumberIcon) => {
+    IconsetCurrentTabIcon(IconnewValueIcon);
   };
 
-  const handleGlobalRefresh = async () => {
-    try {
-      // Trigger a refresh on all health monitoring components
-      setLastSystemRefresh(new Date());
+  IconconstIcon IconhandleGlobalRefreshIcon = IconasyncIcon () => {
+    IcontryIcon {
+      // IconTriggerIcon IconaIcon IconrefreshIcon IcononIcon IconallIcon IconhealthIcon IconmonitoringIcon IconcomponentsIcon
+      IconsetLastSystemRefreshIcon(IconnewIcon IconDateIcon());
 
-      // You could also trigger a manual refresh of all services here
-      await api.post('/api/v1/health/refresh-all');
-    } catch (error) {
-      console.error('Failed to refresh system health:', error);
+      // IconYouIcon IconcouldIcon IconalsoIcon IcontriggerIcon IconaIcon IconmanualIcon IconrefreshIcon IconofIcon IconallIcon IconservicesIcon IconhereIcon
+      IconawaitIcon IconapiIcon.IconpostIcon('/IconapiIcon/Iconv1Icon/IconhealthIcon/IconrefreshIcon-Iconall');
+    } IconcatchIcon (IconerrorIcon) {
+      IconconsoleIcon.IconerrorIcon('IconFailedIcon IcontoIcon IconrefreshIcon IconsystemIcon IconhealthIcon:', IconerrorIcon);
     }
   };
 
-  const handleExportHealth = async () => {
-    try {
-      const response = await api.get('/api/v1/health/export', {
-        responseType: 'blob',
+  IconconstIcon IconhandleExportHealthIcon = IconasyncIcon () => {
+    IcontryIcon {
+      IconconstIcon IconresponseIcon = IconawaitIcon IconapiIcon.IcongetIcon('/IconapiIcon/Iconv1Icon/IconhealthIcon/Iconexport', {
+        IconresponseTypeIcon: 'Iconblob',
       });
 
-      const blob = new Blob([response.data], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `system-health-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      IconconstIcon IconblobIcon = IconnewIcon IconBlobIcon([IconresponseIcon.IcondataIcon], { IcontypeIcon: 'IconapplicationIcon/Iconjson' });
+      IconconstIcon IconurlIcon = IconwindowIcon.IconURLIcon.IconcreateObjectURLIcon(IconblobIcon);
+      IconconstIcon IconlinkIcon = IcondocumentIcon.IconcreateElementIcon('Icona');
+      IconlinkIcon.IconhrefIcon = IconurlIcon;
+      IconlinkIcon.IcondownloadIcon = `IconsystemIcon-IconhealthIcon-${IconnewIcon IconDateIcon().IcontoISOStringIcon().IconsplitIcon('IconT')[Icon0Icon]}.IconjsonIcon`;
+      IcondocumentIcon.IconbodyIcon.IconappendChildIcon(IconlinkIcon);
+      IconlinkIcon.IconclickIcon();
+      IcondocumentIcon.IconbodyIcon.IconremoveChildIcon(IconlinkIcon);
+      IconwindowIcon.IconURLIcon.IconrevokeObjectURLIcon(IconurlIcon);
 
-      setExportOpen(false);
-    } catch (error) {
-      console.error('Failed to export health data:', error);
+      IconsetExportOpenIcon(IconfalseIcon);
+    } IconcatchIcon (IconerrorIcon) {
+      IconconsoleIcon.IconerrorIcon('IconFailedIcon IcontoIcon IconexportIcon IconhealthIcon IcondataIcon:', IconerrorIcon);
     }
   };
 
-  const getOverallStatusColor = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return theme.palette.success.main;
-      case 'degraded':
-        return theme.palette.warning.main;
-      case 'unhealthy':
-        return theme.palette.error.main;
-      default:
-        return theme.palette.text.secondary;
+  IconconstIcon IcongetOverallStatusColorIcon = (IconstatusIcon: IconstringIcon) => {
+    IconswitchIcon (IconstatusIcon) {
+      IconcaseIcon 'Iconhealthy':
+        IconreturnIcon IconthemeIcon.IconpaletteIcon.IconsuccessIcon.IconmainIcon;
+      IconcaseIcon 'Icondegraded':
+        IconreturnIcon IconthemeIcon.IconpaletteIcon.IconwarningIcon.IconmainIcon;
+      IconcaseIcon 'Iconunhealthy':
+        IconreturnIcon IconthemeIcon.IconpaletteIcon.IconerrorIcon.IconmainIcon;
+      IcondefaultIcon:
+        IconreturnIcon IconthemeIcon.IconpaletteIcon.IcontextIcon.IconsecondaryIcon;
     }
   };
 
-  const getOverallStatusIcon = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return <HealthyIcon fontSize="small" />;
-      case 'degraded':
-        return <WarningIcon fontSize="small" />;
-      case 'unhealthy':
-        return <ErrorIcon fontSize="small" />;
-      default:
-        return <WarningIcon fontSize="small" />;
+  IconconstIcon IcongetOverallStatusIconIcon = (IconstatusIcon: IconstringIcon) => {
+    IconswitchIcon (IconstatusIcon) {
+      IconcaseIcon 'Iconhealthy':
+        IconreturnIcon <IconIconCircleCheckIcon IconfontSizeIcon="Iconsmall" />;
+      IconcaseIcon 'Icondegraded':
+        IconreturnIcon <IconIconAlertTriangleIcon IconfontSizeIcon="Iconsmall" />;
+      IconcaseIcon 'Iconunhealthy':
+        IconreturnIcon <IconIconCircleXIcon IconfontSizeIcon="Iconsmall" />;
+      IcondefaultIcon:
+        IconreturnIcon <IconIconAlertTriangleIcon IconfontSizeIcon="Iconsmall" />;
     }
   };
 
-  const tabs = [
+  IconconstIcon IcontabsIcon = [
     {
-      label: 'Overview',
-      icon: <DashboardIcon />,
-      description: 'System metrics and resource monitoring',
+      IconlabelIcon: 'IconOverview',
+      IconiconIcon: <IconIconDashboardIcon />,
+      IcondescriptionIcon: 'IconSystemIcon IconmetricsIcon IconandIcon IconresourceIcon Iconmonitoring',
     },
     {
-      label: 'Integrations',
-      icon: <IntegrationIcon />,
-      description: 'External API and service health',
+      IconlabelIcon: 'IconIntegrations',
+      IconiconIcon: <IconIconApiIcon />,
+      IcondescriptionIcon: 'IconExternalIcon IconAPIIcon IconandIcon IconserviceIcon Iconhealth',
     },
     {
-      label: 'Database',
-      icon: <DatabaseIcon />,
-      description: 'PostgreSQL and Redis connectivity',
+      IconlabelIcon: 'IconDatabase',
+      IconiconIcon: <IconIconStorageIcon />,
+      IcondescriptionIcon: 'IconPostgreSQLIcon IconandIcon IconRedisIcon Iconconnectivity',
     },
     {
-      label: 'Real-time',
-      icon: <RealtimeIcon />,
-      description: 'Pusher and WebSocket services',
+      IconlabelIcon: 'IconRealIcon-Icontime',
+      IconiconIcon: <IconIconStreamIcon />,
+      IcondescriptionIcon: 'IconPusherIcon IconandIcon IconWebSocketIcon Iconservices',
     },
     {
-      label: 'Agents',
-      icon: <AgentIcon />,
-      description: 'AI agent orchestration status',
+      IconlabelIcon: 'IconAgents',
+      IconiconIcon: <IconIconHubIcon />,
+      IcondescriptionIcon: 'IconAIIcon IconagentIcon IconorchestrationIcon Iconstatus',
     },
     {
-      label: 'Roblox',
-      icon: <RobloxIcon />,
-      description: 'Roblox integration services',
+      IconlabelIcon: 'IconRoblox',
+      IconiconIcon: <IconIconGamesIcon />,
+      IcondescriptionIcon: 'IconRobloxIcon IconintegrationIcon Iconservices',
     },
   ];
 
-  return (
-    <MotionContainer
-      maxWidth="xl"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+  IconreturnIcon (
+    <IconMotionContainerIcon
+      IconmaxWidthIcon="Iconxl"
+      IconinitialIcon={{ IconopacityIcon: Icon0Icon, IconyIcon: Icon20Icon }}
+      IconanimateIcon={{ IconopacityIcon: Icon1Icon, IconyIcon: Icon0Icon }}
+      IcontransitionIcon={{ IcondurationIcon: Icon0Icon.Icon5Icon }}
     >
-      <Stack spacing={3} sx={{ py: 3 }}>
-        {/* Header */}
-        <Paper sx={{ p: 3 }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Stack spacing={1}>
-              <Typography variant="h4" fontWeight="bold">
-                System Health Dashboard
-              </Typography>
-              <Stack direction="row" alignItems="center" spacing={2}>
-                <Typography variant="body2" color="text.secondary">
-                  Real-time monitoring and diagnostics for all system components
-                </Typography>
-                <Chip
-                  label={`System: ${systemOverallHealth.toUpperCase()}`}
-                  size="small"
-                  color={
-                    systemOverallHealth === 'healthy'
-                      ? 'success'
-                      : systemOverallHealth === 'degraded'
-                      ? 'warning'
-                      : 'error'
+      <IconStackIcon IconspacingIcon={Icon3Icon} IconstyleIcon={{ IconpyIcon: Icon3Icon }}>
+        {/* IconHeaderIcon */}
+        <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon3Icon }}>
+          <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
+            <IconStackIcon IconspacingIcon={Icon1Icon}>
+              <IconTypographyIcon IconorderIcon={Icon4Icon} IconfontWeightIcon="Iconbold">
+                IconSystemIcon IconHealthIcon IconDashboardIcon
+              <IconIconIcon/IconTypographyIcon>
+              <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconspacingIcon={Icon2Icon}>
+                <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
+                  IconRealIcon-IcontimeIcon IconmonitoringIcon IconandIcon IcondiagnosticsIcon IconforIcon IconallIcon IconsystemIcon IconcomponentsIcon
+                <IconIconIcon/IconTypographyIcon>
+                <IconChipIcon
+                  IconlabelIcon={`IconSystemIcon: ${IconsystemOverallHealthIcon.IcontoUpperCaseIcon()}`}
+                  IconsizeIcon="Iconsmall"
+                  IconcolorIcon={
+                    IconsystemOverallHealthIcon === 'Iconhealthy'
+                      ? 'Iconsuccess'
+                      : IconsystemOverallHealthIcon === 'Icondegraded'
+                      ? 'Iconwarning'
+                      : 'Iconerror'
                   }
-                  icon={getOverallStatusIcon(systemOverallHealth)}
+                  IconiconIcon={IcongetOverallStatusIconIcon(IconsystemOverallHealthIcon)}
                 />
-              </Stack>
-            </Stack>
+              <IconIconIcon/IconStackIcon>
+            <IconIconIcon/IconStackIcon>
 
-            <Stack direction="row" spacing={1}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={autoRefreshEnabled}
-                    onChange={(e) => setAutoRefreshEnabled(e.target.checked)}
-                    size="small"
+            <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon}>
+              <IconFormControlLabelIcon
+                IconcontrolIcon={
+                  <IconSwitchIcon
+                    IconcheckedIcon={IconautoRefreshEnabledIcon}
+                    IcononChangeIcon={(IconeIcon) => IconsetAutoRefreshEnabledIcon(IconeIcon.IcontargetIcon.IconcheckedIcon)}
+                    IconsizeIcon="Iconsmall"
                   />
                 }
-                label="Auto-refresh"
+                IconlabelIcon="IconAutoIcon-Iconrefresh"
               />
 
-              <Tooltip title="Refresh all health checks">
-                <IconButton onClick={handleGlobalRefresh} color="primary">
-                  <RefreshIcon />
-                </IconButton>
-              </Tooltip>
+              <IconTooltipIcon IcontitleIcon="IconRefreshIcon IconallIcon IconhealthIcon Iconchecks">
+                <IconIconButtonIcon IcononClickIcon={IconhandleGlobalRefreshIcon} IconcolorIcon="Iconblue">
+                  <IconIconRefreshIcon />
+                <IconIconIcon/IconIconButtonIcon>
+              <IconIconIcon/IconTooltipIcon>
 
-              <Tooltip title="Export health data">
-                <IconButton onClick={() => setExportOpen(true)} color="primary">
-                  <ExportIcon />
-                </IconButton>
-              </Tooltip>
+              <IconTooltipIcon IcontitleIcon="IconExportIcon IconhealthIcon Icondata">
+                <IconIconButtonIcon IcononClickIcon={() => IconsetExportOpenIcon(IcontrueIcon)} IconcolorIcon="Iconblue">
+                  <IconIconDownloadIcon />
+                <IconIconIcon/IconIconButtonIcon>
+              <IconIconIcon/IconTooltipIcon>
 
-              <Tooltip title="Settings">
-                <IconButton onClick={() => setSettingsOpen(true)} color="primary">
-                  <SettingsIcon />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-          </Stack>
-        </Paper>
+              <IconTooltipIcon IcontitleIcon="IconSettings">
+                <IconIconButtonIcon IcononClickIcon={() => IconsetSettingsOpenIcon(IcontrueIcon)} IconcolorIcon="Iconblue">
+                  <IconIconSettingsIcon />
+                <IconIconIcon/IconIconButtonIcon>
+              <IconIconIcon/IconTooltipIcon>
+            <IconIconIcon/IconStackIcon>
+          <IconIconIcon/IconStackIcon>
+        <IconIconIcon/IconPaperIcon>
 
-        {/* Health Status Alert */}
-        {systemOverallHealth === 'unhealthy' && (
-          <Alert severity="error">
-            <AlertTitle>System Health Warning</AlertTitle>
-            One or more critical system components are experiencing issues. Check the detailed tabs below for more information.
-          </Alert>
+        {/* IconHealthIcon IconStatusIcon IconAlertIcon */}
+        {IconsystemOverallHealthIcon === 'Iconunhealthy' && (
+          <IconAlertIcon IconseverityIcon="Iconerror">
+            <IconAlertTitleIcon>IconSystemIcon IconHealthIcon IconWarningIcon<IconIconIcon/IconAlertTitleIcon>
+            IconOneIcon IconorIcon IconmoreIcon IconcriticalIcon IconsystemIcon IconcomponentsIcon IconareIcon IconexperiencingIcon IconissuesIcon. IconCheckIcon IcontheIcon IcondetailedIcon IcontabsIcon IconbelowIcon IconforIcon IconmoreIcon IconinformationIcon.
+          <IconIconIcon/IconAlertIcon>
         )}
 
-        {systemOverallHealth === 'degraded' && (
-          <Alert severity="warning">
-            <AlertTitle>System Performance Degraded</AlertTitle>
-            Some system components are not performing optimally. Monitor the situation and consider taking action if performance continues to degrade.
-          </Alert>
+        {IconsystemOverallHealthIcon === 'Icondegraded' && (
+          <IconAlertIcon IconseverityIcon="Iconwarning">
+            <IconAlertTitleIcon>IconSystemIcon IconPerformanceIcon IconDegradedIcon<IconIconIcon/IconAlertTitleIcon>
+            IconSomeIcon IconsystemIcon IconcomponentsIcon IconareIcon IconnotIcon IconperformingIcon IconoptimallyIcon. IconMonitorIcon IcontheIcon IconsituationIcon IconandIcon IconconsiderIcon IcontakingIcon IconactionIcon IconifIcon IconperformanceIcon IconcontinuesIcon IcontoIcon IcondegradeIcon.
+          <IconIconIcon/IconAlertIcon>
         )}
 
-        {/* Navigation Tabs */}
-        <Paper>
-          <Tabs
-            value={currentTab}
-            onChange={handleTabChange}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{ borderBottom: 1, borderColor: 'divider' }}
+        {/* IconNavigationIcon IconTabsIcon */}
+        <IconPaperIcon>
+          <IconTabsIcon
+            IconvalueIcon={IconcurrentTabIcon}
+            IcononChangeIcon={IconhandleTabChangeIcon}
+            IconvariantIcon="Iconscrollable"
+            IconscrollButtonsIcon="Iconauto"
+            IconstyleIcon={{ IconborderBottomIcon: Icon1Icon, IconborderColorIcon: 'Icondivider' }}
           >
-            {tabs.map((tab, index) => (
-              <Tab
-                key={index}
-                label={tab.label}
-                icon={tab.icon}
-                iconPosition="start"
-                sx={{ minHeight: 72 }}
+            {IcontabsIcon.IconmapIcon((IcontabIcon, IconindexIcon) => (
+              <IconTabIcon
+                IconkeyIcon={IconindexIcon}
+                IconlabelIcon={IcontabIcon.IconlabelIcon}
+                IconiconIcon={IcontabIcon.IconiconIcon}
+                IconiconPositionIcon="Iconstart"
+                IconstyleIcon={{ IconminHeightIcon: Icon72Icon }}
               />
             ))}
-          </Tabs>
+          <IconIconIcon/IconTabsIcon>
 
-          {/* Tab Panels */}
-          <TabPanel value={currentTab} index={0}>
-            <SystemHealthMonitor
-              autoRefresh={autoRefreshEnabled}
-              refreshInterval={refreshInterval}
-              showCharts={true}
-              compact={false}
+          {/* IconTabIcon IconPanelsIcon */}
+          <IconTabPanelIcon IconvalueIcon={IconcurrentTabIcon} IconindexIcon={Icon0Icon}>
+            <IconSystemHealthMonitorIcon
+              IconautoRefreshIcon={IconautoRefreshEnabledIcon}
+              IconrefreshIntervalIcon={IconrefreshIntervalIcon}
+              IconshowChartsIcon={IcontrueIcon}
+              IconcompactIcon={IconfalseIcon}
             />
-          </TabPanel>
+          <IconIconIcon/IconTabPanelIcon>
 
-          <TabPanel value={currentTab} index={1}>
-            <IntegrationHealthMonitor
-              autoRefresh={autoRefreshEnabled}
-              refreshInterval={refreshInterval}
-              showDetails={true}
+          <IconTabPanelIcon IconvalueIcon={IconcurrentTabIcon} IconindexIcon={Icon1Icon}>
+            <IconIntegrationHealthMonitorIcon
+              IconautoRefreshIcon={IconautoRefreshEnabledIcon}
+              IconrefreshIntervalIcon={IconrefreshIntervalIcon}
+              IconshowDetailsIcon={IcontrueIcon}
             />
-          </TabPanel>
+          <IconIconIcon/IconTabPanelIcon>
 
-          <TabPanel value={currentTab} index={2}>
-            <Card>
-              <CardHeader title="Database Health" subheader="PostgreSQL and Redis connection monitoring" />
-              <CardContent>
-                <Typography>
-                  Detailed database health monitoring will be displayed here.
-                  This would include connection pools, query performance, and cache hit rates.
-                </Typography>
-              </CardContent>
-            </Card>
-          </TabPanel>
+          <IconTabPanelIcon IconvalueIcon={IconcurrentTabIcon} IconindexIcon={Icon2Icon}>
+            <IconCardIcon>
+              <IconCardHeaderIcon IcontitleIcon="IconDatabaseIcon IconHealth" IconsubheaderIcon="IconPostgreSQLIcon IconandIcon IconRedisIcon IconconnectionIcon Iconmonitoring" />
+              <IconCardContentIcon>
+                <IconTypographyIcon>
+                  IconDetailedIcon IcondatabaseIcon IconhealthIcon IconmonitoringIcon IconwillIcon IconbeIcon IcondisplayedIcon IconhereIcon.
+                  IconThisIcon IconwouldIcon IconincludeIcon IconconnectionIcon IconpoolsIcon, IconqueryIcon IconperformanceIcon, IconandIcon IconcacheIcon IconhitIcon IconratesIcon.
+                <IconIconIcon/IconTypographyIcon>
+              <IconIconIcon/IconCardContentIcon>
+            <IconIconIcon/IconCardIcon>
+          <IconIconIcon/IconTabPanelIcon>
 
-          <TabPanel value={currentTab} index={3}>
-            <Card>
-              <CardHeader title="Real-time Services" subheader="Pusher Channels and WebSocket monitoring" />
-              <CardContent>
-                <Typography>
-                  Real-time service monitoring including Pusher channel health,
-                  WebSocket connection counts, and message throughput.
-                </Typography>
-              </CardContent>
-            </Card>
-          </TabPanel>
+          <IconTabPanelIcon IconvalueIcon={IconcurrentTabIcon} IconindexIcon={Icon3Icon}>
+            <IconCardIcon>
+              <IconCardHeaderIcon IcontitleIcon="IconRealIcon-IcontimeIcon IconServices" IconsubheaderIcon="IconPusherIcon IconChannelsIcon IconandIcon IconWebSocketIcon Iconmonitoring" />
+              <IconCardContentIcon>
+                <IconTypographyIcon>
+                  IconRealIcon-IcontimeIcon IconserviceIcon IconmonitoringIcon IconincludingIcon IconPusherIcon IconchannelIcon IconhealthIcon,
+                  IconWebSocketIcon IconconnectionIcon IconcountsIcon, IconandIcon IconmessageIcon IconthroughputIcon.
+                <IconIconIcon/IconTypographyIcon>
+              <IconIconIcon/IconCardContentIcon>
+            <IconIconIcon/IconCardIcon>
+          <IconIconIcon/IconTabPanelIcon>
 
-          <TabPanel value={currentTab} index={4}>
-            <Card>
-              <CardHeader title="Agent Orchestration" subheader="AI agent system monitoring" />
-              <CardContent>
-                <Typography>
-                  Agent system health including MCP server status, agent coordinator health,
-                  and SPARC framework monitoring.
-                </Typography>
-              </CardContent>
-            </Card>
-          </TabPanel>
+          <IconTabPanelIcon IconvalueIcon={IconcurrentTabIcon} IconindexIcon={Icon4Icon}>
+            <IconCardIcon>
+              <IconCardHeaderIcon IcontitleIcon="IconAgentIcon IconOrchestration" IconsubheaderIcon="IconAIIcon IconagentIcon IconsystemIcon Iconmonitoring" />
+              <IconCardContentIcon>
+                <IconTypographyIcon>
+                  IconAgentIcon IconsystemIcon IconhealthIcon IconincludingIcon IconMCPIcon IconserverIcon IconstatusIcon, IconagentIcon IconcoordinatorIcon IconhealthIcon,
+                  IconandIcon IconSPARCIcon IconframeworkIcon IconmonitoringIcon.
+                <IconIconIcon/IconTypographyIcon>
+              <IconIconIcon/IconCardContentIcon>
+            <IconIconIcon/IconCardIcon>
+          <IconIconIcon/IconTabPanelIcon>
 
-          <TabPanel value={currentTab} index={5}>
-            <Card>
-              <CardHeader title="Roblox Integration" subheader="Roblox-specific service monitoring" />
-              <CardContent>
-                <Typography>
-                  Roblox integration health including Flask bridge status,
-                  plugin communication, and content generation services.
-                </Typography>
-              </CardContent>
-            </Card>
-          </TabPanel>
-        </Paper>
-      </Stack>
+          <IconTabPanelIcon IconvalueIcon={IconcurrentTabIcon} IconindexIcon={Icon5Icon}>
+            <IconCardIcon>
+              <IconCardHeaderIcon IcontitleIcon="IconRobloxIcon IconIntegration" IconsubheaderIcon="IconRobloxIcon-IconspecificIcon IconserviceIcon Iconmonitoring" />
+              <IconCardContentIcon>
+                <IconTypographyIcon>
+                  IconRobloxIcon IconintegrationIcon IconhealthIcon IconincludingIcon IconFlaskIcon IconbridgeIcon IconstatusIcon,
+                  IconpluginIcon IconcommunicationIcon, IconandIcon IconcontentIcon IcongenerationIcon IconservicesIcon.
+                <IconIconIcon/IconTypographyIcon>
+              <IconIconIcon/IconCardContentIcon>
+            <IconIconIcon/IconCardIcon>
+          <IconIconIcon/IconTabPanelIcon>
+        <IconIconIcon/IconPaperIcon>
+      <IconIconIcon/IconStackIcon>
 
-      {/* Settings Dialog */}
-      <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Health Monitoring Settings</DialogTitle>
-        <DialogContent>
-          <Stack spacing={3} sx={{ pt: 1 }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={alertsEnabled}
-                  onChange={(e) => setAlertsEnabled(e.target.checked)}
+      {/* IconSettingsIcon IconDialogIcon */}
+      <IconDialogIcon IconopenIcon={IconsettingsOpenIcon} IcononCloseIcon={() => IconsetSettingsOpenIcon(IconfalseIcon)} IconmaxWidthIcon="Iconsm" IconfullWidthIcon>
+        <IconDialogTitleIcon>IconHealthIcon IconMonitoringIcon IconSettingsIcon<IconIconIcon/IconDialogTitleIcon>
+        <IconDialogContentIcon>
+          <IconStackIcon IconspacingIcon={Icon3Icon} IconstyleIcon={{ IconptIcon: Icon1Icon }}>
+            <IconFormControlLabelIcon
+              IconcontrolIcon={
+                <IconSwitchIcon
+                  IconcheckedIcon={IconalertsEnabledIcon}
+                  IcononChangeIcon={(IconeIcon) => IconsetAlertsEnabledIcon(IconeIcon.IcontargetIcon.IconcheckedIcon)}
                 />
               }
-              label="Enable critical alerts"
+              IconlabelIcon="IconEnableIcon IconcriticalIcon Iconalerts"
             />
 
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={autoRefreshEnabled}
-                  onChange={(e) => setAutoRefreshEnabled(e.target.checked)}
+            <IconFormControlLabelIcon
+              IconcontrolIcon={
+                <IconSwitchIcon
+                  IconcheckedIcon={IconautoRefreshEnabledIcon}
+                  IcononChangeIcon={(IconeIcon) => IconsetAutoRefreshEnabledIcon(IconeIcon.IcontargetIcon.IconcheckedIcon)}
                 />
               }
-              label="Auto-refresh enabled"
+              IconlabelIcon="IconAutoIcon-IconrefreshIcon Iconenabled"
             />
 
-            <Typography variant="body2" color="text.secondary">
-              Refresh interval: {refreshInterval / 1000} seconds
-            </Typography>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSettingsOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
+            <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
+              IconRefreshIcon IconintervalIcon: {IconrefreshIntervalIcon / Icon1000Icon} IconsecondsIcon
+            <IconIconIcon/IconTypographyIcon>
+          <IconIconIcon/IconStackIcon>
+        <IconIconIcon/IconDialogContentIcon>
+        <IconDialogActionsIcon>
+          <IconButtonIcon IcononClickIcon={() => IconsetSettingsOpenIcon(IconfalseIcon)}>IconCloseIcon<IconIconIcon/IconButtonIcon>
+        <IconIconIcon/IconDialogActionsIcon>
+      <IconIconIcon/IconDialogIcon>
 
-      {/* Export Dialog */}
-      <Dialog open={exportOpen} onClose={() => setExportOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Export Health Data</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary">
-            Export comprehensive system health data as JSON for analysis or reporting.
-            This includes all current health metrics, integration statuses, and system performance data.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setExportOpen(false)}>Cancel</Button>
-          <Button onClick={handleExportHealth} variant="contained">
-            Export
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </MotionContainer>
+      {/* IconExportIcon IconDialogIcon */}
+      <IconDialogIcon IconopenIcon={IconexportOpenIcon} IcononCloseIcon={() => IconsetExportOpenIcon(IconfalseIcon)} IconmaxWidthIcon="Iconsm" IconfullWidthIcon>
+        <IconDialogTitleIcon>IconExportIcon IconHealthIcon IconDataIcon<IconIconIcon/IconDialogTitleIcon>
+        <IconDialogContentIcon>
+          <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
+            IconExportIcon IconcomprehensiveIcon IconsystemIcon IconhealthIcon IcondataIcon IconasIcon IconJSONIcon IconforIcon IconanalysisIcon IconorIcon IconreportingIcon.
+            IconThisIcon IconincludesIcon IconallIcon IconcurrentIcon IconhealthIcon IconmetricsIcon, IconintegrationIcon IconstatusesIcon, IconandIcon IconsystemIcon IconperformanceIcon IcondataIcon.
+          <IconIconIcon/IconTypographyIcon>
+        <IconIconIcon/IconDialogContentIcon>
+        <IconDialogActionsIcon>
+          <IconButtonIcon IcononClickIcon={() => IconsetExportOpenIcon(IconfalseIcon)}>IconCancelIcon<IconIconIcon/IconButtonIcon>
+          <IconButtonIcon IcononClickIcon={IconhandleExportHealthIcon} IconvariantIcon="Iconfilled">
+            IconExportIcon
+          <IconIconIcon/IconButtonIcon>
+        <IconIconIcon/IconDialogActionsIcon>
+      <IconIconIcon/IconDialogIcon>
+    <IconIconIcon/IconMotionContainerIcon>
   );
 });
 
-SystemHealthDashboard.displayName = 'SystemHealthDashboard';
-export default SystemHealthDashboard;
+IconSystemHealthDashboardIcon.IcondisplayNameIcon = 'IconSystemHealthDashboard';
+IconexportIcon IcondefaultIcon IconSystemHealthDashboardIcon;

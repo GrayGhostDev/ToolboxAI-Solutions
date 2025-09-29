@@ -219,6 +219,62 @@ result = await content_agent.execute(
 
 ## Integration Systems
 
+### LangChain/LangSmith Integration (Sept 28, 2025)
+
+**Overview**:
+The agent system is fully integrated with LangChain for orchestration and LangSmith for observability.
+
+**Features**:
+- **Full Tracing**: Every agent operation is traced in LangSmith dashboard
+- **Performance Metrics**: Token usage, latency, and cost tracking
+- **Error Monitoring**: Detailed error traces with stack information
+- **Custom Tracers**: Per-agent type tracing configuration
+- **Real-time Updates**: Pusher integration for live progress
+
+**Configuration**:
+```python
+from core.agents.config import langchain_config
+
+# Get tracer for specific agent
+tracer = langchain_config.get_tracer("content-agent")
+
+# Use in agent execution
+result = await agent.execute(
+    task="Generate content",
+    callbacks=[tracer]
+)
+```
+
+**Dashboard Access**:
+- View traces: https://smith.langchain.com/project/{your-project-id}
+- Monitor costs: Real-time token usage and pricing
+- Analyze performance: Latency breakdown by operation
+
+### Coordinator Service Integration
+
+**Architecture**:
+```
+FastAPI Backend → Coordinator Service → Agent System
+                           ↓
+                   LangChain Tracer → LangSmith Dashboard
+                           ↓
+                   Pusher Service → Real-time Updates
+```
+
+**Components**:
+- **Main Coordinator**: Overall orchestration and task distribution
+- **Workflow Coordinator**: Multi-step task management
+- **Resource Coordinator**: Agent resource allocation
+- **Sync Coordinator**: Redis-based state synchronization
+- **Error Coordinator**: Centralized error handling
+
+**API Endpoints**:
+```bash
+POST /api/v1/coordinators/generate  # Generate educational content
+GET  /api/v1/coordinators/health    # Health status
+GET  /api/v1/coordinators/agents    # List available agents
+```
+
 ### Database Integration
 
 **Features**:

@@ -6,6 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a monorepo that underwent significant restructuring in September 2025. The repository is on branch `chore/remove-render-worker-2025-09-20` with main work tracked in `main` branch.
 
+### Latest Updates (2025-09-28)
+- **🚀 REACT 19 MIGRATION & DEPENDENCY MODERNIZATION**: Complete frontend modernization
+  - **React 19.1.0 Migration**: Successfully updated from React 18.3.1 to React 19.1.0
+  - **All Dependencies Updated**: Updated to 2025 versions including Vite 6, TypeScript 5.9.2, Vitest 3.2.4
+  - **ESLint 9 Flat Config**: Implemented modern ESLint v9 with flat config system for React 19
+  - **External Drive NPM Issues Identified**: System error -88 prevents native binary execution on external drives
+  - **Docker Recommended Solution**: Docker containers solve all external drive issues with full Linux filesystem support
+  - **Package Count**: Successfully installed 692-799 packages despite external drive limitations
+  - **Configuration Converted**: vite.config.ts converted to vite.config.js to bypass esbuild transpilation requirement
+
 ### Latest Deep Clean (2025-09-18)
 - **Root Directory Optimized**: Only essential config files remain in root
 - **Documentation Reorganized**: All docs properly categorized in `docs/` subdirectories
@@ -85,17 +95,32 @@ This is a monorepo that underwent significant restructuring in September 2025. T
 - **Type Safety Maintained**: BasedPyright configuration working correctly with all fixes
 - **Production Ready**: System now fully operational for development and testing
 
-### Critical Context (Updated 2025-09-27)
+### Critical Context (Updated 2025-09-28)
 - **System Status**: Backend fully operational - all systems running
 - **Dashboard Structure**: The active dashboard is at `apps/dashboard/`
+- **Frontend Stack**: React 19.1.0 with Vite 6, TypeScript 5.9.2
+  - React: Migrated from 18.3.1 to 19.1.0
+  - Build Tool: Vite 6.0.1 with vite.config.js (converted from TypeScript)
+  - Testing: Vitest 3.2.4 with React Testing Library
+  - Linting: ESLint 9 with flat config system
 - **UI Framework**: Migrated from Material-UI to Mantine v8
   - Theme: `src/theme/mantine-theme.ts` with Roblox-inspired design
   - Components: All using Mantine with Tabler icons
   - Hooks: Comprehensive Pusher hooks in `src/hooks/pusher/`
-- **Realtime System**: Pusher Channels for all real-time features
+- **Realtime System**: Pusher Channels (Primary) for all real-time features
   - Context: `src/contexts/PusherContext.tsx` with full functionality
-  - Compatibility: `src/contexts/WebSocketContext.tsx` for migration period
-  - Authentication: `/api/v1/pusher/auth` endpoint configured
+  - No WebSocket fallback - Pusher is the sole real-time solution
+  - Authentication: Backend Pusher service in `services/roblox_pusher.py`
+  - 46+ components using Pusher hooks for real-time updates
+- **External Drive Development**: Special considerations for `/Volumes/G-DRIVE ArmorATD/`
+  - Issue: Native binaries (esbuild, Rollup) fail with system error -88
+  - Solution: Use Docker for development (full Linux filesystem support)
+  - NPM Flag: Always use `--no-bin-links` when installing on external drive
+- **Database System**: Dual strategy with PostgreSQL (primary) and Supabase (optional)
+  - Supabase configured for database, storage, and auth (if enabled)
+  - Extensive Supabase settings in `toolboxai_settings/settings.py`
+  - Storage providers in `apps/backend/services/storage/`
+  - Migration support via `services/supabase_migration_manager.py`
 - **Path Normalization**: All components now use canonical paths under `core/` directory
 - **Archived Content**: Old embedded dashboard backends archived to `Archive/2025-09-16/deprecated/`
 - **Agent Systems**: SPARC framework and all agent coordinators fully initialized
@@ -177,8 +202,11 @@ pip install -r requirements.txt
 
 ### Quick Start
 
-#### Docker Development (Recommended)
+#### Docker Development (Recommended for External Drive)
 ```bash
+# IMPORTANT: Docker is the recommended approach for external drive development
+# as it provides full Linux filesystem support for native binaries
+
 # Start all services with new consolidated Docker structure
 docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml up -d
 
@@ -192,18 +220,39 @@ docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastruc
 docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml down
 ```
 
-#### Native Development (Alternative)
+#### Native Development (Alternative - Issues on External Drive)
 ```bash
+# WARNING: Native development on external drives (/Volumes/) has limitations:
+# - Native binaries (esbuild, Rollup) fail with system error -88
+# - Must use --no-bin-links flag for npm installations
+# - Consider Docker development instead for external drives
+
+# For external drive npm installations:
+cd apps/dashboard && npm install --no-bin-links
+
 # Start both backend and frontend natively
 make dev
 
 # Or run separately:
 make backend   # FastAPI on localhost:8009
-make dashboard # React dashboard on localhost:5179
+make dashboard # React dashboard on localhost:5179 (may fail on external drive)
 
 # Alternative: Run from specific directories
 cd apps/backend && uvicorn main:app --host 127.0.0.1 --port 8009 --reload
-cd apps/dashboard && npm run dev
+cd apps/dashboard && npm run dev  # Will fail on external drive without workarounds
+```
+
+#### External Drive NPM Workarounds
+```bash
+# Install packages on external drive (required flags):
+npm install --no-bin-links --legacy-peer-deps
+
+# Clean install for external drive:
+rm -rf node_modules package-lock.json
+npm install --no-bin-links --legacy-peer-deps
+
+# Use JavaScript config instead of TypeScript (avoids esbuild):
+# vite.config.js instead of vite.config.ts
 ```
 
 ### Type System & Configuration
@@ -282,17 +331,51 @@ mypy apps/backend
 
 ### Dashboard-specific Commands
 ```bash
-# Development server with hot reload
+# IMPORTANT: For external drive development, use Docker instead
+# Native npm run dev will fail with error -88 on external drives
+
+# Development server with hot reload (works on internal drive only)
 cd apps/dashboard && npm run dev
 
 # Run on different port to avoid conflicts
 PORT=5180 npm run dev
+
+# External drive installation scripts (added in package.json)
+npm run install:external    # Uses --no-bin-links flag
+npm run install:clean       # Clean reinstall for external drive
 
 # Check Socket.IO connectivity (legacy, now using Pusher)
 npm run socketio:check:env
 
 # Type checking
 npm run typecheck
+
+# Linting with ESLint 9
+npm run lint
+npm run lint:fix
+```
+
+### Dashboard Configuration (2025-09-28 Updates)
+```json
+// apps/dashboard/package.json key updates:
+{
+  "dependencies": {
+    "react": "^19.1.0",              // Updated from 18.3.1
+    "react-dom": "^19.1.0",          // Updated from 18.3.1
+    "@react-three/fiber": "^9.3.0"  // Updated for React 19 compatibility
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",      // React 19 types
+    "typescript": "^5.9.2",         // Latest TypeScript
+    "vite": "^6.0.1",               // Vite 6
+    "vitest": "^3.2.4",             // Vitest 3
+    "eslint": "^9.35.0"             // ESLint 9 with flat config
+  },
+  "scripts": {
+    "install:external": "npm install --no-bin-links",
+    "install:clean": "rm -rf node_modules package-lock.json && npm install --no-bin-links"
+  }
+}
 ```
 
 ## Project Metrics (Updated 2025-09-26)
@@ -708,17 +791,32 @@ usePusherEvent('content-progress', (data) => {
 - **Current State**: Database models properly imported and functional
 - **Status**: Fixed 2025-09-20 - database connectivity and models working correctly
 
-#### 4. Port Conflicts
+#### 4. External Drive Native Binary Execution (NEW - 2025-09-28)
+- **Issue**: Native binaries (esbuild, Rollup) fail with "spawn Unknown system error -88" on external drives
+- **Root Cause**: macOS external drives cannot execute native binaries properly
+- **Workarounds**:
+  - Use Docker for development (recommended)
+  - Convert vite.config.ts to vite.config.js to avoid esbuild transpilation
+  - Install with `npm install --no-bin-links --legacy-peer-deps`
+  - Consider WASM-based alternatives (experimental)
+- **Status**: Docker is the recommended solution for external drive development
+
+#### 5. Port Conflicts
 - **Issue**: Multiple services trying to use same ports
 - **Workaround**: Use `PORT=5180 npm run dev` for alternate ports
 
-#### 5. Test Environment Setup
+#### 6. Test Environment Setup
 - **Issue**: jsdom missing canvas/ResizeObserver for charts
 - **Fix**: Add mocks in `src/test/setup.ts`
 
-#### 6. Type Checking Memory Issues
+#### 7. Type Checking Memory Issues
 - **Issue**: Full pyright scan causes OOM
 - **Fix**: Use `config/pyrightconfig.narrow.json` for targeted checks
+
+#### 8. React 19 Peer Dependencies (2025-09-28)
+- **Issue**: Some packages still expect React 18 as peer dependency
+- **Workaround**: Use `--legacy-peer-deps` flag when installing
+- **Packages Affected**: @react-three/drei (expects @react-three/fiber v8 instead of v9)
 
 ### Development Workflow
 
@@ -908,14 +1006,20 @@ Consider adding for:
 ### Critical Reminders
 
 1. **Dashboard path is `apps/dashboard/`**: Documentation corrected 2025-09-16
-2. **Docker structure modernized (2025-09-24)**: Use consolidated files in `infrastructure/docker/compose/`
-3. **Security-first approach**: Copy `.env.example` to `.env` and generate secure secrets
-4. **Check venv activation**: Use standard `venv/` virtual environment
-5. **Run tests with flags**: Some integration tests need environment variables
-6. **Use Pusher for new realtime features**: Socket.IO is legacy
-7. **Database uses shims**: Be aware of compatibility layers in tests
-8. **Type check with narrow config**: Avoid full pyright scan
-9. **Never commit real credentials**: Use Docker Secrets for production, secure .env for development
+2. **React 19.1.0 Migration (2025-09-28)**: Dashboard updated from React 18.3.1 to 19.1.0
+3. **External Drive Development**: Use Docker for `/Volumes/` drives - native binaries fail with error -88
+4. **Vite Config**: Use `vite.config.js` (not .ts) on external drives to avoid esbuild transpilation
+5. **NPM on External Drive**: Always use `--no-bin-links --legacy-peer-deps` flags
+6. **Docker structure modernized (2025-09-24)**: Use consolidated files in `infrastructure/docker/compose/`
+7. **Security-first approach**: Copy `.env.example` to `.env` and generate secure secrets
+8. **Check venv activation**: Use standard `venv/` virtual environment
+9. **Run tests with flags**: Some integration tests need environment variables
+10. **Use Pusher for new realtime features**: Socket.IO is legacy
+11. **Database uses shims**: Be aware of compatibility layers in tests
+12. **Type check with narrow config**: Avoid full pyright scan
+13. **Never commit real credentials**: Use Docker Secrets for production, secure .env for development
+14. **ESLint 9**: Using flat config system in `eslint.config.js`
+15. **Dependencies Updated**: Vite 6, TypeScript 5.9.2, Vitest 3.2.4, all updated to 2025 versions
 
 ## Important Development Guidelines
 
@@ -937,10 +1041,12 @@ Consider adding for:
 - **BasedPyright**: Configuration in `pyproject.toml`, use for type checking
 
 ### Frontend Specific
-- **React 19**: Project migrated to React 19, ensure compatibility
-- **TypeScript strict**: Maintain type safety, avoid `any` types
+- **React 19**: Project migrated to React 19.1.0, ensure compatibility
+- **TypeScript strict**: Maintain type safety with TypeScript 5.9.2, avoid `any` types
 - **Pusher integration**: Real-time features use Pusher, not Socket.IO
-- **Vite configuration**: Development server on port 5179 with API proxy to 8009
+- **Vite configuration**: Vite 6.0.1, development server on port 5179 with API proxy to 8009
+- **External Drive**: Use Docker for development, or vite.config.js (not .ts) to avoid esbuild issues
+- **ESLint**: Using ESLint 9 with flat config system (eslint.config.js)
 
 ### Testing Guidelines
 - **Python tests**: Run with `pytest` from project root

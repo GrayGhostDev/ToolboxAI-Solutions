@@ -1,24 +1,6 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../../utils/mui-imports';
 import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardHeader from '@mui/material/CardHeader';
-import Typography from '@mui/material/Typography';
-import Switch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import Grid from '@mui/material/Grid';
-import Alert from '@mui/material/Alert';
-import Stack from '@mui/material/Stack';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Chip from '@mui/material/Chip';
 
-import { Save, RestartAlt } from '@mui/icons-material';
 import { useAppDispatch } from '../../../store';
 import { addNotification } from '../../../store/slices/uiSlice';
 
@@ -198,13 +180,13 @@ const SystemSettings: React.FunctionComponent<Record<string, any>> = () => {
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h5" fontWeight={600}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" style={{ mb: 3 }}>
+        <Typography order={5} fontWeight={600}>
           System Settings
         </Typography>
         <Stack direction="row" spacing={2}>
           <Button
-            variant="outlined"
+            variant="outline"
             startIcon={<RestartAlt />}
             onClick={(e: React.MouseEvent) => handleReset}
             disabled={!hasChanges || saving}
@@ -212,7 +194,7 @@ const SystemSettings: React.FunctionComponent<Record<string, any>> = () => {
             Reset
           </Button>
           <Button
-            variant="contained"
+            variant="filled"
             startIcon={<Save />}
             onClick={(e: React.MouseEvent) => handleSave}
             disabled={!hasChanges || saving}
@@ -223,7 +205,7 @@ const SystemSettings: React.FunctionComponent<Record<string, any>> = () => {
       </Stack>
 
       {hasChanges && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
+        <Alert severity="warning" style={{ mb: 2 }}>
           You have unsaved changes. Don't forget to save before leaving this page.
         </Alert>
       )}
@@ -292,7 +274,7 @@ const SystemSettings: React.FunctionComponent<Record<string, any>> = () => {
                     <Box>
                       Maintenance Mode
                       {settings.general.maintenanceMode && (
-                        <Chip label="Active" color="warning" size="small" sx={{ ml: 1 }} />
+                        <Chip label="Active" color="yellow" size="small" style={{ ml: 1 }} />
                       )}
                     </Box>
                   }

@@ -1,9 +1,22 @@
 # ============================================
-# TOOLBOXAI MONITORING STACK
+# TOOLBOXAI MONITORING STACK (TEMPLATE)
 # ============================================
 # Comprehensive observability with Grafana, Loki, Jaeger, and Prometheus
 # Use with: docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up
-# Updated: 2025-09-26
+# Updated: 2025-09-28
+# ============================================
+#
+# ⚠️ IMPORTANT: This is a template configuration.
+# 📍 For the ACTUAL PRODUCTION deployment with running containers, see:
+#    docs/08-operations/monitoring/PROMETHEUS_IMPLEMENTATION_2025.md
+#
+# Current production containers (as of 2025-09-28):
+# - Prometheus: ced4f25f065961fa (port 9090)
+# - Grafana: 435fb9a29d6d7c8d (port 3000)
+# - Loki: 03ca72de474e3be4 (port 3100)
+# - Promtail: 48dec4e7fb08997 (port 9080)
+# - Jaeger: 6ceb03cd6bc9159c (ports 16686/4317)
+# - OpenTelemetry: a3de9f68b91a9081 (ports 4317/4318)
 # ============================================
 
 version: '3.9'

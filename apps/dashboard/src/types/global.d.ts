@@ -1,210 +1,160 @@
 // Global type definitions for ToolBoxAI Dashboard
+// Updated for Mantine migration
 
 import * as React from 'react';
 
-// Fix Material-UI component typing issues
-declare module '@mui/material/Alert' {
-  import { AlertProps } from '@mui/material';
-  const Alert: React.ComponentType<AlertProps>;
-  export default Alert;
-}
+// Mantine component type declarations for global usage
+declare global {
+  // Common utility types
+  type ComponentPropsWithoutRef<T extends React.ElementType> = React.ComponentPropsWithoutRef<T>;
+  type ComponentPropsWithRef<T extends React.ElementType> = React.ComponentPropsWithRef<T>;
 
-declare module '@mui/material/Button' {
-  import { ButtonProps } from '@mui/material';
-  const Button: React.ComponentType<ButtonProps>;
-  export default Button;
-}
+  // Layout types
+  type SpacingValue = number | string;
+  type ColorScheme = 'light' | 'dark';
+  type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  type Radius = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
-declare module '@mui/material/Chip' {
-  import { ChipProps } from '@mui/material';
-  const Chip: React.ComponentType<ChipProps>;
-  export default Chip;
-}
+  // Common prop patterns
+  interface BaseProps {
+    className?: string;
+    style?: React.CSSProperties;
+    children?: React.ReactNode;
+  }
 
-declare module '@mui/material/IconButton' {
-  import { IconButtonProps } from '@mui/material';
-  const IconButton: React.ComponentType<IconButtonProps>;
-  export default IconButton;
-}
+  interface SpacingProps {
+    m?: SpacingValue;
+    mx?: SpacingValue;
+    my?: SpacingValue;
+    mt?: SpacingValue;
+    mb?: SpacingValue;
+    ml?: SpacingValue;
+    mr?: SpacingValue;
+    p?: SpacingValue;
+    px?: SpacingValue;
+    py?: SpacingValue;
+    pt?: SpacingValue;
+    pb?: SpacingValue;
+    pl?: SpacingValue;
+    pr?: SpacingValue;
+  }
 
-declare module '@mui/material/Box' {
-  import { BoxProps } from '@mui/material';
-  const Box: React.ComponentType<BoxProps>;
-  export default Box;
-}
+  // Mantine specific
+  interface MantineStyleProp {
+    sx?: any; // For backward compatibility with MUI sx prop
+  }
 
-declare module '@mui/material/Typography' {
-  import { TypographyProps } from '@mui/material';
-  const Typography: React.ComponentType<TypographyProps>;
-  export default Typography;
-}
+  // Legacy MUI component mappings (for compatibility during migration)
+  namespace MUI {
+    type AlertProps = ComponentPropsWithoutRef<'div'> & {
+      severity?: 'error' | 'warning' | 'info' | 'success';
+      variant?: 'filled' | 'outlined' | 'standard';
+    };
 
-declare module '@mui/material/Card' {
-  import { CardProps } from '@mui/material';
-  const Card: React.ComponentType<CardProps>;
-  export default Card;
-}
+    type ButtonProps = ComponentPropsWithoutRef<'button'> & {
+      variant?: 'contained' | 'outlined' | 'text';
+      color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
+      size?: 'small' | 'medium' | 'large';
+      fullWidth?: boolean;
+      disabled?: boolean;
+      loading?: boolean;
+    };
 
-declare module '@mui/material/CardContent' {
-  import { CardContentProps } from '@mui/material';
-  const CardContent: React.ComponentType<CardContentProps>;
-  export default CardContent;
-}
+    type ChipProps = ComponentPropsWithoutRef<'div'> & {
+      label?: React.ReactNode;
+      color?: string;
+      variant?: 'filled' | 'outlined';
+      size?: 'small' | 'medium';
+      onDelete?: () => void;
+    };
 
-declare module '@mui/material/CardHeader' {
-  import { CardHeaderProps } from '@mui/material';
-  const CardHeader: React.ComponentType<CardHeaderProps>;
-  export default CardHeader;
-}
+    type BoxProps = ComponentPropsWithoutRef<'div'> & SpacingProps & MantineStyleProp;
 
-declare module '@mui/material/Grid' {
-  import { GridProps } from '@mui/material';
-  const Grid: React.ComponentType<GridProps>;
-  export default Grid;
-}
+    type TypographyProps = ComponentPropsWithoutRef<'span'> & {
+      variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'body1' | 'body2' | 'caption' | 'subtitle1' | 'subtitle2';
+      component?: React.ElementType;
+      color?: string;
+      align?: 'left' | 'center' | 'right';
+      gutterBottom?: boolean;
+    };
 
-declare module '@mui/material/Container' {
-  import { ContainerProps } from '@mui/material';
-  const Container: React.ComponentType<ContainerProps>;
-  export default Container;
-}
+    type CardProps = ComponentPropsWithoutRef<'div'> & {
+      elevation?: number;
+      variant?: 'elevation' | 'outlined';
+    };
 
-declare module '@mui/material/Stack' {
-  import { StackProps } from '@mui/material';
-  const Stack: React.ComponentType<StackProps>;
-  export default Stack;
-}
+    type GridProps = ComponentPropsWithoutRef<'div'> & {
+      container?: boolean;
+      item?: boolean;
+      xs?: number | boolean;
+      sm?: number | boolean;
+      md?: number | boolean;
+      lg?: number | boolean;
+      xl?: number | boolean;
+      spacing?: number;
+    };
 
-declare module '@mui/material/TextField' {
-  import { TextFieldProps } from '@mui/material';
-  const TextField: React.ComponentType<TextFieldProps>;
-  export default TextField;
-}
+    type ContainerProps = ComponentPropsWithoutRef<'div'> & {
+      maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | false;
+      fixed?: boolean;
+    };
 
-declare module '@mui/material/Select' {
-  import { SelectProps } from '@mui/material';
-  const Select: React.ComponentType<SelectProps>;
-  export default Select;
-}
+    type StackProps = ComponentPropsWithoutRef<'div'> & {
+      direction?: 'row' | 'column';
+      spacing?: number | string;
+      divider?: React.ReactNode;
+      alignItems?: string;
+      justifyContent?: string;
+    };
 
-declare module '@mui/material/MenuItem' {
-  import { MenuItemProps } from '@mui/material';
-  const MenuItem: React.ComponentType<MenuItemProps>;
-  export default MenuItem;
-}
+    type TextFieldProps = ComponentPropsWithoutRef<'input'> & {
+      label?: string;
+      variant?: 'outlined' | 'filled' | 'standard';
+      fullWidth?: boolean;
+      multiline?: boolean;
+      rows?: number;
+      type?: string;
+      helperText?: string;
+      error?: boolean;
+      InputProps?: any;
+      inputProps?: any;
+    };
 
-declare module '@mui/material/FormControl' {
-  import { FormControlProps } from '@mui/material';
-  const FormControl: React.ComponentType<FormControlProps>;
-  export default FormControl;
-}
+    type SelectProps = ComponentPropsWithoutRef<'select'> & {
+      value?: any;
+      onChange?: (event: any) => void;
+      fullWidth?: boolean;
+      variant?: 'outlined' | 'filled' | 'standard';
+    };
 
-declare module '@mui/material/InputLabel' {
-  import { InputLabelProps } from '@mui/material';
-  const InputLabel: React.ComponentType<InputLabelProps>;
-  export default InputLabel;
-}
+    type DialogProps = ComponentPropsWithoutRef<'div'> & {
+      open: boolean;
+      onClose?: () => void;
+      maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | false;
+      fullWidth?: boolean;
+      fullScreen?: boolean;
+    };
 
-declare module '@mui/material/Tab' {
-  import { TabProps } from '@mui/material';
-  const Tab: React.ComponentType<TabProps>;
-  export default Tab;
-}
+    type TabProps = ComponentPropsWithoutRef<'div'> & {
+      label?: React.ReactNode;
+      value?: any;
+      disabled?: boolean;
+    };
 
-declare module '@mui/material/Tabs' {
-  import { TabsProps } from '@mui/material';
-  const Tabs: React.ComponentType<TabsProps>;
-  export default Tabs;
-}
+    type TabsProps = ComponentPropsWithoutRef<'div'> & {
+      value?: any;
+      onChange?: (event: any, newValue: any) => void;
+      orientation?: 'horizontal' | 'vertical';
+      variant?: 'standard' | 'scrollable' | 'fullWidth';
+    };
 
-declare module '@mui/material/Paper' {
-  import { PaperProps } from '@mui/material';
-  const Paper: React.ComponentType<PaperProps>;
-  export default Paper;
-}
-
-declare module '@mui/material/Checkbox' {
-  import { CheckboxProps } from '@mui/material';
-  const Checkbox: React.ComponentType<CheckboxProps>;
-  export default Checkbox;
-}
-
-declare module '@mui/material/Switch' {
-  import { SwitchProps } from '@mui/material';
-  const Switch: React.ComponentType<SwitchProps>;
-  export default Switch;
-}
-
-declare module '@mui/material/Dialog' {
-  import { DialogProps } from '@mui/material';
-  const Dialog: React.ComponentType<DialogProps>;
-  export default Dialog;
-}
-
-declare module '@mui/material/DialogTitle' {
-  import { DialogTitleProps } from '@mui/material';
-  const DialogTitle: React.ComponentType<DialogTitleProps>;
-  export default DialogTitle;
-}
-
-declare module '@mui/material/DialogContent' {
-  import { DialogContentProps } from '@mui/material';
-  const DialogContent: React.ComponentType<DialogContentProps>;
-  export default DialogContent;
-}
-
-declare module '@mui/material/DialogActions' {
-  import { DialogActionsProps } from '@mui/material';
-  const DialogActions: React.ComponentType<DialogActionsProps>;
-  export default DialogActions;
-}
-
-declare module '@mui/material/CircularProgress' {
-  import { CircularProgressProps } from '@mui/material';
-  const CircularProgress: React.ComponentType<CircularProgressProps>;
-  export default CircularProgress;
-}
-
-declare module '@mui/material/LinearProgress' {
-  import { LinearProgressProps } from '@mui/material';
-  const LinearProgress: React.ComponentType<LinearProgressProps>;
-  export default LinearProgress;
-}
-
-declare module '@mui/material/Table' {
-  import { TableProps } from '@mui/material';
-  const Table: React.ComponentType<TableProps>;
-  export default Table;
-}
-
-declare module '@mui/material/TableBody' {
-  import { TableBodyProps } from '@mui/material';
-  const TableBody: React.ComponentType<TableBodyProps>;
-  export default TableBody;
-}
-
-declare module '@mui/material/TableCell' {
-  import { TableCellProps } from '@mui/material';
-  const TableCell: React.ComponentType<TableCellProps>;
-  export default TableCell;
-}
-
-declare module '@mui/material/TableContainer' {
-  import { TableContainerProps } from '@mui/material';
-  const TableContainer: React.ComponentType<TableContainerProps>;
-  export default TableContainer;
-}
-
-declare module '@mui/material/TableHead' {
-  import { TableHeadProps } from '@mui/material';
-  const TableHead: React.ComponentType<TableHeadProps>;
-  export default TableHead;
-}
-
-declare module '@mui/material/TableRow' {
-  import { TableRowProps } from '@mui/material';
-  const TableRow: React.ComponentType<TableRowProps>;
-  export default TableRow;
+    type ProgressProps = ComponentPropsWithoutRef<'div'> & {
+      value?: number;
+      variant?: 'determinate' | 'indeterminate';
+      color?: string;
+      size?: number | string;
+    };
+  }
 }
 
 // Window interface extensions
@@ -216,6 +166,8 @@ declare global {
       wsUrl: string;
       version: string;
     };
+    // Mantine theme provider support
+    __MANTINE_COLOR_SCHEME__?: 'light' | 'dark';
   }
 }
 
@@ -229,6 +181,58 @@ declare namespace NodeJS {
     VITE_PUSHER_KEY?: string;
     VITE_PUSHER_CLUSTER?: string;
     VITE_PUSHER_AUTH_ENDPOINT?: string;
+    VITE_ENABLE_CLERK_AUTH?: string;
+    VITE_CLERK_PUBLISHABLE_KEY?: string;
+  }
+}
+
+// Vite environment variables
+interface ImportMetaEnv {
+  readonly VITE_API_BASE_URL: string;
+  readonly VITE_WS_URL: string;
+  readonly VITE_ENABLE_WEBSOCKET: string;
+  readonly VITE_PUSHER_KEY: string;
+  readonly VITE_PUSHER_CLUSTER: string;
+  readonly VITE_PUSHER_AUTH_ENDPOINT: string;
+  readonly VITE_ENABLE_CLERK_AUTH: string;
+  readonly VITE_CLERK_PUBLISHABLE_KEY: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
+// Roblox theme specific types
+declare global {
+  namespace Roblox {
+    type ColorMode = 'light' | 'dark' | 'system';
+
+    interface ThemeColors {
+      primary: string;
+      secondary: string;
+      background: string;
+      surface: string;
+      text: string;
+      textSecondary: string;
+      success: string;
+      error: string;
+      warning: string;
+      info: string;
+    }
+
+    interface Theme {
+      mode: ColorMode;
+      colors: ThemeColors;
+      typography: {
+        fontFamily: string;
+        h1: any;
+        h2: any;
+        h3: any;
+        h4: any;
+        h5: any;
+        h6: any;
+      };
+    }
   }
 }
 

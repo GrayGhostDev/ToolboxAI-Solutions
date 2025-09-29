@@ -1,3 +1,4 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 /**
  * Lazy loading wrapper for chart components
  *
@@ -6,7 +7,6 @@
  */
 
 import React, { Suspense, lazy } from 'react';
-import { Box, CircularProgress, Typography, Skeleton } from '@mui/material';
 
 // Lazy load chart components - these will be in separate chunks
 const UserActivityChart = lazy(() => import('../analytics/UserActivityChart'));
@@ -119,10 +119,10 @@ const ChartErrorFallback = ({ error }: { error?: Error }) => (
     border="1px solid"
     borderColor="warning.main"
   >
-    <Typography variant="h6" color="warning.dark">
+    <Typography order={6} color="warning.dark">
       Chart Unavailable
     </Typography>
-    <Typography variant="body2" color="text.secondary" textAlign="center">
+    <Typography size="sm" color="text.secondary" textAlign="center">
       {error?.message || "Unable to load chart. Please try refreshing the page."}
     </Typography>
   </Box>

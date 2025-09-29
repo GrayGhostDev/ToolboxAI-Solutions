@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Text, useMantineTheme } from '@mantine/core';
-import { keyframes } from '@emotion/react';
+import { keyframes } from '@mantine/core';
 import { Procedural3DIcon } from './Procedural3DIcon';
 
 interface Real3DIconProps {

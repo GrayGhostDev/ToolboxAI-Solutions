@@ -31,7 +31,7 @@ RUN addgroup -g 1002 -S builduser && \
 WORKDIR /app
 
 # Set Node.js environment variables for build
-ENV NODE_ENV=production \
+ENV NODE_ENV=development \
     NPM_CONFIG_UPDATE_NOTIFIER=false \
     NPM_CONFIG_FUND=false \
     NPM_CONFIG_AUDIT=false \
@@ -41,10 +41,11 @@ ENV NODE_ENV=production \
 # Copy package files for dependency installation
 COPY --chown=builduser:builduser apps/dashboard/package*.json ./
 
-# Install dependencies with cache mount for faster builds
+# Install ALL dependencies (including dev) for build stage
+# Using --legacy-peer-deps due to react-three/fiber version conflict
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \
     --mount=type=cache,target=/app/.npm-cache,sharing=locked \
-    npm install --production --no-audit --no-fund --cache /app/.npm-cache && \
+    npm install --legacy-peer-deps --no-audit --no-fund --cache /app/.npm-cache && \
     npm cache clean --force
 
 # Copy source code

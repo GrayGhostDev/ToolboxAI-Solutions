@@ -1,3 +1,4 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 /**
  * Lazy loading wrapper for Three.js components
  *
@@ -6,7 +7,6 @@
  */
 
 import React, { Suspense, lazy } from 'react';
-import { Box, CircularProgress, Typography } from '@mui/material';
 
 // Lazy load Three.js components - these will be in separate chunks
 const Scene3D = lazy(() => import('../three/Scene3D'));
@@ -29,7 +29,7 @@ const ThreeLoadingFallback = ({
     borderColor="divider"
   >
     <CircularProgress size={40} />
-    <Typography variant="body2" color="text.secondary">
+    <Typography size="sm" color="text.secondary">
       {message}
     </Typography>
   </Box>
@@ -48,10 +48,10 @@ const ThreeErrorFallback = ({ error }: { error?: Error }) => (
     borderRadius={1}
     p={3}
   >
-    <Typography variant="h6" color="error.main">
+    <Typography order={6} color="error.main">
       3D Environment Unavailable
     </Typography>
-    <Typography variant="body2" color="text.secondary" textAlign="center">
+    <Typography size="sm" color="text.secondary" textAlign="center">
       {error?.message || "Unable to load 3D components. Please try refreshing the page."}
     </Typography>
   </Box>

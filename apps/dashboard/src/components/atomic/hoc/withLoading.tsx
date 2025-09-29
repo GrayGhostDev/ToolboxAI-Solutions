@@ -47,7 +47,7 @@ const DefaultLoadingComponent: React.FunctionComponent<LoadingComponentProps> = 
     {loadingText && (
       <AtomicText
         variant="sm"
-        color="secondary"
+        color="gray"
         textAlign="center"
       >
         {loadingText}
@@ -84,7 +84,7 @@ const OverlayLoadingComponent: React.FunctionComponent<LoadingComponentProps> = 
     {loadingText && (
       <AtomicText
         variant="base"
-        color="primary"
+        color="blue"
         textAlign="center"
         mt={2}
         weight="medium"

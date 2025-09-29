@@ -1,3 +1,4 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../utils/mui-imports';
 /**
  * ContentGenerationMonitor Component
  *
@@ -630,7 +631,4 @@ const handleProgressUpdate = (prog: ContentGenerationProgress) => {
     </Box>
   );
 };
-// Add missing import
-
-import MuiSwitch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
+// Add missing 

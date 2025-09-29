@@ -161,7 +161,7 @@ export const PlayerLeaderboard: React.FunctionComponent<Record<string, any>> = (
       subtitle="Top performers this week"
       actions={
         <AtomicBox display="flex" gap={1}>
-          <AtomicButton variant="outlined" size="sm">
+          <AtomicButton variant="outline" size="sm">
             Export
           </AtomicButton>
           <AtomicButton variant="primary" size="sm">
@@ -184,10 +184,10 @@ export const PlayerLeaderboard: React.FunctionComponent<Record<string, any>> = (
             {selectedPlayers.size} player{selectedPlayers.size > 1 ? 's' : ''} selected
           </AtomicText>
           <AtomicBox display="flex" gap={1}>
-            <AtomicButton variant="outlined" size="sm">
+            <AtomicButton variant="outline" size="sm">
               Compare
             </AtomicButton>
-            <AtomicButton variant="outlined" size="sm">
+            <AtomicButton variant="outline" size="sm">
               Message
             </AtomicButton>
           </AtomicBox>
@@ -286,7 +286,7 @@ export const PlayerLeaderboard: React.FunctionComponent<Record<string, any>> = (
               </Table.Cell>
 
               <Table.Cell align="right">
-                <AtomicText variant="base" weight="bold" color="primary">
+                <AtomicText variant="base" weight="bold" color="blue">
                   {player.score.toLocaleString()}
                 </AtomicText>
               </Table.Cell>
@@ -294,7 +294,7 @@ export const PlayerLeaderboard: React.FunctionComponent<Record<string, any>> = (
               <Table.Cell align="center">
                 <AtomicBadge
                   variant="standard"
-                  color="info"
+                  color="cyan"
                   badgeContent={player.level}
                 >
                   <AtomicText variant="xs">LVL</AtomicText>
@@ -345,37 +345,37 @@ const EnhancedGameStats = withErrorBoundary(
         <Card variant="game" title="Game Analytics" subtitle={`Game ID: ${gameId}`}>
           <AtomicBox display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={3}>
             <AtomicBox textAlign="center">
-              <AtomicText variant="2xl" weight="bold" color="primary">
+              <AtomicText variant="2xl" weight="bold" color="blue">
                 {stats.activePlayers.toLocaleString()}
               </AtomicText>
-              <AtomicText variant="sm" color="secondary">
+              <AtomicText variant="sm" color="gray">
                 Active Players
               </AtomicText>
             </AtomicBox>
 
             <AtomicBox textAlign="center">
-              <AtomicText variant="2xl" weight="bold" color="success">
+              <AtomicText variant="2xl" weight="bold" color="green">
                 {stats.totalSessions.toLocaleString()}
               </AtomicText>
-              <AtomicText variant="sm" color="secondary">
+              <AtomicText variant="sm" color="gray">
                 Total Sessions
               </AtomicText>
             </AtomicBox>
 
             <AtomicBox textAlign="center">
-              <AtomicText variant="2xl" weight="bold" color="info">
+              <AtomicText variant="2xl" weight="bold" color="cyan">
                 {stats.avgPlayTime}
               </AtomicText>
-              <AtomicText variant="sm" color="secondary">
+              <AtomicText variant="sm" color="gray">
                 Avg Play Time
               </AtomicText>
             </AtomicBox>
 
             <AtomicBox textAlign="center">
-              <AtomicText variant="2xl" weight="bold" color="warning">
+              <AtomicText variant="2xl" weight="bold" color="yellow">
                 {stats.satisfaction}%
               </AtomicText>
-              <AtomicText variant="sm" color="secondary">
+              <AtomicText variant="sm" color="gray">
                 Satisfaction
               </AtomicText>
             </AtomicBox>
@@ -394,18 +394,18 @@ export const ComponentCompositionShowcase: React.FunctionComponent<Record<string
 
   return (
     <AtomicBox p={4} display="flex" flexDirection="column" gap={4}>
-      <AtomicText variant="h1" weight="bold" gradient>
+      <AtomicText order={1} weight="bold" gradient>
         🎮 Component Composition Examples
       </AtomicText>
 
-      <AtomicText variant="lg" color="secondary">
+      <AtomicText variant="lg" color="gray">
         These examples demonstrate how atomic design components work together
         to create complex, interactive interfaces.
       </AtomicText>
 
       {/* Registration Form */}
       <AtomicBox>
-        <AtomicText variant="h3" weight="semibold" mb={3}>
+        <AtomicText order={3} weight="semibold" mb={3}>
           Example 1: Registration Form
         </AtomicText>
         <RegistrationForm />
@@ -413,7 +413,7 @@ export const ComponentCompositionShowcase: React.FunctionComponent<Record<string
 
       {/* Player Leaderboard */}
       <AtomicBox>
-        <AtomicText variant="h3" weight="semibold" mb={3}>
+        <AtomicText order={3} weight="semibold" mb={3}>
           Example 2: Interactive Data Table
         </AtomicText>
         <PlayerLeaderboard />
@@ -421,7 +421,7 @@ export const ComponentCompositionShowcase: React.FunctionComponent<Record<string
 
       {/* HOC Enhanced Component */}
       <AtomicBox>
-        <AtomicText variant="h3" weight="semibold" mb={3}>
+        <AtomicText order={3} weight="semibold" mb={3}>
           Example 3: HOC Enhanced Component
         </AtomicText>
         <AtomicButton
@@ -435,7 +435,7 @@ export const ComponentCompositionShowcase: React.FunctionComponent<Record<string
           <AtomicBox>
             <EnhancedGameStats gameId="game-123" loading={true} />
             <AtomicButton
-              variant="outlined"
+              variant="outline"
               onClick={(e: React.MouseEvent) => gameStatsModal.close}
               mt={2}
             >

@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { ThemeProvider as MUIThemeProvider, Theme } from '@mui/material/styles';
 import { getRobloxTheme } from '../theme/robloxTheme';
 import { useAppDispatch, useAppSelector } from '../store';
 import { setTheme } from '../store/slices/uiSlice';
@@ -9,7 +8,7 @@ type ThemeMode = 'light' | 'dark' | 'system';
 interface ThemeContextType {
   mode: ThemeMode;
   actualMode: 'light' | 'dark';
-  theme: Theme;
+  theme: typeof import('../theme/robloxTheme').robloxTheme;
   toggleTheme: () => void;
   setThemeMode: (mode: ThemeMode) => void;
   isDark: boolean;
@@ -131,9 +130,7 @@ export const RobloxThemeProvider: React.FunctionComponent<ThemeProviderProps> = 
 
   return (
     <ThemeContext.Provider value={contextValue}>
-      <MUIThemeProvider theme={theme}>
-        {children}
-      </MUIThemeProvider>
+      {children}
     </ThemeContext.Provider>
   );
 };

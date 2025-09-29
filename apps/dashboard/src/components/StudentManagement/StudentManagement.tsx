@@ -1,545 +1,519 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import IconButton from '@mui/material/IconButton';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import TextField from '@mui/material/TextField';
-import Checkbox from '@mui/material/Checkbox';
-import Avatar from '@mui/material/Avatar';
-import Chip from '@mui/material/Chip';
-import Alert from '@mui/material/Alert';
-import CircularProgress from '@mui/material/CircularProgress';
-import Tooltip from '@mui/material/Tooltip';
-import InputAdornment from '@mui/material/InputAdornment';
-import Grid from '@mui/material/Grid';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Switch from '@mui/material/Switch';
+IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../IconutilsIcon/IconmuiIcon-Iconimports';
+IconimportIcon IconReactIcon, { IconuseStateIcon, IconuseEffectIcon, IconuseCallbackIcon } IconfromIcon 'Iconreact';
 
-import {
-  Delete as DeleteIcon,
-  PersonAdd as PersonAddIcon,
-  PersonRemove as PersonRemoveIcon,
-  Search as SearchIcon,
-  GroupAdd as GroupAddIcon,
-  School as SchoolIcon,
-  Check as CheckIcon,
-  Close as CloseIcon,
-  FilterList as FilterListIcon,
-} from '@mui/icons-material';
-import { useSnackbar } from 'notistack';
-import { apiClient } from '../../services/api';
-import { usePusher } from '../../hooks/usePusher';
+IconimportIcon {
+  IconDeleteIcon IconasIcon IconIconTrashIcon,
+  IconPersonAddIcon IconasIcon IconIconPersonAddIcon,
+  IconPersonRemoveIcon IconasIcon IconIconPersonRemoveIcon,
+  IconSearchIcon IconasIcon IconIconSearchIcon,
+  IconGroupAddIcon IconasIcon IconIconGroupAddIcon,
+  IconSchoolIcon IconasIcon IconIconSchoolIcon,
+  IconCheckIcon IconasIcon IconIconCheckIcon,
+  IconCloseIcon IconasIcon IconIconXIcon,
+  IconFilterListIcon IconasIcon IconIconFilterIcon,
+} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
+IconimportIcon { IconuseSnackbarIcon } IconfromIcon 'Iconnotistack';
+IconimportIcon { IconapiClientIcon } IconfromIcon '../../IconservicesIcon/Iconapi';
+IconimportIcon { IconusePusherIcon } IconfromIcon '../../IconhooksIcon/IconusePusher';
+IconimportIcon { IconIconIcon, IconIconCheckIcon, IconIconFilterIcon, IconIconGroupAddIcon, IconIconPersonAddIcon, IconIconPersonRemoveIcon, IconIconSchoolIcon, IconIconSearchIcon, IconIconTrashIcon, IconIconXIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
 
-interface Student {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  enrollmentDate?: string;
-  status: 'active' | 'inactive';
-  grade?: string;
-  lastActivity?: string;
+IconinterfaceIcon IconStudentIcon {
+  IconidIcon: IconstringIcon;
+  IconnameIcon: IconstringIcon;
+  IconemailIcon: IconstringIcon;
+  IconavatarIcon?: IconstringIcon;
+  IconenrollmentDateIcon?: IconstringIcon;
+  IconstatusIcon: 'Iconactive' | 'Iconinactive';
+  IcongradeIcon?: IconstringIcon;
+  IconlastActivityIcon?: IconstringIcon;
 }
 
-interface StudentManagementProps {
-  classId: string;
-  className: string;
-  teacherId: string;
-  maxStudents?: number;
-  onStudentCountChange?: (count: number) => void;
+IconinterfaceIcon IconStudentManagementPropsIcon {
+  IconclassIdIcon: IconstringIcon;
+  IconclassNameIcon: IconstringIcon;
+  IconteacherIdIcon: IconstringIcon;
+  IconmaxStudentsIcon?: IconnumberIcon;
+  IcononStudentCountChangeIcon?: (IconcountIcon: IconnumberIcon) => IconvoidIcon;
 }
 
-export const StudentManagement: React.FunctionComponent<StudentManagementProps> = ({
-  classId,
-  className,
-  teacherId,
-  maxStudents = 30,
-  onStudentCountChange,
+IconexportIcon IconconstIcon IconStudentManagementIcon: IconReactIcon.IconFunctionComponentIcon<IconStudentManagementPropsIcon> = ({
+  IconclassIdIcon,
+  IconclassNameIcon,
+  IconteacherIdIcon,
+  IconmaxStudentsIcon = Icon30Icon,
+  IcononStudentCountChangeIcon,
 }) => {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [availableStudents, setAvailableStudents] = useState<Student[]>([]);
-  const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
-  const [studentToRemove, setStudentToRemove] = useState<Student | null>(null);
-  const [batchMode, setBatchMode] = useState(false);
-  const [filterActive, setFilterActive] = useState(true);
-  const { enqueueSnackbar } = useSnackbar();
+  IconconstIcon [IconstudentsIcon, IconsetStudentsIcon] = IconuseStateIcon<IconStudentIcon[]>([]);
+  IconconstIcon [IconavailableStudentsIcon, IconsetAvailableStudentsIcon] = IconuseStateIcon<IconStudentIcon[]>([]);
+  IconconstIcon [IconselectedStudentsIcon, IconsetSelectedStudentsIcon] = IconuseStateIcon<IconSetIcon<IconstringIcon>>(IconnewIcon IconSetIcon());
+  IconconstIcon [IconloadingIcon, IconsetLoadingIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon [IconsearchTermIcon, IconsetSearchTermIcon] = IconuseStateIcon('');
+  IconconstIcon [IconaddDialogOpenIcon, IconsetAddDialogOpenIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon [IconremoveDialogOpenIcon, IconsetRemoveDialogOpenIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon [IconstudentToRemoveIcon, IconsetStudentToRemoveIcon] = IconuseStateIcon<IconStudentIcon | IconnullIcon>(IconnullIcon);
+  IconconstIcon [IconbatchModeIcon, IconsetBatchModeIcon] = IconuseStateIcon(IconfalseIcon);
+  IconconstIcon [IconfilterActiveIcon, IconsetFilterActiveIcon] = IconuseStateIcon(IcontrueIcon);
+  IconconstIcon { IconenqueueSnackbarIcon } = IconuseSnackbarIcon();
 
-  // Set up Pusher for real-time updates
-  const pusherClient = usePusher();
+  // IconSetIcon IconupIcon IconPusherIcon IconforIcon IconrealIcon-IcontimeIcon IconupdatesIcon
+  IconconstIcon IconpusherClientIcon = IconusePusherIcon();
 
-  useEffect(() => {
-    if (pusherClient && classId) {
-      const channel = pusherClient.subscribe(`class-${classId}`);
+  IconuseEffectIcon(() => {
+    IconifIcon (IconpusherClientIcon && IconclassIdIcon) {
+      IconconstIcon IconchannelIcon = IconpusherClientIcon.IconsubscribeIcon(`IconclassIcon-${IconclassIdIcon}`);
 
-      channel.bind('student-enrolled', (data: any) => {
-        handleStudentEnrolled(data);
+      IconchannelIcon.IconbindIcon('IconstudentIcon-Iconenrolled', (IcondataIcon: IconanyIcon) => {
+        IconhandleStudentEnrolledIcon(IcondataIcon);
       });
 
-      channel.bind('student-unenrolled', (data: any) => {
-        handleStudentUnenrolled(data);
+      IconchannelIcon.IconbindIcon('IconstudentIcon-Iconunenrolled', (IcondataIcon: IconanyIcon) => {
+        IconhandleStudentUnenrolledIcon(IcondataIcon);
       });
 
-      channel.bind('batch-enrollment', (data: any) => {
-        handleBatchEnrollment(data);
+      IconchannelIcon.IconbindIcon('IconbatchIcon-Iconenrollment', (IcondataIcon: IconanyIcon) => {
+        IconhandleBatchEnrollmentIcon(IcondataIcon);
       });
 
-      return () => {
-        channel.unbind_all();
-        pusherClient.unsubscribe(`class-${classId}`);
+      IconreturnIcon () => {
+        IconchannelIcon.Iconunbind_allIcon();
+        IconpusherClientIcon.IconunsubscribeIcon(`IconclassIcon-${IconclassIdIcon}`);
       };
     }
-  }, [pusherClient, classId]);
+  }, [IconpusherClientIcon, IconclassIdIcon]);
 
-  // Load enrolled students
-  const loadStudents = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await apiClient.get(`/api/v1/classes/${classId}/students`);
-      setStudents(response.data.data || []);
-      onStudentCountChange?.(response.data.data?.length || 0);
-    } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to load students', {
-        variant: 'error',
+  // IconLoadIcon IconenrolledIcon IconstudentsIcon
+  IconconstIcon IconloadStudentsIcon = IconuseCallbackIcon(IconasyncIcon () => {
+    IconsetLoadingIcon(IcontrueIcon);
+    IcontryIcon {
+      IconconstIcon IconresponseIcon = IconawaitIcon IconapiClientIcon.IcongetIcon(`/IconapiIcon/Iconv1Icon/IconclassesIcon/${IconclassIdIcon}/IconstudentsIcon`);
+      IconsetStudentsIcon(IconresponseIcon.IcondataIcon.IcondataIcon || []);
+      IcononStudentCountChangeIcon?.(IconresponseIcon.IcondataIcon.IcondataIcon?.IconlengthIcon || Icon0Icon);
+    } IconcatchIcon (IconerrorIcon: IconanyIcon) {
+      IconenqueueSnackbarIcon(IconerrorIcon.IconresponseIcon?.IcondataIcon?.IconmessageIcon || 'IconFailedIcon IcontoIcon IconloadIcon Iconstudents', {
+        IconvariantIcon: 'Iconerror',
       });
-    } finally {
-      setLoading(false);
+    } IconfinallyIcon {
+      IconsetLoadingIcon(IconfalseIcon);
     }
-  }, [classId, enqueueSnackbar, onStudentCountChange]);
+  }, [IconclassIdIcon, IconenqueueSnackbarIcon, IcononStudentCountChangeIcon]);
 
-  // Load available students for enrollment
-  const loadAvailableStudents = useCallback(async () => {
-    try {
-      const response = await apiClient.get('/api/v1/users/students', {
-        params: {
-          exclude_class: classId,
+  // IconLoadIcon IconavailableIcon IconstudentsIcon IconforIcon IconenrollmentIcon
+  IconconstIcon IconloadAvailableStudentsIcon = IconuseCallbackIcon(IconasyncIcon () => {
+    IcontryIcon {
+      IconconstIcon IconresponseIcon = IconawaitIcon IconapiClientIcon.IcongetIcon('/IconapiIcon/Iconv1Icon/IconusersIcon/Iconstudents', {
+        IconparamsIcon: {
+          Iconexclude_classIcon: IconclassIdIcon,
         },
       });
-      setAvailableStudents(response.data.data || []);
-    } catch (error: any) {
-      enqueueSnackbar('Failed to load available students', { variant: 'error' });
+      IconsetAvailableStudentsIcon(IconresponseIcon.IcondataIcon.IcondataIcon || []);
+    } IconcatchIcon (IconerrorIcon: IconanyIcon) {
+      IconenqueueSnackbarIcon('IconFailedIcon IcontoIcon IconloadIcon IconavailableIcon Iconstudents', { IconvariantIcon: 'Iconerror' });
     }
-  }, [classId, enqueueSnackbar]);
+  }, [IconclassIdIcon, IconenqueueSnackbarIcon]);
 
-  useEffect(() => {
-    loadStudents();
-  }, [loadStudents]);
+  IconuseEffectIcon(() => {
+    IconloadStudentsIcon();
+  }, [IconloadStudentsIcon]);
 
-  // Handle real-time updates
-  const handleStudentEnrolled = (data: any) => {
-    if (data.student) {
-      setStudents(prev => [...prev, data.student]);
-      setAvailableStudents(prev => prev.filter(s => s.id !== data.student.id));
-      onStudentCountChange?.(students.length + 1);
-      enqueueSnackbar(`${data.student.name} has been enrolled`, { variant: 'info' });
+  // IconHandleIcon IconrealIcon-IcontimeIcon IconupdatesIcon
+  IconconstIcon IconhandleStudentEnrolledIcon = (IcondataIcon: IconanyIcon) => {
+    IconifIcon (IcondataIcon.IconstudentIcon) {
+      IconsetStudentsIcon(IconprevIcon => [...IconprevIcon, IcondataIcon.IconstudentIcon]);
+      IconsetAvailableStudentsIcon(IconprevIcon => IconprevIcon.IconfilterIcon(IconsIcon => IconsIcon.IconidIcon !== IcondataIcon.IconstudentIcon.IconidIcon));
+      IcononStudentCountChangeIcon?.(IconstudentsIcon.IconlengthIcon + Icon1Icon);
+      IconenqueueSnackbarIcon(`${IcondataIcon.IconstudentIcon.IconnameIcon} IconhasIcon IconbeenIcon IconenrolledIcon`, { IconvariantIcon: 'Iconinfo' });
     }
   };
 
-  const handleStudentUnenrolled = (data: any) => {
-    if (data.studentId) {
-      const removedStudent = students.find(s => s.id === data.studentId);
-      setStudents(prev => prev.filter(s => s.id !== data.studentId));
-      if (removedStudent) {
-        setAvailableStudents(prev => [...prev, removedStudent]);
+  IconconstIcon IconhandleStudentUnenrolledIcon = (IcondataIcon: IconanyIcon) => {
+    IconifIcon (IcondataIcon.IconstudentIdIcon) {
+      IconconstIcon IconremovedStudentIcon = IconstudentsIcon.IconfindIcon(IconsIcon => IconsIcon.IconidIcon === IcondataIcon.IconstudentIdIcon);
+      IconsetStudentsIcon(IconprevIcon => IconprevIcon.IconfilterIcon(IconsIcon => IconsIcon.IconidIcon !== IcondataIcon.IconstudentIdIcon));
+      IconifIcon (IconremovedStudentIcon) {
+        IconsetAvailableStudentsIcon(IconprevIcon => [...IconprevIcon, IconremovedStudentIcon]);
       }
-      onStudentCountChange?.(students.length - 1);
-      enqueueSnackbar(`Student has been unenrolled`, { variant: 'info' });
+      IcononStudentCountChangeIcon?.(IconstudentsIcon.IconlengthIcon - Icon1Icon);
+      IconenqueueSnackbarIcon(`IconStudentIcon IconhasIcon IconbeenIcon IconunenrolledIcon`, { IconvariantIcon: 'Iconinfo' });
     }
   };
 
-  const handleBatchEnrollment = (data: any) => {
-    if (data.enrolled) {
-      loadStudents();
-      loadAvailableStudents();
-      enqueueSnackbar(`${data.enrolled.length} students have been enrolled`, {
-        variant: 'info'
+  IconconstIcon IconhandleBatchEnrollmentIcon = (IcondataIcon: IconanyIcon) => {
+    IconifIcon (IcondataIcon.IconenrolledIcon) {
+      IconloadStudentsIcon();
+      IconloadAvailableStudentsIcon();
+      IconenqueueSnackbarIcon(`${IcondataIcon.IconenrolledIcon.IconlengthIcon} IconstudentsIcon IconhaveIcon IconbeenIcon IconenrolledIcon`, {
+        IconvariantIcon: 'Iconinfo'
       });
     }
   };
 
-  // Enroll single student
-  const enrollStudent = async (studentId: string) => {
-    try {
-      await apiClient.post(`/api/v1/classes/${classId}/students/${studentId}`);
-      await loadStudents();
-      await loadAvailableStudents();
-      enqueueSnackbar('Student enrolled successfully', { variant: 'success' });
-    } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to enroll student', {
-        variant: 'error',
+  // IconEnrollIcon IconsingleIcon IconstudentIcon
+  IconconstIcon IconenrollStudentIcon = IconasyncIcon (IconstudentIdIcon: IconstringIcon) => {
+    IcontryIcon {
+      IconawaitIcon IconapiClientIcon.IconpostIcon(`/IconapiIcon/Iconv1Icon/IconclassesIcon/${IconclassIdIcon}/IconstudentsIcon/${IconstudentIdIcon}`);
+      IconawaitIcon IconloadStudentsIcon();
+      IconawaitIcon IconloadAvailableStudentsIcon();
+      IconenqueueSnackbarIcon('IconStudentIcon IconenrolledIcon Iconsuccessfully', { IconvariantIcon: 'Iconsuccess' });
+    } IconcatchIcon (IconerrorIcon: IconanyIcon) {
+      IconenqueueSnackbarIcon(IconerrorIcon.IconresponseIcon?.IcondataIcon?.IconmessageIcon || 'IconFailedIcon IcontoIcon IconenrollIcon Iconstudent', {
+        IconvariantIcon: 'Iconerror',
       });
     }
   };
 
-  // Unenroll single student
-  const unenrollStudent = async (studentId: string) => {
-    try {
-      await apiClient.delete(`/api/v1/classes/${classId}/students/${studentId}`);
-      await loadStudents();
-      await loadAvailableStudents();
-      setStudentToRemove(null);
-      setRemoveDialogOpen(false);
-      enqueueSnackbar('Student unenrolled successfully', { variant: 'success' });
-    } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to unenroll student', {
-        variant: 'error',
+  // IconUnenrollIcon IconsingleIcon IconstudentIcon
+  IconconstIcon IconunenrollStudentIcon = IconasyncIcon (IconstudentIdIcon: IconstringIcon) => {
+    IcontryIcon {
+      IconawaitIcon IconapiClientIcon.IcondeleteIcon(`/IconapiIcon/Iconv1Icon/IconclassesIcon/${IconclassIdIcon}/IconstudentsIcon/${IconstudentIdIcon}`);
+      IconawaitIcon IconloadStudentsIcon();
+      IconawaitIcon IconloadAvailableStudentsIcon();
+      IconsetStudentToRemoveIcon(IconnullIcon);
+      IconsetRemoveDialogOpenIcon(IconfalseIcon);
+      IconenqueueSnackbarIcon('IconStudentIcon IconunenrolledIcon Iconsuccessfully', { IconvariantIcon: 'Iconsuccess' });
+    } IconcatchIcon (IconerrorIcon: IconanyIcon) {
+      IconenqueueSnackbarIcon(IconerrorIcon.IconresponseIcon?.IcondataIcon?.IconmessageIcon || 'IconFailedIcon IcontoIcon IconunenrollIcon Iconstudent', {
+        IconvariantIcon: 'Iconerror',
       });
     }
   };
 
-  // Batch enroll students
-  const batchEnrollStudents = async () => {
-    if (selectedStudents.size === 0) {
-      enqueueSnackbar('Please select students to enroll', { variant: 'warning' });
-      return;
+  // IconBatchIcon IconenrollIcon IconstudentsIcon
+  IconconstIcon IconbatchEnrollStudentsIcon = IconasyncIcon () => {
+    IconifIcon (IconselectedStudentsIcon.IconsizeIcon === Icon0Icon) {
+      IconenqueueSnackbarIcon('IconPleaseIcon IconselectIcon IconstudentsIcon IcontoIcon Iconenroll', { IconvariantIcon: 'Iconwarning' });
+      IconreturnIcon;
     }
 
-    try {
-      await apiClient.post(`/api/v1/classes/${classId}/students/batch`, {
-        student_ids: Array.from(selectedStudents),
-        action: 'enroll',
+    IcontryIcon {
+      IconawaitIcon IconapiClientIcon.IconpostIcon(`/IconapiIcon/Iconv1Icon/IconclassesIcon/${IconclassIdIcon}/IconstudentsIcon/IconbatchIcon`, {
+        Iconstudent_idsIcon: IconArrayIcon.IconfromIcon(IconselectedStudentsIcon),
+        IconactionIcon: 'Iconenroll',
       });
-      await loadStudents();
-      await loadAvailableStudents();
-      setSelectedStudents(new Set());
-      setAddDialogOpen(false);
-      setBatchMode(false);
-      enqueueSnackbar(`${selectedStudents.size} students enrolled successfully`, {
-        variant: 'success',
+      IconawaitIcon IconloadStudentsIcon();
+      IconawaitIcon IconloadAvailableStudentsIcon();
+      IconsetSelectedStudentsIcon(IconnewIcon IconSetIcon());
+      IconsetAddDialogOpenIcon(IconfalseIcon);
+      IconsetBatchModeIcon(IconfalseIcon);
+      IconenqueueSnackbarIcon(`${IconselectedStudentsIcon.IconsizeIcon} IconstudentsIcon IconenrolledIcon IconsuccessfullyIcon`, {
+        IconvariantIcon: 'Iconsuccess',
       });
-    } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to enroll students', {
-        variant: 'error',
+    } IconcatchIcon (IconerrorIcon: IconanyIcon) {
+      IconenqueueSnackbarIcon(IconerrorIcon.IconresponseIcon?.IcondataIcon?.IconmessageIcon || 'IconFailedIcon IcontoIcon IconenrollIcon Iconstudents', {
+        IconvariantIcon: 'Iconerror',
       });
     }
   };
 
-  // Toggle student selection for batch operations
-  const toggleStudentSelection = (studentId: string) => {
-    const newSelection = new Set(selectedStudents);
-    if (newSelection.has(studentId)) {
-      newSelection.delete(studentId);
-    } else {
-      newSelection.add(studentId);
+  // IconToggleIcon IconstudentIcon IconselectionIcon IconforIcon IconbatchIcon IconoperationsIcon
+  IconconstIcon IcontoggleStudentSelectionIcon = (IconstudentIdIcon: IconstringIcon) => {
+    IconconstIcon IconnewSelectionIcon = IconnewIcon IconSetIcon(IconselectedStudentsIcon);
+    IconifIcon (IconnewSelectionIcon.IconhasIcon(IconstudentIdIcon)) {
+      IconnewSelectionIcon.IcondeleteIcon(IconstudentIdIcon);
+    } IconelseIcon {
+      IconnewSelectionIcon.IconaddIcon(IconstudentIdIcon);
     }
-    setSelectedStudents(newSelection);
+    IconsetSelectedStudentsIcon(IconnewSelectionIcon);
   };
 
-  // Filter students based on search
-  const filteredStudents = students.filter(student => {
-    const matchesSearch =
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = !filterActive || student.status === 'active';
-    return matchesSearch && matchesFilter;
+  // IconFilterIcon IconstudentsIcon IconbasedIcon IcononIcon IconsearchIcon
+  IconconstIcon IconfilteredStudentsIcon = IconstudentsIcon.IconfilterIcon(IconstudentIcon => {
+    IconconstIcon IconmatchesSearchIcon =
+      IconstudentIcon.IconnameIcon.IcontoLowerCaseIcon().IconincludesIcon(IconsearchTermIcon.IcontoLowerCaseIcon()) ||
+      IconstudentIcon.IconemailIcon.IcontoLowerCaseIcon().IconincludesIcon(IconsearchTermIcon.IcontoLowerCaseIcon());
+    IconconstIcon IconmatchesFilterIcon = !IconfilterActiveIcon || IconstudentIcon.IconstatusIcon === 'Iconactive';
+    IconreturnIcon IconmatchesSearchIcon && IconmatchesFilterIcon;
   });
 
-  const filteredAvailableStudents = availableStudents.filter(student =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchTerm.toLowerCase())
+  IconconstIcon IconfilteredAvailableStudentsIcon = IconavailableStudentsIcon.IconfilterIcon(IconstudentIcon =>
+    IconstudentIcon.IconnameIcon.IcontoLowerCaseIcon().IconincludesIcon(IconsearchTermIcon.IcontoLowerCaseIcon()) ||
+    IconstudentIcon.IconemailIcon.IcontoLowerCaseIcon().IconincludesIcon(IconsearchTermIcon.IcontoLowerCaseIcon())
   );
 
-  return (
-    <Box data-testid="student-management">
-      <Card>
-        <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Box display="flex" alignItems="center" gap={2}>
-              <SchoolIcon color="primary" />
-              <Typography variant="h6">
-                Student Management - {className}
-              </Typography>
-              <Chip
-                label={`${students.length} / ${maxStudents}`}
-                color={students.length >= maxStudents ? 'error' : 'primary'}
-                size="small"
+  IconreturnIcon (
+    <IconBoxIcon IcondataIcon-IcontestidIcon="IconstudentIcon-Iconmanagement">
+      <IconCardIcon>
+        <IconCardContentIcon>
+          <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="Iconcenter" IconmbIcon={Icon2Icon}>
+            <IconBoxIcon IcondisplayIcon="Iconflex" IconalignItemsIcon="Iconcenter" IcongapIcon={Icon2Icon}>
+              <IconIconSchoolIcon IconcolorIcon="Iconblue" />
+              <IconTypographyIcon IconorderIcon={Icon6Icon}>
+                IconStudentIcon IconManagementIcon - {IconclassNameIcon}
+              <IconIconIcon/IconTypographyIcon>
+              <IconChipIcon
+                IconlabelIcon={`${IconstudentsIcon.IconlengthIcon} / ${IconmaxStudentsIcon}`}
+                IconcolorIcon={IconstudentsIcon.IconlengthIcon >= IconmaxStudentsIcon ? 'Iconerror' : 'Iconprimary'}
+                IconsizeIcon="Iconsmall"
               />
-            </Box>
-            <Box display="flex" gap={1}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={filterActive}
-                    onChange={(e) => setFilterActive(e.target.checked)}
+            <IconIconIcon/IconBoxIcon>
+            <IconBoxIcon IcondisplayIcon="Iconflex" IcongapIcon={Icon1Icon}>
+              <IconFormControlLabelIcon
+                IconcontrolIcon={
+                  <IconSwitchIcon
+                    IconcheckedIcon={IconfilterActiveIcon}
+                    IcononChangeIcon={(IconeIcon) => IconsetFilterActiveIcon(IconeIcon.IcontargetIcon.IconcheckedIcon)}
                   />
                 }
-                label="Active Only"
+                IconlabelIcon="IconActiveIcon IconOnly"
               />
-              <Button
-                variant="contained"
-                startIcon={<PersonAddIcon />}
-                onClick={(e: React.MouseEvent) => () => {
-                  loadAvailableStudents();
-                  setAddDialogOpen(true);
+              <IconButtonIcon
+                IconvariantIcon="Iconfilled"
+                IconstartIconIcon={<IconIconPersonAddIcon />}
+                IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
+                  IconloadAvailableStudentsIcon();
+                  IconsetAddDialogOpenIcon(IcontrueIcon);
                 }}
-                disabled={students.length >= maxStudents}
-                data-testid="add-students-button"
+                IcondisabledIcon={IconstudentsIcon.IconlengthIcon >= IconmaxStudentsIcon}
+                IcondataIcon-IcontestidIcon="IconaddIcon-IconstudentsIcon-Iconbutton"
               >
-                Add Students
-              </Button>
-            </Box>
-          </Box>
+                IconAddIcon IconStudentsIcon
+              <IconIconIcon/IconButtonIcon>
+            <IconIconIcon/IconBoxIcon>
+          <IconIconIcon/IconBoxIcon>
 
-          <TextField
-            fullWidth
-            placeholder="Search students..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ mb: 2 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
+          <IconTextFieldIcon
+            IconfullWidthIcon
+            IconplaceholderIcon="IconSearchIcon IconstudentsIcon..."
+            IconvalueIcon={IconsearchTermIcon}
+            IcononChangeIcon={(IconeIcon) => IconsetSearchTermIcon(IconeIcon.IcontargetIcon.IconvalueIcon)}
+            IconstyleIcon={{ IconmbIcon: Icon2Icon }}
+            IconInputPropsIcon={{
+              IconstartAdornmentIcon: (
+                <IconInputAdornmentIcon IconpositionIcon="Iconstart">
+                  <IconIconSearchIcon />
+                <IconIconIcon/IconInputAdornmentIcon>
               ),
             }}
-            data-testid="search-students"
+            IcondataIcon-IcontestidIcon="IconsearchIcon-Iconstudents"
           />
 
-          {loading ? (
-            <Box display="flex" justifyContent="center" py={4}>
-              <CircularProgress />
-            </Box>
-          ) : filteredStudents.length === 0 ? (
-            <Alert severity="info">
-              {searchTerm
-                ? 'No students match your search criteria'
-                : 'No students enrolled in this class yet'}
-            </Alert>
+          {IconloadingIcon ? (
+            <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="Iconcenter" IconpyIcon={Icon4Icon}>
+              <IconCircularProgressIcon />
+            <IconIconIcon/IconBoxIcon>
+          ) : IconfilteredStudentsIcon.IconlengthIcon === Icon0Icon ? (
+            <IconAlertIcon IconseverityIcon="Iconinfo">
+              {IconsearchTermIcon
+                ? 'IconNoIcon IconstudentsIcon IconmatchIcon IconyourIcon IconsearchIcon Iconcriteria'
+                : 'IconNoIcon IconstudentsIcon IconenrolledIcon IconinIcon IconthisIcon IconclassIcon Iconyet'}
+            <IconIconIcon/IconAlertIcon>
           ) : (
-            <TableContainer component={Paper} elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-              <Table data-testid="enrolled-students-table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Student</TableCell>
-                    <TableCell>Email</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Enrolled Date</TableCell>
-                    <TableCell align="right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredStudents.map((student) => (
-                    <TableRow key={student.id} data-testid={`student-row-${student.id}`}>
-                      <TableCell>
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Avatar src={student.avatar} alt={student.name}>
-                            {student.name.charAt(0)}
-                          </Avatar>
-                          <Typography>{student.name}</Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>{student.email}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={student.status}
-                          color={student.status === 'active' ? 'success' : 'default'}
-                          size="small"
+            <IconTableContainerIcon IconcomponentIcon={IconPaperIcon} IconelevationIcon={Icon0Icon} IconstyleIcon={{ IconborderIcon: Icon1Icon, IconborderColorIcon: 'Icondivider' }}>
+              <IconTableIcon IcondataIcon-IcontestidIcon="IconenrolledIcon-IconstudentsIcon-Icontable">
+                <IconTableHeadIcon>
+                  <IconTableRowIcon>
+                    <IconTableCellIcon>IconStudentIcon<IconIconIcon/IconTableCellIcon>
+                    <IconTableCellIcon>IconEmailIcon<IconIconIcon/IconTableCellIcon>
+                    <IconTableCellIcon>IconStatusIcon<IconIconIcon/IconTableCellIcon>
+                    <IconTableCellIcon>IconEnrolledIcon IconDateIcon<IconIconIcon/IconTableCellIcon>
+                    <IconTableCellIcon IconalignIcon="Iconright">IconActionsIcon<IconIconIcon/IconTableCellIcon>
+                  <IconIconIcon/IconTableRowIcon>
+                <IconIconIcon/IconTableHeadIcon>
+                <IconTableBodyIcon>
+                  {IconfilteredStudentsIcon.IconmapIcon((IconstudentIcon) => (
+                    <IconTableRowIcon IconkeyIcon={IconstudentIcon.IconidIcon} IcondataIcon-IcontestidIcon={`IconstudentIcon-IconrowIcon-${IconstudentIcon.IconidIcon}`}>
+                      <IconTableCellIcon>
+                        <IconBoxIcon IcondisplayIcon="Iconflex" IconalignItemsIcon="Iconcenter" IcongapIcon={Icon1Icon}>
+                          <IconAvatarIcon IconsrcIcon={IconstudentIcon.IconavatarIcon} IconaltIcon={IconstudentIcon.IconnameIcon}>
+                            {IconstudentIcon.IconnameIcon.IconcharAtIcon(Icon0Icon)}
+                          <IconIconIcon/IconAvatarIcon>
+                          <IconTypographyIcon>{IconstudentIcon.IconnameIcon}<IconIconIcon/IconTypographyIcon>
+                        <IconIconIcon/IconBoxIcon>
+                      <IconIconIcon/IconTableCellIcon>
+                      <IconTableCellIcon>{IconstudentIcon.IconemailIcon}<IconIconIcon/IconTableCellIcon>
+                      <IconTableCellIcon>
+                        <IconChipIcon
+                          IconlabelIcon={IconstudentIcon.IconstatusIcon}
+                          IconcolorIcon={IconstudentIcon.IconstatusIcon === 'Iconactive' ? 'Iconsuccess' : 'Icondefault'}
+                          IconsizeIcon="Iconsmall"
                         />
-                      </TableCell>
-                      <TableCell>
-                        {student.enrollmentDate
-                          ? new Date(student.enrollmentDate).toLocaleDateString()
-                          : 'N/A'}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Tooltip title="Remove from class">
-                          <IconButton
-                            color="error"
-                            onClick={(e: React.MouseEvent) => () => {
-                              setStudentToRemove(student);
-                              setRemoveDialogOpen(true);
+                      <IconIconIcon/IconTableCellIcon>
+                      <IconTableCellIcon>
+                        {IconstudentIcon.IconenrollmentDateIcon
+                          ? IconnewIcon IconDateIcon(IconstudentIcon.IconenrollmentDateIcon).IcontoLocaleDateStringIcon()
+                          : 'IconNIcon/IconA'}
+                      <IconIconIcon/IconTableCellIcon>
+                      <IconTableCellIcon IconalignIcon="Iconright">
+                        <IconTooltipIcon IcontitleIcon="IconRemoveIcon IconfromIcon Iconclass">
+                          <IconIconButtonIcon
+                            IconcolorIcon="Iconred"
+                            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
+                              IconsetStudentToRemoveIcon(IconstudentIcon);
+                              IconsetRemoveDialogOpenIcon(IcontrueIcon);
                             }}
-                            data-testid={`remove-student-${student.id}`}
+                            IcondataIcon-IcontestidIcon={`IconremoveIcon-IconstudentIcon-${IconstudentIcon.IconidIcon}`}
                           >
-                            <PersonRemoveIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
+                            <IconIconPersonRemoveIcon />
+                          <IconIconIcon/IconIconButtonIcon>
+                        <IconIconIcon/IconTooltipIcon>
+                      <IconIconIcon/IconTableCellIcon>
+                    <IconIconIcon/IconTableRowIcon>
                   ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                <IconIconIcon/IconTableBodyIcon>
+              <IconIconIcon/IconTableIcon>
+            <IconIconIcon/IconTableContainerIcon>
           )}
-        </CardContent>
-      </Card>
+        <IconIconIcon/IconCardContentIcon>
+      <IconIconIcon/IconCardIcon>
 
-      {/* Add Students Dialog */}
-      <Dialog
-        open={addDialogOpen}
-        onClose={() => {
-          setAddDialogOpen(false);
-          setSelectedStudents(new Set());
-          setBatchMode(false);
-          setSearchTerm('');
+      {/* IconAddIcon IconStudentsIcon IconDialogIcon */}
+      <IconDialogIcon
+        IconopenIcon={IconaddDialogOpenIcon}
+        IcononCloseIcon={() => {
+          IconsetAddDialogOpenIcon(IconfalseIcon);
+          IconsetSelectedStudentsIcon(IconnewIcon IconSetIcon());
+          IconsetBatchModeIcon(IconfalseIcon);
+          IconsetSearchTermIcon('');
         }}
-        maxWidth="md"
-        fullWidth
-        data-testid="add-students-dialog"
+        IconmaxWidthIcon="Iconmd"
+        IconfullWidthIcon
+        IcondataIcon-IcontestidIcon="IconaddIcon-IconstudentsIcon-Icondialog"
       >
-        <DialogTitle>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6">Add Students to {className}</Typography>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={batchMode}
-                  onChange={(e) => {
-                    setBatchMode(e.target.checked);
-                    setSelectedStudents(new Set());
+        <IconDialogTitleIcon>
+          <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="Iconcenter">
+            <IconTypographyIcon IconorderIcon={Icon6Icon}>IconAddIcon IconStudentsIcon IcontoIcon {IconclassNameIcon}<IconIconIcon/IconTypographyIcon>
+            <IconFormControlLabelIcon
+              IconcontrolIcon={
+                <IconSwitchIcon
+                  IconcheckedIcon={IconbatchModeIcon}
+                  IcononChangeIcon={(IconeIcon) => {
+                    IconsetBatchModeIcon(IconeIcon.IcontargetIcon.IconcheckedIcon);
+                    IconsetSelectedStudentsIcon(IconnewIcon IconSetIcon());
                   }}
                 />
               }
-              label="Batch Mode"
+              IconlabelIcon="IconBatchIcon IconMode"
             />
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            placeholder="Search available students..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ mb: 2 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
+          <IconIconIcon/IconBoxIcon>
+        <IconIconIcon/IconDialogTitleIcon>
+        <IconDialogContentIcon>
+          <IconTextFieldIcon
+            IconfullWidthIcon
+            IconplaceholderIcon="IconSearchIcon IconavailableIcon IconstudentsIcon..."
+            IconvalueIcon={IconsearchTermIcon}
+            IcononChangeIcon={(IconeIcon) => IconsetSearchTermIcon(IconeIcon.IcontargetIcon.IconvalueIcon)}
+            IconstyleIcon={{ IconmbIcon: Icon2Icon }}
+            IconInputPropsIcon={{
+              IconstartAdornmentIcon: (
+                <IconInputAdornmentIcon IconpositionIcon="Iconstart">
+                  <IconIconSearchIcon />
+                <IconIconIcon/IconInputAdornmentIcon>
               ),
             }}
           />
 
-          {filteredAvailableStudents.length === 0 ? (
-            <Alert severity="info">No available students to add</Alert>
+          {IconfilteredAvailableStudentsIcon.IconlengthIcon === Icon0Icon ? (
+            <IconAlertIcon IconseverityIcon="Iconinfo">IconNoIcon IconavailableIcon IconstudentsIcon IcontoIcon IconaddIcon<IconIconIcon/IconAlertIcon>
           ) : (
-            <Grid container spacing={2}>
-              {filteredAvailableStudents.map((student) => (
-                <Grid item xs={12} sm={6} key={student.id}>
-                  <Card
-                    variant="outlined"
-                    sx={{
-                      cursor: 'pointer',
-                      bgcolor: selectedStudents.has(student.id) ? 'action.selected' : 'background.paper',
-                      '&:hover': { bgcolor: 'action.hover' },
+            <IconGridIcon IconcontainerIcon IconspacingIcon={Icon2Icon}>
+              {IconfilteredAvailableStudentsIcon.IconmapIcon((IconstudentIcon) => (
+                <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconsmIcon={Icon6Icon} IconkeyIcon={IconstudentIcon.IconidIcon}>
+                  <IconCardIcon
+                    IconvariantIcon="Iconoutline"
+                    IconstyleIcon={{
+                      IconcursorIcon: 'Iconpointer',
+                      IconbgcolorIcon: IconselectedStudentsIcon.IconhasIcon(IconstudentIcon.IconidIcon) ? 'IconactionIcon.Iconselected' : 'IconbackgroundIcon.Iconpaper',
+                      '&:Iconhover': { IconbgcolorIcon: 'IconactionIcon.Iconhover' },
                     }}
-                    onClick={(e: React.MouseEvent) => () => {
-                      if (batchMode) {
-                        toggleStudentSelection(student.id);
-                      } else {
-                        enrollStudent(student.id);
-                        setAddDialogOpen(false);
+                    IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
+                      IconifIcon (IconbatchModeIcon) {
+                        IcontoggleStudentSelectionIcon(IconstudentIcon.IconidIcon);
+                      } IconelseIcon {
+                        IconenrollStudentIcon(IconstudentIcon.IconidIcon);
+                        IconsetAddDialogOpenIcon(IconfalseIcon);
                       }
                     }}
-                    data-testid={`available-student-${student.id}`}
+                    IcondataIcon-IcontestidIcon={`IconavailableIcon-IconstudentIcon-${IconstudentIcon.IconidIcon}`}
                   >
-                    <CardContent>
-                      <Box display="flex" alignItems="center" justifyContent="space-between">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          {batchMode && (
-                            <Checkbox
-                              checked={selectedStudents.has(student.id)}
-                              onClick={(e: React.MouseEvent) => (e) => e.stopPropagation()}
-                              onChange={() => toggleStudentSelection(student.id)}
+                    <IconCardContentIcon>
+                      <IconBoxIcon IcondisplayIcon="Iconflex" IconalignItemsIcon="Iconcenter" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
+                        <IconBoxIcon IcondisplayIcon="Iconflex" IconalignItemsIcon="Iconcenter" IcongapIcon={Icon1Icon}>
+                          {IconbatchModeIcon && (
+                            <IconCheckboxIcon
+                              IconcheckedIcon={IconselectedStudentsIcon.IconhasIcon(IconstudentIcon.IconidIcon)}
+                              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => (IconeIcon) => IconeIcon.IconstopPropagationIcon()}
+                              IcononChangeIcon={() => IcontoggleStudentSelectionIcon(IconstudentIcon.IconidIcon)}
                             />
                           )}
-                          <Avatar src={student.avatar} alt={student.name}>
-                            {student.name.charAt(0)}
-                          </Avatar>
-                          <Box>
-                            <Typography variant="body1">{student.name}</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {student.email}
-                            </Typography>
-                          </Box>
-                        </Box>
-                        {!batchMode && (
-                          <PersonAddIcon color="action" />
+                          <IconAvatarIcon IconsrcIcon={IconstudentIcon.IconavatarIcon} IconaltIcon={IconstudentIcon.IconnameIcon}>
+                            {IconstudentIcon.IconnameIcon.IconcharAtIcon(Icon0Icon)}
+                          <IconIconIcon/IconAvatarIcon>
+                          <IconBoxIcon>
+                            <IconTypographyIcon IconsizeIcon="Iconmd">{IconstudentIcon.IconnameIcon}<IconIconIcon/IconTypographyIcon>
+                            <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
+                              {IconstudentIcon.IconemailIcon}
+                            <IconIconIcon/IconTypographyIcon>
+                          <IconIconIcon/IconBoxIcon>
+                        <IconIconIcon/IconBoxIcon>
+                        {!IconbatchModeIcon && (
+                          <IconIconPersonAddIcon IconcolorIcon="Iconaction" />
                         )}
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
+                      <IconIconIcon/IconBoxIcon>
+                    <IconIconIcon/IconCardContentIcon>
+                  <IconIconIcon/IconCardIcon>
+                <IconIconIcon/IconGridIcon>
               ))}
-            </Grid>
+            <IconIconIcon/IconGridIcon>
           )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={(e: React.MouseEvent) => () => {
-            setAddDialogOpen(false);
-            setSelectedStudents(new Set());
-            setBatchMode(false);
-            setSearchTerm('');
+        <IconIconIcon/IconDialogContentIcon>
+        <IconDialogActionsIcon>
+          <IconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
+            IconsetAddDialogOpenIcon(IconfalseIcon);
+            IconsetSelectedStudentsIcon(IconnewIcon IconSetIcon());
+            IconsetBatchModeIcon(IconfalseIcon);
+            IconsetSearchTermIcon('');
           }}>
-            Cancel
-          </Button>
-          {batchMode && (
-            <Button
-              variant="contained"
-              startIcon={<GroupAddIcon />}
-              onClick={(e: React.MouseEvent) => batchEnrollStudents}
-              disabled={selectedStudents.size === 0}
+            IconCancelIcon
+          <IconIconIcon/IconButtonIcon>
+          {IconbatchModeIcon && (
+            <IconButtonIcon
+              IconvariantIcon="Iconfilled"
+              IconstartIconIcon={<IconIconGroupAddIcon />}
+              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconbatchEnrollStudentsIcon}
+              IcondisabledIcon={IconselectedStudentsIcon.IconsizeIcon === Icon0Icon}
             >
-              Add {selectedStudents.size} Students
-            </Button>
+              IconAddIcon {IconselectedStudentsIcon.IconsizeIcon} IconStudentsIcon
+            <IconIconIcon/IconButtonIcon>
           )}
-        </DialogActions>
-      </Dialog>
+        <IconIconIcon/IconDialogActionsIcon>
+      <IconIconIcon/IconDialogIcon>
 
-      {/* Remove Student Confirmation Dialog */}
-      <Dialog
-        open={removeDialogOpen}
-        onClose={() => {
-          setRemoveDialogOpen(false);
-          setStudentToRemove(null);
+      {/* IconRemoveIcon IconStudentIcon IconConfirmationIcon IconDialogIcon */}
+      <IconDialogIcon
+        IconopenIcon={IconremoveDialogOpenIcon}
+        IcononCloseIcon={() => {
+          IconsetRemoveDialogOpenIcon(IconfalseIcon);
+          IconsetStudentToRemoveIcon(IconnullIcon);
         }}
-        data-testid="remove-student-dialog"
+        IcondataIcon-IcontestidIcon="IconremoveIcon-IconstudentIcon-Icondialog"
       >
-        <DialogTitle>Confirm Removal</DialogTitle>
-        <DialogContent>
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            This action will remove the student from the class. They can be re-enrolled later if needed.
-          </Alert>
-          {studentToRemove && (
-            <Typography>
-              Are you sure you want to remove <strong>{studentToRemove.name}</strong> from {className}?
-            </Typography>
+        <IconDialogTitleIcon>IconConfirmIcon IconRemovalIcon<IconIconIcon/IconDialogTitleIcon>
+        <IconDialogContentIcon>
+          <IconAlertIcon IconseverityIcon="Iconwarning" IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
+            IconThisIcon IconactionIcon IconwillIcon IconremoveIcon IcontheIcon IconstudentIcon IconfromIcon IcontheIcon IconclassIcon. IconTheyIcon IconcanIcon IconbeIcon IconreIcon-IconenrolledIcon IconlaterIcon IconifIcon IconneededIcon.
+          <IconIconIcon/IconAlertIcon>
+          {IconstudentToRemoveIcon && (
+            <IconTypographyIcon>
+              IconAreIcon IconyouIcon IconsureIcon IconyouIcon IconwantIcon IcontoIcon IconremoveIcon <IconstrongIcon>{IconstudentToRemoveIcon.IconnameIcon}<IconIconIcon/IconstrongIcon> IconfromIcon {IconclassNameIcon}?
+            <IconIconIcon/IconTypographyIcon>
           )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={(e: React.MouseEvent) => () => {
-            setRemoveDialogOpen(false);
-            setStudentToRemove(null);
+        <IconIconIcon/IconDialogContentIcon>
+        <IconDialogActionsIcon>
+          <IconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
+            IconsetRemoveDialogOpenIcon(IconfalseIcon);
+            IconsetStudentToRemoveIcon(IconnullIcon);
           }}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={(e: React.MouseEvent) => () => studentToRemove && unenrollStudent(studentToRemove.id)}
+            IconCancelIcon
+          <IconIconIcon/IconButtonIcon>
+          <IconButtonIcon
+            IconvariantIcon="Iconfilled"
+            IconcolorIcon="Iconred"
+            IconstartIconIcon={<IconIconTrashIcon />}
+            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconstudentToRemoveIcon && IconunenrollStudentIcon(IconstudentToRemoveIcon.IconidIcon)}
           >
-            Remove Student
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+            IconRemoveIcon IconStudentIcon
+          <IconIconIcon/IconButtonIcon>
+        <IconIconIcon/IconDialogActionsIcon>
+      <IconIconIcon/IconDialogIcon>
+    <IconIconIcon/IconBoxIcon>
   );
 };

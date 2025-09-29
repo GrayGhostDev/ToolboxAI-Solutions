@@ -1,3 +1,4 @@
+import { Box, Button, Text, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 /**
  * Roblox Themed Dashboard
  * 
@@ -5,45 +6,37 @@
  * with futuristic design, character integration, and 3D icons
  */
 import React, { useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
-import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Grid from '@mui/material/Grid';
-import LinearProgress from '@mui/material/LinearProgress';
-import Avatar from '@mui/material/Avatar';
-import Badge from '@mui/material/Badge';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Fade from '@mui/material/Fade';
-import Slide from '@mui/material/Slide';
-import Zoom from '@mui/material/Zoom';
-import { useTheme } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
 import {
-  RocketLaunch,
-  Star,
-  EmojiEvents,
-  TrendingUp,
-  School,
-  SportsEsports,
-  Psychology,
-  Groups,
-  Games,
-  AutoAwesome,
-  PlayArrow,
-  Pause,
-  Refresh
-} from '@mui/icons-material';
-import { ThemeProvider } from '@mui/material/styles';
+  IconHome, IconUser, IconSettings, IconLogout, IconChevronDown,
+  IconChevronUp, IconChevronLeft, IconChevronRight, IconMenu,
+  IconX, IconCheck, IconPlus, IconMinus, IconEdit, IconTrash,
+  IconSearch, IconFilter, IconDownload, IconUpload, IconEye,
+  IconEyeOff, IconBell, IconMessage, IconStar, IconHeart,
+  IconShare, IconRefresh, IconLogin, IconSchool, IconBook,
+  IconChartBar, IconPalette, IconMoon, IconSun, IconPlayerPlay,
+  IconPlayerPause, IconPlayerStop, IconVolume, IconVolumeOff,
+  IconInfoCircle, IconAlertTriangle, IconCircleX, IconCircleCheck,
+  IconArrowLeft, IconArrowRight, IconSend, IconDeviceFloppy,
+  IconPrinter, IconHelp, IconHelpCircle, IconLock, IconLockOpen,
+  IconMail, IconPhone, IconMapPin, IconMap, IconCalendar, IconClock,
+  IconWifi, IconWifiOff, IconBluetooth, IconBattery, IconCamera,
+  IconMicrophone, IconMicrophoneOff, IconVideo, IconVideoOff,
+  IconPhoto, IconPaperclip, IconCloud, IconCloudUpload,
+  IconCloudDownload, IconFolder, IconFolderOpen, IconFolderPlus,
+  IconFile, IconFileText, IconClipboard, IconBan, IconFlag,
+  IconBookmark, IconShoppingCart, IconUserCircle, IconMoodSmile,
+  IconMoodSad, IconThumbUp, IconThumbDown, IconMessages,
+  IconMessageQuestion, IconSpeakerphone, IconBellRinging,
+  IconBellOff, IconCalendarEvent, IconCalendarStats, IconAlarm,
+  IconAlarmOff, IconHistory, IconRefreshOff, IconRefreshAlert,
+  IconDashboard, IconUsers, IconDotsVertical, IconDots,
+  IconReportAnalytics
+} from '@tabler/icons-react';
 import { robloxTheme } from '../..//robloxTheme';
 import RobloxDashboardHeader from '../roblox/RobloxDashboardHeader';
 import RobloxDashboardGrid from '../roblox/RobloxDashboardGrid';
 import RobloxCharacterAvatar from '../roblox/RobloxCharacterAvatar';
+import { IconAutoAwesome, IconEmojiEvents, IconGames, IconGroups, IconPlayerPause, IconPlayerPlay, IconPsychology, IconRefresh, IconRocketLaunch, IconSchool, IconSportsEsports, IconStar, IconTrendingUp } from '@tabler/icons-react';
 interface RobloxThemedDashboardProps {
   onNavigate?: (path: string) => void;
   onItemClick?: (item: any) => void;
@@ -85,7 +78,7 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
     return (
       <ThemeProvider theme={robloxTheme}>
         <Box
-          sx={{
+          style={{
             minHeight: '100vh',
             background: `linear-gradient(135deg, ${robloxTheme.palette.background.default}, ${alpha(robloxTheme.palette.primary.main, 0.1)})`,
             display: 'flex',
@@ -96,7 +89,7 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
           }}
         >
           <Box
-            sx={{
+            style={{
               width: 80,
               height: 80,
               borderRadius: '50%',
@@ -111,11 +104,11 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
               }
             }}
           >
-            <RocketLaunch sx={{ fontSize: 40, color: 'white' }} />
+            <IconRocketLaunch style={{ fontSize: 40, color: 'white' }} />
           </Box>
-          <Typography
-            variant="h4"
-            sx={{
+          <Text
+            order={4}
+            style={{
               fontWeight: 700,
               background: `linear-gradient(135deg, ${robloxTheme.palette.primary.main}, ${robloxTheme.palette.secondary.main})`,
               backgroundClip: 'text',
@@ -124,7 +117,7 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
             }}
           >
             Loading Space Station...
-          </Typography>
+          </Text>
         </Box>
       </ThemeProvider>
     );
@@ -132,7 +125,7 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
   return (
     <ThemeProvider theme={robloxTheme}>
       <Box
-        sx={{
+        style={{
           minHeight: '100vh',
           background: `linear-gradient(135deg, ${robloxTheme.palette.background.default}, ${alpha(robloxTheme.palette.primary.main, 0.05)})`,
           position: 'relative',
@@ -141,7 +134,7 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
       >
         {/* Animated background elements */}
         <Box
-          sx={{
+          style={{
             position: 'absolute',
             top: 0,
             left: 0,
@@ -160,7 +153,7 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
           }}
         />
         {/* Main content */}
-        <Box sx={{ position: 'relative', zIndex: 1 }}>
+        <Box style={{ position: 'relative', zIndex: 1 }}>
           {/* Header */}
           <RobloxDashboardHeader
             title="ToolBoxAI Space Station"
@@ -172,11 +165,11 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
             onProfileClick={() => console.log('Profile clicked')}
           />
           {/* Main dashboard content */}
-          <Container maxWidth="xl" sx={{ py: 4 }}>
+          <Container maxWidth="xl" style={{ py: 4 }}>
             {/* Welcome section */}
             <Fade in={true} timeout={1000}>
               <Card
-                sx={{
+                style={{
                   mb: 4,
                   background: `linear-gradient(145deg, ${robloxTheme.palette.background.paper}, ${alpha(robloxTheme.palette.primary.main, 0.05)})`,
                   border: `2px solid ${alpha(robloxTheme.palette.primary.main, 0.2)}`,
@@ -185,12 +178,12 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
                   position: 'relative'
                 }}
               >
-                <CardContent sx={{ p: 4 }}>
-                  <Grid container spacing={4} alignItems="center">
-                    <Grid item xs={12} md={8}>
-                      <Typography
-                        variant="h3"
-                        sx={{
+                <CardContent style={{ p: 4 }}>
+                  <SimpleGrid spacing={4} alignItems="center">
+                    <Box xs={12} md={8}>
+                      <Text
+                        order={3}
+                        style={{
                           fontWeight: 800,
                           mb: 2,
                           background: `linear-gradient(135deg, ${robloxTheme.palette.primary.main}, ${robloxTheme.palette.secondary.main})`,
@@ -200,10 +193,10 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
                         }}
                       >
                         Welcome to Your Learning Universe! 🚀
-                      </Typography>
-                      <Typography
-                        variant="h6"
-                        sx={{
+                      </Text>
+                      <Text
+                        order={6}
+                        style={{
                           color: robloxTheme.palette.text.secondary,
                           mb: 3,
                           lineHeight: 1.6
@@ -211,39 +204,39 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
                       >
                         Explore, learn, and grow with our interactive 3D tools and characters. 
                         Your space adventure begins here!
-                      </Typography>
+                      </Text>
                       <Stack direction="row" spacing={2} flexWrap="wrap">
                         <Chip
-                          icon={<Star />}
+                          icon={<IconStar />}
                           label="Level 5 Explorer"
-                          sx={{
+                          style={{
                             background: `linear-gradient(135deg, ${robloxTheme.palette.warning.main}, ${alpha(robloxTheme.palette.warning.main, 0.7)})`,
                             color: 'white',
                             fontWeight: 600
                           }}
                         />
                         <Chip
-                          icon={<EmojiEvents />}
+                          icon={<IconEmojiEvents />}
                           label="12 Achievements"
-                          sx={{
+                          style={{
                             background: `linear-gradient(135deg, ${robloxTheme.palette.secondary.main}, ${alpha(robloxTheme.palette.secondary.main, 0.7)})`,
                             color: 'white',
                             fontWeight: 600
                           }}
                         />
                         <Chip
-                          icon={<TrendingUp />}
+                          icon={<IconTrendingUp />}
                           label="85% Progress"
-                          sx={{
+                          style={{
                             background: `linear-gradient(135deg, ${robloxTheme.palette.success.main}, ${alpha(robloxTheme.palette.success.main, 0.7)})`,
                             color: 'white',
                             fontWeight: 600
                           }}
                         />
                       </Stack>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    </SimpleGrid>
+                    <Box xs={12} md={4}>
+                      <Box style={{ display: 'flex', justifyContent: 'center' }}>
                         <RobloxCharacterAvatar
                           character={{
                             name: 'Astro Explorer',
@@ -259,8 +252,8 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
                           onClick={(e: React.MouseEvent) => () => console.log('Character clicked')}
                         />
                       </Box>
-                    </Grid>
-                  </Grid>
+                    </SimpleGrid>
+                  </SimpleGrid>
                 </CardContent>
               </Card>
             </Fade>
@@ -274,7 +267,7 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
             {/* Quick Actions */}
             <Fade in={true} timeout={2000}>
               <Card
-                sx={{
+                style={{
                   mt: 4,
                   background: `linear-gradient(145deg, ${robloxTheme.palette.background.paper}, ${alpha(robloxTheme.palette.secondary.main, 0.05)})`,
                   border: `2px solid ${alpha(robloxTheme.palette.secondary.main, 0.2)}`,
@@ -282,10 +275,10 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
                   overflow: 'hidden'
                 }}
               >
-                <CardContent sx={{ p: 4 }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
+                <CardContent style={{ p: 4 }}>
+                  <Text
+                    order={5}
+                    style={{
                       fontWeight: 700,
                       mb: 3,
                       color: robloxTheme.palette.secondary.main,
@@ -293,20 +286,20 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
                     }}
                   >
                     Quick Actions
-                  </Typography>
-                  <Grid container spacing={3}>
+                  </Text>
+                  <SimpleGrid spacing={3}>
                     {[
-                      { icon: School, label: 'Start Learning', color: robloxTheme.palette.primary.main },
-                      { icon: SportsEsports, label: 'Play Games', color: robloxTheme.palette.secondary.main },
-                      { icon: Psychology, label: 'AI Assistant', color: robloxTheme.palette.info.main },
-                      { icon: Groups, label: 'Join Class', color: robloxTheme.palette.warning.main }
+                      { icon: IconSchool, label: 'Start Learning', color: robloxTheme.palette.primary.main },
+                      { icon: IconSportsEsports, label: 'Play Games', color: robloxTheme.palette.secondary.main },
+                      { icon: IconPsychology, label: 'AI Assistant', color: robloxTheme.palette.info.main },
+                      { icon: IconGroups, label: 'Join Class', color: robloxTheme.palette.warning.main }
                     ].map((action, index) => (
-                      <Grid item xs={6} md={3} key={index}>
+                      <Box xs={6} md={3} key={index}>
                         <Button
                           fullWidth
-                          variant="contained"
+                          variant="filled"
                           startIcon={<action.icon />}
-                          sx={{
+                          style={{
                             py: 2,
                             background: `linear-gradient(135deg, ${action.color}, ${alpha(action.color, 0.7)})`,
                             '&:hover': {
@@ -318,9 +311,9 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
                         >
                           {action.label}
                         </Button>
-                      </Grid>
+                      </SimpleGrid>
                     ))}
-                  </Grid>
+                  </SimpleGrid>
                 </CardContent>
               </Card>
             </Fade>

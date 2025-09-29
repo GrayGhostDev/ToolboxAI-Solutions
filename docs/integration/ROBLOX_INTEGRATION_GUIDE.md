@@ -13,9 +13,24 @@ The Rojo server is configured to run on localhost port 34872 for all ToolboxAI-S
 ## Architecture Components
 
 ### 1. Backend Services
+- **Encryption Service** (`apps/backend/services/encryption.py`)
+  - AES-256 encryption using Fernet cipher
+  - Secure credential storage and key rotation
+
+- **Credential Manager** (`apps/backend/services/credential_manager.py`)
+  - Encrypted credential access with audit logging
+  - IP whitelisting and access control
+  - Automatic credential rotation support
+
+- **Roblox Pusher Service** (`apps/backend/services/roblox_pusher.py`)
+  - Real-time communication via Pusher channels
+  - Event notifications for all stages
+  - Private and presence channel authentication
+
 - **OAuth2 Authentication Service** (`apps/backend/services/roblox_auth.py`)
   - Implements Roblox OAuth2 with PKCE flow (2025 standards)
-  - Secure token management with refresh capabilities
+  - Secure token management with encryption
+  - Automatic token refresh
 
 - **Open Cloud API Client** (`apps/backend/services/open_cloud_client.py`)
   - Complete Open Cloud API v2 implementation
@@ -23,24 +38,28 @@ The Rojo server is configured to run on localhost port 34872 for all ToolboxAI-S
 
 - **Rojo Manager** (`apps/backend/services/rojo_manager.py`)
   - Enhanced Rojo 7.5.1 integration
-  - Multi-project support with automatic port allocation
+  - Multi-project support with port 34872
 
 - **Conversation Flow Manager** (`apps/backend/core/prompts/enhanced_conversation_flow.py`)
   - 8-stage conversation system with LCEL chains
-  - AI-guided content generation
+  - AI-guided content generation with Pusher progress updates
 
 ### 2. API Endpoints
 - **Authentication**
-  - `POST /api/v1/roblox/auth/initiate` - Start OAuth2 flow
-  - `GET /api/v1/roblox/auth/callback` - OAuth2 callback
+  - `POST /api/v1/roblox/auth/initiate` - Start OAuth2 flow with PKCE
+  - `GET /api/v1/roblox/auth/callback` - OAuth2 callback with state validation
   - `POST /api/v1/roblox/auth/refresh` - Refresh access token
   - `POST /api/v1/roblox/auth/revoke` - Revoke tokens
+
+- **Pusher Real-time**
+  - `POST /api/v1/roblox/pusher/auth` - Authenticate Pusher channels
+  - `GET /api/v1/roblox/pusher/status` - Check Pusher connection status
 
 - **Conversation Flow**
   - `POST /api/v1/roblox/conversation/start` - Begin 8-stage process
   - `POST /api/v1/roblox/conversation/input` - Process user input
   - `POST /api/v1/roblox/conversation/advance` - Move to next stage
-  - `POST /api/v1/roblox/conversation/generate` - Generate environment
+  - `POST /api/v1/roblox/conversation/generate` - Generate environment with Pusher progress
 
 - **Rojo Management**
   - `GET /api/v1/roblox/rojo/check` - Check Rojo installation
@@ -87,21 +106,34 @@ The Rojo server is configured to run on localhost port 34872 for all ToolboxAI-S
 ### Backend Setup
 
 1. **Environment Variables**
-   Create `.env` file in project root:
+   Create `.env.local` file in project root with encrypted credentials:
    ```bash
-   # Roblox OAuth2
-   ROBLOX_CLIENT_ID=your-client-id
-   ROBLOX_CLIENT_SECRET=your-client-secret
+   # Security - Generate encryption key first
+   # python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+   ENCRYPTION_KEY=your-44-byte-base64-encryption-key
 
-   # Open Cloud API
-   ROBLOX_API_KEY=your-api-key
-   ROBLOX_UNIVERSE_ID=your-universe-id
+   # Encrypted Roblox Credentials (AES-256 encrypted)
+   ROBLOX_API_KEY_ENCRYPTED=encrypted-api-key
+   ROBLOX_CLIENT_SECRET_ENCRYPTED=encrypted-client-secret
 
-   # Pusher
+   # Roblox Configuration
+   ROBLOX_CLIENT_ID=2214511122270781418
+   ROBLOX_UNIVERSE_ID=8505376973
+   ROJO_SERVER_PORT=34872
+   ENABLE_ROBLOX_INTEGRATION=true
+
+   # Pusher Configuration
    PUSHER_APP_ID=your-app-id
    PUSHER_KEY=your-key
    PUSHER_SECRET=your-secret
-   PUSHER_CLUSTER=your-cluster
+   PUSHER_CLUSTER=us2
+
+   # Security Settings
+   ENABLE_CREDENTIAL_AUDIT=true
+   CREDENTIAL_CACHE_TTL=300
+   ROBLOX_API_RATE_LIMIT=100
+   ENABLE_IP_WHITELIST=true
+   ROBLOX_ALLOWED_IPS=127.0.0.1,::1
 
    # Database
    DATABASE_URL=postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev
@@ -109,6 +141,11 @@ The Rojo server is configured to run on localhost port 34872 for all ToolboxAI-S
 
    # OpenAI
    OPENAI_API_KEY=your-openai-key
+   ```
+
+   To generate encrypted credentials:
+   ```bash
+   python scripts/generate_encrypted_roblox_config.py
    ```
 
 2. **Install Dependencies**
@@ -125,7 +162,7 @@ The Rojo server is configured to run on localhost port 34872 for all ToolboxAI-S
 
 4. **Start Backend**
    ```bash
-   uvicorn apps.backend.main:app --host 127.0.0.1 --port 8008 --reload
+   uvicorn apps.backend.main:app --host 127.0.0.1 --port 8009 --reload
    ```
 
 ### Dashboard Setup
@@ -133,10 +170,11 @@ The Rojo server is configured to run on localhost port 34872 for all ToolboxAI-S
 1. **Environment Variables**
    Create `apps/dashboard/.env.local`:
    ```bash
-   VITE_API_BASE_URL=http://127.0.0.1:8008
+   VITE_API_BASE_URL=http://127.0.0.1:8009
    VITE_PUSHER_KEY=your-pusher-key
-   VITE_PUSHER_CLUSTER=your-cluster
-   VITE_PUSHER_AUTH_ENDPOINT=/api/v1/pusher/auth
+   VITE_PUSHER_CLUSTER=us2
+   VITE_PUSHER_AUTH_ENDPOINT=/api/v1/roblox/pusher/auth
+   VITE_ENABLE_PUSHER=true
    ```
 
 2. **Install Dependencies**
@@ -165,7 +203,7 @@ The Rojo server is configured to run on localhost port 34872 for all ToolboxAI-S
 3. **Configure Plugin**
    - Open plugin from Plugins toolbar
    - Click "Settings"
-   - Enter backend URL: `http://127.0.0.1:8008`
+   - Enter backend URL: `http://127.0.0.1:8009`
    - Authenticate with OAuth2
 
 ## Usage Workflow
@@ -256,69 +294,201 @@ await client.create_asset(
 
 ## Real-time Features
 
-### Pusher Channels
-- `roblox-conversation-{session_id}` - Conversation updates
-- `roblox-generation-{session_id}` - Generation progress
-- `roblox-sync-{project_id}` - Rojo sync status
+### Pusher Channels Configuration
+- **Private Channels** (require authentication)
+  - `private-roblox-conversation-{session_id}` - Conversation flow updates
+  - `private-roblox-generation-{session_id}` - Content generation progress
+  - `private-roblox-sync-{project_id}` - Rojo sync status
+  - `private-roblox-auth-{user_id}` - Authentication events
+  - `private-roblox-studio-{studio_id}` - Studio plugin events
+
+- **Presence Channels** (show who's online)
+  - `presence-roblox-workspace-{workspace_id}` - Collaborative workspace
 
 ### Event Types
 ```typescript
-// Conversation Events
-interface ConversationEvent {
-  type: 'stage_changed' | 'input_processed' | 'generation_started';
-  data: {
-    stage: string;
-    progress: number;
-    message: string;
+// Conversation Events (from RobloxEventType enum)
+type ConversationEvents =
+  | 'stage-changed'        // Stage transition
+  | 'input-processed'      // User input handled
+  | 'generation-started'   // Generation begins
+  | 'generation-progress'  // Progress update
+  | 'generation-complete'; // Generation finished
+
+// Sync Events
+type SyncEvents =
+  | 'rojo-connected'       // Rojo connected to Studio
+  | 'rojo-disconnected'    // Rojo disconnected
+  | 'rojo-sync-update'     // Files syncing
+  | 'rojo-build-complete'; // Build finished
+
+// Auth Events
+type AuthEvents =
+  | 'auth-success'         // Authentication successful
+  | 'auth-failed'          // Authentication failed
+  | 'token-refreshed'      // Token refreshed
+  | 'token-revoked';       // Token revoked
+
+// Studio Events
+type StudioEvents =
+  | 'plugin-connected'     // Plugin connected
+  | 'plugin-disconnected'  // Plugin disconnected
+  | 'content-deployed'     // Content deployed
+  | 'asset-uploaded';      // Asset uploaded
+
+// Error Events
+type ErrorEvents = 'error-occurred';  // Any error
+
+// Event Data Structures
+interface StageChangedData {
+  session_id: string;
+  stage: string;
+  progress: number;
+  message: string;
+  timestamp: string;
+  metadata?: Record<string, any>;
+}
+
+interface GenerationProgressData {
+  session_id: string;
+  progress: number;
+  status: string;
+  timestamp: string;
+  details?: {
+    current_step: string;
+    total_steps: number;
+    artifacts_created: string[];
   };
 }
 
-// Generation Events
-interface GenerationEvent {
-  type: 'asset_created' | 'script_generated' | 'environment_built';
-  data: {
-    assetId: string;
-    assetType: string;
-    status: 'success' | 'error';
-  };
+interface RojoSyncUpdateData {
+  project_id: string;
+  files_synced: number;
+  files_pending: number;
+  sync_status: string;
+  timestamp: string;
 }
 ```
 
 ## API Examples
 
+### Pusher Channel Authentication
+```typescript
+// Initialize Pusher client
+const pusher = new Pusher('your-pusher-key', {
+  cluster: 'us2',
+  auth: {
+    endpoint: 'http://127.0.0.1:8009/api/v1/roblox/pusher/auth',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`
+    }
+  }
+});
+```
+
 ### Starting Conversation
 ```typescript
-const response = await fetch('http://127.0.0.1:8008/api/v1/roblox/conversation/start', {
+const response = await fetch('http://127.0.0.1:8009/api/v1/roblox/conversation/start', {
   method: 'POST',
   headers: {
     'Authorization': `Bearer ${accessToken}`,
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
-    initial_message: 'I want to create a math learning environment'
+    user_id: 'user_123',
+    initial_message: 'I want to create a math learning environment',
+    context: {
+      grade_level: 5,
+      subject: 'mathematics'
+    }
   })
 });
 
-const { session_id, pusher_channel } = await response.json();
+const { session_id, pusher_channel, current_stage } = await response.json();
 
-// Subscribe to updates
-const channel = pusher.subscribe(pusher_channel);
-channel.bind('stage_changed', (data) => {
-  console.log('New stage:', data.stage);
+// Subscribe to private channel for updates
+const channel = pusher.subscribe(`private-roblox-conversation-${session_id}`);
+
+// Listen to all conversation events
+channel.bind('stage-changed', (data) => {
+  console.log('Stage changed:', data.stage, data.progress);
+  updateUI(data.message);
+});
+
+channel.bind('input-processed', (data) => {
+  console.log('Input processed:', data);
+});
+
+channel.bind('generation-started', (data) => {
+  console.log('Generation started');
+  showProgressBar();
 });
 ```
 
-### Generating Environment
+### Generating Environment with Progress Tracking
 ```typescript
-const response = await fetch(`http://127.0.0.1:8008/api/v1/roblox/conversation/generate?session_id=${sessionId}`, {
+// Start generation
+const response = await fetch('http://127.0.0.1:8009/api/v1/roblox/conversation/generate', {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${accessToken}`
+    'Authorization': `Bearer ${accessToken}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    session_id: sessionId,
+    requirements: generatedRequirements
+  })
+});
+
+const { project_id, generation_id } = await response.json();
+
+// Subscribe to generation channel for progress
+const genChannel = pusher.subscribe(`private-roblox-generation-${sessionId}`);
+
+genChannel.bind('generation-progress', (data) => {
+  console.log(`Progress: ${data.progress}% - ${data.status}`);
+  updateProgressBar(data.progress);
+
+  if (data.details) {
+    console.log(`Step ${data.details.current_step} of ${data.details.total_steps}`);
   }
 });
 
-const { project_id, rojo_port, files_generated } = await response.json();
-console.log(`Generated ${files_generated} files, Rojo on port ${rojo_port}`);
+genChannel.bind('generation-complete', (data) => {
+  console.log('Generation complete!');
+  console.log(`Project: ${data.project_id}`);
+  console.log(`Files: ${data.files_generated}`);
+  console.log(`Rojo Port: ${data.rojo_port}`);
+
+  // Automatically connect Rojo
+  connectToRojo(data.rojo_port);
+});
+
+genChannel.bind('error-occurred', (data) => {
+  console.error('Generation error:', data.error_message);
+  showError(data.error_message);
+});
+```
+
+### Monitoring Rojo Sync
+```typescript
+// Subscribe to Rojo sync channel
+const rojoChannel = pusher.subscribe(`private-roblox-sync-${projectId}`);
+
+rojoChannel.bind('rojo-connected', (data) => {
+  console.log('Rojo connected to Studio');
+  console.log(`Port: ${data.port}`);
+  console.log(`Session: ${data.studio_session_id}`);
+});
+
+rojoChannel.bind('rojo-sync-update', (data) => {
+  console.log(`Synced: ${data.files_synced}/${data.files_synced + data.files_pending}`);
+  updateSyncStatus(data.sync_status);
+});
+
+rojoChannel.bind('rojo-build-complete', (data) => {
+  console.log('Build complete, ready for Studio!');
+});
 ```
 
 ## Testing
@@ -380,31 +550,47 @@ logging.basicConfig(level=logging.DEBUG)
 ### Health Checks
 ```bash
 # Check all services
-curl http://127.0.0.1:8008/health
+curl http://127.0.0.1:8009/api/v1/roblox/health
 
 # Check Rojo
-curl http://127.0.0.1:8008/api/v1/roblox/rojo/check
+curl http://127.0.0.1:8009/api/v1/roblox/rojo/check
 
 # Check Pusher
-curl http://127.0.0.1:8008/api/v1/pusher/status
+curl http://127.0.0.1:8009/api/v1/roblox/pusher/status
 ```
 
 ## Security Considerations
 
-1. **OAuth2 Security**
+1. **Credential Encryption**
+   - AES-256 encryption using Fernet cipher for all credentials
+   - Encryption key stored separately from encrypted data
+   - Automatic key rotation support
+   - Audit logging for all credential access
+
+2. **OAuth2 Security**
    - PKCE flow prevents authorization code interception
+   - State parameters with 5-minute TTL for CSRF protection
    - Tokens stored encrypted in database
    - Automatic token refresh before expiry
 
-2. **API Security**
-   - Rate limiting on all endpoints
-   - JWT authentication required
+3. **API Security**
+   - Rate limiting (100 requests/minute default)
+   - JWT authentication with improved security measures
    - CORS restricted to allowed origins
+   - IP whitelisting support (configurable)
+   - Optional HMAC signature verification
 
-3. **Data Protection**
+4. **Data Protection**
    - User data encrypted at rest
    - SSL/TLS for all communications
+   - Credential access audit logs
    - Regular security audits
+
+5. **Pusher Channel Security**
+   - Private channels require authentication
+   - Channel auth endpoint validates JWT tokens
+   - User data included in presence channels
+   - Socket ID validation to prevent replay attacks
 
 ## Performance Optimization
 

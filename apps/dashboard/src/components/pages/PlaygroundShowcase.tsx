@@ -1,19 +1,6 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
-import Button from '@mui/material/Button';
-import Fab from '@mui/material/Fab';
-import { styled, keyframes } from '@mui/material/styles';
 import { motion } from 'framer-motion';
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import SchoolIcon from '@mui/icons-material/School';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import StarIcon from '@mui/icons-material/Star';
 
 // Import our new playful components
 import { Roblox3DMetricCard } from '../roblox/Roblox3DMetricCard';
@@ -122,7 +109,7 @@ const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
     {
       title: 'Total XP Earned',
       value: 15420,
-      icon: <StarIcon />,
+      icon: <IconStar />,
       trend: { value: 23, direction: 'up' as const },
       color: robloxColors.neon.plasmaYellow,
       subtitle: 'Keep going! 580 XP to next level',
@@ -131,7 +118,7 @@ const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
     {
       title: 'Lessons Completed',
       value: 142,
-      icon: <SchoolIcon />,
+      icon: <IconSchool />,
       trend: { value: 15, direction: 'up' as const },
       color: robloxColors.neon.toxicGreen,
       subtitle: '28 more than last month!',
@@ -167,19 +154,19 @@ const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
       <FloatingEmoji delay={8} left="70%">💎</FloatingEmoji>
       <FloatingEmoji delay={10} left="85%">🌟</FloatingEmoji>
 
-      <Container maxWidth="xl" sx={{ py: 4, position: 'relative', zIndex: 2 }}>
+      <Container maxWidth="xl" style={{ py: 4, position: 'relative', zIndex: 2 }}>
         <motion.div
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <GlowingTitle variant="h1">
+          <GlowingTitle order={1}>
             🎮 EPIC GAMING DASHBOARD 🚀
           </GlowingTitle>
 
           <Typography
-            variant="h4"
-            sx={{
+            order={4}
+            style={{
               textAlign: 'center',
               color: robloxColors.white,
               mb: 6,
@@ -199,8 +186,8 @@ const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
         >
           <FloatingCard delay={0}>
             <Typography
-              variant="h5"
-              sx={{
+              order={5}
+              style={{
                 color: robloxColors.neon.electricBlue,
                 mb: 3,
                 fontWeight: 700,
@@ -214,10 +201,10 @@ const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
         </motion.div>
 
         {/* 3D Metric Cards */}
-        <Box sx={{ mt: 4 }}>
+        <Box style={{ mt: 4 }}>
           <Typography
-            variant="h4"
-            sx={{
+            order={4}
+            style={{
               color: robloxColors.white,
               mb: 3,
               fontWeight: 700,
@@ -248,7 +235,7 @@ const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
         </Box>
 
         {/* Animated Leaderboard */}
-        <Box sx={{ mt: 6 }}>
+        <Box style={{ mt: 6 }}>
           <Grid container spacing={4}>
             <Grid item xs={12} md={6}>
               <motion.div
@@ -272,8 +259,8 @@ const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
               >
                 <FloatingCard delay={0.2}>
                   <Typography
-                    variant="h5"
-                    sx={{
+                    order={5}
+                    style={{
                       color: robloxColors.neon.toxicGreen,
                       mb: 3,
                       fontWeight: 700,
@@ -283,13 +270,13 @@ const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
                     🎯 Daily Challenges 🎯
                   </Typography>
 
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {['Complete 5 Math Problems', 'Win 3 Quiz Battles', 'Study for 30 Minutes', 'Help a Friend'].map((challenge, index) => (
                       <Button
                         key={index}
-                        variant="contained"
+                        variant="filled"
                         fullWidth
-                        sx={{
+                        style={{
                           background: robloxColors.effects.electricGradient,
                           py: 2,
                           fontSize: '1.1rem',
@@ -314,7 +301,7 @@ const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
 
         {/* Floating Action Buttons */}
         <Box
-          sx={{
+          style={{
             position: 'fixed',
             bottom: 32,
             right: 32,
@@ -324,8 +311,8 @@ const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
           }}
         >
           <Fab
-            color="primary"
-            sx={{
+            color="blue"
+            style={{
               background: robloxColors.effects.fireGradient,
               animation: `${spin} 3s linear infinite`,
               '&:hover': {
@@ -337,7 +324,7 @@ const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
             <RocketLaunchIcon />
           </Fab>
           <Fab
-            sx={{
+            style={{
               background: robloxColors.effects.cosmicGradient,
               animation: `${bounce} 2s ease-in-out infinite`,
             }}

@@ -16,6 +16,7 @@ from fastapi import FastAPI
 from apps.backend.core.config import settings
 from apps.backend.core.monitoring import initialize_sentry
 from apps.backend.core.logging import initialize_logging, logging_manager
+from apps.backend.core.telemetry import telemetry_manager
 
 # Will create these modules in subsequent steps
 try:
@@ -122,6 +123,22 @@ def create_app(
         initialize_sentry()
     initialize_logging()
 
+    # Initialize OpenTelemetry instrumentation (unless in testing mode)
+    if not testing_mode and not skip_lifespan:
+        telemetry_manager.initialize(
+            service_name=app_settings.APP_NAME,
+            service_version=app_settings.APP_VERSION,
+            otel_endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317"),
+            enable_logging=True,
+            enable_metrics=True,
+            enable_tracing=True,
+            additional_attributes={
+                "deployment.environment": app_settings.ENVIRONMENT,
+                "service.namespace": "toolboxai",
+            }
+        )
+        logger.info("OpenTelemetry instrumentation initialized")
+
     # Determine if we should use lifespan
     use_lifespan = not (skip_lifespan or os.getenv("SKIP_LIFESPAN", "false").lower() == "true")
 
@@ -151,6 +168,11 @@ def create_app(
 
     # Track application start time for uptime calculations
     app.state.start_time = time.time()
+
+    # Instrument FastAPI app with OpenTelemetry (unless in testing mode)
+    if not testing_mode and not skip_lifespan:
+        telemetry_manager.instrument_fastapi(app)
+        logger.info("FastAPI app instrumented with OpenTelemetry")
 
     # Register middleware and routers if factory components are available
     if FACTORY_COMPONENTS_AVAILABLE:

@@ -1,3 +1,4 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 /**
  * RobloxStudioPage Component
  *
@@ -6,14 +7,13 @@
  */
 
 import React from 'react';
-import Box from '@mui/material/Box';
 import RobloxStudioIntegration from '../roblox/RobloxStudioIntegration';
 
 const RobloxStudioPage: React.FunctionComponent<Record<string, any>> = () => {
   // Simple, stable container without any complex positioning or scroll prevention
   return (
     <Box
-      sx={{
+      style={{
         width: '100%',
         height: 'calc(100vh - 140px)',  // Simple height calculation for navbar + toolbar + padding
         display: 'flex',

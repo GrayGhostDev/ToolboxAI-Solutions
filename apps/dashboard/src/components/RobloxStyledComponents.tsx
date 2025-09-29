@@ -1,21 +1,10 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../utils/mui-imports';
 /**
  * Roblox-Styled Components
  *
  * Pre-built components with Roblox theming and gamification elements.
  */
 import React from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import LinearProgress from '@mui/material/LinearProgress';
-import Avatar from '@mui/material/Avatar';
-import Badge from '@mui/material/Badge';
-import IconButton from '@mui/material/IconButton';
-import { styled } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import { keyframes } from '@mui/material/styles';
-import { keyframes } from '@mui/material/styles';
 import { designTokens } from '..//designTokens';
 // Roblox brand colors
 const ROBLOX_RED = '#E2231A';

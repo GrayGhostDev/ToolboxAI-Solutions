@@ -1,8 +1,5 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import * as React from "react";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
-import Slide from "@mui/material/Slide";
-import { TransitionProps } from "@mui/material/transitions";
 import { useAppSelector, useAppDispatch } from "../../store";
 import { removeNotification } from "../../store/slices/uiSlice";
 
@@ -41,7 +38,7 @@ export function NotificationToast() {
       <Alert
         onClose={handleClose}
         severity={currentNotification.type}
-        sx={{
+        style={{
           width: "100%",
           boxShadow: 3,
         }}

@@ -1,15 +1,5 @@
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import React, { useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import { styled, keyframes } from '@mui/material/styles';
-import { alpha } from '@mui/material/styles';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { robloxColors } from '../..//robloxTheme';
 import { motion } from 'framer-motion';
 const float = keyframes`
@@ -207,13 +197,13 @@ export const Roblox3DMetricCard: React.FunctionComponent<Roblox3DMetricCardProps
         onMouseLeave={() => setIsHovered(false)}
         onClick={(e: React.MouseEvent) => onClick}
       >
-        <CardContent sx={{ p: 3 }}>
+        <CardContent style={{ p: 3 }}>
           <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
             <Box flex={1}>
               <Box display="flex" alignItems="center" gap={1} mb={1}>
                 <Typography
-                  variant="h6"
-                  sx={{
+                  order={6}
+                  style={{
                     color: robloxColors.lightGray,
                     fontWeight: 600,
                     fontSize: '0.875rem',
@@ -225,7 +215,7 @@ export const Roblox3DMetricCard: React.FunctionComponent<Roblox3DMetricCardProps
                 </Typography>
                 {tooltip && (
                   <Tooltip title={tooltip} arrow placement="top">
-                    <IconButton size="small" sx={{ p: 0.5, color: robloxColors.gray }}>
+                    <IconButton size="small" style={{ p: 0.5, color: robloxColors.gray }}>
                       <InfoOutlinedIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
@@ -234,8 +224,8 @@ export const Roblox3DMetricCard: React.FunctionComponent<Roblox3DMetricCardProps
               <ValueDisplay>{displayValue}</ValueDisplay>
               {subtitle && (
                 <Typography
-                  variant="body2"
-                  sx={{
+                  size="sm"
+                  style={{
                     color: alpha(robloxColors.lightGray, 0.7),
                     mt: 0.5,
                     fontSize: '0.75rem',
@@ -257,8 +247,8 @@ export const Roblox3DMetricCard: React.FunctionComponent<Roblox3DMetricCardProps
                 <TrendingDownIcon />
               ) : null}
               <Typography
-                variant="body2"
-                sx={{
+                size="sm"
+                style={{
                   fontWeight: 600,
                   color: trend.direction === 'up'
                     ? robloxColors.success
@@ -271,7 +261,7 @@ export const Roblox3DMetricCard: React.FunctionComponent<Roblox3DMetricCardProps
               </Typography>
               <Typography
                 variant="caption"
-                sx={{
+                style={{
                   color: alpha(robloxColors.lightGray, 0.7),
                   ml: 0.5,
                 }}

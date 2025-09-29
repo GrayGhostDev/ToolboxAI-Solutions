@@ -156,10 +156,11 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/backend.Dockerfile
+      # Local cache only (no registry)
       cache_from:
-        - type=registry,ref=toolboxai/backend:buildcache
+        - type=local,src=/tmp/docker-cache
       cache_to:
-        - type=registry,ref=toolboxai/backend:buildcache,mode=max
+        - type=local,dest=/tmp/docker-cache,mode=max
       args:
         BUILDKIT_INLINE_CACHE: 1
     image: toolboxai/backend:${DOCKER_TAG:-latest}
@@ -291,10 +292,11 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/mcp.Dockerfile
+      # Local cache only (no registry)
       cache_from:
-        - type=registry,ref=toolboxai/mcp:buildcache
+        - type=local,src=/tmp/docker-cache
       cache_to:
-        - type=registry,ref=toolboxai/mcp:buildcache,mode=max
+        - type=local,dest=/tmp/docker-cache,mode=max
     image: toolboxai/mcp:${DOCKER_TAG:-latest}
     container_name: toolboxai-mcp
     <<: [*restart-policy, *security-opts]
@@ -336,10 +338,11 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/agents.Dockerfile
+      # Local cache only (no registry)
       cache_from:
-        - type=registry,ref=toolboxai/agents:buildcache
+        - type=local,src=/tmp/docker-cache
       cache_to:
-        - type=registry,ref=toolboxai/agents:buildcache,mode=max
+        - type=local,dest=/tmp/docker-cache,mode=max
     image: toolboxai/agents:${DOCKER_TAG:-latest}
     container_name: toolboxai-agents
     <<: [*restart-policy, *security-opts]
@@ -385,10 +388,11 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/celery-worker.Dockerfile
+      # Local cache only (no registry)
       cache_from:
-        - type=registry,ref=toolboxai/celery-worker:buildcache
+        - type=local,src=/tmp/docker-cache
       cache_to:
-        - type=registry,ref=toolboxai/celery-worker:buildcache,mode=max
+        - type=local,dest=/tmp/docker-cache,mode=max
       target: production
     image: toolboxai/celery-worker:${DOCKER_TAG:-latest}
     # container_name removed to support replicas
@@ -453,10 +457,11 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/celery-beat.Dockerfile
+      # Local cache only (no registry)
       cache_from:
-        - type=registry,ref=toolboxai/celery-beat:buildcache
+        - type=local,src=/tmp/docker-cache
       cache_to:
-        - type=registry,ref=toolboxai/celery-beat:buildcache,mode=max
+        - type=local,dest=/tmp/docker-cache,mode=max
       target: production
     image: toolboxai/celery-beat:${DOCKER_TAG:-latest}
     # container_name removed to support deploy section
@@ -517,10 +522,11 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/celery-flower.Dockerfile
+      # Local cache only (no registry)
       cache_from:
-        - type=registry,ref=toolboxai/celery-flower:buildcache
+        - type=local,src=/tmp/docker-cache
       cache_to:
-        - type=registry,ref=toolboxai/celery-flower:buildcache,mode=max
+        - type=local,dest=/tmp/docker-cache,mode=max
       target: production
     image: toolboxai/celery-flower:${DOCKER_TAG:-latest}
     <<: *restart-policy
@@ -571,10 +577,11 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/roblox-sync.Dockerfile
+      # Local cache only (no registry)
       cache_from:
-        - type=registry,ref=toolboxai/roblox-sync:buildcache
+        - type=local,src=/tmp/docker-cache
       cache_to:
-        - type=registry,ref=toolboxai/roblox-sync:buildcache,mode=max
+        - type=local,dest=/tmp/docker-cache,mode=max
       target: production
       args:
         BUILDKIT_INLINE_CACHE: 1

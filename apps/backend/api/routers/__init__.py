@@ -53,6 +53,15 @@ def _register_core_routers(app: FastAPI) -> None:
         except ImportError as e:
             logger.warning(f"Could not load health check endpoints: {e}")
 
+        # Secure Roblox Integration Router (Priority - loads first)
+        try:
+            from apps.backend.routers.roblox import router as secure_roblox_router
+
+            app.include_router(secure_roblox_router)
+            logger.info("✅ Secure Roblox integration endpoints loaded successfully")
+        except ImportError as e:
+            logger.warning(f"Could not load secure Roblox integration endpoints: {e}")
+
         # Pusher and realtime communication routers
         try:
             from apps.backend.api.routers.pusher import router as pusher_router

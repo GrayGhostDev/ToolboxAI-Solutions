@@ -6,7 +6,7 @@ vi.setConfig({ testTimeout: 10000 });
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider, createTheme } from '@mantine/core/styles';
 import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, beforeEach } from 'vitest';
 import RobloxAIAssistantEnhanced from '../RobloxAIAssistantEnhanced';
