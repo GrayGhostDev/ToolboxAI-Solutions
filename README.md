@@ -356,3 +356,4 @@ ToolBoxAI is a comprehensive educational platform that combines AI-powered conte
 - **Node.js**: 22+ required for React 19 features
 - **Docker**: 25.x with Compose v2
 - **Pydantic**: v2-first with v1 compatibility adapter at `toolboxai_settings/compat.py`
+# Test comment

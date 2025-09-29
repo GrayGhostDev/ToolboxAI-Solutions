@@ -345,3 +345,4 @@ node_modules.old.*
 
 # TeamCity local server (too large for git)
 TeamCity/
+apps/dashboard/node_modules.backup.*/
