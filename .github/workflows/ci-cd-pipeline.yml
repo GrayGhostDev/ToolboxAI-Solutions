@@ -41,7 +41,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -51,13 +51,13 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Cache Python dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
 
       - name: Cache Node dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -100,7 +100,7 @@ jobs:
 
       - name: Set up Python
         if: matrix.service == 'backend'
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -125,7 +125,7 @@ jobs:
           npm run test:ci
 
       - name: Upload Coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           flags: ${{ matrix.service }}
@@ -166,7 +166,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -388,6 +388,8 @@ jobs:
     steps:
       - name: Slack Notification
         uses: 8398a7/action-slack@v3
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
         with:
           status: ${{ job.status }}
           text: |
@@ -395,7 +397,6 @@ jobs:
             Branch: ${{ github.ref }}
             Commit: ${{ github.sha }}
             Author: ${{ github.actor }}
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
 
       - name: GitHub Deployment Status
         uses: bobheadxi/deployments@v1
@@ -404,4 +405,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           status: ${{ job.status }}
           env: ${{ github.event.inputs.environment || 'staging' }}
-          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+          # deployment_id: ${{ steps.deployment.outputs.deployment_id }} # TODO: Add deployment step to capture ID

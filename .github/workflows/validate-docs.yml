@@ -85,15 +85,21 @@ jobs:
       - name: Determine validation type
         id: determine-validation
         run: |
+          # Initialize shell variables
+          api_sync=false
+          coverage=false
+
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "type=${{ inputs.validation_type }}" >> $GITHUB_OUTPUT
           elif [ "${{ github.event_name }}" = "schedule" ]; then
             echo "type=all" >> $GITHUB_OUTPUT
+            api_sync=true
+            coverage=true
           elif [ "${{ steps.changed-files.outputs.any_changed }}" = "true" ]; then
             # Check what types of files changed
             if echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q "apps/backend\|core/\|database/.*\.py"; then
-              echo "api-sync=true" >> $GITHUB_OUTPUT
-              echo "coverage=true" >> $GITHUB_OUTPUT
+              api_sync=true
+              coverage=true
             fi
             if echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q "docs/\|.*\.md\|.*\.rst"; then
               echo "type=all" >> $GITHUB_OUTPUT
@@ -104,13 +110,9 @@ jobs:
             echo "type=syntax-only" >> $GITHUB_OUTPUT
           fi
 
-          # Set defaults if not set
-          if [ -z "${{ github.event.inputs.api_sync }}" ]; then
-            echo "api-sync=${api_sync:-false}" >> $GITHUB_OUTPUT
-          fi
-          if [ -z "${{ github.event.inputs.coverage }}" ]; then
-            echo "coverage=${coverage:-false}" >> $GITHUB_OUTPUT
-          fi
+          # Emit outputs once at the end using the shell variables
+          echo "api-sync=${api_sync}" >> $GITHUB_OUTPUT
+          echo "coverage=${coverage}" >> $GITHUB_OUTPUT
 
   documentation-validation:
     name: Documentation Validation
@@ -123,7 +125,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -406,7 +408,7 @@ jobs:
             }
 
       - name: Upload validation reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: documentation-validation-reports
@@ -415,7 +417,7 @@ jobs:
           retention-days: 30
 
       - name: Upload HTML reports for preview
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: validation-html-reports
@@ -473,7 +475,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -552,7 +554,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
