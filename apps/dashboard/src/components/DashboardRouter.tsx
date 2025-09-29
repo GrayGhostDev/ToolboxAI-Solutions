@@ -75,8 +75,8 @@ const DashboardRouter: React.FunctionComponent<Record<string, any>> = () => {
 
   return (
     <Routes>
-      {/* Default route - redirect to role-specific dashboard */}
-      <Route path="/" element={<Navigate to={userConfig.defaultRoute} replace />} />
+      {/* Default route - render role-specific dashboard component */}
+      <Route path="/" element={getDashboardComponent()} />
 
       {/* Admin Routes */}
       <Route path="/admin/*" element={
@@ -170,7 +170,7 @@ const DashboardRouter: React.FunctionComponent<Record<string, any>> = () => {
         }}>
           <Typography variant="h4" gutterBottom>Unauthorized Access</Typography>
           <Typography variant="body1" gutterBottom>You don't have permission to access this page.</Typography>
-          <Button variant="contained" onClick={(e: React.MouseEvent) => () => window.history.back()}>Go Back</Button>
+          <Button variant="contained" onClick={() => window.history.back()}>Go Back</Button>
         </Box>
       } />
 

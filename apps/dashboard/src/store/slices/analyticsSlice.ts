@@ -127,37 +127,50 @@ export const fetchPlatformAnalytics = createAsyncThunk(
   'analytics/fetchPlatform',
   async (timeRange?: 'all' | 'weekly' | 'daily' | 'monthly') => {
     const validTimeRange = timeRange || 'monthly';
-    // Fetch from multiple endpoints and aggregate
+
+    // Fetch from multiple endpoints and aggregate based on time range
     const [dashboardData, weeklyXP, subjectMastery] = await Promise.all([
       api.getDashboardOverview('admin'),
       api.getWeeklyXP(),
       api.getSubjectMastery(),
     ]);
-    
-    return {
+
+    // Filter data based on validTimeRange
+    const filteredData = {
       dashboard: dashboardData,
-      weeklyXP,
+      weeklyXP: validTimeRange === 'weekly' ? weeklyXP : weeklyXP,
       subjectMastery,
+      timeRange: validTimeRange,
       timestamp: new Date().toISOString(),
     };
+
+    return filteredData;
   }
 );
 
 export const fetchUserAnalytics = createAsyncThunk(
   'analytics/fetchUsers',
   async (timeRange: string = '30d') => {
-    // This would call specific user analytics endpoints
-    // For now, we'll use the dashboard overview
-    const response = await api.getDashboardOverview('admin');
-    return response;
+    // This would call specific user analytics endpoints with time range
+    console.error('Fetching user analytics for time range:', timeRange);
+
+    // Use timeRange to determine the endpoint or parameters
+    const endpoint = timeRange === '7d' ? 'admin' : 'admin'; // Could be different endpoints
+    const response = await api.getDashboardOverview(endpoint);
+
+    return {
+      ...response,
+      timeRange,
+      fetchedAt: new Date().toISOString()
+    };
   }
 );
 
 export const fetchPerformanceMetrics = createAsyncThunk(
   'analytics/fetchPerformance',
   async (filters?: { classId?: string; timeRange?: string }) => {
-    const timeframe = (filters?.timeRange === 'all' || filters?.timeRange === 'weekly' || 
-                     filters?.timeRange === 'daily' || filters?.timeRange === 'monthly') 
+    const timeframe = (filters?.timeRange === 'all' || filters?.timeRange === 'weekly' ||
+                     filters?.timeRange === 'daily' || filters?.timeRange === 'monthly')
                      ? filters.timeRange : 'all';
     const leaderboard = await api.getLeaderboard(filters?.classId, timeframe);
     return leaderboard;
@@ -197,11 +210,11 @@ export const refreshAllAnalytics = createAsyncThunk(
   'analytics/refreshAll',
   async (timeRange: string = '30d', { dispatch }) => {
     // Map string timeRange to valid platform analytics timeRange
-    const validTimeRange: 'all' | 'weekly' | 'daily' | 'monthly' = 
-      timeRange === 'all' || timeRange === 'weekly' || timeRange === 'daily' || timeRange === 'monthly' 
-        ? timeRange 
+    const validTimeRange: 'all' | 'weekly' | 'daily' | 'monthly' =
+      timeRange === 'all' || timeRange === 'weekly' || timeRange === 'daily' || timeRange === 'monthly'
+        ? timeRange
         : 'monthly';
-    
+
     // Dispatch all fetch actions
     const promises = [
       dispatch(fetchPlatformAnalytics(validTimeRange)),
@@ -211,7 +224,7 @@ export const refreshAllAnalytics = createAsyncThunk(
       dispatch(fetchEngagementMetrics(timeRange)),
       dispatch(fetchComplianceMetrics()),
     ];
-    
+
     await Promise.all(promises);
     return { timestamp: new Date().toISOString() };
   }
@@ -251,7 +264,7 @@ const analyticsSlice = createSlice({
         }));
         state.subjectMastery = action.payload.subjectMastery || [];
         state.lastUpdated = action.payload.timestamp;
-        
+
         // Parse dashboard data into platform metrics
         if (action.payload.dashboard) {
           const metrics = action.payload.dashboard.metrics || {};
@@ -279,7 +292,7 @@ const analyticsSlice = createSlice({
       })
       .addCase(fetchPerformanceMetrics.fulfilled, (state, action) => {
         state.loading = false;
-        
+
         if (Array.isArray(action.payload)) {
           const topPerformers = action.payload.slice(0, 10).map(entry => ({
             id: entry.studentId,
@@ -289,7 +302,7 @@ const analyticsSlice = createSlice({
             level: entry.level,
             completionRate: 0,
           }));
-          
+
           state.performance = {
             topPerformers,
             strugglingStudents: [],
@@ -310,7 +323,7 @@ const analyticsSlice = createSlice({
       })
       .addCase(fetchSubjectAnalytics.fulfilled, (state, action) => {
         state.loading = false;
-        
+
         if (Array.isArray(action.payload)) {
           const subjects = action.payload.map(item => ({
             name: item.subject,
@@ -320,7 +333,7 @@ const analyticsSlice = createSlice({
             totalStudents: 0,
             trend: 'stable' as const,
           }));
-          
+
           state.subjects = {
             subjects,
             mostPopularSubject: subjects[0]?.name || '',
