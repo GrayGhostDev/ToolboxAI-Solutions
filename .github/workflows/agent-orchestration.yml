@@ -105,8 +105,10 @@ jobs:
               return 0 if not result.get('large_files') else 1
 
           exit_code = asyncio.run(main())
-          echo \"detected=$([[ $exit_code -eq 0 ]] && echo 'false' || echo 'true')\" >> $GITHUB_OUTPUT
+          sys.exit(exit_code)
           " || true
+          exit_code=$?
+          echo "detected=$([[ $exit_code -eq 0 ]] && echo 'false' || echo 'true')" >> $GITHUB_OUTPUT
 
       - name: Dependency Security Scan
         id: security
