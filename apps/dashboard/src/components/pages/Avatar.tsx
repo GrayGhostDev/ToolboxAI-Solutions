@@ -1,508 +1,529 @@
-IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../IconutilsIcon/IconmuiIcon-Iconimports';
-IconimportIcon * IconasIcon IconReactIcon IconfromIcon "Iconreact";
+import * as React from "react";
+import { useState } from "react";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  Button,
+  Stack,
+  Chip,
+  IconButton,
+  Tabs,
+  Tab,
+  Avatar as MuiAvatar,
+  Paper,
+  Slider,
+  Switch,
+  FormControlLabel,
+  Divider,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
+import {
+  Face,
+  ColorLens,
+  Checkroom,
+  EmojiEvents,
+  Lock,
+  LockOpen,
+  Save,
+  Refresh,
+  Camera,
+  Edit,
+  ShoppingCart,
+  Star,
+} from "@mui/icons-material";
+import { useAppSelector, useAppDispatch } from "../../store";
+import { addNotification } from "../../store/slices/uiSlice";
 
-IconimportIcon { IconuseStateIcon } IconfromIcon "Iconreact";
-IconimportIcon {
-  IconIconMoodSmileIcon,
-  IconIconColorLensIcon,
-  IconIconCheckroomIcon,
-  IconIconEmojiEventsIcon,
-  IconIconLockIcon,
-  IconIconLockOpenIcon,
-  IconIconDeviceFloppyIcon,
-  IconIconRefreshIcon,
-  IconIconCameraIcon,
-  IconIconEditIcon,
-  IconIconShoppingCartIcon,
-  IconIconStarIcon,
-} IconfromIcon "@IconmuiIcon/IconiconsIcon-Iconmaterial";
-IconimportIcon { IconuseAppSelectorIcon, IconuseAppDispatchIcon } IconfromIcon "../../Iconstore";
-IconimportIcon { IconaddNotificationIcon } IconfromIcon "../../IconstoreIcon/IconslicesIcon/IconuiSlice";
-IconimportIcon { IconIconIcon, IconIconCameraIcon, IconIconCheckroomIcon, IconIconColorLensIcon, IconIconDeviceFloppyIcon, IconIconEditIcon, IconIconEmojiEventsIcon, IconIconLockIcon, IconIconLockOpenIcon, IconIconMoodSmileIcon, IconIconRefreshIcon, IconIconShoppingCartIcon, IconIconStarIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
-
-IconinterfaceIcon IconAvatarCategoryIcon {
-  IconidIcon: IconstringIcon;
-  IconnameIcon: IconstringIcon;
-  IconiconIcon: IconReactIcon.IconReactNodeIcon;
-  IconitemsIcon: IconAvatarItemIcon[];
+interface AvatarCategory {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  items: AvatarItem[];
 }
 
-IconinterfaceIcon IconAvatarItemIcon {
-  IconidIcon: IconstringIcon;
-  IconnameIcon: IconstringIcon;
-  IconpreviewIcon: IconstringIcon;
-  IconcategoryIcon: IconstringIcon;
-  IconrarityIcon: "Iconcommon" | "Iconrare" | "Iconepic" | "Iconlegendary";
-  IconxpCostIcon: IconnumberIcon;
-  IconlevelRequiredIcon: IconnumberIcon;
-  IconownedIcon: IconbooleanIcon;
-  IconequippedIcon: IconbooleanIcon;
+interface AvatarItem {
+  id: string;
+  name: string;
+  preview: string;
+  category: string;
+  rarity: "common" | "rare" | "epic" | "legendary";
+  xpCost: number;
+  levelRequired: number;
+  owned: boolean;
+  equipped: boolean;
 }
 
-IconconstIcon IconAVATAR_CATEGORIESIcon: IconAvatarCategoryIcon[] = [
+const AVATAR_CATEGORIES: AvatarCategory[] = [
   {
-    IconidIcon: "Iconhairstyles",
-    IconnameIcon: "IconHairstyles",
-    IconiconIcon: <IconIconMoodSmileIcon />,
-    IconitemsIcon: [
-      { IconidIcon: "Iconhair_1", IconnameIcon: "IconShortIcon & IconNeat", IconpreviewIcon: "👱", IconcategoryIcon: "Iconhairstyles", IconrarityIcon: "Iconcommon", IconxpCostIcon: Icon0Icon, IconlevelRequiredIcon: Icon1Icon, IconownedIcon: IcontrueIcon, IconequippedIcon: IcontrueIcon },
-      { IconidIcon: "Iconhair_2", IconnameIcon: "IconLongIcon & IconWavy", IconpreviewIcon: "👩", IconcategoryIcon: "Iconhairstyles", IconrarityIcon: "Iconcommon", IconxpCostIcon: Icon50Icon, IconlevelRequiredIcon: Icon2Icon, IconownedIcon: IcontrueIcon, IconequippedIcon: IconfalseIcon },
-      { IconidIcon: "Iconhair_3", IconnameIcon: "IconMohawk", IconpreviewIcon: "🎸", IconcategoryIcon: "Iconhairstyles", IconrarityIcon: "Iconrare", IconxpCostIcon: Icon150Icon, IconlevelRequiredIcon: Icon5Icon, IconownedIcon: IconfalseIcon, IconequippedIcon: IconfalseIcon },
-      { IconidIcon: "Iconhair_4", IconnameIcon: "IconRainbowIcon IconSpikes", IconpreviewIcon: "🌈", IconcategoryIcon: "Iconhairstyles", IconrarityIcon: "Iconepic", IconxpCostIcon: Icon300Icon, IconlevelRequiredIcon: Icon10Icon, IconownedIcon: IconfalseIcon, IconequippedIcon: IconfalseIcon },
-      { IconidIcon: "Iconhair_5", IconnameIcon: "IconGalaxyIcon IconHair", IconpreviewIcon: "🌌", IconcategoryIcon: "Iconhairstyles", IconrarityIcon: "Iconlegendary", IconxpCostIcon: Icon500Icon, IconlevelRequiredIcon: Icon15Icon, IconownedIcon: IconfalseIcon, IconequippedIcon: IconfalseIcon },
+    id: "hairstyles",
+    name: "Hairstyles",
+    icon: <Face />,
+    items: [
+      { id: "hair_1", name: "Short & Neat", preview: "👱", category: "hairstyles", rarity: "common", xpCost: 0, levelRequired: 1, owned: true, equipped: true },
+      { id: "hair_2", name: "Long & Wavy", preview: "👩", category: "hairstyles", rarity: "common", xpCost: 50, levelRequired: 2, owned: true, equipped: false },
+      { id: "hair_3", name: "Mohawk", preview: "🎸", category: "hairstyles", rarity: "rare", xpCost: 150, levelRequired: 5, owned: false, equipped: false },
+      { id: "hair_4", name: "Rainbow Spikes", preview: "🌈", category: "hairstyles", rarity: "epic", xpCost: 300, levelRequired: 10, owned: false, equipped: false },
+      { id: "hair_5", name: "Galaxy Hair", preview: "🌌", category: "hairstyles", rarity: "legendary", xpCost: 500, levelRequired: 15, owned: false, equipped: false },
     ],
   },
   {
-    IconidIcon: "Iconoutfits",
-    IconnameIcon: "IconOutfits",
-    IconiconIcon: <IconIconCheckroomIcon />,
-    IconitemsIcon: [
-      { IconidIcon: "Iconoutfit_1", IconnameIcon: "IconSchoolIcon IconUniform", IconpreviewIcon: "👔", IconcategoryIcon: "Iconoutfits", IconrarityIcon: "Iconcommon", IconxpCostIcon: Icon0Icon, IconlevelRequiredIcon: Icon1Icon, IconownedIcon: IcontrueIcon, IconequippedIcon: IcontrueIcon },
-      { IconidIcon: "Iconoutfit_2", IconnameIcon: "IconCasualIcon IconWear", IconpreviewIcon: "👕", IconcategoryIcon: "Iconoutfits", IconrarityIcon: "Iconcommon", IconxpCostIcon: Icon75Icon, IconlevelRequiredIcon: Icon2Icon, IconownedIcon: IcontrueIcon, IconequippedIcon: IconfalseIcon },
-      { IconidIcon: "Iconoutfit_3", IconnameIcon: "IconSportsIcon IconJersey", IconpreviewIcon: "🏈", IconcategoryIcon: "Iconoutfits", IconrarityIcon: "Iconrare", IconxpCostIcon: Icon200Icon, IconlevelRequiredIcon: Icon6Icon, IconownedIcon: IconfalseIcon, IconequippedIcon: IconfalseIcon },
-      { IconidIcon: "Iconoutfit_4", IconnameIcon: "IconSpaceIcon IconSuit", IconpreviewIcon: "🚀", IconcategoryIcon: "Iconoutfits", IconrarityIcon: "Iconepic", IconxpCostIcon: Icon400Icon, IconlevelRequiredIcon: Icon12Icon, IconownedIcon: IconfalseIcon, IconequippedIcon: IconfalseIcon },
-      { IconidIcon: "Iconoutfit_5", IconnameIcon: "IconDragonIcon IconArmor", IconpreviewIcon: "🐉", IconcategoryIcon: "Iconoutfits", IconrarityIcon: "Iconlegendary", IconxpCostIcon: Icon750Icon, IconlevelRequiredIcon: Icon20Icon, IconownedIcon: IconfalseIcon, IconequippedIcon: IconfalseIcon },
+    id: "outfits",
+    name: "Outfits",
+    icon: <Checkroom />,
+    items: [
+      { id: "outfit_1", name: "School Uniform", preview: "👔", category: "outfits", rarity: "common", xpCost: 0, levelRequired: 1, owned: true, equipped: true },
+      { id: "outfit_2", name: "Casual Wear", preview: "👕", category: "outfits", rarity: "common", xpCost: 75, levelRequired: 2, owned: true, equipped: false },
+      { id: "outfit_3", name: "Sports Jersey", preview: "🏈", category: "outfits", rarity: "rare", xpCost: 200, levelRequired: 6, owned: false, equipped: false },
+      { id: "outfit_4", name: "Space Suit", preview: "🚀", category: "outfits", rarity: "epic", xpCost: 400, levelRequired: 12, owned: false, equipped: false },
+      { id: "outfit_5", name: "Dragon Armor", preview: "🐉", category: "outfits", rarity: "legendary", xpCost: 750, levelRequired: 20, owned: false, equipped: false },
     ],
   },
   {
-    IconidIcon: "Iconaccessories",
-    IconnameIcon: "IconAccessories",
-    IconiconIcon: <IconIconStarIcon />,
-    IconitemsIcon: [
-      { IconidIcon: "Iconacc_1", IconnameIcon: "IconReadingIcon IconGlasses", IconpreviewIcon: "👓", IconcategoryIcon: "Iconaccessories", IconrarityIcon: "Iconcommon", IconxpCostIcon: Icon25Icon, IconlevelRequiredIcon: Icon1Icon, IconownedIcon: IcontrueIcon, IconequippedIcon: IconfalseIcon },
-      { IconidIcon: "Iconacc_2", IconnameIcon: "IconCoolIcon IconSunglasses", IconpreviewIcon: "🕶️", IconcategoryIcon: "Iconaccessories", IconrarityIcon: "Iconcommon", IconxpCostIcon: Icon50Icon, IconlevelRequiredIcon: Icon3Icon, IconownedIcon: IconfalseIcon, IconequippedIcon: IconfalseIcon },
-      { IconidIcon: "Iconacc_3", IconnameIcon: "IconMagicIcon IconHat", IconpreviewIcon: "🎩", IconcategoryIcon: "Iconaccessories", IconrarityIcon: "Iconrare", IconxpCostIcon: Icon175Icon, IconlevelRequiredIcon: Icon7Icon, IconownedIcon: IconfalseIcon, IconequippedIcon: IconfalseIcon },
-      { IconidIcon: "Iconacc_4", IconnameIcon: "IconCrownIcon IconofIcon IconWisdom", IconpreviewIcon: "👑", IconcategoryIcon: "Iconaccessories", IconrarityIcon: "Iconepic", IconxpCostIcon: Icon350Icon, IconlevelRequiredIcon: Icon14Icon, IconownedIcon: IconfalseIcon, IconequippedIcon: IconfalseIcon },
-      { IconidIcon: "Iconacc_5", IconnameIcon: "IconPhoenixIcon IconWings", IconpreviewIcon: "🔥", IconcategoryIcon: "Iconaccessories", IconrarityIcon: "Iconlegendary", IconxpCostIcon: Icon600Icon, IconlevelRequiredIcon: Icon18Icon, IconownedIcon: IconfalseIcon, IconequippedIcon: IconfalseIcon },
+    id: "accessories",
+    name: "Accessories",
+    icon: <Star />,
+    items: [
+      { id: "acc_1", name: "Reading Glasses", preview: "👓", category: "accessories", rarity: "common", xpCost: 25, levelRequired: 1, owned: true, equipped: false },
+      { id: "acc_2", name: "Cool Sunglasses", preview: "🕶️", category: "accessories", rarity: "common", xpCost: 50, levelRequired: 3, owned: false, equipped: false },
+      { id: "acc_3", name: "Magic Hat", preview: "🎩", category: "accessories", rarity: "rare", xpCost: 175, levelRequired: 7, owned: false, equipped: false },
+      { id: "acc_4", name: "Crown of Wisdom", preview: "👑", category: "accessories", rarity: "epic", xpCost: 350, levelRequired: 14, owned: false, equipped: false },
+      { id: "acc_5", name: "Phoenix Wings", preview: "🔥", category: "accessories", rarity: "legendary", xpCost: 600, levelRequired: 18, owned: false, equipped: false },
     ],
   },
   {
-    IconidIcon: "Iconbackgrounds",
-    IconnameIcon: "IconBackgrounds",
-    IconiconIcon: <IconIconColorLensIcon />,
-    IconitemsIcon: [
-      { IconidIcon: "Iconbg_1", IconnameIcon: "IconClassroom", IconpreviewIcon: "🏫", IconcategoryIcon: "Iconbackgrounds", IconrarityIcon: "Iconcommon", IconxpCostIcon: Icon0Icon, IconlevelRequiredIcon: Icon1Icon, IconownedIcon: IcontrueIcon, IconequippedIcon: IcontrueIcon },
-      { IconidIcon: "Iconbg_2", IconnameIcon: "IconLibrary", IconpreviewIcon: "📚", IconcategoryIcon: "Iconbackgrounds", IconrarityIcon: "Iconcommon", IconxpCostIcon: Icon40Icon, IconlevelRequiredIcon: Icon2Icon, IconownedIcon: IcontrueIcon, IconequippedIcon: IconfalseIcon },
-      { IconidIcon: "Iconbg_3", IconnameIcon: "IconLaboratory", IconpreviewIcon: "🔬", IconcategoryIcon: "Iconbackgrounds", IconrarityIcon: "Iconrare", IconxpCostIcon: Icon125Icon, IconlevelRequiredIcon: Icon5Icon, IconownedIcon: IconfalseIcon, IconequippedIcon: IconfalseIcon },
-      { IconidIcon: "Iconbg_4", IconnameIcon: "IconSpaceIcon IconStation", IconpreviewIcon: "🛸", IconcategoryIcon: "Iconbackgrounds", IconrarityIcon: "Iconepic", IconxpCostIcon: Icon275Icon, IconlevelRequiredIcon: Icon11Icon, IconownedIcon: IconfalseIcon, IconequippedIcon: IconfalseIcon },
-      { IconidIcon: "Iconbg_5", IconnameIcon: "IconMysticIcon IconPortal", IconpreviewIcon: "🌀", IconcategoryIcon: "Iconbackgrounds", IconrarityIcon: "Iconlegendary", IconxpCostIcon: Icon450Icon, IconlevelRequiredIcon: Icon16Icon, IconownedIcon: IconfalseIcon, IconequippedIcon: IconfalseIcon },
+    id: "backgrounds",
+    name: "Backgrounds",
+    icon: <ColorLens />,
+    items: [
+      { id: "bg_1", name: "Classroom", preview: "🏫", category: "backgrounds", rarity: "common", xpCost: 0, levelRequired: 1, owned: true, equipped: true },
+      { id: "bg_2", name: "Library", preview: "📚", category: "backgrounds", rarity: "common", xpCost: 40, levelRequired: 2, owned: true, equipped: false },
+      { id: "bg_3", name: "Laboratory", preview: "🔬", category: "backgrounds", rarity: "rare", xpCost: 125, levelRequired: 5, owned: false, equipped: false },
+      { id: "bg_4", name: "Space Station", preview: "🛸", category: "backgrounds", rarity: "epic", xpCost: 275, levelRequired: 11, owned: false, equipped: false },
+      { id: "bg_5", name: "Mystic Portal", preview: "🌀", category: "backgrounds", rarity: "legendary", xpCost: 450, levelRequired: 16, owned: false, equipped: false },
     ],
   },
 ];
 
-IconexportIcon IcondefaultIcon IconfunctionIcon IconAvatarIcon() {
-  IconconstIcon IcondispatchIcon = IconuseAppDispatchIcon();
-  IconconstIcon IconuserXPIcon = IconuseAppSelectorIcon((IconsIcon) => IconsIcon.IcongamificationIcon?.IconxpIcon ?? Icon0Icon);
-  IconconstIcon IconuserLevelIcon = IconuseAppSelectorIcon((IconsIcon) => IconsIcon.IcongamificationIcon?.IconlevelIcon ?? Icon1Icon);
+export default function Avatar() {
+  const dispatch = useAppDispatch();
+  const userXP = useAppSelector((s) => s.gamification?.xp ?? 0);
+  const userLevel = useAppSelector((s) => s.gamification?.level ?? 1);
   
-  IconconstIcon [IconselectedCategoryIcon, IconsetSelectedCategoryIcon] = IconuseStateIcon("Iconhairstyles");
-  IconconstIcon [IconavatarItemsIcon, IconsetAvatarItemsIcon] = IconuseStateIcon<IconAvatarItemIcon[]>(
-    IconAVATAR_CATEGORIESIcon.IconflatMapIcon((IconcatIcon) => IconcatIcon.IconitemsIcon)
+  const [selectedCategory, setSelectedCategory] = useState("hairstyles");
+  const [avatarItems, setAvatarItems] = useState<AvatarItem[]>(
+    AVATAR_CATEGORIES.flatMap((cat) => cat.items)
   );
-  IconconstIcon [IconavatarNameIcon, IconsetAvatarNameIcon] = IconuseStateIcon("IconCoolIcon IconStudent");
-  IconconstIcon [IconshowShopIcon, IconsetShowShopIcon] = IconuseStateIcon(IconfalseIcon);
-  IconconstIcon [IconavatarSettingsIcon, IconsetAvatarSettingsIcon] = IconuseStateIcon({
-    IconshowBadgesIcon: IcontrueIcon,
-    IconshowLevelIcon: IcontrueIcon,
-    IconanimatedEffectsIcon: IcontrueIcon,
-    IconpublicProfileIcon: IcontrueIcon,
+  const [avatarName, setAvatarName] = useState("Cool Student");
+  const [showShop, setShowShop] = useState(false);
+  const [avatarSettings, setAvatarSettings] = useState({
+    showBadges: true,
+    showLevel: true,
+    animatedEffects: true,
+    publicProfile: true,
   });
 
-  IconconstIcon IconcurrentCategoryIcon = IconAVATAR_CATEGORIESIcon.IconfindIcon((IconcatIcon) => IconcatIcon.IconidIcon === IconselectedCategoryIcon);
+  const currentCategory = AVATAR_CATEGORIES.find((cat) => cat.id === selectedCategory);
 
-  IconconstIcon IconhandleEquipItemIcon = (IconitemIdIcon: IconstringIcon) => {
-    IconsetAvatarItemsIcon((IconprevIcon) =>
-      IconprevIcon.IconmapIcon((IconitemIcon) => {
-        IconifIcon (IconitemIcon.IconidIcon === IconitemIdIcon && IconitemIcon.IconownedIcon) {
-          // IconUnequipIcon IconallIcon IconitemsIcon IconinIcon IcontheIcon IconsameIcon IconcategoryIcon, IconthenIcon IconequipIcon IconthisIcon IcononeIcon
-          IconconstIcon IconnewEquippedIcon = IconitemIcon.IconcategoryIcon === IconcurrentCategoryIcon?.IconidIcon ? !IconitemIcon.IconequippedIcon : IconitemIcon.IconequippedIcon;
-          IconreturnIcon { ...IconitemIcon, IconequippedIcon: IconnewEquippedIcon };
-        } IconelseIcon IconifIcon (IconitemIcon.IconcategoryIcon === IconcurrentCategoryIcon?.IconidIcon) {
-          IconreturnIcon { ...IconitemIcon, IconequippedIcon: IconfalseIcon };
+  const handleEquipItem = (itemId: string) => {
+    setAvatarItems((prev) =>
+      prev.map((item) => {
+        if (item.id === itemId && item.owned) {
+          // Unequip all items in the same category, then equip this one
+          const newEquipped = item.category === currentCategory?.id ? !item.equipped : item.equipped;
+          return { ...item, equipped: newEquipped };
+        } else if (item.category === currentCategory?.id) {
+          return { ...item, equipped: false };
         }
-        IconreturnIcon IconitemIcon;
+        return item;
       })
     );
     
-    IcondispatchIcon(IconaddNotificationIcon({
-      IconmessageIcon: "IconAvatarIcon IconitemIcon IconequippedIcon!",
-      IcontypeIcon: "Iconsuccess",
+    dispatch(addNotification({
+      message: "Avatar item equipped!",
+      type: "success",
     }));
   };
 
-  IconconstIcon IconhandlePurchaseItemIcon = (IconitemIcon: IconAvatarItemIcon) => {
-    IconifIcon (IconuserXPIcon >= IconitemIcon.IconxpCostIcon && IconuserLevelIcon >= IconitemIcon.IconlevelRequiredIcon) {
-      IconsetAvatarItemsIcon((IconprevIcon) =>
-        IconprevIcon.IconmapIcon((IconiIcon) => (IconiIcon.IconidIcon === IconitemIcon.IconidIcon ? { ...IconiIcon, IconownedIcon: IcontrueIcon } : IconiIcon))
+  const handlePurchaseItem = (item: AvatarItem) => {
+    if (userXP >= item.xpCost && userLevel >= item.levelRequired) {
+      setAvatarItems((prev) =>
+        prev.map((i) => (i.id === item.id ? { ...i, owned: true } : i))
       );
       
-      IcondispatchIcon(IconaddNotificationIcon({
-        IconmessageIcon: `IconPurchasedIcon ${IconitemIcon.IconnameIcon} IconforIcon ${IconitemIcon.IconxpCostIcon} IconXPIcon!`,
-        IcontypeIcon: "Iconsuccess",
+      dispatch(addNotification({
+        message: `Purchased ${item.name} for ${item.xpCost} XP!`,
+        type: "success",
       }));
-    } IconelseIcon {
-      IcondispatchIcon(IconaddNotificationIcon({
-        IconmessageIcon: "IconInsufficientIcon IconXPIcon IconorIcon IconlevelIcon IconrequirementIcon IconnotIcon Iconmet",
-        IcontypeIcon: "Iconerror",
+    } else {
+      dispatch(addNotification({
+        message: "Insufficient XP or level requirement not met",
+        type: "error",
       }));
     }
   };
 
-  IconconstIcon IconhandleSaveAvatarIcon = () => {
-    // IconInIcon IconproductionIcon, IconthisIcon IconwouldIcon IconsaveIcon IcontoIcon IcontheIcon IconbackendIcon
-    IcondispatchIcon(IconaddNotificationIcon({
-      IconmessageIcon: "IconAvatarIcon IconsavedIcon IconsuccessfullyIcon!",
-      IcontypeIcon: "Iconsuccess",
+  const handleSaveAvatar = () => {
+    // In production, this would save to the backend
+    dispatch(addNotification({
+      message: "Avatar saved successfully!",
+      type: "success",
     }));
   };
 
-  IconconstIcon IconhandleRandomizeIcon = () => {
-    // IconRandomizeIcon IconequippedIcon IconitemsIcon IconfromIcon IconownedIcon IconitemsIcon
-    IconconstIcon IconcategoriesIcon = ["Iconhairstyles", "Iconoutfits", "Iconaccessories", "Iconbackgrounds"];
+  const handleRandomize = () => {
+    // Randomize equipped items from owned items
+    const categories = ["hairstyles", "outfits", "accessories", "backgrounds"];
     
-    IconsetAvatarItemsIcon((IconprevIcon) => {
-      IconconstIcon IconnewItemsIcon = [...IconprevIcon];
-      IconcategoriesIcon.IconforEachIcon((IconcategoryIcon) => {
-        IconconstIcon IconownedInCategoryIcon = IconnewItemsIcon.IconfilterIcon((IconitemIcon) => IconitemIcon.IconcategoryIcon === IconcategoryIcon && IconitemIcon.IconownedIcon);
-        IconifIcon (IconownedInCategoryIcon.IconlengthIcon > Icon0Icon) {
-          // IconUnequipIcon IconallIcon IconinIcon IconcategoryIcon
-          IconnewItemsIcon.IconforEachIcon((IconitemIcon) => {
-            IconifIcon (IconitemIcon.IconcategoryIcon === IconcategoryIcon) {
-              IconitemIcon.IconequippedIcon = IconfalseIcon;
+    setAvatarItems((prev) => {
+      const newItems = [...prev];
+      categories.forEach((category) => {
+        const ownedInCategory = newItems.filter((item) => item.category === category && item.owned);
+        if (ownedInCategory.length > 0) {
+          // Unequip all in category
+          newItems.forEach((item) => {
+            if (item.category === category) {
+              item.equipped = false;
             }
           });
-          // IconEquipIcon IconrandomIcon IcononeIcon
-          IconconstIcon IconrandomItemIcon = IconownedInCategoryIcon[IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * IconownedInCategoryIcon.IconlengthIcon)];
-          IconconstIcon IconitemIndexIcon = IconnewItemsIcon.IconfindIndexIcon((IconitemIcon) => IconitemIcon.IconidIcon === IconrandomItemIcon.IconidIcon);
-          IconifIcon (IconitemIndexIcon !== -Icon1Icon) {
-            IconnewItemsIcon[IconitemIndexIcon].IconequippedIcon = IcontrueIcon;
+          // Equip random one
+          const randomItem = ownedInCategory[Math.floor(Math.random() * ownedInCategory.length)];
+          const itemIndex = newItems.findIndex((item) => item.id === randomItem.id);
+          if (itemIndex !== -1) {
+            newItems[itemIndex].equipped = true;
           }
         }
       });
-      IconreturnIcon IconnewItemsIcon;
+      return newItems;
     });
     
-    IcondispatchIcon(IconaddNotificationIcon({
-      IconmessageIcon: "IconAvatarIcon IconrandomizedIcon!",
-      IcontypeIcon: "Iconinfo",
+    dispatch(addNotification({
+      message: "Avatar randomized!",
+      type: "info",
     }));
   };
 
-  IconconstIcon IcongetRarityColorIcon = (IconrarityIcon: IconstringIcon) => {
-    IconswitchIcon (IconrarityIcon) {
-      IconcaseIcon "Iconcommon": IconreturnIcon "Icondefault";
-      IconcaseIcon "Iconrare": IconreturnIcon "Iconprimary";
-      IconcaseIcon "Iconepic": IconreturnIcon "Iconsecondary";
-      IconcaseIcon "Iconlegendary": IconreturnIcon "Iconwarning";
-      IcondefaultIcon: IconreturnIcon "Icondefault";
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case "common": return "default";
+      case "rare": return "primary";
+      case "epic": return "secondary";
+      case "legendary": return "warning";
+      default: return "default";
     }
   };
 
-  IconconstIcon IcongetEquippedItemsIcon = () => {
-    IconreturnIcon IconavatarItemsIcon.IconfilterIcon((IconitemIcon) => IconitemIcon.IconequippedIcon);
+  const getEquippedItems = () => {
+    return avatarItems.filter((item) => item.equipped);
   };
 
-  IconreturnIcon (
-    <IconBoxIcon>
-      <IconTypographyIcon IconorderIcon={Icon4Icon} IcongutterBottomIcon IconfontWeightIcon={Icon600Icon}>
-        IconAvatarIcon IconCustomizationIcon
-      <IconIconIcon/IconTypographyIcon>
+  return (
+    <Box>
+      <Typography variant="h4" gutterBottom fontWeight={600}>
+        Avatar Customization
+      </Typography>
 
-      <IconGridIcon IconcontainerIcon IconspacingIcon={Icon3Icon}>
-        {/* IconAvatarIcon IconPreviewIcon */}
-        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconmdIcon={Icon4Icon}>
-          <IconCardIcon>
-            <IconCardContentIcon>
-              <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
-                IconAvatarIcon IconPreviewIcon
-              <IconIconIcon/IconTypographyIcon>
+      <Grid container spacing={3}>
+        {/* Avatar Preview */}
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Avatar Preview
+              </Typography>
               
-              <IconBoxIcon IconstyleIcon={{ IconpositionIcon: "Iconrelative", IconmbIcon: Icon3Icon }}>
-                <IconPaperIcon
-                  IconelevationIcon={Icon3Icon}
-                  IconstyleIcon={{
-                    IconpIcon: Icon4Icon,
-                    IconborderRadiusIcon: Icon2Icon,
-                    IconbackgroundIcon: "IconlinearIcon-IcongradientIcon(Icon135degIcon, #Icon667eeaIcon Icon0Icon%, #Icon764ba2Icon Icon100Icon%)",
-                    IcondisplayIcon: "Iconflex",
-                    IconjustifyContentIcon: "Iconcenter",
-                    IconalignItemsIcon: "Iconcenter",
-                    IconminHeightIcon: Icon300Icon,
+              <Box sx={{ position: "relative", mb: 3 }}>
+                <Paper
+                  elevation={3}
+                  sx={{
+                    p: 4,
+                    borderRadius: 2,
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: 300,
                   }}
                 >
-                  <IconBoxIcon IconstyleIcon={{ IcontextAlignIcon: "Iconcenter" }}>
-                    <IconMuiAvatarIcon
-                      IconstyleIcon={{
-                        IconwidthIcon: Icon150Icon,
-                        IconheightIcon: Icon150Icon,
-                        IconfontSizeIcon: "Icon4rem",
-                        IconmarginIcon: "Icon0Icon Iconauto",
-                        IconmbIcon: Icon2Icon,
-                        IconbgcolorIcon: "Iconwhite",
-                        IconcolorIcon: "IconprimaryIcon.Iconmain",
+                  <Box sx={{ textAlign: "center" }}>
+                    <MuiAvatar
+                      sx={{
+                        width: 150,
+                        height: 150,
+                        fontSize: "4rem",
+                        margin: "0 auto",
+                        mb: 2,
+                        bgcolor: "white",
+                        color: "primary.main",
                       }}
                     >
-                      {IcongetEquippedItemsIcon().IconmapIcon((IconitemIcon) => IconitemIcon.IconpreviewIcon)[Icon0Icon] || "👤"}
-                    <IconIconIcon/IconMuiAvatarIcon>
+                      {getEquippedItems().map((item) => item.preview)[0] || "👤"}
+                    </MuiAvatar>
                     
-                    <IconTypographyIcon IconorderIcon={Icon5Icon} IconstyleIcon={{ IconcolorIcon: "Iconwhite", IconmbIcon: Icon1Icon }}>
-                      {IconavatarNameIcon}
-                    <IconIconIcon/IconTypographyIcon>
+                    <Typography variant="h5" sx={{ color: "white", mb: 1 }}>
+                      {avatarName}
+                    </Typography>
                     
-                    {IconavatarSettingsIcon.IconshowLevelIcon && (
-                      <IconChipIcon
-                        IconlabelIcon={`IconLevelIcon ${IconuserLevelIcon}`}
-                        IconcolorIcon="Iconblue"
-                        IconsizeIcon="Iconsmall"
-                        IconstyleIcon={{ IconmrIcon: Icon1Icon }}
+                    {avatarSettings.showLevel && (
+                      <Chip
+                        label={`Level ${userLevel}`}
+                        color="primary"
+                        size="small"
+                        sx={{ mr: 1 }}
                       />
                     )}
                     
-                    {IconavatarSettingsIcon.IconshowBadgesIcon && (
-                      <IconChipIcon
-                        IconiconIcon={<IconIconEmojiEventsIcon />}
-                        IconlabelIcon="Icon5Icon IconBadges"
-                        IconcolorIcon="Icongray"
-                        IconsizeIcon="Iconsmall"
+                    {avatarSettings.showBadges && (
+                      <Chip
+                        icon={<EmojiEvents />}
+                        label="5 Badges"
+                        color="secondary"
+                        size="small"
                       />
                     )}
-                  <IconIconIcon/IconBoxIcon>
-                <IconIconIcon/IconPaperIcon>
+                  </Box>
+                </Paper>
                 
-                <IconIconButtonIcon
-                  IconstyleIcon={{
-                    IconpositionIcon: "Iconabsolute",
-                    IcontopIcon: Icon10Icon,
-                    IconrightIcon: Icon10Icon,
-                    IconbgcolorIcon: "Iconwhite",
-                    "&:Iconhover": { IconbgcolorIcon: "IcongreyIcon.Icon100" },
+                <IconButton
+                  sx={{
+                    position: "absolute",
+                    top: 10,
+                    right: 10,
+                    bgcolor: "white",
+                    "&:hover": { bgcolor: "grey.100" },
                   }}
-                  IconsizeIcon="Iconsmall"
+                  size="small"
                 >
-                  <IconIconCameraIcon />
-                <IconIconIcon/IconIconButtonIcon>
-              <IconIconIcon/IconBoxIcon>
+                  <Camera />
+                </IconButton>
+              </Box>
 
-              <IconTextFieldIcon
-                IconfullWidthIcon
-                IconlabelIcon="IconAvatarIcon IconName"
-                IconvalueIcon={IconavatarNameIcon}
-                IcononChangeIcon={(IconeIcon) => IconsetAvatarNameIcon(IconeIcon.IcontargetIcon.IconvalueIcon)}
-                IconvariantIcon="Iconoutline"
-                IconsizeIcon="Iconsmall"
-                IconstyleIcon={{ IconmbIcon: Icon2Icon }}
-                IconInputPropsIcon={{
-                  IconendAdornmentIcon: <IconIconEditIcon IconfontSizeIcon="Iconsmall" />,
+              <TextField
+                fullWidth
+                label="Avatar Name"
+                value={avatarName}
+                onChange={(e) => setAvatarName(e.target.value)}
+                variant="outlined"
+                size="small"
+                sx={{ mb: 2 }}
+                InputProps={{
+                  endAdornment: <Edit fontSize="small" />,
                 }}
               />
 
-              <IconStackIcon IconspacingIcon={Icon1Icon}>
-                <IconFormControlLabelIcon
-                  IconcontrolIcon={
-                    <IconSwitchIcon
-                      IconcheckedIcon={IconavatarSettingsIcon.IconshowBadgesIcon}
-                      IcononChangeIcon={(IconeIcon) =>
-                        IconsetAvatarSettingsIcon({ ...IconavatarSettingsIcon, IconshowBadgesIcon: IconeIcon.IcontargetIcon.IconcheckedIcon })
+              <Stack spacing={1}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={avatarSettings.showBadges}
+                      onChange={(e) =>
+                        setAvatarSettings({ ...avatarSettings, showBadges: e.target.checked })
                       }
                     />
                   }
-                  IconlabelIcon="IconShowIcon IconBadges"
+                  label="Show Badges"
                 />
-                <IconFormControlLabelIcon
-                  IconcontrolIcon={
-                    <IconSwitchIcon
-                      IconcheckedIcon={IconavatarSettingsIcon.IconshowLevelIcon}
-                      IcononChangeIcon={(IconeIcon) =>
-                        IconsetAvatarSettingsIcon({ ...IconavatarSettingsIcon, IconshowLevelIcon: IconeIcon.IcontargetIcon.IconcheckedIcon })
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={avatarSettings.showLevel}
+                      onChange={(e) =>
+                        setAvatarSettings({ ...avatarSettings, showLevel: e.target.checked })
                       }
                     />
                   }
-                  IconlabelIcon="IconShowIcon IconLevel"
+                  label="Show Level"
                 />
-                <IconFormControlLabelIcon
-                  IconcontrolIcon={
-                    <IconSwitchIcon
-                      IconcheckedIcon={IconavatarSettingsIcon.IconanimatedEffectsIcon}
-                      IcononChangeIcon={(IconeIcon) =>
-                        IconsetAvatarSettingsIcon({ ...IconavatarSettingsIcon, IconanimatedEffectsIcon: IconeIcon.IcontargetIcon.IconcheckedIcon })
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={avatarSettings.animatedEffects}
+                      onChange={(e) =>
+                        setAvatarSettings({ ...avatarSettings, animatedEffects: e.target.checked })
                       }
                     />
                   }
-                  IconlabelIcon="IconAnimatedIcon IconEffects"
+                  label="Animated Effects"
                 />
-                <IconFormControlLabelIcon
-                  IconcontrolIcon={
-                    <IconSwitchIcon
-                      IconcheckedIcon={IconavatarSettingsIcon.IconpublicProfileIcon}
-                      IcononChangeIcon={(IconeIcon) =>
-                        IconsetAvatarSettingsIcon({ ...IconavatarSettingsIcon, IconpublicProfileIcon: IconeIcon.IcontargetIcon.IconcheckedIcon })
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={avatarSettings.publicProfile}
+                      onChange={(e) =>
+                        setAvatarSettings({ ...avatarSettings, publicProfile: e.target.checked })
                       }
                     />
                   }
-                  IconlabelIcon="IconPublicIcon IconProfile"
+                  label="Public Profile"
                 />
-              <IconIconIcon/IconStackIcon>
+              </Stack>
 
-              <IconDividerIcon IconstyleIcon={{ IconmyIcon: Icon2Icon }} />
+              <Divider sx={{ my: 2 }} />
 
-              <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon}>
-                <IconButtonIcon
-                  IconvariantIcon="Iconfilled"
-                  IconfullWidthIcon
-                  IconstartIconIcon={<IconIconDeviceFloppyIcon />}
-                  IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleSaveAvatarIcon}
+              <Stack direction="row" spacing={1}>
+                <Button
+                  variant="contained"
+                  fullWidth
+                  startIcon={<Save />}
+                  onClick={handleSaveAvatar}
                 >
-                  IconIconDeviceFloppyIcon IconAvatarIcon
-                <IconIconIcon/IconButtonIcon>
-                <IconButtonIcon
-                  IconvariantIcon="Iconoutline"
-                  IconfullWidthIcon
-                  IconstartIconIcon={<IconIconRefreshIcon />}
-                  IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleRandomizeIcon}
+                  Save Avatar
+                </Button>
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  startIcon={<Refresh />}
+                  onClick={handleRandomize}
                 >
-                  IconRandomizeIcon
-                <IconIconIcon/IconButtonIcon>
-              <IconIconIcon/IconStackIcon>
-            <IconIconIcon/IconCardContentIcon>
-          <IconIconIcon/IconCardIcon>
-        <IconIconIcon/IconGridIcon>
+                  Randomize
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
 
-        {/* IconCustomizationIcon IconOptionsIcon */}
-        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconmdIcon={Icon8Icon}>
-          <IconCardIcon>
-            <IconCardContentIcon>
-              <IconStackIcon IcondirectionIcon="Iconrow" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="Iconcenter" IconmbIcon={Icon2Icon}>
-                <IconTypographyIcon IconorderIcon={Icon6Icon}>IconCustomizationIcon IconOptionsIcon<IconIconIcon/IconTypographyIcon>
-                <IconButtonIcon
-                  IconvariantIcon="Iconoutline"
-                  IconstartIconIcon={<IconIconShoppingCartIcon />}
-                  IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconsetShowShopIcon(!IconshowShopIcon)}
+        {/* Customization Options */}
+        <Grid item xs={12} md={8}>
+          <Card>
+            <CardContent>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h6">Customization Options</Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<ShoppingCart />}
+                  onClick={() => setShowShop(!showShop)}
                 >
-                  {IconshowShopIcon ? "IconMyIcon IconItems" : "IconShop"}
-                <IconIconIcon/IconButtonIcon>
-              <IconIconIcon/IconStackIcon>
+                  {showShop ? "My Items" : "Shop"}
+                </Button>
+              </Stack>
 
-              <IconTabsIcon
-                IconvalueIcon={IconselectedCategoryIcon}
-                IcononChangeIcon={(Icon_Icon, IconvalueIcon) => IconsetSelectedCategoryIcon(IconvalueIcon)}
-                IconvariantIcon="Iconscrollable"
-                IconscrollButtonsIcon="Iconauto"
-                IconstyleIcon={{ IconborderBottomIcon: Icon1Icon, IconborderColorIcon: "Icondivider", IconmbIcon: Icon2Icon }}
+              <Tabs
+                value={selectedCategory}
+                onChange={(_, value) => setSelectedCategory(value)}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}
               >
-                {IconAVATAR_CATEGORIESIcon.IconmapIcon((IconcategoryIcon) => (
-                  <IconTabIcon
-                    IconkeyIcon={IconcategoryIcon.IconidIcon}
-                    IconlabelIcon={IconcategoryIcon.IconnameIcon}
-                    IconvalueIcon={IconcategoryIcon.IconidIcon}
-                    IconiconIcon={IconcategoryIcon.IconiconIcon IconasIcon IconReactIcon.IconReactElementIcon}
-                    IconiconPositionIcon="Iconstart"
+                {AVATAR_CATEGORIES.map((category) => (
+                  <Tab
+                    key={category.id}
+                    label={category.name}
+                    value={category.id}
+                    icon={category.icon as React.ReactElement}
+                    iconPosition="start"
                   />
                 ))}
-              <IconIconIcon/IconTabsIcon>
+              </Tabs>
 
-              <IconGridIcon IconcontainerIcon IconspacingIcon={Icon2Icon}>
-                {IconcurrentCategoryIcon?.IconitemsIcon
-                  .IconfilterIcon((IconitemIcon) => IconshowShopIcon || IconitemIcon.IconownedIcon)
-                  .IconmapIcon((IconitemIcon) => (
-                    <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon} IconsmIcon={Icon4Icon} IconmdIcon={Icon3Icon} IconkeyIcon={IconitemIcon.IconidIcon}>
-                      <IconCardIcon
-                        IconstyleIcon={{
-                          IconpositionIcon: "Iconrelative",
-                          IconcursorIcon: IconitemIcon.IconownedIcon ? "Iconpointer" : "Icondefault",
-                          IconborderIcon: IconitemIcon.IconequippedIcon ? Icon2Icon : Icon1Icon,
-                          IconborderColorIcon: IconitemIcon.IconequippedIcon ? "IconprimaryIcon.Iconmain" : "Icondivider",
-                          IcontransitionIcon: "IconallIcon Icon0Icon.Icon2s",
-                          "&:Iconhover": IconitemIcon.IconownedIcon ? {
-                            IcontransformIcon: "IcontranslateYIcon(-Icon4pxIcon)",
-                            IconboxShadowIcon: Icon3Icon,
+              <Grid container spacing={2}>
+                {currentCategory?.items
+                  .filter((item) => showShop || item.owned)
+                  .map((item) => (
+                    <Grid item xs={6} sm={4} md={3} key={item.id}>
+                      <Card
+                        sx={{
+                          position: "relative",
+                          cursor: item.owned ? "pointer" : "default",
+                          border: item.equipped ? 2 : 1,
+                          borderColor: item.equipped ? "primary.main" : "divider",
+                          transition: "all 0.2s",
+                          "&:hover": item.owned ? {
+                            transform: "translateY(-4px)",
+                            boxShadow: 3,
                           } : {},
                         }}
-                        IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconitemIcon.IconownedIcon && IconhandleEquipItemIcon(IconitemIcon.IconidIcon)}
+                        onClick={() => item.owned && handleEquipItem(item.id)}
                       >
-                        <IconCardContentIcon IconstyleIcon={{ IcontextAlignIcon: "Iconcenter", IconpIcon: Icon1Icon.Icon5Icon }}>
-                          <IconTypographyIcon IconfontSizeIcon="Icon2Icon.Icon5rem">{IconitemIcon.IconpreviewIcon}<IconIconIcon/IconTypographyIcon>
-                          <IconTypographyIcon IconsizeIcon="Iconsm" IconnoWrapIcon>
-                            {IconitemIcon.IconnameIcon}
-                          <IconIconIcon/IconTypographyIcon>
+                        <CardContent sx={{ textAlign: "center", p: 1.5 }}>
+                          <Typography fontSize="2.5rem">{item.preview}</Typography>
+                          <Typography variant="body2" noWrap>
+                            {item.name}
+                          </Typography>
                           
-                          <IconChipIcon
-                            IconlabelIcon={IconitemIcon.IconrarityIcon}
-                            IconsizeIcon="Iconsmall"
-                            IconcolorIcon={IcongetRarityColorIcon(IconitemIcon.IconrarityIcon) IconasIcon IconanyIcon}
-                            IconstyleIcon={{ IconmtIcon: Icon0Icon.Icon5Icon }}
+                          <Chip
+                            label={item.rarity}
+                            size="small"
+                            color={getRarityColor(item.rarity) as any}
+                            sx={{ mt: 0.5 }}
                           />
 
-                          {!IconitemIcon.IconownedIcon && (
-                            <IconIconIcon>
-                              <IconTypographyIcon IconvariantIcon="Iconcaption" IcondisplayIcon="Iconblock" IconstyleIcon={{ IconmtIcon: Icon1Icon }}>
-                                {IconitemIcon.IconxpCostIcon} IconXPIcon
-                              <IconIconIcon/IconTypographyIcon>
-                              <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                                IconLevelIcon {IconitemIcon.IconlevelRequiredIcon}
-                              <IconIconIcon/IconTypographyIcon>
-                            <IconIconIcon/>
+                          {!item.owned && (
+                            <>
+                              <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                                {item.xpCost} XP
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                Level {item.levelRequired}
+                              </Typography>
+                            </>
                           )}
 
-                          {IconitemIcon.IconequippedIcon && (
-                            <IconChipIcon
-                              IconlabelIcon="IconEquipped"
-                              IconcolorIcon="Icongreen"
-                              IconsizeIcon="Iconsmall"
-                              IconstyleIcon={{ IconmtIcon: Icon1Icon }}
+                          {item.equipped && (
+                            <Chip
+                              label="Equipped"
+                              color="success"
+                              size="small"
+                              sx={{ mt: 1 }}
                             />
                           )}
-                        <IconIconIcon/IconCardContentIcon>
+                        </CardContent>
 
-                        {!IconitemIcon.IconownedIcon && (
-                          <IconBoxIcon
-                            IconstyleIcon={{
-                              IconpositionIcon: "Iconabsolute",
-                              IcontopIcon: Icon0Icon,
-                              IconleftIcon: Icon0Icon,
-                              IconrightIcon: Icon0Icon,
-                              IconbottomIcon: Icon0Icon,
-                              IconbgcolorIcon: "IconrgbaIcon(Icon0Icon,Icon0Icon,Icon0Icon,Icon0Icon.Icon6Icon)",
-                              IcondisplayIcon: "Iconflex",
-                              IconalignItemsIcon: "Iconcenter",
-                              IconjustifyContentIcon: "Iconcenter",
-                              IconflexDirectionIcon: "Iconcolumn",
+                        {!item.owned && (
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              bgcolor: "rgba(0,0,0,0.6)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexDirection: "column",
                             }}
                           >
-                            {IconuserLevelIcon >= IconitemIcon.IconlevelRequiredIcon ? (
-                              <IconIconButtonIcon
-                                IconcolorIcon="Iconblue"
-                                IconstyleIcon={{ IconbgcolorIcon: "Iconwhite", "&:Iconhover": { IconbgcolorIcon: "IcongreyIcon.Icon100" } }}
-                                IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => (IconeIcon) => {
-                                  IconeIcon.IconstopPropagationIcon();
-                                  IconhandlePurchaseItemIcon(IconitemIcon);
+                            {userLevel >= item.levelRequired ? (
+                              <IconButton
+                                color="primary"
+                                sx={{ bgcolor: "white", "&:hover": { bgcolor: "grey.100" } }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePurchaseItem(item);
                                 }}
                               >
-                                <IconIconShoppingCartIcon />
-                              <IconIconIcon/IconIconButtonIcon>
+                                <ShoppingCart />
+                              </IconButton>
                             ) : (
-                              <IconIconLockIcon IconstyleIcon={{ IconcolorIcon: "Iconwhite" }} />
+                              <Lock sx={{ color: "white" }} />
                             )}
-                          <IconIconIcon/IconBoxIcon>
+                          </Box>
                         )}
-                      <IconIconIcon/IconCardIcon>
-                    <IconIconIcon/IconGridIcon>
+                      </Card>
+                    </Grid>
                   ))}
-              <IconIconIcon/IconGridIcon>
+              </Grid>
 
-              {IconshowShopIcon && (
-                <IconBoxIcon IconstyleIcon={{ IconmtIcon: Icon3Icon, IconpIcon: Icon2Icon, IconbgcolorIcon: "IcongreyIcon.Icon50", IconborderRadiusIcon: Icon1Icon }}>
-                  <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
-                    💡 <IconstrongIcon>IconTipIcon:<IconIconIcon/IconstrongIcon> IconEarnIcon IconmoreIcon IconXPIcon IconbyIcon IconcompletingIcon IconlessonsIcon IconandIcon IconchallengesIcon IcontoIcon IconunlockIcon IconrareIcon IconitemsIcon!
-                  <IconIconIcon/IconTypographyIcon>
-                  <IconTypographyIcon IconsizeIcon="Iconsm" IconstyleIcon={{ IconmtIcon: Icon1Icon }}>
-                    IconYourIcon IconXPIcon: <IconstrongIcon>{IconuserXPIcon}<IconIconIcon/IconstrongIcon> | IconLevelIcon: <IconstrongIcon>{IconuserLevelIcon}<IconIconIcon/IconstrongIcon>
-                  <IconIconIcon/IconTypographyIcon>
-                <IconIconIcon/IconBoxIcon>
+              {showShop && (
+                <Box sx={{ mt: 3, p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    💡 <strong>Tip:</strong> Earn more XP by completing lessons and challenges to unlock rare items!
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Your XP: <strong>{userXP}</strong> | Level: <strong>{userLevel}</strong>
+                  </Typography>
+                </Box>
               )}
-            <IconIconIcon/IconCardContentIcon>
-          <IconIconIcon/IconCardIcon>
-        <IconIconIcon/IconGridIcon>
-      <IconIconIcon/IconGridIcon>
-    <IconIconIcon/IconBoxIcon>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
   );
 }

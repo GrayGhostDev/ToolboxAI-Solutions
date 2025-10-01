@@ -1,769 +1,858 @@
-IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../IconutilsIcon/IconmuiIcon-Iconimports';
-// @IcontsIcon-IconnocheckIcon - IconTemporaryIcon IconfixIcon IconforIcon IconPhaseIcon Icon3Icon
 /**
- * IconContentModerationPanelIcon IconComponentIcon
- * IconContentIcon IconmoderationIcon IconandIcon IconreviewIcon IconinterfaceIcon IconforIcon IconadministratorsIcon
+ * ContentModerationPanel Component
+ * Content moderation and review interface for administrators
  */
-IconimportIcon { IconmemoIcon, IconuseStateIcon, IconuseEffectIcon } IconfromIcon 'Iconreact';
 
-IconimportIcon {
-  IconSearchIcon IconasIcon IconIconSearchIcon,
-  IconFilterListIcon IconasIcon IconIconFilterIcon,
-  IconCheckIcon IconasIcon IconIconCheckIcon,
-  IconCloseIcon IconasIcon IconIconXIcon,
-  IconFlagIcon IconasIcon IconIconFlagIcon,
-  IconVisibilityIcon IconasIcon IconIconEyeIcon,
-  IconDeleteIcon IconasIcon IconIconTrashIcon,
-  IconWarningIcon IconasIcon IconIconAlertTriangleIcon,
-  IconInfoIcon IconasIcon IconIconInfoCircleIcon,
-  IconSchoolIcon IconasIcon IconIconSchoolIcon,
-  IconAssessmentIcon IconasIcon IconIconReportAnalyticsIcon,
-  IconMessageIcon IconasIcon IconIconMessageCircleIcon,
-  IconImageIcon IconasIcon IconIconImageIcon,
-  IconVideoLibraryIcon IconasIcon IconIconVideoLibraryIcon,
-  IconDescriptionIcon IconasIcon IconIconFileTextIcon,
-  IconCodeIcon IconasIcon IconIconCodeIcon,
-  IconReportIcon IconasIcon IconIconFlagIcon,
-  IconGavelIcon IconasIcon IconIconGavelIcon,
-  IconAutoAwesomeIcon IconasIcon IconIconAutoAwesomeIcon,
-  IconThumbUpIcon IconasIcon IconIconThumbUpIcon,
-  IconThumbDownIcon IconasIcon IconIconThumbDownIcon,
-} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
-IconimportIcon { IconformatIcon } IconfromIcon 'IcondateIcon-Iconfns';
-IconimportIcon { IconusePusherIcon } IconfromIcon '@/IconhooksIcon/IconusePusher';
-IconimportIcon { IconIconIcon, IconIconAlertTriangleIcon, IconIconAutoAwesomeIcon, IconIconCheckIcon, IconIconCodeIcon, IconIconEyeIcon, IconIconFileTextIcon, IconIconFilterIcon, IconIconFlagIcon, IconIconGavelIcon, IconIconImageIcon, IconIconInfoCircleIcon, IconIconMessageCircleIcon, IconIconReportAnalyticsIcon, IconIconSchoolIcon, IconIconSearchIcon, IconIconThumbDownIcon, IconIconThumbUpIcon, IconIconTrashIcon, IconIconVideoLibraryIcon, IconIconXIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
-IconexportIcon IcontypeIcon IconContentTypeIcon = 'Iconlesson' | 'Iconassessment' | 'Iconmessage' | 'Iconimage' | 'Iconvideo' | 'Icondocument' | 'Iconcode';
-IconexportIcon IcontypeIcon IconContentStatusIcon = 'Iconpending' | 'Iconapproved' | 'Iconrejected' | 'Iconflagged' | 'Iconunder_review';
-IconexportIcon IcontypeIcon IconModerationReasonIcon = 'Iconinappropriate' | 'Iconspam' | 'Iconcopyright' | 'Iconquality' | 'Iconpolicy_violation' | 'Iconother';
-IconexportIcon IconinterfaceIcon IconContentItemIcon {
-  IconidIcon: IconstringIcon;
-  IcontypeIcon: IconContentTypeIcon;
-  IcontitleIcon: IconstringIcon;
-  IcondescriptionIcon?: IconstringIcon;
-  IconcontentIcon?: IconstringIcon;
-  IconauthorIcon: {
-    IconidIcon: IconstringIcon;
-    IconnameIcon: IconstringIcon;
-    IconroleIcon: IconstringIcon;
-    IconavatarIcon?: IconstringIcon;
+import React, { memo, useState, useCallback, useEffect } from 'react';
+import {
+  Box,
+  Paper,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  IconButton,
+  Button,
+  Chip,
+  Stack,
+  TextField,
+  InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  AlertTitle,
+  Tooltip,
+  Checkbox,
+  Card,
+  CardContent,
+  CardActions,
+  CardMedia,
+  Grid,
+  Tab,
+  Tabs,
+  Badge,
+  LinearProgress,
+  Avatar,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  ListItemSecondaryAction,
+  useTheme,
+  alpha,
+} from '@mui/material';
+import {
+  Search as SearchIcon,
+  FilterList as FilterIcon,
+  Check as ApproveIcon,
+  Close as RejectIcon,
+  Flag as FlagIcon,
+  Visibility as ViewIcon,
+  Delete as DeleteIcon,
+  Warning as WarningIcon,
+  Info as InfoIcon,
+  School as EducationIcon,
+  Assessment as AssessmentIcon,
+  Message as MessageIcon,
+  Image as ImageIcon,
+  VideoLibrary as VideoIcon,
+  Description as DocumentIcon,
+  Code as CodeIcon,
+  Report as ReportIcon,
+  Gavel as PolicyIcon,
+  AutoAwesome as AIIcon,
+  ThumbUp as ThumbUpIcon,
+  ThumbDown as ThumbDownIcon,
+} from '@mui/icons-material';
+import { format } from 'date-fns';
+import { api } from '@/services/api';
+import { usePusher } from '@/hooks/usePusher';
+
+export type ContentType = 'lesson' | 'assessment' | 'message' | 'image' | 'video' | 'document' | 'code';
+export type ContentStatus = 'pending' | 'approved' | 'rejected' | 'flagged' | 'under_review';
+export type ModerationReason = 'inappropriate' | 'spam' | 'copyright' | 'quality' | 'policy_violation' | 'other';
+
+export interface ContentItem {
+  id: string;
+  type: ContentType;
+  title: string;
+  description?: string;
+  content?: string;
+  author: {
+    id: string;
+    name: string;
+    role: string;
+    avatar?: string;
   };
-  IconstatusIcon: IconContentStatusIcon;
-  IconcreatedAtIcon: IconstringIcon;
-  IconreviewedAtIcon?: IconstringIcon;
-  IconreviewedByIcon?: {
-    IconidIcon: IconstringIcon;
-    IconnameIcon: IconstringIcon;
+  status: ContentStatus;
+  createdAt: string;
+  reviewedAt?: string;
+  reviewedBy?: {
+    id: string;
+    name: string;
   };
-  IconflagsIcon: IconnumberIcon;
-  IconreportsIcon: IconArrayIcon<{
-    IconidIcon: IconstringIcon;
-    IconreasonIcon: IconModerationReasonIcon;
-    IcondescriptionIcon: IconstringIcon;
-    IconreportedByIcon: IconstringIcon;
-    IconcreatedAtIcon: IconstringIcon;
+  flags: number;
+  reports: Array<{
+    id: string;
+    reason: ModerationReason;
+    description: string;
+    reportedBy: string;
+    createdAt: string;
   }>;
-  IconmetadataIcon?: {
-    IconfileSizeIcon?: IconnumberIcon;
-    IcondurationIcon?: IconnumberIcon;
-    IconlanguageIcon?: IconstringIcon;
-    IcontagsIcon?: IconstringIcon[];
+  metadata?: {
+    fileSize?: number;
+    duration?: number;
+    language?: string;
+    tags?: string[];
   };
-  IconaiScoreIcon?: {
-    IconsafetyIcon: IconnumberIcon;
-    IconqualityIcon: IconnumberIcon;
-    IconrelevanceIcon: IconnumberIcon;
+  aiScore?: {
+    safety: number;
+    quality: number;
+    relevance: number;
   };
-  IconthumbnailIcon?: IconstringIcon;
+  thumbnail?: string;
 }
-IconexportIcon IconinterfaceIcon IconContentModerationPanelPropsIcon {
-  IcononContentApproveIcon?: (IconcontentIdIcon: IconstringIcon) => IconvoidIcon;
-  IcononContentRejectIcon?: (IconcontentIdIcon: IconstringIcon, IconreasonIcon: IconstringIcon) => IconvoidIcon;
-  IcononContentDeleteIcon?: (IconcontentIdIcon: IconstringIcon) => IconvoidIcon;
-  IcononContentViewIcon?: (IconcontentIcon: IconContentItemIcon) => IconvoidIcon;
-  IconshowAIAssistIcon?: IconbooleanIcon;
-  IconallowBulkActionsIcon?: IconbooleanIcon;
+
+export interface ContentModerationPanelProps {
+  onContentApprove?: (contentId: string) => void;
+  onContentReject?: (contentId: string, reason: string) => void;
+  onContentDelete?: (contentId: string) => void;
+  onContentView?: (content: ContentItem) => void;
+  showAIAssist?: boolean;
+  allowBulkActions?: boolean;
 }
-IconexportIcon IconconstIcon IconContentModerationPanelIcon = IconmemoIcon<IconContentModerationPanelPropsIcon>(({
-  IcononContentApproveIcon,
-  IcononContentRejectIcon,
-  IcononContentDeleteIcon,
-  IcononContentViewIcon,
-  IconshowAIAssistIcon = IcontrueIcon,
-  IconallowBulkActionsIcon = IcontrueIcon,
+
+export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
+  onContentApprove,
+  onContentReject,
+  onContentDelete,
+  onContentView,
+  showAIAssist = true,
+  allowBulkActions = true,
 }) => {
-  IconconstIcon IconthemeIcon = IconuseThemeIcon();
-  IconconstIcon [IcontabValueIcon, IconsetTabValueIcon] = IconuseStateIcon(Icon0Icon);
-  IconconstIcon [IconcontentIcon, IconsetContentIcon] = IconuseStateIcon<IconContentItemIcon[]>([]);
-  IconconstIcon [IconloadingIcon, IconsetLoadingIcon] = IconuseStateIcon(IconfalseIcon);
-  IconconstIcon [IconerrorIcon, IconsetErrorIcon] = IconuseStateIcon<IconstringIcon | IconnullIcon>(IconnullIcon);
-  // IconPaginationIcon
-  IconconstIcon [IconpageIcon, IconsetPageIcon] = IconuseStateIcon(Icon0Icon);
-  IconconstIcon [IconrowsPerPageIcon, IconsetRowsPerPageIcon] = IconuseStateIcon(Icon10Icon);
-  // IconSearchIcon IconandIcon IconfilterIcon
-  IconconstIcon [IconsearchTermIcon, IconsetSearchTermIcon] = IconuseStateIcon('');
-  IconconstIcon [IconfilterTypeIcon, IconsetFilterTypeIcon] = IconuseStateIcon<IconContentTypeIcon | 'Iconall'>('Iconall');
-  IconconstIcon [IconfilterStatusIcon, IconsetFilterStatusIcon] = IconuseStateIcon<IconContentStatusIcon | 'Iconall'>('Iconpending');
-  // IconSelectionIcon
-  IconconstIcon [IconselectedIcon, IconsetSelectedIcon] = IconuseStateIcon<IconstringIcon[]>([]);
-  IconconstIcon [IconselectedContentIcon, IconsetSelectedContentIcon] = IconuseStateIcon<IconContentItemIcon | IconnullIcon>(IconnullIcon);
-  // IconDialogsIcon
-  IconconstIcon [IconviewDialogOpenIcon, IconsetViewDialogOpenIcon] = IconuseStateIcon(IconfalseIcon);
-  IconconstIcon [IconrejectDialogOpenIcon, IconsetRejectDialogOpenIcon] = IconuseStateIcon(IconfalseIcon);
-  IconconstIcon [IconrejectReasonIcon, IconsetRejectReasonIcon] = IconuseStateIcon('');
-  // IconSetupIcon IconPusherIcon IconforIcon IconrealIcon-IcontimeIcon IconupdatesIcon
-  IconconstIcon { IconsubscribeIcon, IconunsubscribeIcon } = IconusePusherIcon();
-  IconuseEffectIcon(() => {
-    IconconstIcon IconchannelIcon = 'IconcontentIcon-Iconmoderation';
-    IconconstIcon IconhandleNewContentIcon = (IcondataIcon: IconContentItemIcon) => {
-      IconsetContentIcon(IconprevIcon => [IcondataIcon, ...IconprevIcon]);
+  const theme = useTheme();
+  const [tabValue, setTabValue] = useState(0);
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Pagination
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // Search and filter
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<ContentType | 'all'>('all');
+  const [filterStatus, setFilterStatus] = useState<ContentStatus | 'all'>('pending');
+
+  // Selection
+  const [selected, setSelected] = useState<string[]>([]);
+  const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
+
+  // Dialogs
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+
+  // Setup Pusher for real-time updates
+  const { subscribe, unsubscribe } = usePusher();
+
+  useEffect(() => {
+    const channel = 'content-moderation';
+
+    const handleNewContent = (data: ContentItem) => {
+      setContent(prev => [data, ...prev]);
     };
-    IconconstIcon IconhandleContentUpdateIcon = (IcondataIcon: { IconidIcon: IconstringIcon; IconstatusIcon: IconContentStatusIcon }) => {
-      IconsetContentIcon(IconprevIcon =>
-        IconprevIcon.IconmapIcon(IconitemIcon =>
-          IconitemIcon.IconidIcon === IcondataIcon.IconidIcon ? { ...IconitemIcon, IconstatusIcon: IcondataIcon.IconstatusIcon } : IconitemIcon
+
+    const handleContentUpdate = (data: { id: string; status: ContentStatus }) => {
+      setContent(prev =>
+        prev.map(item =>
+          item.id === data.id ? { ...item, status: data.status } : item
         )
       );
     };
-    IconsubscribeIcon(IconchannelIcon, 'IconnewIcon-Iconcontent', IconhandleNewContentIcon);
-    IconsubscribeIcon(IconchannelIcon, 'IconcontentIcon-Iconupdated', IconhandleContentUpdateIcon);
-    IconreturnIcon () => {
-      IconunsubscribeIcon(IconchannelIcon, 'IconnewIcon-Iconcontent', IconhandleNewContentIcon);
-      IconunsubscribeIcon(IconchannelIcon, 'IconcontentIcon-Iconupdated', IconhandleContentUpdateIcon);
+
+    subscribe(channel, 'new-content', handleNewContent);
+    subscribe(channel, 'content-updated', handleContentUpdate);
+
+    return () => {
+      unsubscribe(channel, 'new-content', handleNewContent);
+      unsubscribe(channel, 'content-updated', handleContentUpdate);
     };
-  }, [IconsubscribeIcon, IconunsubscribeIcon]);
-  // IconFetchIcon IconcontentIcon
-  IconuseEffectIcon(() => {
-    IconfetchContentIcon();
+  }, [subscribe, unsubscribe]);
+
+  // Fetch content
+  useEffect(() => {
+    fetchContent();
   }, []);
-  IconconstIcon IconfetchContentIcon = IconasyncIcon () => {
-    IconsetLoadingIcon(IcontrueIcon);
-    IcontryIcon {
-      // IconMockIcon IcondataIcon IconforIcon IcondemonstrationIcon
-      IconconstIcon IconmockContentIcon: IconContentItemIcon[] = [
+
+  const fetchContent = async () => {
+    setLoading(true);
+    try {
+      // Mock data for demonstration
+      const mockContent: ContentItem[] = [
         {
-          IconidIcon: 'Icon1',
-          IcontypeIcon: 'Iconlesson',
-          IcontitleIcon: 'IconIntroductionIcon IcontoIcon IconAlgebra',
-          IcondescriptionIcon: 'IconBasicIcon IconalgebraicIcon IconconceptsIcon IconforIcon Iconbeginners',
-          IconauthorIcon: {
-            IconidIcon: 'Iconteacher1',
-            IconnameIcon: 'IconSarahIcon IconJohnson',
-            IconroleIcon: 'Iconteacher',
+          id: '1',
+          type: 'lesson',
+          title: 'Introduction to Algebra',
+          description: 'Basic algebraic concepts for beginners',
+          author: {
+            id: 'teacher1',
+            name: 'Sarah Johnson',
+            role: 'teacher',
           },
-          IconstatusIcon: 'Iconpending',
-          IconcreatedAtIcon: IconnewIcon IconDateIcon().IcontoISOStringIcon(),
-          IconflagsIcon: Icon0Icon,
-          IconreportsIcon: [],
-          IconaiScoreIcon: {
-            IconsafetyIcon: Icon98Icon,
-            IconqualityIcon: Icon85Icon,
-            IconrelevanceIcon: Icon92Icon,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+          flags: 0,
+          reports: [],
+          aiScore: {
+            safety: 98,
+            quality: 85,
+            relevance: 92,
           },
         },
         {
-          IconidIcon: 'Icon2',
-          IcontypeIcon: 'Iconassessment',
-          IcontitleIcon: 'IconPhysicsIcon IconQuizIcon IconChapterIcon Icon3',
-          IcondescriptionIcon: 'IconAssessmentIcon IcononIcon IconforceIcon IconandIcon Iconmotion',
-          IconauthorIcon: {
-            IconidIcon: 'Iconteacher2',
-            IconnameIcon: 'IconMichaelIcon IconBrown',
-            IconroleIcon: 'Iconteacher',
+          id: '2',
+          type: 'assessment',
+          title: 'Physics Quiz Chapter 3',
+          description: 'Assessment on force and motion',
+          author: {
+            id: 'teacher2',
+            name: 'Michael Brown',
+            role: 'teacher',
           },
-          IconstatusIcon: 'Iconpending',
-          IconcreatedAtIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon2Icon * Icon60Icon * Icon60Icon * Icon1000Icon).IcontoISOStringIcon(),
-          IconflagsIcon: Icon0Icon,
-          IconreportsIcon: [],
-          IconaiScoreIcon: {
-            IconsafetyIcon: Icon100Icon,
-            IconqualityIcon: Icon78Icon,
-            IconrelevanceIcon: Icon88Icon,
+          status: 'pending',
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          flags: 0,
+          reports: [],
+          aiScore: {
+            safety: 100,
+            quality: 78,
+            relevance: 88,
           },
         },
         {
-          IconidIcon: 'Icon3',
-          IcontypeIcon: 'Iconmessage',
-          IcontitleIcon: 'IconStudentIcon IconQuestion',
-          IconcontentIcon: 'IconCanIcon IconsomeoneIcon IconhelpIcon IconwithIcon IconthisIcon IconproblemIcon?',
-          IconauthorIcon: {
-            IconidIcon: 'Iconstudent1',
-            IconnameIcon: 'IconJohnIcon IconSmith',
-            IconroleIcon: 'Iconstudent',
+          id: '3',
+          type: 'message',
+          title: 'Student Question',
+          content: 'Can someone help with this problem?',
+          author: {
+            id: 'student1',
+            name: 'John Smith',
+            role: 'student',
           },
-          IconstatusIcon: 'Iconflagged',
-          IconcreatedAtIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon24Icon * Icon60Icon * Icon60Icon * Icon1000Icon).IcontoISOStringIcon(),
-          IconflagsIcon: Icon3Icon,
-          IconreportsIcon: [
+          status: 'flagged',
+          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          flags: 3,
+          reports: [
             {
-              IconidIcon: 'Iconr1',
-              IconreasonIcon: 'Iconspam',
-              IcondescriptionIcon: 'IconRepeatedIcon Iconposting',
-              IconreportedByIcon: 'Iconuser123',
-              IconcreatedAtIcon: IconnewIcon IconDateIcon().IcontoISOStringIcon(),
+              id: 'r1',
+              reason: 'spam',
+              description: 'Repeated posting',
+              reportedBy: 'user123',
+              createdAt: new Date().toISOString(),
             },
           ],
-          IconaiScoreIcon: {
-            IconsafetyIcon: Icon65Icon,
-            IconqualityIcon: Icon40Icon,
-            IconrelevanceIcon: Icon30Icon,
+          aiScore: {
+            safety: 65,
+            quality: 40,
+            relevance: 30,
           },
         },
         {
-          IconidIcon: 'Icon4',
-          IcontypeIcon: 'Iconvideo',
-          IcontitleIcon: 'IconChemistryIcon IconLabIcon IconExperiment',
-          IcondescriptionIcon: 'IconLabIcon IconsafetyIcon IconandIcon IconprocedureIcon Icondemonstration',
-          IconauthorIcon: {
-            IconidIcon: 'Iconteacher3',
-            IconnameIcon: 'IconEmilyIcon IconDavis',
-            IconroleIcon: 'Iconteacher',
+          id: '4',
+          type: 'video',
+          title: 'Chemistry Lab Experiment',
+          description: 'Lab safety and procedure demonstration',
+          author: {
+            id: 'teacher3',
+            name: 'Emily Davis',
+            role: 'teacher',
           },
-          IconstatusIcon: 'Iconapproved',
-          IconcreatedAtIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon3Icon * Icon24Icon * Icon60Icon * Icon60Icon * Icon1000Icon).IcontoISOStringIcon(),
-          IconreviewedAtIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon2Icon * Icon24Icon * Icon60Icon * Icon60Icon * Icon1000Icon).IcontoISOStringIcon(),
-          IconreviewedByIcon: {
-            IconidIcon: 'Iconadmin1',
-            IconnameIcon: 'IconAdminIcon IconUser',
+          status: 'approved',
+          createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          reviewedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          reviewedBy: {
+            id: 'admin1',
+            name: 'Admin User',
           },
-          IconflagsIcon: Icon0Icon,
-          IconreportsIcon: [],
-          IconmetadataIcon: {
-            IcondurationIcon: Icon1200Icon, // Icon20Icon IconminutesIcon
-            IconfileSizeIcon: Icon250Icon * Icon1024Icon * Icon1024Icon, // Icon250MBIcon
+          flags: 0,
+          reports: [],
+          metadata: {
+            duration: 1200, // 20 minutes
+            fileSize: 250 * 1024 * 1024, // 250MB
           },
-          IconaiScoreIcon: {
-            IconsafetyIcon: Icon100Icon,
-            IconqualityIcon: Icon95Icon,
-            IconrelevanceIcon: Icon98Icon,
+          aiScore: {
+            safety: 100,
+            quality: 95,
+            relevance: 98,
           },
-          IconthumbnailIcon: 'IconhttpsIcon://IconviaIcon.IconplaceholderIcon.IconcomIcon/Icon150',
+          thumbnail: 'https://via.placeholder.com/150',
         },
         {
-          IconidIcon: 'Icon5',
-          IcontypeIcon: 'Icondocument',
-          IcontitleIcon: 'IconStudyIcon IconGuideIcon - IconWorldIcon IconHistory',
-          IcondescriptionIcon: 'IconComprehensiveIcon IconguideIcon IconforIcon IconfinalIcon Iconexam',
-          IconauthorIcon: {
-            IconidIcon: 'Iconteacher1',
-            IconnameIcon: 'IconSarahIcon IconJohnson',
-            IconroleIcon: 'Iconteacher',
+          id: '5',
+          type: 'document',
+          title: 'Study Guide - World History',
+          description: 'Comprehensive guide for final exam',
+          author: {
+            id: 'teacher1',
+            name: 'Sarah Johnson',
+            role: 'teacher',
           },
-          IconstatusIcon: 'Iconunder_review',
-          IconcreatedAtIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon4Icon * Icon60Icon * Icon60Icon * Icon1000Icon).IcontoISOStringIcon(),
-          IconflagsIcon: Icon1Icon,
-          IconreportsIcon: [
+          status: 'under_review',
+          createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+          flags: 1,
+          reports: [
             {
-              IconidIcon: 'Iconr2',
-              IconreasonIcon: 'Iconcopyright',
-              IcondescriptionIcon: 'IconContainsIcon IconcopyrightedIcon Iconmaterial',
-              IconreportedByIcon: 'Iconuser456',
-              IconcreatedAtIcon: IconnewIcon IconDateIcon().IcontoISOStringIcon(),
+              id: 'r2',
+              reason: 'copyright',
+              description: 'Contains copyrighted material',
+              reportedBy: 'user456',
+              createdAt: new Date().toISOString(),
             },
           ],
-          IconaiScoreIcon: {
-            IconsafetyIcon: Icon90Icon,
-            IconqualityIcon: Icon82Icon,
-            IconrelevanceIcon: Icon95Icon,
+          aiScore: {
+            safety: 90,
+            quality: 82,
+            relevance: 95,
           },
         },
       ];
-      IconsetContentIcon(IconmockContentIcon);
-    } IconcatchIcon (IconerrIcon) {
-      IconsetErrorIcon('IconFailedIcon IcontoIcon IconfetchIcon Iconcontent');
-      IconconsoleIcon.IconerrorIcon(IconerrIcon);
-    } IconfinallyIcon {
-      IconsetLoadingIcon(IconfalseIcon);
+
+      setContent(mockContent);
+    } catch (err) {
+      setError('Failed to fetch content');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
-  IconconstIcon IconhandleApproveIcon = IconasyncIcon (IconcontentItemIcon: IconContentItemIcon) => {
-    IconsetContentIcon(IconprevIcon =>
-      IconprevIcon.IconmapIcon(IconitemIcon =>
-        IconitemIcon.IconidIcon === IconcontentItemIcon.IconidIcon
-          ? { ...IconitemIcon, IconstatusIcon: 'Iconapproved', IconreviewedAtIcon: IconnewIcon IconDateIcon().IcontoISOStringIcon() }
-          : IconitemIcon
+
+  const handleApprove = async (contentItem: ContentItem) => {
+    setContent(prev =>
+      prev.map(item =>
+        item.id === contentItem.id
+          ? { ...item, status: 'approved', reviewedAt: new Date().toISOString() }
+          : item
       )
     );
-    IcononContentApproveIcon?.(IconcontentItemIcon.IconidIcon);
+    onContentApprove?.(contentItem.id);
   };
-  IconconstIcon IconhandleRejectIcon = IconasyncIcon () => {
-    IconifIcon (IconselectedContentIcon && IconrejectReasonIcon) {
-      IconsetContentIcon(IconprevIcon =>
-        IconprevIcon.IconmapIcon(IconitemIcon =>
-          IconitemIcon.IconidIcon === IconselectedContentIcon.IconidIcon
-            ? { ...IconitemIcon, IconstatusIcon: 'Iconrejected', IconreviewedAtIcon: IconnewIcon IconDateIcon().IcontoISOStringIcon() }
-            : IconitemIcon
+
+  const handleReject = async () => {
+    if (selectedContent && rejectReason) {
+      setContent(prev =>
+        prev.map(item =>
+          item.id === selectedContent.id
+            ? { ...item, status: 'rejected', reviewedAt: new Date().toISOString() }
+            : item
         )
       );
-      IcononContentRejectIcon?.(IconselectedContentIcon.IconidIcon, IconrejectReasonIcon);
-      IconsetRejectDialogOpenIcon(IconfalseIcon);
-      IconsetRejectReasonIcon('');
-      IconsetSelectedContentIcon(IconnullIcon);
+      onContentReject?.(selectedContent.id, rejectReason);
+      setRejectDialogOpen(false);
+      setRejectReason('');
+      setSelectedContent(null);
     }
   };
-  IconconstIcon IconhandleBulkActionIcon = (IconactionIcon: 'Iconapprove' | 'Iconreject' | 'Icondelete') => {
-    IconselectedIcon.IconforEachIcon(IconidIcon => {
-      IconconstIcon IconitemIcon = IconcontentIcon.IconfindIcon(IconcIcon => IconcIcon.IconidIcon === IconidIcon);
-      IconifIcon (IconitemIcon) {
-        IconswitchIcon (IconactionIcon) {
-          IconcaseIcon 'Iconapprove':
-            IconhandleApproveIcon(IconitemIcon);
-            IconbreakIcon;
-          IconcaseIcon 'Iconreject':
-            // IconOpenIcon IconrejectIcon IcondialogIcon IconforIcon IconbulkIcon IconrejectIcon
-            IconbreakIcon;
-          IconcaseIcon 'Icondelete':
-            IconhandleDeleteIcon(IconitemIcon);
-            IconbreakIcon;
+
+  const handleBulkAction = (action: 'approve' | 'reject' | 'delete') => {
+    selected.forEach(id => {
+      const item = content.find(c => c.id === id);
+      if (item) {
+        switch (action) {
+          case 'approve':
+            handleApprove(item);
+            break;
+          case 'reject':
+            // Open reject dialog for bulk reject
+            break;
+          case 'delete':
+            handleDelete(item);
+            break;
         }
       }
     });
-    IconsetSelectedIcon([]);
+    setSelected([]);
   };
-  IconconstIcon IconhandleDeleteIcon = IconasyncIcon (IconcontentItemIcon: IconContentItemIcon) => {
-    IconsetContentIcon(IconprevIcon => IconprevIcon.IconfilterIcon(IconitemIcon => IconitemIcon.IconidIcon !== IconcontentItemIcon.IconidIcon));
-    IcononContentDeleteIcon?.(IconcontentItemIcon.IconidIcon);
+
+  const handleDelete = async (contentItem: ContentItem) => {
+    setContent(prev => prev.filter(item => item.id !== contentItem.id));
+    onContentDelete?.(contentItem.id);
   };
-  IconconstIcon IcongetContentIconIcon = (IcontypeIcon: IconContentTypeIcon) => {
-    IconswitchIcon (IcontypeIcon) {
-      IconcaseIcon 'Iconlesson':
-        IconreturnIcon <IconIconSchoolIcon />;
-      IconcaseIcon 'Iconassessment':
-        IconreturnIcon <IconIconReportAnalyticsIcon />;
-      IconcaseIcon 'Iconmessage':
-        IconreturnIcon <IconIconMessageCircleIcon />;
-      IconcaseIcon 'Iconimage':
-        IconreturnIcon <IconIconImageIcon />;
-      IconcaseIcon 'Iconvideo':
-        IconreturnIcon <IconIconVideoLibraryIcon />;
-      IconcaseIcon 'Icondocument':
-        IconreturnIcon <IconIconFileTextIcon />;
-      IconcaseIcon 'Iconcode':
-        IconreturnIcon <IconIconCodeIcon />;
-      IcondefaultIcon:
-        IconreturnIcon <IconIconInfoCircleIcon />;
+
+  const getContentIcon = (type: ContentType) => {
+    switch (type) {
+      case 'lesson':
+        return <EducationIcon />;
+      case 'assessment':
+        return <AssessmentIcon />;
+      case 'message':
+        return <MessageIcon />;
+      case 'image':
+        return <ImageIcon />;
+      case 'video':
+        return <VideoIcon />;
+      case 'document':
+        return <DocumentIcon />;
+      case 'code':
+        return <CodeIcon />;
+      default:
+        return <InfoIcon />;
     }
   };
-  IconconstIcon IcongetStatusColorIcon = (IconstatusIcon: IconContentStatusIcon) => {
-    IconswitchIcon (IconstatusIcon) {
-      IconcaseIcon 'Iconpending':
-        IconreturnIcon 'Iconwarning';
-      IconcaseIcon 'Iconapproved':
-        IconreturnIcon 'Iconsuccess';
-      IconcaseIcon 'Iconrejected':
-        IconreturnIcon 'Iconerror';
-      IconcaseIcon 'Iconflagged':
-        IconreturnIcon 'Iconerror';
-      IconcaseIcon 'Iconunder_review':
-        IconreturnIcon 'Iconinfo';
-      IcondefaultIcon:
-        IconreturnIcon 'Icondefault';
+
+  const getStatusColor = (status: ContentStatus) => {
+    switch (status) {
+      case 'pending':
+        return 'warning';
+      case 'approved':
+        return 'success';
+      case 'rejected':
+        return 'error';
+      case 'flagged':
+        return 'error';
+      case 'under_review':
+        return 'info';
+      default:
+        return 'default';
     }
   };
-  IconconstIcon IcongetAIScoreColorIcon = (IconscoreIcon: IconnumberIcon) => {
-    IconifIcon (IconscoreIcon >= Icon80Icon) IconreturnIcon IconthemeIcon.IconpaletteIcon.IconsuccessIcon.IconmainIcon;
-    IconifIcon (IconscoreIcon >= Icon60Icon) IconreturnIcon IconthemeIcon.IconpaletteIcon.IconwarningIcon.IconmainIcon;
-    IconreturnIcon IconthemeIcon.IconpaletteIcon.IconerrorIcon.IconmainIcon;
+
+  const getAIScoreColor = (score: number) => {
+    if (score >= 80) return theme.palette.success.main;
+    if (score >= 60) return theme.palette.warning.main;
+    return theme.palette.error.main;
   };
-  IconconstIcon IconfilteredContentIcon = IconcontentIcon.IconfilterIcon(IconitemIcon => {
-    IconconstIcon IconmatchesSearchIcon = IconsearchTermIcon
-      ? IconitemIcon.IcontitleIcon.IcontoLowerCaseIcon().IconincludesIcon(IconsearchTermIcon.IcontoLowerCaseIcon()) ||
-        IconitemIcon.IcondescriptionIcon?.IcontoLowerCaseIcon().IconincludesIcon(IconsearchTermIcon.IcontoLowerCaseIcon())
-      : IcontrueIcon;
-    IconconstIcon IconmatchesTypeIcon = IconfilterTypeIcon === 'Iconall' || IconitemIcon.IcontypeIcon === IconfilterTypeIcon;
-    IconconstIcon IconmatchesStatusIcon = IconfilterStatusIcon === 'Iconall' || IconitemIcon.IconstatusIcon === IconfilterStatusIcon;
-    IconreturnIcon IconmatchesSearchIcon && IconmatchesTypeIcon && IconmatchesStatusIcon;
+
+  const filteredContent = content.filter(item => {
+    const matchesSearch = searchTerm
+      ? item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      : true;
+
+    const matchesType = filterType === 'all' || item.type === filterType;
+    const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
+
+    return matchesSearch && matchesType && matchesStatus;
   });
-  IconconstIcon IcongetTabContentIcon = () => {
-    IconswitchIcon (IcontabValueIcon) {
-      IconcaseIcon Icon0Icon: // IconPendingIcon IconReviewIcon
-        IconreturnIcon IconfilteredContentIcon.IconfilterIcon(IconcIcon => IconcIcon.IconstatusIcon === 'Iconpending');
-      IconcaseIcon Icon1Icon: // IconFlaggedIcon
-        IconreturnIcon IconfilteredContentIcon.IconfilterIcon(IconcIcon => IconcIcon.IconstatusIcon === 'Iconflagged');
-      IconcaseIcon Icon2Icon: // IconUnderIcon IconReviewIcon
-        IconreturnIcon IconfilteredContentIcon.IconfilterIcon(IconcIcon => IconcIcon.IconstatusIcon === 'Iconunder_review');
-      IconcaseIcon Icon3Icon: // IconAllIcon IconContentIcon
-        IconreturnIcon IconfilteredContentIcon;
-      IcondefaultIcon:
-        IconreturnIcon [];
+
+  const getTabContent = () => {
+    switch (tabValue) {
+      case 0: // Pending Review
+        return filteredContent.filter(c => c.status === 'pending');
+      case 1: // Flagged
+        return filteredContent.filter(c => c.status === 'flagged');
+      case 2: // Under Review
+        return filteredContent.filter(c => c.status === 'under_review');
+      case 3: // All Content
+        return filteredContent;
+      default:
+        return [];
     }
   };
-  IconconstIcon IcontabContentIcon = IcongetTabContentIcon();
-  IconconstIcon IconpaginatedContentIcon = IcontabContentIcon.IconsliceIcon(
-    IconpageIcon * IconrowsPerPageIcon,
-    IconpageIcon * IconrowsPerPageIcon + IconrowsPerPageIcon
+
+  const tabContent = getTabContent();
+  const paginatedContent = tabContent.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
   );
-  IconreturnIcon (
-    <IconPaperIcon IconstyleIcon={{ IconheightIcon: 'Icon100Icon%', IcondisplayIcon: 'Iconflex', IconflexDirectionIcon: 'Iconcolumn' }}>
-      {/* IconHeaderIcon */}
-      <IconBoxIcon IconstyleIcon={{ IconpIcon: Icon2Icon, IconborderBottomIcon: Icon1Icon, IconborderColorIcon: 'Icondivider' }}>
-        <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
-          <IconTypographyIcon IconorderIcon={Icon6Icon} IconfontWeightIcon="Iconbold">
-            IconContentIcon IconModerationIcon
-          <IconIconIcon/IconTypographyIcon>
-          <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon}>
-            {IconallowBulkActionsIcon && IconselectedIcon.IconlengthIcon > Icon0Icon && (
-              <IconIconIcon>
-                <IconButtonIcon
-                  IconsizeIcon="Iconsmall"
-                  IconcolorIcon="Icongreen"
-                  IconstartIconIcon={<IconIconCheckIcon />}
-                  IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconhandleBulkActionIcon('Iconapprove')}
+
+  return (
+    <Paper sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Typography variant="h6" fontWeight="bold">
+            Content Moderation
+          </Typography>
+          <Stack direction="row" spacing={1}>
+            {allowBulkActions && selected.length > 0 && (
+              <>
+                <Button
+                  size="small"
+                  color="success"
+                  startIcon={<ApproveIcon />}
+                  onClick={() => handleBulkAction('approve')}
                 >
-                  IconApproveIcon ({IconselectedIcon.IconlengthIcon})
-                <IconIconIcon/IconButtonIcon>
-                <IconButtonIcon
-                  IconsizeIcon="Iconsmall"
-                  IconcolorIcon="Iconred"
-                  IconstartIconIcon={<IconIconXIcon />}
-                  IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconhandleBulkActionIcon('Iconreject')}
+                  Approve ({selected.length})
+                </Button>
+                <Button
+                  size="small"
+                  color="error"
+                  startIcon={<RejectIcon />}
+                  onClick={() => handleBulkAction('reject')}
                 >
-                  IconRejectIcon ({IconselectedIcon.IconlengthIcon})
-                <IconIconIcon/IconButtonIcon>
-              <IconIconIcon/>
+                  Reject ({selected.length})
+                </Button>
+              </>
             )}
-            {IconshowAIAssistIcon && (
-              <IconButtonIcon
-                IconsizeIcon="Iconsmall"
-                IconvariantIcon="Iconoutline"
-                IconstartIconIcon={<IconIconAutoAwesomeIcon />}
+            {showAIAssist && (
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<AIIcon />}
               >
-                IconAIIcon IconAssistIcon
-              <IconIconIcon/IconButtonIcon>
+                AI Assist
+              </Button>
             )}
-          <IconIconIcon/IconStackIcon>
-        <IconIconIcon/IconStackIcon>
-        {/* IconTabsIcon */}
-        <IconTabsIcon
-          IconvalueIcon={IcontabValueIcon}
-          IcononChangeIcon={(Icon_Icon, IconvalueIcon) => IconsetTabValueIcon(IconvalueIcon)}
-          IconstyleIcon={{ IconmtIcon: Icon2Icon }}
+          </Stack>
+        </Stack>
+
+        {/* Tabs */}
+        <Tabs
+          value={tabValue}
+          onChange={(_, value) => setTabValue(value)}
+          sx={{ mt: 2 }}
         >
-          <IconTabIcon
-            IconlabelIcon={
-              <IconBadgeIcon IconbadgeContentIcon={IconcontentIcon.IconfilterIcon(IconcIcon => IconcIcon.IconstatusIcon === 'Iconpending').IconlengthIcon} IconcolorIcon="Iconyellow">
-                IconPendingIcon IconReviewIcon
-              <IconIconIcon/IconBadgeIcon>
+          <Tab
+            label={
+              <Badge badgeContent={content.filter(c => c.status === 'pending').length} color="warning">
+                Pending Review
+              </Badge>
             }
           />
-          <IconTabIcon
-            IconlabelIcon={
-              <IconBadgeIcon IconbadgeContentIcon={IconcontentIcon.IconfilterIcon(IconcIcon => IconcIcon.IconstatusIcon === 'Iconflagged').IconlengthIcon} IconcolorIcon="Iconred">
-                IconFlaggedIcon
-              <IconIconIcon/IconBadgeIcon>
+          <Tab
+            label={
+              <Badge badgeContent={content.filter(c => c.status === 'flagged').length} color="error">
+                Flagged
+              </Badge>
             }
           />
-          <IconTabIcon
-            IconlabelIcon={
-              <IconBadgeIcon IconbadgeContentIcon={IconcontentIcon.IconfilterIcon(IconcIcon => IconcIcon.IconstatusIcon === 'Iconunder_review').IconlengthIcon} IconcolorIcon="Iconcyan">
-                IconUnderIcon IconReviewIcon
-              <IconIconIcon/IconBadgeIcon>
+          <Tab
+            label={
+              <Badge badgeContent={content.filter(c => c.status === 'under_review').length} color="info">
+                Under Review
+              </Badge>
             }
           />
-          <IconTabIcon IconlabelIcon="IconAllIcon IconContent" />
-        <IconIconIcon/IconTabsIcon>
-        {/* IconFiltersIcon */}
-        <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon} IconstyleIcon={{ IconmtIcon: Icon2Icon }}>
-          <IconTextFieldIcon
-            IconsizeIcon="Iconsmall"
-            IconplaceholderIcon="IconSearchIcon IconcontentIcon..."
-            IconvalueIcon={IconsearchTermIcon}
-            IcononChangeIcon={(IconeIcon) => IconsetSearchTermIcon(IconeIcon.IcontargetIcon.IconvalueIcon)}
-            IconInputPropsIcon={{
-              IconstartAdornmentIcon: (
-                <IconInputAdornmentIcon IconpositionIcon="Iconstart">
-                  <IconIconSearchIcon />
-                <IconIconIcon/IconInputAdornmentIcon>
+          <Tab label="All Content" />
+        </Tabs>
+
+        {/* Filters */}
+        <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+          <TextField
+            size="small"
+            placeholder="Search content..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
               ),
             }}
-            IconstyleIcon={{ IconflexIcon: Icon1Icon, IconmaxWidthIcon: Icon300Icon }}
+            sx={{ flex: 1, maxWidth: 300 }}
           />
-          <IconFormControlIcon IconsizeIcon="Iconsmall" IconstyleIcon={{ IconminWidthIcon: Icon120Icon }}>
-            <IconInputLabelIcon>IconTypeIcon<IconIconIcon/IconInputLabelIcon>
-            <IconSelectIcon
-              IconvalueIcon={IconfilterTypeIcon}
-              IconlabelIcon="IconType"
-              IcononChangeIcon={(IconeIcon) => IconsetFilterTypeIcon(IconeIcon.IcontargetIcon.IconvalueIcon IconasIcon IconContentTypeIcon | 'Iconall')}
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Type</InputLabel>
+            <Select
+              value={filterType}
+              label="Type"
+              onChange={(e) => setFilterType(e.target.value as ContentType | 'all')}
             >
-              <IconMenuItemIcon IconvalueIcon="Iconall">IconAllIcon IconTypesIcon<IconIconIcon/IconMenuItemIcon>
-              <IconMenuItemIcon IconvalueIcon="Iconlesson">IconLessonIcon<IconIconIcon/IconMenuItemIcon>
-              <IconMenuItemIcon IconvalueIcon="Iconassessment">IconAssessmentIcon<IconIconIcon/IconMenuItemIcon>
-              <IconMenuItemIcon IconvalueIcon="Iconmessage">IconMessageIcon<IconIconIcon/IconMenuItemIcon>
-              <IconMenuItemIcon IconvalueIcon="Iconvideo">IconVideoIcon<IconIconIcon/IconMenuItemIcon>
-              <IconMenuItemIcon IconvalueIcon="Icondocument">IconDocumentIcon<IconIconIcon/IconMenuItemIcon>
-            <IconIconIcon/IconSelectIcon>
-          <IconIconIcon/IconFormControlIcon>
-        <IconIconIcon/IconStackIcon>
-      <IconIconIcon/IconBoxIcon>
-      {/* IconLoadingIcon */}
-      {IconloadingIcon && <IconLinearProgressIcon />}
-      {/* IconErrorIcon */}
-      {IconerrorIcon && (
-        <IconAlertIcon IconseverityIcon="Iconerror" IconstyleIcon={{ IconmIcon: Icon2Icon }}>
-          {IconerrorIcon}
-        <IconIconIcon/IconAlertIcon>
+              <MenuItem value="all">All Types</MenuItem>
+              <MenuItem value="lesson">Lesson</MenuItem>
+              <MenuItem value="assessment">Assessment</MenuItem>
+              <MenuItem value="message">Message</MenuItem>
+              <MenuItem value="video">Video</MenuItem>
+              <MenuItem value="document">Document</MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
+      </Box>
+
+      {/* Loading */}
+      {loading && <LinearProgress />}
+
+      {/* Error */}
+      {error && (
+        <Alert severity="error" sx={{ m: 2 }}>
+          {error}
+        </Alert>
       )}
-      {/* IconContentIcon IconListIcon */}
-      <IconBoxIcon IconstyleIcon={{ IconflexIcon: Icon1Icon, IconoverflowIcon: 'Iconauto', IconpIcon: Icon2Icon }}>
-        <IconGridIcon IconcontainerIcon IconspacingIcon={Icon2Icon}>
-          {IconpaginatedContentIcon.IconmapIcon(IconitemIcon => (
-            <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconmdIcon={Icon6Icon} IconlgIcon={Icon4Icon} IconkeyIcon={IconitemIcon.IconidIcon}>
-              <IconCardIcon
-                IconstyleIcon={{
-                  IconheightIcon: 'Icon100Icon%',
-                  IcondisplayIcon: 'Iconflex',
-                  IconflexDirectionIcon: 'Iconcolumn',
-                  IconborderLeftIcon: `Icon4pxIcon IconsolidIcon ${IconthemeIcon.IconpaletteIcon[IcongetStatusColorIcon(IconitemIcon.IconstatusIcon)].IconmainIcon}`,
+
+      {/* Content List */}
+      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+        <Grid container spacing={2}>
+          {paginatedContent.map(item => (
+            <Grid item xs={12} md={6} lg={4} key={item.id}>
+              <Card
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  borderLeft: `4px solid ${theme.palette[getStatusColor(item.status)].main}`,
                 }}
               >
-                {IconitemIcon.IconthumbnailIcon && (
-                  <IconCardMediaIcon
-                    IconcomponentIcon="Iconimg"
-                    IconheightIcon="Icon140"
-                    IconimageIcon={IconitemIcon.IconthumbnailIcon}
-                    IconaltIcon={IconitemIcon.IcontitleIcon}
+                {item.thumbnail && (
+                  <CardMedia
+                    component="img"
+                    height="140"
+                    image={item.thumbnail}
+                    alt={item.title}
                   />
                 )}
-                <IconCardContentIcon IconstyleIcon={{ IconflexIcon: Icon1Icon }}>
-                  <IconStackIcon IconspacingIcon={Icon1Icon}>
-                    {/* IconHeaderIcon */}
-                    <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
-                      <IconChipIcon
-                        IconiconIcon={IcongetContentIconIcon(IconitemIcon.IcontypeIcon)}
-                        IconlabelIcon={IconitemIcon.IcontypeIcon}
-                        IconsizeIcon="Iconsmall"
-                        IconvariantIcon="Iconoutline"
+                <CardContent sx={{ flex: 1 }}>
+                  <Stack spacing={1}>
+                    {/* Header */}
+                    <Stack direction="row" alignItems="center" justifyContent="space-between">
+                      <Chip
+                        icon={getContentIcon(item.type)}
+                        label={item.type}
+                        size="small"
+                        variant="outlined"
                       />
-                      <IconChipIcon
-                        IconlabelIcon={IconitemIcon.IconstatusIcon}
-                        IconsizeIcon="Iconsmall"
-                        IconcolorIcon={IcongetStatusColorIcon(IconitemIcon.IconstatusIcon) IconasIcon IconanyIcon}
+                      <Chip
+                        label={item.status}
+                        size="small"
+                        color={getStatusColor(item.status) as any}
                       />
-                    <IconIconIcon/IconStackIcon>
-                    {/* IconTitleIcon IconandIcon IcondescriptionIcon */}
-                    <IconTypographyIcon IconvariantIcon="Iconsubtitle1" IconfontWeightIcon="Iconbold">
-                      {IconitemIcon.IcontitleIcon}
-                    <IconIconIcon/IconTypographyIcon>
-                    {IconitemIcon.IcondescriptionIcon && (
-                      <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary" IconstyleIcon={{ IconheightIcon: Icon40Icon, IconoverflowIcon: 'Iconhidden' }}>
-                        {IconitemIcon.IcondescriptionIcon}
-                      <IconIconIcon/IconTypographyIcon>
+                    </Stack>
+
+                    {/* Title and description */}
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      {item.title}
+                    </Typography>
+                    {item.description && (
+                      <Typography variant="body2" color="text.secondary" sx={{ height: 40, overflow: 'hidden' }}>
+                        {item.description}
+                      </Typography>
                     )}
-                    {/* IconAuthorIcon */}
-                    <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconspacingIcon={Icon1Icon}>
-                      <IconAvatarIcon IconstyleIcon={{ IconwidthIcon: Icon24Icon, IconheightIcon: Icon24Icon }}>
-                        {IconitemIcon.IconauthorIcon.IconnameIcon.IconcharAtIcon(Icon0Icon)}
-                      <IconIconIcon/IconAvatarIcon>
-                      <IconTypographyIcon IconvariantIcon="Iconcaption">
-                        {IconitemIcon.IconauthorIcon.IconnameIcon} • {IconformatIcon(IconnewIcon IconDateIcon(IconitemIcon.IconcreatedAtIcon), 'IconMMMIcon IconddIcon, IconHHIcon:Iconmm')}
-                      <IconIconIcon/IconTypographyIcon>
-                    <IconIconIcon/IconStackIcon>
-                    {/* IconAIIcon IconScoresIcon */}
-                    {IconshowAIAssistIcon && IconitemIcon.IconaiScoreIcon && (
-                      <IconStackIcon IconspacingIcon={Icon0Icon.Icon5Icon}>
-                        <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                          IconAIIcon IconAnalysisIcon
-                        <IconIconIcon/IconTypographyIcon>
-                        <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon}>
-                          <IconTooltipIcon IcontitleIcon="IconSafetyIcon IconScore">
-                            <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconspacingIcon={Icon0Icon.Icon5Icon}>
-                              <IconIconGavelIcon IconfontSizeIcon="Iconsmall" IconstyleIcon={{ IconcolorIcon: IcongetAIScoreColorIcon(IconitemIcon.IconaiScoreIcon.IconsafetyIcon) }} />
-                              <IconTypographyIcon IconvariantIcon="Iconcaption">{IconitemIcon.IconaiScoreIcon.IconsafetyIcon}%<IconIconIcon/IconTypographyIcon>
-                            <IconIconIcon/IconStackIcon>
-                          <IconIconIcon/IconTooltipIcon>
-                          <IconTooltipIcon IcontitleIcon="IconQualityIcon IconScore">
-                            <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconspacingIcon={Icon0Icon.Icon5Icon}>
-                              <IconIconThumbUpIcon IconfontSizeIcon="Iconsmall" IconstyleIcon={{ IconcolorIcon: IcongetAIScoreColorIcon(IconitemIcon.IconaiScoreIcon.IconqualityIcon) }} />
-                              <IconTypographyIcon IconvariantIcon="Iconcaption">{IconitemIcon.IconaiScoreIcon.IconqualityIcon}%<IconIconIcon/IconTypographyIcon>
-                            <IconIconIcon/IconStackIcon>
-                          <IconIconIcon/IconTooltipIcon>
-                          <IconTooltipIcon IcontitleIcon="IconRelevanceIcon IconScore">
-                            <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconspacingIcon={Icon0Icon.Icon5Icon}>
-                              <IconIconInfoCircleIcon IconfontSizeIcon="Iconsmall" IconstyleIcon={{ IconcolorIcon: IcongetAIScoreColorIcon(IconitemIcon.IconaiScoreIcon.IconrelevanceIcon) }} />
-                              <IconTypographyIcon IconvariantIcon="Iconcaption">{IconitemIcon.IconaiScoreIcon.IconrelevanceIcon}%<IconIconIcon/IconTypographyIcon>
-                            <IconIconIcon/IconStackIcon>
-                          <IconIconIcon/IconTooltipIcon>
-                        <IconIconIcon/IconStackIcon>
-                      <IconIconIcon/IconStackIcon>
+
+                    {/* Author */}
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Avatar sx={{ width: 24, height: 24 }}>
+                        {item.author.name.charAt(0)}
+                      </Avatar>
+                      <Typography variant="caption">
+                        {item.author.name} • {format(new Date(item.createdAt), 'MMM dd, HH:mm')}
+                      </Typography>
+                    </Stack>
+
+                    {/* AI Scores */}
+                    {showAIAssist && item.aiScore && (
+                      <Stack spacing={0.5}>
+                        <Typography variant="caption" color="text.secondary">
+                          AI Analysis
+                        </Typography>
+                        <Stack direction="row" spacing={2}>
+                          <Tooltip title="Safety Score">
+                            <Stack direction="row" alignItems="center" spacing={0.5}>
+                              <PolicyIcon fontSize="small" sx={{ color: getAIScoreColor(item.aiScore.safety) }} />
+                              <Typography variant="caption">{item.aiScore.safety}%</Typography>
+                            </Stack>
+                          </Tooltip>
+                          <Tooltip title="Quality Score">
+                            <Stack direction="row" alignItems="center" spacing={0.5}>
+                              <ThumbUpIcon fontSize="small" sx={{ color: getAIScoreColor(item.aiScore.quality) }} />
+                              <Typography variant="caption">{item.aiScore.quality}%</Typography>
+                            </Stack>
+                          </Tooltip>
+                          <Tooltip title="Relevance Score">
+                            <Stack direction="row" alignItems="center" spacing={0.5}>
+                              <InfoIcon fontSize="small" sx={{ color: getAIScoreColor(item.aiScore.relevance) }} />
+                              <Typography variant="caption">{item.aiScore.relevance}%</Typography>
+                            </Stack>
+                          </Tooltip>
+                        </Stack>
+                      </Stack>
                     )}
-                    {/* IconFlagsIcon IconandIcon IconreportsIcon */}
-                    {(IconitemIcon.IconflagsIcon > Icon0Icon || IconitemIcon.IconreportsIcon.IconlengthIcon > Icon0Icon) && (
-                      <IconAlertIcon IconseverityIcon="Iconwarning" IconstyleIcon={{ IconpyIcon: Icon0Icon.Icon5Icon }}>
-                        <IconStackIcon IconspacingIcon={Icon0Icon.Icon5Icon}>
-                          <IconTypographyIcon IconvariantIcon="Iconcaption">
-                            {IconitemIcon.IconflagsIcon} IconflagsIcon, {IconitemIcon.IconreportsIcon.IconlengthIcon} IconreportsIcon
-                          <IconIconIcon/IconTypographyIcon>
-                          {IconitemIcon.IconreportsIcon[Icon0Icon] && (
-                            <IconTypographyIcon IconvariantIcon="Iconcaption">
-                              IconLatestIcon: {IconitemIcon.IconreportsIcon[Icon0Icon].IconreasonIcon}
-                            <IconIconIcon/IconTypographyIcon>
+
+                    {/* Flags and reports */}
+                    {(item.flags > 0 || item.reports.length > 0) && (
+                      <Alert severity="warning" sx={{ py: 0.5 }}>
+                        <Stack spacing={0.5}>
+                          <Typography variant="caption">
+                            {item.flags} flags, {item.reports.length} reports
+                          </Typography>
+                          {item.reports[0] && (
+                            <Typography variant="caption">
+                              Latest: {item.reports[0].reason}
+                            </Typography>
                           )}
-                        <IconIconIcon/IconStackIcon>
-                      <IconIconIcon/IconAlertIcon>
+                        </Stack>
+                      </Alert>
                     )}
-                  <IconIconIcon/IconStackIcon>
-                <IconIconIcon/IconCardContentIcon>
-                <IconCardActionsIcon>
-                  {IconallowBulkActionsIcon && (
-                    <IconCheckboxIcon
-                      IconcheckedIcon={IconselectedIcon.IconincludesIcon(IconitemIcon.IconidIcon)}
-                      IcononChangeIcon={() => {
-                        IconifIcon (IconselectedIcon.IconincludesIcon(IconitemIcon.IconidIcon)) {
-                          IconsetSelectedIcon(IconprevIcon => IconprevIcon.IconfilterIcon(IconidIcon => IconidIcon !== IconitemIcon.IconidIcon));
-                        } IconelseIcon {
-                          IconsetSelectedIcon(IconprevIcon => [...IconprevIcon, IconitemIcon.IconidIcon]);
+                  </Stack>
+                </CardContent>
+                <CardActions>
+                  {allowBulkActions && (
+                    <Checkbox
+                      checked={selected.includes(item.id)}
+                      onChange={() => {
+                        if (selected.includes(item.id)) {
+                          setSelected(prev => prev.filter(id => id !== item.id));
+                        } else {
+                          setSelected(prev => [...prev, item.id]);
                         }
                       }}
                     />
                   )}
-                  <IconIconButtonIcon
-                    IconsizeIcon="Iconsmall"
-                    IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
-                      IconsetSelectedContentIcon(IconitemIcon);
-                      IconsetViewDialogOpenIcon(IcontrueIcon);
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setSelectedContent(item);
+                      setViewDialogOpen(true);
                     }}
                   >
-                    <IconIconEyeIcon />
-                  <IconIconIcon/IconIconButtonIcon>
-                  {IconitemIcon.IconstatusIcon === 'Iconpending' && (
-                    <IconIconIcon>
-                      <IconIconButtonIcon
-                        IconsizeIcon="Iconsmall"
-                        IconcolorIcon="Icongreen"
-                        IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconhandleApproveIcon(IconitemIcon)}
+                    <ViewIcon />
+                  </IconButton>
+                  {item.status === 'pending' && (
+                    <>
+                      <IconButton
+                        size="small"
+                        color="success"
+                        onClick={() => handleApprove(item)}
                       >
-                        <IconIconCheckIcon />
-                      <IconIconIcon/IconIconButtonIcon>
-                      <IconIconButtonIcon
-                        IconsizeIcon="Iconsmall"
-                        IconcolorIcon="Iconred"
-                        IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
-                          IconsetSelectedContentIcon(IconitemIcon);
-                          IconsetRejectDialogOpenIcon(IcontrueIcon);
+                        <ApproveIcon />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => {
+                          setSelectedContent(item);
+                          setRejectDialogOpen(true);
                         }}
                       >
-                        <IconIconXIcon />
-                      <IconIconIcon/IconIconButtonIcon>
-                    <IconIconIcon/>
+                        <RejectIcon />
+                      </IconButton>
+                    </>
                   )}
-                  <IconIconButtonIcon
-                    IconsizeIcon="Iconsmall"
-                    IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconhandleDeleteIcon(IconitemIcon)}
+                  <IconButton
+                    size="small"
+                    onClick={() => handleDelete(item)}
                   >
-                    <IconIconTrashIcon />
-                  <IconIconIcon/IconIconButtonIcon>
-                <IconIconIcon/IconCardActionsIcon>
-              <IconIconIcon/IconCardIcon>
-            <IconIconIcon/IconGridIcon>
+                    <DeleteIcon />
+                  </IconButton>
+                </CardActions>
+              </Card>
+            </Grid>
           ))}
-        <IconIconIcon/IconGridIcon>
-      <IconIconIcon/IconBoxIcon>
-      {/* IconPaginationIcon */}
-      <IconTablePaginationIcon
-        IconcomponentIcon="Icondiv"
-        IconcountIcon={IcontabContentIcon.IconlengthIcon}
-        IconpageIcon={IconpageIcon}
-        IcononPageChangeIcon={(Icon_Icon, IconnewPageIcon) => IconsetPageIcon(IconnewPageIcon)}
-        IconrowsPerPageIcon={IconrowsPerPageIcon}
-        IcononRowsPerPageChangeIcon={(IconeIcon) => {
-          IconsetRowsPerPageIcon(IconparseIntIcon(IconeIcon.IcontargetIcon.IconvalueIcon, Icon10Icon));
-          IconsetPageIcon(Icon0Icon);
+        </Grid>
+      </Box>
+
+      {/* Pagination */}
+      <TablePagination
+        component="div"
+        count={tabContent.length}
+        page={page}
+        onPageChange={(_, newPage) => setPage(newPage)}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={(e) => {
+          setRowsPerPage(parseInt(e.target.value, 10));
+          setPage(0);
         }}
       />
-      {/* IconViewIcon IconDialogIcon */}
-      <IconDialogIcon
-        IconopenIcon={IconviewDialogOpenIcon}
-        IcononCloseIcon={() => IconsetViewDialogOpenIcon(IconfalseIcon)}
-        IconmaxWidthIcon="Iconmd"
-        IconfullWidthIcon
+
+      {/* View Dialog */}
+      <Dialog
+        open={viewDialogOpen}
+        onClose={() => setViewDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
       >
-        <IconDialogTitleIcon>IconContentIcon IconDetailsIcon<IconIconIcon/IconDialogTitleIcon>
-        <IconDialogContentIcon>
-          {IconselectedContentIcon && (
-            <IconStackIcon IconspacingIcon={Icon2Icon}>
-              <IconTypographyIcon IconorderIcon={Icon6Icon}>{IconselectedContentIcon.IcontitleIcon}<IconIconIcon/IconTypographyIcon>
-              {IconselectedContentIcon.IcondescriptionIcon && (
-                <IconTypographyIcon>{IconselectedContentIcon.IcondescriptionIcon}<IconIconIcon/IconTypographyIcon>
+        <DialogTitle>Content Details</DialogTitle>
+        <DialogContent>
+          {selectedContent && (
+            <Stack spacing={2}>
+              <Typography variant="h6">{selectedContent.title}</Typography>
+              {selectedContent.description && (
+                <Typography>{selectedContent.description}</Typography>
               )}
-              {IconselectedContentIcon.IconcontentIcon && (
-                <IconPaperIcon IconvariantIcon="Iconoutline" IconstyleIcon={{ IconpIcon: Icon2Icon }}>
-                  <IconTypographyIcon>{IconselectedContentIcon.IconcontentIcon}<IconIconIcon/IconTypographyIcon>
-                <IconIconIcon/IconPaperIcon>
+              {selectedContent.content && (
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Typography>{selectedContent.content}</Typography>
+                </Paper>
               )}
-              <IconDividerIcon />
-              <IconTypographyIcon IconvariantIcon="Iconsubtitle2">IconMetadataIcon<IconIconIcon/IconTypographyIcon>
-              <IconGridIcon IconcontainerIcon IconspacingIcon={Icon2Icon}>
-                <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon}>
-                  <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                    IconAuthorIcon
-                  <IconIconIcon/IconTypographyIcon>
-                  <IconTypographyIcon>{IconselectedContentIcon.IconauthorIcon.IconnameIcon}<IconIconIcon/IconTypographyIcon>
-                <IconIconIcon/IconGridIcon>
-                <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon}>
-                  <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                    IconCreatedIcon
-                  <IconIconIcon/IconTypographyIcon>
-                  <IconTypographyIcon>
-                    {IconformatIcon(IconnewIcon IconDateIcon(IconselectedContentIcon.IconcreatedAtIcon), 'IconPPp')}
-                  <IconIconIcon/IconTypographyIcon>
-                <IconIconIcon/IconGridIcon>
-              <IconIconIcon/IconGridIcon>
-            <IconIconIcon/IconStackIcon>
+              <Divider />
+              <Typography variant="subtitle2">Metadata</Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Typography variant="caption" color="text.secondary">
+                    Author
+                  </Typography>
+                  <Typography>{selectedContent.author.name}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="caption" color="text.secondary">
+                    Created
+                  </Typography>
+                  <Typography>
+                    {format(new Date(selectedContent.createdAt), 'PPp')}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Stack>
           )}
-        <IconIconIcon/IconDialogContentIcon>
-        <IconDialogActionsIcon>
-          <IconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconsetViewDialogOpenIcon(IconfalseIcon)}>IconCloseIcon<IconIconIcon/IconButtonIcon>
-        <IconIconIcon/IconDialogActionsIcon>
-      <IconIconIcon/IconDialogIcon>
-      {/* IconRejectIcon IconDialogIcon */}
-      <IconDialogIcon
-        IconopenIcon={IconrejectDialogOpenIcon}
-        IcononCloseIcon={() => IconsetRejectDialogOpenIcon(IconfalseIcon)}
-        IconmaxWidthIcon="Iconsm"
-        IconfullWidthIcon
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Reject Dialog */}
+      <Dialog
+        open={rejectDialogOpen}
+        onClose={() => setRejectDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
       >
-        <IconDialogTitleIcon>IconRejectIcon IconContentIcon<IconIconIcon/IconDialogTitleIcon>
-        <IconDialogContentIcon>
-          <IconStackIcon IconspacingIcon={Icon2Icon}>
-            <IconTypographyIcon>
-              IconPleaseIcon IconprovideIcon IconaIcon IconreasonIcon IconforIcon IconrejectingIcon "{IconselectedContentIcon?.IcontitleIcon}"
-            <IconIconIcon/IconTypographyIcon>
-            <IconFormControlIcon IconfullWidthIcon>
-              <IconInputLabelIcon>IconReasonIcon<IconIconIcon/IconInputLabelIcon>
-              <IconSelectIcon
-                IconvalueIcon={IconrejectReasonIcon}
-                IconlabelIcon="IconReason"
-                IcononChangeIcon={(IconeIcon) => IconsetRejectReasonIcon(IconeIcon.IcontargetIcon.IconvalueIcon)}
+        <DialogTitle>Reject Content</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2}>
+            <Typography>
+              Please provide a reason for rejecting "{selectedContent?.title}"
+            </Typography>
+            <FormControl fullWidth>
+              <InputLabel>Reason</InputLabel>
+              <Select
+                value={rejectReason}
+                label="Reason"
+                onChange={(e) => setRejectReason(e.target.value)}
               >
-                <IconMenuItemIcon IconvalueIcon="Iconinappropriate">IconInappropriateIcon IconContentIcon<IconIconIcon/IconMenuItemIcon>
-                <IconMenuItemIcon IconvalueIcon="Iconspam">IconSpamIcon<IconIconIcon/IconMenuItemIcon>
-                <IconMenuItemIcon IconvalueIcon="Iconcopyright">IconCopyrightIcon IconViolationIcon<IconIconIcon/IconMenuItemIcon>
-                <IconMenuItemIcon IconvalueIcon="Iconquality">IconLowIcon IconQualityIcon<IconIconIcon/IconMenuItemIcon>
-                <IconMenuItemIcon IconvalueIcon="Iconpolicy">IconPolicyIcon IconViolationIcon<IconIconIcon/IconMenuItemIcon>
-                <IconMenuItemIcon IconvalueIcon="Iconother">IconOtherIcon<IconIconIcon/IconMenuItemIcon>
-              <IconIconIcon/IconSelectIcon>
-            <IconIconIcon/IconFormControlIcon>
-            <IconTextFieldIcon
-              IconmultilineIcon
-              IconrowsIcon={Icon3Icon}
-              IconlabelIcon="IconAdditionalIcon IconComments"
-              IconfullWidthIcon
+                <MenuItem value="inappropriate">Inappropriate Content</MenuItem>
+                <MenuItem value="spam">Spam</MenuItem>
+                <MenuItem value="copyright">Copyright Violation</MenuItem>
+                <MenuItem value="quality">Low Quality</MenuItem>
+                <MenuItem value="policy">Policy Violation</MenuItem>
+                <MenuItem value="other">Other</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              multiline
+              rows={3}
+              label="Additional Comments"
+              fullWidth
             />
-          <IconIconIcon/IconStackIcon>
-        <IconIconIcon/IconDialogContentIcon>
-        <IconDialogActionsIcon>
-          <IconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconsetRejectDialogOpenIcon(IconfalseIcon)}>IconCancelIcon<IconIconIcon/IconButtonIcon>
-          <IconButtonIcon
-            IconvariantIcon="Iconfilled"
-            IconcolorIcon="Iconred"
-            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleRejectIcon}
-            IcondisabledIcon={!IconrejectReasonIcon}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleReject}
+            disabled={!rejectReason}
           >
-            IconRejectIcon
-          <IconIconIcon/IconButtonIcon>
-        <IconIconIcon/IconDialogActionsIcon>
-      <IconIconIcon/IconDialogIcon>
-    <IconIconIcon/IconPaperIcon>
+            Reject
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Paper>
   );
 });
-IconContentModerationPanelIcon.IcondisplayNameIcon = 'IconContentModerationPanel';
-IconexportIcon IcondefaultIcon IconContentModerationPanelIcon;
+
+ContentModerationPanel.displayName = 'ContentModerationPanel';
+
+export default ContentModerationPanel;

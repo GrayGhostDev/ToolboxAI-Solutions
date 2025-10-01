@@ -1,334 +1,351 @@
-IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../IconutilsIcon/IconmuiIcon-Iconimports';
 /**
- * IconPerformanceIcon IconSettingsIcon IconComponentIcon
+ * Performance Settings Component
  *
- * IconUIIcon IconforIcon IconcontrollingIcon IconperformanceIcon IconmonitoringIcon IconfeatureIcon IconflagsIcon
- * IconandIcon IcondisplayingIcon IconperformanceIcon IconmetricsIcon
+ * UI for controlling performance monitoring feature flags
+ * and displaying performance metrics
  */
 
-IconimportIcon IconReactIcon IconfromIcon 'Iconreact';
+import React from 'react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Switch,
+  FormControlLabel,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Divider,
+  Alert,
+  AlertTitle,
+  Chip,
+  LinearProgress,
+  Button,
+  Stack,
+  Grid,
+} from '@mui/material';
+import {
+  Speed,
+  Warning,
+  CheckCircle,
+  Error as ErrorIcon,
+  Memory,
+  Timer,
+  TrendingUp,
+  Refresh,
+  Clear,
+} from '@mui/icons-material';
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
+import { featureFlags, useFeatureFlags } from '@/config/features';
 
-IconimportIcon {
-  IconIconSpeedIcon,
-  IconIconAlertTriangleIcon,
-  IconIconCircleCheckIcon,
-  IconErrorIcon IconasIcon IconIconCircleXIcon,
-  IconIconMemoryIcon,
-  IconIconClockIcon,
-  IconIconTrendingUpIcon,
-  IconIconRefreshIcon,
-  IconIconXIcon,
-} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
-IconimportIcon { IconusePerformanceMonitorIcon } IconfromIcon '@/IconhooksIcon/IconusePerformanceMonitor';
-IconimportIcon { IconfeatureFlagsIcon, IconuseFeatureFlagsIcon } IconfromIcon '@/IconconfigIcon/Iconfeatures';
-IconimportIcon { IconIconIcon, IconIconAlertTriangleIcon, IconIconCircleCheckIcon, IconIconCircleXIcon, IconIconClockIcon, IconIconMemoryIcon, IconIconRefreshIcon, IconIconSpeedIcon, IconIconTrendingUpIcon, IconIconXIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
-
-IconexportIcon IcondefaultIcon IconfunctionIcon IconPerformanceSettingsIcon() {
-  IconconstIcon IconflagsIcon = IconuseFeatureFlagsIcon();
-  IconconstIcon {
-    IconisMonitoringIcon,
-    IconsummaryIcon,
-    IconstartMonitoringIcon,
-    IconstopMonitoringIcon,
-    IconclearAlertsIcon,
-  } = IconusePerformanceMonitorIcon();
+export default function PerformanceSettings() {
+  const flags = useFeatureFlags();
+  const {
+    isMonitoring,
+    summary,
+    startMonitoring,
+    stopMonitoring,
+    clearAlerts,
+  } = usePerformanceMonitor();
 
   /**
-   * IconHandleIcon IconperformanceIcon IconmonitoringIcon IcontoggleIcon
+   * Handle performance monitoring toggle
    */
-  IconconstIcon IconhandleMonitoringToggleIcon = (IconeventIcon: IconReactIcon.IconChangeEventIcon<IconHTMLInputElementIcon>) => {
-    IconconstIcon IconenabledIcon = IconeventIcon.IcontargetIcon.IconcheckedIcon;
-    IconfeatureFlagsIcon.IconupdateFlagsIcon({ IconenablePerformanceMonitoringIcon: IconenabledIcon });
+  const handleMonitoringToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const enabled = event.target.checked;
+    featureFlags.updateFlags({ enablePerformanceMonitoring: enabled });
 
-    IconifIcon (IconenabledIcon) {
-      IconstartMonitoringIcon();
-    } IconelseIcon {
-      IconstopMonitoringIcon();
+    if (enabled) {
+      startMonitoring();
+    } else {
+      stopMonitoring();
     }
   };
 
   /**
-   * IconHandleIcon IconmonitoringIcon IconlevelIcon IconchangeIcon
+   * Handle monitoring level change
    */
-  IconconstIcon IconhandleLevelChangeIcon = (IconeventIcon: IconanyIcon) => {
-    IconfeatureFlagsIcon.IconupdateFlagsIcon({
-      IconperformanceMonitoringLevelIcon: IconeventIcon.IcontargetIcon.IconvalueIcon,
+  const handleLevelChange = (event: any) => {
+    featureFlags.updateFlags({
+      performanceMonitoringLevel: event.target.value,
     });
   };
 
   /**
-   * IconGetIcon IconscoreIcon IconcolorIcon IconbasedIcon IcononIcon IconvalueIcon
+   * Get score color based on value
    */
-  IconconstIcon IcongetScoreColorIcon = (IconscoreIcon: IconnumberIcon): IconstringIcon => {
-    IconifIcon (IconscoreIcon >= Icon90Icon) IconreturnIcon 'Iconsuccess';
-    IconifIcon (IconscoreIcon >= Icon70Icon) IconreturnIcon 'Iconwarning';
-    IconreturnIcon 'Iconerror';
+  const getScoreColor = (score: number): string => {
+    if (score >= 90) return 'success';
+    if (score >= 70) return 'warning';
+    return 'error';
   };
 
   /**
-   * IconGetIcon IconseverityIcon IconcolorIcon
+   * Get severity color
    */
-  IconconstIcon IcongetSeverityColorIcon = (IconseverityIcon: IconstringIcon): 'Iconerror' | 'Iconwarning' | 'Iconinfo' => {
-    IconswitchIcon (IconseverityIcon) {
-      IconcaseIcon 'Iconcritical':
-      IconcaseIcon 'Iconerror':
-        IconreturnIcon 'Iconerror';
-      IconcaseIcon 'Iconwarning':
-        IconreturnIcon 'Iconwarning';
-      IcondefaultIcon:
-        IconreturnIcon 'Iconinfo';
+  const getSeverityColor = (severity: string): 'error' | 'warning' | 'info' => {
+    switch (severity) {
+      case 'critical':
+      case 'error':
+        return 'error';
+      case 'warning':
+        return 'warning';
+      default:
+        return 'info';
     }
   };
 
-  IconreturnIcon (
-    <IconBoxIcon>
-      <IconTypographyIcon IconorderIcon={Icon5Icon} IcongutterBottomIcon>
-        IconPerformanceIcon IconMonitoringIcon
-      <IconIconIcon/IconTypographyIcon>
+  return (
+    <Box>
+      <Typography variant="h5" gutterBottom>
+        Performance Monitoring
+      </Typography>
 
-      {/* IconMainIcon IconSettingsIcon */}
-      <IconCardIcon IconstyleIcon={{ IconmbIcon: Icon3Icon }}>
-        <IconCardContentIcon>
-          <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
-            IconMonitoringIcon IconConfigurationIcon
-          <IconIconIcon/IconTypographyIcon>
+      {/* Main Settings */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Monitoring Configuration
+          </Typography>
 
-          <IconGridIcon IconcontainerIcon IconspacingIcon={Icon3Icon}>
-            <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconmdIcon={Icon6Icon}>
-              <IconFormControlLabelIcon
-                IconcontrolIcon={
-                  <IconSwitchIcon
-                    IconcheckedIcon={IconflagsIcon.IconenablePerformanceMonitoringIcon}
-                    IcononChangeIcon={IconhandleMonitoringToggleIcon}
-                    IconcolorIcon="Iconblue"
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={flags.enablePerformanceMonitoring}
+                    onChange={handleMonitoringToggle}
+                    color="primary"
                   />
                 }
-                IconlabelIcon="IconEnableIcon IconPerformanceIcon IconMonitoring"
+                label="Enable Performance Monitoring"
               />
-            <IconIconIcon/IconGridIcon>
+            </Grid>
 
-            <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconmdIcon={Icon6Icon}>
-              <IconFormControlIcon IconfullWidthIcon IcondisabledIcon={!IconflagsIcon.IconenablePerformanceMonitoringIcon}>
-                <IconInputLabelIcon>IconMonitoringIcon IconLevelIcon<IconIconIcon/IconInputLabelIcon>
-                <IconSelectIcon
-                  IconvalueIcon={IconflagsIcon.IconperformanceMonitoringLevelIcon}
-                  IcononChangeIcon={IconhandleLevelChangeIcon}
-                  IconlabelIcon="IconMonitoringIcon IconLevel"
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth disabled={!flags.enablePerformanceMonitoring}>
+                <InputLabel>Monitoring Level</InputLabel>
+                <Select
+                  value={flags.performanceMonitoringLevel}
+                  onChange={handleLevelChange}
+                  label="Monitoring Level"
                 >
-                  <IconMenuItemIcon IconvalueIcon="Iconoff">IconOffIcon<IconIconIcon/IconMenuItemIcon>
-                  <IconMenuItemIcon IconvalueIcon="Iconbasic">IconBasicIcon<IconIconIcon/IconMenuItemIcon>
-                  <IconMenuItemIcon IconvalueIcon="Icondetailed">IconDetailedIcon<IconIconIcon/IconMenuItemIcon>
-                  <IconMenuItemIcon IconvalueIcon="Iconverbose">IconVerboseIcon<IconIconIcon/IconMenuItemIcon>
-                <IconIconIcon/IconSelectIcon>
-              <IconIconIcon/IconFormControlIcon>
-            <IconIconIcon/IconGridIcon>
+                  <MenuItem value="off">Off</MenuItem>
+                  <MenuItem value="basic">Basic</MenuItem>
+                  <MenuItem value="detailed">Detailed</MenuItem>
+                  <MenuItem value="verbose">Verbose</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
 
-            <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconmdIcon={Icon6Icon}>
-              <IconFormControlLabelIcon
-                IconcontrolIcon={
-                  <IconSwitchIcon
-                    IconcheckedIcon={IconflagsIcon.IconenableSlowApiWarningsIcon}
-                    IcononChangeIcon={(IconeIcon) =>
-                      IconfeatureFlagsIcon.IconupdateFlagsIcon({
-                        IconenableSlowApiWarningsIcon: IconeIcon.IcontargetIcon.IconcheckedIcon,
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={flags.enableSlowApiWarnings}
+                    onChange={(e) =>
+                      featureFlags.updateFlags({
+                        enableSlowApiWarnings: e.target.checked,
                       })
                     }
-                    IconcolorIcon="Iconblue"
+                    color="primary"
                   />
                 }
-                IconlabelIcon="IconEnableIcon IconSlowIcon IconAPIIcon IconWarnings"
+                label="Enable Slow API Warnings"
               />
-            <IconIconIcon/IconGridIcon>
+            </Grid>
 
-            <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconmdIcon={Icon6Icon}>
-              <IconFormControlLabelIcon
-                IconcontrolIcon={
-                  <IconSwitchIcon
-                    IconcheckedIcon={IconflagsIcon.IconenableReactProfilerIcon}
-                    IcononChangeIcon={(IconeIcon) =>
-                      IconfeatureFlagsIcon.IconupdateFlagsIcon({
-                        IconenableReactProfilerIcon: IconeIcon.IcontargetIcon.IconcheckedIcon,
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={flags.enableReactProfiler}
+                    onChange={(e) =>
+                      featureFlags.updateFlags({
+                        enableReactProfiler: e.target.checked,
                       })
                     }
-                    IconcolorIcon="Iconblue"
+                    color="primary"
                   />
                 }
-                IconlabelIcon="IconEnableIcon IconReactIcon IconProfiler"
+                label="Enable React Profiler"
               />
-            <IconIconIcon/IconGridIcon>
-          <IconIconIcon/IconGridIcon>
-        <IconIconIcon/IconCardContentIcon>
-      <IconIconIcon/IconCardIcon>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
-      {/* IconPerformanceIcon IconStatusIcon */}
-      {IconisMonitoringIcon && (
-        <IconCardIcon IconstyleIcon={{ IconmbIcon: Icon3Icon }}>
-          <IconCardContentIcon>
-            <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="Iconcenter" IconmbIcon={Icon2Icon}>
-              <IconTypographyIcon IconorderIcon={Icon6Icon}>IconPerformanceIcon IconStatusIcon<IconIconIcon/IconTypographyIcon>
-              <IconChipIcon
-                IconiconIcon={<IconIconSpeedIcon />}
-                IconlabelIcon="IconMonitoringIcon IconActive"
-                IconcolorIcon="Icongreen"
-                IconsizeIcon="Iconsmall"
+      {/* Performance Status */}
+      {isMonitoring && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h6">Performance Status</Typography>
+              <Chip
+                icon={<Speed />}
+                label="Monitoring Active"
+                color="success"
+                size="small"
               />
-            <IconIconIcon/IconBoxIcon>
+            </Box>
 
-            {IconsummaryIcon ? (
-              <IconIconIcon>
-                {/* IconPerformanceIcon IconScoreIcon */}
-                <IconBoxIcon IconmbIcon={Icon3Icon}>
-                  <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconcolorIcon="IcontextIcon.Iconsecondary" IcongutterBottomIcon>
-                    IconOverallIcon IconScoreIcon
-                  <IconIconIcon/IconTypographyIcon>
-                  <IconBoxIcon IcondisplayIcon="Iconflex" IconalignItemsIcon="Iconcenter" IcongapIcon={Icon2Icon}>
-                    <IconTypographyIcon IconorderIcon={Icon3Icon} IconcolorIcon={`${IcongetScoreColorIcon(IconsummaryIcon.IconscoreIcon)}.IconmainIcon`}>
-                      {IconsummaryIcon.IconscoreIcon}
-                    <IconIconIcon/IconTypographyIcon>
-                    <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
-                      / Icon100Icon
-                    <IconIconIcon/IconTypographyIcon>
-                  <IconIconIcon/IconBoxIcon>
-                  <IconLinearProgressIcon
-                    IconvariantIcon="Icondeterminate"
-                    IconvalueIcon={IconsummaryIcon.IconscoreIcon}
-                    IconcolorIcon={IcongetScoreColorIcon(IconsummaryIcon.IconscoreIcon) IconasIcon IconanyIcon}
-                    IconstyleIcon={{ IconmtIcon: Icon1Icon, IconheightIcon: Icon8Icon, IconborderRadiusIcon: Icon1Icon }}
+            {summary ? (
+              <>
+                {/* Performance Score */}
+                <Box mb={3}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Overall Score
+                  </Typography>
+                  <Box display="flex" alignItems="center" gap={2}>
+                    <Typography variant="h3" color={`${getScoreColor(summary.score)}.main`}>
+                      {summary.score}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      / 100
+                    </Typography>
+                  </Box>
+                  <LinearProgress
+                    variant="determinate"
+                    value={summary.score}
+                    color={getScoreColor(summary.score) as any}
+                    sx={{ mt: 1, height: 8, borderRadius: 1 }}
                   />
-                <IconIconIcon/IconBoxIcon>
+                </Box>
 
-                <IconDividerIcon IconstyleIcon={{ IconmyIcon: Icon2Icon }} />
+                <Divider sx={{ my: 2 }} />
 
-                {/* IconKeyIcon IconMetricsIcon */}
-                <IconGridIcon IconcontainerIcon IconspacingIcon={Icon2Icon}>
-                  <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
-                    <IconBoxIcon IcontextAlignIcon="Iconcenter">
-                      <IconIconClockIcon IconcolorIcon="Iconaction" />
-                      <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
-                        IconFCPIcon
-                      <IconIconIcon/IconTypographyIcon>
-                      <IconTypographyIcon IconorderIcon={Icon6Icon}>
-                        {IconsummaryIcon.IconmetricsIcon.IconfirstContentfulPaintIcon.IcontoFixedIcon(Icon0Icon)}IconmsIcon
-                      <IconIconIcon/IconTypographyIcon>
-                    <IconIconIcon/IconBoxIcon>
-                  <IconIconIcon/IconGridIcon>
+                {/* Key Metrics */}
+                <Grid container spacing={2}>
+                  <Grid item xs={6} md={3}>
+                    <Box textAlign="center">
+                      <Timer color="action" />
+                      <Typography variant="body2" color="text.secondary">
+                        FCP
+                      </Typography>
+                      <Typography variant="h6">
+                        {summary.metrics.firstContentfulPaint.toFixed(0)}ms
+                      </Typography>
+                    </Box>
+                  </Grid>
 
-                  <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
-                    <IconBoxIcon IcontextAlignIcon="Iconcenter">
-                      <IconIconTrendingUpIcon IconcolorIcon="Iconaction" />
-                      <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
-                        IconLCPIcon
-                      <IconIconIcon/IconTypographyIcon>
-                      <IconTypographyIcon IconorderIcon={Icon6Icon}>
-                        {IconsummaryIcon.IconmetricsIcon.IconlargestContentfulPaintIcon.IcontoFixedIcon(Icon0Icon)}IconmsIcon
-                      <IconIconIcon/IconTypographyIcon>
-                    <IconIconIcon/IconBoxIcon>
-                  <IconIconIcon/IconGridIcon>
+                  <Grid item xs={6} md={3}>
+                    <Box textAlign="center">
+                      <TrendingUp color="action" />
+                      <Typography variant="body2" color="text.secondary">
+                        LCP
+                      </Typography>
+                      <Typography variant="h6">
+                        {summary.metrics.largestContentfulPaint.toFixed(0)}ms
+                      </Typography>
+                    </Box>
+                  </Grid>
 
-                  <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
-                    <IconBoxIcon IcontextAlignIcon="Iconcenter">
-                      <IconIconMemoryIcon IconcolorIcon="Iconaction" />
-                      <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
-                        IconIconMemoryIcon
-                      <IconIconIcon/IconTypographyIcon>
-                      <IconTypographyIcon IconorderIcon={Icon6Icon}>
-                        {IconsummaryIcon.IconsystemHealthIcon.Iconmemory_usageIcon}IconMBIcon
-                      <IconIconIcon/IconTypographyIcon>
-                    <IconIconIcon/IconBoxIcon>
-                  <IconIconIcon/IconGridIcon>
+                  <Grid item xs={6} md={3}>
+                    <Box textAlign="center">
+                      <Memory color="action" />
+                      <Typography variant="body2" color="text.secondary">
+                        Memory
+                      </Typography>
+                      <Typography variant="h6">
+                        {summary.systemHealth.memory_usage}MB
+                      </Typography>
+                    </Box>
+                  </Grid>
 
-                  <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
-                    <IconBoxIcon IcontextAlignIcon="Iconcenter">
-                      <IconIconSpeedIcon IconcolorIcon="Iconaction" />
-                      <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
-                        IconCPUIcon
-                      <IconIconIcon/IconTypographyIcon>
-                      <IconTypographyIcon IconorderIcon={Icon6Icon}>{IconsummaryIcon.IconsystemHealthIcon.Iconcpu_usageIcon}%<IconIconIcon/IconTypographyIcon>
-                    <IconIconIcon/IconBoxIcon>
-                  <IconIconIcon/IconGridIcon>
-                <IconIconIcon/IconGridIcon>
+                  <Grid item xs={6} md={3}>
+                    <Box textAlign="center">
+                      <Speed color="action" />
+                      <Typography variant="body2" color="text.secondary">
+                        CPU
+                      </Typography>
+                      <Typography variant="h6">{summary.systemHealth.cpu_usage}%</Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
 
-                <IconDividerIcon IconstyleIcon={{ IconmyIcon: Icon2Icon }} />
+                <Divider sx={{ my: 2 }} />
 
-                {/* IconAlertsIcon */}
-                {IconsummaryIcon.IconalertsIcon.IconlengthIcon > Icon0Icon && (
-                  <IconBoxIcon IconmbIcon={Icon2Icon}>
-                    <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="Iconcenter" IconmbIcon={Icon1Icon}>
-                      <IconTypographyIcon IconvariantIcon="Iconsubtitle1">IconActiveIcon IconAlertsIcon<IconIconIcon/IconTypographyIcon>
-                      <IconButtonIcon IconsizeIcon="Iconsmall" IconstartIconIcon={<IconIconXIcon />} IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconclearAlertsIcon}>
-                        IconIconXIcon IconAllIcon
-                      <IconIconIcon/IconButtonIcon>
-                    <IconIconIcon/IconBoxIcon>
-                    <IconStackIcon IconspacingIcon={Icon1Icon}>
-                      {IconsummaryIcon.IconalertsIcon.IconsliceIcon(-Icon5Icon).IconmapIcon((IconalertIcon, IconindexIcon) => (
-                        <IconAlertIcon
-                          IconkeyIcon={IconindexIcon}
-                          IconseverityIcon={IcongetSeverityColorIcon(IconalertIcon.IconseverityIcon)}
-                          IcononCloseIcon={() => {}}
+                {/* Alerts */}
+                {summary.alerts.length > 0 && (
+                  <Box mb={2}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                      <Typography variant="subtitle1">Active Alerts</Typography>
+                      <Button size="small" startIcon={<Clear />} onClick={clearAlerts}>
+                        Clear All
+                      </Button>
+                    </Box>
+                    <Stack spacing={1}>
+                      {summary.alerts.slice(-5).map((alert, index) => (
+                        <Alert
+                          key={index}
+                          severity={getSeverityColor(alert.severity)}
+                          onClose={() => {}}
                         >
-                          <IconAlertTitleIcon>{IconalertIcon.IconmessageIcon}<IconIconIcon/IconAlertTitleIcon>
-                          {IconalertIcon.IconsuggestionIcon && (
-                            <IconTypographyIcon IconsizeIcon="Iconsm">{IconalertIcon.IconsuggestionIcon}<IconIconIcon/IconTypographyIcon>
+                          <AlertTitle>{alert.message}</AlertTitle>
+                          {alert.suggestion && (
+                            <Typography variant="body2">{alert.suggestion}</Typography>
                           )}
-                        <IconIconIcon/IconAlertIcon>
+                        </Alert>
                       ))}
-                    <IconIconIcon/IconStackIcon>
-                  <IconIconIcon/IconBoxIcon>
+                    </Stack>
+                  </Box>
                 )}
 
-                {/* IconRecommendationsIcon */}
-                {IconsummaryIcon.IconrecommendationsIcon.IconlengthIcon > Icon0Icon && (
-                  <IconBoxIcon>
-                    <IconTypographyIcon IconvariantIcon="Iconsubtitle1" IcongutterBottomIcon>
-                      IconRecommendationsIcon
-                    <IconIconIcon/IconTypographyIcon>
-                    <IconStackIcon IconspacingIcon={Icon1Icon}>
-                      {IconsummaryIcon.IconrecommendationsIcon.IconmapIcon((IconrecIcon, IconindexIcon) => (
-                        <IconBoxIcon IconkeyIcon={IconindexIcon} IcondisplayIcon="Iconflex" IconalignItemsIcon="Iconcenter" IcongapIcon={Icon1Icon}>
-                          <IconIconCircleCheckIcon IconcolorIcon="Iconcyan" IconfontSizeIcon="Iconsmall" />
-                          <IconTypographyIcon IconsizeIcon="Iconsm">{IconrecIcon}<IconIconIcon/IconTypographyIcon>
-                        <IconIconIcon/IconBoxIcon>
+                {/* Recommendations */}
+                {summary.recommendations.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle1" gutterBottom>
+                      Recommendations
+                    </Typography>
+                    <Stack spacing={1}>
+                      {summary.recommendations.map((rec, index) => (
+                        <Box key={index} display="flex" alignItems="center" gap={1}>
+                          <CheckCircle color="info" fontSize="small" />
+                          <Typography variant="body2">{rec}</Typography>
+                        </Box>
                       ))}
-                    <IconIconIcon/IconStackIcon>
-                  <IconIconIcon/IconBoxIcon>
+                    </Stack>
+                  </Box>
                 )}
-              <IconIconIcon/>
+              </>
             ) : (
-              <IconBoxIcon IcontextAlignIcon="Iconcenter" IconpyIcon={Icon3Icon}>
-                <IconTypographyIcon IconcolorIcon="IcontextIcon.Iconsecondary">
-                  IconCollectingIcon IconperformanceIcon IcondataIcon...
-                <IconIconIcon/IconTypographyIcon>
-                <IconLinearProgressIcon IconstyleIcon={{ IconmtIcon: Icon2Icon }} />
-              <IconIconIcon/IconBoxIcon>
+              <Box textAlign="center" py={3}>
+                <Typography color="text.secondary">
+                  Collecting performance data...
+                </Typography>
+                <LinearProgress sx={{ mt: 2 }} />
+              </Box>
             )}
-          <IconIconIcon/IconCardContentIcon>
-        <IconIconIcon/IconCardIcon>
+          </CardContent>
+        </Card>
       )}
 
-      {/* IconNotIcon IconMonitoringIcon IconMessageIcon */}
-      {!IconisMonitoringIcon && IconflagsIcon.IconenablePerformanceMonitoringIcon && (
-        <IconAlertIcon IconseverityIcon="Iconinfo">
-          <IconAlertTitleIcon>IconPerformanceIcon IconMonitoringIcon IconReadyIcon<IconIconIcon/IconAlertTitleIcon>
-          IconPerformanceIcon IconmonitoringIcon IconisIcon IconenabledIcon IconbutIcon IconnotIcon IconcurrentlyIcon IconactiveIcon.
-          <IconButtonIcon
-            IconsizeIcon="Iconsmall"
-            IconstartIconIcon={<IconIconSpeedIcon />}
-            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconstartMonitoringIcon}
-            IconstyleIcon={{ IconmtIcon: Icon1Icon }}
+      {/* Not Monitoring Message */}
+      {!isMonitoring && flags.enablePerformanceMonitoring && (
+        <Alert severity="info">
+          <AlertTitle>Performance Monitoring Ready</AlertTitle>
+          Performance monitoring is enabled but not currently active.
+          <Button
+            size="small"
+            startIcon={<Speed />}
+            onClick={startMonitoring}
+            sx={{ mt: 1 }}
           >
-            IconStartIcon IconMonitoringIcon
-          <IconIconIcon/IconButtonIcon>
-        <IconIconIcon/IconAlertIcon>
+            Start Monitoring
+          </Button>
+        </Alert>
       )}
 
-      {/* IconDisabledIcon IconMessageIcon */}
-      {!IconflagsIcon.IconenablePerformanceMonitoringIcon && (
-        <IconAlertIcon IconseverityIcon="Iconwarning">
-          <IconAlertTitleIcon>IconPerformanceIcon IconMonitoringIcon IconDisabledIcon<IconIconIcon/IconAlertTitleIcon>
-          IconEnableIcon IconperformanceIcon IconmonitoringIcon IcontoIcon IcontrackIcon IconapplicationIcon IconmetricsIcon IconandIcon IconidentifyIcon IconoptimizationIcon
-          IconopportunitiesIcon.
-        <IconIconIcon/IconAlertIcon>
+      {/* Disabled Message */}
+      {!flags.enablePerformanceMonitoring && (
+        <Alert severity="warning">
+          <AlertTitle>Performance Monitoring Disabled</AlertTitle>
+          Enable performance monitoring to track application metrics and identify optimization
+          opportunities.
+        </Alert>
       )}
-    <IconIconIcon/IconBoxIcon>
+    </Box>
   );
 }

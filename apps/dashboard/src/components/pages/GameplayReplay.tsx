@@ -1,749 +1,774 @@
-IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../IconutilsIcon/IconmuiIcon-Iconimports';
-IconimportIcon * IconasIcon IconReactIcon IconfromIcon "Iconreact";
+import * as React from "react";
+import { useState, useEffect } from "react";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Stack,
+  IconButton,
+  LinearProgress,
+  Chip,
+  Alert,
+  Slider,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Paper,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  ListItemButton,
+  Divider,
+  Tab,
+  Tabs,
+  Avatar,
+} from "@mui/material";
+import Grid2 from "@mui/material/Unstable_Grid2";
+import {
+  PlayArrow,
+  Pause,
+  SkipNext,
+  SkipPrevious,
+  Replay,
+  VolumeUp,
+  Fullscreen,
+  Speed,
+  EmojiEvents,
+  Stars,
+  TrendingUp,
+  School,
+  Timer,
+  CheckCircle,
+  Warning,
+  SportsEsports,
+  Timeline,
+  Insights,
+  Download,
+  Share,
+  CalendarToday,
+} from "@mui/icons-material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { useAppSelector } from "../../store";
 
-IconimportIcon { IconuseStateIcon, IconuseEffectIcon } IconfromIcon "Iconreact";
-IconimportIcon {
-  IconIconPlayerPlayIcon,
-  IconIconPlayerPauseIcon,
-  IconIconSkipNextIcon,
-  IconIconSkipPreviousIcon,
-  IconIconReplayIcon,
-  IconIconVolumeIcon,
-  IconIconFullscreenIcon,
-  IconIconSpeedIcon,
-  IconIconEmojiEventsIcon,
-  IconIconStarsIcon,
-  IconIconTrendingUpIcon,
-  IconIconSchoolIcon,
-  IconIconClockIcon,
-  IconIconCircleCheckIcon,
-  IconIconAlertTriangleIcon,
-  IconIconSportsEsportsIcon,
-  IconIconTimelineIcon,
-  IconIconInsightsIcon,
-  IconIconDownloadIcon,
-  IconIconShareIcon,
-  IconIconCalendarIcon,
-} IconfromIcon "@IconmuiIcon/IconiconsIcon-Iconmaterial";
-IconimportIcon { IconDatePickerIcon } IconfromIcon "@IconmuiIcon/IconxIcon-IcondateIcon-IconpickersIcon/IconDatePicker";
-IconimportIcon { IconLocalizationProviderIcon } IconfromIcon "@IconmuiIcon/IconxIcon-IcondateIcon-IconpickersIcon/IconLocalizationProvider";
-IconimportIcon { IconAdapterDateFnsIcon } IconfromIcon "@IconmuiIcon/IconxIcon-IcondateIcon-IconpickersIcon/IconAdapterDateFns";
-IconimportIcon { IconuseAppSelectorIcon } IconfromIcon "../../Iconstore";
-IconimportIcon { IconIconIcon, IconIconAlertTriangleIcon, IconIconCalendarIcon, IconIconCircleCheckIcon, IconIconClockIcon, IconIconDownloadIcon, IconIconEmojiEventsIcon, IconIconFullscreenIcon, IconIconInsightsIcon, IconIconPlayerPauseIcon, IconIconPlayerPlayIcon, IconIconReplayIcon, IconIconSchoolIcon, IconIconShareIcon, IconIconSkipNextIcon, IconIconSkipPreviousIcon, IconIconSpeedIcon, IconIconSportsEsportsIcon, IconIconStarsIcon, IconIconTimelineIcon, IconIconTrendingUpIcon, IconIconVolumeIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
-
-IconinterfaceIcon IconGameplaySessionIcon {
-  IconidIcon: IconstringIcon;
-  IconstudentNameIcon: IconstringIcon;
-  IconstudentAvatarIcon: IconstringIcon;
-  IconworldNameIcon: IconstringIcon;
-  IconworldThumbnailIcon: IconstringIcon;
-  IcondateIcon: IconDateIcon;
-  IcondurationIcon: IconnumberIcon; // IconinIcon IconsecondsIcon
-  IconhighlightsIcon: IconHighlightIcon[];
-  IconachievementsIcon: IconAchievementIcon[];
-  IconinteractionsIcon: IconInteractionIcon[];
-  IconprogressIcon: IconProgressPointIcon[];
-  IconoverallScoreIcon: IconnumberIcon;
-  IconxpEarnedIcon: IconnumberIcon;
-  IconmasteryConceptsIcon: IconstringIcon[];
+interface GameplaySession {
+  id: string;
+  studentName: string;
+  studentAvatar: string;
+  worldName: string;
+  worldThumbnail: string;
+  date: Date;
+  duration: number; // in seconds
+  highlights: Highlight[];
+  achievements: Achievement[];
+  interactions: Interaction[];
+  progress: ProgressPoint[];
+  overallScore: number;
+  xpEarned: number;
+  masteryConcepts: string[];
 }
 
-IconinterfaceIcon IconHighlightIcon {
-  IconidIcon: IconstringIcon;
-  IcontimestampIcon: IconnumberIcon; // IconsecondsIcon IconfromIcon IconstartIcon
-  IcontypeIcon: "Iconachievement" | "Iconmilestone" | "Iconstruggle" | "Iconbreakthrough" | "Iconcollaboration";
-  IcontitleIcon: IconstringIcon;
-  IcondescriptionIcon: IconstringIcon;
-  IconthumbnailUrlIcon?: IconstringIcon;
-  IconimportanceIcon: "Iconlow" | "Iconmedium" | "Iconhigh";
+interface Highlight {
+  id: string;
+  timestamp: number; // seconds from start
+  type: "achievement" | "milestone" | "struggle" | "breakthrough" | "collaboration";
+  title: string;
+  description: string;
+  thumbnailUrl?: string;
+  importance: "low" | "medium" | "high";
 }
 
-IconinterfaceIcon IconAchievementIcon {
-  IconidIcon: IconstringIcon;
-  IconnameIcon: IconstringIcon;
-  IconiconIcon: IconstringIcon;
-  IcontimestampIcon: IconnumberIcon;
-  IconxpRewardIcon: IconnumberIcon;
+interface Achievement {
+  id: string;
+  name: string;
+  icon: string;
+  timestamp: number;
+  xpReward: number;
 }
 
-IconinterfaceIcon IconInteractionIcon {
-  IconidIcon: IconstringIcon;
-  IcontypeIcon: "Iconnpc_dialogue" | "Iconpuzzle_solve" | "Iconquiz_complete" | "Iconpeer_help";
-  IcontimestampIcon: IconnumberIcon;
-  IcondetailsIcon: IconstringIcon;
-  IconoutcomeIcon: "Iconsuccess" | "Iconpartial" | "Iconretry";
+interface Interaction {
+  id: string;
+  type: "npc_dialogue" | "puzzle_solve" | "quiz_complete" | "peer_help";
+  timestamp: number;
+  details: string;
+  outcome: "success" | "partial" | "retry";
 }
 
-IconinterfaceIcon IconProgressPointIcon {
-  IcontimestampIcon: IconnumberIcon;
-  IconconceptIcon: IconstringIcon;
-  IconmasteryIcon: IconnumberIcon; // Icon0Icon-Icon100Icon
+interface ProgressPoint {
+  timestamp: number;
+  concept: string;
+  mastery: number; // 0-100
 }
 
-IconexportIcon IcondefaultIcon IconfunctionIcon IconGameplayReplayIcon() {
-  IconconstIcon IconuserIcon = IconuseAppSelectorIcon((IconsIcon) => IconsIcon.IconuserIcon);
-  IconconstIcon [IconselectedChildIcon, IconsetSelectedChildIcon] = IconuseStateIcon<IconstringIcon>("");
-  IconconstIcon [IconselectedDateIcon, IconsetSelectedDateIcon] = IconuseStateIcon<IconDateIcon>(IconnewIcon IconDateIcon());
-  IconconstIcon [IconsessionsIcon, IconsetSessionsIcon] = IconuseStateIcon<IconGameplaySessionIcon[]>([]);
-  IconconstIcon [IconcurrentSessionIcon, IconsetCurrentSessionIcon] = IconuseStateIcon<IconGameplaySessionIcon | IconnullIcon>(IconnullIcon);
-  IconconstIcon [IconisPlayingIcon, IconsetIsPlayingIcon] = IconuseStateIcon(IconfalseIcon);
-  IconconstIcon [IconcurrentTimeIcon, IconsetCurrentTimeIcon] = IconuseStateIcon(Icon0Icon);
-  IconconstIcon [IconplaybackSpeedIcon, IconsetPlaybackSpeedIcon] = IconuseStateIcon(Icon1Icon);
-  IconconstIcon [IconactiveTabIcon, IconsetActiveTabIcon] = IconuseStateIcon(Icon0Icon);
-  IconconstIcon [IconselectedHighlightIcon, IconsetSelectedHighlightIcon] = IconuseStateIcon<IconstringIcon | IconnullIcon>(IconnullIcon);
+export default function GameplayReplay() {
+  const user = useAppSelector((s) => s.user);
+  const [selectedChild, setSelectedChild] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [sessions, setSessions] = useState<GameplaySession[]>([]);
+  const [currentSession, setCurrentSession] = useState<GameplaySession | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [activeTab, setActiveTab] = useState(0);
+  const [selectedHighlight, setSelectedHighlight] = useState<string | null>(null);
 
-  // IconMockIcon IcondataIcon IconforIcon IconchildrenIcon (IconinIcon IconrealIcon IconappIcon, IconfetchIcon IconfromIcon IconAPIIcon)
-  IconconstIcon IconchildrenIcon = [
-    { IconidIcon: "Icon1", IconnameIcon: "IconEmmaIcon IconJohnson", IconavatarIcon: "", IcongradeIcon: Icon5Icon },
-    { IconidIcon: "Icon2", IconnameIcon: "IconAlexIcon IconJohnson", IconavatarIcon: "", IcongradeIcon: Icon3Icon },
+  // Mock data for children (in real app, fetch from API)
+  const children = [
+    { id: "1", name: "Emma Johnson", avatar: "", grade: 5 },
+    { id: "2", name: "Alex Johnson", avatar: "", grade: 3 },
   ];
 
-  // IconLoadIcon IconmockIcon IconsessionsIcon
-  IconuseEffectIcon(() => {
-    // IconMockIcon IcongameplayIcon IconsessionsIcon
-    IconconstIcon IconmockSessionsIcon: IconGameplaySessionIcon[] = [
+  // Load mock sessions
+  useEffect(() => {
+    // Mock gameplay sessions
+    const mockSessions: GameplaySession[] = [
       {
-        IconidIcon: "Icon1",
-        IconstudentNameIcon: "IconEmmaIcon IconJohnson",
-        IconstudentAvatarIcon: "",
-        IconworldNameIcon: "IconMathIcon IconAdventureIcon IconIsland",
-        IconworldThumbnailIcon: "",
-        IcondateIcon: IconnewIcon IconDateIcon(),
-        IcondurationIcon: Icon1800Icon, // Icon30Icon IconminutesIcon
-        IconhighlightsIcon: [
+        id: "1",
+        studentName: "Emma Johnson",
+        studentAvatar: "",
+        worldName: "Math Adventure Island",
+        worldThumbnail: "",
+        date: new Date(),
+        duration: 1800, // 30 minutes
+        highlights: [
           {
-            IconidIcon: "Iconh1",
-            IcontimestampIcon: Icon120Icon,
-            IcontypeIcon: "Iconachievement",
-            IcontitleIcon: "IconFirstIcon IconPuzzleIcon IconSolvedIcon!",
-            IcondescriptionIcon: "IconEmmaIcon IconsolvedIcon IcontheIcon IconfractionIcon IconpuzzleIcon IcononIcon IconherIcon IconfirstIcon Icontry",
-            IconimportanceIcon: "Iconhigh",
+            id: "h1",
+            timestamp: 120,
+            type: "achievement",
+            title: "First Puzzle Solved!",
+            description: "Emma solved the fraction puzzle on her first try",
+            importance: "high",
           },
           {
-            IconidIcon: "Iconh2",
-            IcontimestampIcon: Icon450Icon,
-            IcontypeIcon: "Iconbreakthrough",
-            IcontitleIcon: "IconMasteredIcon IconMultiplication",
-            IcondescriptionIcon: "IconCompletedIcon IconallIcon IconmultiplicationIcon IconchallengesIcon IconwithIcon Icon100Icon% Iconaccuracy",
-            IconimportanceIcon: "Iconhigh",
+            id: "h2",
+            timestamp: 450,
+            type: "breakthrough",
+            title: "Mastered Multiplication",
+            description: "Completed all multiplication challenges with 100% accuracy",
+            importance: "high",
           },
           {
-            IconidIcon: "Iconh3",
-            IcontimestampIcon: Icon780Icon,
-            IcontypeIcon: "Iconcollaboration",
-            IcontitleIcon: "IconHelpedIcon IconaIcon IconClassmate",
-            IcondescriptionIcon: "IconEmmaIcon IconassistedIcon IconanotherIcon IconstudentIcon IconwithIcon IconaIcon IcondifficultIcon Iconproblem",
-            IconimportanceIcon: "Iconmedium",
+            id: "h3",
+            timestamp: 780,
+            type: "collaboration",
+            title: "Helped a Classmate",
+            description: "Emma assisted another student with a difficult problem",
+            importance: "medium",
           },
           {
-            IconidIcon: "Iconh4",
-            IcontimestampIcon: Icon1200Icon,
-            IcontypeIcon: "Iconstruggle",
-            IcontitleIcon: "IconDivisionIcon IconChallenge",
-            IcondescriptionIcon: "IconTookIcon Icon3Icon IconattemptsIcon IconbutIcon IconperseveredIcon IconthroughIcon IcontheIcon IcondivisionIcon Iconsection",
-            IconimportanceIcon: "Iconmedium",
+            id: "h4",
+            timestamp: 1200,
+            type: "struggle",
+            title: "Division Challenge",
+            description: "Took 3 attempts but persevered through the division section",
+            importance: "medium",
           },
           {
-            IconidIcon: "Iconh5",
-            IcontimestampIcon: Icon1650Icon,
-            IcontypeIcon: "Iconmilestone",
-            IcontitleIcon: "IconLevelIcon IconCompleteIcon!",
-            IcondescriptionIcon: "IconFinishedIcon IconLevelIcon Icon3Icon IconwithIcon IconaIcon IconscoreIcon IconofIcon Icon95Icon%",
-            IconimportanceIcon: "Iconhigh",
-          },
-        ],
-        IconachievementsIcon: [
-          { IconidIcon: "Icona1", IconnameIcon: "IconProblemIcon IconSolver", IconiconIcon: "🧩", IcontimestampIcon: Icon120Icon, IconxpRewardIcon: Icon50Icon },
-          { IconidIcon: "Icona2", IconnameIcon: "IconMathIcon IconMaster", IconiconIcon: "🎓", IcontimestampIcon: Icon450Icon, IconxpRewardIcon: Icon100Icon },
-          { IconidIcon: "Icona3", IconnameIcon: "IconTeamIcon IconPlayer", IconiconIcon: "🤝", IcontimestampIcon: Icon780Icon, IconxpRewardIcon: Icon75Icon },
-        ],
-        IconinteractionsIcon: [
-          {
-            IconidIcon: "Iconi1",
-            IcontypeIcon: "Iconnpc_dialogue",
-            IcontimestampIcon: Icon60Icon,
-            IcondetailsIcon: "IconSpokeIcon IconwithIcon IconProfessorIcon IconMathIcon IconaboutIcon Iconfractions",
-            IconoutcomeIcon: "Iconsuccess",
-          },
-          {
-            IconidIcon: "Iconi2",
-            IcontypeIcon: "Iconpuzzle_solve",
-            IcontimestampIcon: Icon120Icon,
-            IcondetailsIcon: "IconFractionIcon IconpuzzleIcon Iconcompleted",
-            IconoutcomeIcon: "Iconsuccess",
-          },
-          {
-            IconidIcon: "Iconi3",
-            IcontypeIcon: "Iconquiz_complete",
-            IcontimestampIcon: Icon900Icon,
-            IcondetailsIcon: "IconMidIcon-IconlevelIcon IconquizIcon: Icon9Icon/Icon10Icon Iconcorrect",
-            IconoutcomeIcon: "Iconsuccess",
-          },
-          {
-            IconidIcon: "Iconi4",
-            IcontypeIcon: "Iconpeer_help",
-            IcontimestampIcon: Icon780Icon,
-            IcondetailsIcon: "IconHelpedIcon IconAlexIcon IconwithIcon Iconmultiplication",
-            IconoutcomeIcon: "Iconsuccess",
+            id: "h5",
+            timestamp: 1650,
+            type: "milestone",
+            title: "Level Complete!",
+            description: "Finished Level 3 with a score of 95%",
+            importance: "high",
           },
         ],
-        IconprogressIcon: [
-          { IcontimestampIcon: Icon0Icon, IconconceptIcon: "IconFractions", IconmasteryIcon: Icon60Icon },
-          { IcontimestampIcon: Icon300Icon, IconconceptIcon: "IconFractions", IconmasteryIcon: Icon75Icon },
-          { IcontimestampIcon: Icon600Icon, IconconceptIcon: "IconMultiplication", IconmasteryIcon: Icon80Icon },
-          { IcontimestampIcon: Icon900Icon, IconconceptIcon: "IconMultiplication", IconmasteryIcon: Icon95Icon },
-          { IcontimestampIcon: Icon1200Icon, IconconceptIcon: "IconDivision", IconmasteryIcon: Icon70Icon },
-          { IcontimestampIcon: Icon1500Icon, IconconceptIcon: "IconDivision", IconmasteryIcon: Icon85Icon },
+        achievements: [
+          { id: "a1", name: "Problem Solver", icon: "🧩", timestamp: 120, xpReward: 50 },
+          { id: "a2", name: "Math Master", icon: "🎓", timestamp: 450, xpReward: 100 },
+          { id: "a3", name: "Team Player", icon: "🤝", timestamp: 780, xpReward: 75 },
         ],
-        IconoverallScoreIcon: Icon95Icon,
-        IconxpEarnedIcon: Icon225Icon,
-        IconmasteryConceptsIcon: ["IconFractions", "IconMultiplication", "IconProblemIcon IconSolving"],
+        interactions: [
+          {
+            id: "i1",
+            type: "npc_dialogue",
+            timestamp: 60,
+            details: "Spoke with Professor Math about fractions",
+            outcome: "success",
+          },
+          {
+            id: "i2",
+            type: "puzzle_solve",
+            timestamp: 120,
+            details: "Fraction puzzle completed",
+            outcome: "success",
+          },
+          {
+            id: "i3",
+            type: "quiz_complete",
+            timestamp: 900,
+            details: "Mid-level quiz: 9/10 correct",
+            outcome: "success",
+          },
+          {
+            id: "i4",
+            type: "peer_help",
+            timestamp: 780,
+            details: "Helped Alex with multiplication",
+            outcome: "success",
+          },
+        ],
+        progress: [
+          { timestamp: 0, concept: "Fractions", mastery: 60 },
+          { timestamp: 300, concept: "Fractions", mastery: 75 },
+          { timestamp: 600, concept: "Multiplication", mastery: 80 },
+          { timestamp: 900, concept: "Multiplication", mastery: 95 },
+          { timestamp: 1200, concept: "Division", mastery: 70 },
+          { timestamp: 1500, concept: "Division", mastery: 85 },
+        ],
+        overallScore: 95,
+        xpEarned: 225,
+        masteryConcepts: ["Fractions", "Multiplication", "Problem Solving"],
       },
       {
-        IconidIcon: "Icon2",
-        IconstudentNameIcon: "IconEmmaIcon IconJohnson",
-        IconstudentAvatarIcon: "",
-        IconworldNameIcon: "IconScienceIcon IconLaboratory",
-        IconworldThumbnailIcon: "",
-        IcondateIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon86400000Icon), // IconYesterdayIcon
-        IcondurationIcon: Icon2400Icon, // Icon40Icon IconminutesIcon
-        IconhighlightsIcon: [
+        id: "2",
+        studentName: "Emma Johnson",
+        studentAvatar: "",
+        worldName: "Science Laboratory",
+        worldThumbnail: "",
+        date: new Date(Date.now() - 86400000), // Yesterday
+        duration: 2400, // 40 minutes
+        highlights: [
           {
-            IconidIcon: "Iconh6",
-            IcontimestampIcon: Icon180Icon,
-            IcontypeIcon: "Iconachievement",
-            IcontitleIcon: "IconExperimentIcon IconSuccessIcon!",
-            IcondescriptionIcon: "IconCompletedIcon IcontheIcon IconchemicalIcon IconreactionIcon IconexperimentIcon Iconperfectly",
-            IconimportanceIcon: "Iconhigh",
+            id: "h6",
+            timestamp: 180,
+            type: "achievement",
+            title: "Experiment Success!",
+            description: "Completed the chemical reaction experiment perfectly",
+            importance: "high",
           },
         ],
-        IconachievementsIcon: [
-          { IconidIcon: "Icona4", IconnameIcon: "IconScientist", IconiconIcon: "🔬", IcontimestampIcon: Icon180Icon, IconxpRewardIcon: Icon75Icon },
+        achievements: [
+          { id: "a4", name: "Scientist", icon: "🔬", timestamp: 180, xpReward: 75 },
         ],
-        IconinteractionsIcon: [
+        interactions: [
           {
-            IconidIcon: "Iconi5",
-            IcontypeIcon: "Iconnpc_dialogue",
-            IcontimestampIcon: Icon100Icon,
-            IcondetailsIcon: "IconLearnedIcon IconaboutIcon IconchemicalIcon IconreactionsIcon IconfromIcon IconDrIcon. IconScience",
-            IconoutcomeIcon: "Iconsuccess",
+            id: "i5",
+            type: "npc_dialogue",
+            timestamp: 100,
+            details: "Learned about chemical reactions from Dr. Science",
+            outcome: "success",
           },
         ],
-        IconprogressIcon: [
-          { IcontimestampIcon: Icon0Icon, IconconceptIcon: "IconChemistry", IconmasteryIcon: Icon50Icon },
-          { IcontimestampIcon: Icon1200Icon, IconconceptIcon: "IconChemistry", IconmasteryIcon: Icon85Icon },
+        progress: [
+          { timestamp: 0, concept: "Chemistry", mastery: 50 },
+          { timestamp: 1200, concept: "Chemistry", mastery: 85 },
         ],
-        IconoverallScoreIcon: Icon88Icon,
-        IconxpEarnedIcon: Icon175Icon,
-        IconmasteryConceptsIcon: ["IconChemistry", "IconScientificIcon IconMethod"],
+        overallScore: 88,
+        xpEarned: 175,
+        masteryConcepts: ["Chemistry", "Scientific Method"],
       },
     ];
 
-    IconsetSessionsIcon(IconmockSessionsIcon);
-    IconifIcon (IconmockSessionsIcon.IconlengthIcon > Icon0Icon) {
-      IconsetCurrentSessionIcon(IconmockSessionsIcon[Icon0Icon]);
+    setSessions(mockSessions);
+    if (mockSessions.length > 0) {
+      setCurrentSession(mockSessions[0]);
     }
-  }, [IconselectedChildIcon, IconselectedDateIcon]);
+  }, [selectedChild, selectedDate]);
 
-  IconconstIcon IconformatTimeIcon = (IconsecondsIcon: IconnumberIcon): IconstringIcon => {
-    IconconstIcon IconminsIcon = IconMathIcon.IconfloorIcon(IconsecondsIcon / Icon60Icon);
-    IconconstIcon IconsecsIcon = IconMathIcon.IconfloorIcon(IconsecondsIcon % Icon60Icon);
-    IconreturnIcon `${IconminsIcon}:${IconsecsIcon.IcontoStringIcon().IconpadStartIcon(Icon2Icon, "Icon0")}`;
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  IconconstIcon IconhandlePlayPauseIcon = () => {
-    IconsetIsPlayingIcon(!IconisPlayingIcon);
+  const handlePlayPause = () => {
+    setIsPlaying(!isPlaying);
   };
 
-  IconconstIcon IconhandleSeekIcon = (IconnewTimeIcon: IconnumberIcon) => {
-    IconsetCurrentTimeIcon(IconnewTimeIcon);
+  const handleSeek = (newTime: number) => {
+    setCurrentTime(newTime);
   };
 
-  IconconstIcon IconjumpToHighlightIcon = (IcontimestampIcon: IconnumberIcon) => {
-    IconsetCurrentTimeIcon(IcontimestampIcon);
-    IconsetIsPlayingIcon(IcontrueIcon);
+  const jumpToHighlight = (timestamp: number) => {
+    setCurrentTime(timestamp);
+    setIsPlaying(true);
   };
 
-  IconconstIcon IcongetHighlightIconIcon = (IcontypeIcon: IconHighlightIcon["Icontype"]) => {
-    IconswitchIcon (IcontypeIcon) {
-      IconcaseIcon "Iconachievement":
-        IconreturnIcon <IconIconEmojiEventsIcon IconcolorIcon="Iconyellow" />;
-      IconcaseIcon "Iconmilestone":
-        IconreturnIcon <IconIconStarsIcon IconcolorIcon="Iconblue" />;
-      IconcaseIcon "Iconbreakthrough":
-        IconreturnIcon <IconIconTrendingUpIcon IconcolorIcon="Icongreen" />;
-      IconcaseIcon "Iconstruggle":
-        IconreturnIcon <IconIconAlertTriangleIcon IconcolorIcon="Iconred" />;
-      IconcaseIcon "Iconcollaboration":
-        IconreturnIcon <IconIconSchoolIcon IconcolorIcon="Icongray" />;
-      IcondefaultIcon:
-        IconreturnIcon <IconIconCircleCheckIcon />;
+  const getHighlightIcon = (type: Highlight["type"]) => {
+    switch (type) {
+      case "achievement":
+        return <EmojiEvents color="warning" />;
+      case "milestone":
+        return <Stars color="primary" />;
+      case "breakthrough":
+        return <TrendingUp color="success" />;
+      case "struggle":
+        return <Warning color="error" />;
+      case "collaboration":
+        return <School color="secondary" />;
+      default:
+        return <CheckCircle />;
     }
   };
 
-  // IconSimulateIcon IconplaybackIcon
-  IconuseEffectIcon(() => {
-    IconifIcon (IconisPlayingIcon && IconcurrentSessionIcon && IconcurrentTimeIcon <IconIconIcon IconcurrentSessionIcon.IcondurationIcon) {
-      IconconstIcon IcontimerIcon = IconsetTimeoutIcon(() => {
-        IconsetCurrentTimeIcon((IconprevIcon) => IconMathIcon.IconminIcon(IconprevIcon + IconplaybackSpeedIcon, IconcurrentSessionIcon.IcondurationIcon));
-      }, Icon1000Icon / IconplaybackSpeedIcon);
-      IconreturnIcon () => IconclearTimeoutIcon(IcontimerIcon);
-    } IconelseIcon IconifIcon (IconcurrentTimeIcon >= (IconcurrentSessionIcon?.IcondurationIcon || Icon0Icon)) {
-      IconsetIsPlayingIcon(IconfalseIcon);
+  // Simulate playback
+  useEffect(() => {
+    if (isPlaying && currentSession && currentTime < currentSession.duration) {
+      const timer = setTimeout(() => {
+        setCurrentTime((prev) => Math.min(prev + playbackSpeed, currentSession.duration));
+      }, 1000 / playbackSpeed);
+      return () => clearTimeout(timer);
+    } else if (currentTime >= (currentSession?.duration || 0)) {
+      setIsPlaying(false);
     }
-  }, [IconisPlayingIcon, IconcurrentTimeIcon, IconplaybackSpeedIcon, IconcurrentSessionIcon]);
+  }, [isPlaying, currentTime, playbackSpeed, currentSession]);
 
-  IconifIcon (!IconcurrentSessionIcon) {
-    IconreturnIcon (
-      <IconBoxIcon>
-        <IconTypographyIcon IconorderIcon={Icon4Icon} IconstyleIcon={{ IconmbIcon: Icon3Icon }}>
-          IconGameplayIcon IconIconReplayIcon
-        <IconIconIcon/IconTypographyIcon>
-        <IconAlertIcon IconseverityIcon="Iconinfo">
-          IconSelectIcon IconaIcon IconchildIcon IconandIcon IcondateIcon IcontoIcon IconviewIcon IcontheirIcon IcongameplayIcon IconsessionsIcon
-        <IconIconIcon/IconAlertIcon>
-      <IconIconIcon/IconBoxIcon>
+  if (!currentSession) {
+    return (
+      <Box>
+        <Typography variant="h4" sx={{ mb: 3 }}>
+          Gameplay Replay
+        </Typography>
+        <Alert severity="info">
+          Select a child and date to view their gameplay sessions
+        </Alert>
+      </Box>
     );
   }
 
-  IconreturnIcon (
-    <IconBoxIcon>
-      <IconStackIcon IcondirectionIcon="Iconrow" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="Iconcenter" IconmbIcon={Icon3Icon}>
-        <IconTypographyIcon IconorderIcon={Icon4Icon} IconstyleIcon={{ IconfontWeightIcon: Icon600Icon }}>
-          IconGameplayIcon IconIconReplayIcon
-        <IconIconIcon/IconTypographyIcon>
-        <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon}>
-          <IconFormControlIcon IconsizeIcon="Iconsmall" IconstyleIcon={{ IconminWidthIcon: Icon150Icon }}>
-            <IconInputLabelIcon>IconSelectIcon IconChildIcon<IconIconIcon/IconInputLabelIcon>
-            <IconSelectIcon
-              IconvalueIcon={IconselectedChildIcon}
-              IcononChangeIcon={(IconeIcon) => IconsetSelectedChildIcon(IconeIcon.IcontargetIcon.IconvalueIcon)}
-              IconlabelIcon="IconSelectIcon IconChild"
+  return (
+    <Box>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4" sx={{ fontWeight: 600 }}>
+          Gameplay Replay
+        </Typography>
+        <Stack direction="row" spacing={2}>
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Select Child</InputLabel>
+            <Select
+              value={selectedChild}
+              onChange={(e) => setSelectedChild(e.target.value)}
+              label="Select Child"
             >
-              {IconchildrenIcon.IconmapIcon((IconchildIcon) => (
-                <IconMenuItemIcon IconkeyIcon={IconchildIcon.IconidIcon} IconvalueIcon={IconchildIcon.IconidIcon}>
-                  {IconchildIcon.IconnameIcon}
-                <IconIconIcon/IconMenuItemIcon>
+              {children.map((child) => (
+                <MenuItem key={child.id} value={child.id}>
+                  {child.name}
+                </MenuItem>
               ))}
-            <IconIconIcon/IconSelectIcon>
-          <IconIconIcon/IconFormControlIcon>
-          <IconLocalizationProviderIcon IcondateAdapterIcon={IconAdapterDateFnsIcon}>
-            <IconDatePickerIcon
-              IconlabelIcon="IconSelectIcon IconDate"
-              IconvalueIcon={IconselectedDateIcon}
-              IcononChangeIcon={(IconnewDateIcon) => IconnewDateIcon && IconsetSelectedDateIcon(IconnewDateIcon)}
-              IconslotPropsIcon={{ IcontextFieldIcon: { IconsizeIcon: "Iconsmall" } }}
+            </Select>
+          </FormControl>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DatePicker
+              label="Select Date"
+              value={selectedDate}
+              onChange={(newDate) => newDate && setSelectedDate(newDate)}
+              slotProps={{ textField: { size: "small" } }}
             />
-          <IconIconIcon/IconLocalizationProviderIcon>
-        <IconIconIcon/IconStackIcon>
-      <IconIconIcon/IconStackIcon>
+          </LocalizationProvider>
+        </Stack>
+      </Stack>
 
-      <IconGrid2Icon IconcontainerIcon IconspacingIcon={Icon3Icon}>
-        {/* IconVideoIcon IconPlayerIcon IconAreaIcon */}
-        <IconGrid2Icon IconxsIcon={Icon12Icon} IconlgIcon={Icon8Icon}>
-          <IconCardIcon>
-            <IconBoxIcon
-              IconstyleIcon={{
-                IconpositionIcon: "Iconrelative",
-                IconpaddingTopIcon: "Icon56Icon.Icon25Icon%", // Icon16Icon:Icon9Icon IconaspectIcon IconratioIcon
-                IconbgcolorIcon: "Iconblack",
-                IconborderRadiusIcon: Icon1Icon,
-                IconoverflowIcon: "Iconhidden",
+      <Grid2 container spacing={3}>
+        {/* Video Player Area */}
+        <Grid2 xs={12} lg={8}>
+          <Card>
+            <Box
+              sx={{
+                position: "relative",
+                paddingTop: "56.25%", // 16:9 aspect ratio
+                bgcolor: "black",
+                borderRadius: 1,
+                overflow: "hidden",
               }}
             >
-              {/* IconIconReplayIcon IconVisualizationIcon */}
-              <IconBoxIcon
-                IconstyleIcon={{
-                  IconpositionIcon: "Iconabsolute",
-                  IcontopIcon: Icon0Icon,
-                  IconleftIcon: Icon0Icon,
-                  IconrightIcon: Icon0Icon,
-                  IconbottomIcon: Icon0Icon,
-                  IcondisplayIcon: "Iconflex",
-                  IconalignItemsIcon: "Iconcenter",
-                  IconjustifyContentIcon: "Iconcenter",
-                  IconbackgroundIcon: `IconlinearIcon-IcongradientIcon(Icon135degIcon, #Icon667eeaIcon Icon0Icon%, #Icon764ba2Icon Icon100Icon%)`,
+              {/* Replay Visualization */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`,
                 }}
               >
-                <IconStackIcon IconalignItemsIcon="Iconcenter" IconspacingIcon={Icon2Icon}>
-                  <IconIconSportsEsportsIcon IconstyleIcon={{ IconfontSizeIcon: Icon80Icon, IconcolorIcon: "Iconwhite", IconopacityIcon: Icon0Icon.Icon8Icon }} />
-                  <IconTypographyIcon IconorderIcon={Icon5Icon} IconcolorIcon="Iconwhite">
-                    {IconcurrentSessionIcon.IconworldNameIcon}
-                  <IconIconIcon/IconTypographyIcon>
-                  <IconTypographyIcon IconsizeIcon="Iconmd" IconcolorIcon="Iconwhite" IconstyleIcon={{ IconopacityIcon: Icon0Icon.Icon9Icon }}>
-                    {IconformatTimeIcon(IconcurrentTimeIcon)} / {IconformatTimeIcon(IconcurrentSessionIcon.IcondurationIcon)}
-                  <IconIconIcon/IconTypographyIcon>
-                <IconIconIcon/IconStackIcon>
-              <IconIconIcon/IconBoxIcon>
+                <Stack alignItems="center" spacing={2}>
+                  <SportsEsports sx={{ fontSize: 80, color: "white", opacity: 0.8 }} />
+                  <Typography variant="h5" color="white">
+                    {currentSession.worldName}
+                  </Typography>
+                  <Typography variant="body1" color="white" sx={{ opacity: 0.9 }}>
+                    {formatTime(currentTime)} / {formatTime(currentSession.duration)}
+                  </Typography>
+                </Stack>
+              </Box>
 
-              {/* IconHighlightIcon IconMarkersIcon IcononIcon IconIconTimelineIcon */}
-              <IconBoxIcon
-                IconstyleIcon={{
-                  IconpositionIcon: "Iconabsolute",
-                  IconbottomIcon: Icon80Icon,
-                  IconleftIcon: Icon0Icon,
-                  IconrightIcon: Icon0Icon,
-                  IconheightIcon: Icon4Icon,
-                  IconbgcolorIcon: "IconrgbaIcon(Icon255Icon,Icon255Icon,Icon255Icon,Icon0Icon.Icon3Icon)",
+              {/* Highlight Markers on Timeline */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 80,
+                  left: 0,
+                  right: 0,
+                  height: 4,
+                  bgcolor: "rgba(255,255,255,0.3)",
                 }}
               >
-                {IconcurrentSessionIcon.IconhighlightsIcon.IconmapIcon((IconhighlightIcon) => (
-                  <IconBoxIcon
-                    IconkeyIcon={IconhighlightIcon.IconidIcon}
-                    IconstyleIcon={{
-                      IconpositionIcon: "Iconabsolute",
-                      IconleftIcon: `${(IconhighlightIcon.IcontimestampIcon / IconcurrentSessionIcon.IcondurationIcon) * Icon100Icon}%`,
-                      IcontopIcon: -Icon6Icon,
-                      IconwidthIcon: Icon16Icon,
-                      IconheightIcon: Icon16Icon,
-                      IconborderRadiusIcon: "Icon50Icon%",
-                      IconbgcolorIcon:
-                        IconhighlightIcon.IconimportanceIcon === "Iconhigh"
-                          ? "IconwarningIcon.Iconmain"
-                          : IconhighlightIcon.IconimportanceIcon === "Iconmedium"
-                          ? "IconinfoIcon.Iconmain"
-                          : "IcongreyIcon.Icon500",
-                      IconcursorIcon: "Iconpointer",
-                      "&:Iconhover": {
-                        IcontransformIcon: "IconscaleIcon(Icon1Icon.Icon3Icon)",
+                {currentSession.highlights.map((highlight) => (
+                  <Box
+                    key={highlight.id}
+                    sx={{
+                      position: "absolute",
+                      left: `${(highlight.timestamp / currentSession.duration) * 100}%`,
+                      top: -6,
+                      width: 16,
+                      height: 16,
+                      borderRadius: "50%",
+                      bgcolor:
+                        highlight.importance === "high"
+                          ? "warning.main"
+                          : highlight.importance === "medium"
+                          ? "info.main"
+                          : "grey.500",
+                      cursor: "pointer",
+                      "&:hover": {
+                        transform: "scale(1.3)",
                       },
                     }}
-                    IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconjumpToHighlightIcon(IconhighlightIcon.IcontimestampIcon)}
+                    onClick={() => jumpToHighlight(highlight.timestamp)}
                   />
                 ))}
-              <IconIconIcon/IconBoxIcon>
-            <IconIconIcon/IconBoxIcon>
+              </Box>
+            </Box>
 
-            {/* IconPlayerIcon IconControlsIcon */}
-            <IconCardContentIcon>
-              <IconStackIcon IconspacingIcon={Icon2Icon}>
-                <IconSliderIcon
-                  IconvalueIcon={IconcurrentTimeIcon}
-                  IconmaxIcon={IconcurrentSessionIcon.IcondurationIcon}
-                  IcononChangeIcon={(Icon_Icon, IconvalueIcon) => IconhandleSeekIcon(IconvalueIcon IconasIcon IconnumberIcon)}
-                  IconstyleIcon={{ IconwidthIcon: "Icon100Icon%" }}
+            {/* Player Controls */}
+            <CardContent>
+              <Stack spacing={2}>
+                <Slider
+                  value={currentTime}
+                  max={currentSession.duration}
+                  onChange={(_, value) => handleSeek(value as number)}
+                  sx={{ width: "100%" }}
                 />
-                <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconjustifyContentIcon="Iconcenter" IconspacingIcon={Icon2Icon}>
-                  <IconIconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconhandleSeekIcon(IconMathIcon.IconmaxIcon(Icon0Icon, IconcurrentTimeIcon - Icon30Icon))}>
-                    <IconIconSkipPreviousIcon />
-                  <IconIconIcon/IconIconButtonIcon>
-                  <IconIconButtonIcon
-                    IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandlePlayPauseIcon}
-                    IconstyleIcon={{
-                      IconbgcolorIcon: "IconprimaryIcon.Iconmain",
-                      IconcolorIcon: "Iconwhite",
-                      "&:Iconhover": { IconbgcolorIcon: "IconprimaryIcon.Icondark" },
+                <Stack direction="row" alignItems="center" justifyContent="center" spacing={2}>
+                  <IconButton onClick={() => handleSeek(Math.max(0, currentTime - 30))}>
+                    <SkipPrevious />
+                  </IconButton>
+                  <IconButton
+                    onClick={handlePlayPause}
+                    sx={{
+                      bgcolor: "primary.main",
+                      color: "white",
+                      "&:hover": { bgcolor: "primary.dark" },
                     }}
                   >
-                    {IconisPlayingIcon ? <IconIconPlayerPauseIcon /> : <IconIconPlayerPlayIcon />}
-                  <IconIconIcon/IconIconButtonIcon>
-                  <IconIconButtonIcon
-                    IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconhandleSeekIcon(IconMathIcon.IconminIcon(IconcurrentSessionIcon.IcondurationIcon, IconcurrentTimeIcon + Icon30Icon))}
+                    {isPlaying ? <Pause /> : <PlayArrow />}
+                  </IconButton>
+                  <IconButton
+                    onClick={() => handleSeek(Math.min(currentSession.duration, currentTime + 30))}
                   >
-                    <IconIconSkipNextIcon />
-                  <IconIconIcon/IconIconButtonIcon>
-                  <IconIconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconhandleSeekIcon(Icon0Icon)}>
-                    <IconIconReplayIcon />
-                  <IconIconIcon/IconIconButtonIcon>
-                  <IconFormControlIcon IconsizeIcon="Iconsmall" IconstyleIcon={{ IconmlIcon: Icon2Icon, IconminWidthIcon: Icon80Icon }}>
-                    <IconSelectIcon
-                      IconvalueIcon={IconplaybackSpeedIcon}
-                      IcononChangeIcon={(IconeIcon) => IconsetPlaybackSpeedIcon(IconNumberIcon(IconeIcon.IcontargetIcon.IconvalueIcon))}
-                      IconsizeIcon="Iconsmall"
+                    <SkipNext />
+                  </IconButton>
+                  <IconButton onClick={() => handleSeek(0)}>
+                    <Replay />
+                  </IconButton>
+                  <FormControl size="small" sx={{ ml: 2, minWidth: 80 }}>
+                    <Select
+                      value={playbackSpeed}
+                      onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
+                      size="small"
                     >
-                      <IconMenuItemIcon IconvalueIcon={Icon0Icon.Icon5Icon}>Icon0Icon.Icon5xIcon<IconIconIcon/IconMenuItemIcon>
-                      <IconMenuItemIcon IconvalueIcon={Icon1Icon}>Icon1xIcon<IconIconIcon/IconMenuItemIcon>
-                      <IconMenuItemIcon IconvalueIcon={Icon1Icon.Icon5Icon}>Icon1Icon.Icon5xIcon<IconIconIcon/IconMenuItemIcon>
-                      <IconMenuItemIcon IconvalueIcon={Icon2Icon}>Icon2xIcon<IconIconIcon/IconMenuItemIcon>
-                    <IconIconIcon/IconSelectIcon>
-                  <IconIconIcon/IconFormControlIcon>
-                  <IconIconButtonIcon IconstyleIcon={{ IconmlIcon: "Iconauto" }}>
-                    <IconIconDownloadIcon />
-                  <IconIconIcon/IconIconButtonIcon>
-                  <IconIconButtonIcon>
-                    <IconIconShareIcon />
-                  <IconIconIcon/IconIconButtonIcon>
-                  <IconIconButtonIcon>
-                    <IconIconFullscreenIcon />
-                  <IconIconIcon/IconIconButtonIcon>
-                <IconIconIcon/IconStackIcon>
-              <IconIconIcon/IconStackIcon>
-            <IconIconIcon/IconCardContentIcon>
-          <IconIconIcon/IconCardIcon>
+                      <MenuItem value={0.5}>0.5x</MenuItem>
+                      <MenuItem value={1}>1x</MenuItem>
+                      <MenuItem value={1.5}>1.5x</MenuItem>
+                      <MenuItem value={2}>2x</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <IconButton sx={{ ml: "auto" }}>
+                    <Download />
+                  </IconButton>
+                  <IconButton>
+                    <Share />
+                  </IconButton>
+                  <IconButton>
+                    <Fullscreen />
+                  </IconButton>
+                </Stack>
+              </Stack>
+            </CardContent>
+          </Card>
 
-          {/* IconSessionIcon IconTabsIcon */}
-          <IconCardIcon IconstyleIcon={{ IconmtIcon: Icon3Icon }}>
-            <IconTabsIcon IconvalueIcon={IconactiveTabIcon} IcononChangeIcon={(Icon_Icon, IconvIcon) => IconsetActiveTabIcon(IconvIcon)}>
-              <IconTabIcon IconlabelIcon="IconHighlights" />
-              <IconTabIcon IconlabelIcon="IconProgress" />
-              <IconTabIcon IconlabelIcon="IconInteractions" />
-              <IconTabIcon IconlabelIcon="IconAchievements" />
-            <IconIconIcon/IconTabsIcon>
-            <IconCardContentIcon>
-              {IconactiveTabIcon === Icon0Icon && (
-                <IconListIcon>
-                  {IconcurrentSessionIcon.IconhighlightsIcon.IconmapIcon((IconhighlightIcon) => (
-                    <IconReactIcon.IconFragmentIcon IconkeyIcon={IconhighlightIcon.IconidIcon}>
-                      <IconListItemButtonIcon
-                        IconselectedIcon={IconselectedHighlightIcon === IconhighlightIcon.IconidIcon}
-                        IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
-                          IconsetSelectedHighlightIcon(IconhighlightIcon.IconidIcon);
-                          IconjumpToHighlightIcon(IconhighlightIcon.IcontimestampIcon);
+          {/* Session Tabs */}
+          <Card sx={{ mt: 3 }}>
+            <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
+              <Tab label="Highlights" />
+              <Tab label="Progress" />
+              <Tab label="Interactions" />
+              <Tab label="Achievements" />
+            </Tabs>
+            <CardContent>
+              {activeTab === 0 && (
+                <List>
+                  {currentSession.highlights.map((highlight) => (
+                    <React.Fragment key={highlight.id}>
+                      <ListItemButton
+                        selected={selectedHighlight === highlight.id}
+                        onClick={() => {
+                          setSelectedHighlight(highlight.id);
+                          jumpToHighlight(highlight.timestamp);
                         }}
                       >
-                        <IconListItemIconIcon>{IcongetHighlightIconIcon(IconhighlightIcon.IcontypeIcon)}<IconIconIcon/IconListItemIconIcon>
-                        <IconListItemTextIcon
-                          IconprimaryIcon={IconhighlightIcon.IcontitleIcon}
-                          IconsecondaryIcon={
-                            <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon} IconalignItemsIcon="Iconcenter">
-                              <IconTypographyIcon IconvariantIcon="Iconcaption">
-                                {IconformatTimeIcon(IconhighlightIcon.IcontimestampIcon)}
-                              <IconIconIcon/IconTypographyIcon>
-                              <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                                • {IconhighlightIcon.IcondescriptionIcon}
-                              <IconIconIcon/IconTypographyIcon>
-                            <IconIconIcon/IconStackIcon>
+                        <ListItemIcon>{getHighlightIcon(highlight.type)}</ListItemIcon>
+                        <ListItemText
+                          primary={highlight.title}
+                          secondary={
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <Typography variant="caption">
+                                {formatTime(highlight.timestamp)}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                • {highlight.description}
+                              </Typography>
+                            </Stack>
                           }
                         />
-                        <IconChipIcon
-                          IconlabelIcon={IconhighlightIcon.IconimportanceIcon}
-                          IconsizeIcon="Iconsmall"
-                          IconcolorIcon={
-                            IconhighlightIcon.IconimportanceIcon === "Iconhigh"
-                              ? "Iconerror"
-                              : IconhighlightIcon.IconimportanceIcon === "Iconmedium"
-                              ? "Iconwarning"
-                              : "Icondefault"
+                        <Chip
+                          label={highlight.importance}
+                          size="small"
+                          color={
+                            highlight.importance === "high"
+                              ? "error"
+                              : highlight.importance === "medium"
+                              ? "warning"
+                              : "default"
                           }
                         />
-                      <IconIconIcon/IconListItemButtonIcon>
-                      <IconDividerIcon />
-                    <IconIconIcon/IconReactIcon.IconFragmentIcon>
+                      </ListItemButton>
+                      <Divider />
+                    </React.Fragment>
                   ))}
-                <IconIconIcon/IconListIcon>
+                </List>
               )}
 
-              {IconactiveTabIcon === Icon1Icon && (
-                <IconBoxIcon>
-                  <IconTypographyIcon IconorderIcon={Icon6Icon} IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
-                    IconConceptIcon IconMasteryIcon IconProgressIcon
-                  <IconIconIcon/IconTypographyIcon>
-                  {IconArrayIcon.IconfromIcon(IconnewIcon IconSetIcon(IconcurrentSessionIcon.IconprogressIcon.IconmapIcon((IconpIcon) => IconpIcon.IconconceptIcon))).IconmapIcon(
-                    (IconconceptIcon) => {
-                      IconconstIcon IconconceptProgressIcon = IconcurrentSessionIcon.IconprogressIcon.IconfilterIcon(
-                        (IconpIcon) => IconpIcon.IconconceptIcon === IconconceptIcon
+              {activeTab === 1 && (
+                <Box>
+                  <Typography variant="h6" sx={{ mb: 2 }}>
+                    Concept Mastery Progress
+                  </Typography>
+                  {Array.from(new Set(currentSession.progress.map((p) => p.concept))).map(
+                    (concept) => {
+                      const conceptProgress = currentSession.progress.filter(
+                        (p) => p.concept === concept
                       );
-                      IconconstIcon IconinitialIcon = IconconceptProgressIcon[Icon0Icon]?.IconmasteryIcon || Icon0Icon;
-                      IconconstIcon IconfinalIcon = IconconceptProgressIcon[IconconceptProgressIcon.IconlengthIcon - Icon1Icon]?.IconmasteryIcon || Icon0Icon;
-                      IconconstIcon IconimprovementIcon = IconfinalIcon - IconinitialIcon;
+                      const initial = conceptProgress[0]?.mastery || 0;
+                      const final = conceptProgress[conceptProgress.length - 1]?.mastery || 0;
+                      const improvement = final - initial;
 
-                      IconreturnIcon (
-                        <IconBoxIcon IconkeyIcon={IconconceptIcon} IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
-                          <IconStackIcon IcondirectionIcon="Iconrow" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconmbIcon={Icon1Icon}>
-                            <IconTypographyIcon IconsizeIcon="Iconsm">{IconconceptIcon}<IconIconIcon/IconTypographyIcon>
-                            <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon}>
-                              <IconChipIcon
-                                IconlabelIcon={`${IconfinalIcon}%`}
-                                IconsizeIcon="Iconsmall"
-                                IconcolorIcon={IconfinalIcon >= Icon80Icon ? "Iconsuccess" : "Icondefault"}
+                      return (
+                        <Box key={concept} sx={{ mb: 2 }}>
+                          <Stack direction="row" justifyContent="space-between" mb={1}>
+                            <Typography variant="body2">{concept}</Typography>
+                            <Stack direction="row" spacing={1}>
+                              <Chip
+                                label={`${final}%`}
+                                size="small"
+                                color={final >= 80 ? "success" : "default"}
                               />
-                              {IconimprovementIcon > Icon0Icon && (
-                                <IconChipIcon
-                                  IconlabelIcon={`+${IconimprovementIcon}%`}
-                                  IconsizeIcon="Iconsmall"
-                                  IconcolorIcon="Icongreen"
-                                  IconvariantIcon="Iconoutline"
+                              {improvement > 0 && (
+                                <Chip
+                                  label={`+${improvement}%`}
+                                  size="small"
+                                  color="success"
+                                  variant="outlined"
                                 />
                               )}
-                            <IconIconIcon/IconStackIcon>
-                          <IconIconIcon/IconStackIcon>
-                          <IconLinearProgressIcon IconvariantIcon="Icondeterminate" IconvalueIcon={IconfinalIcon} />
-                        <IconIconIcon/IconBoxIcon>
+                            </Stack>
+                          </Stack>
+                          <LinearProgress variant="determinate" value={final} />
+                        </Box>
                       );
                     }
                   )}
-                <IconIconIcon/IconBoxIcon>
+                </Box>
               )}
 
-              {IconactiveTabIcon === Icon2Icon && (
-                <IconListIcon>
-                  {IconcurrentSessionIcon.IconinteractionsIcon.IconmapIcon((IconinteractionIcon) => (
-                    <IconReactIcon.IconFragmentIcon IconkeyIcon={IconinteractionIcon.IconidIcon}>
-                      <IconListItemIcon>
-                        <IconListItemTextIcon
-                          IconprimaryIcon={IconinteractionIcon.IcondetailsIcon}
-                          IconsecondaryIcon={
-                            <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon} IconalignItemsIcon="Iconcenter">
-                              <IconTypographyIcon IconvariantIcon="Iconcaption">
-                                {IconformatTimeIcon(IconinteractionIcon.IcontimestampIcon)}
-                              <IconIconIcon/IconTypographyIcon>
-                              <IconChipIcon
-                                IconlabelIcon={IconinteractionIcon.IconoutcomeIcon}
-                                IconsizeIcon="Iconsmall"
-                                IconcolorIcon={IconinteractionIcon.IconoutcomeIcon === "Iconsuccess" ? "Iconsuccess" : "Iconwarning"}
+              {activeTab === 2 && (
+                <List>
+                  {currentSession.interactions.map((interaction) => (
+                    <React.Fragment key={interaction.id}>
+                      <ListItem>
+                        <ListItemText
+                          primary={interaction.details}
+                          secondary={
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <Typography variant="caption">
+                                {formatTime(interaction.timestamp)}
+                              </Typography>
+                              <Chip
+                                label={interaction.outcome}
+                                size="small"
+                                color={interaction.outcome === "success" ? "success" : "warning"}
                               />
-                            <IconIconIcon/IconStackIcon>
+                            </Stack>
                           }
                         />
-                      <IconIconIcon/IconListItemIcon>
-                      <IconDividerIcon />
-                    <IconIconIcon/IconReactIcon.IconFragmentIcon>
+                      </ListItem>
+                      <Divider />
+                    </React.Fragment>
                   ))}
-                <IconIconIcon/IconListIcon>
+                </List>
               )}
 
-              {IconactiveTabIcon === Icon3Icon && (
-                <IconListIcon>
-                  {IconcurrentSessionIcon.IconachievementsIcon.IconmapIcon((IconachievementIcon) => (
-                    <IconReactIcon.IconFragmentIcon IconkeyIcon={IconachievementIcon.IconidIcon}>
-                      <IconListItemIcon>
-                        <IconListItemIconIcon>
-                          <IconTypographyIcon IconorderIcon={Icon5Icon}>{IconachievementIcon.IconiconIcon}<IconIconIcon/IconTypographyIcon>
-                        <IconIconIcon/IconListItemIconIcon>
-                        <IconListItemTextIcon
-                          IconprimaryIcon={IconachievementIcon.IconnameIcon}
-                          IconsecondaryIcon={IconformatTimeIcon(IconachievementIcon.IcontimestampIcon)}
+              {activeTab === 3 && (
+                <List>
+                  {currentSession.achievements.map((achievement) => (
+                    <React.Fragment key={achievement.id}>
+                      <ListItem>
+                        <ListItemIcon>
+                          <Typography variant="h5">{achievement.icon}</Typography>
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={achievement.name}
+                          secondary={formatTime(achievement.timestamp)}
                         />
-                        <IconChipIcon IconlabelIcon={`+${IconachievementIcon.IconxpRewardIcon} IconXPIcon`} IconcolorIcon="Iconblue" />
-                      <IconIconIcon/IconListItemIcon>
-                      <IconDividerIcon />
-                    <IconIconIcon/IconReactIcon.IconFragmentIcon>
+                        <Chip label={`+${achievement.xpReward} XP`} color="primary" />
+                      </ListItem>
+                      <Divider />
+                    </React.Fragment>
                   ))}
-                <IconIconIcon/IconListIcon>
+                </List>
               )}
-            <IconIconIcon/IconCardContentIcon>
-          <IconIconIcon/IconCardIcon>
-        <IconIconIcon/IconGrid2Icon>
+            </CardContent>
+          </Card>
+        </Grid2>
 
-        {/* IconSessionIcon IconInfoIcon IconSidebarIcon */}
-        <IconGrid2Icon IconxsIcon={Icon12Icon} IconlgIcon={Icon4Icon}>
-          {/* IconSessionIcon IconOverviewIcon */}
-          <IconCardIcon>
-            <IconCardContentIcon>
-              <IconTypographyIcon IconorderIcon={Icon6Icon} IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
-                IconSessionIcon IconOverviewIcon
-              <IconIconIcon/IconTypographyIcon>
-              <IconStackIcon IconspacingIcon={Icon2Icon}>
-                <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon2Icon, IconbgcolorIcon: "IconprimaryIcon.Icon50" }}>
-                  <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconspacingIcon={Icon2Icon}>
-                    <IconAvatarIcon IconsrcIcon={IconcurrentSessionIcon.IconstudentAvatarIcon}>
-                      {IconcurrentSessionIcon.IconstudentNameIcon[Icon0Icon]}
-                    <IconIconIcon/IconAvatarIcon>
-                    <IconBoxIcon>
-                      <IconTypographyIcon IconvariantIcon="Iconsubtitle2">
-                        {IconcurrentSessionIcon.IconstudentNameIcon}
-                      <IconIconIcon/IconTypographyIcon>
-                      <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                        {IconcurrentSessionIcon.IcondateIcon.IcontoLocaleDateStringIcon()}
-                      <IconIconIcon/IconTypographyIcon>
-                    <IconIconIcon/IconBoxIcon>
-                  <IconIconIcon/IconStackIcon>
-                <IconIconIcon/IconPaperIcon>
+        {/* Session Info Sidebar */}
+        <Grid2 xs={12} lg={4}>
+          {/* Session Overview */}
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Session Overview
+              </Typography>
+              <Stack spacing={2}>
+                <Paper sx={{ p: 2, bgcolor: "primary.50" }}>
+                  <Stack direction="row" alignItems="center" spacing={2}>
+                    <Avatar src={currentSession.studentAvatar}>
+                      {currentSession.studentName[0]}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="subtitle2">
+                        {currentSession.studentName}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {currentSession.date.toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
 
-                <IconStackIcon IconspacingIcon={Icon1Icon}>
-                  <IconStackIcon IcondirectionIcon="Iconrow" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
-                    <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
-                      IconDurationIcon
-                    <IconIconIcon/IconTypographyIcon>
-                    <IconTypographyIcon IconsizeIcon="Iconsm" IconfontWeightIcon={Icon600Icon}>
-                      {IconformatTimeIcon(IconcurrentSessionIcon.IcondurationIcon)}
-                    <IconIconIcon/IconTypographyIcon>
-                  <IconIconIcon/IconStackIcon>
-                  <IconStackIcon IcondirectionIcon="Iconrow" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
-                    <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
-                      IconOverallIcon IconScoreIcon
-                    <IconIconIcon/IconTypographyIcon>
-                    <IconChipIcon
-                      IconlabelIcon={`${IconcurrentSessionIcon.IconoverallScoreIcon}%`}
-                      IconsizeIcon="Iconsmall"
-                      IconcolorIcon={IconcurrentSessionIcon.IconoverallScoreIcon >= Icon90Icon ? "Iconsuccess" : "Iconprimary"}
+                <Stack spacing={1}>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography variant="body2" color="text.secondary">
+                      Duration
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {formatTime(currentSession.duration)}
+                    </Typography>
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography variant="body2" color="text.secondary">
+                      Overall Score
+                    </Typography>
+                    <Chip
+                      label={`${currentSession.overallScore}%`}
+                      size="small"
+                      color={currentSession.overallScore >= 90 ? "success" : "primary"}
                     />
-                  <IconIconIcon/IconStackIcon>
-                  <IconStackIcon IcondirectionIcon="Iconrow" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
-                    <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
-                      IconXPIcon IconEarnedIcon
-                    <IconIconIcon/IconTypographyIcon>
-                    <IconTypographyIcon IconsizeIcon="Iconsm" IconfontWeightIcon={Icon600Icon} IconcolorIcon="IconprimaryIcon.Iconmain">
-                      +{IconcurrentSessionIcon.IconxpEarnedIcon} IconXPIcon
-                    <IconIconIcon/IconTypographyIcon>
-                  <IconIconIcon/IconStackIcon>
-                  <IconStackIcon IcondirectionIcon="Iconrow" IconjustifyContentIcon="IconspaceIcon-Iconbetween">
-                    <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
-                      IconAchievementsIcon
-                    <IconIconIcon/IconTypographyIcon>
-                    <IconTypographyIcon IconsizeIcon="Iconsm" IconfontWeightIcon={Icon600Icon}>
-                      {IconcurrentSessionIcon.IconachievementsIcon.IconlengthIcon}
-                    <IconIconIcon/IconTypographyIcon>
-                  <IconIconIcon/IconStackIcon>
-                <IconIconIcon/IconStackIcon>
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography variant="body2" color="text.secondary">
+                      XP Earned
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600} color="primary.main">
+                      +{currentSession.xpEarned} XP
+                    </Typography>
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography variant="body2" color="text.secondary">
+                      Achievements
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {currentSession.achievements.length}
+                    </Typography>
+                  </Stack>
+                </Stack>
 
-                <IconDividerIcon />
+                <Divider />
 
-                <IconBoxIcon>
-                  <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconstyleIcon={{ IconmbIcon: Icon1Icon }}>
-                    IconMasteredIcon IconConceptsIcon
-                  <IconIconIcon/IconTypographyIcon>
-                  <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon0Icon.Icon5Icon} IconflexWrapIcon="Iconwrap">
-                    {IconcurrentSessionIcon.IconmasteryConceptsIcon.IconmapIcon((IconconceptIcon) => (
-                      <IconChipIcon IconkeyIcon={IconconceptIcon} IconlabelIcon={IconconceptIcon} IconsizeIcon="Iconsmall" IconvariantIcon="Iconoutline" />
+                <Box>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                    Mastered Concepts
+                  </Typography>
+                  <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                    {currentSession.masteryConcepts.map((concept) => (
+                      <Chip key={concept} label={concept} size="small" variant="outlined" />
                     ))}
-                  <IconIconIcon/IconStackIcon>
-                <IconIconIcon/IconBoxIcon>
-              <IconIconIcon/IconStackIcon>
-            <IconIconIcon/IconCardContentIcon>
-          <IconIconIcon/IconCardIcon>
+                  </Stack>
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
 
-          {/* IconOtherIcon IconSessionsIcon */}
-          <IconCardIcon IconstyleIcon={{ IconmtIcon: Icon3Icon }}>
-            <IconCardContentIcon>
-              <IconTypographyIcon IconorderIcon={Icon6Icon} IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
-                IconOtherIcon IconSessionsIcon IconTodayIcon
-              <IconIconIcon/IconTypographyIcon>
-              <IconListIcon>
-                {IconsessionsIcon.IconsliceIcon(Icon0Icon, Icon3Icon).IconmapIcon((IconsessionIcon) => (
-                  <IconListItemButtonIcon
-                    IconkeyIcon={IconsessionIcon.IconidIcon}
-                    IconselectedIcon={IconsessionIcon.IconidIcon === IconcurrentSessionIcon.IconidIcon}
-                    IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconsetCurrentSessionIcon(IconsessionIcon)}
+          {/* Other Sessions */}
+          <Card sx={{ mt: 3 }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Other Sessions Today
+              </Typography>
+              <List>
+                {sessions.slice(0, 3).map((session) => (
+                  <ListItemButton
+                    key={session.id}
+                    selected={session.id === currentSession.id}
+                    onClick={() => setCurrentSession(session)}
                   >
-                    <IconListItemIconIcon>
-                      <IconIconSportsEsportsIcon />
-                    <IconIconIcon/IconListItemIconIcon>
-                    <IconListItemTextIcon
-                      IconprimaryIcon={IconsessionIcon.IconworldNameIcon}
-                      IconsecondaryIcon={`${IconformatTimeIcon(IconsessionIcon.IcondurationIcon)} • ${IconsessionIcon.IconxpEarnedIcon} IconXPIcon`}
+                    <ListItemIcon>
+                      <SportsEsports />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={session.worldName}
+                      secondary={`${formatTime(session.duration)} • ${session.xpEarned} XP`}
                     />
-                  <IconIconIcon/IconListItemButtonIcon>
+                  </ListItemButton>
                 ))}
-              <IconIconIcon/IconListIcon>
-            <IconIconIcon/IconCardContentIcon>
-          <IconIconIcon/IconCardIcon>
+              </List>
+            </CardContent>
+          </Card>
 
-          {/* IconIconInsightsIcon */}
-          <IconCardIcon IconstyleIcon={{ IconmtIcon: Icon3Icon }}>
-            <IconCardContentIcon>
-              <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconspacingIcon={Icon1Icon} IconmbIcon={Icon2Icon}>
-                <IconIconInsightsIcon />
-                <IconTypographyIcon IconorderIcon={Icon6Icon}>IconAIIcon IconIconInsightsIcon<IconIconIcon/IconTypographyIcon>
-              <IconIconIcon/IconStackIcon>
-              <IconStackIcon IconspacingIcon={Icon2Icon}>
-                <IconAlertIcon IconseverityIcon="Iconsuccess">
-                  IconEmmaIcon IconshowedIcon IconexcellentIcon IconproblemIcon-IconsolvingIcon IconskillsIcon, IconparticularlyIcon IconinIcon IcontheIcon IconmultiplicationIcon
-                  IconsectionIcon.
-                <IconIconIcon/IconAlertIcon>
-                <IconAlertIcon IconseverityIcon="Iconinfo">
-                  IconConsiderIcon IconmoreIcon IcondivisionIcon IconpracticeIcon. IconEmmaIcon IconneededIcon IconmultipleIcon IconattemptsIcon IconbutIcon IconshowedIcon IcongoodIcon
-                  IconperseveranceIcon.
-                <IconIconIcon/IconAlertIcon>
-                <IconAlertIcon IconseverityIcon="Iconwarning">
-                  IconEmmaIcon IconspentIcon Icon5Icon IconminutesIcon IcononIcon IcononeIcon IconproblemIcon. IconThisIcon IconmightIcon IconindicateIcon IcontheIcon IconneedIcon IconforIcon IconadditionalIcon
-                  IconsupportIcon IconinIcon IconthisIcon IconareaIcon.
-                <IconIconIcon/IconAlertIcon>
-              <IconIconIcon/IconStackIcon>
-            <IconIconIcon/IconCardContentIcon>
-          <IconIconIcon/IconCardIcon>
-        <IconIconIcon/IconGrid2Icon>
-      <IconIconIcon/IconGrid2Icon>
-    <IconIconIcon/IconBoxIcon>
+          {/* Insights */}
+          <Card sx={{ mt: 3 }}>
+            <CardContent>
+              <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+                <Insights />
+                <Typography variant="h6">AI Insights</Typography>
+              </Stack>
+              <Stack spacing={2}>
+                <Alert severity="success">
+                  Emma showed excellent problem-solving skills, particularly in the multiplication
+                  section.
+                </Alert>
+                <Alert severity="info">
+                  Consider more division practice. Emma needed multiple attempts but showed good
+                  perseverance.
+                </Alert>
+                <Alert severity="warning">
+                  Emma spent 5 minutes on one problem. This might indicate the need for additional
+                  support in this area.
+                </Alert>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid2>
+      </Grid2>
+    </Box>
   );
 }
