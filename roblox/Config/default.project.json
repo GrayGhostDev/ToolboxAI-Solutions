@@ -28,10 +28,7 @@
         }
       },
       "StarterCharacterScripts": {
-        "$className": "StarterCharacterScripts",
-        "$properties": {
-          "Name": "StarterCharacterScripts"
-        }
+        "$className": "StarterCharacterScripts"
       }
     },
 
@@ -41,30 +38,18 @@
         "$path": "src/shared"
       },
       "RemoteEvents": {
-        "$className": "Folder",
-        "$properties": {
-          "Name": "RemoteEvents"
-        }
+        "$className": "Folder"
       },
       "RemoteFunctions": {
-        "$className": "Folder",
-        "$properties": {
-          "Name": "RemoteFunctions"
-        }
+        "$className": "Folder"
       },
       "Modules": {
         "$path": "src/shared"
       },
       "SDK": {
         "$className": "Folder",
-        "$properties": {
-          "Name": "SDK"
-        },
         "ToolBoxAI": {
-          "$path": "src/Modules",
-          "$properties": {
-            "Name": "ToolBoxAI"
-          }
+          "$path": "src/Modules"
         }
       }
     },
@@ -75,16 +60,10 @@
         "$path": "Config"
       },
       "Templates": {
-        "$className": "Folder",
-        "$properties": {
-          "Name": "Templates"
-        }
+        "$className": "Folder"
       },
       "Assets": {
         "$className": "Folder",
-        "$properties": {
-          "Name": "Assets"
-        },
         "NPCTemplate": {
           "$className": "Model"
         },
@@ -94,9 +73,6 @@
       },
       "UI": {
         "$className": "Folder",
-        "$properties": {
-          "Name": "UI"
-        },
         "HUD": {
           "$className": "ScreenGui"
         },
@@ -122,46 +98,25 @@
         "SignalBehavior": "Deferred"
       },
       "GeneratedContent": {
-        "$className": "Folder",
-        "$properties": {
-          "Name": "GeneratedContent"
-        }
+        "$className": "Folder"
       },
       "Checkpoints": {
-        "$className": "Folder",
-        "$properties": {
-          "Name": "Checkpoints"
-        }
+        "$className": "Folder"
       },
       "InteractiveElements": {
-        "$className": "Folder",
-        "$properties": {
-          "Name": "InteractiveElements"
-        }
+        "$className": "Folder"
       },
       "TerrainFeatures": {
-        "$className": "Folder",
-        "$properties": {
-          "Name": "TerrainFeatures"
-        }
+        "$className": "Folder"
       },
       "EducationalAssets": {
-        "$className": "Folder",
-        "$properties": {
-          "Name": "EducationalAssets"
-        }
+        "$className": "Folder"
       },
       "NPCs": {
-        "$className": "Folder",
-        "$properties": {
-          "Name": "NPCs"
-        }
+        "$className": "Folder"
       },
       "QuizZones": {
-        "$className": "Folder",
-        "$properties": {
-          "Name": "QuizZones"
-        }
+        "$className": "Folder"
       }
     },
 
@@ -208,9 +163,7 @@
       }
     }
   },
-  "servePlaceIds": {
-    "production": 8505376973,
-    "staging": null,
-    "development": null
-  }
+  "servePlaceIds": [
+    8505376973
+  ]
 }

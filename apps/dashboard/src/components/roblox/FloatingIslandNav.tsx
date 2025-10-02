@@ -40,7 +40,7 @@ function Island({ position, color, label, onClick, isHovered, scale = 1 }) {
   useFrame((state) => {
     if (meshRef.current) {
       meshRef.current.rotation.y += 0.002;
-      meshRef.current.position.y = Math.sin(state.clock.elapsedTime + position[0]) * 0.1;
+      meshRef.current.position.setY(Math.sin(state.clock.elapsedTime + position[0]) * 0.1);
     }
   });
 
@@ -55,8 +55,8 @@ function Island({ position, color, label, onClick, isHovered, scale = 1 }) {
         position={position}
         scale={hovered ? scale * 1.2 : scale}
         onClick={onClick}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
+        onPointerOver={() => setHovered(true]}
+        onPointerOut={() => setHovered(false]}
       >
         {/* Island base */}
         <mesh ref={meshRef} castShadow receiveShadow>
@@ -112,7 +112,7 @@ function Island({ position, color, label, onClick, isHovered, scale = 1 }) {
             speed={0.4}
             color="#FFD700"
           />
-        )}
+        ]}
       </group>
     </Float>
   );
@@ -123,8 +123,8 @@ function Bridge({ start, end, visible }) {
   const bridgeRef = useRef();
 
   // Calculate bridge position and rotation
-  const startVec = new THREE.Vector3(...start);
-  const endVec = new THREE.Vector3(...end);
+  const startVec = [...start);
+  const endVec = [...end);
   const midpoint = startVec.clone().add(endVec).multiplyScalar(0.5);
   const distance = startVec.distanceTo(endVec);
 
@@ -157,10 +157,14 @@ function FlyingCharacter({ targetPosition }) {
 
   useFrame((state) => {
     if (meshRef.current && targetPosition) {
-      // Smooth movement to target
-      meshRef.current.position.x += (targetPosition[0] - meshRef.current.position.x) * 0.05;
-      meshRef.current.position.y = 2 + Math.sin(state.clock.elapsedTime * 2) * 0.3;
-      meshRef.current.position.z += (targetPosition[2] - meshRef.current.position.z) * 0.05;
+      // Smooth movement to target using position.set() method
+      const currentX = meshRef.current.position.x;
+      const currentZ = meshRef.current.position.z;
+      const newX = currentX + (targetPosition[0] - currentX) * 0.05;
+      const newY = 2 + Math.sin(state.clock.elapsedTime * 2) * 0.3;
+      const newZ = currentZ + (targetPosition[2] - currentZ) * 0.05;
+
+      meshRef.current.position.set(newX, newY, newZ);
 
       // Rotation
       meshRef.current.rotation.y = state.clock.elapsedTime;
@@ -270,11 +274,11 @@ export const FloatingIslandNav: React.FunctionComponent<FloatingIslandNavProps> 
             position={island.position}
             color={island.color}
             label={island.label}
-            onClick={() => handleIslandClick(index, island.route)}
+            onClick={() => handleIslandClick(index, island.route]}
             isHovered={hoveredIsland === index}
             scale={selectedIsland === index ? 1.3 : 1}
           />
-        ))}
+        )]}
 
         {/* Bridges between islands */}
         <Bridge

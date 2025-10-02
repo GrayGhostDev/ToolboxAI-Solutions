@@ -187,15 +187,6 @@ export default function Sidebar({ role }: Props) {
                     borderRadius: "var(--mantine-radius-md)",
                     transition: "all 0.3s ease",
                     color: "white",
-                    "&[data-active]": {
-                      background: "linear-gradient(135deg, #00bcd4, #e91e63)",
-                      color: "white",
-                      boxShadow: "0 4px 15px rgba(0, 188, 212, 0.4)",
-                      "&:hover": {
-                        background: "linear-gradient(135deg, #0097a7, #c2185b)",
-                        boxShadow: "0 6px 20px rgba(0, 188, 212, 0.6)",
-                      },
-                    },
                     "&:hover": {
                       background: "linear-gradient(135deg, rgba(0, 188, 212, 0.1), rgba(233, 30, 99, 0.1))",
                       border: "1px solid rgba(0, 188, 212, 0.3)",

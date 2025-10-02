@@ -2,6 +2,7 @@
 # ============================================
 # TOOLBOXAI AGENT COORDINATOR DOCKERFILE
 # ============================================
+# REBUILD TIMESTAMP: 2025-10-01
 # Multi-stage build optimized for AI agent orchestration
 # Security-first approach with Python 3.12
 # Updated: 2025-09-25
@@ -153,7 +154,6 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY --chown=coordinator:coordinator core ./core
 COPY --chown=coordinator:coordinator database ./database
 COPY --chown=coordinator:coordinator toolboxai_settings ./toolboxai_settings
-COPY --chown=coordinator:coordinator toolboxai_utils ./toolboxai_utils
 
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/logs /data/agents /tmp/coordinator && \
@@ -173,7 +173,7 @@ ENV COORDINATOR_PORT=8888 \
     CPU_THRESHOLD=0.9
 
 # Create health check script
-RUN cat > /app/healthcheck.py << 'EOF'
+COPY <<'HEALTHCHECK_AGENTS_EOF' /app/healthcheck.py
 #!/usr/bin/env python3
 import json
 import sys
@@ -215,12 +215,12 @@ def check_health():
 if __name__ == "__main__":
     result = check_health()
     sys.exit(0 if result else 1)
-EOF
+HEALTHCHECK_AGENTS_EOF
 
 RUN chmod +x /app/healthcheck.py
 
 # Create startup script with comprehensive logging
-RUN cat > /app/start-coordinator.sh << 'EOF'
+COPY <<'STARTUP_SCRIPT_EOF' /app/start-coordinator.sh
 #!/bin/bash
 set -e
 
@@ -256,7 +256,7 @@ exec python -m core.agents.master_orchestrator \
     --max-workers ${MAX_CONCURRENT_AGENTS} \
     --task-timeout ${TASK_TIMEOUT} \
     --log-level ${LOG_LEVEL}
-EOF
+STARTUP_SCRIPT_EOF
 
 RUN chmod +x /app/start-coordinator.sh
 

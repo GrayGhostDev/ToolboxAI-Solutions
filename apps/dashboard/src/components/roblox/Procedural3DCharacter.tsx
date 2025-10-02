@@ -250,7 +250,7 @@ const AnimatedCharacter: React.FunctionComponent<{ type: string; color?: string 
   useFrame((state) => {
     if (meshRef.current) {
       // Idle animation - gentle bobbing
-      meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 2) * 0.05;
+      meshRef.current.position.setY(Math.sin(state.clock.elapsedTime * 2) * 0.05);
       meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime) * 0.1;
     }
   });

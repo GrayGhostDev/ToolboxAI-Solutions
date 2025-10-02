@@ -40,7 +40,7 @@ import {
   Close as CloseIcon,
   FilterList as FilterListIcon,
 } from '@mui/icons-material';
-import { useSnackbar } from 'notistack';
+import { notifications } from '@mantine/notifications';
 import { apiClient } from '../../services/api';
 import { usePusher } from '../../hooks/usePusher';
 
@@ -80,7 +80,7 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
   const [studentToRemove, setStudentToRemove] = useState<Student | null>(null);
   const [batchMode, setBatchMode] = useState(false);
   const [filterActive, setFilterActive] = useState(true);
-  const { enqueueSnackbar } = useSnackbar();
+  // Using Mantine notifications instead of notistack
 
   // Set up Pusher for real-time updates
   const pusherClient = usePusher();
@@ -116,13 +116,15 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
       setStudents(response.data.data || []);
       onStudentCountChange?.(response.data.data?.length || 0);
     } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to load students', {
-        variant: 'error',
+      notifications.show({
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to load students',
+        color: 'red',
       });
     } finally {
       setLoading(false);
     }
-  }, [classId, enqueueSnackbar, onStudentCountChange]);
+  }, [classId, onStudentCountChange]);
 
   // Load available students for enrollment
   const loadAvailableStudents = useCallback(async () => {
@@ -134,9 +136,13 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
       });
       setAvailableStudents(response.data.data || []);
     } catch (error: any) {
-      enqueueSnackbar('Failed to load available students', { variant: 'error' });
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to load available students',
+        color: 'red',
+      });
     }
-  }, [classId, enqueueSnackbar]);
+  }, [classId]);
 
   useEffect(() => {
     loadStudents();
@@ -148,7 +154,11 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
       setStudents(prev => [...prev, data.student]);
       setAvailableStudents(prev => prev.filter(s => s.id !== data.student.id));
       onStudentCountChange?.(students.length + 1);
-      enqueueSnackbar(`${data.student.name} has been enrolled`, { variant: 'info' });
+      notifications.show({
+        title: 'Student Enrolled',
+        message: `${data.student.name} has been enrolled`,
+        color: 'blue',
+      });
     }
   };
 
@@ -160,7 +170,11 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
         setAvailableStudents(prev => [...prev, removedStudent]);
       }
       onStudentCountChange?.(students.length - 1);
-      enqueueSnackbar(`Student has been unenrolled`, { variant: 'info' });
+      notifications.show({
+        title: 'Student Unenrolled',
+        message: 'Student has been unenrolled',
+        color: 'blue',
+      });
     }
   };
 
@@ -168,8 +182,10 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
     if (data.enrolled) {
       loadStudents();
       loadAvailableStudents();
-      enqueueSnackbar(`${data.enrolled.length} students have been enrolled`, {
-        variant: 'info'
+      notifications.show({
+        title: 'Batch Enrollment',
+        message: `${data.enrolled.length} students have been enrolled`,
+        color: 'blue',
       });
     }
   };
@@ -180,10 +196,16 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
       await apiClient.post(`/api/v1/classes/${classId}/students/${studentId}`);
       await loadStudents();
       await loadAvailableStudents();
-      enqueueSnackbar('Student enrolled successfully', { variant: 'success' });
+      notifications.show({
+        title: 'Success',
+        message: 'Student enrolled successfully',
+        color: 'green',
+      });
     } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to enroll student', {
-        variant: 'error',
+      notifications.show({
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to enroll student',
+        color: 'red',
       });
     }
   };
@@ -196,10 +218,16 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
       await loadAvailableStudents();
       setStudentToRemove(null);
       setRemoveDialogOpen(false);
-      enqueueSnackbar('Student unenrolled successfully', { variant: 'success' });
+      notifications.show({
+        title: 'Success',
+        message: 'Student unenrolled successfully',
+        color: 'green',
+      });
     } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to unenroll student', {
-        variant: 'error',
+      notifications.show({
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to unenroll student',
+        color: 'red',
       });
     }
   };
@@ -207,7 +235,11 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
   // Batch enroll students
   const batchEnrollStudents = async () => {
     if (selectedStudents.size === 0) {
-      enqueueSnackbar('Please select students to enroll', { variant: 'warning' });
+      notifications.show({
+        title: 'Warning',
+        message: 'Please select students to enroll',
+        color: 'yellow',
+      });
       return;
     }
 
@@ -221,12 +253,16 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
       setSelectedStudents(new Set());
       setAddDialogOpen(false);
       setBatchMode(false);
-      enqueueSnackbar(`${selectedStudents.size} students enrolled successfully`, {
-        variant: 'success',
+      notifications.show({
+        title: 'Success',
+        message: `${selectedStudents.size} students enrolled successfully`,
+        color: 'green',
       });
     } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to enroll students', {
-        variant: 'error',
+      notifications.show({
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to enroll students',
+        color: 'red',
       });
     }
   };

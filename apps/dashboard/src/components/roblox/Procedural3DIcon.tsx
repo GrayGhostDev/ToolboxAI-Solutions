@@ -190,7 +190,7 @@ const AnimatedIcon: React.FunctionComponent<{ iconName: string; color?: string }
   useFrame((state) => {
     if (meshRef.current) {
       meshRef.current.rotation.y = state.clock.elapsedTime;
-      meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 2) * 0.1;
+      meshRef.current.position.setY(Math.sin(state.clock.elapsedTime * 2) * 0.1);
     }
   });
 

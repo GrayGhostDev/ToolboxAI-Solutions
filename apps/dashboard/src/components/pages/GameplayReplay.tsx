@@ -3,57 +3,46 @@ import { useState, useEffect } from "react";
 import {
   Box,
   Card,
-  CardContent,
-  Typography,
+  Text,
   Button,
   Stack,
-  IconButton,
-  LinearProgress,
-  Chip,
+  ActionIcon,
+  Progress,
+  Badge,
   Alert,
   Slider,
   Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Paper,
   List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  ListItemButton,
   Divider,
-  Tab,
   Tabs,
   Avatar,
-} from "@mui/material";
-import Grid2 from "@mui/material/Unstable_Grid2";
+  Grid,
+} from "@mantine/core";
 import {
-  PlayArrow,
-  Pause,
-  SkipNext,
-  SkipPrevious,
-  Replay,
-  VolumeUp,
-  Fullscreen,
-  Speed,
-  EmojiEvents,
-  Stars,
-  TrendingUp,
-  School,
-  Timer,
-  CheckCircle,
-  Warning,
-  SportsEsports,
-  Timeline,
-  Insights,
-  Download,
-  Share,
-  CalendarToday,
-} from "@mui/icons-material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+  IconPlayerPlay,
+  IconPlayerPause,
+  IconPlayerSkipForward,
+  IconPlayerSkipBack,
+  IconRefresh,
+  IconVolume,
+  IconMaximize,
+  IconGauge,
+  IconTrophy,
+  IconStar,
+  IconTrendingUp,
+  IconSchool,
+  IconClock,
+  IconCheck,
+  IconAlertTriangle,
+  IconDeviceGamepad,
+  IconTimeline,
+  IconChartBar,
+  IconDownload,
+  IconShare,
+  IconCalendar,
+} from "@tabler/icons-react";
+import { DateInput } from "@mantine/dates";
 import { useAppSelector } from "../../store";
 
 interface GameplaySession {
@@ -321,9 +310,9 @@ export default function GameplayReplay() {
   if (!currentSession) {
     return (
       <Box>
-        <Typography variant="h4" sx={{ mb: 3 }}>
+        <Text size="xl" fw={700} mb="md">
           Gameplay Replay
-        </Typography>
+        </Text>
         <Alert severity="info">
           Select a child and date to view their gameplay sessions
         </Alert>
@@ -334,38 +323,31 @@ export default function GameplayReplay() {
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" sx={{ fontWeight: 600 }}>
+        <Text size="xl" fw={600}>
           Gameplay Replay
-        </Typography>
+        </Text>
         <Stack direction="row" spacing={2}>
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Select Child</InputLabel>
-            <Select
-              value={selectedChild}
-              onChange={(e) => setSelectedChild(e.target.value)}
-              label="Select Child"
-            >
-              {children.map((child) => (
-                <MenuItem key={child.id} value={child.id}>
-                  {child.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="Select Date"
-              value={selectedDate}
-              onChange={(newDate) => newDate && setSelectedDate(newDate)}
-              slotProps={{ textField: { size: "small" } }}
-            />
-          </LocalizationProvider>
+          <Select
+            value={selectedChild}
+            onChange={(value) => setSelectedChild(value || '')}
+            placeholder="Select Child"
+            data={children.map((child) => ({ value: child.id, label: child.name }))}
+            style={{ minWidth: 150 }}
+            size="sm"
+          />
+          <DateInput
+            placeholder="Select Date"
+            value={selectedDate}
+            onChange={(newDate) => newDate && setSelectedDate(newDate)}
+            size="sm"
+            style={{ minWidth: 150 }}
+          />
         </Stack>
       </Stack>
 
-      <Grid2 container spacing={3}>
+      <Grid gutter="md">
         {/* Video Player Area */}
-        <Grid2 xs={12} lg={8}>
+        <Grid.Col span={{ base: 12, lg: 8 }}>
           <Card>
             <Box
               sx={{
@@ -638,10 +620,10 @@ export default function GameplayReplay() {
               )}
             </CardContent>
           </Card>
-        </Grid2>
+        </Grid.Col>
 
         {/* Session Info Sidebar */}
-        <Grid2 xs={12} lg={4}>
+        <Grid.Col span={{ base: 12, lg: 4 }}>
           {/* Session Overview */}
           <Card>
             <CardContent>
@@ -767,8 +749,8 @@ export default function GameplayReplay() {
               </Stack>
             </CardContent>
           </Card>
-        </Grid2>
-      </Grid2>
+        </Grid.Col>
+      </Grid>
     </Box>
   );
 }

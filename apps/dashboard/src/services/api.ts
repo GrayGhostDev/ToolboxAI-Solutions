@@ -386,7 +386,7 @@ class ApiClient {
   async getDashboardOverview(role: string): Promise<DashboardOverview> {
     return this.request<DashboardOverview>({
       method: "GET",
-      url: `/api/v1/dashboard/overview`,
+      url: `/api/v1/analytics/dashboards`,
       timeout: 15000 // 15 seconds timeout for dashboard data
     });
   }

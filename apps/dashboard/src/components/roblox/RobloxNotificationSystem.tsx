@@ -10,7 +10,7 @@ import {
   keyframes,
   rem
 } from '@mantine/core';
-import { createStyles } from '@mantine/emotion';
+// import { createStyles } from '@mantine/emotion'; // Removed - using inline styles instead
 import {
   IconX,
   IconBell,

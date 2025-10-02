@@ -48,7 +48,7 @@ export const PusherProvider: React.FC<PusherProviderProps> = ({
   showConnectionStatus = true,
   autoReconnect = true,
 }) => {
-  const { user, token } = useSelector((state: RootState) => state.auth);
+  const { userId, token } = useSelector((state: RootState) => state.user);
   const [contextValue, setContextValue] = useState<PusherContextValue>({
     isConnected: false,
     connectionState: 'uninitialized',
@@ -61,10 +61,10 @@ export const PusherProvider: React.FC<PusherProviderProps> = ({
 
   // Initialize Pusher when user is authenticated
   useEffect(() => {
-    if (user?.id && token && config.pusher.enabled) {
+    if (userId && token && config.pusher.enabled) {
       try {
-        console.log('Initializing Pusher for user:', user.id);
-        pusherClient.initialize(user.id, token);
+        console.log('Initializing Pusher for user:', userId);
+        pusherClient.initialize(userId, token);
 
         setContextValue(prev => ({
           ...prev,

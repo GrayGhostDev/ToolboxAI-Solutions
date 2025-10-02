@@ -8,7 +8,7 @@ import {
   rem,
   Progress
 } from '@mantine/core';
-import { createStyles } from '@mantine/emotion';
+// import { createStyles } from '@mantine/emotion'; // Removed - using inline styles instead
 import { IconTrophy, IconStar, IconFlame, IconSchool, IconDeviceGamepad2 } from '@tabler/icons-react';
 
 interface Achievement {

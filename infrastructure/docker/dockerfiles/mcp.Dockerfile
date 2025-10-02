@@ -146,7 +146,6 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY --chown=mcp:mcp core ./core
 COPY --chown=mcp:mcp database ./database
 COPY --chown=mcp:mcp toolboxai_settings ./toolboxai_settings
-COPY --chown=mcp:mcp toolboxai_utils ./toolboxai_utils
 
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/logs /data/contexts /data/agents /tmp/mcp && \
@@ -166,7 +165,7 @@ ENV MCP_HOST=0.0.0.0 \
     AGENT_TIMEOUT=300
 
 # Create health check script
-RUN cat > /app/healthcheck.py << 'EOF'
+COPY <<'HEALTHCHECK_EOF' /app/healthcheck.py
 #!/usr/bin/env python3
 import asyncio
 import json
@@ -209,7 +208,7 @@ async def check_health():
 if __name__ == "__main__":
     result = asyncio.run(check_health())
     sys.exit(0 if result else 1)
-EOF
+HEALTHCHECK_EOF
 
 RUN chmod +x /app/healthcheck.py
 

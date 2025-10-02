@@ -318,6 +318,50 @@ class ObservabilityAPI {
       default: return '#9e9e9e';
     }
   }
+
+  // Infrastructure metrics endpoints
+  async getInfrastructureSystemMetrics() {
+    const response = await axios.get(`${this.baseURL}/infrastructure/system`, {
+      headers: this.getAuthHeaders()
+    });
+    return response.data;
+  }
+
+  async getInfrastructureProcessMetrics() {
+    const response = await axios.get(`${this.baseURL}/infrastructure/process`, {
+      headers: this.getAuthHeaders()
+    });
+    return response.data;
+  }
+
+  async getInfrastructurePlatformInfo() {
+    const response = await axios.get(`${this.baseURL}/infrastructure/platform`, {
+      headers: this.getAuthHeaders()
+    });
+    return response.data;
+  }
+
+  async getInfrastructureSummary(timeWindowMinutes: number = 5) {
+    const response = await axios.get(`${this.baseURL}/infrastructure/summary`, {
+      params: { time_window: timeWindowMinutes },
+      headers: this.getAuthHeaders()
+    });
+    return response.data;
+  }
+
+  async checkInfrastructureHealth() {
+    const response = await axios.get(`${this.baseURL}/infrastructure/health`, {
+      headers: this.getAuthHeaders()
+    });
+    return response.data;
+  }
+
+  async getInfrastructureReport() {
+    const response = await axios.get(`${this.baseURL}/infrastructure/report`, {
+      headers: this.getAuthHeaders()
+    });
+    return response.data;
+  }
 }
 
 // Export singleton instance
@@ -338,5 +382,11 @@ export const {
   formatDuration,
   formatBytes,
   getHealthColor,
-  getSeverityColor
+  getSeverityColor,
+  getInfrastructureSystemMetrics,
+  getInfrastructureProcessMetrics,
+  getInfrastructurePlatformInfo,
+  getInfrastructureSummary,
+  checkInfrastructureHealth,
+  getInfrastructureReport
 } = observabilityAPI;

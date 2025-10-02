@@ -1,9 +1,9 @@
 /**
  * Performance Monitor for Terminal 2
- * 
+ *
  * Monitors frontend performance metrics, component render times, API latency,
  * WebSocket performance, and system resource usage
- * 
+ *
  * @fileoverview Production-ready performance monitoring for Dashboard
  * @version 1.0.0
  */
@@ -165,7 +165,7 @@ export class PerformanceMonitor {
     this.interceptAPIRequests();
     this.monitorWebSocketPerformance();
     this.monitorSystemResources();
-    
+
     // Start periodic reporting
     this.startPeriodicReporting();
 
@@ -271,7 +271,7 @@ export class PerformanceMonitor {
   // ================================
   // PERFORMANCE OBSERVERS
   // ================================
-  
+
   private initializePerformanceObservers(): void {
     // Largest Contentful Paint
     try {
@@ -279,7 +279,7 @@ export class PerformanceMonitor {
         const entries = list.getEntries();
         const lastEntry = entries[entries.length - 1] as any;
         this.metrics.largestContentfulPaint = lastEntry.renderTime || lastEntry.loadTime;
-        
+
         // Alert if LCP is poor
         if (this.metrics.largestContentfulPaint > 2500) {
           this.addAlert({
@@ -292,7 +292,7 @@ export class PerformanceMonitor {
           });
         }
       });
-      
+
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
       this.observers.set('lcp', lcpObserver);
 
@@ -309,9 +309,9 @@ export class PerformanceMonitor {
             clsValue += (entry as any).value;
           }
         }
-        
+
         this.metrics.cumulativeLayoutShift = clsValue;
-        
+
         if (clsValue > this.thresholds.layoutShift) {
           this.addAlert({
             type: 'layout_shift',
@@ -323,7 +323,7 @@ export class PerformanceMonitor {
           });
         }
       });
-      
+
       clsObserver.observe({ entryTypes: ['layout-shift'] });
       this.observers.set('cls', clsObserver);
 
@@ -338,7 +338,7 @@ export class PerformanceMonitor {
           const fid = (entry as any).processingStart - entry.startTime;
           // Use FID as approximation for TTI
           this.metrics.timeToInteractive = entry.startTime + fid;
-          
+
           if (fid > 100) {
             this.addAlert({
               type: 'slow_component',
@@ -351,7 +351,7 @@ export class PerformanceMonitor {
           }
         }
       });
-      
+
       fidObserver.observe({ entryTypes: ['first-input'] });
       this.observers.set('fid', fidObserver);
 
@@ -369,10 +369,10 @@ export class PerformanceMonitor {
 
     // React Profiler integration
     this.integrateWithReactProfiler();
-    
+
     // Generic component monitoring via mutation observer
     this.monitorDOMChanges();
-    
+
     // Hook into React DevTools if available
     this.hookIntoReactDevTools();
   }
@@ -380,7 +380,7 @@ export class PerformanceMonitor {
   private integrateWithReactProfiler(): void {
     // This would typically be done at the React component level
     // For now, we'll create a synthetic monitoring system
-    
+
     if (typeof React !== 'undefined' && React.createElement && typeof window !== 'undefined') {
       try {
         const originalCreateElement = React.createElement;
@@ -390,12 +390,12 @@ export class PerformanceMonitor {
             const startTime = performance.now();
             const result = originalCreateElement(type, props, ...children);
             const duration = performance.now() - startTime;
-            
+
             if (duration > 0.1 && type && typeof type === 'function') {
               const componentName = type.name || type.displayName || 'Unknown';
               this.recordComponentMetric(componentName, 'mount', duration);
             }
-            
+
             return result;
           },
           writable: true,
@@ -409,43 +409,58 @@ export class PerformanceMonitor {
 
   private monitorDOMChanges(): void {
     if (typeof MutationObserver === 'undefined') return;
+    if (typeof document === 'undefined') return;
 
-    const observer = new MutationObserver((mutations) => {
-      const startTime = performance.now();
-      
-      mutations.forEach((mutation) => {
-        if (mutation.addedNodes.length > 0) {
-          const endTime = performance.now();
-          const duration = endTime - startTime;
-          
-          mutation.addedNodes.forEach((node) => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              const element = node as Element;
-              const componentName = element.getAttribute('data-component') || 
-                                  element.className || 
-                                  element.tagName.toLowerCase();
-              
-              if (duration > 1) { // Only record significant render times
-                this.recordComponentMetric(componentName, 'mount', duration);
+    // Wait for document.body to be available
+    const checkBody = () => {
+      if (!document.body) {
+        setTimeout(checkBody, 100);
+        return;
+      }
+
+      const observer = new MutationObserver((mutations) => {
+        const startTime = performance.now();
+
+        mutations.forEach((mutation) => {
+          if (mutation.addedNodes.length > 0) {
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+
+            mutation.addedNodes.forEach((node) => {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                const element = node as Element;
+                const componentName = element.getAttribute('data-component') ||
+                                    element.className ||
+                                    element.tagName.toLowerCase();
+
+                if (duration > 1) { // Only record significant render times
+                  this.recordComponentMetric(componentName, 'mount', duration);
+                }
               }
-            }
-          });
-        }
+            });
+          }
+        });
       });
-    });
 
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: false
-    });
+      try {
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+          attributes: false
+        });
+      } catch (error) {
+        console.warn('Failed to observe DOM changes:', error);
+      }
+    };
+
+    checkBody();
   }
 
   private hookIntoReactDevTools(): void {
     // This would integrate with React DevTools if available
     if (typeof window !== 'undefined' && (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__) {
       const hook = (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__;
-      
+
       hook.onCommitFiberRoot = (_id: any, _root: any, _priorityLevel: any) => {
         const duration = performance.now();
         this.recordComponentMetric('ReactRoot', 'update', duration);
@@ -464,12 +479,12 @@ export class PerformanceMonitor {
 
     const existing = this.componentMetrics.get(componentId) || [];
     existing.push(metric);
-    
+
     // Keep only last 20 measurements per component
     if (existing.length > 20) {
       existing.shift();
     }
-    
+
     this.componentMetrics.set(componentId, existing);
 
     // Alert for slow components
@@ -495,23 +510,23 @@ export class PerformanceMonitor {
     if (typeof window === 'undefined' || !window.fetch) return;
 
     this.originalFetch = window.fetch;
-    
+
     window.fetch = async (...args: Parameters<typeof fetch>): Promise<Response> => {
       const startTime = performance.now();
       const url = args[0].toString();
       const method = (args[1]?.method || 'GET').toUpperCase();
-      
+
       try {
         const response = await this.originalFetch!(...args);
         const duration = performance.now() - startTime;
-        
+
         // Get response size if available
         const contentLength = response.headers.get('content-length');
         const size = contentLength ? parseInt(contentLength, 10) : undefined;
-        
+
         // Check if response was cached
         const cached = response.headers.get('cache-control') !== null;
-        
+
         const metric: ApiMetric = {
           url,
           method,
@@ -523,7 +538,7 @@ export class PerformanceMonitor {
         };
 
         this.recordApiMetric(metric);
-        
+
         // Alert for slow APIs
         if (duration > this.thresholds.apiCallDuration) {
           this.addAlert({
@@ -535,12 +550,12 @@ export class PerformanceMonitor {
             suggestion: 'Consider caching, optimizing the API, or showing loading states'
           });
         }
-        
+
         return response;
-        
+
       } catch (error) {
         const duration = performance.now() - startTime;
-        
+
         const metric: ApiMetric = {
           url,
           method,
@@ -550,7 +565,7 @@ export class PerformanceMonitor {
         };
 
         this.recordApiMetric(metric);
-        
+
         this.addAlert({
           type: 'slow_api',
           severity: 'error',
@@ -559,7 +574,7 @@ export class PerformanceMonitor {
           timestamp: new Date().toISOString(),
           suggestion: 'Check network connectivity and API endpoint availability'
         });
-        
+
         throw error;
       }
     };
@@ -569,12 +584,12 @@ export class PerformanceMonitor {
     const key = `${metric.method} ${metric.url}`;
     const existing = this.apiMetrics.get(key) || [];
     existing.push(metric);
-    
+
     // Keep only last 50 measurements per API
     if (existing.length > 50) {
       existing.shift();
     }
-    
+
     this.apiMetrics.set(key, existing);
   }
 
@@ -670,7 +685,7 @@ export class PerformanceMonitor {
 
   private recordWebSocketMetric(metric: WebSocketMetric): void {
     this.webSocketMetrics.push(metric);
-    
+
     // Keep only last 100 WebSocket metrics
     if (this.webSocketMetrics.length > 100) {
       this.webSocketMetrics.shift();
@@ -699,7 +714,7 @@ export class PerformanceMonitor {
       };
 
       this.systemMetrics.push(metric);
-      
+
       // Keep only last 60 measurements (30 minutes at 30s intervals)
       if (this.systemMetrics.length > 60) {
         this.systemMetrics.shift();
@@ -707,7 +722,7 @@ export class PerformanceMonitor {
 
       // Check for resource alerts
       this.checkResourceAlerts(metric);
-      
+
     }, 30000); // Every 30 seconds
   }
 
@@ -724,9 +739,9 @@ export class PerformanceMonitor {
     const recentTasks = performance.getEntriesByType('measure').filter(
       entry => Date.now() - entry.startTime < 30000
     );
-    
+
     if (recentTasks.length === 0) return 0;
-    
+
     const avgDuration = recentTasks.reduce((sum, entry) => sum + entry.duration, 0) / recentTasks.length;
     return Math.min(Math.round(avgDuration / 10), 100); // Normalize to 0-100%
   }
@@ -751,10 +766,10 @@ export class PerformanceMonitor {
     if (typeof document !== 'undefined') {
       const elements = document.querySelectorAll('*');
       let count = 0;
-      
+
       // Check common event types
       const eventTypes = ['click', 'mouseover', 'keydown', 'scroll', 'resize'];
-      
+
       elements.forEach(element => {
         eventTypes.forEach(eventType => {
           if ((element as any)[`on${eventType}`] !== null) {
@@ -762,7 +777,7 @@ export class PerformanceMonitor {
           }
         });
       });
-      
+
       return count;
     }
     return 0;
@@ -866,14 +881,14 @@ export class PerformanceMonitor {
 
   private addAlert(alert: PerformanceAlert): void {
     this.alerts.push(alert);
-    
+
     // Keep only last 50 alerts
     if (this.alerts.length > 50) {
       this.alerts.shift();
     }
 
     // Log alert to console
-    const logMethod = alert.severity === 'critical' ? 'error' : 
+    const logMethod = alert.severity === 'critical' ? 'error' :
                      alert.severity === 'error' ? 'error' : 'warn';
     console[logMethod](`🚨 Performance Alert [${alert.severity.toUpperCase()}]:`, alert.message);
 
@@ -894,18 +909,18 @@ export class PerformanceMonitor {
   private calculatePerformanceScore(): number {
     // Simplified performance score calculation (0-100)
     let score = 100;
-    
+
     // Deduct points based on metrics
     if (this.metrics.largestContentfulPaint > 2500) score -= 20;
     if (this.metrics.firstContentfulPaint > 1800) score -= 15;
     if (this.metrics.cumulativeLayoutShift > 0.1) score -= 15;
     if (this.metrics.totalBlockingTime > 300) score -= 20;
-    
+
     // Deduct points for recent alerts
     const recentAlerts = this.alerts.filter(
       alert => Date.now() - new Date(alert.timestamp).getTime() < 300000 // Last 5 minutes
     );
-    
+
     recentAlerts.forEach(alert => {
       switch (alert.severity) {
         case 'critical': score -= 10; break;
@@ -913,43 +928,43 @@ export class PerformanceMonitor {
         case 'warning': score -= 2; break;
       }
     });
-    
+
     return Math.max(0, Math.min(100, score));
   }
 
   private calculateAverageApiLatency(): number {
     const allApiMetrics = Array.from(this.apiMetrics.values()).flat();
     if (allApiMetrics.length === 0) return 0;
-    
+
     const totalLatency = allApiMetrics.reduce((sum, metric) => sum + metric.duration, 0);
     return Math.round(totalLatency / allApiMetrics.length);
   }
 
   private generateRecommendations(): string[] {
     const recommendations: string[] = [];
-    
+
     if (this.metrics.largestContentfulPaint > 2500) {
       recommendations.push('Optimize images and use lazy loading to improve LCP');
     }
-    
+
     if (this.metrics.cumulativeLayoutShift > 0.1) {
       recommendations.push('Add explicit dimensions to images and avoid inserting content dynamically');
     }
-    
+
     const slowComponents = this.getTopSlowComponents(5);
     if (slowComponents.length > 0) {
       recommendations.push(`Optimize slow components: ${slowComponents.map(c => c.id).join(', ')}`);
     }
-    
+
     const recentMemoryAlerts = this.alerts.filter(
-      alert => alert.type === 'high_memory' && 
+      alert => alert.type === 'high_memory' &&
                Date.now() - new Date(alert.timestamp).getTime() < 600000
     );
-    
+
     if (recentMemoryAlerts.length > 0) {
       recommendations.push('Implement memory optimization strategies or check for memory leaks');
     }
-    
+
     return recommendations;
   }
 
@@ -994,7 +1009,7 @@ export class PerformanceMonitor {
 
   public getRecentAlerts(minutes: number = 30): PerformanceAlert[] {
     const cutoff = Date.now() - (minutes * 60 * 1000);
-    return this.alerts.filter(alert => 
+    return this.alerts.filter(alert =>
       new Date(alert.timestamp).getTime() > cutoff
     );
   }

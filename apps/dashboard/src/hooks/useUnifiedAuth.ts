@@ -1,4 +1,3 @@
-import { useAuth as useClerkAuth } from "../contexts/ClerkAuthContext";
 import { useAuth as useLegacyAuth } from "../contexts/AuthContext";
 
 /**
@@ -9,14 +8,13 @@ import { useAuth as useLegacyAuth } from "../contexts/AuthContext";
  * calling the same hooks in the same order, regardless of configuration.
  */
 export function useUnifiedAuth() {
-  const clerkResult = useClerkAuth();
-  const legacyResult = useLegacyAuth();
-
   const isClerkEnabled = import.meta.env.VITE_ENABLE_CLERK_AUTH === 'true';
 
-  if (isClerkEnabled && clerkResult) {
-    return clerkResult;
-  }
+  // Always call the legacy auth hook to follow Rules of Hooks
+  const legacyResult = useLegacyAuth();
 
+  // For now, since Clerk is disabled, just return the legacy result
+  // When Clerk is enabled, the ClerkAuthProvider will be available and
+  // the useClerkAuth hook can be called safely
   return legacyResult;
 }

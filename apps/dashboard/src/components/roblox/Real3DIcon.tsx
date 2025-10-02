@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Text, useMantineTheme } from '@mantine/core';
-import { keyframes } from '@mantine/core';
+// import { keyframes } from '@mantine/core'; // Removed - using CSS animations instead
 import { Procedural3DIcon } from './Procedural3DIcon';
 
 interface Real3DIconProps {
@@ -11,23 +11,35 @@ interface Real3DIconProps {
   description?: string;
 }
 
-// Animations
-const floatAnimation = keyframes`
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-3px) rotate(2deg); }
-`;
+// CSS Animations - using CSS keyframes instead of Mantine keyframes
+const floatAnimation = 'floatAnimation 3s ease-in-out infinite';
+const pulseAnimation = 'pulseAnimation 1s linear infinite';
+const glowAnimation = 'glowAnimation 2s ease-in-out infinite';
 
-const pulseAnimation = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-`;
-
-const glowAnimation = keyframes`
-  0% { box-shadow: 0 0 5px currentColor; }
-  50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
-  100% { box-shadow: 0 0 5px currentColor; }
-`;
+// Add CSS styles to document head
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes floatAnimation {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-3px) rotate(2deg); }
+    }
+    @keyframes pulseAnimation {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes glowAnimation {
+      0% { box-shadow: 0 0 5px currentColor; }
+      50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+      100% { box-shadow: 0 0 5px currentColor; }
+    }
+  `;
+  if (!document.head.querySelector('style[data-real3d-animations]')) {
+    style.setAttribute('data-real3d-animations', 'true');
+    document.head.appendChild(style);
+  }
+}
 
 // Mantine-compatible styled component approach
 const getIconContainerStyles = (theme: any, size: string) => {
@@ -106,191 +118,191 @@ function createParticleEffect(x: number, y: number, type: string) {
 }
 
 // Icon mapping with actual 3D image data
-const iconMap: { [key: string]: { 
-  emoji: string; 
-  color: string; 
+const iconMap: { [key: string]: {
+  emoji: string;
+  color: string;
   description: string;
   imagePath: string;
   fallbackColor: string;
 } } = {
-  'ABC_CUBE': { 
-    emoji: '🧩', 
-    color: '#4CAF50', 
+  'ABC_CUBE': {
+    emoji: '🧩',
+    color: '#4CAF50',
     description: 'ABC Learning Cube',
     imagePath: '/images/png/3d_icon_ABC_CUBE_1.json',
     fallbackColor: '#4CAF50'
   },
-  'BACKPACK': { 
-    emoji: '🎒', 
-    color: '#FF9800', 
+  'BACKPACK': {
+    emoji: '🎒',
+    color: '#FF9800',
     description: 'Student Backpack',
     imagePath: '/images/png/3d_icon_BACKPACK_1.json',
     fallbackColor: '#FF9800'
   },
-  'BADGE': { 
-    emoji: '🏅', 
-    color: '#E91E63', 
+  'BADGE': {
+    emoji: '🏅',
+    color: '#E91E63',
     description: 'Achievement Badge',
     imagePath: '/images/png/3d_icon_BADGE_1.json',
     fallbackColor: '#E91E63'
   },
-  'BASKETBALL': { 
-    emoji: '🏀', 
-    color: '#FF5722', 
+  'BASKETBALL': {
+    emoji: '🏀',
+    color: '#FF5722',
     description: 'Sports Basketball',
     imagePath: '/images/png/3d_icon_BASKETBALL_1.json',
     fallbackColor: '#FF5722'
   },
-  'BOARD': { 
-    emoji: '📋', 
-    color: '#2196F3', 
+  'BOARD': {
+    emoji: '📋',
+    color: '#2196F3',
     description: 'Learning Board',
     imagePath: '/images/png/3d_icon_BOARD_1.json',
     fallbackColor: '#2196F3'
   },
-  'BOOKS': { 
-    emoji: '📚', 
-    color: '#9C27B0', 
+  'BOOKS': {
+    emoji: '📚',
+    color: '#9C27B0',
     description: 'Educational Books',
     imagePath: '/images/png/3d_icon_BOOKS_1.json',
     fallbackColor: '#9C27B0'
   },
-  'BRUSH_PAINT': { 
-    emoji: '🎨', 
-    color: '#FFC107', 
+  'BRUSH_PAINT': {
+    emoji: '🎨',
+    color: '#FFC107',
     description: 'Paint Brush',
     imagePath: '/images/png/3d_icon_BRUSH_PAINT_1.json',
     fallbackColor: '#FFC107'
   },
-  'CIRCLE_RULER': { 
-    emoji: '📏', 
-    color: '#607D8B', 
+  'CIRCLE_RULER': {
+    emoji: '📏',
+    color: '#607D8B',
     description: 'Circle Ruler',
     imagePath: '/images/png/3d_icon_CIRCLE_RULER_1.json',
     fallbackColor: '#607D8B'
   },
-  'CRAYON': { 
-    emoji: '🖍️', 
-    color: '#FF5722', 
+  'CRAYON': {
+    emoji: '🖍️',
+    color: '#FF5722',
     description: 'Coloring Crayon',
     imagePath: '/images/png/3d_icon_CRAYON_1.json',
     fallbackColor: '#FF5722'
   },
-  'ERASER': { 
-    emoji: '🧽', 
-    color: '#9E9E9E', 
+  'ERASER': {
+    emoji: '🧽',
+    color: '#9E9E9E',
     description: 'Eraser Tool',
     imagePath: '/images/png/3d_icon_ERASER_1.json',
     fallbackColor: '#9E9E9E'
   },
-  'GRADUATION_CAP': { 
-    emoji: '🎓', 
-    color: '#3F51B5', 
+  'GRADUATION_CAP': {
+    emoji: '🎓',
+    color: '#3F51B5',
     description: 'Graduation Cap',
     imagePath: '/images/png/3d_icon_GRADUATION_CAP_1.json',
     fallbackColor: '#3F51B5'
   },
-  'LAMP': { 
-    emoji: '💡', 
-    color: '#FFEB3B', 
+  'LAMP': {
+    emoji: '💡',
+    color: '#FFEB3B',
     description: 'Study Lamp',
     imagePath: '/images/png/3d_icon_LAMP_1.json',
     fallbackColor: '#FFEB3B'
   },
-  'LIGHT_BULB': { 
-    emoji: '💡', 
-    color: '#FFC107', 
+  'LIGHT_BULB': {
+    emoji: '💡',
+    color: '#FFC107',
     description: 'Light Bulb',
     imagePath: '/images/png/3d_icon_LIGHT_BULB_1.json',
     fallbackColor: '#FFC107'
   },
-  'OPEN_BOOK': { 
-    emoji: '📖', 
-    color: '#4CAF50', 
+  'OPEN_BOOK': {
+    emoji: '📖',
+    color: '#4CAF50',
     description: 'Open Book',
     imagePath: '/images/png/3d_icon_OPEN_BOOK_1.json',
     fallbackColor: '#4CAF50'
   },
-  'PAPER': { 
-    emoji: '📄', 
-    color: '#FFFFFF', 
+  'PAPER': {
+    emoji: '📄',
+    color: '#FFFFFF',
     description: 'Paper Sheet',
     imagePath: '/images/png/3d_icon_PAPER_1.json',
     fallbackColor: '#FFFFFF'
   },
-  'PENCIL': { 
-    emoji: '✏️', 
-    color: '#FF9800', 
+  'PENCIL': {
+    emoji: '✏️',
+    color: '#FF9800',
     description: 'Pencil Tool',
     imagePath: '/images/png/3d_icon_PENCIL_1.json',
     fallbackColor: '#FF9800'
   },
-  'RULER': { 
-    emoji: '📐', 
-    color: '#607D8B', 
+  'RULER': {
+    emoji: '📐',
+    color: '#607D8B',
     description: 'Measuring Ruler',
     imagePath: '/images/png/3d_icon_RULER_1.json',
     fallbackColor: '#607D8B'
   },
-  'SOCCER_BALL': { 
-    emoji: '⚽', 
-    color: '#4CAF50', 
+  'SOCCER_BALL': {
+    emoji: '⚽',
+    color: '#4CAF50',
     description: 'Soccer Ball',
     imagePath: '/images/png/3d_icon_SOCCER_BALL_1.json',
     fallbackColor: '#4CAF50'
   },
-  'TRIANGLE_RULER': { 
-    emoji: '📐', 
-    color: '#795548', 
+  'TRIANGLE_RULER': {
+    emoji: '📐',
+    color: '#795548',
     description: 'Triangle Ruler',
     imagePath: '/images/png/3d_icon_TRIANGLE_RULER_1.json',
     fallbackColor: '#795548'
   },
-  'TROPHY': { 
-    emoji: '🏆', 
-    color: '#FFD700', 
+  'TROPHY': {
+    emoji: '🏆',
+    color: '#FFD700',
     description: 'Trophy Award',
     imagePath: '/images/png/3d_icon_TROPHY_1.json',
     fallbackColor: '#FFD700'
   },
-  'STAR': { 
-    emoji: '⭐', 
-    color: '#FFC107', 
+  'STAR': {
+    emoji: '⭐',
+    color: '#FFC107',
     description: 'Star Achievement',
     imagePath: '/images/png/3d_icon_STAR_1.json',
     fallbackColor: '#FFC107'
   },
-  'ROCKET': { 
-    emoji: '🚀', 
-    color: '#E91E63', 
+  'ROCKET': {
+    emoji: '🚀',
+    color: '#E91E63',
     description: 'Rocket Launch',
     imagePath: '/images/png/3d_icon_ROCKET_1.json',
     fallbackColor: '#E91E63'
   },
-  'ASSESSMENT': { 
-    emoji: '📝', 
-    color: '#2196F3', 
+  'ASSESSMENT': {
+    emoji: '📝',
+    color: '#2196F3',
     description: 'Assessment Test',
     imagePath: '/images/png/3d_icon_ASSESSMENT_1.json',
     fallbackColor: '#2196F3'
   },
-  'SETTINGS': { 
-    emoji: '⚙️', 
-    color: '#607D8B', 
+  'SETTINGS': {
+    emoji: '⚙️',
+    color: '#607D8B',
     description: 'Settings Gear',
     imagePath: '/images/png/3d_icon_SETTINGS_1.json',
     fallbackColor: '#607D8B'
   },
-  'REFRESH': { 
-    emoji: '🔄', 
-    color: '#4CAF50', 
+  'REFRESH': {
+    emoji: '🔄',
+    color: '#4CAF50',
     description: 'Refresh Data',
     imagePath: '/images/png/3d_icon_REFRESH_1.json',
     fallbackColor: '#4CAF50'
   },
-  'SPORTS_ESPORTS': { 
-    emoji: '🎮', 
-    color: '#9C27B0', 
+  'SPORTS_ESPORTS': {
+    emoji: '🎮',
+    color: '#9C27B0',
     description: 'Gaming Controller',
     imagePath: '/images/png/3d_icon_SPORTS_ESPORTS_1.json',
     fallbackColor: '#9C27B0'

@@ -41,7 +41,7 @@ WORKDIR /app
 ENV RUST_LOG=info \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
-    ROJO_VERSION=7.4.1
+    ROJO_VERSION=7.5.1
 
 # ============================================
 # BUILDER STAGE - Build Rojo and tools
@@ -56,11 +56,26 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         cmake && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Rojo from cargo for ARM64 compatibility
-# Pre-built binaries have download issues, build from source instead
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/usr/local/cargo/git \
-    cargo install rojo --version 7.4.4 --locked
+# Install Rojo from official release (zip) with architecture-aware URL selection
+# Validates download and extracts the rojo binary to /usr/local/bin/rojo
+RUN set -eux; \
+    arch="$(uname -m)"; \
+    case "$arch" in \
+      x86_64|amd64) rojo_arch="x86_64" ;; \
+      aarch64|arm64) rojo_arch="aarch64" ;; \
+      *) echo "Unsupported arch: $arch" >&2; exit 1 ;; \
+    esac; \
+    base="https://github.com/rojo-rbx/rojo/releases/download/v${ROJO_VERSION}"; \
+    url="$base/rojo-${ROJO_VERSION}-linux-${rojo_arch}.zip"; \
+    alt="$base/rojo-${ROJO_VERSION}-linux-arm64.zip"; \
+    echo "Downloading Rojo ${ROJO_VERSION} for arch=${rojo_arch} from $url (alt: $alt)"; \
+    curl -fsSL -o /tmp/rojo.zip "$url" || curl -fsSL -o /tmp/rojo.zip "$alt"; \
+    test -s /tmp/rojo.zip; \
+    unzip -q -o /tmp/rojo.zip -d /tmp/rojo_extracted; \
+    rojo_bin="$(find /tmp/rojo_extracted -maxdepth 2 -type f -name rojo -print -quit)"; \
+    [ -n "$rojo_bin" ] || { echo "rojo binary not found in zip"; exit 1; }; \
+    install -m 0755 "$rojo_bin" /usr/local/bin/rojo; \
+    rm -rf /tmp/rojo.zip /tmp/rojo_extracted
 
 # Install additional Roblox development tools
 # Remove --locked flag for wildcard versions
@@ -78,7 +93,7 @@ RUN curl -sSf https://raw.githubusercontent.com/roblox/rokit/main/install.sh | b
 FROM base AS development
 
 # Copy built tools from builder
-COPY --from=builder /usr/local/cargo/bin/rojo /usr/local/bin/rojo
+COPY --from=builder /usr/local/bin/rojo /usr/local/bin/rojo
 COPY --from=builder /usr/local/cargo/bin/selene /usr/local/bin/selene
 COPY --from=builder /usr/local/cargo/bin/stylua /usr/local/bin/stylua
 COPY --from=builder /root/.rokit /opt/rokit
@@ -133,7 +148,7 @@ CMD ["rojo", "serve", \
 FROM base AS production
 
 # Copy built tools from builder
-COPY --from=builder /usr/local/cargo/bin/rojo /usr/local/bin/rojo
+COPY --from=builder /usr/local/bin/rojo /usr/local/bin/rojo
 COPY --from=builder /usr/local/cargo/bin/selene /usr/local/bin/selene
 COPY --from=builder /usr/local/cargo/bin/stylua /usr/local/bin/stylua
 

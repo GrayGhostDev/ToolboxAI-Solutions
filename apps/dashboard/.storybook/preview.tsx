@@ -1,15 +1,20 @@
 import React from 'react';
 import type { Preview } from '@storybook/react';
-import { Box, Button, Text, Container, Paper, Stack, Group, Card, TextInput, Select, Alert, Modal, Table, Tabs, Menu, Tooltip, Checkbox, Radio, Switch, Slider, Badge, Chip, Avatar, Divider, Progress, Skeleton, ActionIcon, Title, Anchor, Notification, ScrollArea, Grid, Space, Center, Flex, SimpleGrid, Loader, RingProgress, Timeline } from '@mantine/core';
-import { Box, Button, Text, Container, Paper, Stack, Group, Card, TextInput, Select, Alert, Modal, Table, Tabs, Menu, Tooltip, Checkbox, Radio, Switch, Slider, Badge, Chip, Avatar, Divider, Progress, Skeleton, ActionIcon, Title, Anchor, Notification, ScrollArea, Grid, Space, Center, Flex, SimpleGrid, Loader, RingProgress, Timeline } from '@mantine/core';
-import { DatePicker, DateTimePicker } from '@mantine/dates';
-import { DatePicker, DateTimePicker } from '@mantine/dates';
+import { MantineProvider } from '@mantine/core';
+import { DatesProvider } from '@mantine/dates';
+import { Notifications } from '@mantine/notifications';
+import { ModalsProvider } from '@mantine/modals';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { BrowserRouter } from 'react-router-dom';
 
-// Import your theme
-import { lightTheme } from '../src/theme';
+// Import Mantine styles
+import '@mantine/core/styles.css';
+import '@mantine/dates/styles.css';
+import '@mantine/notifications/styles.css';
+
+// Import your Mantine theme
+import { theme } from '../src/theme/mantine-theme';
 
 // Import store slices for mock store
 import uiReducer from '../src/store/slices/uiSlice';
@@ -54,17 +59,26 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
+    backgrounds: {
+      default: 'light',
+      values: [
+        { name: 'light', value: '#ffffff' },
+        { name: 'dark', value: '#1a1b1e' },
+      ],
+    },
   },
   decorators: [
     (Story) => (
       <Provider store={mockStore}>
         <BrowserRouter>
-          <ThemeProvider theme={lightTheme}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <CssBaseline />
-              <Story />
-            </LocalizationProvider>
-          </ThemeProvider>
+          <MantineProvider theme={theme}>
+            <DatesProvider settings={{}}>
+              <ModalsProvider>
+                <Notifications position="top-right" />
+                <Story />
+              </ModalsProvider>
+            </DatesProvider>
+          </MantineProvider>
         </BrowserRouter>
       </Provider>
     ),

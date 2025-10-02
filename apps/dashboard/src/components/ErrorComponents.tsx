@@ -9,24 +9,20 @@ import {
   Box,
   Button,
   Card,
-  CardContent,
-  Typography,
+  Text,
   Alert,
-  AlertTitle,
-  CircularProgress,
-  LinearProgress,
+  Loader,
+  Progress,
   Stack,
-  Chip,
-  IconButton,
+  Badge,
+  ActionIcon,
   Collapse,
   Paper,
   Skeleton,
-  Fade,
-  Zoom,
-  useTheme,
   Container,
-  Link,
-} from '@mui/material';
+  Anchor,
+  useMantineTheme,
+} from '@mantine/core';
 import {
   WifiOff,
   CloudOff,
@@ -73,12 +69,12 @@ export function NetworkError({
     <Card sx={{ maxWidth: 400, mx: 'auto', my: 4 }}>
       <CardContent sx={{ textAlign: 'center', py: 4 }}>
         <WifiOff sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
-        <Typography variant="h5" gutterBottom>
+        <Text size="xl" fw={600} mb="md">
           Connection Problem
-        </Typography>
-        <Typography variant="body2" color="text.secondary" paragraph>
+        </Text>
+        <Text size="sm" c="dimmed" mb="md">
           {message}
-        </Typography>
+        </Text>
 
         {!isOnline && (
           <Alert severity="warning" sx={{ mb: 2 }}>
@@ -124,7 +120,7 @@ export function ApiError({
   showDetails?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const theme = useTheme();
+  const theme = useMantineTheme();
 
   const getErrorMessage = () => {
     if (error?.response?.status === 404) return "The requested resource was not found";
@@ -156,12 +152,12 @@ export function ApiError({
         <Stack direction="row" alignItems="center" spacing={2}>
           <ErrorOutline color="error" />
           <Box flex={1}>
-            <Typography variant="h6" color="error">
+            <Text size="lg" c="red">
               {getErrorTitle()}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+            </Text>
+            <Text size="sm" c="dimmed">
               {getErrorMessage()}
-            </Typography>
+            </Text>
           </Box>
         </Stack>
 
@@ -176,7 +172,7 @@ export function ApiError({
         {retryCount > 0 && (
           <Typography variant="caption" color="text.secondary">
             Retry attempt {retryCount} of {maxRetries}
-          </Typography>
+          </Text>
         )}
 
         <Stack direction="row" spacing={2}>
@@ -206,7 +202,7 @@ export function ApiError({
           <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.paper' }}>
             <Typography variant="caption" component="pre" sx={{ fontFamily: 'monospace' }}>
               {JSON.stringify(error?.response?.data || error, null, 2)}
-            </Typography>
+            </Text>
           </Paper>
         </Collapse>
       </Stack>
@@ -239,10 +235,10 @@ export function LoadingError({
         <Box>
           <Typography variant="h5" gutterBottom>
             {title}
-          </Typography>
+          </Text>
           <Typography variant="body1" color="text.secondary">
             {message}
-          </Typography>
+          </Text>
         </Box>
 
         <Stack direction="row" spacing={2}>
@@ -351,7 +347,7 @@ export function RetryTimer({
         <Box flex={1}>
           <Typography variant="body2">
             {message} {timeLeft} seconds...
-          </Typography>
+          </Text>
         </Box>
         {onCancel && (
           <Button size="small" onClick={onCancel}>

@@ -49,7 +49,7 @@ import { ContentGenerationMonitor } from '../roblox/ContentGenerationMonitor';
 import { StudentProgressDashboard } from '../roblox/StudentProgressDashboard';
 import { RobloxSessionManager } from '../roblox/RobloxSessionManager';
 import { QuizResultsAnalytics } from '../roblox/QuizResultsAnalytics';
-import { RobloxEnvironmentPreview } from '../roblox/RobloxEnvironmentPreview';
+import RobloxEnvironmentPreview from '../roblox/RobloxEnvironmentPreview';
 import { RobloxAIAssistant } from '../roblox/RobloxAIAssistant';
 import { AIAssistantTest } from '../test/AIAssistantTest';
 import { IconAutoAwesome, IconBell, IconCircle, IconDashboard, IconGames, IconGroups, IconHelp, IconPsychology, IconQuiz, IconRefresh, IconSettings, IconTerrain } from '@tabler/icons-react';
@@ -148,7 +148,7 @@ export default function TeacherRobloxDashboard() {
                 </Text>
               </Box>
             </Box>
-          </SimpleGrid>
+          </Box>
 
           <Box xs={12} md={6}>
             <Stack direction="row" spacing={2} justifyContent="flex-end">
@@ -174,7 +174,7 @@ export default function TeacherRobloxDashboard() {
                 <IconHelp />
               </IconButton>
             </Stack>
-          </SimpleGrid>
+          </Box>
         </SimpleGrid>
 
         {/* Quick Stats */}
@@ -193,7 +193,7 @@ export default function TeacherRobloxDashboard() {
                 </Stack>
               </CardContent>
             </Card>
-          </SimpleGrid>
+          </Box>
 
           <Box xs={6} sm={3}>
             <Card style={{ bgcolor: alpha(theme.palette.success.main, 0.1) }}>
@@ -209,7 +209,7 @@ export default function TeacherRobloxDashboard() {
                 </Stack>
               </CardContent>
             </Card>
-          </SimpleGrid>
+          </Box>
 
           <Box xs={6} sm={3}>
             <Card style={{ bgcolor: alpha(theme.palette.info.main, 0.1) }}>
@@ -225,7 +225,7 @@ export default function TeacherRobloxDashboard() {
                 </Stack>
               </CardContent>
             </Card>
-          </SimpleGrid>
+          </Box>
 
           <Box xs={6} sm={3}>
             <Card style={{ bgcolor: alpha(theme.palette.warning.main, 0.1) }}>
@@ -243,7 +243,7 @@ export default function TeacherRobloxDashboard() {
                 </Stack>
               </CardContent>
             </Card>
-          </SimpleGrid>
+          </Box>
         </SimpleGrid>
       </Paper>
 

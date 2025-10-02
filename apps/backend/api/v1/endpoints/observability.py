@@ -20,6 +20,7 @@ from apps.backend.core.edge_cache import edge_cache_manager
 from apps.backend.core.websocket_cluster import websocket_cluster
 from apps.backend.api.deps import get_current_user
 from apps.backend.services.pusher import trigger_event
+from apps.backend.services.infrastructure_metrics import infrastructure_metrics
 from database.replica_router import replica_router
 
 logger = structlog.get_logger(__name__)
@@ -225,6 +226,189 @@ async def acknowledge_anomaly(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/infrastructure/system")
+async def get_infrastructure_system_metrics(
+    current_user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Get detailed system-level infrastructure metrics.
+
+    Returns:
+        CPU, memory, disk, network metrics with current values
+    """
+    try:
+        system_metrics = await infrastructure_metrics.collect_system_metrics()
+
+        return {
+            "status": "success",
+            "data": {
+                "cpu": {
+                    "percent": system_metrics.cpu_percent,
+                    "count": system_metrics.cpu_count,
+                    "freq_mhz": system_metrics.cpu_freq_current,
+                },
+                "memory": {
+                    "total_gb": system_metrics.memory_total_gb,
+                    "used_gb": system_metrics.memory_used_gb,
+                    "available_gb": system_metrics.memory_available_gb,
+                    "percent": system_metrics.memory_percent,
+                },
+                "disk": {
+                    "total_gb": system_metrics.disk_total_gb,
+                    "used_gb": system_metrics.disk_used_gb,
+                    "free_gb": system_metrics.disk_free_gb,
+                    "percent": system_metrics.disk_percent,
+                },
+                "network": {
+                    "bytes_sent": system_metrics.network_bytes_sent,
+                    "bytes_recv": system_metrics.network_bytes_recv,
+                    "connections": system_metrics.network_connections,
+                },
+                "uptime_seconds": system_metrics.uptime_seconds,
+                "timestamp": system_metrics.timestamp.isoformat(),
+            }
+        }
+    except Exception as e:
+        logger.error("Failed to get infrastructure system metrics", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/infrastructure/process")
+async def get_infrastructure_process_metrics(
+    current_user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Get current process metrics for the backend service.
+
+    Returns:
+        Process-specific metrics including CPU, memory, threads
+    """
+    try:
+        process_metrics = await infrastructure_metrics.collect_process_metrics()
+
+        return {
+            "status": "success",
+            "data": {
+                "pid": process_metrics.pid,
+                "name": process_metrics.name,
+                "status": process_metrics.status,
+                "cpu_percent": process_metrics.cpu_percent,
+                "memory_mb": process_metrics.memory_mb,
+                "memory_percent": process_metrics.memory_percent,
+                "threads": process_metrics.num_threads,
+                "file_descriptors": process_metrics.num_fds,
+                "create_time": process_metrics.create_time.isoformat(),
+                "timestamp": process_metrics.timestamp.isoformat(),
+            }
+        }
+    except Exception as e:
+        logger.error("Failed to get infrastructure process metrics", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/infrastructure/platform")
+async def get_infrastructure_platform_info(
+    current_user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Get platform and environment information.
+
+    Returns:
+        OS, architecture, Python version details
+    """
+    try:
+        platform_info = await infrastructure_metrics.get_platform_info()
+
+        return {
+            "status": "success",
+            "data": platform_info
+        }
+    except Exception as e:
+        logger.error("Failed to get infrastructure platform info", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/infrastructure/summary")
+async def get_infrastructure_summary(
+    time_window: int = Query(5, description="Time window in minutes", ge=1, le=60),
+    current_user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Get summarized infrastructure metrics over a time window.
+
+    Args:
+        time_window: Time window for aggregation (1-60 minutes)
+
+    Returns:
+        Aggregated metrics with min/max/avg values
+    """
+    try:
+        summary = await infrastructure_metrics.get_metrics_summary(
+            time_window_minutes=time_window
+        )
+
+        return {
+            "status": "success",
+            "data": summary
+        }
+    except Exception as e:
+        logger.error("Failed to get infrastructure summary", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/infrastructure/health")
+async def check_infrastructure_health(
+    current_user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Check infrastructure health against predefined thresholds.
+
+    Returns:
+        Health status with warnings and critical issues
+    """
+    try:
+        health_check = await infrastructure_metrics.check_resource_thresholds()
+
+        # Return appropriate status code based on health
+        status_code = 200
+        if health_check["status"] == "unhealthy":
+            status_code = 503
+        elif health_check["status"] == "degraded":
+            status_code = 200  # Still operational
+
+        return {
+            "status": "success",
+            "data": health_check,
+            "http_status": status_code
+        }
+    except Exception as e:
+        logger.error("Failed to check infrastructure health", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/infrastructure/report")
+async def get_infrastructure_comprehensive_report(
+    current_user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Get comprehensive infrastructure report with all metrics.
+
+    Returns:
+        Complete infrastructure status including system, process,
+        platform, health checks, and metrics summary
+    """
+    try:
+        report = await infrastructure_metrics.get_comprehensive_report()
+
+        return {
+            "status": "success",
+            "data": report
+        }
+    except Exception as e:
+        logger.error("Failed to get comprehensive infrastructure report", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/trace/{trace_id}")
 async def get_trace_details(
     trace_id: str, current_user: dict = Depends(get_current_user)
@@ -366,11 +550,15 @@ async def stream_metrics_to_pusher():
                 "websocket_cluster": await get_websocket_status(),
             }
 
+            # Get infrastructure metrics
+            infrastructure_data = await infrastructure_metrics.get_comprehensive_report()
+
             # Combine all data
             stream_data = {
                 **metrics_data,
                 "component_health": components_health,
                 "system_status": await get_system_status(),
+                "infrastructure": infrastructure_data,
             }
 
             # Trigger Pusher event

@@ -4,20 +4,18 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import Box from '@mui/material/Box';
-import Badge from '@mui/material/Badge';
-import IconButton from '@mui/material/IconButton';
-import Popover from '@mui/material/Popover';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import Chip from '@mui/material/Chip';
-import Paper from '@mui/material/Paper';
-import Alert from '@mui/material/Alert';
+import {
+  Box,
+  Badge,
+  ActionIcon,
+  Popover,
+  List,
+  Text,
+  Button,
+  Divider,
+  Paper,
+  Alert
+} from '@mantine/core';
 import {
   Notifications as NotificationsIcon,
   NotificationsActive as ActiveNotificationsIcon,

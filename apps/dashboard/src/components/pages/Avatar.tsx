@@ -3,41 +3,37 @@ import { useState } from "react";
 import {
   Box,
   Card,
-  CardContent,
-  Typography,
+  Text,
   Grid,
   Button,
   Stack,
-  Chip,
-  IconButton,
+  Badge,
+  ActionIcon,
   Tabs,
-  Tab,
-  Avatar as MuiAvatar,
+  Avatar as MantineAvatar,
   Paper,
   Slider,
   Switch,
-  FormControlLabel,
   Divider,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from "@mui/material";
+  TextInput,
+  Modal,
+  Title,
+  Group,
+} from "@mantine/core";
 import {
-  Face,
-  ColorLens,
-  Checkroom,
-  EmojiEvents,
-  Lock,
-  LockOpen,
-  Save,
-  Refresh,
-  Camera,
-  Edit,
-  ShoppingCart,
-  Star,
-} from "@mui/icons-material";
+  IconUser,
+  IconPalette,
+  IconShirt,
+  IconTrophy,
+  IconLock,
+  IconLockOpen,
+  IconDeviceFloppy,
+  IconRefresh,
+  IconCamera,
+  IconEdit,
+  IconShoppingCart,
+  IconStar,
+} from "@tabler/icons-react";
 import { useAppSelector, useAppDispatch } from "../../store";
 import { addNotification } from "../../store/slices/uiSlice";
 
@@ -64,7 +60,7 @@ const AVATAR_CATEGORIES: AvatarCategory[] = [
   {
     id: "hairstyles",
     name: "Hairstyles",
-    icon: <Face />,
+    icon: <IconUser />,
     items: [
       { id: "hair_1", name: "Short & Neat", preview: "👱", category: "hairstyles", rarity: "common", xpCost: 0, levelRequired: 1, owned: true, equipped: true },
       { id: "hair_2", name: "Long & Wavy", preview: "👩", category: "hairstyles", rarity: "common", xpCost: 50, levelRequired: 2, owned: true, equipped: false },
@@ -76,7 +72,7 @@ const AVATAR_CATEGORIES: AvatarCategory[] = [
   {
     id: "outfits",
     name: "Outfits",
-    icon: <Checkroom />,
+    icon: <IconShirt />,
     items: [
       { id: "outfit_1", name: "School Uniform", preview: "👔", category: "outfits", rarity: "common", xpCost: 0, levelRequired: 1, owned: true, equipped: true },
       { id: "outfit_2", name: "Casual Wear", preview: "👕", category: "outfits", rarity: "common", xpCost: 75, levelRequired: 2, owned: true, equipped: false },
@@ -88,7 +84,7 @@ const AVATAR_CATEGORIES: AvatarCategory[] = [
   {
     id: "accessories",
     name: "Accessories",
-    icon: <Star />,
+    icon: <IconStar />,
     items: [
       { id: "acc_1", name: "Reading Glasses", preview: "👓", category: "accessories", rarity: "common", xpCost: 25, levelRequired: 1, owned: true, equipped: false },
       { id: "acc_2", name: "Cool Sunglasses", preview: "🕶️", category: "accessories", rarity: "common", xpCost: 50, levelRequired: 3, owned: false, equipped: false },
@@ -100,7 +96,7 @@ const AVATAR_CATEGORIES: AvatarCategory[] = [
   {
     id: "backgrounds",
     name: "Backgrounds",
-    icon: <ColorLens />,
+    icon: <IconPalette />,
     items: [
       { id: "bg_1", name: "Classroom", preview: "🏫", category: "backgrounds", rarity: "common", xpCost: 0, levelRequired: 1, owned: true, equipped: true },
       { id: "bg_2", name: "Library", preview: "📚", category: "backgrounds", rarity: "common", xpCost: 40, levelRequired: 2, owned: true, equipped: false },
@@ -115,7 +111,7 @@ export default function Avatar() {
   const dispatch = useAppDispatch();
   const userXP = useAppSelector((s) => s.gamification?.xp ?? 0);
   const userLevel = useAppSelector((s) => s.gamification?.level ?? 1);
-  
+
   const [selectedCategory, setSelectedCategory] = useState("hairstyles");
   const [avatarItems, setAvatarItems] = useState<AvatarItem[]>(
     AVATAR_CATEGORIES.flatMap((cat) => cat.items)
@@ -144,7 +140,7 @@ export default function Avatar() {
         return item;
       })
     );
-    
+
     dispatch(addNotification({
       message: "Avatar item equipped!",
       type: "success",
@@ -156,7 +152,7 @@ export default function Avatar() {
       setAvatarItems((prev) =>
         prev.map((i) => (i.id === item.id ? { ...i, owned: true } : i))
       );
-      
+
       dispatch(addNotification({
         message: `Purchased ${item.name} for ${item.xpCost} XP!`,
         type: "success",
@@ -180,7 +176,7 @@ export default function Avatar() {
   const handleRandomize = () => {
     // Randomize equipped items from owned items
     const categories = ["hairstyles", "outfits", "accessories", "backgrounds"];
-    
+
     setAvatarItems((prev) => {
       const newItems = [...prev];
       categories.forEach((category) => {
@@ -202,7 +198,7 @@ export default function Avatar() {
       });
       return newItems;
     });
-    
+
     dispatch(addNotification({
       message: "Avatar randomized!",
       type: "info",
@@ -237,7 +233,7 @@ export default function Avatar() {
               <Typography variant="h6" gutterBottom>
                 Avatar Preview
               </Typography>
-              
+
               <Box sx={{ position: "relative", mb: 3 }}>
                 <Paper
                   elevation={3}
@@ -265,11 +261,11 @@ export default function Avatar() {
                     >
                       {getEquippedItems().map((item) => item.preview)[0] || "👤"}
                     </MuiAvatar>
-                    
+
                     <Typography variant="h5" sx={{ color: "white", mb: 1 }}>
                       {avatarName}
                     </Typography>
-                    
+
                     {avatarSettings.showLevel && (
                       <Chip
                         label={`Level ${userLevel}`}
@@ -278,10 +274,10 @@ export default function Avatar() {
                         sx={{ mr: 1 }}
                       />
                     )}
-                    
+
                     {avatarSettings.showBadges && (
                       <Chip
-                        icon={<EmojiEvents />}
+                        icon={<IconTrophy />}
                         label="5 Badges"
                         color="secondary"
                         size="small"
@@ -289,7 +285,7 @@ export default function Avatar() {
                     )}
                   </Box>
                 </Paper>
-                
+
                 <IconButton
                   sx={{
                     position: "absolute",
@@ -300,7 +296,7 @@ export default function Avatar() {
                   }}
                   size="small"
                 >
-                  <Camera />
+                  <IconCamera />
                 </IconButton>
               </Box>
 
@@ -370,7 +366,7 @@ export default function Avatar() {
                 <Button
                   variant="contained"
                   fullWidth
-                  startIcon={<Save />}
+                  leftSection={<IconDeviceFloppy />}
                   onClick={handleSaveAvatar}
                 >
                   Save Avatar
@@ -378,7 +374,7 @@ export default function Avatar() {
                 <Button
                   variant="outlined"
                   fullWidth
-                  startIcon={<Refresh />}
+                  leftSection={<IconRefresh />}
                   onClick={handleRandomize}
                 >
                   Randomize
@@ -396,7 +392,7 @@ export default function Avatar() {
                 <Typography variant="h6">Customization Options</Typography>
                 <Button
                   variant="outlined"
-                  startIcon={<ShoppingCart />}
+                  leftSection={<IconShoppingCart />}
                   onClick={() => setShowShop(!showShop)}
                 >
                   {showShop ? "My Items" : "Shop"}
@@ -445,7 +441,7 @@ export default function Avatar() {
                           <Typography variant="body2" noWrap>
                             {item.name}
                           </Typography>
-                          
+
                           <Chip
                             label={item.rarity}
                             size="small"
@@ -498,7 +494,7 @@ export default function Avatar() {
                                   handlePurchaseItem(item);
                                 }}
                               >
-                                <ShoppingCart />
+                                <IconShoppingCart />
                               </IconButton>
                             ) : (
                               <Lock sx={{ color: "white" }} />

@@ -127,7 +127,7 @@ const RobloxConversationFlow: React.FunctionComponent<Record<string, any>> = () 
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [generationStatus, setGenerationStatus] = useState<string | null>(null);
 
-  const user = useSelector((state: RootState) => state.auth.user);
+  const user = useSelector((state: RootState) => state.user);
 
   // Initialize conversation
   const startConversation = useCallback(async () => {

@@ -1,6 +1,6 @@
 /**
  * Clerk Authentication Components (2025)
- * Material-UI styled Clerk components with enhanced error handling
+ * Mantine styled Clerk components with enhanced error handling
  */
 
 import React from 'react';
@@ -15,56 +15,53 @@ import {
 import {
   Box,
   Paper,
-  Typography,
+  Text,
+  Title,
   Button,
   Avatar,
   Menu,
-  MenuItem,
   Divider,
-  ListItemIcon,
-  ListItemText,
-  Alert
-} from '@mui/material';
+  Alert,
+  Loader
+} from '@mantine/core';
 import {
-  LogoutRounded,
-  SettingsRounded,
-  PersonRounded,
-  SecurityRounded
-} from '@mui/icons-material';
+  IconLogout,
+  IconSettings,
+  IconUser,
+  IconShield
+} from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import ClerkErrorBoundary from './ClerkErrorBoundary';
 
 // Enhanced Sign In Component
-export const SignIn= ({ redirectUrl }: { redirectUrl?: string }) => {
+export const SignIn = ({ redirectUrl }: { redirectUrl?: string }) => {
   return (
     <ClerkErrorBoundary>
       <Box
-        sx={{
+        style={{
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           minHeight: '100vh',
-          p: 2
+          padding: '1rem'
         }}
       >
         <Paper
-          elevation={3}
-          sx={{
-            p: 4,
-            borderRadius: 2,
+          shadow="md"
+          p="xl"
+          style={{
+            borderRadius: '8px',
             maxWidth: 400,
             width: '100%'
           }}
         >
-          <Typography
-            variant="h4"
-            component="h1"
-            gutterBottom
-            textAlign="center"
-            sx={{ mb: 3 }}
+          <Title
+            order={1}
+            ta="center"
+            mb="xl"
           >
             Welcome Back
-          </Typography>
+          </Title>
           <ClerkSignIn
             path="/sign-in"
             routing="path"
@@ -79,36 +76,34 @@ export const SignIn= ({ redirectUrl }: { redirectUrl?: string }) => {
 };
 
 // Enhanced Sign Up Component
-export const SignUp= ({ redirectUrl }: { redirectUrl?: string }) => {
+export const SignUp = ({ redirectUrl }: { redirectUrl?: string }) => {
   return (
     <ClerkErrorBoundary>
       <Box
-        sx={{
+        style={{
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           minHeight: '100vh',
-          p: 2
+          padding: '1rem'
         }}
       >
         <Paper
-          elevation={3}
-          sx={{
-            p: 4,
-            borderRadius: 2,
+          shadow="md"
+          p="xl"
+          style={{
+            borderRadius: '8px',
             maxWidth: 400,
             width: '100%'
           }}
         >
-          <Typography
-            variant="h4"
-            component="h1"
-            gutterBottom
-            textAlign="center"
-            sx={{ mb: 3 }}
+          <Title
+            order={1}
+            ta="center"
+            mb="xl"
           >
             Get Started
-          </Typography>
+          </Title>
           <ClerkSignUp
             path="/sign-up"
             routing="path"
@@ -122,21 +117,11 @@ export const SignUp= ({ redirectUrl }: { redirectUrl?: string }) => {
   );
 };
 
-// Enhanced User Button with Material-UI styling
-export const UserButton= () => {
+// Enhanced User Button with Mantine styling
+export const UserButton = () => {
   const { user, isLoaded } = useUser();
   const { signOut } = useAuth();
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-
-  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
 
   const handleSignOut = async () => {
     try {
@@ -144,25 +129,21 @@ export const UserButton= () => {
       navigate('/');
     } catch (error) {
       console.error('Sign out error:', error);
-    } finally {
-      handleClose();
     }
   };
 
   const handleProfile = () => {
     navigate('/profile');
-    handleClose();
   };
 
   const handleSettings = () => {
     navigate('/settings');
-    handleClose();
   };
 
   if (!isLoaded) {
     return (
-      <Avatar sx={{ width: 32, height: 32 }}>
-        <PersonRounded />
+      <Avatar size="sm">
+        <IconUser size={16} />
       </Avatar>
     );
   }
@@ -170,8 +151,8 @@ export const UserButton= () => {
   if (!user) {
     return (
       <Button
-        variant="outlined"
-        size="small"
+        variant="outline"
+        size="sm"
         onClick={() => navigate('/sign-in')}
       >
         Sign In
@@ -181,79 +162,66 @@ export const UserButton= () => {
 
   return (
     <ClerkErrorBoundary>
-      <Box>
-        <Avatar
-          src={user.imageUrl}
-          alt={user.fullName || user.username || 'User'}
-          sx={{
-            width: 32,
-            height: 32,
-            cursor: 'pointer',
-            border: '2px solid',
-            borderColor: 'primary.main'
-          }}
-          onClick={handleClick}
-        >
-          {(user.fullName || user.username || 'U').charAt(0).toUpperCase()}
-        </Avatar>
+      <Menu shadow="md" width={200} position="bottom-end">
+        <Menu.Target>
+          <Avatar
+            src={user.imageUrl}
+            alt={user.fullName || user.username || 'User'}
+            size="sm"
+            style={{
+              cursor: 'pointer',
+              border: '2px solid var(--mantine-color-blue-6)'
+            }}
+          >
+            {(user.fullName || user.username || 'U').charAt(0).toUpperCase()}
+          </Avatar>
+        </Menu.Target>
 
-        <Menu
-          anchorEl={anchorEl}
-          open={open}
-          onClose={handleClose}
-          onClick={handleClose}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-          sx={{
-            '& .MuiPaper-root': {
-              minWidth: 200,
-              mt: 1.5
-            }
-          }}
-        >
-          <Box sx={{ px: 2, py: 1 }}>
-            <Typography variant="subtitle2" noWrap>
+        <Menu.Dropdown>
+          <Box p="xs">
+            <Text size="sm" fw={500} truncate>
               {user.fullName || user.username}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" noWrap>
+            </Text>
+            <Text size="xs" c="dimmed" truncate>
               {user.primaryEmailAddress?.emailAddress}
-            </Typography>
+            </Text>
           </Box>
 
           <Divider />
 
-          <MenuItem onClick={handleProfile}>
-            <ListItemIcon>
-              <PersonRounded fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Profile</ListItemText>
-          </MenuItem>
+          <Menu.Item
+            leftSection={<IconUser size={14} />}
+            onClick={handleProfile}
+          >
+            Profile
+          </Menu.Item>
 
-          <MenuItem onClick={handleSettings}>
-            <ListItemIcon>
-              <SettingsRounded fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Settings</ListItemText>
-          </MenuItem>
+          <Menu.Item
+            leftSection={<IconSettings size={14} />}
+            onClick={handleSettings}
+          >
+            Settings
+          </Menu.Item>
 
           <Divider />
 
-          <MenuItem onClick={handleSignOut}>
-            <ListItemIcon>
-              <LogoutRounded fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Sign Out</ListItemText>
-          </MenuItem>
-        </Menu>
-      </Box>
+          <Menu.Item
+            leftSection={<IconLogout size={14} />}
+            onClick={handleSignOut}
+            color="red"
+          >
+            Sign Out
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
     </ClerkErrorBoundary>
   );
 };
 
 // Enhanced Sign Out Button
-export const SignOutButton = ({ children, variant = 'outlined' }: {
+export const SignOutButton = ({ children, variant = 'outline' }: {
   children?: React.ReactNode;
-  variant?: 'contained' | 'outlined' | 'text';
+  variant?: 'filled' | 'outline' | 'light' | 'subtle';
 }) => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
@@ -272,7 +240,7 @@ export const SignOutButton = ({ children, variant = 'outlined' }: {
       <Button
         variant={variant}
         onClick={handleSignOut}
-        startIcon={<LogoutRounded />}
+        leftSection={<IconLogout size={16} />}
       >
         {children || 'Sign Out'}
       </Button>
@@ -281,13 +249,13 @@ export const SignOutButton = ({ children, variant = 'outlined' }: {
 };
 
 // Authentication Status Component
-export const AuthStatus= () => {
+export const AuthStatus = () => {
   const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
 
   if (!isLoaded) {
     return (
-      <Alert severity="info">
+      <Alert color="blue" title="Loading">
         Loading authentication...
       </Alert>
     );
@@ -295,14 +263,14 @@ export const AuthStatus= () => {
 
   if (!isSignedIn) {
     return (
-      <Alert severity="warning">
+      <Alert color="yellow" title="Not Signed In">
         You are not signed in.
       </Alert>
     );
   }
 
   return (
-    <Alert severity="success">
+    <Alert color="green" title="Signed In">
       Signed in as {user?.fullName || user?.username || 'User'}
     </Alert>
   );
@@ -325,14 +293,15 @@ export const ProtectedRoute = ({ children, fallback }: {
   if (!isLoaded) {
     return (
       <Box
-        sx={{
+        style={{
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           minHeight: '100vh'
         }}
       >
-        <Typography>Loading...</Typography>
+        <Loader size="md" />
+        <Text ml="md">Loading...</Text>
       </Box>
     );
   }
@@ -342,14 +311,14 @@ export const ProtectedRoute = ({ children, fallback }: {
       <>{fallback}</>
     ) : (
       <Box
-        sx={{
+        style={{
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           minHeight: '100vh'
         }}
       >
-        <Typography>Redirecting to sign in...</Typography>
+        <Text>Redirecting to sign in...</Text>
       </Box>
     );
   }

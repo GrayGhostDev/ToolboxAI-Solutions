@@ -1,4 +1,4 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
+import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, InputAdornment, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { listLessons, deleteLesson } from "../../services/api";
@@ -102,8 +102,8 @@ export default function Lessons() {
     lesson.subject.toLowerCase().includes(searchTerm.toLowerCase())
   );
   return (
-    <Grid2 container spacing={3}>
-      <Grid2 xs={12}>
+    <Grid container spacing={3}>
+      <Grid item xs={12}>
         <Card>
           <CardContent>
             <Stack
@@ -141,8 +141,8 @@ export default function Lessons() {
             </Stack>
           </CardContent>
         </Card>
-      </Grid2>
-      <Grid2 xs={12}>
+      </Grid>
+      <Grid item xs={12}>
         <Card>
           <CardContent style={{ p: 0 }}>
             <Table aria-label="lessons table">
@@ -284,12 +284,12 @@ export default function Lessons() {
             </Menu>
           </CardContent>
         </Card>
-      </Grid2>
+      </Grid>
       <CreateLessonDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         onSuccess={fetchLessons}
       />
-    </Grid2>
+    </Grid>
   );
 }

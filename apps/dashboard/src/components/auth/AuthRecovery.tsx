@@ -8,24 +8,21 @@ import React, { useState, useEffect } from 'react';
 import {
   Alert,
   Button,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  LinearProgress,
-  Typography,
+  Loader,
+  Modal,
+  Progress,
+  Text,
   Box,
   Stack,
-  Snackbar,
-} from '@mui/material';
+  Notification,
+} from '@mantine/core';
 import {
-  Refresh,
-  Lock,
-  CheckCircle,
-  Error as ErrorIcon,
-  Timer,
-} from '@mui/icons-material';
+  IconRefresh,
+  IconLock,
+  IconCheck,
+  IconX,
+  IconAlertTriangle,
+} from '@tabler/icons-react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { authSync } from '../../services/auth-sync';
 
@@ -384,21 +381,19 @@ export function NetworkStatus() {
     };
   }, []);
 
+  if (!showAlert) return null;
+
   return (
-    <Snackbar
-      open={showAlert}
-      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+    <Notification
       onClose={() => setShowAlert(false)}
+      color={isOnline ? 'green' : 'red'}
+      title={isOnline ? 'Connection Restored' : 'Connection Lost'}
+      style={{ position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 1000 }}
     >
-      <Alert
-        severity={isOnline ? 'success' : 'error'}
-        onClose={() => setShowAlert(false)}
-      >
-        {isOnline
-          ? 'Connection restored. Your session is active.'
-          : 'Network connection lost. Your work will be saved locally.'}
-      </Alert>
-    </Snackbar>
+      {isOnline
+        ? 'Connection restored. Your session is active.'
+        : 'Network connection lost. Your work will be saved locally.'}
+    </Notification>
   );
 }
 

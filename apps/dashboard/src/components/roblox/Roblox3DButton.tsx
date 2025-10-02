@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button, Box, Text, Tooltip, useMantineTheme, rem, keyframes } from '@mantine/core';
-import { createStyles } from '@mantine/emotion';
+import { Button, Box, Text, Tooltip, useMantineTheme, rem } from '@mantine/core';
+// import { createStyles } from '@mantine/emotion'; // Removed - using inline styles instead
 
 interface Roblox3DButtonProps {
   iconName: string;
@@ -15,30 +15,44 @@ interface Roblox3DButtonProps {
   fullWidth?: boolean;
 }
 
-// Animations
-const floatAnimation = keyframes({
-  '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
-  '50%': { transform: 'translateY(-3px) rotate(2deg)' }
-});
+// CSS Animations - using CSS keyframes instead of Mantine keyframes
+const floatAnimation = 'floatAnimation 3s ease-in-out infinite';
+const pulseAnimation = 'pulseAnimation 1s linear infinite';
+const glowAnimation = 'glowAnimation 2s ease-in-out infinite';
+const shimmerAnimation = 'shimmerAnimation 0.6s ease';
 
-const pulseAnimation = keyframes({
-  '0%': { transform: 'scale(1)' },
-  '50%': { transform: 'scale(1.05)' },
-  '100%': { transform: 'scale(1)' }
-});
+// Add CSS styles to document head
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes floatAnimation {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-3px) rotate(2deg); }
+    }
+    @keyframes pulseAnimation {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes glowAnimation {
+      0% { box-shadow: 0 0 5px currentColor; }
+      50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+      100% { box-shadow: 0 0 5px currentColor; }
+    }
+    @keyframes shimmerAnimation {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+  `;
+  if (!document.head.querySelector('style[data-roblox-animations]')) {
+    style.setAttribute('data-roblox-animations', 'true');
+    document.head.appendChild(style);
+  }
+}
 
-const glowAnimation = keyframes({
-  '0%': { boxShadow: '0 0 5px currentColor' },
-  '50%': { boxShadow: '0 0 20px currentColor, 0 0 30px currentColor' },
-  '100%': { boxShadow: '0 0 5px currentColor' }
-});
-
-const shimmerAnimation = keyframes({
-  '0%': { transform: 'translateX(-100%)' },
-  '100%': { transform: 'translateX(100%)' }
-});
-
-const useStyles = createStyles((theme, { variant, size }: { variant: string; size: string }) => {
+// const useStyles = createStyles((theme, { variant, size }: { variant: string; size: string }) => {
+// Temporarily disabled - using inline styles instead
+const getButtonStyles = (theme: any, variant: string, size: string) => {
   const variantColors = {
     primary: theme.colors.blue[6],
     secondary: theme.colors.violet[6],
@@ -63,7 +77,7 @@ const useStyles = createStyles((theme, { variant, size }: { variant: string; siz
   return {
     button: {
       position: 'relative',
-      background: `linear-gradient(145deg, ${variantColors[variant as keyof typeof variantColors]}, ${theme.fn.rgba(variantColors[variant as keyof typeof variantColors], 0.8)})`,
+      background: `linear-gradient(145deg, ${variantColors[variant as keyof typeof variantColors]}, rgba(37, 99, 235, 0.8))`,
       border: `2px solid ${variantColors[variant as keyof typeof variantColors]}`,
       borderRadius: rem(12),
       textTransform: 'none',
@@ -71,14 +85,14 @@ const useStyles = createStyles((theme, { variant, size }: { variant: string; siz
       color: 'white',
       overflow: 'hidden',
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-      boxShadow: `0 4px 15px ${theme.fn.rgba(variantColors[variant as keyof typeof variantColors], 0.3)}`,
+      boxShadow: `0 4px 15px rgba(37, 99, 235, 0.3)`,
       animation: `${floatAnimation} 3s ease-in-out infinite`,
       ...sizeStyles[size as keyof typeof sizeStyles],
 
       '&:hover': {
         transform: 'translateY(-2px) scale(1.02)',
-        boxShadow: `0 8px 25px ${theme.fn.rgba(variantColors[variant as keyof typeof variantColors], 0.5)}`,
-        background: `linear-gradient(145deg, ${variantColors[variant as keyof typeof variantColors]}, ${theme.fn.rgba(variantColors[variant as keyof typeof variantColors], 0.9)})`
+        boxShadow: `0 8px 25px rgba(37, 99, 235, 0.5)`,
+        background: `linear-gradient(145deg, ${variantColors[variant as keyof typeof variantColors]}, rgba(37, 99, 235, 0.9))`
       },
 
       '&:active': {
@@ -100,7 +114,7 @@ const useStyles = createStyles((theme, { variant, size }: { variant: string; siz
         left: 0,
         right: 0,
         bottom: 0,
-        background: `linear-gradient(45deg, transparent, ${theme.fn.rgba('#fff', 0.2)}, transparent)`,
+        background: `linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent)`,
         transform: 'translateX(-100%)',
         transition: 'transform 0.6s ease'
       },
@@ -115,7 +129,7 @@ const useStyles = createStyles((theme, { variant, size }: { variant: string; siz
         left: 0,
         right: 0,
         bottom: 0,
-        background: `linear-gradient(135deg, ${theme.fn.rgba('#fff', 0.1)}, transparent, ${theme.fn.rgba('#fff', 0.1)})`,
+        background: `linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent, rgba(255, 255, 255, 0.1))`,
         borderRadius: 'inherit',
         opacity: 0,
         transition: 'opacity 0.3s ease'
@@ -136,13 +150,13 @@ const useStyles = createStyles((theme, { variant, size }: { variant: string; siz
     loadingSpinner: {
       width: 20,
       height: 20,
-      border: `2px solid ${theme.fn.rgba('#fff', 0.3)}`,
+      border: `2px solid rgba(255, 255, 255, 0.3)`,
       borderTop: '2px solid #fff',
       borderRadius: '50%',
       animation: `${pulseAnimation} 1s linear infinite`
     }
   };
-});
+};
 
 // Map icon names to their image paths
 const iconImageMap: { [key: string]: string } = {
@@ -181,7 +195,7 @@ export const Roblox3DButton: React.FunctionComponent<Roblox3DButtonProps> = ({
   fullWidth = false,
 }) => {
   const theme = useMantineTheme();
-  const { classes } = useStyles({ variant, size });
+  const classes = getButtonStyles(theme, variant, size);
   const [isHovered, setIsHovered] = useState(false);
 
   const iconPath = iconImageMap[iconName] || iconImageMap['TROPHY'];

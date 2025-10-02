@@ -5,7 +5,7 @@
 
 import React, { Suspense } from 'react';
 import { ClerkProvider } from '@clerk/clerk-react';
-import { Box, CircularProgress, Typography, Alert } from '@mui/material';
+import { Box, Loader, Text, Alert } from '@mantine/core';
 import ClerkErrorBoundary from './ClerkErrorBoundary';
 
 interface ClerkProviderWrapperProps {
@@ -14,50 +14,47 @@ interface ClerkProviderWrapperProps {
 }
 
 // Loading component for Clerk initialization
-const ClerkLoadingFallback= () => (
+const ClerkLoadingFallback = () => (
   <Box
-    sx={{
+    style={{
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: '100vh',
-      gap: 2
+      gap: '1rem'
     }}
   >
-    <CircularProgress size={40} />
-    <Typography variant="body2" color="text.secondary">
+    <Loader size="lg" />
+    <Text size="sm" c="dimmed">
       Initializing authentication...
-    </Typography>
+    </Text>
   </Box>
 );
 
 // Error fallback for Clerk provider
 const ClerkErrorFallback = ({ error, retry }: { error: Error; retry: () => void }) => (
   <Box
-    sx={{
+    style={{
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: '100vh',
-      p: 3,
-      maxWidth: 600,
-      mx: 'auto'
+      padding: '1.5rem',
+      maxWidth: '600px',
+      margin: '0 auto'
     }}
   >
-    <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        Authentication Service Unavailable
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 2 }}>
+    <Alert color="red" title="Authentication Service Unavailable" style={{ width: '100%', marginBottom: '1rem' }}>
+      <Text size="sm" mb="md">
         {error.message.includes('publishable key')
           ? 'The authentication service is not properly configured.'
           : 'Unable to connect to the authentication service.'}
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
+      </Text>
+      <Text size="sm" c="dimmed">
         Please check your connection and try again.
-      </Typography>
+      </Text>
     </Alert>
   </Box>
 );

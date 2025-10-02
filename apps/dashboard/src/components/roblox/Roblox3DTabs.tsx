@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Tabs, Text, Badge, useMantineTheme, createStyles, keyframes } from '@mantine/core';
+import { Box, Tabs, Text, Badge, useMantineTheme } from '@mantine/core';
 
 interface TabItem {
   id: string;
@@ -21,30 +21,42 @@ interface Roblox3DTabsProps {
   glowEffect?: boolean;
 }
 
-// Animations
-const floatAnimation = keyframes({
-  '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
-  '50%': { transform: 'translateY(-2px) rotate(1deg)' }
-});
+// CSS Animations - using CSS keyframes instead of Mantine keyframes
+const floatAnimation = 'floatAnimation 3s ease-in-out infinite';
+const pulseAnimation = 'pulseAnimation 1s linear infinite';
+const glowAnimation = 'glowAnimation 2s ease-in-out infinite';
+const shimmerAnimation = 'shimmerAnimation 0.6s ease';
 
-const pulseAnimation = keyframes({
-  '0%': { transform: 'scale(1)' },
-  '50%': { transform: 'scale(1.05)' },
-  '100%': { transform: 'scale(1)' }
-});
+// Add CSS styles to document head
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes floatAnimation {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-2px) rotate(1deg); }
+    }
+    @keyframes pulseAnimation {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes glowAnimation {
+      0% { box-shadow: 0 0 5px currentColor; }
+      50% { box-shadow: 0 0 15px currentColor, 0 0 25px currentColor; }
+      100% { box-shadow: 0 0 5px currentColor; }
+    }
+    @keyframes shimmerAnimation {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+  `;
+  if (!document.head.querySelector('style[data-roblox-tabs-animations]')) {
+    style.setAttribute('data-roblox-tabs-animations', 'true');
+    document.head.appendChild(style);
+  }
+}
 
-const glowAnimation = keyframes({
-  '0%': { boxShadow: '0 0 5px currentColor' },
-  '50%': { boxShadow: '0 0 15px currentColor, 0 0 25px currentColor' },
-  '100%': { boxShadow: '0 0 5px currentColor' }
-});
-
-const shimmerAnimation = keyframes({
-  '0%': { transform: 'translateX(-100%)' },
-  '100%': { transform: 'translateX(100%)' }
-});
-
-const useStyles = createStyles((theme, { orientation, animated, size, glowEffect }: any) => {
+const getStyles = (theme: any, { orientation, animated, size, glowEffect }: any) => {
   const sizeStyles = {
     small: { minHeight: 40, padding: '8px 16px', fontSize: '0.875rem' },
     medium: { minHeight: 48, padding: '12px 20px', fontSize: '1rem' },
@@ -82,13 +94,7 @@ const useStyles = createStyles((theme, { orientation, animated, size, glowEffect
         color: theme.colors.blue[6],
       },
 
-      '&[data-active]': {
-        background: `linear-gradient(145deg, ${theme.colors.blue[6]}, ${theme.colors.blue[5]})`,
-        color: 'white',
-        borderColor: theme.colors.blue[6],
-        boxShadow: `0 4px 20px ${theme.colors.blue[4]}`,
-        transform: 'translateY(-1px)',
-      },
+      // Note: data-active selector removed as it's not supported in inline styles
 
       '&[disabled]': {
         background: `linear-gradient(145deg, ${theme.colors.gray[8]}, ${theme.colors.gray[9]})`,
@@ -149,7 +155,7 @@ const useStyles = createStyles((theme, { orientation, animated, size, glowEffect
       }
     }
   };
-});
+};
 
 // Map icon names to their image paths
 const iconImageMap: { [key: string]: string } = {
@@ -186,7 +192,7 @@ export const Roblox3DTabs: React.FunctionComponent<Roblox3DTabsProps> = ({
   glowEffect = true,
 }) => {
   const theme = useMantineTheme();
-  const { classes } = useStyles({ orientation, animated, size, glowEffect });
+  const classes = getStyles(theme, { orientation, animated, size, glowEffect });
 
   const sizeMap = {
     small: { width: 16, height: 16 },

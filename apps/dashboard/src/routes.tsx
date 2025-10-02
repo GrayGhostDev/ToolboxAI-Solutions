@@ -90,11 +90,12 @@ const WebSocketTest = lazy(() =>
     default: module.default
   }))
 );
-const WebSocketDemo = lazy(() =>
-  import("./components/test/WebSocketDemo").then(module => ({
-    default: module.default
-  }))
-);
+// WebSocketDemo removed - component does not exist
+// const WebSocketDemo = lazy(() =>
+//   import("./components/test/WebSocketDemo").then(module => ({
+//     default: module.default
+//   }))
+// );
 const HealthCheck = lazy(() => import("./pages/Health"));
 // MigrationDemo removed - not needed in production
 const AgentDashboard = lazy(() =>
@@ -363,7 +364,7 @@ export default function AppRoutes() {
 
       {/* Development Test Routes */}
       <Route path="/websocket-test" element={<WebSocketTest />} />
-      <Route path="/websocket-demo" element={<WebSocketDemo />} />
+      {/* WebSocketDemo route removed - component does not exist */}
       <Route path="/health" element={<HealthCheck />} />
       {/* Migration demo removed - not needed in production */}
 

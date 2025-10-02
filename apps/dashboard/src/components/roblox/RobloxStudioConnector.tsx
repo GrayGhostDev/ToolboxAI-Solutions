@@ -84,7 +84,7 @@ const RobloxStudioConnector: React.FunctionComponent<Record<string, any>> = () =
   const [connectionDialogOpen, setConnectionDialogOpen] = useState(false);
   const [autoSync, setAutoSync] = useState(true);
 
-  const user = useSelector((state: RootState) => state.auth.user);
+  const user = useSelector((state: RootState) => state.user);
 
   // Check Rojo installation
   const checkRojoInstallation = useCallback(async () => {

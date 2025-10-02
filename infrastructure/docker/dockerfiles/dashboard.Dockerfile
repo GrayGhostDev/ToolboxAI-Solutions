@@ -133,7 +133,7 @@ RUN mkdir -p /usr/share/nginx/html \
 COPY --from=builder --chown=nginx-app:nginx-app /app/dist /usr/share/nginx/html
 
 # Create comprehensive nginx configuration
-RUN cat > /etc/nginx/nginx.conf << 'EOF'
+RUN cat > /etc/nginx/nginx.conf << 'NGINX_CONF_EOF'
 user nginx-app;
 worker_processes auto;
 error_log /var/log/nginx/error.log notice;
@@ -192,10 +192,10 @@ http {
 
     include /etc/nginx/conf.d/*.conf;
 }
-EOF
+NGINX_CONF_EOF
 
 # Create server configuration
-RUN cat > /etc/nginx/conf.d/default.conf << 'EOF'
+RUN cat > /etc/nginx/conf.d/default.conf << 'NGINX_DEFAULT_CONF_EOF'
 server {
     listen 80;
     listen [::]:80;
@@ -326,10 +326,12 @@ server {
         log_not_found off;
     }
 }
-EOF
+NGINX_DEFAULT_CONF_EOF
 
 # Create entrypoint script for production
-RUN cat > /docker-entrypoint.sh << 'EOF'
+RUN cat > /docker-entrypoint.sh << 'DOCKER_ENTRYPOINT_EOF' && \
+    chmod +x /docker-entrypoint.sh && \
+    chown nginx-app:nginx-app /docker-entrypoint.sh
 #!/bin/bash
 set -e
 
@@ -347,10 +349,7 @@ nginx -t
 # Start nginx with proper signal handling
 echo "✅ Starting Nginx server..."
 exec nginx -g "daemon off;"
-EOF
-
-RUN chmod +x /docker-entrypoint.sh && \
-    chown nginx-app:nginx-app /docker-entrypoint.sh
+DOCKER_ENTRYPOINT_EOF
 
 # Set proper ownership for all files
 RUN chown -R nginx-app:nginx-app /etc/nginx/conf.d/ \

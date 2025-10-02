@@ -6,24 +6,7 @@
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import {
-  Box,
-  Container,
-  Text,
-  Title,
-  Button,
-  Paper,
-  Alert,
-  Stack,
-  Collapse,
-  ActionIcon,
-  Divider,
-  Group,
-  useMantineTheme,
-  ScrollArea,
-  Badge,
-  Center,
-} from '@mantine/core';
+// Removed Mantine imports - using basic HTML elements instead
 import {
   IconAlertCircle,
   IconRefresh,
@@ -262,157 +245,223 @@ function ErrorFallback({
   isRecovering,
   errorCount,
 }: ErrorFallbackProps) {
-  const theme = useMantineTheme();
-
   // Different layouts based on error level
   if (level === 'page') {
     return (
-      <Container size="md" py="xl">
-        <Paper
-          shadow="md"
-          p="xl"
-          radius="md"
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
+        <div
           style={{
             textAlign: 'center',
-            borderTop: `4px solid ${theme.colors.red[6]}`,
+            borderTop: '4px solid #e03131',
+            padding: '2rem',
+            borderRadius: '8px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            backgroundColor: 'white',
           }}
         >
-          <Center mb="md">
+          <div style={{ marginBottom: '1rem' }}>
             <IconAlertCircle
               size={80}
-              color={theme.colors.red[6]}
+              color="#e03131"
             />
-          </Center>
+          </div>
 
-          <Title order={2} mb="md">
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', fontWeight: 'bold' }}>
             Oops! Something went wrong
-          </Title>
+          </h2>
 
-          <Text c="dimmed" mb="xl">
+          <p style={{ color: '#666', marginBottom: '2rem' }}>
             We're sorry, but something unexpected happened. The error has been logged
             and we'll look into it.
-          </Text>
+          </p>
 
           {errorCount >= 3 && (
-            <Alert
-              icon={<IconAlertCircle size={20} />}
-              color="yellow"
-              mb="lg"
+            <div
+              style={{
+                backgroundColor: '#fff3cd',
+                border: '1px solid #ffeaa7',
+                borderRadius: '4px',
+                padding: '1rem',
+                marginBottom: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
             >
-              Multiple errors detected. The page may be unstable.
-            </Alert>
+              <IconAlertCircle size={20} color="#856404" />
+              <span style={{ color: '#856404' }}>
+                Multiple errors detected. The page may be unstable.
+              </span>
+            </div>
           )}
 
-          <Group justify="center" mb="lg">
-            <Button
-              leftSection={<IconRefresh size={20} />}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
+            <button
               onClick={onReset}
               disabled={isRecovering}
-              variant="filled"
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#e03131',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: isRecovering ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
             >
+              <IconRefresh size={20} />
               {isRecovering ? 'Recovering...' : 'Try Again'}
-            </Button>
+            </button>
 
-            <Button
-              leftSection={<IconHome size={20} />}
+            <button
               onClick={onGoHome}
-              variant="outline"
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: 'transparent',
+                color: '#e03131',
+                border: '1px solid #e03131',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
             >
+              <IconHome size={20} />
               Go to Homepage
-            </Button>
-          </Group>
+            </button>
+          </div>
 
           {showDetailsProp && (
             <>
-              <Button
-                size="sm"
+              <button
                 onClick={onToggleDetails}
-                rightSection={showDetails ? <IconChevronUp size={18} /> : <IconChevronDown size={18} />}
-                variant="subtle"
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  margin: '0 auto',
+                }}
               >
                 {showDetails ? 'Hide' : 'Show'} Technical Details
-              </Button>
+                {showDetails ? <IconChevronUp size={18} /> : <IconChevronDown size={18} />}
+              </button>
 
-              <Collapse in={showDetails}>
-                <Box mt="lg" style={{ textAlign: 'left' }}>
-                  <Alert
-                    icon={<IconAlertCircle size={20} />}
-                    title="Error Message"
-                    color="red"
-                    mb="md"
+              {showDetails && (
+                <div style={{ marginTop: '1rem', textAlign: 'left' }}>
+                  <div
+                    style={{
+                      backgroundColor: '#ffe0e0',
+                      border: '1px solid #e03131',
+                      borderRadius: '4px',
+                      padding: '1rem',
+                      marginBottom: '1rem',
+                    }}
                   >
-                    <Text size="sm" style={{ fontFamily: 'monospace' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <IconAlertCircle size={20} color="#e03131" />
+                      <strong>Error Message</strong>
+                    </div>
+                    <div style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
                       {error.message}
-                    </Text>
-                  </Alert>
+                    </div>
+                  </div>
 
                   {error.stack && (
-                    <Paper p="md" withBorder bg="gray.0">
-                      <Group justify="space-between" mb="sm">
-                        <Text size="sm" fw={500}>
+                    <div
+                      style={{
+                        padding: '1rem',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        backgroundColor: '#f8f9fa',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
                           Stack Trace
-                        </Text>
-                        <ActionIcon
-                          size="sm"
+                        </span>
+                        <button
                           onClick={onCopy}
-                          variant="subtle"
-                        >
-                          {copied ? <IconCheck color="green" size={18} /> : <IconCopy size={18} />}
-                        </ActionIcon>
-                      </Group>
-                      <ScrollArea h={200}>
-                        <Text
-                          size="xs"
-                          component="pre"
                           style={{
-                            fontFamily: 'monospace',
-                            overflow: 'auto',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '0.25rem',
                           }}
                         >
+                          {copied ? <IconCheck color="green" size={18} /> : <IconCopy size={18} />}
+                        </button>
+                      </div>
+                      <div
+                        style={{
+                          height: '200px',
+                          overflow: 'auto',
+                          fontFamily: 'monospace',
+                          fontSize: '0.75rem',
+                          backgroundColor: 'white',
+                          padding: '0.5rem',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                        }}
+                      >
+                        <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
                           {error.stack}
-                        </Text>
-                      </ScrollArea>
-                    </Paper>
+                        </pre>
+                      </div>
+                    </div>
                   )}
-                </Box>
-              </Collapse>
+                </div>
+              )}
             </>
           )}
-        </Paper>
-      </Container>
+        </div>
+      </div>
     );
   }
 
   // Inline error for sections and components
   return (
-    <Box
-      p={level === 'section' ? 'lg' : 'md'}
+    <div
       style={{
-        border: `1px solid ${theme.colors.red[6]}`,
-        borderRadius: theme.radius.sm,
-        backgroundColor: theme.colors.red[0],
+        padding: level === 'section' ? '1.5rem' : '1rem',
+        border: '1px solid #e03131',
+        borderRadius: '4px',
+        backgroundColor: '#ffe0e0',
       }}
     >
-      <Group>
-        <IconAlertCircle color={theme.colors.red[6]} size={24} />
-        <Box style={{ flex: 1 }}>
-          <Text c="red" fw={500}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <IconAlertCircle color="#e03131" size={24} />
+        <div style={{ flex: 1 }}>
+          <div style={{ color: '#e03131', fontWeight: '500' }}>
             {level === 'section' ? 'Section Error' : 'Component Error'}
-          </Text>
-          <Text size="sm" c="dimmed">
+          </div>
+          <div style={{ fontSize: '0.875rem', color: '#666' }}>
             {error.message}
-          </Text>
-        </Box>
-        <Button
-          size="xs"
-          variant="outline"
+          </div>
+        </div>
+        <button
           onClick={onReset}
           disabled={isRecovering}
+          style={{
+            padding: '0.25rem 0.5rem',
+            backgroundColor: 'transparent',
+            color: '#e03131',
+            border: '1px solid #e03131',
+            borderRadius: '4px',
+            cursor: isRecovering ? 'not-allowed' : 'pointer',
+            fontSize: '0.75rem',
+          }}
         >
           Retry
-        </Button>
-      </Group>
-    </Box>
+        </button>
+      </div>
+    </div>
   );
 }
 

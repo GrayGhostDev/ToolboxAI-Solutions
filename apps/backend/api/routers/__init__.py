@@ -109,6 +109,8 @@ def _register_core_routers(app: FastAPI) -> None:
 def _register_v1_routers(app: FastAPI) -> None:
     """Register API v1 routers"""
     routers_config = [
+        # Observability and monitoring (high priority)
+        ("apps.backend.api.v1.endpoints.observability", "router", "/api/v1"),
         # Educational content routers
         ("apps.backend.api.v1.endpoints.classes", "classes_router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.lessons", "lessons_router", "/api/v1"),
@@ -131,6 +133,7 @@ def _register_v1_routers(app: FastAPI) -> None:
         ("apps.backend.api.v1.endpoints.roblox_environment", "router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.roblox_integration", "router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.roblox_ai", "router", "/api/v1"),
+        ("apps.backend.api.v1.endpoints.rojo_health", "router", ""),  # Rojo health endpoint
         # Analytics and reporting
         ("apps.backend.api.v1.endpoints.analytics_reporting", "router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.reports", "reports_router", "/api/v1"),

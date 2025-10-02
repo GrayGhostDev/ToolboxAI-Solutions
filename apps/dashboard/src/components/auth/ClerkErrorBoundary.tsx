@@ -4,8 +4,8 @@
  */
 
 import React from 'react';
-import { Alert, AlertTitle, Box, Button, Typography } from '@mui/material';
-import { RefreshRounded, ErrorOutlineRounded } from '@mui/icons-material';
+import { Alert, Box, Button, Text, Title } from '@mantine/core';
+import { IconRefresh, IconAlertCircle } from '@tabler/icons-react';
 
 interface ClerkErrorBoundaryState {
   hasError: boolean;
@@ -84,34 +84,34 @@ export class ClerkErrorBoundary extends React.Component<
       // Default fallback UI
       return (
         <Box
-          sx={{
-            p: 3,
+          p="md"
+          style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             maxWidth: 500,
-            mx: 'auto',
-            mt: 4
+            margin: '0 auto',
+            marginTop: '1rem'
           }}
         >
           <Alert
-            severity="error"
-            sx={{ width: '100%', mb: 2 }}
-            icon={<ErrorOutlineRounded />}
+            color="red"
+            icon={<IconAlertCircle size={16} />}
+            title="Authentication Error"
+            style={{ width: '100%', marginBottom: '1rem' }}
           >
-            <AlertTitle>Authentication Error</AlertTitle>
-            <Typography variant="body2" sx={{ mb: 2 }}>
+            <Text size="sm" mb="md">
               {this.state.error?.message || 'An error occurred with the authentication system.'}
-            </Typography>
+            </Text>
 
             {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
               <Box
                 component="details"
-                sx={{
-                  mt: 2,
-                  p: 2,
-                  bgcolor: 'grey.100',
-                  borderRadius: 1,
+                style={{
+                  marginTop: '1rem',
+                  padding: '1rem',
+                  backgroundColor: '#f5f5f5',
+                  borderRadius: '4px',
                   fontSize: '0.75rem',
                   fontFamily: 'monospace'
                 }}
@@ -129,22 +129,20 @@ export class ClerkErrorBoundary extends React.Component<
           </Alert>
 
           <Button
-            variant="contained"
-            color="primary"
-            startIcon={<RefreshRounded />}
+            leftSection={<IconRefresh size={16} />}
             onClick={this.handleRetry}
-            sx={{ mt: 2 }}
+            style={{ marginTop: '1rem' }}
           >
             Try Again
           </Button>
 
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mt: 2, textAlign: 'center' }}
+          <Text
+            size="sm"
+            c="dimmed"
+            style={{ marginTop: '1rem', textAlign: 'center' }}
           >
             If this problem persists, please refresh the page or contact support.
-          </Typography>
+          </Text>
         </Box>
       );
     }

@@ -289,7 +289,7 @@ const GPT4MigrationDashboard= () => {
               <Text size="sm" color="text.secondary">
                 Current Month
               </Text>
-            </SimpleGrid>
+            </Box>
             <Box xs={6}>
               <Text order={4} color="gray">
                 {formatCurrency(cost.projected_monthly_total)}
@@ -297,7 +297,7 @@ const GPT4MigrationDashboard= () => {
               <Text size="sm" color="text.secondary">
                 Projected Total
               </Text>
-            </SimpleGrid>
+            </Box>
             <Box xs={12}>
               <Box display="flex" alignItems="center" mt={1}>
                 <Text size="sm" color="text.secondary" mr={1}>
@@ -313,7 +313,7 @@ const GPT4MigrationDashboard= () => {
                   {formatPercentage(cost.budget_utilization)}
                 </Text>
               </Box>
-            </SimpleGrid>
+            </Box>
             <Box xs={12}>
               <Box display="flex" alignItems="center">
                 {cost.trend_percentage > 0 ? (
@@ -329,7 +329,7 @@ const GPT4MigrationDashboard= () => {
                   {cost.trend_percentage > 0 ? '+' : ''}{formatPercentage(cost.trend_percentage)} vs last week
                 </Text>
               </Box>
-            </SimpleGrid>
+            </Box>
           </SimpleGrid>
         </CardContent>
       </Card>
@@ -394,7 +394,7 @@ const GPT4MigrationDashboard= () => {
                 <Text size="sm" color="text.secondary">
                   {key.replace('_', ' ')}: {typeof value === 'number' ? value.toFixed(2) : value}
                 </Text>
-              </SimpleGrid>
+              </Box>
             ))}
           </SimpleGrid>
         </CardContent>
@@ -617,21 +617,21 @@ const GPT4MigrationDashboard= () => {
         {/* First Row - Key Metrics */}
         <Box xs={12} md={4}>
           {renderMigrationProgress()}
-        </SimpleGrid>
+        </Box>
         <Box xs={12} md={4}>
           {renderCostSummary()}
-        </SimpleGrid>
+        </Box>
         <Box xs={12} md={4}>
           {renderPerformanceScore()}
-        </SimpleGrid>
+        </Box>
 
         {/* Second Row - Charts and Alerts */}
         <Box xs={12} md={8}>
           {renderCostTrends()}
-        </SimpleGrid>
+        </Box>
         <Box xs={12} md={4}>
           {renderActiveAlerts()}
-        </SimpleGrid>
+        </Box>
       </SimpleGrid>
 
       {/* Settings Dialog */}

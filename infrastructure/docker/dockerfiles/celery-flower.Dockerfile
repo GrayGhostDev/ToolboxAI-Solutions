@@ -85,9 +85,7 @@ FROM base AS production
 RUN pip install --no-cache-dir \
     flower==2.0.1 \
     redis>=4.5.0 \
-    celery[redis]>=5.3.0 \
-    --compile \
-    --no-compile-extensions
+    celery[redis]>=5.3.0
 
 # Copy application code
 COPY --chown=flower:flower . /app

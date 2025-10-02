@@ -47,7 +47,7 @@ import { Roblox3DNavigation } from "../roblox/Roblox3DNavigation";
 import { RobloxProgressBar } from "../roblox/RobloxProgressBar";
 import { RobloxAchievementBadge } from "../roblox/RobloxAchievementBadge";
 import { Simple3DIcon } from "../roblox/Simple3DIcon";
-import { Real3DIcon } from "../roblox/Real3DIcon";
+import { Real3DIcon } from "../roblox/Real3DIcon.tsx";
 import { robloxColors } from "../../theme/robloxTheme";
 
 export function DashboardHome({ role }: { role?: UserRole }) {
@@ -225,10 +225,10 @@ export function DashboardHome({ role }: { role?: UserRole }) {
               gap="md"
             >
               <Stack style={{ flex: 1 }}>
-                <Text
-                  size="xl"
-                  fw={800}
+                <Box
                   style={{
+                    fontSize: 'var(--mantine-font-size-xl)',
+                    fontWeight: 800,
                     background: 'linear-gradient(135deg, #fff, #e0e0e0)',
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
@@ -255,7 +255,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       />
                     </Box>
                   </Group>
-                </Text>
+                </Box>
                 <Text size="md" style={{ opacity: 0.9, marginBottom: 16 }}>
                   {role === "teacher" && "Review today's classes, push lessons to Roblox, and track assessments."}
                   {role === "admin" && "Monitor usage across schools, manage integrations, and review compliance."}

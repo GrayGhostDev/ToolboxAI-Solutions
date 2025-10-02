@@ -7,23 +7,16 @@
 
 import React, { useState } from 'react';
 import {
-  Avatar,
   Box,
   Tooltip,
-  Transition,
   Badge,
   ActionIcon,
   Text,
   Group,
-  useMantineTheme,
-  rem
+  useMantineTheme
 } from '@mantine/core';
-import { createStyles, keyframes } from '@mantine/emotion';
 import {
-  IconRocket,
-  IconStar,
-  IconTrophy,
-  IconSparkles
+  IconStar
 } from '@tabler/icons-react';
 import { Procedural3DCharacter } from './Procedural3DCharacter';
 
@@ -45,21 +38,26 @@ interface RobloxCharacterAvatarProps {
   onClick?: () => void;
 }
 
-// Animations
-const floatAnimation = keyframes({
-  '0%, 100%': { transform: 'translateY(0px)' },
-  '50%': { transform: 'translateY(-10px)' }
-});
+// CSS animation classes - defined in global styles or inline
+const floatAnimationCSS = `
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+`;
 
-const pulseAnimation = keyframes({
-  '0%': { transform: 'scale(1)', opacity: 1 },
-  '50%': { transform: 'scale(1.2)', opacity: 0.7 },
-  '100%': { transform: 'scale(1)', opacity: 1 }
-});
+const pulseAnimationCSS = `
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+`;
 
-const useStyles = createStyles((theme, { isHovered, isActive }: { isHovered: boolean; isActive: boolean }) => ({
+// Inline styles function
+const getStyles = (isHovered: boolean, isActive: boolean) => ({
   container: {
-    position: 'relative',
+    position: 'relative' as const,
     display: 'inline-block',
     cursor: 'pointer',
     transform: isHovered ? 'scale(1.1)' : 'scale(1)',
@@ -71,15 +69,15 @@ const useStyles = createStyles((theme, { isHovered, isActive }: { isHovered: boo
     borderRadius: '50%',
     background: 'linear-gradient(135deg, #4caf50, #8bc34a)',
     boxShadow: '0 0 10px #4caf50',
-    animation: isActive ? `${pulseAnimation} 1s ease-in-out infinite` : 'none'
+    animation: isActive ? 'pulse 1s ease-in-out infinite' : 'none'
   },
   floatingIcon: {
-    position: 'absolute',
+    position: 'absolute' as const,
     top: -10,
     right: -10,
-    animation: `${floatAnimation} 2s ease-in-out infinite`
+    animation: 'float 2s ease-in-out infinite'
   }
-}));
+});
 
 // Character images will be loaded dynamically from design_files
 
@@ -93,8 +91,7 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
 }) => {
   const theme = useMantineTheme();
   const [isHovered, setIsHovered] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const { classes } = useStyles({ isHovered, isActive: character.isActive });
+  const styles = getStyles(isHovered, character.isActive);
 
   const sizeMap = {
     small: 40,
@@ -112,7 +109,14 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
 
   return (
     <Box
-      className={classes.container}
+      style={{
+        position: 'relative',
+        display: 'inline-block',
+        cursor: 'pointer',
+        transition: 'transform 0.3s ease',
+        transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+        animation: animated ? 'float 3s ease-in-out infinite' : 'none'
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
@@ -163,7 +167,10 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
           }}
           styles={{
             indicator: {
-              ...classes.activeIndicator
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              animation: character.isActive ? 'pulse 2s ease-in-out infinite' : 'none'
             }
           }}
         >
@@ -174,7 +181,7 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
             style={{
               width: avatarSize,
               height: avatarSize,
-              boxShadow: `0 4px 20px ${theme.fn.rgba(theme.colors.blue[6], 0.3)}`,
+              boxShadow: `0 4px 20px rgba(37, 99, 235, 0.3)`,
               transition: 'all 0.3s ease',
               borderRadius: '50%'
             }}
@@ -184,18 +191,24 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
 
       {/* Floating icons for active characters */}
       {character.isActive && animated && (
-        <Box className={classes.floatingIcon}>
+        <Box style={{
+          position: 'absolute',
+          top: -10,
+          right: -10,
+          animation: 'float 2s ease-in-out infinite',
+          zIndex: 1
+        }}>
           <ActionIcon
             size="sm"
             variant="light"
             color="yellow"
             style={{
-              background: theme.fn.rgba(theme.colors.yellow[6], 0.1)
+              background: 'rgba(255, 193, 7, 0.1)'
             }}
             styles={{
               root: {
                 '&:hover': {
-                  background: theme.fn.rgba(theme.colors.yellow[6], 0.2)
+                  background: 'rgba(255, 193, 7, 0.2)'
                 }
               }
             }}

@@ -62,7 +62,7 @@ export const FloatingCharactersV2: React.FunctionComponent<FloatingCharactersV2P
       emissiveIntensity: 0.05
     });
     const head = new THREE.Mesh(headGeometry, headMaterial);
-    head.position.y = 1;
+    head.position.setY(1);
     group.add(head);
 
     // Arms
@@ -214,8 +214,10 @@ export const FloatingCharactersV2: React.FunctionComponent<FloatingCharactersV2P
         const time = Date.now() * 0.001;
         const { floatSpeed, floatOffset, rotationSpeed } = character.userData;
 
-        // Floating motion
-        character.position.y += Math.sin(time * floatSpeed + floatOffset) * 0.002;
+        // Floating motion using position.set()
+        const currentY = character.position.y;
+        const newY = currentY + Math.sin(time * floatSpeed + floatOffset) * 0.002;
+        character.position.setY(newY);
 
         // Rotation
         character.rotation.y += rotationSpeed;
@@ -231,9 +233,12 @@ export const FloatingCharactersV2: React.FunctionComponent<FloatingCharactersV2P
 
       // Drift clouds
       cloudsRef.current.forEach((cloud) => {
-        cloud.position.x += cloud.userData.driftSpeed;
-        if (cloud.position.x > 15) {
-          cloud.position.x = -15;
+        const currentX = cloud.position.x;
+        const newX = currentX + cloud.userData.driftSpeed;
+        if (newX > 15) {
+          cloud.position.setX(-15);
+        } else {
+          cloud.position.setX(newX);
         }
       });
     };

@@ -1,0 +1,177 @@
+{
+  "projectName": "ToolBoxAI-Solutions-Worktree",
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "filesystem",
+    "ide",
+    "git",
+    "github",
+    "docker",
+    "postgres",
+    "memory",
+    "toolboxai-orchestrator"
+  ],
+  "autoAccept": {
+    "enabled": true,
+    "corrections": true,
+    "suggestions": true,
+    "improvements": true,
+    "refactorings": true,
+    "securityFixes": true
+  },
+  "codeStandards": {
+    "enforceYear": 2025,
+    "requireOfficialDocs": true,
+    "preferredSources": [
+      "official documentation",
+      "official repositories",
+      "2025 best practices",
+      "current LTS versions"
+    ],
+    "deprecated": {
+      "allowOldPatterns": false,
+      "requireModernSyntax": true,
+      "blockLegacyAPIs": true
+    }
+  },
+  "implementationRules": {
+    "react": {
+      "version": "19.1.0",
+      "source": "https://react.dev/",
+      "patterns": ["hooks", "server-components", "concurrent-features"],
+      "deprecated": ["class-components", "legacy-context"]
+    },
+    "typescript": {
+      "version": "5.9.2",
+      "source": "https://www.typescriptlang.org/",
+      "patterns": ["strict-mode", "modern-decorators", "type-guards"],
+      "deprecated": ["any-types", "namespace-imports"]
+    },
+    "python": {
+      "version": "3.12",
+      "source": "https://docs.python.org/3.12/",
+      "patterns": ["type-hints", "async-await", "pydantic-v2"],
+      "deprecated": ["python2-syntax", "old-string-formatting"]
+    },
+    "fastapi": {
+      "version": "latest",
+      "source": "https://fastapi.tiangolo.com/",
+      "patterns": ["dependency-injection", "pydantic-models", "async-endpoints"],
+      "deprecated": ["sync-only-routes", "manual-validation"]
+    },
+    "vite": {
+      "version": "6.0.1",
+      "source": "https://vite.dev/",
+      "patterns": ["esm-modules", "optimized-deps", "rollup-4"],
+      "deprecated": ["commonjs-exclusive", "webpack-configs"]
+    }
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "description": "Validate 2025 implementation standards",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] Enforcing 2025 standards\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/standards.log\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write\\(.*\\.(ts|tsx|js|jsx)\\)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[JS/TS] Enforcing React 19 + TypeScript 5.9 standards\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/standards.log\"",
+            "description": "Log frontend standard enforcement"
+          }
+        ]
+      },
+      {
+        "matcher": "Write\\(.*\\.py\\)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[Python] Enforcing Python 3.12 + Pydantic v2 standards\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/standards.log\"",
+            "description": "Log Python standard enforcement"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit\\(.*\\)|Write\\(.*\\)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] File modified with 2025 standards\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/file_changes.log\"",
+            "description": "Track standards-compliant modifications"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p ${CLAUDE_PROJECT_DIR}/.claude/logs && echo \"[$(date)] Worktree session started - 2025 standards enforced\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/sessions.log",
+            "description": "Initialize session with standards logging"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(python:*)",
+      "Bash(git:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(chmod:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(pytest:*)",
+      "WebFetch(domain:react.dev)",
+      "WebFetch(domain:vite.dev)",
+      "WebFetch(domain:fastapi.tiangolo.com)",
+      "WebFetch(domain:docs.python.org)",
+      "WebFetch(domain:www.typescriptlang.org)",
+      "WebFetch(domain:docs.pydantic.dev)",
+      "WebSearch"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(sudo:*)",
+      "Write(${HOME}/.ssh/**)",
+      "Write(${HOME}/.aws/credentials)"
+    ],
+    "ask": [
+      "Bash(rm -rf:*)",
+      "Write(**/.env)",
+      "Bash(git push --force:*)"
+    ]
+  },
+  "features": {
+    "autoActivateVenv": true,
+    "trackGitChanges": true,
+    "logToolUsage": true,
+    "enableContextCompaction": true,
+    "maxTokensBeforeCompact": 100000,
+    "autoAcceptCorrections": true,
+    "enforceModernStandards": true,
+    "blockDeprecatedAPIs": true
+  },
+  "validation": {
+    "requireOfficialSources": true,
+    "blockLegacyPatterns": true,
+    "enforceTypeScript": true,
+    "requireTests": true,
+    "minCoverage": 80
+  }
+}

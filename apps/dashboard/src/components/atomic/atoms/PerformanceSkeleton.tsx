@@ -1,15 +1,21 @@
 import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../../utils/mui-imports';
 import React from 'react';
 
-// Optimized skeleton with reduced animation for better performance
-const OptimizedSkeleton = styled(Skeleton)(({ theme }) => ({
-  '&::after': {
-    animationDuration: '2s', // Slower animation for better performance
-  },
-  backgroundColor: theme.palette.mode === 'dark'
-    ? 'rgba(255, 255, 255, 0.08)'
-    : 'rgba(0, 0, 0, 0.08)',
-}));
+// Optimized skeleton component with reduced animation for better performance
+const OptimizedSkeleton: React.FC<{ children?: React.ReactNode; [key: string]: any }> = ({ children, ...props }) => {
+  return (
+    <Skeleton
+      {...props}
+      style={{
+        animationDuration: '2s', // Slower animation for better performance
+        backgroundColor: 'rgba(0, 0, 0, 0.08)', // Default light theme color
+        ...props.style,
+      }}
+    >
+      {children}
+    </Skeleton>
+  );
+};
 
 interface PerformanceSkeletonProps {
   variant: 'dashboard' | 'card' | 'list' | 'chart' | 'navigation' | 'form';

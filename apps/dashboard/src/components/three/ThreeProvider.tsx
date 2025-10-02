@@ -81,7 +81,7 @@ export const ThreeProvider: React.FunctionComponent<ThreeProviderProps> = ({ chi
       0.1,
       1000
     );
-    camera.position.z = 5;
+    camera.position.setZ(5);
     cameraRef.current = camera;
 
     // Create or reuse renderer (singleton pattern to avoid WebGL context limit)

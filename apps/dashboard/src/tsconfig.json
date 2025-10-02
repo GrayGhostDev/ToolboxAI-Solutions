@@ -12,6 +12,6 @@
     "skipLibCheck": true,
     "checkJs": false,
     "allowJs": true,
-    "suppressImplicitAnyIndexErrors": true
+    "ignoreDeprecations": "5.0"
   }
 }

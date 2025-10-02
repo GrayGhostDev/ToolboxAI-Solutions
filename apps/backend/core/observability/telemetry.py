@@ -172,8 +172,26 @@ class TelemetryManager:
         # Performance profiling
         self.profile_data: Dict[str, List[float]] = {}
 
-    def initialize(self):
+    def initialize(self, service_name=None, service_version=None, otel_endpoint=None,
+                   enable_logging=None, enable_metrics=None, enable_tracing=None,
+                   additional_attributes=None):
         """Initialize telemetry providers"""
+
+        # Update config with provided parameters
+        if service_name:
+            self.config.service_name = service_name
+        if service_version:
+            self.config.service_version = service_version
+        if otel_endpoint:
+            self.config.otlp_endpoint = otel_endpoint
+        if enable_logging is not None:
+            self.config.enable_log_correlation = enable_logging
+        if enable_metrics is not None:
+            self.config.enable_metrics = enable_metrics
+        if enable_tracing is not None:
+            self.config.enable_tracing = enable_tracing
+        if additional_attributes:
+            self.config.custom_attributes.update(additional_attributes)
 
         # Create resource
         self.resource = Resource.create(
@@ -296,6 +314,11 @@ class TelemetryManager:
         # Cache
         if self.config.trace_cache_operations:
             RedisInstrumentor().instrument()
+
+    def instrument_fastapi(self, app):
+        """Instrument FastAPI application"""
+        if self.config.enable_tracing:
+            FastAPIInstrumentor.instrument_app(app)
 
     @contextmanager
     def trace_operation(
@@ -761,3 +784,26 @@ def shutdown_telemetry():
     """Shutdown global telemetry manager"""
     if _telemetry_manager:
         _telemetry_manager.shutdown()
+
+
+# Create a default telemetry manager instance for backward compatibility
+def get_default_telemetry_manager():
+    """Get or create the default telemetry manager instance"""
+    if not hasattr(get_default_telemetry_manager, '_instance'):
+        get_default_telemetry_manager._instance = TelemetryManager(TelemetryConfig(
+            service_name="toolboxai-backend",
+            service_version="1.0.0",
+            environment="development",
+            enable_tracing=True,
+            enable_metrics=True,
+            enable_log_correlation=True,
+            sampling_rate=0.1
+        ))
+    return get_default_telemetry_manager._instance
+
+# Create a property-like accessor for backward compatibility
+class TelemetryManagerProxy:
+    def __getattr__(self, name):
+        return getattr(get_default_telemetry_manager(), name)
+
+telemetry_manager = TelemetryManagerProxy()

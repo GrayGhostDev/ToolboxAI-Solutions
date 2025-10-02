@@ -25,7 +25,7 @@ const SpinningCube: React.FunctionComponent<SpinningCubeProps> = ({ position, co
       const time = state.clock.elapsedTime;
       meshRef.current.rotation.x = time * 2 + delay;
       meshRef.current.rotation.y = time * 1.5 + delay;
-      meshRef.current.position.y = position[1] + Math.sin(time * 3 + delay) * 0.3;
+      meshRef.current.position.setY(position[1] + Math.sin(time * 3 + delay) * 0.3);
 
       // Pulse effect
       const scale = 1 + Math.sin(time * 4 + delay) * 0.1;
@@ -61,9 +61,9 @@ const LoadingRocket: React.FunctionComponent<LoadingRocketProps> = ({ scale = 1 
     if (rocketRef.current) {
       const time = state.clock.elapsedTime;
       // Orbit motion
-      rocketRef.current.position.x = Math.cos(time * 2) * 1.5;
-      rocketRef.current.position.z = Math.sin(time * 2) * 1.5;
-      rocketRef.current.position.y = Math.sin(time * 3) * 0.5;
+      rocketRef.current.position.setX(Math.cos(time * 2) * 1.5);
+      rocketRef.current.position.setZ(Math.sin(time * 2) * 1.5);
+      rocketRef.current.position.setY(Math.sin(time * 3) * 0.5);
 
       // Point rocket in direction of motion
       rocketRef.current.rotation.y = -time * 2 + Math.PI / 2;

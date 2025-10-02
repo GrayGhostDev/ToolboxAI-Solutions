@@ -765,12 +765,9 @@ export default function Reports() {
                 </CardContent>
               </Card>
             </Grid2>
-          </>
-        );
-      
-            </Grid>
-          </Tabs.Panel>
-        );
+          </Grid>
+        </Tabs.Panel>
+      );
 
       case 1: // Analytics Dashboard
         return (

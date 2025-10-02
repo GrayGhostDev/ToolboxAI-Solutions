@@ -16,7 +16,7 @@ from fastapi import FastAPI
 from apps.backend.core.config import settings
 from apps.backend.core.monitoring import initialize_sentry
 from apps.backend.core.logging import initialize_logging, logging_manager
-from apps.backend.core.telemetry import telemetry_manager
+# from apps.backend.core.observability.telemetry import telemetry_manager  # Imported locally to avoid circular imports
 
 # Will create these modules in subsequent steps
 try:
@@ -51,12 +51,7 @@ async def application_lifespan(app: FastAPI):
 
     # Startup
     logger.info(
-        f"Starting {settings.APP_NAME} v{settings.APP_VERSION}",
-        extra_fields={
-            "app_name": settings.APP_NAME,
-            "version": settings.APP_VERSION,
-            "environment": settings.ENVIRONMENT,
-        },
+        f"Starting {settings.APP_NAME} v{settings.APP_VERSION} (environment: {settings.ENVIRONMENT})"
     )
 
     try:
@@ -125,19 +120,23 @@ def create_app(
 
     # Initialize OpenTelemetry instrumentation (unless in testing mode)
     if not testing_mode and not skip_lifespan:
-        telemetry_manager.initialize(
-            service_name=app_settings.APP_NAME,
-            service_version=app_settings.APP_VERSION,
-            otel_endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317"),
-            enable_logging=True,
-            enable_metrics=True,
-            enable_tracing=True,
-            additional_attributes={
-                "deployment.environment": app_settings.ENVIRONMENT,
-                "service.namespace": "toolboxai",
-            }
-        )
-        logger.info("OpenTelemetry instrumentation initialized")
+        try:
+            from apps.backend.core.observability.telemetry import telemetry_manager
+            telemetry_manager.initialize(
+                service_name=app_settings.APP_NAME,
+                service_version=app_settings.APP_VERSION,
+                otel_endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317"),
+                enable_logging=True,
+                enable_metrics=True,
+                enable_tracing=True,
+                additional_attributes={
+                    "deployment.environment": app_settings.ENVIRONMENT,
+                    "service.namespace": "toolboxai",
+                }
+            )
+            logger.info("OpenTelemetry instrumentation initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize OpenTelemetry: {e}")
 
     # Determine if we should use lifespan
     use_lifespan = not (skip_lifespan or os.getenv("SKIP_LIFESPAN", "false").lower() == "true")
@@ -171,8 +170,12 @@ def create_app(
 
     # Instrument FastAPI app with OpenTelemetry (unless in testing mode)
     if not testing_mode and not skip_lifespan:
-        telemetry_manager.instrument_fastapi(app)
-        logger.info("FastAPI app instrumented with OpenTelemetry")
+        try:
+            from apps.backend.core.observability.telemetry import telemetry_manager
+            telemetry_manager.instrument_fastapi(app)
+            logger.info("FastAPI app instrumented with OpenTelemetry")
+        except Exception as e:
+            logger.warning(f"Failed to instrument FastAPI with OpenTelemetry: {e}")
 
     # Register middleware and routers if factory components are available
     if FACTORY_COMPONENTS_AVAILABLE:

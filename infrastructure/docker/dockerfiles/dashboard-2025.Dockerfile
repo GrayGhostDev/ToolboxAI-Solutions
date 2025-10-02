@@ -11,8 +11,8 @@
 # ============================================
 FROM node:22-alpine AS builder
 
-# Set Node.js environment for production build
-ENV NODE_ENV=production \
+# Set Node.js environment for build (NOT production to include devDependencies)
+ENV NODE_ENV=development \
     NPM_CONFIG_UPDATE_NOTIFIER=false \
     NPM_CONFIG_FUND=false \
     NPM_CONFIG_AUDIT=false \
@@ -40,8 +40,9 @@ WORKDIR /app
 COPY --chown=appuser:appuser apps/dashboard/package*.json ./
 
 # Install ALL dependencies (dev dependencies needed for build)
+# Using --legacy-peer-deps for React 19 compatibility
 RUN --mount=type=cache,target=/home/appuser/.npm,uid=1001,gid=1001 \
-    npm install --no-audit --no-fund && \
+    npm install --no-audit --no-fund --legacy-peer-deps && \
     npm cache clean --force
 
 # Copy source code
@@ -124,10 +125,7 @@ RUN mkdir -p /usr/share/nginx/html \
 # Copy built application from builder stage
 COPY --from=builder --chown=nginxuser:nginxuser /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration files
-COPY --chown=nginxuser:nginxuser infrastructure/docker/config/nginx/ /etc/nginx/
-
-# Create nginx configuration (proper approach for 2025)
+# Create nginx configuration inline (heredoc approach for 2025)
 COPY <<EOF /etc/nginx/nginx.conf
 user nginxuser;
 worker_processes auto;

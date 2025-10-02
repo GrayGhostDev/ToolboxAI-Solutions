@@ -1,4 +1,5 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
+import { Box, Button, Text, Paper, Stack, Grid, Container, ActionIcon, Avatar, Card, List, Divider, TextInput, Select, Chip, Badge, Alert, Loader, Progress, Modal, Drawer, AppShell, Tabs, Menu, Tooltip, Checkbox, Radio, Switch, Slider, Skeleton, Table } from '@mantine/core';
+import { Link } from '@tabler/icons-react';
 import * as React from "react";
 
 export default function CookieBanner() {
@@ -22,25 +23,33 @@ export default function CookieBanner() {
   };
 
   return (
-    <Snackbar
-      open={open}
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+    <Box
+      style={{
+        position: 'fixed',
+        bottom: 20,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 1000,
+        display: open ? 'block' : 'none'
+      }}
     >
       <Alert
-        severity="info"
+        color="blue"
         variant="filled"
         action={
-          <>
-            <Button color="inherit" size="small" onClick={(e: React.MouseEvent) => decline}>Decline</Button>
-            <Button color="inherit" size="small" onClick={(e: React.MouseEvent) => accept}>Accept</Button>
-          </>
+          <Stack direction="row" gap="xs">
+            <Button color="inherit" size="sm" onClick={decline}>Decline</Button>
+            <Button color="inherit" size="sm" onClick={accept}>Accept</Button>
+          </Stack>
         }
       >
-        We use cookies to operate and improve the service. See our{' '}
-        <Link href="/cookies.html" target="_blank" rel="noopener noreferrer" color="inherit" underline="always">
-          Cookie Policy
-        </Link>.
+        <Text color="white">
+          We use cookies to operate and improve the service. See our{' '}
+          <Link href="/cookies.html" target="_blank" rel="noopener noreferrer" color="inherit" underline="always">
+            Cookie Policy
+          </Link>.
+        </Text>
       </Alert>
-    </Snackbar>
+    </Box>
   );
 }

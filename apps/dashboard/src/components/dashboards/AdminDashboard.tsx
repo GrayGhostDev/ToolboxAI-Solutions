@@ -95,7 +95,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 
 export default function AdminDashboard({ section = 'overview' }: AdminDashboardProps) {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state) => state.auth);
+  const { userId, email, displayName } = useAppSelector((state) => state.user);
   const [activeTab, setActiveTab] = useState(0);
   const [metrics, setMetrics] = useState<SystemMetrics>({
     totalUsers: 0,

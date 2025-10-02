@@ -28,14 +28,14 @@ export interface PusherPresenceState {
  * Hook to initialize Pusher client
  */
 export const usePusherClient = () => {
-  const { user, token } = useSelector((state: RootState) => state.auth);
+  const { userId, token } = useSelector((state: RootState) => state.user);
   const [isInitialized, setIsInitialized] = useState(false);
   const [connectionState, setConnectionState] = useState<string>('uninitialized');
 
   useEffect(() => {
-    if (user?.id && token) {
+    if (userId && token) {
       try {
-        pusherClient.initialize(user.id, token);
+        pusherClient.initialize(userId, token);
         setIsInitialized(true);
       } catch (error) {
         console.error('Failed to initialize Pusher:', error);
@@ -47,7 +47,7 @@ export const usePusherClient = () => {
       // Don't disconnect on unmount as other components might be using it
       // pusherClient.disconnect();
     };
-  }, [user?.id, token]);
+  }, [userId, token]);
 
   useEffect(() => {
     const interval = setInterval(() => {

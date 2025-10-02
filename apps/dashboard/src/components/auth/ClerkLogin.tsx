@@ -5,25 +5,24 @@
 
 import React from 'react';
 import { SignIn } from '@clerk/clerk-react';
-import { Box, Container, Paper } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { Box, Container, Paper } from '@mantine/core';
 
-const StyledPaper = styled(Paper)(({ theme }) => ({
-  marginTop: theme.spacing(8),
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  padding: theme.spacing(4),
-  borderRadius: theme.spacing(2),
-  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-}));
-
-const ClerkLogin= () => {
+const ClerkLogin = () => {
   return (
-    <Container component="main" maxWidth="sm">
-      <StyledPaper>
+    <Container size="sm">
+      <Paper
+        p="xl"
+        style={{
+          marginTop: '2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          borderRadius: '8px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+        }}
+      >
         <Box
-          sx={{
+          style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -85,7 +84,7 @@ const ClerkLogin= () => {
             signUpUrl={import.meta.env.VITE_CLERK_SIGN_UP_URL}
           />
         </Box>
-      </StyledPaper>
+      </Paper>
     </Container>
   );
 };

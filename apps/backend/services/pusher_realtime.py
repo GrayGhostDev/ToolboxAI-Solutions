@@ -292,6 +292,7 @@ def get_pusher_status() -> Dict[str, Any]:
     if not service.initialized:
         return {
             "status": "unavailable",
+            "enabled": False,
             "message": "Pusher service not initialized",
             "connected_users": 0,
         }
@@ -301,6 +302,7 @@ def get_pusher_status() -> Dict[str, Any]:
 
     return {
         "status": "healthy",
+        "enabled": True,
         "connected_users": connected,
         "total_channels": total_channels,
         "active_channels": (

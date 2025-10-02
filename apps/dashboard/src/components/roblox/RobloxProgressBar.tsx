@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Progress, Text, useMantineTheme, rem, keyframes } from '@mantine/core';
-import { createStyles } from '@mantine/emotion';
+// import { createStyles } from '@mantine/emotion'; // Removed - using inline styles instead
 
 interface RobloxProgressBarProps {
   current: number;

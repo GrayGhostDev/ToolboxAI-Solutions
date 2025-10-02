@@ -33,7 +33,7 @@ globalThis._interopRequireWildcard = window._interopRequireWildcard;
   'use strict';
 
   // Make sure functions persist
-
+  {
     // Additional helpers for module compatibility
     window.__createBinding = window.__createBinding || function(o, m, k, k2) {
       if (k2 === undefined) k2 = k;
@@ -73,8 +73,8 @@ globalThis._interopRequireWildcard = window._interopRequireWildcard;
 
   // Node.js environment support
   if (typeof global !== 'undefined') {
-    global._interopRequireDefault = createInteropFunction();
-    global._interopRequireWildcard = createWildcardFunction();
+    global._interopRequireDefault = window._interopRequireDefault;
+    global._interopRequireWildcard = window._interopRequireWildcard;
   }
 
   console.log('[Polyfills] Enhanced CommonJS interop helpers loaded successfully');

@@ -57,7 +57,7 @@ class SecureCORSConfig:
         # Set default allowed origins based on environment
         if allowed_origins is None:
             if environment == "development":
-                # Development: Allow common local development ports
+                # Development: Allow common local development ports with both localhost and 127.0.0.1
                 self.allowed_origins = [
                     "http://localhost:3000",
                     "http://127.0.0.1:3000",
@@ -75,6 +75,8 @@ class SecureCORSConfig:
                     "http://127.0.0.1:5178",
                     "http://localhost:5179",
                     "http://127.0.0.1:5179",
+                    "http://localhost:8009",
+                    "http://127.0.0.1:8009",
                 ]
             else:
                 # Production: Must specify explicit allowed origins

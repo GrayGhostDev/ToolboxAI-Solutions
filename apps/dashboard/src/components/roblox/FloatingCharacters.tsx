@@ -27,7 +27,7 @@ const FloatingCharacter: React.FunctionComponent<FloatingCharacterProps> = ({
   useFrame((state) => {
     if (meshRef.current) {
       meshRef.current.rotation.y += rotationSpeed * 0.01;
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * floatSpeed) * 0.2;
+      meshRef.current.position.setY(position[1] + Math.sin(state.clock.elapsedTime * floatSpeed) * 0.2);
     }
   });
   const characterColors = {

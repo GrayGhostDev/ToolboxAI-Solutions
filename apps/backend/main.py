@@ -48,8 +48,24 @@ logger = logging_manager.get_logger(__name__)
 
 
 # =============================================================================
-# MONITORING ENDPOINTS
+# HEALTH AND MONITORING ENDPOINTS
 # =============================================================================
+
+
+@app.get("/health")
+@app.options("/health")
+async def health_check():
+    """
+    Health check endpoint - accepts both GET and OPTIONS for CORS pre-flight
+
+    Returns basic health status of the application
+    """
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "version": "1.0.0",
+        "environment": settings.ENVIRONMENT
+    }
 
 
 @app.get("/metrics")
@@ -65,6 +81,33 @@ async def get_metrics():
         media_type=CONTENT_TYPE_LATEST,
         headers={"Content-Type": CONTENT_TYPE_LATEST}
     )
+
+
+# =============================================================================
+# FALLBACK DASHBOARD ENDPOINT (Temporary - until asyncpg is installed)
+# =============================================================================
+
+
+@app.get("/api/v1/dashboard/overview")
+async def dashboard_overview_fallback():
+    """
+    Fallback dashboard overview endpoint
+
+    Returns mock data until full dashboard implementation with asyncpg is available
+    """
+    return {
+        "status": "success",
+        "data": {
+            "stats": {
+                "total_users": 0,
+                "active_sessions": 0,
+                "total_content": 0,
+                "recent_activity": []
+            },
+            "message": "Dashboard running in fallback mode - install asyncpg for full functionality"
+        },
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
 
 
 # =============================================================================

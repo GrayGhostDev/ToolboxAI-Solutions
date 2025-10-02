@@ -125,16 +125,16 @@ const MagicOrbs: React.FunctionComponent<MagicOrbsProps> = ({
   const orbsRef = useRef<THREE.Group>(null);
   const orbData = useMemo(() => {
     return Array.from({ length: count }, (_, i) => ({
-      position: new THREE.Vector3(
+      position: [
         (Math.random() - 0.5) * 8,
         (Math.random() - 0.5) * 8,
         (Math.random() - 0.5) * 8
-      ),
-      velocity: new THREE.Vector3(
+      ],
+      velocity: [
         (Math.random() - 0.5) * 0.02,
         (Math.random() - 0.5) * 0.02,
         (Math.random() - 0.5) * 0.02
-      ),
+      ],
       color: colors[Math.floor(Math.random() * colors.length)],
       scale: 0.1 + Math.random() * 0.2,
       phase: Math.random() * Math.PI * 2
@@ -154,9 +154,9 @@ const MagicOrbs: React.FunctionComponent<MagicOrbsProps> = ({
         orb.position.z += data.velocity.z;
 
         // Wrap around edges
-        if (Math.abs(orb.position.x) > 4) orb.position.x = -orb.position.x;
-        if (Math.abs(orb.position.y) > 4) orb.position.y = -orb.position.y;
-        if (Math.abs(orb.position.z) > 4) orb.position.z = -orb.position.z;
+        if (Math.abs(orb.position.x) > 4) orb.position.setX(-orb.position.x);
+        if (Math.abs(orb.position.y) > 4) orb.position.setY(-orb.position.y);
+        if (Math.abs(orb.position.z) > 4) orb.position.setZ(-orb.position.z);
 
         // Pulse effect
         const scale = data.scale * (1 + Math.sin(time * 3 + data.phase) * 0.2);
