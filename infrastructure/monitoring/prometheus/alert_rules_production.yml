@@ -1,0 +1,309 @@
+# ============================================
+# TOOLBOXAI PROMETHEUS ALERTING RULES
+# ============================================
+# Production alerting rules for critical issues
+# Updated: 2025-10-02
+# ============================================
+
+groups:
+  # ============================================
+  # BACKEND API ALERTS
+  # ============================================
+  - name: backend_api
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{service="backend",status=~"5.."}[5m])
+          / rate(http_requests_total{service="backend"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: backend
+        annotations:
+          summary: "High error rate on backend API"
+          description: "Backend API error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            rate(http_request_duration_seconds_bucket{service="backend"}[5m])
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+          component: backend
+        annotations:
+          summary: "High response time on backend API"
+          description: "Backend API p95 response time is {{ $value }}s (threshold: 1s)"
+
+      - alert: BackendAPIDown
+        expr: up{job="backend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: backend
+        annotations:
+          summary: "Backend API is down"
+          description: "Backend API has been down for more than 2 minutes"
+
+      - alert: HighRequestRate
+        expr: |
+          rate(http_requests_total{service="backend"}[5m]) > 1000
+        for: 10m
+        labels:
+          severity: warning
+          component: backend
+        annotations:
+          summary: "Unusually high request rate"
+          description: "Backend API receiving {{ $value }} requests/sec (threshold: 1000)"
+
+  # ============================================
+  # DATABASE ALERTS
+  # ============================================
+  - name: database
+    interval: 30s
+    rules:
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database has been down for more than 1 minute"
+
+      - alert: HighDatabaseConnections
+        expr: |
+          pg_stat_database_numbackends{datname="toolboxai"}
+          / pg_settings_max_connections * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "High database connection usage"
+          description: "Database connection usage is {{ $value }}% (threshold: 80%)"
+
+      - alert: SlowQueries
+        expr: |
+          rate(pg_stat_statements_mean_exec_time[5m]) > 1000
+        for: 10m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Average query execution time is {{ $value }}ms (threshold: 1000ms)"
+
+      - alert: DatabaseDiskSpace
+        expr: |
+          (pg_database_size_bytes{datname="toolboxai"}
+          / node_filesystem_size_bytes{mountpoint="/var/lib/postgresql/data"}) * 100 > 85
+        for: 5m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database disk space running low"
+          description: "Database disk usage is {{ $value }}% (threshold: 85%)"
+
+      - alert: DatabaseReplicationLag
+        expr: |
+          pg_replication_lag_seconds > 60
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Database replication lag detected"
+          description: "Replication lag is {{ $value }}s (threshold: 60s)"
+
+  # ============================================
+  # REDIS ALERTS
+  # ============================================
+  - name: redis
+    interval: 30s
+    rules:
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis has been down for more than 1 minute"
+
+      - alert: RedisHighMemoryUsage
+        expr: |
+          redis_memory_used_bytes / redis_memory_max_bytes * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis memory usage is {{ $value }}% (threshold: 90%)"
+
+      - alert: RedisHighConnectionCount
+        expr: redis_connected_clients > 500
+        for: 10m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "High Redis connection count"
+          description: "Redis has {{ $value }} connections (threshold: 500)"
+
+      - alert: RedisEvictions
+        expr: rate(redis_evicted_keys_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "Redis is evicting keys"
+          description: "Redis evicting {{ $value }} keys/sec (increase maxmemory)"
+
+  # ============================================
+  # CELERY ALERTS
+  # ============================================
+  - name: celery
+    interval: 30s
+    rules:
+      - alert: CeleryWorkerDown
+        expr: celery_worker_up == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: celery
+        annotations:
+          summary: "Celery worker is down"
+          description: "Celery worker {{ $labels.worker }} has been down for 2 minutes"
+
+      - alert: HighTaskQueueSize
+        expr: celery_queue_length{queue="default"} > 1000
+        for: 10m
+        labels:
+          severity: warning
+          component: celery
+        annotations:
+          summary: "High Celery task queue size"
+          description: "Queue {{ $labels.queue }} has {{ $value }} pending tasks"
+
+      - alert: HighTaskFailureRate
+        expr: |
+          rate(celery_tasks_total{state="FAILURE"}[5m])
+          / rate(celery_tasks_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: celery
+        annotations:
+          summary: "High Celery task failure rate"
+          description: "Task failure rate is {{ $value | humanizePercentage }}"
+
+      - alert: SlowTaskExecution
+        expr: |
+          histogram_quantile(0.95,
+            rate(celery_task_duration_seconds_bucket[5m])
+          ) > 300
+        for: 10m
+        labels:
+          severity: warning
+          component: celery
+        annotations:
+          summary: "Slow Celery task execution"
+          description: "Task p95 duration is {{ $value }}s (threshold: 300s)"
+
+  # ============================================
+  # CONTAINER ALERTS
+  # ============================================
+  - name: containers
+    interval: 30s
+    rules:
+      - alert: ContainerHighCPU
+        expr: |
+          rate(container_cpu_usage_seconds_total{name=~"toolboxai-.*"}[5m]) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: container
+        annotations:
+          summary: "Container CPU usage is high"
+          description: "Container {{ $labels.name }} CPU usage is {{ $value }}%"
+
+      - alert: ContainerHighMemory
+        expr: |
+          container_memory_usage_bytes{name=~"toolboxai-.*"}
+          / container_spec_memory_limit_bytes{name=~"toolboxai-.*"} * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+          component: container
+        annotations:
+          summary: "Container memory usage is high"
+          description: "Container {{ $labels.name }} memory usage is {{ $value }}%"
+
+      - alert: ContainerRestart
+        expr: |
+          increase(container_last_seen{name=~"toolboxai-.*"}[10m]) > 3
+        labels:
+          severity: warning
+          component: container
+        annotations:
+          summary: "Container restarting frequently"
+          description: "Container {{ $labels.name }} has restarted {{ $value }} times in 10 minutes"
+
+  # ============================================
+  # SYSTEM ALERTS
+  # ============================================
+  - name: system
+    interval: 60s
+    rules:
+      - alert: HighDiskUsage
+        expr: |
+          (node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_free_bytes{mountpoint="/"})
+          / node_filesystem_size_bytes{mountpoint="/"} * 100 > 85
+        for: 5m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "High disk usage"
+          description: "Disk usage is {{ $value }}% (threshold: 85%)"
+
+      - alert: HighMemoryUsage
+        expr: |
+          (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes)
+          / node_memory_MemTotal_bytes * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High system memory usage"
+          description: "System memory usage is {{ $value }}%"
+
+      - alert: HighLoadAverage
+        expr: node_load15 / count(node_cpu_seconds_total{mode="idle"}) > 2
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High system load"
+          description: "15-minute load average is {{ $value }} (threshold: 2x CPU cores)"
+
+      - alert: DiskIOHigh
+        expr: |
+          rate(node_disk_io_time_seconds_total[5m]) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High disk I/O"
+          description: "Disk I/O utilization is {{ $value | humanizePercentage }}"
